@@ -2434,4 +2434,55 @@ export class ItemCommentsComponent implements OnInit {
       const itemID = +params['id'];
       this._hackerNewsAPIService.fetchComments(itemID).subscribe(data =&amp;gt; {
         this.item = data;
-  
+      }, error =&amp;gt; console.log('Could not load item' + itemID));
+    });
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;b&gt;StoriesComponent&lt;/b&gt;에서 처리했던거와 비슷하게 라우트&amp;nbsp;매개변수를 subscribe하여 itemID를 확인 후 해당 뉴스의 comment들을 조회합니다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;pre class=&quot;code&quot;&gt;&lt;code class=&quot;html&quot;&gt;&amp;lt;!-- item-comments.component.html --&amp;gt;
+
+&amp;lt;div class=&quot;main-content&quot;&amp;gt;
+  &amp;lt;div class=&quot;loading-section&quot; *ngIf=&quot;!item&quot;&amp;gt;
+    &amp;lt;!-- You can add a loading indicator here if you want to :) --&amp;gt;
+  &amp;lt;/div&amp;gt;
+  &amp;lt;div *ngIf=&quot;item&quot; class=&quot;item&quot;&amp;gt;
+    &amp;lt;div class=&quot;mobile item-header&quot;&amp;gt;
+     &amp;lt;!-- Markup that shows only on mobile (to give the app a
+    responsive mobile feel). Same attributes as below,
+    nothing really new here (but refer to the source
+    file if you're interested) --&amp;gt;
+    &amp;lt;/div&amp;gt;
+    &amp;lt;div class=&quot;laptop&quot; [class.item-header]=&quot;item.comments_count &amp;gt; 0 || item.type === 'job'&quot; [class.head-margin]=&quot;item.text&quot;&amp;gt;
+      &amp;lt;p&amp;gt;
+        &amp;lt;a class=&quot;title&quot; href=&quot;{{item.url}}&quot;&amp;gt;
+        {{item.title}}
+        &amp;lt;/a&amp;gt;
+        &amp;lt;span *ngIf=&quot;item.domain&quot; class=&quot;domain&quot;&amp;gt;({{item.domain}})&amp;lt;/span&amp;gt;
+      &amp;lt;/p&amp;gt;
+      &amp;lt;div class=&quot;subtext&quot;&amp;gt;
+        &amp;lt;span&amp;gt;
+        {{item.points}} points by
+          &amp;lt;a href=&quot;&quot;&amp;gt;{{item.user}}&amp;lt;/a&amp;gt;
+        &amp;lt;/span&amp;gt;
+        &amp;lt;span&amp;gt;
+          {{item.time_ago}}
+          &amp;lt;span&amp;gt; |
+            &amp;lt;a [routerLink]=&quot;['/item', item.id]&quot;&amp;gt;
+              &amp;lt;span *ngIf=&quot;item.comments_count !== 0&quot;&amp;gt;
+                {{item.comments_count}}
+                &amp;lt;span *ngIf=&quot;item.comments_count === 1&quot;&amp;gt;comment&amp;lt;/span&amp;gt;
+                &amp;lt;span *ngIf=&quot;item.comments_count &amp;gt; 1&quot;&amp;gt;comments&amp;lt;/span&amp;gt;
+              &amp;lt;/span&amp;gt;
+              &amp;lt;span *ngIf=&quot;item.comments_count === 0&quot;&amp;gt;discuss&amp;lt;/span&amp;gt;
+            &amp;lt;/a&amp;gt;
+          &amp;lt;/span&amp;gt;
+        &amp;lt;/span&amp;gt;
+      &amp;lt;/div&amp;gt;
+    &amp;lt;/div&amp;gt;
+    &amp;lt;p class=&quot;subject&quot; [innerHTML]=&quot;item.content&quot;&amp;gt;&amp;lt;/p&amp;gt;
+    &amp;lt;app-comment-tree [commentTree]=&quot;item.comments&quot;&amp;gt;&amp;lt;/app-comment-tree&amp;gt;
+  &amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;component 맨위에는 뉴스&amp;nbsp;정보가 노출되고 그뒤에는 뉴스 내용(&lt;b&gt;item.content&lt;/b&gt;)이 표시됩니다.&amp;nbsp;그런 다음 &lt;b&gt;CommentTreeComponent&lt;/b&gt;의 선택자인 &lt;b&gt;app-comment-tree&lt;/b&gt;에 해당 뉴스 comment(&lt;b&gt;item.comments&lt;/b&gt;)들을&amp;nbsp;입력합니다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;pre class=&quot;code&quot;&gt;&lt;code class=&quot;scss&quot;&gt;/* item-comments.component.scss */
+
+$mobile-o
