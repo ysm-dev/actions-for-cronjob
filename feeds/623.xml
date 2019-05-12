@@ -1,0 +1,1512 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="https://yunsangjun.github.io/blog/feed.xml" rel="self" type="application/atom+xml" /><link href="https://yunsangjun.github.io/blog/" rel="alternate" type="text/html" /><updated>2018-11-13T17:31:36+00:00</updated><id>https://yunsangjun.github.io/blog/</id><title type="html">윤상준의 기술 블로그</title><subtitle>Software &amp; Cloud Engineer 입니다. Kubernetes, Cloud Foundry등의 PaaS와 Cloud 및 DevOps 관련 기술에 관심이 있습니다.</subtitle><author><name>Yun SangJun</name></author><entry><title type="html">Route 53을 활용하여 GSLB 구성하기</title><link href="https://yunsangjun.github.io/blog/cloud/2018/11/04/gslb.html" rel="alternate" type="text/html" title="Route 53을 활용하여 GSLB 구성하기" /><published>2018-11-04T00:00:00+00:00</published><updated>2018-11-04T00:00:00+00:00</updated><id>https://yunsangjun.github.io/blog/cloud/2018/11/04/gslb</id><content type="html" xml:base="https://yunsangjun.github.io/blog/cloud/2018/11/04/gslb.html">&lt;p&gt;애플리케이션의 고 가용성(High Availability)을 달성하기 위해 서로 다른 Data Center, Cloud에
+애플리케이션을 배치할 수 있습니다. 이 경우 각각의 환경의 Load Balancer에 대해 로드밸런싱을 할 수 있는 GSLB가 필요합니다.&lt;/p&gt;
+
+&lt;p&gt;이 페이지에서는 AWS의 Route 53을 활용하여 GSLB(Global Server Load Balancing)를 구성하는 방법을 알아보겠습니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;구성하기&quot;&gt;구성하기&lt;/h2&gt;
+
+&lt;p&gt;AWS의 Route 53 서비스에 접속합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/cloud/gslb/route53_main.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;health-check-생성하기&quot;&gt;Health Check 생성하기&lt;/h3&gt;
+
+&lt;p&gt;먼저 Master, Slave 애플리케이션에 대한 health check를 추가하겠습니다.
+(서로 다른 Data Center, Cloud에 배치된 애플리케이션을 Master와 Slave로 구분하도록 하겠습니다.)&lt;/p&gt;
+
+&lt;p&gt;Route 53 서비스 main &amp;gt; Left menu &amp;gt; Health checks &amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;Create health check&lt;/code&gt;를 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 Master 애플리케이션에 대한 health check 설정을 입력합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/cloud/gslb/health-check-master.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;마찬가지로 Slave 애플리케이션에 대한 health check 설정을 입력합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/cloud/gslb/health-check-slave.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;host-zone-생성하기&quot;&gt;Host Zone 생성하기&lt;/h3&gt;
+
+&lt;p&gt;Route 53 서비스 main &amp;gt; Left menu &amp;gt; Hosted zones &amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;Create Hosted Zone&lt;/code&gt;을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 Hosted Zone의 정보를 입력합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/cloud/gslb/create-hosted-zone.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Domain Name : dr.example.com(&lt;code class=&quot;highlighter-rouge&quot;&gt;*.example.com&lt;/code&gt; 도메인을 소유하고 있고 하위 도메인
+&lt;code class=&quot;highlighter-rouge&quot;&gt;dr.example.com&lt;/code&gt;을 GSLB 구성에 사용합니다.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;record-set-생성하기&quot;&gt;Record Set 생성하기&lt;/h3&gt;
+
+&lt;p&gt;Route 53 서비스 main &amp;gt; Left menu &amp;gt; Hosted zones &amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;Create Record Set&lt;/code&gt;을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/cloud/gslb/create-recordset-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Master(Primary)에 대한 Record Set을 아래와 같이 설정합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Value : Master 애플리케이션 Endpoint가 가르키는 IP Address&lt;/li&gt;
+  &lt;li&gt;Health Check to Associate : 앞에서 생성한 Master의 health check name 선택&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/cloud/gslb/create-recordset-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Slave(Secondary)에 대한 Record Set을 아래와 같이 설정합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Value : Slave 애플리케이션 Endpoint가 가르키는 IP Address&lt;/li&gt;
+  &lt;li&gt;Health Check to Associate : 앞에서 생성한 Slave의 health check name 선택&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/cloud/gslb/create-recordset-03.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 Master(Primary)와 Slave(Secondary)에 대한 Record Set이 설정되었습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/cloud/gslb/create-recordset-04.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;도메인-설정하기&quot;&gt;도메인 설정하기&lt;/h3&gt;
+
+&lt;p&gt;도메인 제공자의 관리 페이지에서 아래와 같이 설정합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;CNAME 설정&lt;/p&gt;
+
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;demo.example.com&lt;/code&gt;에 대한 canonical name을 &lt;code class=&quot;highlighter-rouge&quot;&gt;demo.dr.example.com&lt;/code&gt;로 설정&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Name Server 설정&lt;/p&gt;
+
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dr.example.com&lt;/code&gt;에 대한 Name Server를 위에서 생성한 Host Zone의 Name Server로 설정합니다.&lt;/p&gt;
+
+    &lt;p&gt;위에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;ns-1064.awsdns-05.org&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;ns-609.awsdns-12.net&lt;/code&gt;을 뜻합니다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;동작-확인&quot;&gt;동작 확인&lt;/h3&gt;
+
+&lt;p&gt;이제 Master 애플리케이션의 접속이 정상인 경우와 비정상일 때 GSLB가 어떻게 동작하는지 확인해보겠습니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;master-애플리케이션의-접속이-정상인-경우&quot;&gt;Master 애플리케이션의 접속이 정상인 경우&lt;/h4&gt;
+
+&lt;p&gt;Master 애플리케이션의 접속이 정상인 경우 &lt;code class=&quot;highlighter-rouge&quot;&gt;demo.example.com&lt;/code&gt; 도메인에 대한 주소를 확인해보면 &lt;code class=&quot;highlighter-rouge&quot;&gt;169.x.x.1&lt;/code&gt; 즉, Master 애플리케이션의
+IP 주소가 반환됩니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ nslookup demo.example.com
+Server:     x.x.x.x
+Address:    x.x.x.x
+
+Non-authoritative answer:
+demo.example.com canonical name = demo.dr.example.com.
+Name:   demo.dr.example.com.
+Address: 169.x.x.1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;좀 더 상세한 흐름을 그림으로 표현해보면 아래와 같습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/cloud/gslb/workflow-master-up.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;master-애플리케이션의-접속이-비정상인-경우&quot;&gt;Master 애플리케이션의 접속이 비정상인 경우&lt;/h4&gt;
+
+&lt;p&gt;이제 Master 애플리케이션을 강제로 종료해 접속이 되지 않도록 변경해보겠습니다.&lt;/p&gt;
+
+&lt;p&gt;Master 애플리케이션의 접속이 비정상인 경우 &lt;code class=&quot;highlighter-rouge&quot;&gt;demo.example.com&lt;/code&gt; 도메인에 대한 주소를 확인해보면 &lt;code class=&quot;highlighter-rouge&quot;&gt;169.x.x.2&lt;/code&gt; 즉, Slave 애플리케이션의
+IP 주소가 반환됩니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ nslookup demo.example.com
+Server:     x.x.x.x
+Address:    x.x.x.x
+
+Non-authoritative answer:
+demo.example.com canonical name = demo.dr.example.com.
+Name:   demo.dr.example.com.
+Address: 169.x.x.2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;좀 더 상세한 흐름을 그림으로 표현해보면 아래와 같습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/cloud/gslb/workflow-master-down.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>윤상준</name></author><category term="gslb" /><category term="aws" /><category term="route53" /><summary type="html">애플리케이션의 고 가용성(High Availability)을 달성하기 위해 서로 다른 Data Center, Cloud에 애플리케이션을 배치할 수 있습니다. 이 경우 각각의 환경의 Load Balancer에 대해 로드밸런싱을 할 수 있는 GSLB가 필요합니다.</summary></entry><entry><title type="html">Spinnaker 활용 #6 Helm chart 배포</title><link href="https://yunsangjun.github.io/blog/spinnaker/2018/10/14/using-spinnaker-6.html" rel="alternate" type="text/html" title="Spinnaker 활용 #6 Helm chart 배포" /><published>2018-10-14T00:00:00+00:00</published><updated>2018-10-14T00:00:00+00:00</updated><id>https://yunsangjun.github.io/blog/spinnaker/2018/10/14/using-spinnaker-6</id><content type="html" xml:base="https://yunsangjun.github.io/blog/spinnaker/2018/10/14/using-spinnaker-6.html">&lt;p&gt;이 페이지는 Spinnaker에서 Helm chart를 배포하는 방법에 대해 설명합니다.&lt;/p&gt;
+
+&lt;p&gt;자세한 내용은 Spinnaker 공식 가이드 문서의 &lt;a href=&quot;https://www.spinnaker.io/guides/user/kubernetes-v2/deploy-helm/&quot;&gt;Deploy Helm Charts&lt;/a&gt;를 참고하세요.&lt;/p&gt;
+
+&lt;h2 id=&quot;사전-준비&quot;&gt;사전 준비&lt;/h2&gt;
+
+&lt;h3 id=&quot;github-계정-생성-및-저장소-fork&quot;&gt;GitHub 계정 생성 및 저장소 fork&lt;/h3&gt;
+
+&lt;p&gt;GitHub 계정을 생성하고 아래 저장소를 fork 합니다.&lt;/p&gt;
+
+&lt;p&gt;https://github.com/YunSangJun/my-charts&lt;/p&gt;
+
+&lt;h3 id=&quot;github-webhook-설정&quot;&gt;GitHub Webhook 설정&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;/blog/spinnaker/2018/09/10/configuration-spinnaker-4.html&quot;&gt;GitHub Webhooks 설정하기&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;github-artifact-설정&quot;&gt;GitHub Artifact 설정&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;/blog/spinnaker/2018/10/11/configuration-spinnaker-5.html&quot;&gt;GitHub Artifact 설정하기&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;application-생성&quot;&gt;Application 생성&lt;/h2&gt;
+
+&lt;p&gt;Spinnaker top menu &amp;gt; Applications &amp;gt; 우측 Actions dropbox &amp;gt; Create Application을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 내용 입력 후 Create 버튼을 선택합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Name : helm-chart-demo&lt;/li&gt;
+  &lt;li&gt;Owner Email : 애플리케이션 소유자의 이메일&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-new-application.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;pipeline-생성&quot;&gt;Pipeline 생성&lt;/h2&gt;
+
+&lt;p&gt;Application top &amp;gt; PIPELINES &amp;gt; Configure a new pipeline을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 내용 입력 후 Create 버튼을 선택합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Type : Pipeline&lt;/li&gt;
+  &lt;li&gt;Pipeline Name : Deploy helm chart&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-new-pipeline.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;pipeline-설정&quot;&gt;Pipeline 설정&lt;/h2&gt;
+
+&lt;h3 id=&quot;automated-triggers&quot;&gt;Automated Triggers&lt;/h3&gt;
+
+&lt;p&gt;Pipeline configuration &amp;gt; Automated Triggers &amp;gt; Add Trigger를 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-pipeline-main-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 내용을 입력하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save Changes&lt;/code&gt; 버튼을 선택해 변경사항을 저장합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Type : Git&lt;/li&gt;
+  &lt;li&gt;Repo Type : github&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Organization or User : GitHub 조직명 또는 사용자 명.&lt;/p&gt;
+
+    &lt;p&gt;예) https://github.com/YunSangJun/my-charts &amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;YunSangJun&lt;/code&gt;이 사용자 명&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Project :  my-charts&lt;/li&gt;
+  &lt;li&gt;Branch : master&lt;/li&gt;
+  &lt;li&gt;Secret : &lt;a href=&quot;/blog/spinnaker/2018/09/10/configuration-spinnaker-4.html&quot;&gt;GitHub Webhooks 설정하기&lt;/a&gt;에서 입력한 secret&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-automated-trigger.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;expected-artifacts&quot;&gt;Expected Artifacts&lt;/h3&gt;
+
+&lt;p&gt;Pipeline configuration &amp;gt; Expected Artifacts &amp;gt; Add Artifact를 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 내용을 입력하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save Changes&lt;/code&gt; 버튼을 선택해 변경사항을 저장합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Match against : GitHub&lt;/li&gt;
+  &lt;li&gt;File path : stable/demo-0.1.0.tgz&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-expected-artifacts.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;bake-manifest&quot;&gt;Bake Manifest&lt;/h3&gt;
+
+&lt;p&gt;Helm chart로 부터 Kubernetes manifest를 생성하는 stage를 구성합니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;stage-추가&quot;&gt;Stage 추가&lt;/h4&gt;
+
+&lt;p&gt;Pipeline &amp;gt; Configuration &amp;gt; Add stage를 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-pipeline-main-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 내용을 입력하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save Changes&lt;/code&gt; 버튼을 선택해 변경사항을 저장합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Type : Bake(Manifest)&lt;/li&gt;
+  &lt;li&gt;Stage Name : Bake manifest for IBM&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-bake-ibm-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;stage-설정&quot;&gt;Stage 설정&lt;/h4&gt;
+
+&lt;p&gt;아래와 같이 내용을 입력하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save Changes&lt;/code&gt; 버튼을 선택해 변경사항을 저장합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Render Engine : HELM2&lt;/li&gt;
+  &lt;li&gt;Name : demo&lt;/li&gt;
+  &lt;li&gt;Namespace : demo&lt;/li&gt;
+  &lt;li&gt;Expected Artifact : stable/demo-0.1.0.tgz&lt;/li&gt;
+  &lt;li&gt;Artifact Account : &lt;a href=&quot;/blog/spinnaker/2018/10/11/configuration-spinnaker-5.html&quot;&gt;GitHub Artifact 설정하기&lt;/a&gt;에서 추가한 GitHub 계정&lt;/li&gt;
+  &lt;li&gt;Overrides :
+    &lt;ul&gt;
+      &lt;li&gt;Key : ingress.enabled, Value : true&lt;/li&gt;
+      &lt;li&gt;Key : ingress.hosts[0], Value : 애플리케이션 호스트 명 입력(예: demo.ibm.example.com)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-bake-ibm-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;produces-artifacts&quot;&gt;Produces Artifacts&lt;/h4&gt;
+
+&lt;p&gt;Bake Manifest 설정을 완료하면 Produces Artifacts에 생성되는 Kubernetes Manifest에 대한 설정이
+자동으로 설정됩니다.&lt;/p&gt;
+
+&lt;p&gt;이 설정을 다음 단계인 Deploy Manifest에서 사용합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-bake-produces-artifacts.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;multi-cloudcluster&quot;&gt;Multi cloud/cluster&lt;/h4&gt;
+
+&lt;p&gt;추가로 다른 클라우드의 클러스터에 추가로 Helm chart를 배포해야 하는 경우 위와 같은 stage를 동일하게 추가하고 설정합니다.&lt;/p&gt;
+
+&lt;p&gt;이 페이지에서는 같은 Helm chart이지만 ingress의 host명을 다르게 해서 배포하도록 설정해보겠습니다.&lt;/p&gt;
+
+&lt;p&gt;Pipeline &amp;gt; Configuration &amp;gt; Add stage를 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-pipeline-main-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 내용을 입력하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save Changes&lt;/code&gt; 버튼을 선택해 변경사항을 저장합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Type : Bake(Manifest)&lt;/li&gt;
+  &lt;li&gt;Stage Name : Bake manifest for GCP&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-bake-gcp-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Render Engine : HELM2&lt;/li&gt;
+  &lt;li&gt;Name : demo&lt;/li&gt;
+  &lt;li&gt;Namespace : demo&lt;/li&gt;
+  &lt;li&gt;Expected Artifact : stable/demo-0.1.0.tgz&lt;/li&gt;
+  &lt;li&gt;Artifact Account : &lt;a href=&quot;/blog/spinnaker/2018/10/11/configuration-spinnaker-5.html&quot;&gt;GitHub Artifact 설정하기&lt;/a&gt;에서 추가한 GitHub 계정&lt;/li&gt;
+  &lt;li&gt;Overrides :
+    &lt;ul&gt;
+      &lt;li&gt;Key : ingress.enabled, Value : true&lt;/li&gt;
+      &lt;li&gt;Key : ingress.hosts[0], Value : 애플리케이션 호스트 명 입력(예: demo.gcp.example.com)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-bake-gcp-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;deploy-manifest&quot;&gt;Deploy Manifest&lt;/h3&gt;
+
+&lt;p&gt;생성한 Kubernetes manifest를 배포하는 stage를 구성합니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;stage-추가-1&quot;&gt;Stage 추가&lt;/h4&gt;
+
+&lt;p&gt;Pipeline &amp;gt; Bake manifest IBM &amp;gt; Add stage를 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-pipeline-main-03.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 내용을 입력하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save Changes&lt;/code&gt; 버튼을 선택해 변경사항을 저장합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Type : Deploy(Manifest)&lt;/li&gt;
+  &lt;li&gt;Stage Name : Deploy to IBM&lt;/li&gt;
+  &lt;li&gt;Depends On : Bake manifest for IBM&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-deploy-to-ibm-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;stage-설정-1&quot;&gt;Stage 설정&lt;/h4&gt;
+
+&lt;p&gt;아래와 같이 내용을 입력하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save Changes&lt;/code&gt; 버튼을 선택해 변경사항을 저장합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Account : IBM Kubernetes Account&lt;/li&gt;
+  &lt;li&gt;Manifest Source : Artifact&lt;/li&gt;
+  &lt;li&gt;Expected Artifact : b64 name:demo, type:embedded/base64(Bake Manifest에서 생성한 Kubernetes manifest)&lt;/li&gt;
+  &lt;li&gt;Artifact Account : embedded-artifact&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-deploy-to-ibm-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;multi-cloudcluster-1&quot;&gt;Multi cloud/cluster&lt;/h4&gt;
+
+&lt;p&gt;추가로 다른 클라우드의 클러스터에 추가로 Helm chart를 배포해야 하는 경우 위와 같은 stage 동일하게 추가하고 설정합니다.&lt;/p&gt;
+
+&lt;p&gt;Pipeline &amp;gt; Bake manifest GCP &amp;gt; Add stage를 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-pipeline-main-04.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 내용을 입력하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save Changes&lt;/code&gt; 버튼을 선택해 변경사항을 저장합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Type : Deploy(Manifest)&lt;/li&gt;
+  &lt;li&gt;Stage Name : Deploy to GCP&lt;/li&gt;
+  &lt;li&gt;Depends On : Bake manifest for GCP&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-deploy-to-gcp-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 내용을 입력하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save Changes&lt;/code&gt; 버튼을 선택해 변경사항을 저장합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Account : GCP Kubernetes Account&lt;/li&gt;
+  &lt;li&gt;Manifest Source : Artifact&lt;/li&gt;
+  &lt;li&gt;Expected Artifact : b64 name:demo, type:embedded/base64(Bake Manifest에서 생성한 Kubernetes manifest)&lt;/li&gt;
+  &lt;li&gt;Artifact Account : embedded-artifact&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-deploy-to-gcp-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;helm-chart-배포&quot;&gt;Helm chart 배포&lt;/h2&gt;
+
+&lt;p&gt;Helm chart를 생성 또는 업데이트하여 이벤트를 발생시킵니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git clone https://github.com/Organization_Or_User/my-charts
+cd my-charts
+helm package demo
+mv demo-0.1.0.tgz stable
+helm repo index stable --url https://Organization_Or_User.github.io/my-charts/stable
+git add --all
+git push
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;결과-확인&quot;&gt;결과 확인&lt;/h2&gt;
+
+&lt;p&gt;GitHub 저장소의 stable/demo-0.1.0.tgz에 변경사항이 있으면 Pipeline이 실행됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-pipeline-result.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Pipeline status가 성공적으로 완료되면(SUCCEEDED) 서버자원이 생성된 것을 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-deploy-result-server.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Service와 Ingress도 생성된 것을 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-deploy-result-loadbalancer.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Multi cloud/cluster에 배포한 경우 ingress host 주소가 다른 것을 확인 할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl get ing -n demo
+NAME      HOSTS                    ADDRESS          PORTS     AGE
+demo      demo.ibm.example.com     169.xx.xxx.xxx   80        12h
+
+$ kubectl get ing -n demo
+NAME      HOSTS                    ADDRESS          PORTS     AGE
+demo      demo.gcp.example.com     35.xx.xxx.xxx   80        12h
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>윤상준</name></author><category term="spinnaker" /><category term="kubernetes" /><category term="cicd" /><category term="devops" /><summary type="html">이 페이지는 Spinnaker에서 Helm chart를 배포하는 방법에 대해 설명합니다.</summary></entry><entry><title type="html">Spinnaker 설정 #5 Artifact 설정</title><link href="https://yunsangjun.github.io/blog/spinnaker/2018/10/11/configuration-spinnaker-5.html" rel="alternate" type="text/html" title="Spinnaker 설정 #5 Artifact 설정" /><published>2018-10-11T00:00:00+00:00</published><updated>2018-10-11T00:00:00+00:00</updated><id>https://yunsangjun.github.io/blog/spinnaker/2018/10/11/configuration-spinnaker-5</id><content type="html" xml:base="https://yunsangjun.github.io/blog/spinnaker/2018/10/11/configuration-spinnaker-5.html">&lt;p&gt;이 페이지는 Spinnaker에 Artifact account를 설정하는 방법에 대해 설명합니다.&lt;/p&gt;
+
+&lt;p&gt;자세한 내용은 Spinnaker 공식 가이드 문서의 &lt;a href=&quot;https://www.spinnaker.io/setup/artifacts/&quot;&gt;Configure Artifacts&lt;/a&gt;을 참고하세요.&lt;/p&gt;
+
+&lt;h2 id=&quot;github-artifact-account-설정&quot;&gt;GitHub artifact account 설정&lt;/h2&gt;
+
+&lt;p&gt;Spinnaker에서는 GitHub 저장소에서 배포할 리소스를 가져올 수 있습니다.
+이를 Artifact라고 부릅니다.&lt;/p&gt;
+
+&lt;p&gt;아래 가이드를 따라서 Spinnaker에 GitHub artifact account를 설정할 수 있습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;사전-준비&quot;&gt;사전 준비&lt;/h3&gt;
+
+&lt;h4 id=&quot;credentials-다운로드&quot;&gt;credentials 다운로드&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/settings/tokens&quot;&gt;Personal access tokens&lt;/a&gt; 페이지에서 토크을 생성합니다.&lt;/p&gt;
+
+&lt;p&gt;이때 필요한 scope는 &lt;code class=&quot;highlighter-rouge&quot;&gt;repo&lt;/code&gt; scope 입니다.&lt;/p&gt;
+
+&lt;p&gt;Halyard에서 토큰을 읽을 수 있도록 아래와 같이 설정합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;export TOKEN=EXAMPLE_TOKEN
+export TOKEN_FILE=EXAMPLE_TOKEN_FILE
+echo $TOKEN &amp;gt; $TOKEN_FILE
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;artifact-설정-편집&quot;&gt;Artifact 설정 편집&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ARTIFACT_ACCOUNT_NAME&lt;/code&gt;에 GitHub artifact 계정을 설정합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;export ARTIFACT_ACCOUNT_NAME=my-github-artifact-account
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;artifact 설정을 활성화합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hal config features edit --artifacts true
+hal config artifact github enable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;artifact 계정을 설정합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hal config artifact github account add $ARTIFACT_ACCOUNT_NAME \
+    --token-file $TOKEN_FILE
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;변경 사항을 반영합니다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hal deploy apply
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>윤상준</name></author><category term="spinnaker" /><category term="kubernetes" /><category term="cicd" /><category term="devops" /><summary type="html">이 페이지는 Spinnaker에 Artifact account를 설정하는 방법에 대해 설명합니다.</summary></entry><entry><title type="html">Spinnaker 설정 #4 GitHub Webhooks 설정</title><link href="https://yunsangjun.github.io/blog/spinnaker/2018/09/10/configuration-spinnaker-4.html" rel="alternate" type="text/html" title="Spinnaker 설정 #4 GitHub Webhooks 설정" /><published>2018-09-10T00:00:00+00:00</published><updated>2018-09-10T00:00:00+00:00</updated><id>https://yunsangjun.github.io/blog/spinnaker/2018/09/10/configuration-spinnaker-4</id><content type="html" xml:base="https://yunsangjun.github.io/blog/spinnaker/2018/09/10/configuration-spinnaker-4.html">&lt;p&gt;이 페이지는 Spinnaker에 GitHub Webhook을 설정하는 방법에 대해 설명합니다.&lt;/p&gt;
+
+&lt;p&gt;자세한 내용은 Spinnaker 공식 가이드 문서의 &lt;a href=&quot;https://www.spinnaker.io/setup/triggers/github/&quot;&gt;Configuring GitHub Webhooks&lt;/a&gt;을 참고하세요.&lt;/p&gt;
+
+&lt;h2 id=&quot;github-webhook-설정&quot;&gt;GitHub Webhook 설정&lt;/h2&gt;
+
+&lt;p&gt;Spinnaker는 GitHub 저장소의 변경사항을 감지할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;이를 위해서는 Webhook 설정이 필요합니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;사전-준비&quot;&gt;사전 준비&lt;/h3&gt;
+
+&lt;p&gt;아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;services.gate.baseUrl&lt;/code&gt;을 확인합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ cat ~/.hal/default/staging/spinnaker.yml
+services:
+...
+gate:
+  ...
+  baseUrl: http://spinnaker-api.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;webhook-설정&quot;&gt;Webhook 설정&lt;/h3&gt;
+
+&lt;p&gt;Repository &amp;gt; Settings &amp;gt; Webhooks &amp;gt; Add Webhook 선택&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 정보를 입력한 후 &lt;code class=&quot;highlighter-rouge&quot;&gt;Add webhook&lt;/code&gt; 버튼을 선택합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Payload URL은 위에서 확인한 &lt;code class=&quot;highlighter-rouge&quot;&gt;services.gate.baseUrl&lt;/code&gt; + &lt;code class=&quot;highlighter-rouge&quot;&gt;/webhooks/git/github&lt;/code&gt; 입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-webhook.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이제 GitHub 저장소에 push event가 발생하면 Spinnaker에서 이벤트를 수신하게됩니다.&lt;/p&gt;</content><author><name>윤상준</name></author><category term="spinnaker" /><category term="kubernetes" /><category term="cicd" /><category term="devops" /><summary type="html">이 페이지는 Spinnaker에 GitHub Webhook을 설정하는 방법에 대해 설명합니다.</summary></entry><entry><title type="html">Spinnaker 설정 #3 CI 시스템 연계</title><link href="https://yunsangjun.github.io/blog/spinnaker/2018/08/18/configuration-spinnaker-3.html" rel="alternate" type="text/html" title="Spinnaker 설정 #3 CI 시스템 연계" /><published>2018-08-18T00:00:00+00:00</published><updated>2018-08-18T00:00:00+00:00</updated><id>https://yunsangjun.github.io/blog/spinnaker/2018/08/18/configuration-spinnaker-3</id><content type="html" xml:base="https://yunsangjun.github.io/blog/spinnaker/2018/08/18/configuration-spinnaker-3.html">&lt;p&gt;이 페이지는 Spinnaker와 CI 시스템을 연계하는 방법에 대해 설명합니다.&lt;/p&gt;
+
+&lt;p&gt;자세한 내용은 Spinnaker 공식 가이드 문서의 &lt;a href=&quot;https://www.spinnaker.io/setup/ci/jenkins/&quot;&gt;Add Your CI system&lt;/a&gt;을 참고하세요.&lt;/p&gt;
+
+&lt;h2 id=&quot;jenkins&quot;&gt;Jenkins&lt;/h2&gt;
+
+&lt;h3 id=&quot;jenkins-master-추가&quot;&gt;Jenkins master 추가&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Jenkins 활성화&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; hal config ci jenkins enable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Jenkins master 추가&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; export BASEURL=http://jenkins.example.com
+ export USERNAME=example
+ export USERNAME=example
+
+ echo $PASSWORD | hal config ci jenkins master add my-jenkins-master \
+     --address $BASEURL \
+     --username $USERNAME \
+     --password
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;적용&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; hal deploy apply
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;csrf-protection-설정&quot;&gt;CSRF protection 설정&lt;/h3&gt;
+
+&lt;p class=&quot;tip-title&quot;&gt;참고&lt;/p&gt;
+&lt;p class=&quot;tip-content&quot;&gt;
+Jenkins CSRF protection in Igor is only supported for Jenkins 2.x.
+&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;csrf 활성화&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; hal config ci jenkins master edit MASTER --csrf true
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;적용&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; hal deploy apply
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Jenkins에서 CSRF protection 활성화&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;Manage Jenkins &amp;gt; Configure Global Security, &lt;code class=&quot;highlighter-rouge&quot;&gt;Prevent Cross Site Request Forgery exploits&lt;/code&gt; 선택&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;Crumb Algorithm, &lt;code class=&quot;highlighter-rouge&quot;&gt;Default Crumb Issuer&lt;/code&gt; 선택&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;</content><author><name>윤상준</name></author><category term="spinnaker" /><category term="kubernetes" /><category term="cicd" /><category term="devops" /><summary type="html">이 페이지는 Spinnaker와 CI 시스템을 연계하는 방법에 대해 설명합니다.</summary></entry><entry><title type="html">Spinnaker 설정 #2 사용자 인증/인가</title><link href="https://yunsangjun.github.io/blog/spinnaker/2018/08/16/configuration-spinnaker-2.html" rel="alternate" type="text/html" title="Spinnaker 설정 #2 사용자 인증/인가" /><published>2018-08-16T00:00:00+00:00</published><updated>2018-08-16T00:00:00+00:00</updated><id>https://yunsangjun.github.io/blog/spinnaker/2018/08/16/configuration-spinnaker-2</id><content type="html" xml:base="https://yunsangjun.github.io/blog/spinnaker/2018/08/16/configuration-spinnaker-2.html">&lt;p&gt;이 페이지는 Spinnaker에 사용자 인증/인가 기능을 설정하는 방법에 대해 설명합니다.&lt;/p&gt;
+
+&lt;p&gt;자세한 내용은 Spinnaker 공식 가이드 문서의 &lt;a href=&quot;https://www.spinnaker.io/setup/security/&quot;&gt;Security&lt;/a&gt;을 참고하세요.&lt;/p&gt;
+
+&lt;h2 id=&quot;인증authentication&quot;&gt;인증(Authentication)&lt;/h2&gt;
+
+&lt;h3 id=&quot;oauth&quot;&gt;OAuth&lt;/h3&gt;
+
+&lt;p&gt;OAuth는 인터넷 사용자들이 비밀번호를 제공하지 않고 웹사이트 상의 자신들의 정보에 대해 접근 권한을 부여할 수 있는 수단으로서 사용되는 표준입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;oauth-제공자&quot;&gt;OAuth 제공자&lt;/h3&gt;
+
+&lt;p&gt;편의을 위해 아래와 같은 OAuth 제공자들을 built-in으로 제공합니다. Cliet ID와 Secret 설정을 통해 간편하게 구성할 수 있습니다.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Provider&lt;/td&gt;
+      &lt;td&gt;Halyard value&lt;/td&gt;
+      &lt;td&gt;Provider-Specific Docs&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Google Apps for Work / G Suite&lt;/td&gt;
+      &lt;td&gt;google&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://www.spinnaker.io/setup/security/authentication/oauth/providers/google/&quot;&gt;Google Apps for Work / G Suite&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;GitHub&lt;/td&gt;
+      &lt;td&gt;github&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://help.github.com/articles/authorizing-oauth-apps/&quot;&gt;GitHub Teams&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Azure&lt;/td&gt;
+      &lt;td&gt;azure&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code&quot;&gt;Azure&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;이 페이지에서는 GitHub를 기준으로 설명하겠습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;사전-준비&quot;&gt;사전 준비&lt;/h3&gt;
+
+&lt;p&gt;GitHub에서 OAuth App을 생성합니다.&lt;/p&gt;
+
+&lt;p&gt;Github &amp;gt; Settings &amp;gt; Developer settings &amp;gt; OAuth Apps &amp;gt; New OAuth App 선택&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 정보를 입력합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-create-oauthapp.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Homepage 및 Callback URL은 &lt;a href=&quot;/blog/spinnaker/2018/08/15/configuration-spinnaker-1.html&quot;&gt;도메인 주소를 통한 대시보드 접속&lt;/a&gt; 가이드의 Spinnaker ui, api 설정
+정보입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;oauth-provider-및-client-정보-설정&quot;&gt;OAuth Provider 및 Client 정보 설정&lt;/h3&gt;
+
+&lt;p&gt;아래와 같이 Client ID, Secret과 OAuth Provider를 설정합니다.&lt;/p&gt;
+
+&lt;p&gt;CLIENT_ID, CLIENT_SECRET은 위에서 생성한 OAuth App 정보에서 얻을 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CLIENT_ID=myClientId
+CLIENT_SECRET=myClientSecret
+PROVIDER=github
+
+hal config security authn oauth2 edit \
+  --client-id $CLIENT_ID \
+  --client-secret $CLIENT_SECRET \
+  --provider $PROVIDER
+
+hal config security authn oauth2 enable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;적용&quot;&gt;적용&lt;/h3&gt;
+
+&lt;p&gt;Spinnaker를 다시 배포합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ hal deploy apply
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;접속&quot;&gt;접속&lt;/h3&gt;
+
+&lt;p&gt;웹 브라우저에서 Spinnaker ui 주소로 접속합니다.&lt;/p&gt;
+
+&lt;p&gt;예) http://spinnaker.example.com&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 Github 로그인 페이지로 redirect 됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-oauth-login.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이제 GitHub 계정으로 로그인하면 Spinnaker ui 주소록 접속되는 것을 확인 할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-dashboard.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>윤상준</name></author><category term="spinnaker" /><category term="kubernetes" /><category term="cicd" /><category term="devops" /><summary type="html">이 페이지는 Spinnaker에 사용자 인증/인가 기능을 설정하는 방법에 대해 설명합니다.</summary></entry><entry><title type="html">Spinnaker 설정 #1 도메인 주소를 통한 대시보드 접속</title><link href="https://yunsangjun.github.io/blog/spinnaker/2018/08/15/configuration-spinnaker-1.html" rel="alternate" type="text/html" title="Spinnaker 설정 #1 도메인 주소를 통한 대시보드 접속" /><published>2018-08-15T00:00:00+00:00</published><updated>2018-08-15T00:00:00+00:00</updated><id>https://yunsangjun.github.io/blog/spinnaker/2018/08/15/configuration-spinnaker-1</id><content type="html" xml:base="https://yunsangjun.github.io/blog/spinnaker/2018/08/15/configuration-spinnaker-1.html">&lt;h2 id=&quot;도메인-주소를-통한-대시보드-접속하기&quot;&gt;도메인 주소를 통한 대시보드 접속하기&lt;/h2&gt;
+
+&lt;p&gt;로컬 환경이 아닌 외부에서 도메인 주소를 통해 Spinnaker에 접속하기 위해서 추가 설정이 필요합니다.&lt;/p&gt;
+
+&lt;p&gt;이 페이지에서는 Kubernetes provider를 기준으로 설명하겠습니다.
+Kubernetes 환경에서는 외부에 서비스를 노출시키기 위해 Ingress를 사용합니다.&lt;/p&gt;
+
+&lt;p&gt;먼저 Ingress에서 사용할 도메인을 Haryard에 설정합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ hal config security ui edit --override-base-url http://spinnaker.example.com
+$ hal config security api edit --override-base-url http://spinnaker-api.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Spinnaker를 다시 배포합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ hal deploy apply
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;다음으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;ingress.yaml&lt;/code&gt;을 작성합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ vi ingress.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: spinnaker
+spec:
+  rules:
+  - host: spinnaker.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: spin-deck
+          servicePort: 9000
+  - host: spinnaker-api.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: spin-gate
+          servicePort: 8084
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Spinnaker가 설치된 Kubernetes cluster에 Ingress를 배포합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl apply -f ingress.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이제 &lt;code class=&quot;highlighter-rouge&quot;&gt;spinnaker.example.com&lt;/code&gt;에 접속해 Spinnaker 대시보드를 사용할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/spinnaker/spinnaker-dashboard.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;</content><author><name>윤상준</name></author><category term="spinnaker" /><category term="kubernetes" /><category term="cicd" /><category term="devops" /><summary type="html">도메인 주소를 통한 대시보드 접속하기</summary></entry><entry><title type="html">Kubernetes 스터디 #8 Monitoring</title><link href="https://yunsangjun.github.io/blog/kubernetes/2018/07/20/kubernetes-monitoring.html" rel="alternate" type="text/html" title="Kubernetes 스터디 #8 Monitoring" /><published>2018-07-20T00:00:00+00:00</published><updated>2018-07-20T00:00:00+00:00</updated><id>https://yunsangjun.github.io/blog/kubernetes/2018/07/20/kubernetes-monitoring</id><content type="html" xml:base="https://yunsangjun.github.io/blog/kubernetes/2018/07/20/kubernetes-monitoring.html">&lt;h2 id=&quot;container-환경에서-떠오르는-도전-과제&quot;&gt;Container 환경에서 떠오르는 도전 과제&lt;/h2&gt;
+
+&lt;h3 id=&quot;운영-환경으로-container-환경-사용&quot;&gt;운영 환경으로 Container 환경 사용&lt;/h3&gt;
+
+&lt;p&gt;운영 환경에서 Kubernets 사용 비율 증가. =&amp;gt; Container 기반 운영 환경 증가&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-trend-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;container-환경에서-떠오르는-도전-과제-1&quot;&gt;Container 환경에서 떠오르는 도전 과제&lt;/h3&gt;
+
+&lt;p&gt;Container 환경을 운영 환경으로 고려하기 시작하면서 운영을 위해 꼭 필요한 모니터링에 대한 관심 증가&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-trend-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;[출처 : CNCF https://www.cncf.io/blog/2017/12/06/cloud-native-technologies-scaling-production-applications/]&lt;/p&gt;
+
+&lt;h2 id=&quot;cloud-native-환경에서-monitoring-architecture의-변화&quot;&gt;Cloud Native 환경에서 Monitoring Architecture의 변화&lt;/h2&gt;
+
+&lt;h3 id=&quot;legacy&quot;&gt;Legacy&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;고사양의 서버에 Application을 크게 운영&lt;/li&gt;
+  &lt;li&gt;Monitoring Agent를 서버에 설치&lt;/li&gt;
+  &lt;li&gt;Agent가 App 및 OS의 metric 수집해 Backend에 전송&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-legacy.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;cloud-native&quot;&gt;Cloud Native&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Application을 작게 운영하고 필요할 때 마다 확장&lt;/li&gt;
+  &lt;li&gt;동적으로 확장하는 서버에 Agent 설치 불가능&lt;/li&gt;
+  &lt;li&gt;Kubernetes API를 통해 동적으로 확장된 서버 endpoint를 discovery&lt;/li&gt;
+  &lt;li&gt;Monitoring Backend에서 discovery한 endpoint를 통해 metric 수집&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-cloud-native.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;monitoring-architecture&quot;&gt;Monitoring Architecture&lt;/h2&gt;
+
+&lt;h3 id=&quot;prometheus&quot;&gt;Prometheus&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Service Discovery, Metric 수집 및 저장, Alert 기능을 통합해 제공하는 Monitoring 시스템&lt;/li&gt;
+  &lt;li&gt;CNCF의 메인 프로젝트로 Container 기반 Monitoring 시스템의 defactor&lt;/li&gt;
+  &lt;li&gt;Kubernetes외의 다른 Cloud Provider에 대한 Service Discovery 기능 제공으로 동적인 Cloud를 효율적을 모니터링&lt;/li&gt;
+  &lt;li&gt;자체 Alert 엔진 보유. 외부 시스템과 연계하여 Alarm을 송신 가능&lt;/li&gt;
+  &lt;li&gt;Web UI와 Grafana를 통해 Data 시각화&lt;/li&gt;
+  &lt;li&gt;자체 TSDB(Time Series Database) 보유. Metric data 저장 및 관리에 최적화&lt;/li&gt;
+  &lt;li&gt;다양한 exporter(수집기)를 제공해 외부 시스템 통합 모니터링 가능&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-prometheus-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;service-discovery--scrape&quot;&gt;Service Discovery &amp;amp; Scrape&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Prometheus가 Kubernetes API Server로 부터 monitoring metric 수집 대상을 discovery&lt;/li&gt;
+  &lt;li&gt;각 대상으로 부터 metic scrape(pull)&lt;/li&gt;
+  &lt;li&gt;Pod(Application)이 동적으로 증가하면 discovery 통해 자동으로 수집 대상에 추가&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-prometheus-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;monitoring-실습&quot;&gt;Monitoring 실습&lt;/h2&gt;
+
+&lt;h3 id=&quot;실습-목표&quot;&gt;실습 목표&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Demo Application 및 JMX Exporter를 Kubernetes cluster에 배포&lt;/li&gt;
+  &lt;li&gt;Kubernetes로 부터 App 및 JMX Exporter target 정보를 discovery&lt;/li&gt;
+  &lt;li&gt;Target으로 부터 Pod 및 JVM metrics 수집&lt;/li&gt;
+  &lt;li&gt;Grafana dashboard에서 Pod 및 JMX metrics 정보를 시각화&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-exercise.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;tip-title&quot;&gt;참고&lt;/p&gt;
+&lt;p class=&quot;tip-content&quot;&gt;
+이 실습은 Kubernetes cluster를 위한 Prometheus와 Grafana가 설치되어 있다는 전제하에 작성했습니다.
+Prometheus와 Grafana 설치에 대한 가이드는 추후 작성 예정입니다.
+&lt;/p&gt;
+
+&lt;h3 id=&quot;demo-application-download-및-build&quot;&gt;Demo Application Download 및 Build&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Demo Application 다운로드&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git clone https://github.com/YunSangJun/monitoring-demo.git
+$ cd monitoring-demo
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Maven build&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ mvn clean package
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Dockerfile 편집&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ vi Dockerfile
+FROM openjdk:8-jdk-alpine
+
+ADD target/spring-boot-monitoring-demo-0.0.1-SNAPSHOT.jar app.jar
+ADD jmx-exporter/jmx_prometheus_javaagent-0.3.1.jar jmx_prometheus_javaagent-0.3.1.jar
+ADD jmx-exporter/tomcat.yaml tomcat.yaml
+
+ENTRYPOINT [&quot;java&quot;,&quot;-Djava.security.egd=file:/dev/./urandom&quot;,&quot;-javaagent:/jmx_prometheus_javaagent-0.3.1.jar=8090:/tomcat.yaml&quot;,&quot;-jar&quot;,&quot;/app.jar&quot;]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ADD target/spring-boot-monitoring-demo-0.0.1-SNAPSHOT.jar app.jar&lt;/code&gt;&lt;/p&gt;
+
+        &lt;p&gt;Demo application을 Docker container에 추가&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;jmx-exporter/jmx_prometheus_javaagent-0.3.1.jar&lt;/code&gt;&lt;/p&gt;
+
+        &lt;p&gt;Prometheus JMX exporter agent를 Docker container에 추가&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;jmx-exporter/tomcat.yaml tomcat.yaml&lt;/code&gt;&lt;/p&gt;
+
+        &lt;p&gt;JMX exporter Tomcat configuration file을 Docker container에 추가&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ENTRYPOINT ...&lt;/code&gt;&lt;/p&gt;
+
+        &lt;p&gt;Demo App 및 JMX exporter agent 실행&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Docker build&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker build -t spring-boot-monitoring-demo .
+
+$ docker images
+REPOSITORY                        TAG                 IMAGE ID          CREATED            SIZE
+spring-boot-monitoring-demo       latest              1444f50dcadc      9 seconds ago      117M
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Application 실행&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker run -p 8080:8080 -p 8090:8090 spring-boot-monitoring-demo
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Web browser에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;localhost:8080&lt;/code&gt;에 접속&lt;/p&gt;
+
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Hello World!&lt;/code&gt; 메세지가 출력됨&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Web browser에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;localhost:8090&lt;/code&gt;에 접속&lt;/p&gt;
+
+    &lt;p&gt;아래와 같이 JVM metrics 출력됨&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# HELP jvm_gc_collection_seconds Time spent in a given JVM garbage collector in seconds.
+# TYPE jvm_gc_collection_seconds summary
+jvm_gc_collection_seconds_count{gc=&quot;PS Scavenge&quot;,} 15.0
+jvm_gc_collection_seconds_sum{gc=&quot;PS Scavenge&quot;,} 0.18
+jvm_gc_collection_seconds_count{gc=&quot;PS MarkSweep&quot;,} 2.0
+jvm_gc_collection_seconds_sum{gc=&quot;PS MarkSweep&quot;,} 0.262
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Docker image를 Docker registry에 push&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker tag spring-boot-monitoring-demo:[VERSION] [REPOSITORY_ADDRESS]/spring-boot-monitoring-demo:[VERSION]
+
+$ docker push [REPOSITORY_ADDRESS]/spring-boot-monitoring-demo:[VERSION]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;demo-application-배포&quot;&gt;Demo Application 배포&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Demo Application Deployment yaml에 discovery, docker image 정보 수정(default 그대로 사용해도 무관)&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ vi kubernetes/deployment.yaml
+...
+spec:
+  ...
+  template:
+    metadata:
+      ...
+      annotations:
+        prometheus.io/scrape: &quot;true&quot;
+        prometheus.io/port: &quot;8090&quot;
+        prometheus.io/path: /metrics
+    spec:
+      containers:
+      - name: spring-boot-monitoring-demo
+        image: dtlabs/spring-boot-monitoring-demo:latest
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;spec.template.metadata.annotations.prometheus.io/scrape&lt;/code&gt;&lt;/p&gt;
+
+        &lt;p&gt;Discorvery 대상 여부&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;spec.template.metadata.annotations.prometheus.io/port&lt;/code&gt;&lt;/p&gt;
+
+        &lt;p&gt;Discovery target port&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;spec.template.metadata.annotations.prometheus.io/path&lt;/code&gt;&lt;/p&gt;
+
+        &lt;p&gt;Discovery target path&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;spec.template.spec.containers.image&lt;/code&gt;&lt;/p&gt;
+
+        &lt;p&gt;Docker image path&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Demo Application 배포&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl apply -f kubernetes/deployment.yaml
+
+$ kubectl get po
+NAME                                              READY     STATUS    RESTARTS   AGE
+spring-boot-monitoring-demo-5795695496-ljfkw      1/1       Running   0          1m
+spring-boot-monitoring-demo-5795695496-mqzrr      1/1       Running   0          1m
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Demo Application에 8080 Port Forwarding 설정&lt;/p&gt;
+
+    &lt;p&gt;Web browser에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;localhost:8080&lt;/code&gt;으로 접속.&lt;/p&gt;
+
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Hello World!&lt;/code&gt; 메세지가 출력됨.&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl port-forward spring-boot-monitoring-demo-5795695496-ljfkw 8080:8080
+Forwarding from 127.0.0.1:8080 -&amp;gt; 8080
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Demo Application에 8090 Port Forwarding 설정&lt;/p&gt;
+
+    &lt;p&gt;Web browser에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;localhost:8090&lt;/code&gt;으로 접속.&lt;/p&gt;
+
+    &lt;p&gt;아래와 같이 JMX metrics가 출력됨.&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# HELP jvm_gc_collection_seconds Time spent in a given JVM garbage collector in seconds.
+# TYPE jvm_gc_collection_seconds summary
+jvm_gc_collection_seconds_count{gc=&quot;PS Scavenge&quot;,} 15.0
+jvm_gc_collection_seconds_sum{gc=&quot;PS Scavenge&quot;,} 0.18
+jvm_gc_collection_seconds_count{gc=&quot;PS MarkSweep&quot;,} 2.0
+jvm_gc_collection_seconds_sum{gc=&quot;PS MarkSweep&quot;,} 0.262
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;monitoring-dashboard-구성-및-활용&quot;&gt;Monitoring Dashboard 구성 및 활용&lt;/h3&gt;
+
+&lt;h4 id=&quot;jmx-dashboard-구성&quot;&gt;JMX Dashboard 구성&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Grafana Dashboard 접속 &amp;gt; Left 메뉴 &amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;+&lt;/code&gt; 버튼 선택 &amp;gt; Import 메뉴 선택&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-dashboard-jmx-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Upload .json File&lt;/code&gt; 버튼 선택&lt;/p&gt;
+
+    &lt;p&gt;다운로드 받은 &lt;code class=&quot;highlighter-rouge&quot;&gt;spring-boot-monitoring-demo&lt;/code&gt; 프로젝트 &amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;jmx-exporter&lt;/code&gt; &amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;jmx-exporter-tomcat-grafana-dashboard.json&lt;/code&gt; 파일 import&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-dashboard-jmx-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Options &amp;gt; prometheus combo box &amp;gt; 원하는 data source 선택 &amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;Import&lt;/code&gt; 버튼 선택&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-dashboard-jmx-03.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;참고 : data source 설정은 prometheus로 부터 data를 검색하기 위한 용도&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Heap Memory, Threads, Class Loading, Open File, GC 등에 대한 metrics을 그래프 형태로 조회&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-dashboard-jmx-04.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;podapplication-dashboard-활용&quot;&gt;Pod(Application) Dashboard 활용&lt;/h4&gt;
+
+&lt;p&gt;Kubernets cluster 용도로 Prometheus 구성 시 동적으로 생성되는 Pod를 discovery 해서 자동으로 metric을 수집합니다.
+이 문서에서는 Kubernetes cluster를 위한 Prometheus와 Grafana가 설치되어 있다는 전제하에 작성했습니다.
+Prometheus와 Grafana 설치에 대한 가이드는 추후 작성 예정입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Dashboard List &amp;gt; Container Dashboards &amp;gt; Kubernetes: POD Overview 선택&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-dashboard-pod-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Pod(Application)의 cpu, memory, network metrics을 그래프 형태로 조회&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/monitoring/monitoring-dashboard-pod-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</content><author><name>윤상준</name></author><category term="kubernetes" /><category term="container" /><category term="monitoring" /><category term="prometheus" /><category term="jmx" /><category term="exporter" /><category term="grafana" /><category term="devops" /><summary type="html">Container 환경에서 떠오르는 도전 과제</summary></entry><entry><title type="html">Kubernetes 스터디 #7 Logging</title><link href="https://yunsangjun.github.io/blog/kubernetes/2018/07/06/kubernetes-logging.html" rel="alternate" type="text/html" title="Kubernetes 스터디 #7 Logging" /><published>2018-07-06T00:00:00+00:00</published><updated>2018-07-06T00:00:00+00:00</updated><id>https://yunsangjun.github.io/blog/kubernetes/2018/07/06/kubernetes-logging</id><content type="html" xml:base="https://yunsangjun.github.io/blog/kubernetes/2018/07/06/kubernetes-logging.html">&lt;h2 id=&quot;cloud-native-환경에서-logging-architecture의-변화&quot;&gt;Cloud Native 환경에서 Logging Architecture의 변화&lt;/h2&gt;
+
+&lt;h3 id=&quot;legacy&quot;&gt;Legacy&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/logging/logging-legacy.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;고사양의 서버에 Application을 크게 운영&lt;/li&gt;
+  &lt;li&gt;Log를 Application이 실행 중인 서버 내부에 저장&lt;/li&gt;
+  &lt;li&gt;개발자/운영자는 서버 내부에 접속해 Log를 확인&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;cloud-native&quot;&gt;Cloud Native&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/logging/logging-cloud-native.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Application을 작게 운영하고 필요할 때 마다 확장&lt;/li&gt;
+  &lt;li&gt;다중 인스턴스의 로그를 효율적으로 검색하기 위해 외부 Log 시스템에 저장&lt;/li&gt;
+  &lt;li&gt;개발자/운영자는 서버에 직접 접속하지 않고 외부 Log Backend에서 로그 확인&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;cloud-native-logging-architecture&quot;&gt;Cloud Native Logging Architecture&lt;/h2&gt;
+
+&lt;h3 id=&quot;overview&quot;&gt;Overview&lt;/h3&gt;
+
+&lt;h4 id=&quot;daemonset-pattern&quot;&gt;DaemonSet Pattern&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/logging/logging-daemonset.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;App Console Log가 각 Node의 Storage에 자동 저장&lt;/li&gt;
+  &lt;li&gt;각 Node의 Agent가 Log를 Aggregator로 전달&lt;/li&gt;
+  &lt;li&gt;Log data를 전/후 처리 후 Backend로 전달&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;sidecar-pattern&quot;&gt;Sidecar Pattern&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/logging/logging-sidecar.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;App Log를 Pod의 Storage에 파일로 저장(Log4j 등 사용)&lt;/li&gt;
+  &lt;li&gt;Pod의 Agent가 Log data를 전/후 처리 후 Backend로 전달&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;daemonset-pattern-상세-architecture&quot;&gt;DaemonSet Pattern 상세 Architecture&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/logging/logging-daemonset-detail.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;App Console Log가 각 Node의 Storage에 자동 저장&lt;/li&gt;
+  &lt;li&gt;Fluentbit가 각 Node의 Log 수집해 FluentD로 전달&lt;/li&gt;
+  &lt;li&gt;FluentD가 수집한 Log를 전/후 처리 후 ElasticSearch로 전달&lt;/li&gt;
+  &lt;li&gt;Log raw data를 S3와 같은 저장소에 동시 전달 가능(Log Data 백업 활용)&lt;/li&gt;
+  &lt;li&gt;Kibana를 통해 ES의 Log data 검색/분석 및 시각화&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;sidecar-pattern-상세-architecture&quot;&gt;Sidecar Pattern 상세 Architecture&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/logging/logging-sidecar-detail.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;App Log를 Pod의 Storage에 파일로 저장(Log4j 등 사용)&lt;/li&gt;
+  &lt;li&gt;Fluentbit가 저장된 Log를 전/후 처리 후 ElasticSearch로 전달.&lt;/li&gt;
+  &lt;li&gt;Log raw data를 S3와 같은 저장소에 동시 전달 가능(Log Data 백업 활용)&lt;/li&gt;
+  &lt;li&gt;Kibana를 통해 ES의 Log data 검색/분석 및 시각화&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;logging-실습&quot;&gt;Logging 실습&lt;/h2&gt;
+
+&lt;h3 id=&quot;sidecar-pattern-1&quot;&gt;Sidecar Pattern&lt;/h3&gt;
+
+&lt;h4 id=&quot;demo-application-download-및-build&quot;&gt;Demo Application Download 및 Build&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Demo Application Download&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git clone https://github.com/YunSangJun/logging-demo
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Maven build&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ mvn clean package
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Docker build&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker build -t logging-demo .
+
+$ docker images
+REPOSITORY                              TAG                 IMAGE ID            CREATED             SIZE
+logging-demo                            latest              1444f50dcadc        9 seconds ago       117M
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Application 실행 및 Web Browser에서 localhost:8080 접속.&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker run -p 8080:8080 logging-demo
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Docker Container에 접속하여 log file 확인&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
+79e28edfbb12        logging-demo        &quot;java -Djava.securit…&quot;   4 minutes ago       Up 4 minutes        0.0.0.0:8080-&amp;gt;8080/tcp   gifted_ride
+
+$ docker exec -it 79e28edfbb12 sh
+/ # tail -f logs/spring-boot-logging.log
+....
+2018-07-16 17:31:40.153 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - FrameworkServlet 'dispatcherServlet': initialization completed in 86 ms
+2018-07-16 17:31:40.315 [http-nio-8080-exec-1] INFO  com.example.demo.HomeRestController - logback example - info level
+2018-07-16 17:31:40.316 [http-nio-8080-exec-1] WARN  com.example.demo.HomeRestController - logback example - warn level
+2018-07-16 17:31:40.318 [http-nio-8080-exec-1] ERROR com.example.demo.HomeRestController - logback example - error level
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;deom-application-구조&quot;&gt;Deom Application 구조&lt;/h4&gt;
+
+&lt;p&gt;Logback 설정해 &lt;code class=&quot;highlighter-rouge&quot;&gt;/logs&lt;/code&gt; directory 하위에 log message를 file로 저장&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Log message 출력하는 HomeRestController&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;package&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;com&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;example&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;demo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;org&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;slf4j&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;org&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;slf4j&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LoggerFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;org&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;springframework&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;web&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;annotation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RequestMapping&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;org&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;springframework&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;web&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;annotation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RequestMethod&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;org&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;springframework&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;web&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;annotation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RestController&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RestController&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;HomeRestController&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Logger&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LoggerFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+
+    &lt;span class=&quot;p&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RequestMapping&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;/&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;method&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RequestMethod&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getHome&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;debug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;logback example - debug level&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;logback example - info level&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;warn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;logback example - warn level&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;logback example - error level&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Hello World!&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;    
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Logback 설정&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;logback-spring.xml&amp;gt;
+&amp;lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&amp;gt;
+&amp;lt;configuration&amp;gt;
+
+    &amp;lt;!-- Send debug messages to System.out --&amp;gt;
+    &amp;lt;appender name=&quot;STDOUT&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&amp;gt;
+        &amp;lt;!-- By default, encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder --&amp;gt;
+        &amp;lt;encoder&amp;gt;
+            &amp;lt;pattern&amp;gt;%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n&amp;lt;/pattern&amp;gt;
+        &amp;lt;/encoder&amp;gt;
+    &amp;lt;/appender&amp;gt;
+
+    &amp;lt;!-- Send debug message to file --&amp;gt;
+    &amp;lt;appender name=&quot;FILE&quot; class=&quot;ch.qos.logback.core.rolling.RollingFileAppender&quot;&amp;gt;
+        &amp;lt;file&amp;gt;logs/spring-boot-logging.log&amp;lt;/file&amp;gt;
+
+        &amp;lt;encoder class=&quot;ch.qos.logback.classic.encoder.PatternLayoutEncoder&quot;&amp;gt;
+            &amp;lt;pattern&amp;gt;%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n&amp;lt;/pattern&amp;gt;
+        &amp;lt;/encoder&amp;gt;
+
+        &amp;lt;rollingPolicy class=&quot;ch.qos.logback.core.rolling.TimeBasedRollingPolicy&quot;&amp;gt;
+            &amp;lt;fileNamePattern&amp;gt;logs/spring-boot-logging.%d{yyyy-MM-dd}_%i.log&amp;lt;/fileNamePattern&amp;gt;
+
+            &amp;lt;!-- each file should be at most 10MB, keep 30 days worth of history --&amp;gt;
+            &amp;lt;maxHistory&amp;gt;30&amp;lt;/maxHistory&amp;gt;
+            &amp;lt;timeBasedFileNamingAndTriggeringPolicy class=&quot;ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP&quot;&amp;gt;
+                &amp;lt;maxFileSize&amp;gt;10MB&amp;lt;/maxFileSize&amp;gt;
+            &amp;lt;/timeBasedFileNamingAndTriggeringPolicy&amp;gt;
+        &amp;lt;/rollingPolicy&amp;gt;
+    &amp;lt;/appender&amp;gt;
+
+    &amp;lt;root level=&quot;INFO&quot;&amp;gt;
+        &amp;lt;appender-ref ref=&quot;STDOUT&quot; /&amp;gt;
+        &amp;lt;appender-ref ref=&quot;FILE&quot; /&amp;gt;
+    &amp;lt;/root&amp;gt;
+&amp;lt;/configuration&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;demo-application-및-fluentbit-배포&quot;&gt;Demo Application 및 Fluentbit 배포&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Fluentbit Configmap에 Elasticsearch의 정보 설정&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ vi configmap.yaml
+...
+  - name: fluent-bit
+    env:
+     - name: FLUENT_ELASTICSEARCH_HOST
+       value: &quot;elasticsearch.kube-system.svc.cluster.local&quot;
+     - name: FLUENT_ELASTICSEARCH_PORT
+       value: &quot;9200&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;FLUENT_ELASTICSEARCH_HOST의 value : Elasticsearch의 endpoint. IP or Domain or Service&lt;/li&gt;
+      &lt;li&gt;FLUENT_ELASTICSEARCH_PORT의 value : Elasticsearch의 port&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Fluentbit Configmap 배포&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl apply -f configmap.yaml
+
+$ kubectl get cm
+NAME                 DATA      AGE
+fluent-bit-config    4         1m
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Demo Application Deployment yaml의 docker image 정보 수정(default 그대로 사용해도 무관)&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ vi deployment.yaml
+...
+  spec:
+      containers:
+      - name: logging-demo
+        image: yunsangjun/logging-demo:latest
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Demo Application 및 Fluentbit Kubernetes Deployment 배포&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl apply -f deployment.yaml
+
+$ kubectl get deploy
+NAME               DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+logging-demo       1         1         1            1           1m
+
+$ kubectl get po
+NAME                             READY     STATUS     RESTARTS   AGE
+logging-demo-6c659fb7cb-zndhs    2/2       Running    0          1m
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Demo Application에 Port Forwarding 설정 &amp;gt; Web browser에서 localhost:8080으로 접속&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl port-forward logging-demo-6c659fb7cb-zndhs 8080:8080
+Forwarding from 127.0.0.1:8080 -&amp;gt; 8080
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Demo Application 및 Fluentbit Container에 접속해 Log file 확인&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl exec -it logging-demo-6c659fb7cb-zndhs -c logging-demo sh
+/ # tail -f /logs/spring-boot-logging.log
+2018-07-17 07:47:59.751 [http-nio-8080-exec-5] INFO  com.example.demo.HomeRestController - logback example - info level
+
+$ kubectl exec -it logging-demo-6c659fb7cb-zndhs -c fluent-bit sh
+# tail -f /var/logs/spring-boot-logging.log
+2018-07-17 07:47:59.751 [http-nio-8080-exec-5] INFO  com.example.demo.HomeRestController - logback example - info level
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;kibana-index-pattern-설정-및-log-message-검색&quot;&gt;Kibana Index Pattern 설정 및 Log message 검색&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Kibana 접속 &amp;gt; Left 메뉴 &amp;gt; Management 메뉴 선택 &amp;gt; Kibana Index Patterns 선택&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/logging/logging-kibana-index-01.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Index name or pattern input box에 fluentbit 입력 후 Time Filter field name combo box에 @timestamp 선택&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/logging/logging-kibana-index-02.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;정상적으로 생성 시 아래와 같은 모습&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/logging/logging-kibana-index-03.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Left 메뉴 &amp;gt; Discover 메뉴 선택 &amp;gt; Demo Application의 Log message 검색 됨&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/kubernetes/logging/logging-kibana-search.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;지금까지 Kubernetes 환경에서 Logging Architecture에 대해 살펴봤습니다.&lt;/p&gt;
+
+&lt;p&gt;Log message 전/후처리에 대한 상세한 내용은 향후 추가로 작성예정입니다.&lt;/p&gt;</content><author><name>윤상준</name></author><category term="kubernetes" /><category term="container" /><category term="logging" /><category term="sidecar" /><category term="fluentbit" /><category term="fluentd" /><category term="elasticsearch" /><category term="kibana" /><category term="s3" /><summary type="html">Cloud Native 환경에서 Logging Architecture의 변화</summary></entry><entry><title type="html">Terraform 사용하기</title><link href="https://yunsangjun.github.io/blog/terraform/2018/06/29/terraform.html" rel="alternate" type="text/html" title="Terraform 사용하기" /><published>2018-06-29T00:00:00+00:00</published><updated>2018-06-29T00:00:00+00:00</updated><id>https://yunsangjun.github.io/blog/terraform/2018/06/29/terraform</id><content type="html" xml:base="https://yunsangjun.github.io/blog/terraform/2018/06/29/terraform.html">&lt;p&gt;Terraform은 인프라를 코드로 관리할 수 있도록 지원하는 오픈소스 프로젝트입니다.&lt;/p&gt;
+
+&lt;p&gt;멀티 클라우드를 사용하는 것이 최근 트렌드입니다. 그만큼 다양하고 복잡한 클라우드 자원을 효율적으로 관리하는 것이 중요합니다.&lt;/p&gt;
+
+&lt;p&gt;Terraform은 AWS, GCP, Microsoft Azure, OpenStack 등의 멀티 클라우드를 지원하므로 이를 활용해 코드로 인프라 자원을 효율적으로 관리할 수 있습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.terraform.io/docs/providers/index.html&quot;&gt;Terraform 지원 provider&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이 페이지에서는 terraform을 사용하여 IBM Cloud에 가상머신을 생성, 삭제하는 방법에 대해 설명합니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;준비하기&quot;&gt;준비하기&lt;/h2&gt;
+
+&lt;p&gt;아래 가이드를 참고하여 Terraform 및 softlayer 플러그인을 설치합니다.&lt;/p&gt;
+
+&lt;p&gt;이 페이지에서는 아래와 같은 버전을 기준으로 작성했습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Terraform : v0.11.7&lt;/li&gt;
+  &lt;li&gt;softlayer 플러그인 : 1.5.0&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;terraform-설치&quot;&gt;Terraform 설치&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;아래 페이지에서 OS별 바이너리 다운로드&lt;/p&gt;
+
+    &lt;p&gt;https://www.terraform.io/downloads.html&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;OSX&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  mv terraform /usr/local/bin
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;softlayer-플러그인-다운로드&quot;&gt;softlayer 플러그인 다운로드&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;아래 페이지에서 OS별 바이너리 다운로드&lt;/p&gt;
+
+    &lt;p&gt;https://github.com/softlayer/terraform-provider-softlayer/releases&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;아래와 같이 플러그인 경로 설정&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  # vi ~/.terraformrc
+  providers {
+      softlayer = &quot;/path/to/bin/terraform-provider-softlayer&quot;
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;softlayer-포탈에서-ssh-key-생성&quot;&gt;Softlayer 포탈에서 ssh key 생성&lt;/h3&gt;
+
+&lt;p&gt;Terraform을 이용하여 VM을 생성할 때 사용할 ssh key를 설정하는 방법입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;디바이스 &amp;gt; 관리 &amp;gt; SSH 키 선택 &amp;gt; 추가 탭 클릭&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;퍼블릭 키 및 라벨 입력 후 추가 버튼 클릭(이 페이지에서는 ssh key 이름을 sl_key로 가정)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Terraform &lt;code class=&quot;highlighter-rouge&quot;&gt;main.tf&lt;/code&gt;에 위 키를 정의해서 VM 생성시 활용합니다.&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  data &quot;softlayer_ssh_key&quot; &quot;public_key&quot; {
+      label = &quot;sl_key&quot;
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;자원-정의&quot;&gt;자원 정의&lt;/h2&gt;
+
+&lt;p&gt;디렉토리를 생성하고 생성할 자원에 대한 정의를 합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;자원 정의&lt;/p&gt;
+
+    &lt;p&gt;계정, ssh key, VM 등의 자원에 대해 정의합니다.&lt;/p&gt;
+
+    &lt;p&gt;자주 사용하는 값들은 변수화 해서 &lt;code class=&quot;highlighter-rouge&quot;&gt;vars.tf&lt;/code&gt;에 정의합니다.&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  $ vi main.tf
+
+  //계정 정보
+  provider &quot;softlayer&quot; {
+    username = &quot;${var.username}&quot;
+    api_key  = &quot;${var.api_key}&quot;
+  }
+
+  //VM에서 사용할 ssh key
+  data &quot;softlayer_ssh_key&quot; &quot;public_key&quot; {
+      label = &quot;sl_key&quot;
+  }
+
+  //VM 정의
+  resource &quot;softlayer_virtual_guest&quot; &quot;sample_vm&quot; {
+    count                = &quot;${var.sample_vm_count}&quot;                           //VM 개수
+    os_reference_code    = &quot;${var.os}&quot;                                        //OS 타입
+    public_vlan_id       = &quot;${var.public_vlan_id}&quot;                            //Public VLAN ID
+    private_vlan_id      = &quot;${var.private_vlan_id}&quot;                           //Private VLAN ID
+    domain               = &quot;${var.domain}&quot;                                    //VM의 도메인 명
+    dedicated_acct_host_only = &quot;${var.dedicated_host}&quot;                        //Dedicated VM 생성 여부
+    hostname             = &quot;${var.sample_vm_hostname}-0${count.index+1}&quot;      //VM의 호스트 명
+    ssh_key_ids          = [&quot;${data.softlayer_ssh_key.public_key.id}&quot;]        //VM에서 사용할 ssh key
+    datacenter           = &quot;${var.datacenter}&quot;                                //데이터센터 명
+    disks                = [100,250]                                          //디스크 크기. SAN 타입[Primary Disk, Second Disk, ...]
+    local_disk           = &quot;${var.local_disk}&quot;                                //로컬 디스크 사용여부
+    hourly_billing       = &quot;${var.hourly_billing}&quot;                            //시간 단위 과금 사용여부
+    private_network_only = &quot;${var.private_network_only}&quot;                      //VM 생성 시 사설 네트워크만 사용할지 여부. true일 경우 public_vlan_id 주석 처리 필요
+    network_speed        = 1000                                               //VM 네트워크 속도. Shared VM 타입은 100Mbps가 최대
+    cores                = 2                                                  //VM CPU Core 수
+    memory               = 4096                                               //VM Memory 수
+    notes                = &quot;${var.notes}&quot;                                     //VM에 대한 태크 명
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;환경 변수 정의&lt;/p&gt;
+
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;main.tf&lt;/code&gt;에서 사용하는 환경 변수를 정의합니다.&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  $ vi vars.tf
+
+  variable username {}        //환경변수로 입력받기 위해 템플릿만 선언
+
+  variable api_key {}         //환경변수로 입력받기 위해 템플릿만 선언
+
+  variable datacenter {
+      default = &quot;seo01&quot;
+  }
+
+  variable domain {
+      default = &quot;example.com&quot;
+  }
+
+  variable dedicated_host {
+      default = &quot;false&quot;
+  }
+
+  variable os {
+      default = &quot;CENTOS_7_64&quot;
+  }
+
+  variable hourly_billing {
+      default = &quot;true&quot;
+  }
+
+  variable private_network_only {
+      default = &quot;false&quot;
+  }
+
+  variable local_disk {
+      default = &quot;false&quot;
+  }
+
+  variable public_vlan_id {
+      default = xxx
+  }
+
+  variable private_vlan_id {
+      default = xxx
+  }
+
+  variable sample_vm_hostname {
+      default = &quot;sample&quot;
+  }
+
+  variable sample_vm_count {
+      default = 1
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;ibm-account-정보-export&quot;&gt;IBM Account 정보 export&lt;/h2&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;export IBM_ACCOUNT=xxx
+export API_KEY=xxx
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;초기화&quot;&gt;초기화&lt;/h2&gt;
+
+&lt;p&gt;아래 명령 실행해 초기화&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform init
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;자원-생성&quot;&gt;자원 생성&lt;/h2&gt;
+
+&lt;p&gt;아래 명령 실행해 자원 생성&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform apply -var &quot;username=$IBM_ACCOUNT&quot; -var &quot;api_key=$API_KEY&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;자원-삭제&quot;&gt;자원 삭제&lt;/h2&gt;
+
+&lt;p&gt;아래 명령 실행해 자원 삭제&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform destroy -var &quot;username=$IBM_ACCOUNT&quot; -var &quot;api_key=$API_KEY&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>윤상준</name></author><category term="terraform" /><category term="iac" /><category term="infrastructure" /><category term="devops" /><summary type="html">Terraform은 인프라를 코드로 관리할 수 있도록 지원하는 오픈소스 프로젝트입니다.</summary></entry></feed>

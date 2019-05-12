@@ -1,626 +1,1935 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-  <title>Daniel Ku</title>
-  <link href="http://danielku.com/atom.xml" rel="self"/>
-  <link href="http://danielku.com"/>
-  <updated>2015-08-26T14:54:41.280Z</updated>
-  <id>http://danielku.com</id>
-  <author>
-    <name>Daniel Ku</name>
-    <email>d@nielku.com</email>
-  </author>
-
-  
-    
-      <entry>
-        <title>베이글 서비스의 아키텍쳐</title>
-        <link href="http://danielku.com/posts/2015-08-20-bagle-architecture/"/>
-        
-        <updated>2015-08-20T00:00:00.000Z</updated>
-        <id>http://danielku.com/posts/2015-08-20-bagle-architecture/</id>
-        <content type="html">&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=utf-8&quot;&gt;&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge,chrome=1&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;&lt;title&gt;베이글 서비스의 아키텍쳐 | Daniel Ku&lt;/title&gt;&lt;meta name=&quot;description&quot; content=&quot;베이글(bagle.io) 서비스의 아키텍쳐에 대해서 설명한다. 베이글의 아키텍쳐가 베스트 프랙티스라서 이 글을 작성하는 것이 아니라 그냥 내 경험을 개인적으로 정리해 두기 위한 것임을 미리 밝힌다.&quot;&gt;&lt;meta name=&quot;keywords&quot; content=&quot;daniel ku, daniel kj ku, daniel kyojun ku, daniel, kjunine, versatile programmer&quot;&gt;&lt;meta name=&quot;author&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta name=&quot;generator&quot; content=&quot;DocPad v6.78.1&quot; /&gt;&lt;meta property=&quot;og:url&quot; content=&quot;http://danielku.com/posts/2015-08-20-bagle-architecture/&quot;&gt;&lt;meta property=&quot;og:type&quot; content=&quot;article&quot;&gt;&lt;meta property=&quot;og:title&quot; content=&quot;베이글 서비스의 아키텍쳐&quot;&gt;&lt;meta property=&quot;og:description&quot; content=&quot;베이글(bagle.io) 서비스의 아키텍쳐에 대해서 설명한다. 베이글의 아키텍쳐가 베스트 프랙티스라서 이 글을 작성하는 것이 아니라 그냥 내 경험을 개인적으로 정리해 두기 위한 것임을 미리 밝힌다.&quot;&gt;&lt;meta property=&quot;og:image&quot; content=&quot;http://danielku.com/posts/2015-08-20-bagle-architecture/bagle-architecture.jpg&quot;&gt;&lt;meta property=&quot;og:site_name&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta property=&quot;og:locale&quot; content=&quot;ko_KR&quot;&gt;&lt;link href=&quot;/atom.xml&quot; rel=&quot;alternate&quot; type=&quot;application/atom+xml&quot; title=&quot;Daniel Ku&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/earlyaccess/nanumgothic.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Lato:700&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Source+Sans+Pro:300,600&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/normalize.css/normalize.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/font-awesome/css/font-awesome.min.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/highlightjs/styles/agate.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/lightbox2/dist/css/lightbox.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/styles/style.css&quot; /&gt;&lt;/head&gt;&lt;body&gt;&lt;!--[if lt IE 9]&gt;&lt;p class=&quot;browsehappy&quot;&gt;You are using an &lt;strong&gt;outdated&lt;/strong&gt; browser.
-Please &lt;a href=&quot;http://browsehappy.com/&quot;&gt;upgrade your browser&lt;/a&gt; to improve your experience.
-&lt;/p&gt;&lt;![endif]--&gt;&lt;header&gt;&lt;div class=&quot;container&quot;&gt;&lt;a href=&quot;/&quot; class=&quot;logo&quot;&gt;Daniel Ku&lt;/a&gt;&lt;/div&gt;&lt;/header&gt;&lt;section class=&quot;main&quot;&gt;&lt;article class=&quot;post&quot;&gt;&lt;div style=&quot;background-image: url(bagle-architecture.jpg)&quot; class=&quot;image&quot;&gt;&lt;img src=&quot;bagle-architecture.jpg&quot; class=&quot;hidden&quot;/&gt;&lt;/div&gt;&lt;div class=&quot;header&quot;&gt;&lt;h1 class=&quot;title&quot;&gt;베이글 서비스의 아키텍쳐&lt;/h1&gt;&lt;h6 class=&quot;date&quot;&gt;August 20, 2015&lt;/h6&gt;&lt;/div&gt;&lt;div class=&quot;content&quot;&gt;&lt;h1 id=&quot;-bagle-io-http-bagle-io-&quot;&gt;베이글(&lt;a href=&quot;http://bagle.io/&quot;&gt;bagle.io&lt;/a&gt;)이란?&lt;/h1&gt;
-&lt;p&gt;베이글은 스터디지피에스社에서 서비스 중인 일종의 그룹앱 서비스이다. 자세한 내용은 &lt;a href=&quot;/posts/2015-07-04-introducing-bagle/&quot;&gt;베이글 서비스 소개&lt;/a&gt;를 참고하길 바란다.&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;../2015-07-04-introducing-bagle/bagle.jpg&quot;&gt;&lt;img src=&quot;../2015-07-04-introducing-bagle/bagle.jpg&quot; alt=&quot;베이글&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;이 글을 통해 베이글 서비스의 아키텍쳐에 대해서 설명해 보겠다.&lt;/p&gt;
-&lt;p&gt;미리 밝히지만 &lt;em&gt;베이글의 아키텍쳐는 베스트 프랙티스가 아니다.&lt;/em&gt; 유사한 서비스를 만들 때 참고는 할 수 있겠지만 그저 &amp;#39;나는 이렇게 한 번 해보았다&amp;#39;라는 정도의 의미임을 고려해주길 바란다.&lt;/p&gt;
-&lt;h1 id=&quot;-&quot;&gt;베이글의 소프트웨어 스택&lt;/h1&gt;
-&lt;p&gt;먼저 가볍게 베이글의 소프트웨어 스택에 대해 살펴보고 넘어가자.&lt;/p&gt;
-&lt;h2 id=&quot;-&quot;&gt;백엔드 소프트웨어 스택&lt;/h2&gt;
-&lt;p&gt;베이글의 백엔드를 구현하기 위해 사용한 소프트웨어로 다음과 같은 것들이 있다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://nodejs.org/&quot;&gt;Node.js&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.mongodb.com/&quot;&gt;MongoDB&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://expressjs.com/&quot;&gt;Express.js&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://mongoosejs.com/&quot;&gt;Mongoose&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://redis.io/&quot;&gt;Redis&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://github.com/petkaantonov/bluebird&quot;&gt;Bluebird&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://lodash.com/&quot;&gt;Lodash&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;...&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;백엔드의 언어로 &lt;strong&gt;Node.js&lt;/strong&gt;를, 데이터베이스로 &lt;strong&gt;MongoDB&lt;/strong&gt;를 선택했다. 그 이유로 특별한 것은 없었다. &lt;del&gt;그냥.. 뜨고 있으니까..&lt;/del&gt; &lt;em&gt;고민보다는 실행인 거다.&lt;/em&gt;&lt;/p&gt;
-&lt;p&gt;자연스럽게 웹 프레임워크로 &lt;strong&gt;Express.js&lt;/strong&gt;를 선택하고, ODM(Object-Document Mapper)으로 &lt;strong&gt;Mongoose&lt;/strong&gt;를 선택했다. 디팩토(De facto) 표준이라 고민할 것이 없었다.&lt;/p&gt;
-&lt;p&gt;또, 큐(Queue)와 임시 저장소의 용도로 &lt;strong&gt;Redis&lt;/strong&gt;를 제한적으로 사용했으며, Node.js 기반의 다양한 라이브러리들을 사용했는데, 특히 Promise 구현체인 &lt;strong&gt;Bluebird&lt;/strong&gt;와 유틸리티인 &lt;strong&gt;Lodash&lt;/strong&gt;를 애용했다.&lt;/p&gt;
-&lt;p&gt;이 기술들에 대해 일년 이상 경험해 본 결과 개인적으로는 &lt;em&gt;&amp;quot;매우 만족&amp;quot;&lt;/em&gt;이다. 각각의 기술에 대해서는 언젠가 자세하게 다룰 날이 있을 것이라 생각한다. 지금은 이 정도로 넘어가자.&lt;/p&gt;
-&lt;h2 id=&quot;-&quot;&gt;프런트엔드 소프트웨어 스택&lt;/h2&gt;
-&lt;p&gt;베이글의 프런트엔드를 구현하기 위해 사용한 소프트웨어로 다음과 같은 것들이 있다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;http://coffeescript.org/&quot;&gt;CoffeeScript&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://jade-lang.com/&quot;&gt;Jade&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://sass-lang.com/&quot;&gt;Sass&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://angularjs.org/&quot;&gt;AngularJS&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://angular-ui.github.io/ui-router/site&quot;&gt;AngularUI Router&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://github.com/mgonto/restangular&quot;&gt;Restangular&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://angular-gettext.rocketeer.be/&quot;&gt;angular-gettext&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://gulpjs.com/&quot;&gt;Gulp&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://gruntjs.com/&quot;&gt;Grunt&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;...&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;백엔드는 순수 자바스크립트로 개발했지만 더 나중에 개발된 프런트엔드는 &lt;strong&gt;CoffeeScript&lt;/strong&gt;로 개발했다. 더불어 &lt;strong&gt;Jade&lt;/strong&gt;와 &lt;strong&gt;Sass&lt;/strong&gt;를 사용했다. 이러한 전처리기(Preprocessor)들은 처음 도입해보았는데 코드를 보다 간결하게 작성할 수 있게 해주어서 매우 유용했다.&lt;/p&gt;
-&lt;p&gt;그리고 웹 프레임워크로는 대세 중의 대세인 &lt;strong&gt;AngularJS&lt;/strong&gt;를 선택했다. 또, 웹과 AngularJS를 위한 다양한 자바스크립트 라이브러리들을 사용했는데, 특히 라우팅을 위한 &lt;strong&gt;AngularUI Router&lt;/strong&gt;, REST API 클라이언트인 &lt;strong&gt;Restangular&lt;/strong&gt;, 다국어 처리를 위한 &lt;strong&gt;angular-gettext&lt;/strong&gt;를 감명깊게 사용하였다.&lt;/p&gt;
-&lt;p&gt;마지막으로 빌드 도구인 &lt;strong&gt;Gulp&lt;/strong&gt;와 &lt;strong&gt;Grunt&lt;/strong&gt;이다. 원래 Grunt를 사용해 왔으나 이번에 Gulp로 갈아탔다. 빌드된 결과물을 AWS S3로 업로드하기 위한 &lt;a href=&quot;https://github.com/MathieuLoutre/grunt-aws-s3&quot;&gt;Grunt S3 플러그인&lt;/a&gt; 때문에 Grunt도 함께 사용했다.&lt;/p&gt;
-&lt;p&gt;마찬가지로 각각의 기술에 대한 자세한 설명은 다음에 기회가 있을 것이다. 지금은 이 정도로 넘어가자.&lt;/p&gt;
-&lt;h1 id=&quot;-&quot;&gt;베이글의 아키텍쳐&lt;/h1&gt;
-&lt;p&gt;본격적으로 베이글 서비스의 아키텍쳐에 대해 설명한다.&lt;/p&gt;
-&lt;h2 id=&quot;-&quot;&gt;백엔드 아키텍쳐 요구사항&lt;/h2&gt;
-&lt;p&gt;먼저 베이글 서비스의 백엔드 아키텍쳐의 요구사항부터 살펴보자.&lt;/p&gt;
-&lt;p&gt;베이글의 백엔드는 REST API를 제공하는 &lt;strong&gt;API 서버&lt;/strong&gt;와 &lt;strong&gt;데이터베이스&lt;/strong&gt;(MongoDB), 이벤트 처리와 배치 작업을 위한 &lt;strong&gt;워커 서버&lt;/strong&gt;와 이벤트/작업 &lt;strong&gt;큐&lt;/strong&gt;(Redis)로 구성된다.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;REST API 서버&lt;/strong&gt;는 사용자, 그룹과 같은 도메인 객체들에 대한 CRUD를 제공한다. 일부 API에서는 &lt;em&gt;이벤트와 작업을 생성해 큐에 저장&lt;/em&gt;하기도 한다. 그리고 사진/파일 저장과 조회를 위한 API는 &lt;em&gt;속도 향상 및 캐싱을 위해 앞단에 CDN을 설정&lt;/em&gt;한다.&lt;/p&gt;
-&lt;p&gt;또, 비밀번호 재설정 API는 해당 사용자의 이메일에 비밀번호 재설정을 할 수 있는 링크를 포함한 &lt;em&gt;이메일을 전송&lt;/em&gt;한다.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;워커 서버&lt;/strong&gt;는 Redis로부터 이벤트와 작업을 읽어서 관련 &lt;em&gt;사용자들에게 푸시 알림&lt;/em&gt;을 보내주거나 &lt;em&gt;작업을 수행&lt;/em&gt;하고 데이터베이스에 결과를 저장한다.&lt;/p&gt;
-&lt;p&gt;마지막으로, REST API 서버들과 워커 서버들은, 데이터베이스와 큐도 마찬가지, 향후 사용자 증가를 대비에 자동 혹은 수동으로 &lt;em&gt;스케일이 가능&lt;/em&gt;한 형태로 구현한다.&lt;/p&gt;
-&lt;p&gt;요약하면,&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;REST API 서버를 제공한다.&lt;/li&gt;
-&lt;li&gt;데이터베이스가 필요하다.&lt;/li&gt;
-&lt;li&gt;배치 워커 서버를 제공한다.&lt;/li&gt;
-&lt;li&gt;이벤트/작업 큐가 필요하다.&lt;/li&gt;
-&lt;li&gt;사진/파일 캐싱을 위한 CDN이 필요하다.&lt;/li&gt;
-&lt;li&gt;푸시 알림을 보낼 수 있다.&lt;/li&gt;
-&lt;li&gt;이메일을 보낼 수 있다.&lt;/li&gt;
-&lt;li&gt;스케일이 가능하다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&quot;-amazon-web-service-aws-http-aws-amazon-com-for-&quot;&gt;&lt;a href=&quot;http://aws.amazon.com/&quot;&gt;&lt;strong&gt;Amazon Web Service (AWS)&lt;/strong&gt;&lt;/a&gt; for 백엔드 아키텍쳐&lt;/h2&gt;
-&lt;p&gt;백엔드 개발과 인프라를 동시에 담당해야 했기에.. 아마존 웹 서비스(AWS)가 없었으면 난 절대 이 일을 시간 안에 못했겠지.&lt;/p&gt;
-&lt;p&gt;AWS는 인프라를 구성하는 다양한 요소들을 세부 서비스로 제공하고 있다. 베이글에서는 다음과 같은 세부 서비스들을 사용했다.&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;aws-web.jpg&quot;&gt;&lt;img src=&quot;aws-web.jpg&quot; alt=&quot;AWS Web Application Hosting Architecture&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/route53/&quot;&gt;Route 53&lt;/a&gt;: 가용성과 확장성이 우수한 DNS 서비스&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/elasticloadbalancing/&quot;&gt;ELB&lt;/a&gt;: 부하 분산과 고가용성을 제공하는 서비스&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/ec2/&quot;&gt;EC2&lt;/a&gt;: 가상 서버 인스턴스를 제공하는 서비스&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/cloudfront/&quot;&gt;CloudFront&lt;/a&gt;: 정적 콘텐츠를 빠르게 배포하기 위한 CDN 서비스&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/cloudwatch/&quot;&gt;CloudWatch&lt;/a&gt;: AWS 내 리소스 상태를 모니터링하는 서비스&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/autoscaling/&quot;&gt;Auto Scaling&lt;/a&gt;: 자동으로 EC2 인스턴스 수를 조절하는 기능을 제공하는 서비스&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/sns/&quot;&gt;SNS&lt;/a&gt;: 모바일 푸시 알림 서비스&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/ses/&quot;&gt;SES&lt;/a&gt;: 이메일 전송 서비스&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;AWS와 각 세부 서비스들에 대해 자세히 알고 싶으면 AWS 홈페이지도 좋지만, 그보단 이재홍(pyrasis)님의 &lt;a href=&quot;http://pyrasis.com/aws.html&quot;&gt;책&lt;/a&gt;과 &lt;a href=&quot;http://pyrasis.com/&quot;&gt;블로그&lt;/a&gt;를 추천한다. 왠만하면 책.&lt;/p&gt;
-&lt;p&gt;앞서 살펴본 요구사항에서 데이터베이스와 큐에 관한 것을 빼고는 위 서비스들로 모두 커버가 가능하다. 기본적으로 &lt;strong&gt;Route 53&lt;/strong&gt;으로 DNS 설정을 한다. 그리고 &lt;strong&gt;EC2&lt;/strong&gt; 서버에 API 서버와 워커 서버를 실행하고, API 서버들 앞에 부하 분산을 위한 &lt;strong&gt;ELB&lt;/strong&gt;를 설정한다. &lt;strong&gt;CloudWatch&lt;/strong&gt;와 &lt;strong&gt;Auto Scaling&lt;/strong&gt;을 설정해 API 서버들과 워커 서버들을 각각 스케일할 수 있도록 한다.&lt;/p&gt;
-&lt;p&gt;또, &lt;strong&gt;CloudFront&lt;/strong&gt; 디스트리뷰션(Distribution)의 오리진(Origin)으로 API의 URL, 정확히는 ELB의 URL을 지정하고 캐싱이 필요한 API는 클라이언트에서 CloudFront 디스트리뷰션의 URL을 사용하도록 한다. 마지막으로 &lt;strong&gt;SNS&lt;/strong&gt;로 푸시 알림을, &lt;strong&gt;SES&lt;/strong&gt;로 이메일 전송을 처리한다.&lt;/p&gt;
-&lt;p&gt;참고로 베이글에서는 데이터베이스와 큐는 각각 MongoDB와 Redis를 사용했지만, AWS를 제대로 이용하려면 RDB를 제공하는 &lt;a href=&quot;https://aws.amazon.com/ko/rds/&quot;&gt;RDS&lt;/a&gt;, NoSQL 데이터베이스인 &lt;a href=&quot;https://aws.amazon.com/ko/dynamodb/&quot;&gt;DynamoDB&lt;/a&gt;와 인 메모리 캐시를 제공하는 &lt;a href=&quot;https://aws.amazon.com/ko/elasticache/&quot;&gt;ElastiCache&lt;/a&gt;, 메시지 큐를 제공하는 &lt;a href=&quot;https://aws.amazon.com/ko/sqs/&quot;&gt;SQS&lt;/a&gt;를 사용할 수도 있다.&lt;/p&gt;
-&lt;p&gt;뭐.. 베이글에서 그 서비스들을 사용하지 않은 이유 역시 딱히 없다. &lt;del&gt;설마.. 잘 몰라서?&lt;/del&gt; MongoDB 운영은 &lt;a href=&quot;https://www.mongodb.com/cloud&quot;&gt;MongoDB Cloud Manager, 舊 MMS&lt;/a&gt;로 하면 꽤 편하고, Redis는 그렇게 많이 사용하지도 않으니까. 하지만 언젠가는 위 서비스들을 사용할 수도 있겠지.&lt;/p&gt;
-&lt;h2 id=&quot;-&quot;&gt;백엔드 아키텍쳐 구조도&lt;/h2&gt;
-&lt;p&gt;아무튼 그래서 베이글의 백엔드 아키텍쳐 구조도는 다음과 같다. 위에서 다 설명했으니 추가 설명은 필요없을 듯 하다.&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;backend-architecture.jpg&quot;&gt;&lt;img src=&quot;backend-architecture.jpg&quot; alt=&quot;백엔드 아키텍쳐 구조도&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&quot;-&quot;&gt;프런트엔드 아키텍쳐 요구사항&lt;/h2&gt;
-&lt;p&gt;이번엔 베이글 서비스의 프런트엔드 아키텍쳐에 대해 설명한다.&lt;/p&gt;
-&lt;p&gt;베이글의 프런트엔드는 AngularJS를 기반으로 만들어진 웹 어플리케이션이다. 그러므로 빌드한 결과물은 HTML, CSS, JS, 이미지, 웹폰트 등과 같은 &lt;em&gt;정적 파일들&lt;/em&gt;만으로 이루어진다.&lt;/p&gt;
-&lt;p&gt;그리고 해당 결과물을 &lt;em&gt;웹서버로 서비스&lt;/em&gt;하기만 하면 된다. 웹서버는 당연히 스케일해야 하고, 정적 파일이니 &lt;em&gt;속도 향상과 캐싱을 위한 CDN&lt;/em&gt;이 필수이다.&lt;/p&gt;
-&lt;h2 id=&quot;-amazon-web-service-aws-http-aws-amazon-com-for-&quot;&gt;&lt;a href=&quot;http://aws.amazon.com/&quot;&gt;&lt;strong&gt;Amazon Web Service (AWS)&lt;/strong&gt;&lt;/a&gt; for 프런트엔드 아키텍쳐&lt;/h2&gt;
-&lt;p&gt;백엔드와 마찬가지로 프런트엔드도 AWS 상에 구축되어 있다. AWS의 다음과 같은 서비스를 이용한다.&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;aws-cdn.jpg&quot;&gt;&lt;img src=&quot;aws-cdn.jpg&quot; alt=&quot;AWS Web Application Hosting Architecture&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/route53/&quot;&gt;Route 53&lt;/a&gt;: 가용성과 확장성이 우수한 DNS 서비스&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/s3/&quot;&gt;S3&lt;/a&gt;: 비용이 저렴하고 안전성과 확장성이 우수한 인터넷 스토리지를 제공하는 서비스&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/cloudfront/&quot;&gt;CloudFront&lt;/a&gt;: 정적 콘텐츠를 빠르게 배포하기 위한 CDN 서비스&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;AWS와 각 세부 서비스들에 대해 자세히 알고 싶으면 AWS 홈페이지도 좋지만, 그보단 이재홍(pyrasis)님의 &lt;a href=&quot;http://pyrasis.com/aws.html&quot;&gt;책&lt;/a&gt;과 &lt;a href=&quot;http://pyrasis.com/&quot;&gt;블로그&lt;/a&gt;를 추천한다. 왠만하면 책.&lt;/p&gt;
-&lt;p&gt;앞서 살펴본 요구사항을 위 서비스들로 모두 커버가 가능하다. 기본적으로 &lt;strong&gt;Route 53&lt;/strong&gt;으로 DNS 설정을 하고, &lt;strong&gt;S3&lt;/strong&gt; 버킷에 빌드 결과물을 업로드한 후 스태틱 웹사이트 호스팅 기능으로 서비스한다. 마지막으로 &lt;strong&gt;CloudFront&lt;/strong&gt; 디스트리뷰션의 오리진으로 S3 버킷을 지정해 캐싱하면 된다. S3와 CloudFront가 알아서 스케일을 처리하므로 걱정할 것이 없다.&lt;/p&gt;
-&lt;p&gt;덧붙여 &amp;#39;www.bagle.io&amp;#39;로 접속하면 &amp;#39;bagle.io&amp;#39;로 리다이렉트하기 위해 별도의 &lt;strong&gt;CloudFront&lt;/strong&gt; 디스트리뷰션과 &lt;strong&gt;S3&lt;/strong&gt; 버킷을 마련하고, &lt;strong&gt;S3&lt;/strong&gt; 버킷의 스태틱 웹사이트 호스팅 설정에서 리다이렉트하도록 처리한다.&lt;/p&gt;
-&lt;h2 id=&quot;-&quot;&gt;프런트엔드 아키텍쳐 구조도&lt;/h2&gt;
-&lt;p&gt;그래서 베이글의 프런트엔드 아키텍쳐 구조도는 다음과 같다. 단순해서 구조도를 그릴 정도도 아니네.&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;frontend-architecture.jpg&quot;&gt;&lt;img src=&quot;frontend-architecture.jpg&quot; alt=&quot;프런트엔드 아키텍쳐 구조도&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h1 id=&quot;-&quot;&gt;베이글 아키텍쳐의 개선점&lt;/h1&gt;
-&lt;h2 id=&quot;-&quot;&gt;백엔드 아키텍쳐 개선점&lt;/h2&gt;
-&lt;p&gt;백엔드 아키텍쳐는 개선할 여지가 무척 많지만 두가지만 언급해본다.&lt;/p&gt;
-&lt;h3 id=&quot;-&quot;&gt;사진/파일 저장소 변경&lt;/h3&gt;
-&lt;p&gt;사진/파일을 현재는 데이터베이스에 저장하고 있다. AWS에는 &lt;a href=&quot;https://aws.amazon.com/ko/s3/&quot;&gt;S3&lt;/a&gt;라는 값싸고 훌륭한 스토리지 서비스가 있는데도 불구하고. 누군가는 S3야말로 AWS를 사용하는 진짜 이유라고 하던데.. 이건 무조건 바꿔야 하는 것이다. 사용자가 많아지기 전에 바꾸는 게 더 좋겠지.&lt;/p&gt;
-&lt;h3 id=&quot;-aws-&quot;&gt;더 상위 수준의 AWS 서비스 이용&lt;/h3&gt;
-&lt;p&gt;직접 EC2를 실행하고, ELB, Auto Scaling 등을 설정하는 대신에 &lt;a href=&quot;https://aws.amazon.com/ko/cloudformation/&quot;&gt;CloudFomation&lt;/a&gt;이나 &lt;a href=&quot;https://aws.amazon.com/ko/opsworks/&quot;&gt;OpsWorks&lt;/a&gt;를 사용하거나 혹은 최근에 런칭한 &lt;a href=&quot;https://aws.amazon.com/ko/ecs/&quot;&gt;ECS&lt;/a&gt;를 사용하는 게 어떨까?&lt;/p&gt;
-&lt;p&gt;배포에 대해서도 자세히 설명할 기회가 있겠지만, 간략히 말해 베이글 백엔드는 &lt;a href=&quot;https://www.chef.io/&quot;&gt;Chef&lt;/a&gt;와 &lt;a href=&quot;https://www.docker.com/&quot;&gt;Docker&lt;/a&gt;를 사용하는데 그렇다면 방금 언급한 보다 더 상위 수준의 서비스를 사용하는 것이 훨씬 편할 것 같다.&lt;/p&gt;
-&lt;p&gt;...&lt;/p&gt;
-&lt;h2 id=&quot;-&quot;&gt;프런트엔드 아키텍쳐 개선점&lt;/h2&gt;
-&lt;p&gt;프런트엔드 아키텍쳐 역시 개선할 여지가 많지만 한가지만 언급한다.&lt;/p&gt;
-&lt;h3 id=&quot;-&quot;&gt;크롤러 대응&lt;/h3&gt;
-&lt;p&gt;다시 한 번 말하지만 베이글의 프런트엔드는 AngularJS를 기반으로 만들어진 웹 어플리케이션이다. 그러므로 프런트엔드에는 아무런 컨텐츠가 담겨있지 않다. 먼저 페이지가 로드된 후 자바스크립트에서 AJAX 통신을 통해 컨텐츠를 불러온다.&lt;/p&gt;
-&lt;p&gt;이런 구조가 무작정 좋은 것이라 생각했지만 부작용이 있었다. 그 중에 하나가 페이스북 같은 서비스에 베이글의 &lt;em&gt;특정 페이지를 공유할 때 해당 페이지의 내용을 미리보기할 수 없다&lt;/em&gt;는 것이다. 왜냐하면 페이스북 같은 서비스의 크롤러에서는 자바스크립트가 동작하지 않기 때문이다.&lt;/p&gt;
-&lt;p&gt;이것에 대응하기 위해서는 좀 더 연구가 필요하다. &lt;strong&gt;CloudFront&lt;/strong&gt;에서 User-Agent 헤더값에 따라 다른 페이지를 서비스하는 것은 가능한 것 같지만 캐싱에 비효율적이라 추천하는 것 같지는 않고, 결국엔 공유를 위한 별도의 URL을 제공해야 할 것 같다. (혹시 좋은 방법이 있으면 알려주세요. ^^)&lt;/p&gt;
-&lt;p&gt;...&lt;/p&gt;
-&lt;h1 id=&quot;-&quot;&gt;마치며&lt;/h1&gt;
-&lt;p&gt;기승전 AWS!&lt;/p&gt;
-&lt;p&gt;...&lt;/p&gt;
-&lt;p&gt;이 글을 작성하기 시작한 후 바로 다른 프로젝트를 시작하는 바람에, 게다가 주어진 시간도 많지 않아서 작성이 너무 더뎠다. 아직까지 그 프로젝트가 끝나진 않았지만 &lt;strong&gt;미리 예약해둔&lt;/strong&gt;, 예이~, 여름 휴가 여행을 떠나는 비행기 안에서 작성하고 있다.&lt;/p&gt;
-&lt;p&gt;별 것 아닌 내용인데도 이렇게 작성하는 것이 오래 걸리다니.. 다시 한 번 글쓰기의 어려움을 절실히 느끼게 되었고, 그냥 내가 게으른 걸지도 ㅠ_ㅠ&lt;/p&gt;
-&lt;p&gt;내가 스스로 정리하기 위한 목적으로 작성한 글이지만, 그냥 우연히 이 글을 읽는 사람에게 조금이나마 도움이 되었으면 한다.&lt;/p&gt;
-&lt;/div&gt;&lt;div class=&quot;related&quot;&gt;&lt;div class=&quot;wrapper&quot;&gt;&lt;h6 class=&quot;text&quot;&gt;Related Posts&lt;/h6&gt;&lt;/div&gt;&lt;ul class=&quot;items&quot;&gt;&lt;li class=&quot;item&quot;&gt;&lt;div class=&quot;title&quot;&gt;&lt;a href=&quot;/posts/2015-07-04-introducing-bagle/&quot;&gt;베이글 서비스를 소개합니다.&lt;/a&gt;&lt;/div&gt;&lt;div class=&quot;date&quot;&gt;July 4, 2015&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;div class=&quot;disqus&quot;&gt;&lt;div id=&quot;disqus_thread&quot;&gt;&lt;/div&gt;&lt;script&gt;var disqus_shortname = 'danielku';
-(function() {
-  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-})();&lt;/script&gt;&lt;noscript&gt;Please enable JavaScript to view the &lt;a href=&quot;https://disqus.com/?ref_noscript&quot; rel=&quot;nofollow&quot;&gt;comments powered by Disqus.&lt;/a&gt;
-&lt;/noscript&gt;&lt;/div&gt;&lt;div class=&quot;navigation&quot;&gt;&lt;div class=&quot;previous&quot;&gt;&lt;a href=&quot;/posts/2015-07-04-introducing-bagle/&quot;&gt;&lt;span&gt;베이글 서비스를 소개합니다.&lt;/span&gt;&lt;i class=&quot;fa fa-lg fa-long-arrow-right&quot;&gt;&lt;/i&gt;&lt;/a&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;&lt;/section&gt;&lt;footer&gt;&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;https://github.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-github&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;github&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;http://www.linkedin.com/in/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-linkedin&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;linkedin&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://twitter.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-twitter&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;twitter&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://www.facebook.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-facebook&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;facebook&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;mailto:d@nielku.com&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-inbox&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;email&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;/atom.xml&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-rss&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;feed&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;div class=&quot;copyright&quot;&gt;© Daniel Ku 2015&lt;/div&gt;&lt;div class=&quot;endnote&quot;&gt;Made with &lt;a href=&quot;http://docpad.org&quot; target=&quot;_blank&quot;&gt;DocPad&lt;/a&gt;,
-hosted on &lt;a href=&quot;https://github.com&quot; target=&quot;_blank&quot;&gt;GitHub&lt;/a&gt;.
-&lt;/div&gt;&lt;/footer&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/jquery/dist/jquery.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lodash/lodash.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/highlightjs/highlight.pack.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lightbox2/dist/js/lightbox.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/scripts/script.js&quot;&gt;&lt;/script&gt;&lt;script&gt;(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-ga('create', 'UA-64883212-1', 'auto');
-ga('send', 'pageview');&lt;/script&gt;&lt;script&gt;var disqus_shortname = 'danielku';
-(function () {
-  var s = document.createElement('script'); s.async = true;
-  s.type = 'text/javascript';
-  s.src = '//' + disqus_shortname + '.disqus.com/count.js';
-  (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
-}());&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;</content>
-      </entry>
-    
-  
-    
-      <entry>
-        <title>베이글 서비스를 소개합니다.</title>
-        <link href="http://danielku.com/posts/2015-07-04-introducing-bagle/"/>
-        
-        <updated>2015-08-20T00:00:00.000Z</updated>
-        <id>http://danielku.com/posts/2015-07-04-introducing-bagle/</id>
-        <content type="html">&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=utf-8&quot;&gt;&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge,chrome=1&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;&lt;title&gt;베이글 서비스를 소개합니다. | Daniel Ku&lt;/title&gt;&lt;meta name=&quot;description&quot; content=&quot;2014 데모데이 TOP100 스타트업에 선정된 스터디지피에스(StudyGPS)社가 개발하고 운영 중인 베이글(bagle.io) 서비스를 소개한다.&quot;&gt;&lt;meta name=&quot;keywords&quot; content=&quot;daniel ku, daniel kj ku, daniel kyojun ku, daniel, kjunine, versatile programmer&quot;&gt;&lt;meta name=&quot;author&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta name=&quot;generator&quot; content=&quot;DocPad v6.78.1&quot; /&gt;&lt;meta property=&quot;og:url&quot; content=&quot;http://danielku.com/posts/2015-07-04-introducing-bagle/&quot;&gt;&lt;meta property=&quot;og:type&quot; content=&quot;article&quot;&gt;&lt;meta property=&quot;og:title&quot; content=&quot;베이글 서비스를 소개합니다.&quot;&gt;&lt;meta property=&quot;og:description&quot; content=&quot;2014 데모데이 TOP100 스타트업에 선정된 스터디지피에스(StudyGPS)社가 개발하고 운영 중인 베이글(bagle.io) 서비스를 소개한다.&quot;&gt;&lt;meta property=&quot;og:image&quot; content=&quot;http://danielku.com/posts/2015-07-04-introducing-bagle/bagle.jpg&quot;&gt;&lt;meta property=&quot;og:site_name&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta property=&quot;og:locale&quot; content=&quot;ko_KR&quot;&gt;&lt;link href=&quot;/atom.xml&quot; rel=&quot;alternate&quot; type=&quot;application/atom+xml&quot; title=&quot;Daniel Ku&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/earlyaccess/nanumgothic.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Lato:700&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Source+Sans+Pro:300,600&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/normalize.css/normalize.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/font-awesome/css/font-awesome.min.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/highlightjs/styles/agate.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/lightbox2/dist/css/lightbox.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/styles/style.css&quot; /&gt;&lt;/head&gt;&lt;body&gt;&lt;!--[if lt IE 9]&gt;&lt;p class=&quot;browsehappy&quot;&gt;You are using an &lt;strong&gt;outdated&lt;/strong&gt; browser.
-Please &lt;a href=&quot;http://browsehappy.com/&quot;&gt;upgrade your browser&lt;/a&gt; to improve your experience.
-&lt;/p&gt;&lt;![endif]--&gt;&lt;header&gt;&lt;div class=&quot;container&quot;&gt;&lt;a href=&quot;/&quot; class=&quot;logo&quot;&gt;Daniel Ku&lt;/a&gt;&lt;/div&gt;&lt;/header&gt;&lt;section class=&quot;main&quot;&gt;&lt;article class=&quot;post&quot;&gt;&lt;div style=&quot;background-image: url(bagle.jpg)&quot; class=&quot;image&quot;&gt;&lt;img src=&quot;bagle.jpg&quot; class=&quot;hidden&quot;/&gt;&lt;/div&gt;&lt;div class=&quot;header&quot;&gt;&lt;h1 class=&quot;title&quot;&gt;베이글 서비스를 소개합니다.&lt;/h1&gt;&lt;h6 class=&quot;date&quot;&gt;July 4, 2015&lt;/h6&gt;&lt;/div&gt;&lt;div class=&quot;content&quot;&gt;&lt;h1 id=&quot;-bagle-io-http-bagle-io-&quot;&gt;베이글(&lt;a href=&quot;http://bagle.io/&quot;&gt;bagle.io&lt;/a&gt;)이란?&lt;/h1&gt;
-&lt;p&gt;&lt;a href=&quot;bagle-logo.png&quot;&gt;&lt;img src=&quot;bagle-logo.png&quot; alt=&quot;베이글 로고&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;나는 스터디지피에스라는 회사에서 베이글 서비스를 개발했다. 베이글 서비스는 작년에 서비스했던 StudyGPS 서비스를 개선해 올해 2월초에 모바일(&lt;a href=&quot;https://play.google.com/store/apps/details?id=net.studygps.mobile&quot;&gt;안드로이드&lt;/a&gt;/&lt;a href=&quot;https://itunes.apple.com/app/bagle/id967912345&quot;&gt;아이폰&lt;/a&gt;)부터 오픈했다. 그리고 시간이 좀 걸렸지만 6월말에 &lt;a href=&quot;http://bagle.io/&quot;&gt;웹&lt;/a&gt;도 오픈했다.&lt;/p&gt;
-&lt;p&gt;StudyGPS 서비스는 이름에 걸맞게 교육 분야에 치우쳐 있는 서비스였지만, 베이글은 비슷한 컨셉을 유지하되 분야를 보다 확장해 누구나 사용할 수 있도록 만들었다.&lt;/p&gt;
-&lt;p&gt;다음은 베이글 서비스의 타임라인 기능의 스크린샷이다. 얼핏보면 다른 SNS 서비스와 유사해보인다. 하지만..&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;bagle-timeline.png&quot;&gt;&lt;img src=&quot;bagle-timeline.png&quot; alt=&quot;베이글 타임라인&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h1 id=&quot;-&quot;&gt;베이글의 특징&lt;/h1&gt;
-&lt;p&gt;베이글은 온라인/오프라인 그룹을 운영하고 있는 사람이 적은 노력으로 큰 효과를 볼 수 있는 서비스로, 다음과 같은 특징이 있다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;그룹은 &lt;strong&gt;베이글&lt;/strong&gt;이라 부른다. 베이글의 모양은 원(서클)이고, 서클은 그룹을 뜻하기도 하니까.&lt;/li&gt;
-&lt;li&gt;글, 포스트는 &lt;strong&gt;카드&lt;/strong&gt;라 부른다. 베이글에 누군가가 카드를 작성하면 나머지 멤버들이 답변을 할 수 있다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;그런데 진짜 중요한 특징은 여기부터이다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;em&gt;지정된 멤버만&lt;/em&gt; 베이글에 카드를 작성할 수 있다!&lt;/li&gt;
-&lt;li&gt;하나의 카드에는 &lt;em&gt;각자 한번만&lt;/em&gt; 답변할 수 있다!&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;답변하기 전에는&lt;/em&gt; 다른 멤버의 답변을 볼 수 없다!&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;그렇다. 지극히 &lt;strong&gt;일방적&lt;/strong&gt;이다. 태생적으로 설문에 가까운 형태이다.&lt;/p&gt;
-&lt;p&gt;베이글은 그룹 관리에 피로를 느끼는 그룹 매니저를 위한 서비스로, &lt;em&gt;자신이 하고 싶은 말만 하고, 멤버들에게 궁금한 것만 물어볼 수 있게&lt;/em&gt; 해준다.&lt;/p&gt;
-&lt;p&gt;얼핏 보면 기존의 SNS와 유사한 형태이지만, 위와 같은 차이로 전혀 다른 서비스가 되었다.&lt;/p&gt;
-&lt;h1 id=&quot;-&quot;&gt;나의 베이글&lt;/h1&gt;
-&lt;p&gt;나도 베이글 서비스에서 &lt;a href=&quot;https://bagle.io/bagles/550e4dc4546555150068729a&quot;&gt;Delicious Bagle&lt;/a&gt;이란 먹방용 베이글을 운영하고 있다. 비록 마지막으로 작성한 카드가 두달 전의 것이지만.. 한번 구경해보길 바란다.&lt;/p&gt;
-&lt;p&gt;최근에 웹도 오픈했으니 나도 다시 잘 사용해 볼 예정이다. 일단 맛있는 것부터 좀 먹고.. ㅠ_ㅠ&lt;/p&gt;
-&lt;h1 id=&quot;-&quot;&gt;...&lt;/h1&gt;
-&lt;p&gt;&lt;a href=&quot;https://files.bagle.io/photos/551688db54655515006873e5.png&quot;&gt;&lt;img src=&quot;https://files.bagle.io/photos/551688db54655515006873e5.png&quot; alt=&quot;마망갸또&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;여담이지만 초기엔 아이폰에서 세로로 찍은 사진을 업로드하면 위 사진처럼 &lt;em&gt;가로로 회전되어 보이는 문제&lt;/em&gt;가 있었다. 해당 이슈는 해결했지만 그때 업로드한 사진들은 여전히 잘못 표시되고 있다.&lt;/p&gt;
-&lt;p&gt;얼릉 맛있는 거 많이 먹고 새 카드 많이 작성해서 예전 카드들을 안 보이게 파묻어 버려야지.&lt;/p&gt;
-&lt;/div&gt;&lt;div class=&quot;related&quot;&gt;&lt;div class=&quot;wrapper&quot;&gt;&lt;h6 class=&quot;text&quot;&gt;Related Posts&lt;/h6&gt;&lt;/div&gt;&lt;ul class=&quot;items&quot;&gt;&lt;li class=&quot;item&quot;&gt;&lt;div class=&quot;title&quot;&gt;&lt;a href=&quot;/posts/2015-08-20-bagle-architecture/&quot;&gt;베이글 서비스의 아키텍쳐&lt;/a&gt;&lt;/div&gt;&lt;div class=&quot;date&quot;&gt;August 20, 2015&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;div class=&quot;disqus&quot;&gt;&lt;div id=&quot;disqus_thread&quot;&gt;&lt;/div&gt;&lt;script&gt;var disqus_shortname = 'danielku';
-(function() {
-  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-})();&lt;/script&gt;&lt;noscript&gt;Please enable JavaScript to view the &lt;a href=&quot;https://disqus.com/?ref_noscript&quot; rel=&quot;nofollow&quot;&gt;comments powered by Disqus.&lt;/a&gt;
-&lt;/noscript&gt;&lt;/div&gt;&lt;div class=&quot;navigation&quot;&gt;&lt;div class=&quot;next&quot;&gt;&lt;a href=&quot;/posts/2015-08-20-bagle-architecture/&quot;&gt;&lt;i class=&quot;fa fa-lg fa-long-arrow-left&quot;&gt;&lt;/i&gt;&lt;span&gt;베이글 서비스의 아키텍쳐&lt;/span&gt;&lt;/a&gt;&lt;/div&gt;&lt;div class=&quot;previous&quot;&gt;&lt;a href=&quot;/posts/2014-02-13-markdown/&quot;&gt;&lt;span&gt;마크다운(Markdown)에 대하여&lt;/span&gt;&lt;i class=&quot;fa fa-lg fa-long-arrow-right&quot;&gt;&lt;/i&gt;&lt;/a&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;&lt;/section&gt;&lt;footer&gt;&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;https://github.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-github&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;github&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;http://www.linkedin.com/in/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-linkedin&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;linkedin&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://twitter.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-twitter&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;twitter&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://www.facebook.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-facebook&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;facebook&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;mailto:d@nielku.com&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-inbox&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;email&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;/atom.xml&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-rss&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;feed&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;div class=&quot;copyright&quot;&gt;© Daniel Ku 2015&lt;/div&gt;&lt;div class=&quot;endnote&quot;&gt;Made with &lt;a href=&quot;http://docpad.org&quot; target=&quot;_blank&quot;&gt;DocPad&lt;/a&gt;,
-hosted on &lt;a href=&quot;https://github.com&quot; target=&quot;_blank&quot;&gt;GitHub&lt;/a&gt;.
-&lt;/div&gt;&lt;/footer&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/jquery/dist/jquery.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lodash/lodash.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/highlightjs/highlight.pack.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lightbox2/dist/js/lightbox.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/scripts/script.js&quot;&gt;&lt;/script&gt;&lt;script&gt;(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-ga('create', 'UA-64883212-1', 'auto');
-ga('send', 'pageview');&lt;/script&gt;&lt;script&gt;var disqus_shortname = 'danielku';
-(function () {
-  var s = document.createElement('script'); s.async = true;
-  s.type = 'text/javascript';
-  s.src = '//' + disqus_shortname + '.disqus.com/count.js';
-  (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
-}());&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;</content>
-      </entry>
-    
-  
-    
-      <entry>
-        <title>마크다운(Markdown)에 대하여</title>
-        <link href="http://danielku.com/posts/2014-02-13-markdown/"/>
-        
-        <updated>2015-07-09T00:00:00.000Z</updated>
-        <id>http://danielku.com/posts/2014-02-13-markdown/</id>
-        <content type="html">&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=utf-8&quot;&gt;&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge,chrome=1&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;&lt;title&gt;마크다운(Markdown)에 대하여 | Daniel Ku&lt;/title&gt;&lt;meta name=&quot;description&quot; content=&quot;개발자의 필수도구 마크다운에 대하여 알아보자.&quot;&gt;&lt;meta name=&quot;keywords&quot; content=&quot;daniel ku, daniel kj ku, daniel kyojun ku, daniel, kjunine, versatile programmer&quot;&gt;&lt;meta name=&quot;author&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta name=&quot;generator&quot; content=&quot;DocPad v6.78.1&quot; /&gt;&lt;meta property=&quot;og:url&quot; content=&quot;http://danielku.com/posts/2014-02-13-markdown/&quot;&gt;&lt;meta property=&quot;og:type&quot; content=&quot;article&quot;&gt;&lt;meta property=&quot;og:title&quot; content=&quot;마크다운(Markdown)에 대하여&quot;&gt;&lt;meta property=&quot;og:description&quot; content=&quot;개발자의 필수도구 마크다운에 대하여 알아보자.&quot;&gt;&lt;meta property=&quot;og:image&quot; content=&quot;http://danielku.com/images/profile.jpg&quot;&gt;&lt;meta property=&quot;og:site_name&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta property=&quot;og:locale&quot; content=&quot;ko_KR&quot;&gt;&lt;link href=&quot;/atom.xml&quot; rel=&quot;alternate&quot; type=&quot;application/atom+xml&quot; title=&quot;Daniel Ku&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/earlyaccess/nanumgothic.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Lato:700&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Source+Sans+Pro:300,600&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/normalize.css/normalize.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/font-awesome/css/font-awesome.min.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/highlightjs/styles/agate.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/lightbox2/dist/css/lightbox.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/styles/style.css&quot; /&gt;&lt;/head&gt;&lt;body&gt;&lt;!--[if lt IE 9]&gt;&lt;p class=&quot;browsehappy&quot;&gt;You are using an &lt;strong&gt;outdated&lt;/strong&gt; browser.
-Please &lt;a href=&quot;http://browsehappy.com/&quot;&gt;upgrade your browser&lt;/a&gt; to improve your experience.
-&lt;/p&gt;&lt;![endif]--&gt;&lt;header&gt;&lt;div class=&quot;container&quot;&gt;&lt;a href=&quot;/&quot; class=&quot;logo&quot;&gt;Daniel Ku&lt;/a&gt;&lt;/div&gt;&lt;/header&gt;&lt;section class=&quot;main&quot;&gt;&lt;article class=&quot;post&quot;&gt;&lt;div class=&quot;header&quot;&gt;&lt;h1 class=&quot;title&quot;&gt;마크다운(Markdown)에 대하여&lt;/h1&gt;&lt;h6 class=&quot;date&quot;&gt;February 13, 2014&lt;/h6&gt;&lt;/div&gt;&lt;div class=&quot;content&quot;&gt;&lt;h1 id=&quot;-markdown-&quot;&gt;마크다운(Markdown)이란?&lt;/h1&gt;
-&lt;p&gt;&lt;code&gt;마크다운(Markdown)&lt;/code&gt;을 만든 &lt;a href=&quot;http://en.wikipedia.org/wiki/John_Gruber&quot;&gt;John Gruber&lt;/a&gt;는 마크다운을 다음과 같이 정의하고 있다.&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;&lt;a href=&quot;http://daringfireball.net/projects/markdown/&quot;&gt;Markdown is a text-to-HTML conversion tool for web writers. Markdown allows you to write using an easy-to-read, easy-to-write plain text format, then convert it to structurally valid XHTML (or HTML).&lt;/a&gt;&lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>노루의 씨분투 세상</title>
+<link>https://norux.me/</link>
+<description>https://github.com/norux</description>
+<language>ko</language>
+<pubDate>Sun, 12 May 2019 17:16:37 +0900</pubDate>
+<generator>TISTORY</generator>
+<managingEditor>norux</managingEditor>
+<image>
+<title>노루의 씨분투 세상</title>
+<url>http://cfile5.uf.tistory.com/image/2569EF455602A2E13F14B8</url>
+<link>https://norux.me</link>
+<description>https://github.com/norux</description>
+</image>
+<item>
+<title>[번역] 자바스크립트는 어떻게 동작할까? - JS엔진, 런타임, 콜스택에 대한 개요</title>
+<link>https://norux.me/67</link>
+<description>&lt;h1&gt;[번역] 자바스크립트는 어떻게 동작할까? - JS엔진, 런타임, 콜스택에 대한 개요&lt;/h1&gt;
+&lt;blockquote&gt;&lt;p&gt;본 포스팅은 &lt;a href='https://blog.sessionstack.com/how-does-javascript-actually-work-part-1-b0bacc073cf'&gt;How JavaScript works: an overview of the engine, the runtime, and the call stack&lt;/a&gt; 의 글을 번역한 글입니다. How JavaScript 시리즈는 9편정도가 있으며, 지금도 나오고 있습니다. 최대한 모든 시리즈를 번역할 예정입니다.&lt;/p&gt;
+&lt;p&gt;많은 의역이 포함되어 있을 수 있습니다. :)&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;즉, 마크다운은 다음과 같은 성질을 가지는 &lt;strong&gt;텍스트를 HTML로 변환하는 언어이자 도구&lt;/strong&gt;이다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;사람이 읽고 쓰기 쉽다.&lt;/li&gt;
-&lt;li&gt;컴퓨터도 이해하기 쉽다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;마크다운은 &lt;strong&gt;간단한 문법&lt;/strong&gt;만을 사용해 글을 구조적으로 작성할 수 있고, 마크다운으로 작성된 글을 그냥 읽어도 이해하기 쉽고 HTML로 변환해도 보기에 좋다.
-이 때문에 최근 &lt;a href=&quot;http://github.com/&quot;&gt;GitHub&lt;/a&gt; 같은 개발 관련 웹사이트에서 마크다운을 많이 사용하고 있다.&lt;/p&gt;
-&lt;h2 id=&quot;-&quot;&gt;왜 알아야 하는가?&lt;/h2&gt;
-&lt;p&gt;당신이 &lt;code&gt;개발자&lt;/code&gt;라면 앞으로 반드시 만나게 될 것이기 때문이다. 개발자가 아니라면 아마도 몰라도 될 것이다. WISIWIG 에디터에서도 마크다운을 지원할테니까.&lt;/p&gt;
-&lt;h1 id=&quot;-&quot;&gt;마크다운의 문법&lt;/h1&gt;
-&lt;p&gt;위에서도 말했듯이 마크다운의 문법은 상당히 간단해서 큰 노력을 기울이지 않아도 쉽게 배울 수 있다.&lt;/p&gt;
-&lt;h2 id=&quot;-paragraphs-&quot;&gt;문단(Paragraphs)&lt;/h2&gt;
-&lt;p&gt;하나 이상의 문장의 집합이다. 한 문단과 다음 문단은 하나 이상의 빈 줄로 구분된다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;첫번째 문단의 첫번째 문장이다.
-첫번째 문단의 두번째 문장이다.
-
-두번째 문단의 첫번째 문장이다.
-두번째 문단의 두번째 문장이다.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;다음과 같이 변환된다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;첫번째 문단의 첫번째 문장이다.
-첫번째 문단의 두번째 문장이다.&amp;lt;/p&amp;gt;
-&amp;lt;p&amp;gt;두번째 문단의 첫번째 문장이다.
-두번째 문단의 두번째 문장이다.&amp;lt;/p&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;그러므로 다음과 같이 보인다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;첫번째 문단의 첫번째 문장이다.
-첫번째 문단의 두번째 문장이다.&lt;/p&gt;
-&lt;p&gt;두번째 문단의 첫번째 문장이다.
-두번째 문단의 두번째 문장이다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;문장 사이의 줄바꿈은 무시되는 것이 기본이지만, 마크다운 변환기에 따라 줄바꿈을 위해 &lt;code&gt;&amp;lt;br /&amp;gt;&lt;/code&gt; 태그를 삽입하기도 한다.&lt;/p&gt;
-&lt;h2 id=&quot;-headers-&quot;&gt;제목(Headers)&lt;/h2&gt;
-&lt;p&gt;제목을 표현하는 방법에는 2가지 방법이 있다. 먼저 &lt;code&gt;=&lt;/code&gt; 혹은 &lt;code&gt;-&lt;/code&gt; 문자를 이용해 밑줄을 채우는 방법이다.
-밑줄 문자는 하나 이상만 사용하면 되지만 보통은 보기 좋게 제목과 같은 길이만큼 사용한다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;가장 큰 제목
-==========
-그 다음 크기의 제목
----------------
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;변환하면 다음과 같다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;h1&amp;gt;가장 큰 제목&amp;lt;/h1&amp;gt;
-&amp;lt;h2&amp;gt;그 다음 크기의 제목&amp;lt;/h2&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;결과는...&lt;/p&gt;
-&lt;hr&gt;
-&lt;h1 id=&quot;-&quot;&gt;가장 큰 제목&lt;/h1&gt;
-&lt;h2 id=&quot;-&quot;&gt;그 다음 크기의 제목&lt;/h2&gt;
-&lt;hr&gt;
-&lt;p&gt;다른 방법으로는 &lt;code&gt;#&lt;/code&gt; 문자를 제목 앞에 붙이는 방법이 있다.
-보기 좋게 하기 위해 제목 뒤에도 &lt;code&gt;#&lt;/code&gt; 문자를 같은 개수 만큼 붙이기도 한다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;# 가장 큰 제목
-## 그 다음 크기의 제목 ##
-### 또 그 다음 크기의 제목
-###### 가장 작은 크기의 제목 ######
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;변환하면...&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;h1&amp;gt;가장 큰 제목&amp;lt;/h1&amp;gt;
-&amp;lt;h2&amp;gt;그 다음 크기의 제목&amp;lt;/h2&amp;gt;
-&amp;lt;h3&amp;gt;또 그 다음 크기의 제목&amp;lt;/h3&amp;gt;
-&amp;lt;h6&amp;gt;가장 작은 크기의 제목&amp;lt;/h6&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;h1 id=&quot;-&quot;&gt;가장 큰 제목&lt;/h1&gt;
-&lt;h2 id=&quot;-&quot;&gt;그 다음 크기의 제목&lt;/h2&gt;
-&lt;h3 id=&quot;-&quot;&gt;또 그 다음 크기의 제목&lt;/h3&gt;
-&lt;h6 id=&quot;-&quot;&gt;가장 작은 크기의 제목&lt;/h6&gt;
-&lt;hr&gt;
-&lt;h2 id=&quot;-blockquotes-&quot;&gt;인용(Blockquotes)&lt;/h2&gt;
-&lt;p&gt;인용은 이메일에서처럼 &lt;code&gt;&amp;gt;&lt;/code&gt; 문자를 앞에 붙이는 방식을 사용한다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;&amp;gt; 인용이다.
-&amp;gt;
-&amp;gt; 인용 안에서도 문단을 나눌 수 있다.
-&amp;gt;
-&amp;gt; ### 제목 등의 다른 문법도 사용 가능하다.
-&amp;gt;
-&amp;gt; &amp;gt; 인용 안의 인용도 된다.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;blockquote&amp;gt;
-  &amp;lt;p&amp;gt;인용이다.&amp;lt;/p&amp;gt;
-  &amp;lt;p&amp;gt;인용 안에서도 문단을 나눌 수 있다.&amp;lt;/p&amp;gt;
-  &amp;lt;h3&amp;gt;제목 등의 다른 문법도 사용 가능하다.&amp;lt;/h3&amp;gt;
-  &amp;lt;blockquote&amp;gt;
-    &amp;lt;p&amp;gt;인용 안의 인용도 된다.&amp;lt;/p&amp;gt;
-  &amp;lt;/blockquote&amp;gt;
-&amp;lt;/blockquote&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;blockquote&gt;
-&lt;p&gt;인용이다.&lt;/p&gt;
-&lt;p&gt;인용 안에서도 문단을 나눌 수 있다.&lt;/p&gt;
-&lt;h3 id=&quot;-&quot;&gt;제목 등의 다른 문법도 사용 가능하다.&lt;/h3&gt;
-&lt;blockquote&gt;
-&lt;p&gt;인용 안의 인용도 된다.&lt;/p&gt;
+&lt;p&gt;자바스크립트가 점점 더 인기있어지면서, 많은 팀들은 프론트엔드, 백엔드, 하이브리드, 임베디드와 그 이상의 많은 영역에서 자바스크립트를 사용하고 있습니다.&lt;/p&gt;
+&lt;p&gt;이 포스팅은 자바스크립트와, 자바스크립트가 어떻게 동작하는지에 대해 깊이 파보기 위한 목적으로, 시리즈의 첫 번째 글입니다. 자바스크립트의 블록을 생성하는 것과 어떻게 동작하는지를 보고나면, 여러분은 더 좋은 코드를 작성할 수 있을것입니다. 아, 포스팅에서는 &lt;a href='https://www.sessionstack.com/?utm_source=medium&amp;utm_medium=source&amp;utm_content=javascript-series-post1-intro'&gt;SessionStack&lt;/a&gt; 을 이용할 것입니다. &lt;em&gt;세션스택은 경쟁력을 유지하기 위한 안정적이고 고성능의 가벼운 자바스크립트 어플리케이션입니다.&lt;/em&gt;&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: 이 사람은 세션스택의 공동 창업자겸 CEO입니다... 위 이야기는 자사제품의 막간 홍보라고 보시면 됩니다.&lt;/p&gt;
 &lt;/blockquote&gt;
+&lt;p&gt;&lt;a href='http://githut.info/'&gt;GitHub의 통계&lt;/a&gt;에서 보는 것 처럼 자바스크립트는 활성화된 레포지토리와 전체 GitHub 푸시 건수에서 1등에 위치하고 있습니다.  그 외 다른 카테고리들도 상위권에 위치하고 있습니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/moe8JGv.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href='https://madnight.github.io/githut/#/pull_requests/2018/1'&gt;GitHub의 최신 언어 통계 확인&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;만약 프로젝트가 자바스크립트에 많은 의존성을 가지고 있다면, 어메이징한 소프트웨어를 만들기 위해서 개발자는 언어와 에코시스템이 제공하는 모든 것을 이용해야만 한다는 것을 의미합니다. 내부에서부터 아주 깊은 이해를 통해서 말이죠.&lt;/p&gt;
+&lt;p&gt;알다시피, 매일 자바스크립트를 사용하지만 핵심 내부에서 어떤 일이 일어나는지를 알고 있는 개발자들은 많이 없습니다.&lt;/p&gt;
+&lt;h2&gt;개요&lt;/h2&gt;
+&lt;p&gt;대부분 개념적으로 V8 엔진에 대해서는 들어본 적이 있을 것입니다. 그리고 대부분의 사람들은 자바스크립트가 싱글 쓰레드라고 알고 있거나 콜백큐를 사용한다고 알고 있습니다.&lt;/p&gt;
+&lt;p&gt;이 포스팅에서 이 개념들을 상세하게 알아보고, 자바스크립트가 실제로 실행되는 방법을 설명하겠습니다. 이 상세내용을 알게되면 여러분은 논블로킹&lt;em&gt;non-blocking&lt;/em&gt; 어플리케이션을 좀 더 좋은 코드로 작성할 수 있을 것입니다.&lt;/p&gt;
+&lt;p&gt;만약 당신이 자바스크립트 초급자라면, 이 포스팅의 내용이 왜 자바스크립트가 다른 언어에 비해서 &amp;quot;이상하게&amp;quot; 느껴지는지 이해하는데 도움이 될 것입니다.&lt;/p&gt;
+&lt;p&gt;능숙한 자바스크립트 개발자라면, 바라건데 제가 당신이 매일 사용하는 자바스크립트 런타임이 실제로 어떻게 동작하는지에 대해서 약간은 신선한 인사이트를 드렸으면 좋겠습니다. &lt;/p&gt;
+&lt;h2&gt;자바스크립트 엔진&lt;/h2&gt;
+&lt;p&gt;구글의 V8엔진은 유명한 자바스크립트의 엔진입니다. V8엔진은 크롬과 Node.js에서 사용되고 있습니다. 다음은 엔진에 대해 굉장히 심플한 그림입니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/Oels0S0.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;p&gt;엔진은 두 가지 컴포넌트로 구성됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;메모리 힙: 메모리 할당이 일어나는 영역입니다.&lt;/li&gt;
+&lt;li&gt;콜 스택: 코드가 실행될 때, 스택 프레임이 생성되는 영역입니다.&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;h2&gt;런타임&lt;/h2&gt;
+&lt;p&gt;거의 모든 자바스크립트 개발자에게 사용되는 &lt;code&gt;setTimeout&lt;/code&gt;과 같은 브라우저에 존재하는 API들이 있습니다. 하지만 이 API들은 엄밀히 말해 엔진이 제공하는 API는 아닙니다.&lt;/p&gt;
+&lt;p&gt;그럼 이런 API는 어디에 정의되어 있을까요?&lt;/p&gt;
+&lt;p&gt;실제로는 조금 복잡합니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/HQSJfm5.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;p&gt;즉, 우리는 엔진뿐만이 아닌 더 많은 것을 가지고 있습니다. 브라우저가 제공하는 Web API 라는 것이 있습니다. Web API에는 DOM, Ajax, setTimeout 같은 다양한 함수들이 정의되어 있습니다.&lt;/p&gt;
+&lt;p&gt;그리고, 또 유명한 &lt;strong&gt;이벤트 루프&lt;/strong&gt;와 &lt;strong&gt;콜백 큐&lt;/strong&gt;도 가지고 있습니다.&lt;/p&gt;
+&lt;h2&gt;콜백 큐(Callback Queue)&lt;/h2&gt;
+&lt;p&gt;자바스크립트는 싱글 쓰레드 프로그래밍 언어 입니다. 이 말은 하나의 콜 스택을 가진다는 의미입니다. 그러므로 동시에 한 개의 작업만 실행할 수 있습니다.&lt;/p&gt;
+&lt;p&gt;콜스택은 기본적으로 우리가 프로그램에서 어디에 있는지 기록하는 자료구조입니다. 만약 우리가 함수 내부로 진입(Function call)한다면, 스택에 함수를 쌓습니다. 그리고 함수로부터 빠져나온다면(return), 스택에서 함수를 빼냅니다. 이것이 스택이 하는 모든 일입니다.&lt;/p&gt;
+&lt;p&gt;다음의 코드 예제를 한 번 봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-javascript' lang='javascript'&gt;function multiply(x, y) {
+    return x * y;
+}
+
+function printSquare(x) {
+    var s = multiply(x, x);
+    console.log(s);
+}
+
+printSquare(5);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;처음에 엔진이 코드를 실행하면, 콜 스택은 비어있습니다. 이후에 스탭 진행별로 콜 스택은 다음과 같이 변합니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/y16XFxE.png' alt='Imgur' /&gt;
+콜스택에서 각 엔트리는 &lt;strong&gt;스택 프레임&lt;em&gt;Stack Frame&lt;/em&gt;&lt;/strong&gt;이라고 부릅니다.&lt;/p&gt;
+&lt;p&gt;그리고 다음 예제는 예외&lt;em&gt;Exception&lt;/em&gt;이 던져졌을&lt;em&gt;Throw&lt;/em&gt; 때, 스택 트레이스가 생성되는 방법에 관한 것입니다. 기본적으로는 예외가 발생할 때의 콜 스택 상태입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-javascript' lang='javascript'&gt;function foo() {
+    throw new Error(&amp;#39;SessionStack will help you resolve crashes :)&amp;#39;);
+}
+
+function bar() {
+    foo();
+}
+
+function start() {
+    bar();
+}
+
+start();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이 코드가 작성된 foo.js 라는 파일을 크롬에서 실행하게 한다면, 다음과 같은 스택 트레이스가 생깁니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/8PBytz0.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;스택 날리기&lt;em&gt;Blowing the stack&lt;/em&gt;&lt;/strong&gt; - 이것은 최대 콜 스택 사이즈에 도달할 때 발생합니다. 이것을 쉽게 발생시키기 위해서 종료조건이 없는 재귀 함수를 사용하겠습니다. 다음의 예제코드를 봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-javascript' lang='javascript'&gt;function foo() {
+    foo();
+}
+
+foo();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;엔진이 이 코드를 실행하면, &lt;code&gt;foo&lt;/code&gt; 함수를 호출합니다. 이 함수는 종료조건 없이 끊임없이 스스로를 재귀 호출하게 됩니다. 각 실행의 스탭마다 같은 함수가 콜스택에 추가되게 되며, 곧 콜 스택의 최대 사이즈를 넘게 됩니다. 다음 그림처럼 말이죠.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/LYTwup0.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;p&gt;콜 스택의 실제 사이즈를 초과하면서 브라우저는 다음과 같이 예외를 던지게 됩니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/krWC0jX.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;p&gt;싱글 쓰레드에 코드를 실행하는 것은 데드락 같은 멀티 쓰레드 환경에서 발생할 수 있는 복잡한 시나리오를 다루지 않아도 되므로 꽤 쉬울 수 있습니다. 하지만 싱글 쓰레드는 제한적입니다. 자바스크립트는 싱글 콜스택을 가지고 있으므로, 어떤 작업이 느릴때 무슨 일이 일어날까요?&lt;/p&gt;
+&lt;h2&gt;동시성과 이벤트 루프&lt;/h2&gt;
+&lt;p&gt;콜스택에서 작업을 처리하기 위해 엄청난 시간이 걸리는 함수 호출을 가질 때, 무슨 일이 일어날까요? 한 번 상상해 봅시다. 여러분은 브러우저에서 자바스크립트로 복잡한 이미지 변환 작업의 수행을 원합니다.&lt;/p&gt;
+&lt;p&gt;아마 여러분은 그것이 왜 문제가 되냐고 질문할 수도 있습니다. 문제는 콜 스택에서 함수가 실행되는동안, 브라우저는 어떠한 작업도 수행할 수 없습니다. 블락되어 버립니다. 이 말은 브라우저가 랜더링도 할 수 없고, 다른 코드도 실행할 수 없고 그냥 멈춰있게 된다는 뜻입니다. 이것은 여러분이 만약 앱이 훌륭한 유동성 UI(&lt;em&gt;Fluid UI&lt;/em&gt;)를 만들 것이라면 문제가 될것입니다.&lt;/p&gt;
+&lt;p&gt;이것이 유일한 문제점도 아닙니다. 여러분의 브라우저는 콜스택에 수많은 작업을 처리하기 시작할 것이며, 아마 긴 시간동안 반응이 멈춰버릴 것입니다. 그리고 대부분의 브라우저는 웹페이지를 종료시킬 것인지에 대한 에러를 발생시킵니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/lgI6Pab.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;자, 이런 것이 좋은 유저 경험(UX)은 아닌건 아시겠죠?&lt;/p&gt;
+&lt;p&gt;그러면 무거운 코드는 어떻게 실행할까요? UI를 블로킹하거나 브라우저를 먹통으로 만들지 않고 실행할 수 있을까요? 해결책은 비동기 콜백입니다.&lt;/p&gt;
+&lt;p&gt;이것은 &lt;em&gt;자바스크립트는 어떻게 동작할까?&lt;/em&gt; 2편(V8 엔진의 내부, 최적화 코드를 작성하는 5가지 이상의 방법)에서 자세히 설명하겠습니다. &lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: 그리고 blah blah, SessionStack에 대한 홍보를 하십니다. ^_^; 열일하시는군요.&lt;/p&gt;
+&lt;p&gt;이 시리즈의 번역은 norux.me 에서 계속 됩니다~~~&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;hr&gt;
-&lt;h2 id=&quot;-lists-&quot;&gt;목록(Lists)&lt;/h2&gt;
-&lt;p&gt;먼저 순서가 없는 목록이다. 각 항목 앞에 &lt;code&gt;*&lt;/code&gt;, &lt;code&gt;+&lt;/code&gt;, &lt;code&gt;-&lt;/code&gt; 문자를 붙인다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;* 첫번째
-* 두번째
-* 세번째
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;ul&amp;gt;
-  &amp;lt;li&amp;gt;첫번째&amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt;두번째&amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt;세번째&amp;lt;/li&amp;gt;
-&amp;lt;/ul&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h2&gt;참조&lt;/h2&gt;
 &lt;ul&gt;
-&lt;li&gt;첫번째&lt;/li&gt;
-&lt;li&gt;두번째&lt;/li&gt;
-&lt;li&gt;세번째&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr&gt;
-&lt;p&gt;다음과 같이 섞어서 사용할 수도 있다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;* 첫번째
-+ 두번째
-- 세번째
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;ul&amp;gt;
-  &amp;lt;li&amp;gt;첫번째&amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt;두번째&amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt;세번째&amp;lt;/li&amp;gt;
-&amp;lt;/ul&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;ul&gt;
-&lt;li&gt;첫번째&lt;/li&gt;
-&lt;li&gt;두번째&lt;/li&gt;
-&lt;li&gt;세번째&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr&gt;
-&lt;p&gt;항목 사이에 빈줄이 있으면 조금 다르게 해석한다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;* 첫번째
+&lt;li&gt;&lt;a href='https://blog.sessionstack.com/how-does-javascript-actually-work-part-1-b0bacc073cf' target='_blank' &gt;https://blog.sessionstack.com/how-does-javascript-actually-work-part-1-b0bacc073cf&lt;/a&gt;&lt;/li&gt;
 
-* 두번째
-
-* 세번째
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;ul&amp;gt;
-  &amp;lt;li&amp;gt;&amp;lt;p&amp;gt;첫번째&amp;lt;/p&amp;gt;&amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt;&amp;lt;p&amp;gt;두번째&amp;lt;/p&amp;gt;&amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt;&amp;lt;p&amp;gt;세번째&amp;lt;/p&amp;gt;&amp;lt;/li&amp;gt;
-&amp;lt;/ul&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;첫번째&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;두번째&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;세번째&lt;/p&gt;
-&lt;/li&gt;
 &lt;/ul&gt;
-&lt;hr&gt;
-&lt;p&gt;다음으로 순서가 있는 목록이다. &lt;code&gt;1.&lt;/code&gt;로 시작한다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;1. 첫번째
-1. 두번째
-1. 세번째
+&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://norux.me/67&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Javascript</category>
+<category>JavaScript</category>
+<category>V8</category>
+<author>norux</author>
+<guid>https://norux.me/67</guid>
+<comments>https://norux.me/67#entry67comment</comments>
+<pubDate>Mon, 23 Apr 2018 19:53:15 +0900</pubDate>
+</item>
+<item>
+<title>[번역] 아직도 NgZone이 단순하게 Angular의 변화감지(Change Detection)를 위해서만 필요하다고 생각하시나요?</title>
+<link>https://norux.me/66</link>
+<description>&lt;h1&gt;[번역] 아직도 NgZone이 단순하게 Angular의 변화감지(Change Detection)를 위해서만 필요하다고 생각하시나요?&lt;/h1&gt;
+&lt;h2&gt;부제 - NgZone의 구현방법과 사용법&lt;/h2&gt;
+&lt;blockquote&gt;&lt;p&gt;본 포스팅은 &lt;a href=&quot;https://blog.angularindepth.com/do-you-still-think-that-ngzone-zone-js-is-required-for-change-detection-in-angular-16f7a575afef&quot;&gt;Do you still think that NgZone (zone.js) is required for change detection in Angular?&lt;/a&gt;  을 번역한 글입니다.&lt;/p&gt;&lt;p&gt;많은 의역이 포함되어 있을 수 있습니다. :)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;대부분의 포스팅에서 &lt;code&gt;Zone&lt;/code&gt;(&lt;code&gt;zone.js&lt;/code&gt;)와 &lt;code&gt;NgZone&lt;/code&gt;이 Angular의 변화 감지&lt;em&gt;Change detection&lt;/em&gt;과 강한 연관성이 있다고 말합니다. 분명 Angular의 변화 감지 기술에 &lt;code&gt;Zone&lt;/code&gt;이 관련되어있는 것은 사실이지만, 기술적으로 부분 집합적인 관계는 아닙니다. 물론 &lt;code&gt;Zone&lt;/code&gt;과 &lt;code&gt;NgZone&lt;/code&gt;은 비동기 오퍼레이션의 결과로 변화 감지&lt;em&gt;Change Detection&lt;/em&gt;를 자동으로 발생시키는데 사용됩니다. 하지만 변화 감지는 별도의 메커니즘이기 때문에, &lt;code&gt;Zone&lt;/code&gt; 과 &lt;code&gt;NgZone&lt;/code&gt; 없이도 구현할 수 있습니다. 첫 번째 챕터에서, &lt;code&gt;Zone&lt;/code&gt; 을 사용하지 않는 Angular를 설명하겠습니다. 그리고 이어지는 두 번째 챕터에서는, Angular와 &lt;code&gt;Zone&lt;/code&gt;이 어떻게 &lt;code&gt;NgZone&lt;/code&gt;을 통해 상호 작동하는지 알아보겠습니다. 마지막으로는 &lt;a href=&quot;https://developers.google.com/api-client-library/&quot;&gt;Google API Client Library(gapi)&lt;/a&gt;같은 일부 서드 파티 라이브러리에서 자동 변화 감지가 동작하지 않는 이유에 대해서 알아보겠습니다.&lt;/p&gt;&lt;p&gt;저는 Angular의 변화감지에 대해 깊이 알아보는 포스팅을 여러개 썼습니다. 그리고 이 글로 큰 그림을 완성합니다. 만약 여러분이 변화 감지가 어떻게 동작하는지에 대해 개괄적인 내용을 보고 싶으시다면, &lt;a href=&quot;https://blog.angularindepth.com/these-5-articles-will-make-you-an-angular-change-detection-expert-ed530d28930&quot;&gt;여기(These 5 articles will make you an Angular Change Detection expert)&lt;/a&gt;에 나와있는 모든 글을 읽으시는 것을 추천드립니다.&lt;/p&gt;
+&lt;h2&gt;Zone 없는 Angular&lt;/h2&gt;
+&lt;p&gt;Zone 없이 Angular가 동작할 수 있다는 것을 설명하기 위해서, 저는 처음에는 아무 동작도 하지 않는 가짜 Zone(mock zone) 객체를 만드려고 했었습니다. 하지만 Angular 5 버전에서는 쉽게 Zone 없는 Angular를 사용할 수 있도록 해줍니다. Angular5에서는 아무 일도 하지 않는 &lt;a href=&quot;https://github.com/angular/angular/blob/30d5a2ca83c9cf44f602462597a58547b05b75dd/packages/core/src/zone/ng_zone.ts#L318&quot;&gt;noop zone&lt;/a&gt; 을 사용하는 &lt;a href=&quot;https://github.com/angular/angular/commit/344a5ca&quot;&gt;방법을 제공&lt;/a&gt;합니다. 자, 그럼 &lt;code&gt;Zone&lt;/code&gt;의 의존성을 제거하는 작업부터 해봅시다. 데모를 위해 &lt;a href=&quot;https://stackblitz.com/&quot;&gt;stackblitz(웹IDE)&lt;/a&gt; 를 사용했습니다. 그리고 stackblitz가 Angular-CLI를 사용하기 때문에, &lt;code&gt;polyfils.ts&lt;/code&gt; 파일에 있는 다음 import 를 제거합니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: 스택블리츠를 사용하지 않고, 로컬에서 angular-cli를 사용하시면 똑같이 데모를 만들어 보실 수 있습니다. angular-cli의 사용법은 &lt;a href=&quot;http://norux.me/57&quot;&gt;angular-cli를 이용한 Angular2 시작하기 (Quick Start)&lt;/a&gt; 를 참고해주세요. &amp;gt;_&amp;lt; (혼틈 셀프 홍보)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;/* Zone JS is required by Angular itself. */
+
+import 'zone.js/dist/zone';  // Included with Angular CLI.
 &lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;ol&amp;gt;
-  &amp;lt;li&amp;gt;첫번째&amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt;두번째&amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt;세번째&amp;lt;/li&amp;gt;
-&amp;lt;/ol&amp;gt;
+&lt;p&gt;Angular에서 noop zone을 사용하도록 설정하는 방법은 아래와 같습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;platformBrowserDynamic()
+    .bootstrapModule(AppModule, {
+        ngZone: 'noop'
+    });
 &lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
+&lt;p&gt;이 상태에서 애플리케이션을 &lt;a href=&quot;https://stackblitz.com/edit/angular-jmlwb7&quot;&gt;실행&lt;/a&gt;하면, 변화 감지(Change Detection)이 완전히 동작해서, DOM에 있는  &lt;code&gt;name&lt;/code&gt; 컴포넌트 속성을 랜더링 하는 것을 볼 수 있습니다.&lt;/p&gt;&lt;p&gt;이제, &lt;code&gt;setTimeout&lt;/code&gt; 함수를 이용해서 속성을 변경하도록 해봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;export class AppComponent  {
+    name = 'Angular 4';
+
+    constructor() {
+        setTimeout(() =&amp;gt; {
+            this.name = 'updated';
+        }, 1000);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이번에는 변화가 업데이트가 되지 않는 것을 볼 수 있습니다. &lt;code&gt;ngZone&lt;/code&gt; 을 사용하지 않기 때문에 그렇습니다. &lt;code&gt;NgZone&lt;/code&gt;이 수행하는 자동 변화 감지가 일어나지 않는 것입니다. 그래도 변화감지를 수동으로 발생시킨다면, 이 코드는 잘 동작하게 됩니다. &lt;a href=&quot;https://angular.io/api/core/ApplicationRef&quot;&gt;ApplicationRef&lt;/a&gt; 를 인젝션하여, &lt;code&gt;tick&lt;/code&gt; 메소드를 발생시키면 됩니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;export class AppComponent  {
+    name = 'Angular 4';
+
+    constructor(app: ApplicationRef) {
+        setTimeout(()=&amp;gt;{
+            this.name = 'updated';
+            app.tick();
+        }, 1000);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이제 성공적으로 &lt;a href=&quot;https://stackblitz.com/edit/angular-lr1rss&quot;&gt;랜더링을 업데이트하는 것&lt;/a&gt;을 볼 수 있습니다.&lt;/p&gt;&lt;p&gt;이 파트를 요약하자면, 위 설명의 포인트는 &lt;code&gt;Zone&lt;/code&gt;과 &lt;code&gt;NgZone&lt;/code&gt;이 변화 감지의 일부분이 전혀 아니라는 것입니다. 이들은 &lt;code&gt;app.tick()&lt;/code&gt; 을 자동으로 호출하는 &lt;u&gt;자동 변화 감지&lt;/u&gt;를 발생시키기 위한 &lt;strong&gt;&lt;u&gt;매우 편리한&lt;/u&gt;&lt;/strong&gt; 매커니즘일뿐입니다. 잠시 후에 이 매커니즘에 대해 알아보겠습니다.&lt;/p&gt;
+&lt;h2&gt;NgZone이 Zone을 사용하는 방법&lt;/h2&gt;
+&lt;p&gt;저의 &lt;a href=&quot;https://blog.angularindepth.com/i-reverse-engineered-zones-zone-js-and-here-is-what-ive-found-1f48dc87659b&quot;&gt;Zone에 대한 이전 포스팅&lt;/a&gt;에서 &lt;code&gt;Zone&lt;/code&gt;이 제공하는 API와 내부 동작에 대해 알아보았습니다. 여기서 저는 zone을 복제하는 핵심 개념과 각각의 존에서 태스크를 실행하는 것에 대해서 설명했습니다. 이 개념들이 여기서 언급됩니다.&lt;/p&gt;&lt;p&gt;또 저는 &lt;code&gt;Zone&lt;/code&gt;이 제공하는 두 가지 능력에 대해서도 설명했습니다. 문맥 전파(Context propagation)에 대한 것과 중요한 비동기 태스크를 추적하는 것에 대한 것이었습니다. Angular는 태스크를 추적하는 매커니즘에 강하게 의존하는 &lt;a href=&quot;https://github.com/angular/angular/blob/30d5a2ca83c9cf44f602462597a58547b05b75dd/packages/core/src/zone/ng_zone.ts#L86&quot;&gt;NgZone&lt;/a&gt; 클래스를 구현합니다. &lt;code&gt;NgZone&lt;/code&gt; 은 단지 &lt;a href=&quot;https://github.com/angular/angular/blob/30d5a2ca83c9cf44f602462597a58547b05b75dd/packages/core/src/zone/ng_zone.ts#L252&quot;&gt;자식 존을 복제하는 것&lt;/a&gt;에 대한 래퍼(wrapper)입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;function forkInnerZoneWithAngularBehavior(zone: NgZonePrivate) {
+    zone._inner = zone._inner.fork({
+        name: 'angular',
+        ...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;복제된 존은 &lt;code&gt;_inner&lt;/code&gt; 속성에 저장됩니다. 그리고 보통 Angular zone으로써 참조합니다. 이 존은 &lt;code&gt;NgZone.run()&lt;/code&gt; 을 실행 할 때, 사용되는 존입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;run(fn, applyThis, applyArgs) {
+    return this._inner.run(fn, applyThis, applyArgs);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Angular zone을 복제한 순간에 현재 존은 &lt;code&gt;_outer&lt;/code&gt; 속성에 저장됩니다. 그리고 이 존은 &lt;code&gt;NgZone.runOutsideAngular()&lt;/code&gt; 메소드를 실행할 때, 사용되는 존입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;runOutsideAngular(fn) {
+    return this._outer.run(fn);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이 메소드는 성능에 영향을 끼칠 수 있는 작업을 실행할 때 종종 사용됩니다. Angular zone의 밖에서 실행되게 함으로써, 변화감지가 발생하는 것을 피할 수 있습니다.&lt;/p&gt;&lt;p&gt;NgZone은 중요한 마이크로 태스크나 매크로 태스크가 있는지 여부를 알려주는 &lt;code&gt;isStable&lt;/code&gt;이라는 속성을 가지고 있습니다. 또한 NgZone은 다음 4개의 이벤트를 정의합니다.&lt;/p&gt;
+&lt;figure&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;&lt;th style=&quot;text-align:left;&quot;&gt;이벤트&lt;/th&gt;&lt;th style=&quot;text-align:left;&quot;&gt;설명&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;text-align:left;&quot;&gt;onUnstable&lt;/td&gt;&lt;td style=&quot;text-align:left;&quot;&gt;Angular Zone에 진입할 때 발생합니다. 이 이벤트는 작업 턴(VM Turn)의 처음 한 번만 발생합니다.&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&quot;text-align:left;&quot;&gt;onMicrotaskEmpty&lt;/td&gt;&lt;td style=&quot;text-align:left;&quot;&gt;현재 작업 큐에 더 이상 마이크로 태스크가 존재하지 않을 때 발생합니다. 이 이벤트는 Angular가 마이크로 태스크가 큐에 들어 온 변화 감지를 수행하는 것을 도와줍니다. 따라서 이 이벤트는 각 작업 턴(VM Turn)마다 여러 번 발생할 수 있습니다.&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&quot;text-align:left;&quot;&gt;onStable&lt;/td&gt;&lt;td style=&quot;text-align:left;&quot;&gt;마지막 &lt;code&gt;onMicrotaskEmtpy&lt;/code&gt; 실행되어, 더 이상 마이크로 태스크가 존재하지 않을 때 발생합니다. 이것은 곧 작업 턴(VM Turn)을 종료할 것임을 의미합니다. 이 이벤트는 한 번만 발생합니다.&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&quot;text-align:left;&quot;&gt;onError&lt;/td&gt;&lt;td style=&quot;text-align:left;&quot;&gt;에러가 있을 때, 발생합니다.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;Angular는 변화 감지를 자동으로 발생시키기 위해서 &lt;a href=&quot;https://github.com/angular/angular/blob/30d5a2ca83c9cf44f602462597a58547b05b75dd/packages/core/src/application_ref.ts#L364&quot;&gt;ApplicationRef&lt;/a&gt; 내부에서 &lt;code&gt;onMicrotaskEmpty&lt;/code&gt; 이벤트를 사용합니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;this._zone.onMicrotaskEmpty.subscribe(
+    {next: () =&amp;gt; { this._zone.run(() =&amp;gt; { this.tick(); }); }});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;아직 이전 섹션에서 배운게 기억난다면, &lt;code&gt;tick()&lt;/code&gt; 메소드는 어플리케이션의 변화감지를 실행할 때 사용하는 메소드라고 알고 계실 겁니다.&lt;/p&gt;
+&lt;h2&gt;NgZone이 onMicrotaskEmpty 이벤트를 구현하는 방법&lt;/h2&gt;
+&lt;p&gt;자, 이제 &lt;code&gt;NgZone&lt;/code&gt;이 &lt;code&gt;onMicrotaskEmpty&lt;/code&gt; 이벤트를 구현하는 방법에 대해서 알아보겠습니다. 이 이벤트는 &lt;a href=&quot;https://github.com/angular/angular/blob/30d5a2ca83c9cf44f602462597a58547b05b75dd/packages/core/src/zone/ng_zone.ts#L233&quot;&gt;checkStable&lt;/a&gt; 함수에서 발생합니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;function checkStable(zone: NgZonePrivate) {
+  if (zone._nesting == 0 &amp;amp;&amp;amp; !zone.hasPendingMicrotasks &amp;amp;&amp;amp; !zone.isStable) {
+    try {
+      zone._nesting++;
+      zone.onMicrotaskEmpty.emit(null); // &amp;lt;----------- 바로 여기!!!!!!!!!!!!
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그리고 이 함수는 일반적으로 다음 세 가지 존의 후킹 메소드에서 호출됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;onHasTask&lt;/li&gt;
+&lt;li&gt;onInvokeTask&lt;/li&gt;
+&lt;li&gt;onInvoke&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: 저자의 이전 포스팅에서 설명한 내용입니다. 저 역시 &lt;a href=&quot;http://norux.me/65&quot;&gt;번역한 글&lt;/a&gt;이 있습니다.&lt;/p&gt;
+&lt;p&gt;onHasTask는 microTask, macroTask, eventTask, change 라는 4개의 상태를 전달해줬습니다. 이 상태로 큐 안에 태스크가 존재하는지 확인할 수 있었지만, 단지 '큐가 비었는지, 아닌지'를 판단했기 때문에 하나의 작업턴에서 여러 개의 태스크가 실행되는 것을 알 수는 없었습니다.&lt;/p&gt;&lt;p&gt;onInvokeTask는 위 개별 태스크를 추적하지 못하는 단점을 보완할 수 있는 함수로써, setTimeout(callback) 같은 비동기 함수에서 인자로 넘겨받은 콜백함수가 실행될 때, 발생했습니다.&lt;/p&gt;&lt;p&gt;마지막으로 onInvoke는 존에 진입할 때, 이벤트가 발생하는 것이었습니다. '존에 진입한다' 라는 것은, &lt;code&gt;z.run()&lt;/code&gt; 을 호출하거나 존 내부에서 특정 함수를 호출할 때 였습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Zone에 대해 설명한 이전 포스팅에서 설명한 것처럼, 마지막 두 개의 훅은 마이크로태스크 큐에 변화가 있을 때 발생합니다. 따라서 Angular는 훅이 동작할 때마다, &lt;code&gt;stable&lt;/code&gt; 검사를 수행해야만 합니다. 또한 &lt;code&gt;onHasTask&lt;/code&gt; 훅도 전체의 큐가 변화하는 것을 추적하므로 검사를 수행할 수 있습니다. &lt;/p&gt;
+&lt;h2&gt;흔한 함정&lt;/h2&gt;
+&lt;p&gt;변화 감지에 관련되어 스택오버플로우에 올라오는 가장 빈번한 질문중 하나는, 왜 일부 서드파티 라이브러리를 사용할 때, 컴포넌트가 변화를 감지하지 못하는지 입니다. 예를 들어 &lt;a href=&quot;https://stackoverflow.com/questions/46284490/angular-change-detection-for-updates-within-a-callback/46286400#46286400&quot;&gt;이런 질문&lt;/a&gt;들이 있습니다. 이러한 문제에 대해 가장 일반적인 해결책은 Angular zone 내부에서 콜백을 실행하도록 하는 것입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;gapi.load('auth2', () =&amp;gt; {
+    zone.run(() =&amp;gt; {
+        ...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;하지만, 왜 존이 훅 중 하나의 통지를 받는 요청을 등록하지 못하는지 궁금합니다. 그리고  &lt;code&gt;NgZone&lt;/code&gt; 자동으로 변화감지를 발생시키지 못하는 것에 대한 것입니다.&lt;/p&gt;&lt;p&gt;이걸 이해하기위해서, 저는  &lt;code&gt;gapi&lt;/code&gt; 의 minified된 소스를 파보았고, &lt;code&gt;gapi&lt;/code&gt;가 네트워크 요청을 받기 위해 &lt;a href=&quot;http://schock.net/articles/2013/02/05/how-jsonp-really-works-examples/&quot;&gt;JSONP&lt;/a&gt;를 사용한다는 것을 발견했습니다. 이 접근법은 존에 의해 패치/추적되는 &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest&quot;&gt;XMLHttpReqeust&lt;/a&gt;나 &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API&quot;&gt;Fetch API&lt;/a&gt; 같이 일반적인 Ajax를 사용하는 방법이 아닙니다. 대신에 URL을 가지는 &lt;code&gt;script&lt;/code&gt; 태그를 생성하고, 서버로부터 가져오는 데이터를 담는 스크립트가 요청 될 때 발생하는 전역 콜백을 정의합니다. 이것은 존에 의해 패치되거나 탐지될 수 없습니다. 따라서 Angular는 이 기술을 사용한 요청에 대해 까맣게 잊어버리게 되는 것입니다.&lt;/p&gt;&lt;p&gt;여기에 &lt;a href=&quot;https://apis.google.com/js/api.js&quot;&gt;gapi 최소화 버전&lt;/a&gt;에서 추출한 코드 스니펫이 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;Ja = function(a) {
+    var b = L.createElement(Z);
+    b.setAttribute(“src”, a);
+    a = Ia();
+    null !== a &amp;amp;&amp;amp; b.setAttribute(“nonce”, a);
+    b.async = “true”;
+    (a = L.getElementsByTagName(Z)[0]) ? 
+        a.parentNode.insertBefore(b, a) : 
+        (L.head || L.body || L.documentElement).appendChild(b)
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;z&lt;/code&gt; 변수는 &lt;code&gt;script&lt;/code&gt; 와 똑같고, 파라미터인 &lt;code&gt;a&lt;/code&gt; 는 요청 URL을 가지고 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;https://apis.google.com/_.../cb=gapi.loaded_0
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;URL의 마지막 세그먼트는 &lt;code&gt;gapi.loaded_0&lt;/code&gt; 이라는 전역 콜백입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;typeof gapi.loaded_0 
+&quot;function&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;읽어주셔서 감사합니다. 이 포스티잉 좋았다면 박수를 눌러주시구요. 더 많은 이야기가 읽고 싶으시면, 제 &lt;a href=&quot;https://twitter.com/maxim_koretskyi&quot;&gt;Twitter&lt;/a&gt; 나 &lt;a href=&quot;https://medium.com/@maximus.koretskyi&quot;&gt;Midium&lt;/a&gt;을 팔로우 해주세요.&lt;/p&gt;
+&lt;h2&gt;참고&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://blog.angularindepth.com/do-you-still-think-that-ngzone-zone-js-is-required-for-change-detection-in-angular-16f7a575afef&quot; target=&quot;_blank&quot;&gt;https://blog.angularindepth.com/do-you-still-think-that-ngzone-zone-js-is-required-for-change-detection-in-angular-16f7a575afef&lt;/a&gt;&lt;/li&gt;
+
+&lt;/ul&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://norux.me/66&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Angular2</category>
+<category>Angular</category>
+<category>NgZone</category>
+<category>zone</category>
+<author>norux</author>
+<guid>https://norux.me/66</guid>
+<comments>https://norux.me/66#entry66comment</comments>
+<pubDate>Mon, 23 Apr 2018 17:57:41 +0900</pubDate>
+</item>
+<item>
+<title>[번역] Zones(zone.js)를 리버스 엔지니어링해서 찾은 것</title>
+<link>https://norux.me/65</link>
+<description>&lt;h1&gt;[번역] Zones(zone.js)를 리버스 엔지니어링해서 찾은 것&lt;/h1&gt;
+&lt;blockquote&gt;&lt;p&gt;본 포스팅은 &lt;a href=&quot;https://blog.angularindepth.com/i-reverse-engineered-zones-zone-js-and-here-is-what-ive-found-1f48dc87659b&quot;&gt;I reverse-engineered Zones (zone.js) and here is what I’ve found&lt;/a&gt; 글을 번역한 글입니다.&lt;/p&gt;&lt;p&gt;많은 의역이 포함되어 있을 수 있습니다. :)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;부제 - Zones이란? (Zones은 무엇이며 또 어떻게 사용할까?)&lt;/h2&gt;
+&lt;blockquote&gt;&lt;p&gt;이 포스팅은 NgZone에 대한 포스팅이 아니지만, NgZone의 메커니즘은 Zones(zone.js)을 이용하기 때문에 비슷할 수 있습니다. 이 포스팅에서는 NgZone을 직접 만들 수 있는 방법과 Angular의 NgZone은 어떻게 동작하는지에 대해서 설명합니다. NgZone에 대해서 더 많이 공부하시려면 &lt;a href=&quot;https://blog.angularindepth.com/do-you-still-think-that-ngzone-zone-js-is-required-for-change-detection-in-angular-16f7a575afef&quot;&gt;&quot;당신은 아직도 NgZone은 Angular의 Change Detection을 위해서 필요한 것이라고 생각하시나요?&quot;&lt;/a&gt; 라는 포스팅을 읽어보세요.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: 위 포스팅은 &lt;a href=&quot;http://norux.me/66&quot; target=&quot;_top&quot; class=&quot;tx-link&quot;&gt;[번역] 아직도 NgZone이 단순하게 Angular의 변화감지(Change Detection)를 위해서만 필요하다고 생각하시나요? &lt;/a&gt;에서 번역되었습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;Zones&lt;/code&gt;은 논리적으로 연결된 여러 개의 비동기 오퍼레이션의 작업을 쉽게 할 수 잇도록 도와주는 새로운 메커니즘입니다. &lt;code&gt;Zones&lt;/code&gt;은 각각의 비동기 오퍼레이션을 존(실행영역)에 연결시키는 작업을 합니다. 개발자는 이 바인딩으로 다음의 이점을 누릴 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;다른 언어에서 쓰레드(Thread)의 개념과 유사한 &lt;strong&gt;&lt;u&gt;'존'&lt;/u&gt;&lt;/strong&gt;에 연결된 데이터들은, 같은 존안에서는 어떤 비동기 오퍼레이션에서도 접근할 수 있게 됩니다. (데이터 접근성)&lt;/li&gt;
+&lt;li&gt;클린업이나, 랜더링, 테스트 검증 작업을 수행하기 위해 존안에서 실행된 특징적인 비동기 오퍼레이션을 자동으로 추적합니다. (자동 추적)&lt;/li&gt;
+&lt;li&gt;존안에서 실행된 전체 시간을 측정할 수 있습니다. 이는 성능 프로파일링에 도움이 됩니다. (쉬운 프로파일링)&lt;/li&gt;
+&lt;li&gt;최상위 영역에 예외들을 전달하지 않아도, 존 안에서 예상하지 못한 모든 예외(uncaught exception)와 처리하지 못한 Promise의 예외(rejection)들을 다룰 수 있습니다. (예외 처리)&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;p&gt;웹에 공개되어 있는 대부분의 포스팅들은 오래된 API를 설명하거나, &lt;code&gt;Zones&lt;/code&gt;에 대해서 상당히 단순하게 설명합니다. 따라서 본 포스팅에서는 최신 API와 중요한 API들에 대해 &lt;em&gt;매우 자세하게&lt;/em&gt;, 그리고 &lt;em&gt;가능한 구현 레벨에 가깝게&lt;/em&gt;  설명할 것입니다. 먼저 API를 설명하고, 비동기 작업 연결 메커니즘을 보여주고, 그 다음으로 위에 언급된 작업(Task)들을 개발자가 사용할 수 있도록 하는 인터셉트 후킹 기법을 설명하겠습니다. 그리고 마지막으로  &lt;code&gt;Zones&lt;/code&gt;의 핵심 엔진이 작동하는 방법에 대해 짧게 설명하도록 하겠습니다.&lt;/p&gt;&lt;p&gt;&lt;code&gt;Zones&lt;/code&gt;은 현재 &lt;a href=&quot;https://github.com/nodejs/TSC/issues/340&quot;&gt;Node의 반대&lt;/a&gt;로 인해 ECMAScript 표준의 0단계에서 &lt;a href=&quot;https://github.com/domenic/zones&quot;&gt;제안&lt;/a&gt; 이 머무르고 있는 상태입니다. &lt;code&gt;Zones&lt;/code&gt;은 흔히 &lt;code&gt;Zone.js&lt;/code&gt;라고 언급되는데, &lt;a href=&quot;https://github.com/angular/zone.js&quot;&gt;GitHub 저장소&lt;/a&gt;와 &lt;a href=&quot;https://www.npmjs.com/package/zone.js&quot;&gt;NPM 패키지&lt;/a&gt;가 &lt;code&gt;Zone.js&lt;/code&gt;라고 이름을 사용하고 있기 때문입니다. 하지만 본 포스팅에서는 스펙에 명시된것처럼 &lt;code&gt;Zone&lt;/code&gt;으로 명시하도록 하겠습니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: &lt;a href=&quot;https://github.com/nodejs/TSC/issues/340&quot;&gt;Node의 반대&lt;/a&gt; 사유를 보면, 에러처리에 대한 논의가 있는 것 같습니다. 위에 언급한것처럼 존을 사용하면 Uncaught Exception같은 처리되지 않은 예외에 대해서 존에 후킹을 걸어 처리할 수 있게 됩니다. 하지만 이는 Node.js에서 제공하는 &lt;code&gt;process.on('uncaughtException')&lt;/code&gt; 라는 프로세스 차원의 예외처리 이벤트와 약간의 모순이 있는 것 같습니다. &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;Zone API에 관하여&lt;/h2&gt;
+&lt;p&gt;첫 번째로  &lt;code&gt;Zones&lt;/code&gt;이 동작하는 것과 관련된 메소드들을 살펴보겠습니다. Zone의 클래스는 다음의 인터페이스를 갖습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;class Zone {
+  constructor(parent: Zone, zoneSpec: ZoneSpec);
+  static get current();
+  get name();
+  get parent();
+
+  fork(zoneSpec: ZoneSpec);
+  run(callback, applyThis, applyArgs, source);
+  runGuarded(callback, applyThis, applyArgs, source);
+  wrap(callback, source);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;Zones&lt;/code&gt;은 &lt;strong&gt;현재 존(Current Zone)&lt;/strong&gt;이라는 개념을 갖는 다는 것이 무엇보다 중요합니다. 현재 영역은 모든 비동기 오퍼레이션을 전달 받은 비동기 컨텍스트입니다. 이것은 현재 실행된 스택프레임과 비동기 작업을 연결시킨 &lt;strong&gt;&lt;u&gt;존(Zone)&lt;/u&gt;&lt;/strong&gt;을 의미합니다. 이 현재 존은 &lt;code&gt;Zone.current&lt;/code&gt; 라는 스태틱 게터(static getter)함수로 접근이 가능합니다.&lt;/p&gt;&lt;p&gt;각 존은 &lt;code&gt;name&lt;/code&gt;을 갖습니다. 이 이름은 대부분 디버깅을 위해서 사용됩니다. 또한 존을 조작하기 위한 다음의 메소드들이 정의되어 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;z.run(callbak, ...)&lt;/code&gt; : 주어진 존 안에서 동기적으로 함수를 호출합니다. 이 함수는 실행된 콜백의 현재 존을 &lt;code&gt;z&lt;/code&gt;로 설정합니다. 그리고 콜백의 실행이 완료되고나면 현재 존을 원래의 존으로 되돌립니다. 존 안에서 실행된 콜백은 보통 존에 &lt;strong&gt;&lt;u&gt;'들어감(entering)'&lt;/u&gt;&lt;/strong&gt; 이라고 표현합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;z.runGuarded(callback, ...)&lt;/code&gt; : 기본적으로는 &lt;code&gt;run&lt;/code&gt; 함수와 동일합니다. 단, 런타임 에러를 캐치하고, 에러를 인터셉트한 메커니즘을 제공한다는 차이점이 있습니다. 만약 에러가 어떤 부모 존에서도 처리되지 않으면, 에러는 다시 &lt;code&gt;throw&lt;/code&gt; 됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;z.wrap(callback)&lt;/code&gt; : 클로저에 z를 담은 새로운 함수를 만듭니다. 그리고 실행 될 때, &lt;code&gt;z.runGuarded(callback)&lt;/code&gt; 함수를 호출합니다. 나중에 콜백으로  &lt;code&gt;other.run(callback)&lt;/code&gt; 함수를 받는다 해도,  &lt;code&gt;other&lt;/code&gt; 존이 아니라 여전히 &lt;code&gt;z&lt;/code&gt; 존 안에서 실행됩니다. 이 메커니즘은 Javascript에서 &lt;code&gt;Function.prototype.bind&lt;/code&gt; 메소드가 동작하는 방법과 유사한 개념입니다.&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;p&gt;다음 섹션에서 우리는 &lt;code&gt;fork&lt;/code&gt; 메소드에 대해 이야기할 것입니다. 존은 작업의 실행(run), 스케쥴링(schedule), 취소(cancel)에 대한 많은 메소드들도 가지고 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;class Zone {
+  runTask(...);
+  scheduleTask(...);
+  scheduleMicroTask(...);
+  scheduleMacroTask(...);
+  scheduleEventTask(...);
+  cancelTask(...);
+  ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이 메소드들 개발자들이 거의 사용할 일이 없는 로우 레벨의 메소드들 입니다. 따라서 본 포스팅에서는 이것들에 대해 자세히 알아보지는 않을 것입니다. 작업을 스케쥴링하는 것은 존의 내부 오퍼레이션이며, 개발자들은 단순히 &lt;code&gt;setTimeout&lt;/code&gt;과 같은 비동기 오퍼레이션을 호출한다고 생각해도 괜찮습니다.&lt;/p&gt;
+&lt;h2&gt;콜 스택에서 존을 유지하기&lt;/h2&gt;
+&lt;p&gt;Javascript VM은 각각의 함수를 그들의 &lt;a href=&quot;https://blog.sessionstack.com/how-does-javascript-actually-work-part-1-b0bacc073cf#6e11&quot;&gt;스택 프레임(실행 영역)&lt;/a&gt;에서 실행합니다. 만약 다음과 같은 코드를 실행한다면 어떻게 될까요?&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;function c() {
+    // capturing stack trace
+    try {
+        new Function('throw new Error()')();
+    } catch (e) {
+        console.log(e.stack);
+    }
+}
+
+function b() { c() }
+function a() { b() }
+
+a();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;c&lt;/code&gt; 함수 내부에서 다음의 콜 스택을 가지는 것을 볼 수 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot; lang=&quot;bash&quot;&gt;at c (index.js:3)
+at b (index.js:10)
+at a (index.js:14)
+at index.js:17
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/Ou8y9Jj.png&quot; alt=&quot;Imgur&quot;&gt;&lt;/p&gt;&lt;p&gt;우리가 호출한 3개의 함수에 대한 스택 프레임과 글로벌 영역의 스택 하나를 가지게 됩니다.&lt;/p&gt;&lt;p&gt;일반적인 Javascript 환경에서는 &lt;code&gt;c&lt;/code&gt; 함수에 대한 스택프레임을 &lt;code&gt;a&lt;/code&gt; 함수의 스택 프레임에 연결시킬 어떠한 방법도 없습니다. 존은 같은 존에 있는 각 스택 프레임들을 서로 연결시킬 수 있도록 합니다. 예를 들어, 우리는 &lt;code&gt;a&lt;/code&gt;와 &lt;code&gt;c&lt;/code&gt;의 스택프레임을 같은 존에 만들어서 효율적으로 연결시킬 수 있습니다. 이제 다음과 같은 스택프레임을 만들 것입니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/UWGLk9O.png&quot; alt=&quot;Imgur&quot;&gt;&lt;/p&gt;&lt;p&gt;잠깐만 기다리세요. 1분만 뒤에 어떻게 만드는지 말씀드릴게요.&lt;/p&gt;
+&lt;h2&gt;zone.fork를 이용하여 자식 존 생성하기&lt;/h2&gt;
+&lt;p&gt;존에서 가장 많이 사용되는 기능 중 하나는 &lt;code&gt;fork&lt;/code&gt; 함수를 통해서 새로운 존을 생성하는 것입니다. 존을 복제(fork) 하면 새로운 자식 존이 생성되고, 복제된 존의 &lt;code&gt;parent&lt;/code&gt;는 기존의 존이 됩니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;const c = z.fork({name: 'c'});
+console.log(c.parent === z);  // true
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;fork&lt;/code&gt; 메소드의 핵심은 클래스를 이용하여 단순히 새로운 존을 만드는 것입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;new Zone(targetZone, zoneSpec);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;a&lt;/code&gt;와 &lt;code&gt;c&lt;/code&gt; 함수를 같은 존에서 실행하여 서로 연결시키기 위한 우리의 목표를 완료하기 위해서, 먼저 존을 생성해야 합니다. 이제 위에서 보여준 &lt;code&gt;fork&lt;/code&gt; 메소드를 사용하게습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;const zoneAC = Zone.current.fork({name: 'AC'});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;fork&lt;/code&gt; 메소드에 전달한 오브젝트는 존 명세(&lt;strong&gt;&lt;u&gt;ZoneSpec&lt;/u&gt;&lt;/strong&gt;)라고 불립니다. 그리고 다음의 속성들이 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;interface ZoneSpec {
+    name: string;
+    properties?: { [key: string]: any };
+    
+    onFork?: ( ... );
+    onIntercept?: ( ... );
+    onInvoke?: ( ... );
+    onHandleError?: ( ... );
+    onScheduleTask?: ( ... );
+    onInvokeTask?: ( ... );
+    onCancelTask?: ( ... );
+    onHasTask?: ( ... );
+    ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;name&lt;/code&gt;은 존의 이름으로 정의 되며, &lt;code&gt;properties&lt;/code&gt;는 존안의 데이터들을 연결시키기 위해 사용됩니다. 다른 모든 속성들은 부모 존이 자식 존의 특정 오퍼레이션을 인터셉트할 수 있게 해주는 '후킹' 속성입니다. 이것은 &lt;code&gt;fork&lt;/code&gt;가 존을 계층적으로 생성한다는 점과 존을 조작할 수 있는 모든 메소드들은 후킹을 시도하는 부모 존에 의해 인터셉트될 수 있다는 점을 이해하기 위해 중요한 요소입니다. 이따가 우리는 비동기 오퍼레이션 사이에 데이터를 공유하기 위해 &lt;code&gt;properties&lt;/code&gt;를 사용하는 방법과 구현된 작업을 추적하기 위해 후킹하는 방법에 대해 알아볼 것입니다.&lt;/p&gt;&lt;p&gt;일단 자식 존을 하나 더 만듭시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;const zoneB = Zone.current.fork({name: 'B'});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이제 우리는 두개의 존이 생겼습니다. 그리고 각 존 안에서 함수들을 실행할 수 있게 되어습니니다. 존 안에서 함수를 실행하기 위해서는  &lt;code&gt;zone.run()&lt;/code&gt; 메소드를 사용합니다.&lt;/p&gt;
+&lt;h2&gt;zone.run을 이용하여 존을 변경하기&lt;/h2&gt;
+&lt;p&gt;존에 연결된 특정 스택 프레임을 만들기 위해서 &lt;code&gt;run&lt;/code&gt; 메소드를 이용하겠습니다. 이미 말했듯이, &lt;code&gt;run&lt;/code&gt; 메소드는 명세된 존 안에서 동기적으로 콜백을 실행합니다. 그리고 콜백이 종료되면 원래의 존으로 복구합니다. &lt;/p&gt;&lt;p&gt;그럼, 이제 예제를 수정해서 실행해 봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt; function c() {
+    console.log(Zone.current.name);  // AC
+}
+function b() {
+    console.log(Zone.current.name);  // B
+    zoneAC.run(c);
+}
+function a() {
+    console.log(Zone.current.name);  // AC
+    zoneB.run(b);
+}
+zoneAC.run(a);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이제 매 콜 스택마다 존에 연결되어 있습니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/UWGLk9O.png&quot; alt=&quot;Imgur&quot;&gt;&lt;/p&gt;&lt;p&gt;위 코드에서 보시다시피, 각 함수는 사용할 존을 직접적으로 정의하여  &lt;code&gt;run&lt;/code&gt; 메소드로 실행했습니다. 아마도 당신은 &lt;code&gt;run&lt;/code&gt; 메소드를 사용하지 않고, 존 안에서 단순히 함수를 호출하게 되면 어떻게 되는지 의문이 생기실 겁니다.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;모든 함수의 호출과 함수 내부에서 스케쥴링된 비동기 작업은 해당 함수와 동일한 존에서 실행된다는 것을 이해하세요. 이것은 매우 중요합니다.&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;우리는 항상 루트 존을 갖는 존 환경을 알고 있습니다. 만약 우리가 &lt;code&gt;zone.run()&lt;/code&gt; 함수로 존을 변경하지 않는다면, 아마 모든 함수들은 &lt;code&gt;root&lt;/code&gt; 존에서 실행될 것입니다. 다음 코드를 보시죠&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;function c() {
+    console.log(Zone.current.name);  // &amp;lt;root&amp;gt;
+}
+function b() {
+    console.log(Zone.current.name);  // &amp;lt;root&amp;gt;
+    c();
+}
+function a() {
+    console.log(Zone.current.name);  // &amp;lt;root&amp;gt;
+    b();
+}
+a();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;네, 이런 경우입니다. 다이어그램은 다음과 같이 됩니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/nPNc6ZF.png&quot; alt=&quot;Imgur&quot;&gt;&lt;/p&gt;&lt;p&gt;이번에는 &lt;code&gt;a&lt;/code&gt; 함수에서만  &lt;code&gt;zoneAB.run&lt;/code&gt; 을 사용해봅시다. &lt;code&gt;b&lt;/code&gt;와 &lt;code&gt;c&lt;/code&gt;는 &lt;code&gt;AB&lt;/code&gt;존에서 실행될 것입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;const zoneAB = Zone.current.fork({name: 'AB'});
+
+function c() {
+    console.log(Zone.current.name);  // AB
+}
+
+function b() {
+    console.log(Zone.current.name);  // AB
+    c();
+}
+
+function a() {
+    console.log(Zone.current.name);  // &amp;lt;root&amp;gt;
+    zoneAB.run(b);
+}
+
+a();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/mqPU2hb.png&quot; alt=&quot;Imgur&quot;&gt;&lt;/p&gt;&lt;p&gt;위 코드에서 우리는  &lt;code&gt;AB&lt;/code&gt; 존안에서  &lt;code&gt;b&lt;/code&gt; 함수를 명시적으로 호출했습니다.  그리고 &lt;code&gt;c&lt;/code&gt; 함수도 `AB 존 안에서 실행이 되었습니다.&lt;/p&gt;
+&lt;h2&gt;비동기 태스크에서 존을 유지하기&lt;/h2&gt;
+&lt;p&gt;자바스크립트 개발에서 두드러지는 특징 중 하나는 비동기 프로그래밍이라는 것입니다. 아마도 대부분의 신규 자바스크립트 개발자들은 &lt;code&gt;setTimeout&lt;/code&gt; 메소드와 같이 함수의 실행을 연기하는 비동기적 패러다임에 익숙할것입니다. 존은 &lt;code&gt;setTimeout&lt;/code&gt; 같은 비동기 오퍼레이션을 호출할 수 있습니다. 이런 함수를 특히 매크로태스크라고 부릅니다. 그리고 마이크로태스크라는 태스크의 다른 종류도 있습니다. &lt;code&gt;Promise.then&lt;/code&gt;과 같른 함수가 마이크로태스크입니다. 이런 용어들은 브라우저의 내부에서 사용됩니다. &lt;a href=&quot;https://twitter.com/jaffathecake&quot;&gt;Jake Archibald&lt;/a&gt;는 &lt;a href=&quot;https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/&quot;&gt;Tasks, microtasks, queues and schedules&lt;/a&gt; 포스팅에서 이를 자세히 설명합니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: 지난번에 마이크로태스크(Microtask)에 이어 매크로태스크(Macrotask)가 나왔습니다. 매크로태스크는 일반 태스크라고 생각하시면 됩니다. 매크로테스크의 종류로는 setTimeout, setInterval 등의 함수가 있고, 마이크로태스크는 대표적으로 Promise가 있습니다. 마이크로태스크의 우선순위가 더 높기 때문에 큐에서 같이 대기중이라면, 먼저 실행이 되게 됩니다. 마이크로태스크에 대해서 더 관심이 있으신 분은 위 연결된 링크인 &lt;a href=&quot;https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/&quot;&gt;Tasks, microtasks, queues and schedules&lt;/a&gt;를 참조하세요. &lt;/p&gt;&lt;p&gt;다음 코드는 위 본문에서 나오는 코드입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;console.log('script start');
+
+setTimeout(function() {
+  console.log('setTimeout');
+}, 0);
+
+Promise.resolve().then(function() {
+  console.log('promise1');
+}).then(function() {
+  console.log('promise2');
+});
+
+console.log('script end');
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;마이크로태스크의 우선순위가 더 높기 때문에 이 코드를 실행하면 다음과 같은 결과가 나옵니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;script start
+script end
+promise1
+promise2
+setTimeout
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;이제 &lt;code&gt;setTimeout&lt;/code&gt; 과 같은 비동기 작업을 존이 어떻게 다루는지 알아보겠습니다. 우리는 &lt;code&gt;c&lt;/code&gt; 함수를 즉시 호출하는 대신에 &lt;code&gt;setTimeout&lt;/code&gt; 함수의 콜백을 통해 호출하는 것으로 변경하겠습니다. 이 함수는 약 2초뒤에 &lt;strong&gt;분리된 콜스택&lt;/strong&gt;에서 실행될 것입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;const zoneBC = Zone.current.fork({name: 'BC'});
+
+function c() {
+    console.log(Zone.current.name);  // BC
+}
+
+function b() {
+    console.log(Zone.current.name);  // BC
+    setTimeout(c, 2000);
+}
+
+function a() {
+    console.log(Zone.current.name);  // &amp;lt;root&amp;gt;
+    zoneBC.run(b);
+}
+
+a();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;우리는 위에서 존 안에서 호출한 함수는 같은 존에서 실행된다는 것을 배웠습니다. 그리고 이 행동은 비동기 오퍼레이션에도 똑같이 적용됩니다. 우리가 비동기 태스크를 사용해서 콜백함수를 정의했다면, 이 콜백 함수는 비동기 태스크를 실행한 존과 같은 존에서 실행이 됩니다.&lt;/p&gt;&lt;p&gt;따라서 다음과 같은 그림을 그릴 수 있습니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/VHMjQd7.png&quot; alt=&quot;Imgur&quot;&gt;&lt;/p&gt;&lt;p&gt;매우 훌륭합니다. 그런데, 이 다이어그램은 중요한 세부 구현을 감추고 있습니다. 내부적으로 존은 실행될 각 태스크에 대한 정확한 존을 복구해야만 합니다. 그러기 위해서 태스크가 실행된 존은 무엇인지 기억해야합니다. 존은 태스크에 연결된 존의 레퍼런스를 유지함으로써 이 정보를 기억합니다. 그리고 이 존은 루트 존의 핸들러로부터 태스크를 호출하는데 사용됩니다.&lt;/p&gt;&lt;p&gt;이는 매 비동기 작업에 대한 콜스택은 항상 정확한 존을 복구하기 위한 태스크와 연결된 정보를 가지는 루트존에서 시작한다는 것을 의미합니다. 그리고 이 존에서 태스크를 호출합니다. 따라서 좀 더 정확한 그림은 여기 있습니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/ZgYnMBb.png&quot; alt=&quot;Imgur&quot;&gt;&lt;/p&gt;
+&lt;h2&gt;비동기 태스크에서 컨택스트 전파&lt;/h2&gt;
+&lt;p&gt;존에는 개발자가 유용하게 사용할 수 있는 흥미로운 능력이 여러 개 있습니다. 그 중 하나는 &lt;strong&gt;컨택스트 전파&lt;em&gt;Context propagation&lt;/em&gt;&lt;/strong&gt;입니다. 간단하게 말해서 이것은  데이터를 존에 넣어놓으면, 이 존안에서 실행된 어떤 태스크들이라도 이 데이터에 접근할 수 있다는 것을 의미합니다.&lt;/p&gt;&lt;p&gt;우리의 마지막 예제를 만들어 봅시다. 비동기 태스크인 &lt;code&gt;setTimeout&lt;/code&gt;을 통해 데이터를 유지하는 방법에 대해 설명하겠습니다. 우리는 이미 새로 존을 복제(fork)할 때, &lt;code&gt;zoneSpec&lt;/code&gt;  오브젝트를 인자로 사용하는 것을 배웠습니다. 이 오브젝트는 옵셔널한 속성인 &lt;code&gt;properties&lt;/code&gt;를 가질 수 있었습니다. 존에 데이터를 연결시키기 위해서 이 속성을 사용해봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;const zoneBC = Zone.current.fork({
+    name: 'BC',
+    properties: {
+        data: 'initial'
+    }
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그리고 &lt;code&gt;zone.get&lt;/code&gt; 메소드를 사용하면 이 데이터에 접근할 수 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;function a() {
+    console.log(Zone.current.get('data')); // 'initial'
+}
+
+function b() {
+    console.log(Zone.current.get('data')); // 'initial'
+    setTimeout(a, 2000);
+}
+
+zoneBC.run(b);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;properties&lt;/code&gt; 오브젝트는 &lt;strong&gt;얕은 불변&lt;em&gt;Shallow-immutable&lt;/em&gt;&lt;/strong&gt;입니다. 얕은 불변이란 오브젝트에 속성을 추가하거나 제거할 수 없다는 것을 의미합니다. 이것은 존이 오브젝트를 변경하기 위한 어떤 메소드도 제공하지 않기 때문에 중요합니다. 따라서 위 예제에서 우리는 &lt;code&gt;properties.data&lt;/code&gt;에 다른 값을 할당할 수 없습니다.&lt;/p&gt;&lt;p&gt;하지만 &lt;code&gt;properties.data&lt;/code&gt;에 원시&lt;em&gt;primitive&lt;/em&gt;타입 대신에 오브젝트를 전달한다면 우리는 데이터를 수정할 수 있게 됩니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;const zoneBC = Zone.current.fork({
+    name: 'BC',
+    properties: {
+        data: {
+            value: 'initial'
+        }
+    }
+});
+
+function a() {
+    console.log(Zone.current.get('data').value); // 'updated'
+}
+
+function b() {
+    console.log(Zone.current.get('data').value); // 'initial'
+    Zone.current.get('data').value = 'updated';
+    setTimeout(a, 2000);
+}
+
+zoneBC.run(b);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그리고 &lt;code&gt;fork&lt;/code&gt;메소드를 사용하여 생성된 자식 존 역시 부모존의 &lt;code&gt;properties&lt;/code&gt;를 상속한다는 점도 아주 재미있습니다. 코드를 보시죠.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;const parent = Zone.current.fork({
+    name: 'parent',
+    properties: { data: 'data from parent' }
+});
+
+const child = parent.fork({name: 'child'});
+
+child.run(() =&amp;gt; {
+    console.log(Zone.current.name); // 'child'
+    console.log(Zone.current.get('data')); // 'data from parent'
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;중요한 태스크 추적하기&lt;/h2&gt;
+&lt;p&gt;존은 또한 중요한 비동기 매크로태스크나 마이크로태스크를 추적하는 유용하고 매우 흥미로운 능력이 있습니다. 존은 큐 안에 있는 모든 중요한 태스크들을 유지합니다. 큐의 상태가 바뀔때마다 알림을 받기 위해서 &lt;code&gt;zoneSpec&lt;/code&gt;에 있는 &lt;code&gt;onHasTask&lt;/code&gt; 라는 후킹 함수를 이용할 수 있습니다. &lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;onHasTask(delegate, currentZone, targetZone, hasTaskState);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;부모 존은 자식 존의 이벤트를 가로챌 수 있기 때문에, 이벤트를 가로챈 존과 태스크 큐(task queue)에서 바뀐 존을 구별하기 위해서  &lt;code&gt;currentZone&lt;/code&gt;과 &lt;code&gt;targetZone&lt;/code&gt; 파라미터가 필요합니다. 예를 들어, 현재 존의 이벤트를 가로챘는지 확인하기 위해서는 두 파라미터를 다음과 같이 비교하면 됩니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;// We are only interested in event which originate from our zone
+if (currentZone === targetZone) { ... }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;후킹함수의 마지막 파라미터는 태스크 큐의 상태를 가지고 있는 &lt;code&gt;hasTaskState&lt;/code&gt; 입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;type HasTaskState = {
+    microTask: boolean;
+    macroTask: boolean;
+    eventTask: boolean;
+    change: 'microTask'|'macroTask'|'eventTask';
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;만약 존 안에서 &lt;code&gt;setTimeout&lt;/code&gt; 호출했다면, &lt;code&gt;hasTaskState&lt;/code&gt; 오브젝트는 다음의 값을 전달합니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;{
+    microTask: false; 
+    macroTask: true; 
+    eventTask: false; 
+    change: 'macroTask';
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;위 상태는 큐 안에 팬딩된 매크로태스크가 있으며, &lt;code&gt;macroTask&lt;/code&gt;로부터 변화가 생겼다는 것을 말해줍니다.&lt;/p&gt;&lt;p&gt;다음의 코드를 봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;const z = Zone.current.fork({
+    name: 'z',
+    onHasTask(delegate, current, target, hasTaskState) {
+        console.log(hasTaskState.change);          // &quot;macroTask&quot;
+        console.log(hasTaskState.macroTask);       // true
+        console.log(JSON.stringify(hasTaskState));
+    }
+});
+
+function a() {}
+
+function b() {
+    // synchronously triggers `onHasTask` event with
+    // change === &quot;macroTask&quot; since `setTimeout` is a macrotask
+    setTimeout(a, 2000);
+}
+
+z.run(b);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이 코드의 실행 결과는 다음과 같습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;macroTask
+true
+{
+    &quot;microTask&quot;: false,
+    &quot;macroTask&quot;: true,
+    &quot;eventTask&quot;: false,
+    &quot;change&quot;: &quot;macroTask&quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;2초후에 실행이 완료되면 &lt;code&gt;onHasTask&lt;/code&gt;는 다시 발생합니다.(trigger) &lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;macroTask
+false
+{
+    &quot;microTask&quot;: false,
+    &quot;macroTask&quot;: false,
+    &quot;eventTask&quot;: false,
+    &quot;change&quot;: &quot;macroTask&quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;하지만 한 가지 주의사항이 있습니다. &lt;code&gt;onHasTask&lt;/code&gt; 후킹은 &lt;strong&gt;전체의 태스크 큐&lt;/strong&gt;의 &lt;code&gt;비어있거나(empty) 혹은 비어있지 않은(non-empty)&lt;/code&gt; 상태를 추적할때만 사용할 수 있습니다. &lt;strong&gt;각각의 태스크 큐&lt;/strong&gt;를 추적할 때는 사용할 수 없습니다. 다음의 코드를 실행해 보시죠.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;let timer;
+
+const z = Zone.current.fork({
+    name: 'z',
+    onHasTask(delegate, current, target, hasTaskState) {
+        console.log(Date.now() - timer);
+        console.log(hasTaskState.change);
+        console.log(hasTaskState.macroTask);
+    }
+});
+
+function a1() {}
+function a2() {}
+
+function b() {
+    timer = Date.now();
+    setTimeout(a1, 2000);
+    setTimeout(a2, 4000);
+}
+
+z.run(b);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그럼 이런 결과가 나옵니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;1
+macroTask
+true
+
+4006
+macroTask
+false
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;2초 뒤에 완료 되는 첫 번째  &lt;code&gt;setTimeout&lt;/code&gt; 태스크에 대한 이벤트는 볼 수 없습니다. 첫 번째의 &lt;code&gt;setTimeout&lt;/code&gt;이 실행 될 때와, 태스크 큐의 상태가 &lt;strong&gt;비어있지 않은&lt;em&gt;non-empty&lt;/em&gt;&lt;/strong&gt;상태에서 &lt;strong&gt;비어있는&lt;em&gt;empty&lt;/em&gt;&lt;/strong&gt;상태로 변화될 때 &lt;code&gt;onHasTask&lt;/code&gt; 후킹이  발생합니다. 그래서 두 번째 &lt;code&gt;setTimeout&lt;/code&gt; 콜백이 완료되는 4초 뒤에 발생합니다.&lt;/p&gt;&lt;p&gt;만약 개별 태스크에 대해서 추적하고 싶다면, &lt;code&gt;onScheduleTask&lt;/code&gt;와 &lt;code&gt;onInvokeTask&lt;/code&gt; 후킹함수가 필요합니다.&lt;/p&gt;
+&lt;h2&gt;onScheduleTask 와 onInvokeTask&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;zoneSpec&lt;/code&gt;은 개별 테스크들을 추적할 때 사용할 수 있는 두 가지 훅을 정의합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;onScheduleTask: &lt;code&gt;setTimeout&lt;/code&gt; 같은 비동기 오퍼레이션이 탐지될 때마다 실행됩니다.&lt;/li&gt;
+&lt;li&gt;onInvokeTask: &lt;code&gt;setTimeout(callback)&lt;/code&gt; 같이 비동기 오퍼레이션으로 전달된 콜백이 동작될 때 실행됩니다.&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;p&gt;개별 태스크들을 추적하기 위해 이 훅들을 사용하는 방법을 보겠습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt; 
+let timer;
+
+const z = Zone.current.fork({
+    name: 'z',
+    onScheduleTask(delegate, currentZone, targetZone, task) {
+      const result = delegate.scheduleTask(targetZone, task);
+      const name = task.callback.name;
+      console.log(
+          Date.now() - timer, 
+         `task with callback '${name}' is added to the task queue`
+      );
+      return result;
+    },
+    onInvokeTask(delegate, currentZone, targetZone, task, ...args) {
+      const result = delegate.invokeTask(targetZone, task, ...args);
+      const name = task.callback.name;
+      console.log(
+        Date.now() - timer, 
+       `task with callback '${name}' is removed from the task queue`
+     );
+     return result;
+    }
+});
+
+function a1() {}
+function a2() {}
+
+function b() {
+    timer = Date.now();
+    setTimeout(a1, 2000);
+    setTimeout(a2, 4000);
+}
+
+z.run(b);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그리고 위 코드를 실행한 결과는 다음과 같습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1 “task with callback ‘a1’ is added to the task queue”
+2 “task with callback ‘a2’ is added to the task queue”
+2001 “task with callback ‘a1’ is removed from the task queue”
+4003 “task with callback ‘a2’ is removed from the task queue”
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;onInvoke로 존의 진입을 가로채기&lt;/h2&gt;
+&lt;p&gt;명시적으로 &lt;code&gt;z.run()&lt;/code&gt;을 호출하거나 암묵적으로 태스크를 호출할 때 존에 진입합니다. 바로 앞에서 존 내부적으로 비동기 태스크에 연결된 콜백이 실행 될 때, 존의 진입을 가로챌 수 있는 &lt;code&gt;onInvokeTask&lt;/code&gt; 훅을 설명했습니다.  &lt;code&gt;onInvoke&lt;/code&gt;는 &lt;code&gt;z.run()&lt;/code&gt;을 실행하여 존에 진입할 때마다 통지를 받을 수 있는 훅입니다.&lt;/p&gt;&lt;p&gt;다음 예제는 이 훅을 사용하는 방법입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;const z = Zone.current.fork({
+    name: 'z',
+    onInvoke(delegate, current, target, callback, ...args) {
+        console.log(`entering zone '${target.name}'`);
+        return delegate.invoke(target, callback, ...args);
+    }
+});
+
+function b() {}
+
+z.run(b);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;출력 결과는 다음과 같습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;entering zone ‘z’
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;Zone.current는 내부적으로 어떻게 동작하는가&lt;/h2&gt;
+&lt;p&gt;현재 존(Current zone)은 &lt;a href=&quot;https://github.com/angular/zone.js/blob/b9c0d9c09776bc253f3156ea511c9a1a5c952c31/dist/zone.js#L64&quot;&gt;이것&lt;/a&gt;처럼 클로저 내부에서 &lt;a href=&quot;https://github.com/angular/zone.js/blob/b9c0d9c09776bc253f3156ea511c9a1a5c952c31/dist/zone.js#L627&quot;&gt;_currentZoneFrame&lt;/a&gt; 변수를 사용하여 추적하며, &lt;code&gt;Zone.current&lt;/code&gt; 게터 함수로 값을 반환받습니다. 따라서 존을 변경하기 위해서는 단순히 &lt;code&gt;__currentZoneFrame&lt;/code&gt; 변수를 업데이트하면 됩니다. 이미 우리가 배운것처럼 &lt;code&gt;z.run()&lt;/code&gt;을 실행하거나 태스크를 호출하는 것으로 존을 바꿀 수&amp;nbsp;있습니다.&lt;/p&gt;&lt;p&gt;&lt;code&gt;run&lt;/code&gt; 메소드가 변수를 업데이트하는 코드는 &lt;a href=&quot;https://github.com/angular/zone.js/blob/b9c0d9c09776bc253f3156ea511c9a1a5c952c31/dist/zone.js#L139&quot;&gt;이곳&lt;/a&gt;에 있습니다. (아래는 코드를 발췌)&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;class Zone {
+   ...
+   run(callback, applyThis, applyArgs,source) {
+      ...
+      _currentZoneFrame = {parent: _currentZoneFrame, zone: this};
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;runTask&lt;/code&gt;는 &lt;a href=&quot;https://github.com/angular/zone.js/blob/b9c0d9c09776bc253f3156ea511c9a1a5c952c31/dist/zone.js#L185&quot;&gt;이곳&lt;/a&gt;에서 변수를 업데이트 합니다. (아래는 코드를 발췌)&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;class Zone {
+   ...
+   runTask(task, applyThis, applyArgs) {
+      ...
+      _currentZoneFrame = { parent: _currentZoneFrame, zone: this };
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;runTask&lt;/code&gt; 메소드는 각 태스크를 가지는  &lt;code&gt;invokeTask&lt;/code&gt; 메소드에 의해 호출된 메소드입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;class ZoneTask {
+    invokeTask() {
+         _numberOfNestedTaskFrames++;
+      try {
+          self.runCount++;
+          return self.zone.runTask(self, this, arguments);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;모든 태스크는 생성될 때, &lt;code&gt;zone&lt;/code&gt; 속성 안에 zone으로써 저장됩니다. 그리고 이 존은 정확히 &lt;code&gt;invokeTask&lt;/code&gt; 안에서 &lt;code&gt;runTask&lt;/code&gt;를 호출하는 존입니다. (&lt;code&gt;self&lt;/code&gt;는 태스크의 인스턴스를 참조합니다.)&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;self.zone.runTask(self, this, arguments);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;추가 자료&lt;/h2&gt;
+&lt;p&gt;추가로 다른 좋은 자료들도 소개합니다. 만약 존에 대해 더 공부하고 싶으시면 참조해 보세요.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=3IqtmUscE_U&amp;amp;t=1s&quot;&gt;A talk by Brain Ford&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://docs.google.com/document/d/1F5Ug0jcrm031vhSMJEOgp1l-Is-Vf0UCNDY-LsQtAIY/edit#heading=h.e5oec3xkpw1r&quot;&gt;Zone Primer google doc&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/angular/zone.js/blob/master/dist/zone.js.d.ts&quot;&gt;Github sources&lt;/a&gt; (똑똑한 사람들을 위해)&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;p&gt;깃허브에서 존과 관련된 많은 질문들에 대해 답변 해준 &lt;a href=&quot;https://github.com/JiaLiPassion&quot;&gt;JiaLi&lt;/a&gt;에게 정말 감사를 드립니다.&lt;/p&gt;&lt;p&gt;읽어주셔서 감사합니다! 만약 이 포스팅이 좋았으면 박수버튼을 눌러주세요. (이글은 번역본이므로 아래 참조 원문으로 가셔서 눌러주세요 &amp;gt;_&amp;lt;) 박수는 저에게 많은 의미가 있고 이 이야기를 더 많은 사람들이 볼 수 있게 됩니다. 더 고급진 포스팅들을 보고싶으시면 &lt;a href=&quot;https://twitter.com/maxim_koretskyi&quot;&gt;Twitter&lt;/a&gt;나 &lt;a href=&quot;https://medium.com/@maximus.koretskyi&quot;&gt;Medium&lt;/a&gt;에서 팔로우를 해주세요!&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: 정말 긴 글이었습니다. zone에 대해서 제가 직접 포스팅하고 싶은 욕심도 있지만, 이 포스팅은 보자마자 번역해야겠다라고 생각이 든 글이었습니다. 글이 너무너무 좋았어요. 더 번역되었으면 하는게 있으시면 언제든지 댓글이나 방명록을 통해 남겨주세요. 감사합니다 ^^&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;참조&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://blog.angularindepth.com/i-reverse-engineered-zones-zone-js-and-here-is-what-ive-found-1f48dc87659b&quot; target=&quot;_blank&quot;&gt;https://blog.angularindepth.com/i-reverse-engineered-zones-zone-js-and-here-is-what-ive-found-1f48dc87659b&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules&quot; target=&quot;_blank&quot;&gt;https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules&lt;/a&gt;/&lt;/li&gt;
+
+&lt;/ul&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://norux.me/65&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Typescript</category>
+<category>Angular</category>
+<category>zone</category>
+<author>norux</author>
+<guid>https://norux.me/65</guid>
+<comments>https://norux.me/65#entry65comment</comments>
+<pubDate>Wed, 18 Apr 2018 17:03:46 +0900</pubDate>
+</item>
+<item>
+<title>[번역] Angular에서 Zones(zone.js)의 역할</title>
+<link>https://norux.me/64</link>
+<description>&lt;h1&gt;[번역] Angular에서 Zones(zone.js)의 역할&lt;/h1&gt;
+&lt;blockquote&gt;&lt;p&gt;본 포스팅은 &lt;a href='https://blog.thoughtram.io/angular/2016/02/01/zones-in-angular-2.html'&gt;Zones in Angular&lt;/a&gt; 포스팅을 번역한 글입니다.&lt;/p&gt;
+&lt;p&gt;많은 의역이 포함되어 있을 수 있습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;a href='https://blog.thoughtram.io/angular/2016/01/22/understanding-zones.html'&gt;Zones의 이해&lt;/a&gt; 포스팅에서 우리는 &lt;code&gt;Zones&lt;/code&gt; 의 능력에 대해 알아 보았습니다. &lt;code&gt;Zones&lt;/code&gt; 을 이용하면 비동기적으로 실행되는 코드에 대해 성능을 프로파일링 할 수 있었습니다. &lt;code&gt;Zones&lt;/code&gt;는 우리의 비동기적 작업을 후킹할 수 있는 실행영역(Execution Context)의 종류라고 배웠습니다. 만약 위 포스팅을 읽지 않으셨다면, 먼저 읽어보기를 강력하게 추천합니다. 본 포스팅에서는 Angular에서 &lt;code&gt;Zones&lt;/code&gt;의 역할이 무엇인지에 대해서만 집중합니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: 먼저 읽어보시 마세요. 혹 필요한 사전지식에 대해서는 제가 설명드리겠습니다.. ^^ &lt;/p&gt;
+&lt;p&gt;위에 언급된 &lt;a href='https://blog.thoughtram.io/angular/2016/01/22/understanding-zones.html'&gt;Zones의 이해&lt;/a&gt;라는 지난 포스팅을 보면, 마지막 파트에서 &lt;code&gt;Zones&lt;/code&gt;을 이용하여 비동기코드의 프로파일링을 합니다. 쉽게 말해, 성능테스트를 했는데요. &lt;code&gt;Zones&lt;/code&gt;  을 이용하면, 해당 &lt;code&gt;Zones&lt;/code&gt;(Javascript에서 실행영역이라고 이해하면 됩니다.)이 실행되는 시점에서 여러 이벤트를 후킹할 수 있습니다. 위 포스팅에서는 &lt;code&gt;beforeTask&lt;/code&gt; 와 &lt;code&gt;afterTask&lt;/code&gt; 이벤트에 대해 후킹을 하여, 해당 코드의 실행 시간을 측정하는 예제를 만들었습니다.&lt;/p&gt;
+&lt;p&gt;특정 Zones(실행영역)을 만들어서 코드를 올리고, Zones의 시작시점과 종료시점에 대한 이벤트를 이용하는 것입니다. Zoens의 강력함에 대해서는 나중에 나중에 다른 포스팅에서 따로 언급하겠습니다. 지금은 &amp;#39;Zones은 자바스크립트의 실행영역을 &lt;strong&gt;직접&lt;/strong&gt; 나누는 것이며, 직접 &lt;u&gt;실행영역을 분리했기 때문에 여러가지 후킹이 가능하다.&lt;/u&gt;&amp;#39; 정도로만 이해해주세요.&lt;/p&gt;
+&lt;p&gt;자바스크립트의 실행영역을 모르신다구요? 그건 아마 먼 미래에도 제가 다루지는 않을 것 같습니다. ㅠ 자바스크립트 문법책을 정독해주세요.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주2: Zones는 흔히 zone.js로 불리는 라이브러리입니다. Github 레퍼지토리나 NPM에서 zone.js라고 사용되기 때문인데요. 요새는 zone.js라는 말보다는 .js는 떼고 zone 또는 zones라고 부릅니다. 자바스크립트의 표준화가 되어가고 있는 상황이기 때문에 .js를 빼고있는 추세일지도 모릅니다 ^^&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;Zones은 Angular에 딱 맞는 옷이다.&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;Zones&lt;/code&gt;는 &lt;code&gt;Angular&lt;/code&gt; 가 필요로 했던 &lt;em&gt;Chnage Detection(변화감지)&lt;/em&gt; 의 완벽한 해결책이었습니다. 혹시 여러분은 &lt;code&gt;Angular&lt;/code&gt;가 언제 왜 &lt;em&gt;Change Detction&lt;/em&gt;을 수행하는지 궁금하셨던 적이 있나요?&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;&amp;quot;사장님? 제 어플리케이션에 변화가 생겼어요. 확인해주시겠어요?&amp;quot; &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;라고  &lt;code&gt;Angular&lt;/code&gt;에게 말해주는 건 누구일까요?&lt;/p&gt;
+&lt;p&gt;이 질문에 대해 알아보기 전에, 우리 어플리케이션에 변화를 만드는 것들이 무엇인지에 대해 생각해봐야 합니다. 또는 무엇이 우리의 어플리케이션의 상태를 변화시킬수 있는지에 대해서요. 어플리케이션의 상태는 다음 세 가지의 이유로 변화가 필요하게 됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;이벤트: &lt;code&gt;click&lt;/code&gt;, &lt;code&gt;change&lt;/code&gt;, &lt;code&gt;input&lt;/code&gt;, &lt;code&gt;submit&lt;/code&gt; 등의 유저 이벤트&lt;/li&gt;
+&lt;li&gt;XMLHttpRequest: 원격 서버로부터 데이터를 가져올 때, (Ajax)&lt;/li&gt;
+&lt;li&gt;타이머: &lt;code&gt;setTimeout&lt;/code&gt;, &lt;code&gt;setInterval&lt;/code&gt; 함수가 동작할 때&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;p&gt;이 세 가지는 흔히 사용되는 기법입니다. 이것들을 뭐라고 부르는지 기억나시나요? 맞아요! &lt;strong&gt;비동기 코드&lt;/strong&gt;입니다.&lt;/p&gt;
+&lt;p&gt;왜 기법들이 중요할까요? &lt;code&gt;Angular&lt;/code&gt;에서 화면을 업데이트할 필요가 있는 상황들이 위 비동기 기법에 의한 상황들이기 때문입니다. 웹페이지에서 버튼을 클릭할 때, 클릭 이벤트에 대한 핸들러를 실행하는 &lt;code&gt;Angular&lt;/code&gt; 컴포넌트를 한 번 살펴봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;@Component({
+  selector: &amp;#39;my-component&amp;#39;,
+  template: `
+    &amp;lt;h3&amp;gt;We love {{name}}&amp;lt;/h3&amp;gt;
+    &amp;lt;button (click)=&amp;quot;changeName()&amp;quot;&amp;gt;Change name&amp;lt;/button&amp;gt;
+  `
+})
+class MyComponent {
+
+  name:string = &amp;#39;thoughtram&amp;#39;;
+
+  changeName() {
+    this.name = &amp;#39;Angular&amp;#39;;
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;만약 &lt;code&gt;(click)&lt;/code&gt; 이라는 문법에 대해 생소하시다면, &lt;a href='https://blog.thoughtram.io/angular/2015/08/11/angular-2-template-syntax-demystified-part-1.html'&gt;&lt;code&gt;Angular&lt;/code&gt;의 템플릿 문법 파해치기&lt;/a&gt; 라는 저희의 포스팅을 참고해주세요. 간단히 말해 &lt;code&gt;&amp;lt;button&amp;gt;&lt;/code&gt; 엘리먼트의 Click 이벤트에 대한 핸들러를 매핑하는 방법입니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: jquery로 치면 $(버튼아이디).click() 과 동일합니다. Angular는 단방향 이벤트 스트림을 지원하는데, () 문법은 Upstream 이벤트라고 생각하시면 됩니다. 즉, 컴포넌트를 정의한 클래스로 단방향 이벤트를 전달하는 것이지요.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;컴포넌트의 버튼을 클릭하면, &lt;code&gt;ChangeName()&lt;/code&gt;함수가 호출됩니다. 이 함수는 컴포넌트의 &lt;code&gt;name&lt;/code&gt; 변수를 변경합니다. 우리는 DOM에 이 변화가 반영되기를 원하며, &lt;code&gt;Angular&lt;/code&gt;는 &lt;code&gt;{{name}}&lt;/code&gt; 을 업데이트 할 것입니다. 와우, 마치 마법처럼 변하는군요.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;setTimeout()&lt;/code&gt; 을 이용하여 &lt;code&gt;name&lt;/code&gt; 프로퍼티를 변경하는 다른 예제입니다. 이제 버튼은 제거해도 됩니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;@Component({
+  selector: &amp;#39;my-component&amp;#39;,
+  template: `
+    &amp;lt;h3&amp;gt;We love {{name}}&amp;lt;/h3&amp;gt;
+  `
+})
+class MyComponent implements OnInit {
+
+  name:string = &amp;#39;thoughtram&amp;#39;;
+
+  ngOnInit() {
+    setTimeout(() =&amp;gt; {
+      this.name = &amp;#39;Angular&amp;#39;;
+    }, 1000);
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;우리는 프레임워크에 변화가 일어났다는 것을 알려주기 위해서 어떠한 작업도 하지 않아도 됩니다. &lt;code&gt;ng-click&lt;/code&gt;도, &lt;code&gt;$timeout&lt;/code&gt; 도, &lt;code&gt;$scope.$apply()&lt;/code&gt; 도 필요 없습니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: ng-click, $timeout, $scope.$apply() 는 모두 angular.js (1.x 버전)에서 사용되는 change detection 기법입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;만약 &lt;a href='https://blog.thoughtram.io/angular/2016/01/22/understanding-zones.html'&gt;&lt;code&gt;Zones&lt;/code&gt;의 이해&lt;/a&gt; 를 읽으셨다면, &lt;code&gt;Angular&lt;/code&gt;가 &lt;code&gt;Zones&lt;/code&gt;를 이용하기 때문에, 이런 작업이 가능하다는 것을 알 수 있을 겁니다. &lt;code&gt;Zones&lt;/code&gt;은 &lt;code&gt;setTimeout()&lt;/code&gt;과 &lt;code&gt;addEventListner()&lt;/code&gt;와 같이 전역적인 비동기 오퍼레이션에 대해 몽키패치를 합니다. 이것은 &lt;code&gt;Angular&lt;/code&gt;가 DOM 을 언제 업데이트해야하는지 쉽게 발견할 수 있게 합니다.&lt;/p&gt;
+&lt;p&gt;사실 VM 이 완료 될 때마다, &lt;code&gt;Angular&lt;/code&gt; 가 &lt;em&gt;Change Detection&lt;/em&gt;을 실행하게 합니다. 이 코드를 보세요.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;ObservableWrapper.subscribe(this.zone.onTurnDone, () =&amp;gt; {
+  this.zone.run(() =&amp;gt; {
+    this.tick();
+  });
+});
+
+tick() {
+  // perform change detection
+  this.changeDetectorRefs.forEach((detector) =&amp;gt; {
+    detector.detectChanges();
+  });
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;Angular&lt;/code&gt; 의 &lt;code&gt;Zones&lt;/code&gt;이 &lt;code&gt;onTurnDonw&lt;/code&gt; 이벤트를 발생시킬 때마다, 전체 어플리케이션에 대해서 &lt;em&gt;Change Detection&lt;/em&gt;을 수행합니다. 만약 당신이 &lt;code&gt;Angular&lt;/code&gt;의 &lt;code&gt;Change Detection&lt;/code&gt; 에만 궁금하다면 &lt;a href='https://blog.thoughtram.io/angular/2016/02/22/angular-2-change-detection-explained.html'&gt;이 포스팅(Angular의 Change Detection 설명)&lt;/a&gt;을 참조하세요.&lt;br/&gt;&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: 여러 포스팅들.. 오지게 홍보하네요 -_-;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;근데 잠깐만요. &lt;code&gt;onTurnDone&lt;/code&gt; 이벤트는 누가 발생시키는 걸까요? 이 이벤트는 &lt;code&gt;Zones&lt;/code&gt;의 API는 아닙니다. 그렇죠? 이것은 &lt;code&gt;Angular&lt;/code&gt;의 &lt;code&gt;NgZone&lt;/code&gt; 이라는 아이와 관련되어 있습니다.&lt;/p&gt;
+&lt;h2&gt;Angular에서의 NgZone &lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;NgZone&lt;/code&gt; 은 실행영역에 대한 추가적인 기능과 확장된 API를 제공하는 포크(fork)된 영역입니다. 확장 API들에는 우리가 구독할 수 있는 다음의 커스텀 이벤트들이 있습니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: 여기서 fork는 POSIX에서 자식프로세스를 생성하는 fork와 유사합니다. 자바스크립트내에서 가상의 실행영역을 생성한다고 보면 됩니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;onTurnStart()&lt;/code&gt;: &lt;code&gt;Angular&lt;/code&gt;의 이벤트가 시작되기 직전에 발생합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;onTurnDone()&lt;/code&gt;: 현재의 작업이 완료되면 이벤트가 발생합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;onEventDone()&lt;/code&gt;: 마지막 &lt;code&gt;onTurnDone&lt;/code&gt; 콜백 이후에 발생됩니다. 유효한 어플리케이션의 상태를 테스트하기에 유용합니다.&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;p&gt;만약, &lt;code&gt;Observable&lt;/code&gt; 과 &lt;code&gt;스트림&lt;/code&gt; 이 당신에게 낯설다면, &lt;a href='https://blog.thoughtram.io/angular/2016/01/06/taking-advantage-of-observables-in-angular2.html'&gt;&lt;code&gt;Angular&lt;/code&gt;에서 &lt;code&gt;Observable&lt;/code&gt; 이용하기&lt;/a&gt;를 읽어주세요. &lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Angular&lt;/code&gt;가 &lt;code&gt;beforeTask&lt;/code&gt; 나 &lt;code&gt;afterTask&lt;/code&gt; 콜백을 사용하는것 대신에 특별한 이벤트를 추가한 이유는 타이머나 다른 &lt;em&gt;Micro task&lt;/em&gt;를 추적하기 위해서입니다. 이 이벤트들를 다루기 위한 API로 &lt;code&gt;Observable&lt;/code&gt; 을 사용하는것도 아주 좋은 것 같습니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: Micro task에 대해서 설명하는 것 또한 하나의 포스팅이 됩니다. 마이크로 태스크는 일반 태스크보다 우선순위가 높은 태스크를 말합니다. 예를 들어 타이머는 일반 태스크이구요. Promise는 마이크로 태스크입니다. 여기서는 여기까지만 이해합시다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;Angular의 Zone 밖에서 코드 실행하기&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;NgZone&lt;/code&gt;이 글로벌 존의 포크(fork)이기 때문에, &lt;code&gt;Angular&lt;/code&gt;는 &lt;em&gt;Change Detection&lt;/em&gt;을 수행하는 존 안에서 어떠한 작업이 실행될 때나 되지않을 때에 대한 모든 제어를 할 수 있습니다. 이것이 왜 유용할까요? 음.. 우리는 &lt;code&gt;Angular&lt;/code&gt;가 &lt;em&gt;Change Detection&lt;/em&gt;을 마법같이 수행하는것을 항상 원하지는 않을 수도 있습니다.&lt;/p&gt;
+&lt;p&gt;여러번 언급했듯이, &lt;code&gt;Zones&lt;/code&gt; 은 브라우저의 비동기적 작업에 대해 꽤 많은 몽키패치가 가능합니다. 그리고 &lt;code&gt;NgZone&lt;/code&gt; 은 단지 존의 포크(fork)입니다. 다시 말해 비동기적 작업에 대한 &lt;em&gt;Change Detection&lt;/em&gt;을 프레임워크에 알려주기 위한 역할을 수행합니다. 그렇기 때문에 &lt;code&gt;mousemove&lt;/code&gt; 같은 이벤트들이 발생할 때 역시, &lt;code&gt;Change Detection&lt;/code&gt;이 발생할 것입니다.&lt;/p&gt;
+&lt;p&gt;우리는 &lt;code&gt;mousemove&lt;/code&gt; 같은 이벤트들이 발생할 때마다 &lt;code&gt;Change Detection&lt;/code&gt;이 일어나는 것을 원하지 않을 것입니다. 어플리케이션에 매우 나쁜 영향을 줄 것이기 때문이지요. (성능저하)&lt;/p&gt;
+&lt;p&gt;이것이 바로 &lt;code&gt;NgZone&lt;/code&gt;의 부모 존에서 작업을 수행하는  &lt;code&gt;runOutsideAngular()&lt;/code&gt; API가 있는 이유입니다. 이 API를 이용하면 &lt;code&gt;onTurnDone&lt;/code&gt; 이벤트가 발생하지 않습니다. 따라서 어떤 &lt;em&gt;Change Detection&lt;/em&gt; 도 수행되지 않습니다. 이 유용한 기능을 설명하기 위해서 다음의 코드를 봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;@Component({
+  selector: &amp;#39;progress-bar&amp;#39;,
+  template: `
+    &amp;lt;h3&amp;gt;Progress: {{progress}}&amp;lt;/h3&amp;gt;
+    &amp;lt;button (click)=&amp;quot;processWithinAngularZone()&amp;quot;&amp;gt;
+      Process within Angular zone
+    &amp;lt;/button&amp;gt;
+  `
+})
+class ProgressBar {
+
+  progress: number = 0;
+
+  constructor(private zone: NgZone) {}
+
+  processWithinAngularZone() {
+    this.progress = 0;
+    this.increaseProgress(() =&amp;gt; console.log(&amp;#39;Done!&amp;#39;));
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;별로 특별할 것 없는 코드입니다. 템플릿을 보면, 버튼을 클릭할 때 &lt;code&gt;processWithinAngularZone()&lt;/code&gt; 함수를 호출했습니다. 하지만 이 함수에서는 &lt;code&gt;increaseProgress()&lt;/code&gt; 함수를 호출합니다. 더 자세히 봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;increaseProgress(doneCallback: () =&amp;gt; void) {
+  this.progress += 1;
+  console.log(`Current progress: ${this.progress}%`);
+
+  if (this.progress &amp;lt; 100) {
+    window.setTimeout(() =&amp;gt; {
+      this.increaseProgress(doneCallback);
+    }, 10);
+  } else {
+    doneCallback();
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;increaseProgress()&lt;/code&gt;함수는 &lt;code&gt;progress&lt;/code&gt; 변수가 100이 될 때 까지, 10ms 간격으로 재귀호출을 합니다. &lt;code&gt;progress&lt;/code&gt;가 100이 되면, &lt;code&gt;doneCallback()&lt;/code&gt; 함수를 호출합니다. 우리가 &lt;code&gt;setTimeout&lt;/code&gt; 함수를 사용한 방법에 주목합시다.&lt;/p&gt;
+&lt;p&gt;이 코드를 브라우저에서 실행하면, 우리가 알고있는 것과 같은 결과가 나옵니다. 각 &lt;code&gt;setTimeout()&lt;/code&gt; 함수가 호출될 때마다. &lt;code&gt;Angular&lt;/code&gt;는 &lt;em&gt;Change Detection&lt;/em&gt;을 수행하여 뷰를 업데이트합니다. 즉, &lt;code&gt;progress&lt;/code&gt;변수가 10ms마다 증가하는것을 볼 수 있습니다. 이 코드를 &lt;code&gt;Angular&lt;/code&gt; 존 밖에서 이 코드를 실행할 때, 더욱 재밌습니다. 다음의 메소드를 추가해 보죠.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;processOutsideAngularZone() {
+  this.progress = 0;
+  this.zone.runOutsideAngular(() =&amp;gt; {
+    this.increaseProgress(() =&amp;gt; {
+      this.zone.run(() =&amp;gt; {
+        console.log(&amp;#39;Outside Done!&amp;#39;);
+      });
+    });
+  });
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;processOutsideAngularZone()&lt;/code&gt; 은 마찬가지로  &lt;code&gt;increaseProgress()&lt;/code&gt; 함수를 호출합니다. 하지만 이번에는 &lt;code&gt;runOutsideAngularZone()&lt;/code&gt; 함수를 이용하여 호출하기 때문에, 각 &lt;code&gt;setTimeout&lt;/code&gt;이 &lt;code&gt;Angular&lt;/code&gt;에게 변화를 통지하지 않습니다. 우리는 &lt;code&gt;NgZone&lt;/code&gt; 을 컴포넌트에 인젝션하여 &lt;code&gt;Angular&lt;/code&gt;의 존 API를 이용할 수 있습니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;progress&lt;/code&gt;가 증가해도 UI는 업데이트되지 않습니다. 하지만, &lt;code&gt;increaseProgress&lt;/code&gt; 함수가 완료되면, &lt;code&gt;zone.run()&lt;/code&gt;이라는 &lt;code&gt;Angular&lt;/code&gt;의 존 안에서 실행되는 또 다른 작업을 실행합니다. 그러면 &lt;code&gt;Angular&lt;/code&gt;가 &lt;em&gt;Change Detection&lt;/em&gt;을 수행하고 뷰를 업데이트합니다. 즉, 다시 말해 &lt;code&gt;progress&lt;/code&gt;가 증가하는 동안 보이지 않다가, 100이 되어 완료가 되면 UI가 갱신이 되는 것입니다. 아래 코드를 실행해서 확인해보세요.&lt;/p&gt;
+&lt;p&gt;PLUNKER: &lt;a href='https://embed.plnkr.co/fA0Wj7Ja5wncSebtCTss' target='_blank' &gt;https://embed.plnkr.co/fA0Wj7Ja5wncSebtCTss&lt;/a&gt;/&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Zones&lt;/code&gt;은 TC39에서 표준화로 제안되었습니다. 아마 더 자세히 공부할 이유가 되지 않을까 싶습니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt; 역자주: TC39는 ECMA명세를 관리하는 ECMA의 기술위원회(Technical Committee)입니다. 자세한 내용은 &lt;a href='http://ahnheejong.name/articles/ecmascript-tc39/'&gt;ECMAScript와 TC39&lt;/a&gt;라는 포스팅을 참고해주세요.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;참조&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href='https://blog.thoughtram.io/angular/2016/02/01/zones-in-angular-2.html' target='_blank' &gt;https://blog.thoughtram.io/angular/2016/02/01/zones-in-angular-2.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href='http://ahnheejong.name/articles/ecmascript-tc39' target='_blank' &gt;http://ahnheejong.name/articles/ecmascript-tc39&lt;/a&gt;/&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://norux.me/64&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Angular2</category>
+<category>Angular</category>
+<category>typeScript</category>
+<category>Zone.js</category>
+<category>ZONES</category>
+<author>norux</author>
+<guid>https://norux.me/64</guid>
+<comments>https://norux.me/64#entry64comment</comments>
+<pubDate>Sun, 15 Apr 2018 21:57:48 +0900</pubDate>
+</item>
+<item>
+<title>[CSS] inline 속성일 때, 4px의 여백에 대하여</title>
+<link>https://norux.me/63</link>
+<description>&lt;h1&gt;[CSS] inline 속성일 때, 4px의 여백에 대하여&lt;/h1&gt;
+&lt;p&gt;오늘은 CSS 에서 display 속성이 &lt;code&gt;inline&lt;/code&gt; 혹은 &lt;code&gt;inline-block&lt;/code&gt;인 엘리먼트들에 왜 4px 정도의 여백이 생기는지를 알아보도록 하겠습니다. 물론 그 이유를 알게 되면 해결책도 간단합니다.&lt;/p&gt;
+&lt;h2&gt;4px의 미세한 차이..&lt;/h2&gt;
+&lt;p&gt;4px의 미세한 차이를 볼 수 있는 예제코드를 먼저 띄워드립니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-html&quot; lang=&quot;html&quot;&gt;&amp;lt;!DOCTYPE html&amp;gt;
+&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+&amp;lt;style&amp;gt;
+.parent-block::after {
+    display: block;
+    clear: both;
+    content: &quot;&quot;
+}
+.child-block {
+    float: left;
+    border: 1px solid #010101;
+    background: #00ffff;
+    padding: 10px 15px;
+}
+
+.child-inline {
+    display: inline-block;
+    padding: 10px 15px;
+    border: 1px solid #010101;
+    background: #ffff00;
+}
+&amp;lt;/style&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body style=&quot;padding: 50px;&quot;&amp;gt;
+
+&amp;lt;div class=&quot;parent-block&quot;&amp;gt;
+    &amp;lt;div class=&quot;child-block&quot;&amp;gt; block div &amp;lt;/div&amp;gt;
+    &amp;lt;div class=&quot;child-block&quot;&amp;gt; block div &amp;lt;/div&amp;gt;    
+&amp;lt;/div&amp;gt;
+
+&amp;lt;div class=&quot;parent-inline&quot;&amp;gt;
+    &amp;lt;span class=&quot;child-inline&quot;&amp;gt;1&amp;lt;/span&amp;gt;
+    &amp;lt;span class=&quot;child-inline&quot;&amp;gt;2&amp;lt;/span&amp;gt;
+    &amp;lt;span class=&quot;child-inline&quot;&amp;gt;3&amp;lt;/span&amp;gt;
+&amp;lt;/div&amp;gt;
+
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그리고 다음은 실행 결과입니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/5y5dR9B.png&quot; alt=&quot;Imgur&quot;&gt;&lt;/p&gt;
+&lt;p&gt;자, 그림을 먼저 봅시다. 위에는 &lt;code&gt;float:left&lt;/code&gt;로 붙어 있는 &lt;code&gt;block&lt;/code&gt; 속성의 &lt;code&gt;div&lt;/code&gt; 엘리먼트구요. 아래 숫자박스는 &lt;code&gt;inline-block&lt;/code&gt;의 &lt;code&gt;span&lt;/code&gt; 엘리먼트입니다. &lt;code&gt;float&lt;/code&gt;으로 붙어있는 엘리먼트들 사이에는 간격이 없는데, &lt;code&gt;inline&lt;/code&gt;속성을 가져서 옆에 붙는 엘리먼트들 사이에는 간격이 존재합니다.&lt;/p&gt;
+&lt;p&gt;이 간격은 16px의 &lt;code&gt;font-size&lt;/code&gt; 기준으로 약 4px입니다. &lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;Q. 근데 위 그림에서 1번과 2번 블록의 사이는 4px인데, 2번과 3번 블록 사이에는 5px이 벌어져있는데요?&lt;/p&gt;
+&lt;p&gt;A. 제가 사용한 폰트가 고정 폭 폰트가 아니어서 그런것 같습니다. font-family: 'Nanum Gothic' 과 같이 고정 폭 폰트를 사용하면 여백의 크기가 일정해집니다.&lt;/p&gt;
+&lt;p&gt;Q. 그럼 inline 요소에 생기는 여백은 폰트에 영향을 받는 건가요?&lt;/p&gt;
+&lt;p&gt;A. 네, 이제부터 그것을 알아 볼 것입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;이처럼 &lt;code&gt;inline&lt;/code&gt;, &lt;code&gt;inline-block&lt;/code&gt; 같은 &lt;code&gt;inline&lt;/code&gt; 요소들은 &lt;code&gt;font-size&lt;/code&gt;, &lt;code&gt;font-family&lt;/code&gt; 등 폰트에 영향을 받습니다. 영향을 받는 이유는 아래 보이는 &lt;strong&gt;'공백'&lt;/strong&gt; 때문입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-html&quot; lang=&quot;html&quot;&gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;1&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;child-inline&quot;&amp;gt;2&amp;lt;/span&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이 코드상에 공백이 안보이신다구요?  태그와 &lt;span&gt; 태그 사이에는 &lt;code&gt;\r\n&lt;/code&gt;  즉, 엔터라는 공백이 있습니다. 이런 공백이 font-size에 영향을 받으면서 위 그림과 같은 여백을 남깁니다.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;그럼 똑똑한 여러분께서는 이런 질문을 하십니다. 코드를 붙여버리면 여백이 없어지나요?&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-html&quot; lang=&quot;html&quot;&gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;1&amp;lt;/span&amp;gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;2&amp;lt;/span&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;네! 없어집니다. 심지어 엔터를 치는 부분을 주석처리해도 없어집니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-html&quot; lang=&quot;html&quot;&gt;&amp;lt;div class=&quot;parent-inline&quot;&amp;gt;
+    &amp;lt;span class=&quot;child-inline&quot;&amp;gt;1&amp;lt;/span&amp;gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;2&amp;lt;/span&amp;gt;&amp;lt;!--
+    --&amp;gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;3&amp;lt;/span&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/YLvbzMF.png&quot; alt=&quot;Imgur&quot;&gt;&lt;/p&gt;
+&lt;p&gt;한 번 폰트 크기를 160px 정도로 키워보세요. 그럼 여백도 엄청나게 커지는 것을 볼 수 있습니다.&lt;/p&gt;
+&lt;h2&gt;여백을 없애는 방법&lt;/h2&gt;
+&lt;p&gt;그럼 이제 여백을 없애는 방법을 알아봐야죠. 다음의 몇 가지 방법을 소개할 예정입니다. 글쓰기의 흐름상 기승전결이 필요하므로, 가장 좋은 방법은 가장 &lt;strong&gt;뒤쪽&lt;/strong&gt;에서 소개하겠습니다. 여백 없애는 방법을 찾기위해 오셨다면 마지막 두 개의 파트에서 확인해 주세요.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;공백 제거&lt;/li&gt;
+&lt;li&gt;폰트 사이즈 조정&lt;/li&gt;
+&lt;li&gt;margin 속성 조정&lt;/li&gt;
+&lt;li&gt;float 속성 사용&lt;/li&gt;
+&lt;li&gt;flex 속성 사용&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;h3&gt;공백 제거&lt;/h3&gt;
+&lt;p&gt;네.. 제일 무식한 방법입니다. 하지만 정말 간단한 코드라면 유용할 수 도 있습니다. 위에서 본것처럼 한줄에 쓰는 방법, 엔터부분을 주석처리하는 방법 등이 있습니다.&lt;/p&gt;
+&lt;h4&gt;1. 한줄에 처리하기&lt;/h4&gt;
+&lt;p&gt;단점은 보기가 힘들어집니다.....&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-html&quot; lang=&quot;html&quot;&gt;&amp;lt;div class=&quot;parent-inline&quot;&amp;gt;
+    &amp;lt;span class=&quot;child-inline&quot;&amp;gt;1&amp;lt;/span&amp;gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;2&amp;lt;/span&amp;gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;3&amp;lt;/span&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;2. 태그를 다음 줄에서 닫기&lt;/h4&gt;
+&lt;p&gt;이런것도 됩니다. 참 단순하지만, 기발하기도 하고 합니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-html&quot; lang=&quot;html&quot;&gt;&amp;lt;div class=&quot;parent-inline&quot;&amp;gt;
+    &amp;lt;span class=&quot;child-inline&quot;&amp;gt;1&amp;lt;/span
+    &amp;gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;2&amp;lt;/span
+    &amp;gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;3&amp;lt;/span&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;3. 공백 사이를 주석처리 하기&lt;/h4&gt;
+&lt;p&gt;아까 보셨던 공백 사이를 주석처리하는 방법입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-html&quot; lang=&quot;html&quot;&gt;&amp;lt;div class=&quot;parent-inline&quot;&amp;gt;
+    &amp;lt;span class=&quot;child-inline&quot;&amp;gt;1&amp;lt;/span&amp;gt;&amp;lt;!--
+    --&amp;gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;2&amp;lt;/span&amp;gt;&amp;lt;!--
+    --&amp;gt;&amp;lt;span class=&quot;child-inline&quot;&amp;gt;3&amp;lt;/span&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;폰트 사이즈 조정&lt;/h3&gt;
+&lt;p&gt;두 번째 방법은 폰트 사이즈를 조절하는 방법입니다. 코드를 잘 보시면 공백은 &lt;code&gt;span&lt;/code&gt; 엘리먼트의 범위가 아니라 상위 엘리먼트인 &lt;code&gt;div&lt;/code&gt; 엘리먼트의 범위 입니다. 그래서 다음과 같은 css 코드로 &lt;code&gt;font-size&lt;/code&gt;를 조절해주면 여백이 없어집니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-css&quot; lang=&quot;css&quot;&gt;.parent-inline { font-size: 0px; }
+.child-inline { font-size: 1rem;}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;상위 요소의 class인 &lt;code&gt;parent-inline&lt;/code&gt; 의 &lt;code&gt;font-size&lt;/code&gt;를 0px로 해주면 공백이 사라지면서 자연스럽게 여백이 사라집니다. 그리고 &lt;code&gt;child-inline&lt;/code&gt; 요소의 &lt;code&gt;font-size&lt;/code&gt;를 원래대로 돌려주면 되는데요. 16px 정도로 선언해주어도 되지만, 자연스럽게 루트 엘리먼트의 font-size를 상속받도록 &lt;code&gt;rem&lt;/code&gt; 단위를 사용했습니다. 참고로 &lt;code&gt;em&lt;/code&gt; 단위는 부모의 폰트사이즈가 기준이 되므로, 0px이 됩니다.&lt;/p&gt;
+&lt;h3&gt;margin 속성 조정&lt;/h3&gt;
+&lt;p&gt;4px 만큼 벌어졌으니, 4px만큼 &lt;code&gt;margin&lt;/code&gt;값을 제거해주면 됩니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-css&quot; lang=&quot;css&quot;&gt;.child-inline { margin-right: -4px; }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;margin-right&lt;/code&gt; 로 준 이유는, 위 코드에서 보다시피 공백은 &lt;code&gt;span&lt;/code&gt; 블럭 우측에 생기기 때문입니다.&lt;/p&gt;
+&lt;h3&gt;float 속성 사용&lt;/h3&gt;
+&lt;p&gt;역시 가장 좋은 방법은 옆에 붙일 때, &lt;code&gt;float&lt;/code&gt; 을 사용하는 것입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-css&quot; lang=&quot;css&quot;&gt;.child-inline { float:left; }
+.parent-inline::after {
+    display: block;
+    clear: both;
+    content: &quot;&quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;child-inline&lt;/code&gt; 클래스에는 &lt;code&gt;float&lt;/code&gt; 속성을 붙입니다. &lt;code&gt;float&lt;/code&gt;을 붙였을 때, 항상 따라와야하는 &lt;code&gt;clear&lt;/code&gt; 속성은 상위 엘리먼트 (&lt;code&gt;parent-inline&lt;/code&gt;) 에 걸어주어 &lt;code&gt;float&lt;/code&gt; 속성을 해제해줍니다.&lt;/p&gt;
+&lt;p&gt;그래서 float을 이용하여 만든 전체 코드는 아래와 같습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-html&quot; lang=&quot;html&quot;&gt;&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+&amp;lt;style&amp;gt;
+.parent-block::after {
+    display: block;
+    clear: both;
+    content: &quot;&quot;
+}
+.child-block {
+    float: left;
+    border: 1px solid #010101;
+    background: #00ffff;
+    padding: 10px 15px;
+}
+
+.parent-inline::after {
+    display: block;
+    clear: both;
+    content: &quot;&quot;
+}
+.child-inline {
+    display: inline-block;
+    float: left;
+    padding: 10px 15px;
+    border: 1px solid #010101;
+    background: #ffff00;
+}
+&amp;lt;/style&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body style=&quot;padding: 50px; font-size:16px;&quot;&amp;gt;
+
+&amp;lt;div class=&quot;parent-block&quot;&amp;gt;
+    &amp;lt;div class=&quot;child-block&quot;&amp;gt; block div &amp;lt;/div&amp;gt;
+    &amp;lt;div class=&quot;child-block&quot;&amp;gt; block div &amp;lt;/div&amp;gt;    
+&amp;lt;/div&amp;gt;
+
+&amp;lt;div class=&quot;parent-inline&quot;&amp;gt;
+    &amp;lt;span class=&quot;child-inline&quot;&amp;gt;1&amp;lt;/span&amp;gt;
+    &amp;lt;span class=&quot;child-inline&quot;&amp;gt;2&amp;lt;/span&amp;gt;
+    &amp;lt;span class=&quot;child-inline&quot;&amp;gt;3&amp;lt;/span&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;flex 속성 사용&lt;/h3&gt;
+&lt;p&gt;만약 지원하는 브라우저가 &lt;code&gt;felx&lt;/code&gt; 속성을 지원한다면, 이 속성을 이용하는 것도 하나의 방법입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-css&quot; lang=&quot;css&quot;&gt;.parent-inline {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;결론&lt;/h2&gt;
+&lt;p&gt;아는 퍼블리셔와 얘기를 하다 궁금해져서 찾아보기 시작했습니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt; 4px의 차이는 '브라우저의 버그' 다. 스펙에는 &lt;code&gt;inline&lt;/code&gt; 요소 끝에 공백이 있어야 한다는 것이 정의되어있지 않다. &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;이것이 퍼블리셔분의 의견이었는데요. 저는 이게 과연 버그일까? 만약 버그라면  왜 모든 브라우저 제작사에서 버그를 수정하지 않는걸까? 라는 궁금함에 찾아보기 시작했습니다. 아래 참조로 건 링크에 다음과 같은 글을 발견했습니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;This isn't a &quot;bug&quot; (I don't think). It's just the way setting elements on a line works. You want spaces between words that you type to be spaces right? The spaces between these blocks are just like spaces between words. That's not to say the spec couldn't be updated to say that spaces between inline-block elements should be nothing, but I'm fairly certain that is a huge can of worms that is unlikely to ever happen.&lt;/p&gt;
+&lt;p&gt;이건 버그가 아닙니다. (제 생각에는 아닙니다.) 단지 한줄 한줄 쓰여진 엘리먼트를 출력하는 방법일 뿐입니다. 만약 여러분이 단어사이 공백을 원한다면, 스페이스바를 입력하지 않을까요? 이렇게 단어 사이의 공백을 입력한 것과 같이 블럭 사이의 공백일 뿐입니다. 인라인 요소사이에는 공백이 없어야한다고 스펙에 업데이트가 되면 좋겠지만, 매우 결정하기 여러운 문제일 것입니다. (마지막줄은 의역입니다.)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;그렇다고 합니다!! 다음에는 신비로운 flexbox 에 대해서 더욱 자세히 포스팅할 수 있는 기회가 있으면 좋겠네요. ^^ 의지를 갖고 해보도록 하겠습니다.&lt;/p&gt;
+&lt;h2&gt;참조&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://css-tricks.com/fighting-the-space-between-inline-block-elements&quot; target=&quot;_blank&quot;&gt;https://css-tricks.com/fighting-the-space-between-inline-block-elements&lt;/a&gt;/&lt;/li&gt;
+
+&lt;/ul&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://norux.me/63&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>CSS</category>
+<category>CSS</category>
+<author>norux</author>
+<guid>https://norux.me/63</guid>
+<comments>https://norux.me/63#entry63comment</comments>
+<pubDate>Wed, 11 Apr 2018 14:11:44 +0900</pubDate>
+</item>
+<item>
+<title>[번역글] Angular에서 Rx.js의 Observable 관리하기</title>
+<link>https://norux.me/62</link>
+<description>&lt;h1&gt;[번역글] Angular에서 Rx.js의 Observable 관리하기&lt;/h1&gt;
+&lt;blockquote&gt;&lt;p&gt;본 포스팅은 다음의 원문을 번역한 글입니다. 많은 의역이 포함되어 있을 수 있습니다.&lt;/p&gt;
+&lt;p&gt;원문: &lt;a href='https://hackernoon.com/manage-your-observable-subscriptions-in-angular-with-help-of-rx-js-f574b590a5cb'&gt;Manage your observable subscriptions in Angular with help of rx.js&lt;/a&gt; &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;서브스크립션(Subscription)을 위해 &lt;code&gt;Observable&lt;/code&gt; 변수를 사용 할 때, 이 변수를 관리하는 것은 아주 중요합니다. &lt;code&gt;Observable&lt;/code&gt; 은 영원히 동작할 수 있으므로 우리는 이 &lt;code&gt;Observable&lt;/code&gt;의 사용이 끝났을 때, 중지하는 것이 필요합니다. 만약 우리가 서브스크립션을 중단하지 않고 계속 유지한다면, 불필요한 메모리와 컴퓨팅 자원이 낭비될 것이므로 좋지 않습니다. 물론 우리는 &lt;code&gt;unsubscribe()&lt;/code&gt; 라는 함수를 호출하면 됩니다. 하지만 이보다 더 쉽고 좋은 강력한 방법이 &lt;code&gt;rx.js&lt;/code&gt;에는 있습니다.&lt;/p&gt;
+&lt;p&gt;만약 아직 &lt;code&gt;Observable&lt;/code&gt;에 대해 완전히 이해하지 못했다면, &lt;a href='https://hackernoon.com/understanding-creating-and-subscribing-to-observables-in-angular-426dbf0b04a3'&gt;이전의 포스팅&lt;/a&gt;을 참고해 주세요.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;rx.js&lt;/code&gt;의 오퍼레이터(operator)를 사용하여 &lt;code&gt;unsubscribe()&lt;/code&gt;함수의 호출 없이  &lt;code&gt;Observable&lt;/code&gt;을 완료할 수 있습니다. 이 메소드를 사용하여 서브스크립션을 완료하는 방법은 &lt;code&gt;unsubscribe()&lt;/code&gt; 함수를 호출하는 것보다 더 선호됩니다.&lt;/p&gt;
+&lt;p&gt;저는 각 &lt;code&gt;rx.js&lt;/code&gt;의 오퍼레이터를 설명하기 위해서 &lt;a href='http://rxmarbles.com'&gt;rxmarbles.com&lt;/a&gt;의 이미지를 포함할것입니다. 이미지에서 위의 화살표는 여러개의 값을 발산(emit)하는 원래의 &lt;code&gt;Observable&lt;/code&gt;을 나타낸다는 것을 기억하세요. 각 사이클은 한 개의 발산(emit)입니다. 그리고 아래의 화살표는 오퍼레이터가 완료되기 전에 갖는 데이터 스트림입니다. 만약 아직 rxmarbles를 잘 모른다면, 최대한 빨리 볼 수 있기를 바랍니다. rx.js 의 오퍼레이터가 어떻가 동작하는지 이해하는데 아주 큰 도움을 줍니다.&lt;/p&gt;
+&lt;h2&gt;.first()&lt;/h2&gt;
+&lt;p&gt;오직 첫번째 값만 필요하다면 &lt;code&gt;fisrt()&lt;/code&gt; 를 사용하세요.&lt;code&gt;Observable&lt;/code&gt;은 첫번째 값만 전달하고 완료합니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/YwLCvXG.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;h3&gt;사용 예&lt;/h3&gt;
+&lt;p&gt;주로 API 요청을 할 때,&lt;code&gt;first&lt;/code&gt; 를 사용할 수 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;import { Component } from &amp;#39;@angular/core&amp;#39;;
+import { ApiClient } from &amp;#39;../client/apiclient&amp;#39;;
+
+@Component({
+    selector: &amp;#39;example-component&amp;#39;,
+    templateUrl: &amp;#39;./template.html&amp;#39;,
+})
+export class ExampleComponent {
+    
+    constructor(
+        public client: ApiClient,
+    ){}
+
+    // api call that takes one response and then completes
+    public fetchUsers() {
+        this.client.fetchUsers()
+            .first()
+            .subscribe((users: IUser[]) {
+                // do stuff with your users here
+            })
+    }
+    
+    public ngOnInit() {
+        this.fetchUsers();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;.take()&lt;/h2&gt;
+&lt;p&gt;최대로 수행할 횟수를 지정하기를 원한다면, &lt;code&gt;take&lt;/code&gt;를 사용하면 됩니다. &lt;code&gt;take&lt;/code&gt;는 지정한 횟수만큼의 값을 발산하는 &lt;code&gt;Observable&lt;/code&gt; 을 반환합니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/Mw5QBJ8.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;h3&gt;사용 예&lt;/h3&gt;
+&lt;p&gt;만약 첫 번째 값은 &lt;code&gt;null&lt;/code&gt; 일 수 있으나, 두번째 값은 반드시 값이 존재하는 로직이라면 &lt;code&gt;take&lt;/code&gt;를 사용하기 적절합니다. 저는 때로는 ngrx/store 로부터 데이터를 선택할때 이 함수를 사용합니다. 데이터를 요청할 때, store는 비어있을 수 있기 때문입니다. 그럼 첫번째 값은 null이 됩니다. 그리고 조금 뒤에 데이터가 받아서 서브스크립션자변수에 채워집니다. 그렇게 되면 &lt;code&gt;take(2)&lt;/code&gt;는 아주 적절하게 동작됩니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;import { Component } from &amp;#39;@angular/core&amp;#39;;
+import { Store } from &amp;#39;@ngrx/store&amp;#39;;
+
+import { IState } from &amp;#39;../reducers&amp;#39;;
+
+@Component({
+    selector: &amp;#39;example-component&amp;#39;,
+    templateUrl: &amp;#39;./template.html&amp;#39;,
+})
+export class ExampleComponent {
+    
+    constructor(
+        public store: Store&amp;lt;IState&amp;gt;,
+    ){}
+
+    // get the users from your ngrx/store
+    // it can happen that it first is empty
+    // the second time there might be users, then it completes
+    public fetchUsersFromStore() {
+        this.store.select(getUsers)
+            .take(2)
+            .subscribe((users: IUser[]) {
+                // do stuff with your users here
+            })
+    }
+    
+    public ngOnInit() {
+        this.fetchUsersFromStore();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;.elementAt()&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;take&lt;/code&gt;가  &lt;code&gt;Observable&lt;/code&gt; 변수가 발산하는 최대 값을 지정한다면, &lt;code&gt;elementAt&lt;/code&gt;은  인덱스를 지정하여 받을 수 있도록 합니다. 즉, &lt;code&gt;elementAt(2)&lt;/code&gt; 를 사용하면  &lt;code&gt;Observable&lt;/code&gt; 변수가 세 번째로 발산하는 값을 받습니다. &lt;code&gt;elementAt&lt;/code&gt; 함수는 세번째 값이 올때까지 기다리며, 그 후 종료합니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/OfDQiK6.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;h3&gt;사용 예&lt;/h3&gt;
+&lt;p&gt;예를 들면 세 번째 클릭했을 때, 무언가 동작을 취하는 시나리오가 있을 수 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;import { Component } from &amp;#39;@angular/core&amp;#39;;
+import { Observable } from &amp;#39;rxjs/Rx&amp;#39;;
+import { IState } from &amp;#39;../reducers&amp;#39;;
+
+@Component({
+    selector: &amp;#39;example-component&amp;#39;,
+    templateUrl: &amp;#39;./template.html&amp;#39;,
+})
+export class ExampleComponent {
+   
+    public clicks$: Observable&amp;lt;any&amp;gt;;
+    
+    // only take the third click
+    // then complete
+    public listenToClicks() {
+        this.clicks$
+            .elementAt(2)
+            .subscribe((thirdClick: any) =&amp;gt; {
+                // do something with the third click
+            });
+    }
+    
+    public ngOnInit() {
+        this.clicks$ = Observable.fromEvent(document.getElementById(button), &amp;#39;click&amp;#39;);
+        this.listenToClicks();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;.takeUntil()&lt;/h2&gt;
+&lt;p&gt;두 개의 &lt;code&gt;Observable&lt;/code&gt; 변수가 필요한  &lt;code&gt;takeUntil&lt;/code&gt;은 이해하기에 조금 더 어렵습니다. &lt;code&gt;takeUntil&lt;/code&gt;은 두 번째 &lt;code&gt;Observable&lt;/code&gt;변수에서 &lt;em&gt;무언가&lt;/em&gt; 값을 발산(emit)하거나 종료될 때까지 값을 발산합니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/t1JFcgN.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;h4&gt;사용 예&lt;/h4&gt;
+&lt;p&gt;특정 페이지에 웹소켓을 열어 리슨(listen)하고 있다고 생각 해 봅시다. 물론 페이지에 머물고 있는 동안, 웹소켓이 열러있어 서브스크립션을 유지하기를 원할것입니다. 이때, &lt;code&gt;takeUntil&lt;/code&gt;을 사용하면 라우터가 변할 때(&lt;code&gt;routeChange&lt;/code&gt;) 자동으로 서브스크립션이 해지&lt;em&gt;(unsubscribe)&lt;/em&gt;됩니다.&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;역자주: Angular의 router.events는 자체가 Observable 변수 입니다. 여기에 rx.js의 오퍼레이터 filter를 걸어 NavigationStart(URL이 변경될때 발생) 이벤트의 발생을 서브스크립션합니다. 다음은 filter에 대한 rxmarbles의 그림입니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/XV289wE.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;import { Component } from &amp;#39;@angular/core&amp;#39;;
+import { NavigationStart, Router } from &amp;#39;@angular/router&amp;#39;;
+import { Observable } from &amp;#39;rxjs/Rx&amp;#39;;
+import { socketService } from &amp;#39;../services/socket&amp;#39;;
+import { IState } from &amp;#39;../reducers&amp;#39;;
+
+@Component({
+    selector: &amp;#39;example-component&amp;#39;,
+    templateUrl: &amp;#39;./template.html&amp;#39;,
+})
+export class ExampleComponent {
+
+    public messages$: Observable&amp;lt;any&amp;gt;;
+    public routeChange$: Observable&amp;lt;any&amp;gt;;
+    
+    constructor(
+        public socket: socketService,
+        public router: Router,
+    ){}
+    
+    // listen to the socket untill there
+    // is an event of NavigationStart
+    // then complete
+    public listenToSocket() {
+      this.messages$
+        .takeUntil(this.routeChange$)
+        .subscribe((messages: any) =&amp;gt; {
+          // do something with the messages here
+        })
+    }
+    
+    public ngOnInit() {
+        this.messages$ = this.socket.messages;
+        this.routeChange$ = this.router.events.filter(event =&amp;gt; event instanceof NavigationStart);
+      
+        this.listenToSocket();
+    }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;.takeWhile()&lt;/h2&gt;
+&lt;p&gt;마지막은 필터처럼 사용될 수 있는 &lt;code&gt;takeWhile&lt;/code&gt;입니다. &lt;code&gt;Observable&lt;/code&gt;이 발산하는 각 값은 &lt;code&gt;takeWhile&lt;/code&gt;이 받습니다. 그리고 받은 값을 조건문과 비교하여 불린값을 반환합니다. 결과가 거짓(false)이면 &lt;code&gt;Observable&lt;/code&gt;은 종료됩니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src='https://i.imgur.com/jrbm1Qc.png' alt='Imgur' /&gt;&lt;/p&gt;
+&lt;h4&gt;사용 예&lt;/h4&gt;
+&lt;p&gt;ngrx/store 에서 특정 데이터의 수신이 완료될 수도 있는 상황에 대하여 &lt;code&gt;takeWhile&lt;/code&gt; 을 사용할 수 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-typescript' lang='typescript'&gt;import { Component } from &amp;#39;@angular/core&amp;#39;;
+import { Store } from &amp;#39;@ngrx/store&amp;#39;;
+import { IState } from &amp;#39;../reducers&amp;#39;;
+
+@Component({
+    selector: &amp;#39;example-component&amp;#39;,
+    templateUrl: &amp;#39;./template.html&amp;#39;,
+})
+export class ExampleComponent {
+    
+    constructor(
+        public store: Store&amp;lt;IState&amp;gt;,
+    ){}
+
+    // get the users from your ngrx/store
+    // take values until the length is larger than 0
+    // then complete
+    public fetchUsersFromStore() {
+        this.store.select(getUsers)
+            .takeWhile(users =&amp;gt; users.length &amp;gt; 0)
+            .subscribe((users: IUser[]) {
+                // do stuff with your users here
+            })
+    }
+    
+    public ngOnInit() {
+        this.fetchUsersFromStore();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;결론&lt;/h2&gt;
+&lt;p&gt;위 예제들은 실제 잘 사용되지는 않겠지만, &lt;code&gt;first&lt;/code&gt;, &lt;code&gt;take&lt;/code&gt;, &lt;code&gt;elementAt&lt;/code&gt;, &lt;code&gt;takeWhile&lt;/code&gt;, &lt;code&gt;takeUntil&lt;/code&gt;을 전체적으로 &lt;code&gt;unsubscribe()&lt;/code&gt;를 사용하지 않고 서브스크립션을 관리하는 방법에 대해 이해하기에는 좋은 예제들입니다.&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;읽어주셔서 감사합니다. 아래는 번역하지 않겠습니다.   다만 저자에 대한 감사의 표시로 아래 링크들은 그대로 걸어놓습니다.&lt;/p&gt;
+&lt;h2&gt;저자의 다른 글&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href='https://hackernoon.com/understanding-creating-and-subscribing-to-observables-in-angular-426dbf0b04a3' target='_blank' &gt;https://hackernoon.com/understanding-creating-and-subscribing-to-observables-in-angular-426dbf0b04a3&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href='https://hackernoon.com/managing-large-s-css-projects-using-the-inverted-triangle-architecture-3c03e4b1e6df' target='_blank' &gt;https://hackernoon.com/managing-large-s-css-projects-using-the-inverted-triangle-architecture-3c03e4b1e6df&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href='https://hackernoon.com/understanding-map-filter-and-reduce-in-javascript-5df1c7eee464' target='_blank' &gt;https://hackernoon.com/understanding-map-filter-and-reduce-in-javascript-5df1c7eee464&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href='https://hackernoon.com/an-angular-2-webpack-setup-for-development-and-production-3ea8bcc35e24' target='_blank' &gt;https://hackernoon.com/an-angular-2-webpack-setup-for-development-and-production-3ea8bcc35e24&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href='https://hackernoon.com/global-http-request-error-catching-in-angular-486a319f59ab' target='_blank' &gt;https://hackernoon.com/global-http-request-error-catching-in-angular-486a319f59ab&lt;/a&gt;&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;p&gt;&lt;em&gt;Follow me on&lt;/em&gt; &lt;a href='https://medium.com/@luukgruijs'&gt;&lt;em&gt;Medium&lt;/em&gt;&lt;/a&gt; &lt;em&gt;or&lt;/em&gt; &lt;a href='https://twitter.com/luukgruijs'&gt;&lt;em&gt;twitter&lt;/em&gt;&lt;/a&gt; &lt;em&gt;and let’s connect on&lt;/em&gt; &lt;a href='https://www.linkedin.com/in/luukgruijs/'&gt;&lt;em&gt;LinkedIn&lt;/em&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://norux.me/62&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Angular2</category>
+<category>Angular</category>
+<category>observable</category>
+<category>Rx.js</category>
+<author>norux</author>
+<guid>https://norux.me/62</guid>
+<comments>https://norux.me/62#entry62comment</comments>
+<pubDate>Mon, 09 Apr 2018 18:06:03 +0900</pubDate>
+</item>
+<item>
+<title>[Typescript] class에서 'this' 를 사용할 때 주의사항</title>
+<link>https://norux.me/61</link>
+<description>&lt;h1&gt;[Typescript] class에서 'this'를 사용할 때 주의사항&lt;/h1&gt;
+&lt;p&gt;얼마전, 타입스크립트로 &lt;code&gt;express&lt;/code&gt;를 사용할 수 있는 템플릿을 만들다가 곤란함에 빠졌던적이 있습니다. (참고: &lt;a href=&quot;https://github.com/norux/express-ts-template&quot;&gt;Github - express-ts-template&lt;/a&gt;)  우선 구조와 코드를 소개해드려야겠군요. 다만, 이 구조는 어려울 수 있으니까요. &lt;u&gt;좀 더 쉬운 설명을 원하시는 분은 바로 다음 파트&lt;/u&gt;로 넘어가셔도 무방합니다.&lt;/p&gt;
+&lt;h2&gt;express-ts-template 에서 발견된 문제점&lt;/h2&gt;
+&lt;p&gt; 타입스크립트의 클래스는 자바스크립트의 ES6보다 좀 더 기존 자바나 C++의 클래스와 유사합니다. 그래서 좀 더 MVC 패턴같은 구조를 만들어보고자 한 것이죠. 전체적인 구조는 컨트롤러의 생성자에서 모델을 등록하여, 해당 모델을 이용하게끔 하는 구조입니다. 이 과정에 추상클래스로 구현된 컨트롤러와 모델이 존재하구요.&lt;/p&gt;
+&lt;p&gt;우선 추상클래스인 &lt;code&gt;controller.ts&lt;/code&gt; 입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;// controller.ts
+
+import { Request, Response } from 'express';
+import { Model } from './model';
+
+export abstract class Controller {
+  protected dao?: any;
+
+  constructor(protected model?: Model) {
+    if(this.model) {
+      this.dao = this.model.getModel();
+    }
+  }
+  ...후략
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그리고 &lt;code&gt;sample-dao&lt;/code&gt;라는 이름을 가진 컨트롤러 입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;// sample-dao.controller.ts
+
+export class SampleDaoController extends Controller {
+  constructor() {
+    super(new SampleDaoModel());
+  }
+
+  public readAll (req: Request, res: Response): void {
+    this.dao.readAll()
+      .then((docs: any) =&amp;gt; {
+        res.json(docs);
+      })
+      .catch((err: any) =&amp;gt; res.status(400).json(err));
+  };
+  ...후략
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그리고 마지막으로 해당 컨트롤러로 연결해주는 &lt;code&gt;routes&lt;/code&gt; 입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;// sample-dao.routes.ts
+
+export class SampleDaoRoutes extends Routes {
+  constructor() {
+    super(new SampleDaoController());
+  }
+
+  protected routes(): void {
+    this.router
+      .route('/')
+      .get(this.ctrl.readAll)
+      .all(this.ctrl.badRequest);
+  ...후략
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이게 &lt;code&gt;typescript&lt;/code&gt;라는 것만 제외하면, 위 구조상에서 문제될만한 점이 보이시나요? 언뜻 쉽게 들어오지 않습니다. 혹자는 제가 공개해드린 깃허브의 코드와 위 코드들의 차이점도 발견하지 못하시는 분이 계실겁니다. 위 코드를 실행하면 다음의 에러가 발생합니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot; lang=&quot;bash&quot;&gt;TypeError: Cannot read property 'this.dao' of undefined
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그리고 추상 클래스인 &lt;code&gt;Controller&lt;/code&gt; 클래스의 생성자에 가면 정상적으로 dao값을 담는 것을 확인할 수 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;// controller.ts
+
+constructor(protected model?: Model) {
+    if(this.model) {
+      this.dao = this.model.getModel();
+      // console.log(this.dao) =&amp;gt; 여기까지는 정상적인 값이 담김
+    }
+  }
+  ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그리고 멘붕에 빠집니다. &lt;code&gt;SampleDaoController&lt;/code&gt; 는 정상적으로 값을 담은 Controller를 상속했는데, 왜 &lt;code&gt;readAll&lt;/code&gt; 함수에서만 &lt;code&gt;this.dao&lt;/code&gt; 객체가 &lt;code&gt;undefined&lt;/code&gt; 일까요..? 심지어 &lt;code&gt;SampleDaoController&lt;/code&gt; 생성자의&lt;code&gt;super()&lt;/code&gt;함수 밑에 &lt;code&gt;this.dao&lt;/code&gt; 값을 체크해봐도 정상입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;// sample-dao.controller.ts
+
+export class SampleDaoController extends Controller {
+  constructor() {
+    super(new SampleDaoModel());
+    // console.log(this.dao) =&amp;gt; 여기까지도 정상
+  }
+  ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그리고 &lt;del&gt;다시 멘붕에 빠집니다.&lt;/del&gt; 가 아니라, 사실 여기까지 보고나서 저는 무슨 문제인지 캐치할 수 있었습니다. 답은 간단했습니다. 기본적인 문장 하나를 떠올려봅니다. 타입스크립트는 자바스크립트의 슈퍼셋이다. (혹은 슈퍼셋 정도로 생각해도 큰 무리는 없다.) 즉, 아무리 클래스를 가다듬은 타입스크립트라 할지라도, 자바스크립트의 본질적인 문제에서 벗어날 수는 없다는 의미가 되기도 합니다.&lt;/p&gt;
+&lt;p&gt;생성자단계까지 정상이던 &lt;code&gt;this.dao&lt;/code&gt;의 값이, 어떤 함수가 호출될 때 &lt;code&gt;undefined&lt;/code&gt; 값이 된다? 이 말은 다시 말해 &lt;code&gt;this 바인딩&lt;/code&gt; 문제가 생겼다고 추측할 수 있습니다. 그래서, 위 코드상에서 가장 간단한 수정방법은 함수형태로 된 클래스의 메소드를 &lt;code&gt;화살표함수(Arrow Function)&lt;/code&gt;으로 변경하는 것입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;  ...
+  // () =&amp;gt; {} 함수 호출 시, this를 별도로 바인딩하지 않는 화살표함수 형태로 변경
+  public readAll = (req: Request, res: Response): void =&amp;gt; {
+    this.dao.readAll()
+      .then((docs: any) =&amp;gt; {
+        res.json(docs);
+      })
+      .catch((err: any) =&amp;gt; res.status(400).json(err));
+  };
+  ...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그러면 이제 &lt;code&gt;this.dao&lt;/code&gt; 를 읽어올 때 아무런 문제가 생기지 않습니다.&lt;/p&gt;
+&lt;h2&gt;this 바인딩을 유의하자&lt;/h2&gt;
+&lt;p&gt;이제 파트1을 건너 뛰었을 몇몇 분들을 위해, 쉬운 코드로 전환하겠습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;class Foo {
+  private bar: string = 'bar';
+
+  print() {
+    console.log(`bar: ${this.bar}`);
+  }
+}
+
+function someFunction(method: any) {
+  //
+  // something else
+  //
+  method();
+}
+
+let foo = new Foo();
+someFunction(foo.print);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;콜백으로 메소드를 넘겨주는 단순한 코드입니다. 구조는 단순화했지만, &lt;code&gt;express-ts-template&lt;/code&gt; 에서와 동일한 문제가 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;TypeError: Cannot read property 'this.bar' of undefined
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이처럼 오류가 나거나, 아니면 &lt;code&gt;bar: undefined&lt;/code&gt;로 찍힐겁니다. this 바인딩을 잘 생각해봅시다. someFunction을 호출할 때, this는 global 객체에 바인딩 됩니다. method 역시 global 객체에 바인딩 되는데, method는 Foo 클래스의 print 함수 입니다. 하지만 global 객체에는 bar 라는 변수가 없기 때문에 undefined가 됩니다.&lt;/p&gt;
+&lt;p&gt;아래 코드는 재미로 한번 찍어봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;...
+declare var bar: string;
+bar = 'I am global';
+
+let foo = new Foo();
+...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그럼 아래와 같이 정상 출력이 됩니다. &lt;code&gt;declare&lt;/code&gt; 를 이용하면 타입스크립트에서는 global 객체에 변수를 추가하는 것이 됩니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot; lang=&quot;bash&quot;&gt;bar: I am global
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;자, 진정한 해결책은 뭘까요? 이 파트의 제목과 동일합니다. this 바인딩을 유의하자. ES6에서는 this 바인딩이 제멋대로 되는 문제를 해결하는 문법이 있습니다. 화살표함수(Arrow Function)입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;class Foo {
+  private bar: string = 'bar';
+
+  // print 함수를 애로우펑션으로 변경해줍니다.
+  print = () =&amp;gt; {
+    console.log(`bar: ${this.bar}`);
+  }
+}
+
+function someFunction(method: any) {
+  //
+  // something else
+  //
+  method();
+}
+
+let foo = new Foo();
+someFunction(foo.print);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;class 내의 print 함수를 화살표함수로 변경합니다. 그러면 this 바인딩 문제가 정상적으로 해결됩니다. &lt;/p&gt;
+&lt;h2&gt;More Deep Inside&lt;/h2&gt;
+&lt;p&gt;마지막은 좀 더 깊이 확인해보는 시간입니다. ^_^ 이미 여러분은 해결책을 아셨으니, 해결책만이 궁금하셨던분들은 이제 나가셔도 됩니다. 자, 타입스크립트에서 ES5 모듈로 트랜스파일링을 해보면, 두 방식의 진정한 차이점을 알 수 있습니다.&lt;/p&gt;
+&lt;p&gt;첫번째, &lt;code&gt;print() {}&lt;/code&gt; 와 같이 함수형태로 선언했을 때 타입스크립트는 아래와 같이 트랜스파일링 합니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;var Foo = /** @class */ (function () {
+    function Foo() {
+        this.bar = 'bar';
+    }
+    Foo.prototype.print = function () {
+        console.log(&quot;bar: &quot; + this.bar);
+    };
+    return Foo;
+}());
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;print = () =&amp;gt; {}&lt;/code&gt; 와 같이 화살표함수형태로 선언하면 다음과 같습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;var Foo = /** @class */ (function () {
+    function Foo() {
+        var _this = this;
+        this.bar = 'bar';
+        this.print = function () {
+            console.log(&quot;bar: &quot; + _this.bar);
+        };
+    }
+    return Foo;
+}());
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;코드를 빠르게 훑어보시면 아시겠지만, 주요 차이점은 this를 다루는 방식입니다. 화살표함수일때, this를 _this에 담아놓고 사용합니다. 따라서 print 함수는 기존에 this 가 제멋대로 바인딩 되는 문제에서 자유로울 수 있게 됩니다.&lt;/p&gt;
+&lt;p&gt;참고로 자바스크립트의 ES6에서도 동일한 문제가 있습니다. &lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;class Foo {
+  constructor() {
+    this.bar = 'bar';
+  }
+
+  print() {
+    console.log(`bar: ${this.bar}`);
+  }
+}
+
+function someFunction(method) {
+  //
+  // something else
+  //
+  console.log(global === this); // true로 출력됨
+  method();
+}
+
+let f = new Foo();
+someFunction(f.print);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이 코드는 자바스크립트 코드입니다. 자바스크립트에서도 class내부에 this 를 다루는 방식이 약간 다른 것 같습니다. 이 코드를 실행시키면, print함수내의 this 가 undefined 이기 때문에 에러가 납니다. 아, 참고로 타입스크립트에서는 global에 매핑되었던건, 제가 ES5로 변환시켰기 때문입니다. &lt;/p&gt;
+&lt;p&gt;method를 호출할 때, &lt;code&gt;method.call(this);&lt;/code&gt; 로 변경해주어야 global에 바인딩이 됩니다. 물론 그렇다고 이것이 현재의 문제를 타계하기 위한 해결책은 아니겠지요. 해결하는 방법은 역시 this를 강제 바인딩하는 방법밖에는 없을것으로 보입니다. print 함수를 화살표함수로 바꾸는것은 ES6에서 허용하지 않는 문법인거 같거든요. 변경되지 않습니다.&lt;/p&gt;
+&lt;p&gt;따라서, 우린 마지막줄의 코드를 아래처럼 바꿉니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;let f = new Foo();
+someFunction(f.print.bind(f));
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;강제로 Foo 클래스의 객체에 바인딩을 시켜줍니다. 그럼 모든 것이 정상입니다.&lt;/p&gt;
+&lt;h2&gt;결론&lt;/h2&gt;
+&lt;p&gt;this 바인딩은 언제나 어렵고, 언제나 헷갈립니다. 정말 자바스크립트의 고질적인 암과 같은 존재입니다. 그래도 적어도 타입스크립트에서는, 클래스의 메소드를 언제나 Arrow Function으로 선언해주는 것은 좋은 습관인것 같습니다. &lt;/p&gt;
+&lt;h2&gt;참조&lt;/h2&gt;
 &lt;ol&gt;
-&lt;li&gt;첫번째&lt;/li&gt;
-&lt;li&gt;두번째&lt;/li&gt;
-&lt;li&gt;세번째&lt;/li&gt;
-&lt;/ol&gt;
-&lt;hr&gt;
-&lt;p&gt;목록을 중첩하는 것 역시 가능하다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;1. 첫번째
-1. 두번째
-  * 두번째의 첫번째
-  * 두번째의 두번째
-  * 두번째의 세번째
-1. 세번째
+&lt;li&gt;&lt;a href=&quot;https://github.com/Microsoft/TypeScript/wiki/'this'-in-TypeScript&quot;&gt;'this' in TypeScript&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.athiemann.net/2015/07/19/typescript-class-method-this.html&quot;&gt;TypeScript and 'this' in class method&lt;/a&gt;&lt;/li&gt;
+
+&lt;/ol&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://norux.me/61&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Typescript</category>
+<category>CLASS</category>
+<category>JavaScript</category>
+<category>typeScript</category>
+<category>자바스크립트</category>
+<category>타입스크립트</category>
+<author>norux</author>
+<guid>https://norux.me/61</guid>
+<comments>https://norux.me/61#entry61comment</comments>
+<pubDate>Sun, 08 Apr 2018 14:17:28 +0900</pubDate>
+</item>
+<item>
+<title>[Linux/macOS] 압축파일을 풀었더니 모든 폴더와 파일에 실행권한이 붙어 있을 때</title>
+<link>https://norux.me/60</link>
+<description>&lt;h1&gt;[Linux/macOS] 압축파일을 풀었더니 모든 폴더와 파일에 실행권한이 붙어 있을 때&lt;/h1&gt;
+&lt;h2&gt;1. 외부에서 다운로드 받은 압축파일을 풀었더니 모조리 실행권한이 붙어 있습니다.&lt;/h2&gt;
+&lt;p&gt;가끔 웹에서 다운로드하거나 USB를 통해 압축파일을 받아 풀었을 때, 폴더의 모든 권한에 실행권한이 붙어 있는 경우가 있습니다.&lt;br/&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-bash' lang='bash'&gt;# 파일의 경우
+-rwxrwxrwx   1  norux  norux  22   files
+
+# 디렉토리의 경우
+drwxrwxrwx   1  norux  norux  3    directory
 &lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;ol&amp;gt;
-  &amp;lt;li&amp;gt;첫번째&amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt;두번째&amp;lt;/li&amp;gt;
-  &amp;lt;ul&amp;gt;
-    &amp;lt;li&amp;gt;두번째의 첫번째&amp;lt;/li&amp;gt;
-    &amp;lt;li&amp;gt;두번째의 두번째&amp;lt;/li&amp;gt;
-    &amp;lt;li&amp;gt;두번째의 세번째&amp;lt;/li&amp;gt;
-  &amp;lt;/ul&amp;gt;
-  &amp;lt;li&amp;gt;세번째&amp;lt;/li&amp;gt;
-&amp;lt;/ol&amp;gt;
+&lt;p&gt;위 처럼 777 권한이 모조리 붙어있는 경우가 있습니다. 이 경우, 보안상 취약하기도 하구요. 리눅스의 파일관리 컨셉과도 안맞게 되구요. 또 보통 배시에서 실행권한이 있는 폴더와 파일의 색상을 다르게 보여주다보니, 관리의 어려움과 간혹 짜증이 나기도 합니다.&lt;/p&gt;
+&lt;p&gt;이렇게 되는 이유는, 보통 &lt;code&gt;.zip&lt;/code&gt; 파일이 문제인데요. &lt;code&gt;zip&lt;/code&gt; 압축파일의 경우 실행권한을 보존하지 않습니다. 따라서 보통의 경우 &lt;code&gt;zip&lt;/code&gt;압축을 많이 하는 윈도우시스템에서 리눅스/맥으로 파일을 옮길때 문제가 발생하게 됩니다. 참고로 &lt;code&gt;tar&lt;/code&gt; 아카이브의 경우에는 실행권한과 소유권을 모두 보존합니다. 그래서 유닉스시스템에서는 &lt;code&gt;tar&lt;/code&gt;로 아카이브한 이후, &lt;code&gt;bzip2&lt;/code&gt;나 &lt;code&gt;gzip&lt;/code&gt;등 편한 압축포맷을 이용해서 압축하는 경우가 많습니다.&lt;/p&gt;
+&lt;h2&gt;2. 해결책&lt;/h2&gt;
+&lt;p&gt;파일과 디렉토리는 각각 다른권한으로 수정해야합니다. 일반적인 파일은 644 권한을 부여해야하구요. 일반적인 디렉토리는 755 권한을 부텨해야 합니다. 즉, &lt;code&gt;chmod -R 755 SOMETHING&lt;/code&gt; 같은 명령어로는 부족하다는 이야기지요.&lt;/p&gt;
+&lt;h3&gt;2.1. 파일의 모든 권한 변경하기&lt;/h3&gt;
+&lt;pre&gt;&lt;code class='language-bash' lang='bash'&gt;$ find SOMETHING -type f -exec chmod 644 {} \;
 &lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;ol&gt;
-&lt;li&gt;첫번째&lt;/li&gt;
-&lt;li&gt;두번째&lt;ul&gt;
-&lt;li&gt;두번째의 첫번째&lt;/li&gt;
-&lt;li&gt;두번째의 두번째&lt;/li&gt;
-&lt;li&gt;두번째의 세번째&lt;/li&gt;
+&lt;p&gt;&lt;code&gt;find&lt;/code&gt; 명령으로 특정 디렉토리의 모든 파일을 찾아가며 &lt;code&gt;chmod&lt;/code&gt; 명령을 실행하게 하는 코드입니다. &lt;code&gt;SOMETHING&lt;/code&gt;은 특정 디렉토리가 됩니다.&lt;/p&gt;
+&lt;h3&gt;2.2. 디렉토리의 모든 권한 변경하기&lt;/h3&gt;
+&lt;pre&gt;&lt;code class='language-bash' lang='bash'&gt;$ find SOMETHING -type d -exec chmod 755 {} \;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;마찬가지로 옵션 &lt;code&gt;type&lt;/code&gt; 만 &lt;code&gt;d&lt;/code&gt; 로 변경해주면 &lt;code&gt;find&lt;/code&gt; 명령어는 디렉토리를 찾습니다. 찾은 모든 디렉토리의 권한을 755 로 변경하게 됩니다.&lt;/p&gt;
+&lt;h3&gt;2.3. 일부 실행권한이 필요한 파일의 실행권한 부여하기&lt;/h3&gt;
+&lt;p&gt;모든 디렉토리와 파일의 권한에서 실행권한을 제거했지만, 일부 실행권한이 필요한 파일이 있을 수 있습니다. 예를들면 &lt;code&gt;.sh&lt;/code&gt; 같은 쉘스크립트파일인데요. 이런 경우 &lt;code&gt;find&lt;/code&gt;의 이름 검색하는 옵션을 통해 구별할 수 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-bash' lang='bash'&gt;$ find SOMETHING -type f -name &amp;quot;*.sh&amp;quot; -exec chmod 755 {} \;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;두 개 이상의 확장자를 검색하여 변경하고 싶다면 &lt;code&gt;-o&lt;/code&gt; 옵션을 이용한 아래와 같은 방법이 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-bash' lang='bash'&gt;$ find SOMETHING -type f \( -name &amp;quot;*.sh&amp;quot; -o -name &amp;quot;*.py&amp;quot; \) -exec chmod 755 {} \;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그 외에 find 의 정규식을 사용한 방법도 있습니다. ^^ 단, 아래 예제에서 사용한 &lt;code&gt;regextype&lt;/code&gt; 옵션은 GNU find에만 있는 옵션입니다. 참고로 macOS에 디폴트로 설치되어 있는 &lt;code&gt;find&lt;/code&gt;는 BSD find 입니다. &lt;code&gt;sed&lt;/code&gt; 명령에서 사용할 수 있는 정규식표현을 사용할 수 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class='language-bash' lang='bash'&gt;$ find SOMETHING -type f -regextype sed -regex &amp;quot;.*/[a-zA-Z]\.sh&amp;quot; -exec chmod 755 {} \;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;3.결론&lt;/h2&gt;
+&lt;p&gt;배시에서 &lt;code&gt;find&lt;/code&gt; 명령어는 가장 자주 쓰는 명령어 중 하나지만, 가장 자주 잊어먹는 명령어 중 한개이기도 합니다. ^_^; 맨날 까먹어서 제 블로그에 정리해 놓고 사용하고자 합니다. 또 혹시 저와 같은 문제를 겪는 분들을 위해서도 글을 남기고자 합니다.&lt;/p&gt;
+&lt;h2&gt;4. 참고&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href='https://stackoverflow.com/questions/3740152/how-do-i-set-chmod-for-a-folder-and-all-of-its-subfolders-and-files-in-linux-ubu'&gt;How do I set chmod for a folder and all of its subfolders and files in Linux Ubuntu Terminal?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href='https://stackoverflow.com/questions/6844785/how-to-use-regex-with-find-command'&gt;How to use regex with find command?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href='https://superuser.com/questions/118200/syntax-for-find-on-mac-os-x'&gt;Syntax for find on Mac OS X&lt;/a&gt;&lt;/li&gt;
+
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;세번째&lt;/li&gt;
-&lt;/ol&gt;
-&lt;hr&gt;
-&lt;h2 id=&quot;-emphasis-&quot;&gt;강조(Emphasis)&lt;/h2&gt;
-&lt;p&gt;문장 내에서 강조하고 싶은 부분이 있으면 &lt;code&gt;*&lt;/code&gt; 혹은 &lt;code&gt;_&lt;/code&gt; 문자로 감싸준다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;이 문장에서 *여기부터 여기까지* 강조한다.
-이 문장에서는 _여기만_ 강조한다.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;변환하면...&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;이 문장에서 &amp;lt;em&amp;gt;여기부터  여기까지&amp;lt;/em&amp;gt; 강조한다.
-이 문장에서는 &amp;lt;em&amp;gt;여기만&amp;lt;/em&amp;gt; 강조한다.&amp;lt;/p&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;p&gt;이 문장에서 &lt;em&gt;여기부터 여기까지&lt;/em&gt; 강조한다.
-이 문장에서는 &lt;em&gt;여기만&lt;/em&gt; 강조한다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;&lt;code&gt;*&lt;/code&gt; 혹은 &lt;code&gt;_&lt;/code&gt; 문자를 하나만 쓰면 &lt;code&gt;&amp;lt;em&amp;gt;&lt;/code&gt; 태그가 쓰여 이탤릭체로 강조되지만, 두개씩 쓰면 &lt;code&gt;&amp;lt;strong&amp;gt;&lt;/code&gt; 태그가 쓰여 볼드체로 강조된다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;이 문장에서 **여기부터 여기까지** 강조한다.
-이 문장에서는 __여기만__ 강조한다.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;이 문장에서 &amp;lt;strong&amp;gt;여기부터 여기까지&amp;lt;/strong&amp;gt; 강조한다.
-이 문장에서는 &amp;lt;strong&amp;gt;여기만&amp;lt;/strong&amp;gt; 강조한다.&amp;lt;/p&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;p&gt;이 문장에서 &lt;strong&gt;여기부터 여기까지&lt;/strong&gt; 강조한다.
-이 문장에서는 &lt;strong&gt;여기만&lt;/strong&gt; 강조한다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;&lt;em&gt;트리플 강조 구문&lt;/em&gt;이라는 것도 있다. 예측대로 동작한다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;이 문장에서 ***여기부터 여기까지*** 강조한다.
-이 문장에서는 ___여기만___ 강조한다.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;이 문장에서 &amp;lt;strong&amp;gt;&amp;lt;em&amp;gt;여기부터 여기까지&amp;lt;/em&amp;gt;&amp;lt;/strong&amp;gt; 강조한다.
-이 문장에서는 &amp;lt;strong&amp;gt;&amp;lt;em&amp;gt;여기만&amp;lt;/em&amp;gt;&amp;lt;/strong&amp;gt; 강조한다.&amp;lt;/p&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;p&gt;이 문장에서 &lt;strong&gt;&lt;em&gt;여기부터 여기까지&lt;/em&gt;&lt;/strong&gt; 강조한다.
-이 문장에서는 &lt;strong&gt;&lt;em&gt;여기만&lt;/em&gt;&lt;/strong&gt; 강조한다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&quot;-links-&quot;&gt;링크(Links)&lt;/h2&gt;
-&lt;p&gt;링크를 거는 방법에도 두 가지 방법이 있다. 하나는 보다 직관적인 방식이다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;마크다운에 관한 자세한 내용은 [여기](http://daringfireball.net/projects/markdown/)를 참고하라.
-[여기](http://en.wikipedia.org/wiki/Markdown &amp;quot;Wikipedia&amp;quot;)에도 잘 정리가 되어 있다.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;마크다운에 관한 자세한 내용은 &amp;lt;a href=&amp;quot;http://daringfireball.net/projects/markdown/&amp;quot;&amp;gt;여기&amp;lt;/a&amp;gt;를 참고하라.
-&amp;lt;a href=&amp;quot;http://en.wikipedia.org/wiki/Markdown&amp;quot; title=&amp;quot;Wikipedia&amp;quot;&amp;gt;여기&amp;lt;/a&amp;gt;에도 잘 정리가 되어 있다.&amp;lt;/p&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;p&gt;마크다운에 관한 자세한 내용은 &lt;a href=&quot;http://daringfireball.net/projects/markdown/&quot;&gt;여기&lt;/a&gt;를 참고하라.
-&lt;a href=&quot;http://en.wikipedia.org/wiki/Markdown&quot; title=&quot;Wikipedia&quot;&gt;여기&lt;/a&gt;에도 잘 정리가 되어 있다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;링크 주소 뒤에 입력한 문자열은 링크 위에 커서를 올렸을 때 나타나는 링크의 제목이다.&lt;/p&gt;
-&lt;p&gt;문장 내 링크가 위치했을 때 가독성을 보다 높이기 위해 참조 방식으로 링크를 걸 수도 있다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;마크다운에 관한 자세한 내용은 [여기][1]를 참고하라.
-[여기][2]에도 잘 정리가 되어 있다.
+&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://norux.me/60&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Linux</category>
+<category>Bash</category>
+<category>Linux</category>
+<category>Mac</category>
+<author>norux</author>
+<guid>https://norux.me/60</guid>
+<comments>https://norux.me/60#entry60comment</comments>
+<pubDate>Tue, 06 Feb 2018 09:58:21 +0900</pubDate>
+</item>
+<item>
+<title>[Typescript] tsconfig.json의 lib</title>
+<link>https://norux.me/59</link>
+<description>&lt;h1&gt;[Typescript] tsconfig.json의 lib&lt;/h1&gt;
+&lt;h2&gt;1. lib 옵션의 사용&lt;/h2&gt;
+&lt;p&gt;타입스크립트가 빌드 될 때 참조하는 &lt;code&gt;tsconfig.json&lt;/code&gt;의 컴파일 옵션중에 &lt;code&gt;lib&lt;/code&gt;이라는 항목이 있습니다. 이 항목의 의미를 알아봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;// tsconfig.json
 
-[1]: http://daringfireball.net/projects/markdown/ &amp;quot;Daring Fireball&amp;quot;
-[2]: http://en.wikipedia.org/wiki/Markdown &amp;quot;Wikipedia&amp;quot;
+{
+  &quot;CompilerOptions&quot;: {
+    &quot;target&quot;: &quot;es5&quot;,
+    &quot;module&quot;: &quot;commonjs&quot;,
+    &quot;lib&quot;: [
+      &quot;dom&quot;,
+      &quot;es5&quot;,
+      &quot;es2015.promise&quot; 
+    ]
+  }
+}
 &lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;마크다운에 관한 자세한 내용은 &amp;lt;a href=&amp;quot;http://daringfireball.net/projects/markdown/&amp;quot; title=&amp;quot;Daring Fireball&amp;quot;&amp;gt;여기&amp;lt;/a&amp;gt;를 참고하라.
-&amp;lt;a href=&amp;quot;http://en.wikipedia.org/wiki/Markdown&amp;quot; title=&amp;quot;Wikipedia&amp;quot;&amp;gt;여기&amp;lt;/a&amp;gt;에도 잘 정리가 되어 있다.&amp;lt;/p&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;p&gt;마크다운에 관한 자세한 내용은 &lt;a href=&quot;http://daringfireball.net/projects/markdown/&quot; title=&quot;Daring Fireball&quot;&gt;여기&lt;/a&gt;를 참고하라.
-&lt;a href=&quot;http://en.wikipedia.org/wiki/Markdown&quot; title=&quot;Wikipedia&quot;&gt;여기&lt;/a&gt;에도 잘 정리가 되어 있다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;참조 문자열은 꼭 숫자가 아니어도 된다. 영문, 한글 모두 가능하고 영문의 경우 대소문자를 구분하지도 않으며, 생략도 가능하다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;마크다운에 관한 자세한 내용은 [여기][Daring Fireball]를 참고하라.
-[위키피디아][]에도 잘 정리가 되어 있다.
+&lt;p&gt;이 &lt;code&gt;tsconfig.json&lt;/code&gt; 에 등장하는 중간에 &lt;code&gt;lib&lt;/code&gt;의 내용을 보면 배열형태로 사용할 라이브러리들을 정의하고 있습니다. 만약 &lt;code&gt;lib&lt;/code&gt; 항목을 정의하지 않았다면 &lt;code&gt;target&lt;/code&gt; 항목에서 지정한 ECMAScript의 버전에 따라 기본값이 정의됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;ES5의 기본 값:&lt;/strong&gt; &lt;code&gt;dom&lt;/code&gt;, &lt;code&gt;es5&lt;/code&gt;, &lt;code&gt;scripthost&lt;/code&gt; &lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;ES6의 기본 값:&lt;/strong&gt; &lt;code&gt;dom&lt;/code&gt;, &lt;code&gt;dom.iterable&lt;/code&gt;, &lt;code&gt;es6&lt;/code&gt;, &lt;code&gt;scripthost&lt;/code&gt; &lt;/li&gt;
 
-[daring fireball]: http://daringfireball.net/projects/markdown/ &amp;quot;Daring Fireball&amp;quot;
-[위키피디아]: http://en.wikipedia.org/wiki/Markdown &amp;quot;Wikipedia&amp;quot;
+&lt;/ul&gt;
+&lt;p&gt;위의 기본 값 대신에 커스텀하게 라이브러리를 쓰려고 할 때, &lt;code&gt;lib&lt;/code&gt;을 정의하여 사용합니다. &lt;/p&gt;
+&lt;p&gt;사용 예를 하나 들겠습니다. 위 예제처럼 빌드 될 &lt;code&gt;target&lt;/code&gt;은 &lt;code&gt;es5&lt;/code&gt;로 정의되어 있습니다. 그런데 작성한 코드나, 코드에서 참조하는 모듈들(&lt;code&gt;node_modules&lt;/code&gt;)에서 ES6에서 등장한 &lt;code&gt;Promise&lt;/code&gt; 를 사용하려면 &lt;code&gt;es2015.promise&lt;/code&gt; 라는 라이브러리를 위처럼 정의하여 라이브러리 인젝션을 해줘야 합니다.&lt;/p&gt;
+&lt;h2&gt;2. lib 옵션에 사용할 수 있는 값들&lt;/h2&gt;
+&lt;p&gt;lib에는 사용할 수 있는 문자열은 아래와 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ES5 &lt;/li&gt;
+&lt;li&gt;ES6 &lt;/li&gt;
+&lt;li&gt;ES2015 &lt;/li&gt;
+&lt;li&gt;ES7 &lt;/li&gt;
+&lt;li&gt;ES2016 &lt;/li&gt;
+&lt;li&gt;ES2017 &lt;/li&gt;
+&lt;li&gt;ESNext &lt;/li&gt;
+&lt;li&gt;DOM &lt;/li&gt;
+&lt;li&gt;DOM.Iterable&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;WebWorker &lt;/li&gt;
+&lt;li&gt;ScriptHost &lt;/li&gt;
+&lt;li&gt;ES2015.Core &lt;/li&gt;
+&lt;li&gt;ES2015.Collection &lt;/li&gt;
+&lt;li&gt;ES2015.Generator &lt;/li&gt;
+&lt;li&gt;ES2015.Iterable &lt;/li&gt;
+&lt;li&gt;ES2015.Promise &lt;/li&gt;
+&lt;li&gt;ES2015.Proxy &lt;/li&gt;
+&lt;li&gt;ES2015.Reflect &lt;/li&gt;
+&lt;li&gt;ES2015.Symbol &lt;/li&gt;
+&lt;li&gt;ES2015.Symbol.WellKnown &lt;/li&gt;
+&lt;li&gt;ES2016.Array.Include &lt;/li&gt;
+&lt;li&gt;ES2017.object &lt;/li&gt;
+&lt;li&gt;ES2017.SharedMemory &lt;/li&gt;
+&lt;li&gt;ES2017.TypedArrays &lt;/li&gt;
+&lt;li&gt;esnext.asynciterable &lt;/li&gt;
+&lt;li&gt;esnext.array &lt;/li&gt;
+&lt;li&gt;esnext.promise &lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;p&gt;아시겠지만, &lt;code&gt;ES6&lt;/code&gt;는 &lt;code&gt;ES2015&lt;/code&gt;와 동일하고 &lt;code&gt;ES7&lt;/code&gt; 는 &lt;code&gt;ES2016&lt;/code&gt; 와 동일합니다. 따라서 &lt;code&gt;ES6&lt;/code&gt;를 사용하게 되면, &lt;code&gt;ES2015&lt;/code&gt;와 동일하며, &lt;code&gt;ES2015.*&lt;/code&gt; 즉, ES2015의 모든 항목들을 전부 로딩합니다.&lt;/p&gt;
+&lt;h2&gt;3. 실제로 참조하는 lib은 무엇일까?&lt;/h2&gt;
+&lt;p&gt;코드를 분석하며 좀 더 딥하게 다이브(&lt;em&gt;Deep Dive&lt;/em&gt;) 해봅시다. &lt;/p&gt;
+&lt;h3&gt;3.1. lib 파일들은 어디에 있을까요?&lt;/h3&gt;
+&lt;p&gt;보통 설치한 타입스크립트 모듈에 존재합니다. 예를 들어, &lt;code&gt;npm install -g typescript&lt;/code&gt; 와 같이 글로벌 영역에 타입스크립트를 설치 했다면, Linux/macOS 에서는 &lt;code&gt;/usr/local/lib/node_modules/typescript&lt;/code&gt; 에 설치가 됩니다. 죄송하지만 Windows에서는 잘 모르겠습니다. ^_^;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot; lang=&quot;bash&quot;&gt;$ ls -l /usr/local/lib/node_modules/typescript/lib
+... (중략)
+lib.d.ts
+lib.dom.d.ts
+...
+lib.es2015.d.ts
+lib.es2015.promise.d.ts
+...
 &lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;마크다운에 관한 자세한 내용은 &amp;lt;a href=&amp;quot;http://daringfireball.net/projects/markdown/&amp;quot; title=&amp;quot;Daring Fireball&amp;quot;&amp;gt;여기&amp;lt;/a&amp;gt;를 참고하라.
-&amp;lt;a href=&amp;quot;http://en.wikipedia.org/wiki/Markdown&amp;quot; title=&amp;quot;Wikipedia&amp;quot;&amp;gt;위키피디아&amp;lt;/a&amp;gt;에도 잘 정리가 되어 있다.&amp;lt;/p&amp;gt;
+&lt;p&gt;위 처럼 아까 보셨던 문자열과 거의 동일한 이름으로 &lt;code&gt;lib&lt;/code&gt; 파일이 정의되어 있습니다. 파일들을 열어보면 ECMAScript 규격에 정의된 자바스크립트 객체들에 대한 인터페이스들이 정의되어 있는 것을 보실 수 있습니다. &lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;// lib.es5.d.ts
+
+... (중략)
+
+interface Function {
+  apply(this: Function, thisArgs: any, argArray?: any): any;
+  call(this: Function, thisArgs: any, ...argArray: any[]): any;
+  ...
+}
+
+interface Number {
+  toString(radix?: number): string;
+  ...
+  valueOf(): number;
+}
+
+...
 &lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;p&gt;마크다운에 관한 자세한 내용은 &lt;a href=&quot;http://daringfireball.net/projects/markdown/&quot; title=&quot;Daring Fireball&quot;&gt;여기&lt;/a&gt;를 참고하라.
-&lt;a href=&quot;http://en.wikipedia.org/wiki/Markdown&quot; title=&quot;Wikipedia&quot;&gt;위키피디아&lt;/a&gt;에도 잘 정리가 되어 있다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;참고로 링크를 거는 또 다른 방법이 있다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;링크: &amp;lt;http://google.com/&amp;gt;, 이메일: &amp;lt;mail@gmail.com&amp;gt;
+&lt;p&gt;위 처럼 원시 타입(&lt;em&gt;Primitive Type&lt;/em&gt;)의 인터페이스들도 정의되어 있구요. &lt;code&gt;Math&lt;/code&gt; 같은 자바스크립트 내장 객체들의 인터페이스도 정의되어 있습니다.&lt;/p&gt;
+&lt;h3&gt;3.2. 라이브러리 로딩 과정&lt;/h3&gt;
+&lt;p&gt;이제 &lt;code&gt;tsc.js&lt;/code&gt; 의 코드를 보며 실제 컴파일 과정에서 라이브러리를 읽는 과정을 잠깐 보겠습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;//tsc.js
+
+{
+  name: &quot;target&quot;,
+  shortName: &quot;t&quot;,
+  type: ts.createMapFromTemplate({
+    &quot;es3&quot;: 0,
+    &quot;es5&quot;: 1,
+    &quot;es6&quot;: 2,
+    &quot;es2015&quot;: 2,
+    &quot;es2016&quot;: 3,
+    &quot;es2017&quot;: 4,
+    &quot;esnext&quot;: 5
+  }),
+  ...(후략)
+},
+{
+  name: &quot;lib&quot;,
+  type: &quot;list&quot;,
+  element: {
+    name: &quot;lib&quot;,
+    type: ts.createMapFromTemplate({
+      &quot;es5&quot;: &quot;lib.es5.d.ts&quot;,
+      &quot;es6&quot;: &quot;lib.es2015.d.ts&quot;,
+      &quot;es2015&quot;: &quot;lib.es2015.d.ts&quot;,
+      &quot;es7&quot;: &quot;lib.es2016.d.ts&quot;,
+      ...
+      &quot;es2015.core&quot;: &quot;lib.es2015.core.d.ts&quot;,
+      &quot;es2015.generator&quot;: &quot;lib.es2015.generator.d.ts&quot;,
+       ...(후략)
+    }),
+  }
+  ...(후략)
+}
 &lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;링크: &amp;lt;a href=&amp;quot;http://google.com/&amp;quot;&amp;gt;http://google.com/&amp;lt;/a&amp;gt;, 이메일: &amp;lt;a href=&amp;quot;mailto:mail@gmail.com&amp;quot;&amp;gt;mail@gmail.com&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&lt;p&gt;위 코드는 &lt;code&gt;tsc.js&lt;/code&gt; 컴파일러가 옵션을 파싱하는 부분입니다. &lt;code&gt;target&lt;/code&gt; 옵션과 &lt;code&gt;lib&lt;/code&gt; 옵션에 대해 위처럼 매핑되어있습니다. &lt;code&gt;lib.es2015.d.ts&lt;/code&gt; 파일을 잠깐 열어보면요.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot; lang=&quot;typescript&quot;&gt;// lib.es2015.d.ts
+
+/// &amp;lt;reference no-default-lib=&quot;true&quot; /&amp;gt;
+
+/// &amp;lt;reference path=&quot;lib.es2015.core.d.ts&quot; /&amp;gt;
+/// &amp;lt;reference path=&quot;lib.es2015.collection.d.ts&quot; /&amp;gt;
+/// &amp;lt;reference path=&quot;lib.es2015.generator.d.ts&quot; /&amp;gt;
+/// &amp;lt;reference path=&quot;lib.es2015.promise.d.ts&quot; /&amp;gt;
+/// &amp;lt;reference path=&quot;lib.es2015.iterable.d.ts&quot; /&amp;gt;
+/// &amp;lt;reference path=&quot;lib.es2015.proxy.d.ts&quot; /&amp;gt;
+/// &amp;lt;reference path=&quot;lib.es2015.reflect.d.ts&quot; /&amp;gt;
+/// &amp;lt;reference path=&quot;lib.es2015.symbol.d.ts&quot; /&amp;gt;
+/// &amp;lt;reference path=&quot;lib.es2015.symbol.wellknown.d.ts&quot; /&amp;gt;
+/// &amp;lt;reference path=&quot;lib.es5.d.ts&quot; /&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;p&gt;링크: &lt;a href=&quot;http://google.com/&quot;&gt;http://google.com/&lt;/a&gt;, 이메일: &lt;a href=&quot;&amp;#x6d;&amp;#97;&amp;#x69;&amp;#x6c;&amp;#116;&amp;#111;&amp;#x3a;&amp;#109;&amp;#x61;&amp;#x69;&amp;#x6c;&amp;#64;&amp;#x67;&amp;#x6d;&amp;#97;&amp;#105;&amp;#108;&amp;#x2e;&amp;#99;&amp;#x6f;&amp;#x6d;&quot;&gt;&amp;#109;&amp;#x61;&amp;#x69;&amp;#x6c;&amp;#64;&amp;#x67;&amp;#x6d;&amp;#97;&amp;#105;&amp;#108;&amp;#x2e;&amp;#99;&amp;#x6f;&amp;#x6d;&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&quot;-images-&quot;&gt;이미지(Images)&lt;/h2&gt;
-&lt;p&gt;이미지를 삽입하는 것은 링크를 거는 것과 매우 흡사하다. 차이가 있다면 &lt;code&gt;!&lt;/code&gt; 문자만 앞에 붙여주면 된다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;![마크다운 로고](https://raw.github.com/dcurtis/markdown-mark/master/png/208x128.png)
+&lt;p&gt;보시다시피 XML형식으로 다른 &lt;code&gt;ts&lt;/code&gt; 파일들을 참조하도록 되어있습니다. 실제 구현부는 &lt;code&gt;lib.es2015.core.d.ts&lt;/code&gt; 같은 파일들에 있습니다. &lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;// tsc.js
+
+function getDefaultLibFileName(options) {
+  switch (options.target) {
+    case 5: return &quot;lib.esnext.full.d.ts&quot;;
+    case 4: return &quot;lib.es2017.full.d.ts&quot;;
+    case 3: return &quot;lib.es2016.full.d.ts&quot;;
+    case 2: return &quot;lib.es6.d.ts&quot;;
+    default: return &quot;lib.d.ts&quot;;
+  }
+}
 &lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;&amp;lt;img src=&amp;quot;https://raw.github.com/dcurtis/markdown-mark/master/png/208x128.png&amp;quot; alt=&amp;quot;마크다운 로고&amp;quot;&amp;gt;&amp;lt;/p&amp;gt;
+&lt;p&gt;이 함수는 서두에 말씀 드렸던 &lt;code&gt;lib&lt;/code&gt;을 정의하지 않았을 때,  &lt;code&gt;target&lt;/code&gt; 에 대한 기본 라이브러리를 읽어오는 부분입니다. &lt;code&gt;lib.es2015.d.ts&lt;/code&gt; 파일이 XML 의 참조 형식을 빌렸기 때문에, 실제 구현부의 집합인 &lt;code&gt;lib.es6.d.ts&lt;/code&gt;라는 파일을 추가 정의하여 사용하는것 같습니다. &lt;code&gt;lib.es6.d.ts&lt;/code&gt; 파일은 &lt;code&gt;lib.es2015.*.d.ts&lt;/code&gt; 의 모든 내용을 합친것과 같습니다. 파일이름에 &lt;code&gt;full&lt;/code&gt; 이 붙은 &lt;code&gt;esnext&lt;/code&gt;, &lt;code&gt;es2017&lt;/code&gt;, &lt;code&gt;es2016&lt;/code&gt; 역시 같은 맥락입니다.&lt;/p&gt;
+&lt;h2&gt;4. 결론&lt;/h2&gt;
+&lt;p&gt;타입스크립트를 빌드하며 &lt;code&gt;lib&lt;/code&gt; 이 도대체 뭘까 궁금했습니다. 그러다가 &lt;a href=&quot;http://reactivex.io/rxjs/&quot;&gt;rxjs&lt;/a&gt;를 공부하는 와중에 &lt;code&gt;target: &quot;es5&quot;&lt;/code&gt; 로 컴파일러 옵션을 주고 빌드를 하면 다음과 같은 에러가 발생하는 문제때문에 딥하게 공부해보기 시작했습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot; lang=&quot;bash&quot;&gt;node_modules/@reactivex/rxjs/dist/package/Observable.d.ts(58,60): error TS2693: 'Promise' only refers to a type, but is being used as a value here.
+node_modules/@reactivex/rxjs/dist/package/Observable.d.ts(73,59): error TS2693: 'Promise' only refers to a type, but is being used as a value here.
 &lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;p&gt;&lt;img src=&quot;https://raw.github.com/dcurtis/markdown-mark/master/png/208x128.png&quot; alt=&quot;마크다운 로고&quot;&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;참고로 이 로고는 &lt;a href=&quot;http://dcurt.is/the-markdown-mark&quot;&gt;Dustin Curtis&lt;/a&gt;에 의해 만들어진 마크다운 로고이다.&lt;/p&gt;
-&lt;h2 id=&quot;-code-&quot;&gt;코드(Code)&lt;/h2&gt;
-&lt;p&gt;코드 블럭을 삽입하기 위해서는 앞에 &lt;code&gt;공백 4개&lt;/code&gt; 혹은 &lt;code&gt;탭 1개&lt;/code&gt;를 붙인다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;    &amp;lt;blockquote&amp;gt;
-      &amp;lt;p&amp;gt;코드 예제&amp;lt;/p&amp;gt;
-    &amp;lt;/blockquote&amp;gt;
+&lt;p&gt;일단은 &lt;code&gt;lib: [&quot;es5&quot;, &quot;dom&quot;, &quot;es2015.promise&quot;]&lt;/code&gt; 혹은 &lt;code&gt;lib: [&quot;es6&quot;, &quot;dom&quot;]&lt;/code&gt; 으로 해결이 되는 문제였습니다. 어떻게 &lt;code&gt;lib&lt;/code&gt;을 사용하는것이 효과적인지, 두 방법간에 어떤 차이가 있는지 궁금해서 시작하게 된 공부였습니다.&lt;/p&gt;
+&lt;p&gt;제 생각은 성능상에는 큰 상관 없을 것 같습니다. ^^ &lt;code&gt;es2015.promise&lt;/code&gt; 처럼 라이브러리를 인젝션하면 모듈화를 할때 조금 더 효율적이긴 할 것 같지만 성능상에 큰 문제를 발생시킬것 같지는 않습니다. 아무래도 공부가 더 필요한 모양입니다.&lt;/p&gt;
+&lt;p&gt;문의사항이나 의견이 있으면 언제든 무엇이든 댓글 남겨주세요.&lt;/p&gt;
+&lt;h2&gt;5. 참고&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.typescriptlang.org/docs/handbook/compiler-options.html&quot;&gt;typescript - Compiler Options&lt;/a&gt;&lt;/li&gt;
+
+&lt;/ul&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://norux.me/59&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Typescript</category>
+<category>TSC</category>
+<category>typeScript</category>
+<author>norux</author>
+<guid>https://norux.me/59</guid>
+<comments>https://norux.me/59#entry59comment</comments>
+<pubDate>Thu, 01 Feb 2018 14:08:03 +0900</pubDate>
+</item>
+<item>
+<title>자바스크립트 ES6 방식의 모듈 로딩 방식 (import/export)</title>
+<link>https://norux.me/58</link>
+<description>&lt;h1&gt;자바스크립트 ES6 방식의 모듈 로딩 방식 (import/export)&lt;/h1&gt;
+&lt;h2&gt;1. import / export&lt;/h2&gt;
+&lt;p&gt;import와 export는 ES6 방식에서 새롭게 등장한 자바스크립트 모듈의 로딩 방식입니다.&lt;/p&gt;
+&lt;p&gt;모듈을 읽어들이는 import를 설명하기에 앞서, 모듈에 선언된 멤버를 외부에 노출시키는 export를 설명하겠습니다.&lt;/p&gt;
+&lt;p&gt;export 에는 두 가지 타입이 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Named export&lt;/li&gt;
+&lt;li&gt;Default export&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;h3&gt;1.1 Named export와 import&lt;/h3&gt;
+&lt;h4&gt;1.1.1. 여러 개의 멤버를 export&lt;/h4&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;// 함수 구현부
+let sum = (a, b, radix = 10) =&amp;gt; { 
+  return parseInt(a, radix) + parseInt(b, radix); 
+};
+let multiple = (a, b, radix = 10) =&amp;gt; { 
+  return parseInt(a, radix) * parseInt(b, radix); 
+};
+
+export { sum, multiple };
 &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;변환하면 다음과 같다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;pre&amp;gt;&amp;lt;code&amp;gt;
-  &amp;lt;blockquote&amp;gt;
-    &amp;lt;p&amp;gt;코드 예제&amp;lt;/p&amp;gt;
-  &amp;lt;/blockquote&amp;gt;
-&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&lt;p&gt;위 예제처럼, 미리 구현해둔 함수나 변수들을 &lt;code&gt;export { }&lt;/code&gt;문법으로 묶어서 한번에 export 할 수 있습니다.&lt;/p&gt;
+&lt;h4&gt;1.1.2. 멤버의 생성과 동시에 export&lt;/h4&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;export let divide = (a, b, radix = 10) =&amp;gt; { 
+  return parseInt(a, radix) / parseInt(b, radix); 
+};
+
+export const hex = 16;
 &lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;pre&gt;&lt;code&gt;&amp;lt;blockquote&amp;gt;
-  &amp;lt;p&amp;gt;코드 예제&amp;lt;/p&amp;gt;
-&amp;lt;/blockquote&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;hr&gt;
-&lt;p&gt;문장 내에서도 &lt;code&gt;` &lt;/code&gt; 문자를 이용해 코드 삽입이 가능하다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;문장 내에서도 `코드` 삽입이 가능하다.
+&lt;p&gt;또는 위 예제처럼 변수의 선언과 동시에 export 하는 것도 가능합니다.&lt;/p&gt;
+&lt;h4&gt;1.1.3. 노출된 모든 멤버를 import&lt;/h4&gt;
+&lt;p&gt;위 &lt;em&gt;named export&lt;/em&gt; 대응되는 &lt;code&gt;import&lt;/code&gt;는 다음과 같습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;import * as calc from './calculator';
+
+console.log(calc.sum(3, 5));		// 8
+console.log(calc.multiple(3, 5));	// 15
+
 &lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;문장 내에서도 &amp;lt;code&amp;gt;코드&amp;lt;/code&amp;gt; 삽입이 가능하다.&amp;lt;/p&amp;gt;
+&lt;h4&gt;1.1.4. 일부 멤버만 import&lt;/h4&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;import { sum, multiple } from './calculator';
+
+console.log(sum(3, 5));			// 8
+console.log(multiple(3, 5));	// 15
 &lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;p&gt;문장 내에서도 &lt;code&gt;코드&lt;/code&gt; 삽입이 가능하다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;마크다운 변환기에 따라서 &lt;em&gt;펜스 코드블럭&lt;/em&gt;이 사용 가능한 경우도 있다. 펜스 코드블럭은 &lt;code&gt;```&lt;/code&gt; 혹은 &lt;code&gt;~~~&lt;/code&gt; 문자열로 코드 블럭을 감싸는 방법이다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;```
-var test = &amp;#39;test&amp;#39;;
-console.log(&amp;#39;test:&amp;#39;, test);
-```
+&lt;h4&gt;1.1.5. 멤버의 별명(alias)을 지정해서 import&lt;/h4&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;import { sum as s, multiple as m } from './calculator';
+
+console.log(s(3, 5));	// 8
+console.log(m(3, 5));	// 15
 &lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;pre&amp;gt;&amp;lt;code&amp;gt;
-var test = &amp;#39;test&amp;#39;;
-console.log(&amp;#39;test:&amp;#39;, test);
-&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&lt;h3&gt;1.2 Default export와 import&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;Default export&lt;/em&gt; 는 &lt;u&gt;&lt;strong&gt;모듈당 딱 하나의 멤버&lt;/strong&gt;&lt;/u&gt;에만 선언할 수 있습니다. 가장 간단하게 &lt;code&gt;import&lt;/code&gt;할 수 있게 되므로, 모듈의 메인에 해당하는 것을 선택하는 것이 좋습니다.&lt;/p&gt;
+&lt;h4&gt;1.2.1. export default&lt;/h4&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;/** 
+ * @file: calculator.js
+ * @desc: Various calculator utils
+ */
+
+// 함수 구현부
+let sum = (a, b, radix = 10) =&amp;gt; { 
+  return parseInt(a, radix) + parseInt(b, radix); 
+};
+let multiple = (a, b, radix = 10) =&amp;gt; { 
+  return parseInt(a, radix) * parseInt(b, radix); 
+};
+
+// defualt export
+export default sum;
+
+// defualt는 모듈당 하나밖에 할 수 없으므로, 나머지 멤버는 named export를 해야 한다.
+export { multiple };
 &lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-javascript&quot;&gt;var test = &amp;#39;test&amp;#39;;
-console.log(&amp;#39;test:&amp;#39;, test);
+&lt;p&gt;위 예제처럼 &lt;code&gt;export default&lt;/code&gt;라는 키워드를 통해서 sum 을 default export 로 정의했습니다. &lt;em&gt;default&lt;/em&gt; 설정은 모듈당 하나로 제한되므로, &lt;code&gt;sum&lt;/code&gt; 변수에만 default를 걸어두고, &lt;code&gt;multiple&lt;/code&gt; 변수는 named export 로 선언해야 합니다.&lt;/p&gt;
+&lt;h4&gt;1.2.2. default export의 import&lt;/h4&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;import sum from './calculator';
+
+console.log(sum(3, 5)); 	// 8
 &lt;/code&gt;&lt;/pre&gt;
-&lt;hr&gt;
-&lt;h2 id=&quot;-backslash-escapes-&quot;&gt;이스케이프(Backslash Escapes)&lt;/h2&gt;
-&lt;p&gt;마크다운으로 글을 작성하다 보면 &lt;code&gt;*&lt;/code&gt; 문자나 &lt;code&gt;_&lt;/code&gt; 문자 등을 사용하고 싶은 경우가 있다. 그럴 때는 &lt;code&gt;\&lt;/code&gt; 문자로 회피할 수 있다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;강조는 \* 문자 혹은 \_ 문자를 사용한다.
+&lt;h4&gt;1.2.3. 기본 멤버들과 함께 import&lt;/h4&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; lang=&quot;javascript&quot;&gt;import sum, * as calc from './calculator';
+import sum, { multiple } from './calculaotr'
 &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;결과 화면은 다음과 같다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;강조는 * 문자 혹은 _ 문자를 사용한다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;혹 코드 내부에 &lt;code&gt;` &lt;/code&gt; 문자를 사용하고 싶으면 &lt;code&gt;` &lt;/code&gt; 대신 &lt;code&gt;``&lt;/code&gt; 문자열로 감싸야 한다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;때론 ``코드 내부에 ` 문자``를 사용하기도 한다.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;결과 화면은...&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;때론 &lt;code&gt;코드 내부에 ` 문자&lt;/code&gt;를 사용하기도 한다.&lt;/p&gt;
-&lt;hr&gt;
-&lt;h1 id=&quot;-&quot;&gt;마치며&lt;/h1&gt;
-&lt;p&gt;간단하지 않은가? 이 정도면 마크다운에 대하여 대부분 살펴보았다. 하지만 마크다운은 아직 진화 중이다. 관심을 가지고 꾸준히 지켜보면 더욱 좋을 것 같다.&lt;/p&gt;
-&lt;/div&gt;&lt;div class=&quot;disqus&quot;&gt;&lt;div id=&quot;disqus_thread&quot;&gt;&lt;/div&gt;&lt;script&gt;var disqus_shortname = 'danielku';
-(function() {
-  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-})();&lt;/script&gt;&lt;noscript&gt;Please enable JavaScript to view the &lt;a href=&quot;https://disqus.com/?ref_noscript&quot; rel=&quot;nofollow&quot;&gt;comments powered by Disqus.&lt;/a&gt;
-&lt;/noscript&gt;&lt;/div&gt;&lt;div class=&quot;navigation&quot;&gt;&lt;div class=&quot;next&quot;&gt;&lt;a href=&quot;/posts/2015-07-04-introducing-bagle/&quot;&gt;&lt;i class=&quot;fa fa-lg fa-long-arrow-left&quot;&gt;&lt;/i&gt;&lt;span&gt;베이글 서비스를 소개합니다.&lt;/span&gt;&lt;/a&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;&lt;/section&gt;&lt;footer&gt;&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;https://github.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-github&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;github&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;http://www.linkedin.com/in/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-linkedin&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;linkedin&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://twitter.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-twitter&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;twitter&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://www.facebook.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-facebook&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;facebook&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;mailto:d@nielku.com&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-inbox&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;email&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;/atom.xml&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-rss&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;feed&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;div class=&quot;copyright&quot;&gt;© Daniel Ku 2015&lt;/div&gt;&lt;div class=&quot;endnote&quot;&gt;Made with &lt;a href=&quot;http://docpad.org&quot; target=&quot;_blank&quot;&gt;DocPad&lt;/a&gt;,
-hosted on &lt;a href=&quot;https://github.com&quot; target=&quot;_blank&quot;&gt;GitHub&lt;/a&gt;.
-&lt;/div&gt;&lt;/footer&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/jquery/dist/jquery.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lodash/lodash.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/highlightjs/highlight.pack.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lightbox2/dist/js/lightbox.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/scripts/script.js&quot;&gt;&lt;/script&gt;&lt;script&gt;(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-ga('create', 'UA-64883212-1', 'auto');
-ga('send', 'pageview');&lt;/script&gt;&lt;script&gt;var disqus_shortname = 'danielku';
-(function () {
-  var s = document.createElement('script'); s.async = true;
-  s.type = 'text/javascript';
-  s.src = '//' + disqus_shortname + '.disqus.com/count.js';
-  (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
-}());&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;</content>
-      </entry>
-    
-  
-</feed>
+&lt;h2&gt;2. 결론&lt;/h2&gt;
+&lt;p&gt;Javascript는 역사적으로 모듈 로딩방식을 언어차원에서 제공하지 않았습니다. 그래서 나온 모듈의 로딩 방식이 CommonJs/AMD 같은 방식이었습니다. 그리고 ES6에 이르러 자바스크립트도 모듈로딩 방식을 내장하게 되었습니다.&lt;/p&gt;
+&lt;p&gt;ES6의 모듈 로딩방식은 꽤나 간결한 방식 입니다. 하지만 ES6의 문법을 완전히 지원하는 브라우저가 극히 드물기 때문에 아무데서나 사용하기는 쉽지 않습니다. node.js 조차 ES6의 문법을 제대로 지원하지 않습니다. 따라서 node.js로 위 코드를 테스트 하려하면 아마 &lt;code&gt;import&lt;/code&gt;라는 알 수 없는 키워드가 있다는 등의 에러가 발생할 겁니다.&lt;/p&gt;
+&lt;p&gt;node.js 에서 테스트 하고 싶으면 bable.js 를 사용해서 es5 이하로 컴파일 하시면 테스트해볼 수 있습니다. 저처럼 Typescript로 넘어오셔서 타입스크립트의 컴파일을 이용하시는 것도 좋습니다. 타입스크립트가 굉장히 간단하게 ES3까지 컴파일을 지원해 줍니다. :)&lt;/p&gt;
+&lt;p&gt;잘못되거나 궁금한 점이 있으면 댓글로 문의해주세요.&lt;/p&gt;
+&lt;h2&gt;3. 출처&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Statements/export&quot;&gt;MDN 공식문서 - export&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Statements/import&quot;&gt;MDN 공식문서 - import&lt;/a&gt;&lt;/li&gt;
+
+&lt;/ul&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://norux.me/58&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Javascript</category>
+<category>ECMA2015</category>
+<category>ES6</category>
+<category>JavaScript</category>
+<author>norux</author>
+<guid>https://norux.me/58</guid>
+<comments>https://norux.me/58#entry58comment</comments>
+<pubDate>Wed, 31 Jan 2018 10:52:57 +0900</pubDate>
+</item>
+</channel>
+</rss>

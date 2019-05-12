@@ -1,423 +1,50 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title><![CDATA[개발하는 곰]]></title><link><![CDATA[https://gompro.postype.com]]></link><description><![CDATA[000gan 풀스택 엔지니어로 활동하고 있는 곰프로입니다.
-
-&#34;Talk is cheap. Show me the code&#34;
-
-이메일: junhyung3224@gmail.com
-깃허브: https://github.com/leejh3224]]></description><language>ko</language><pubDate>Sun, 12 May 2019 17:47:23 +0900</pubDate><generator>https://www.postype.com</generator><item><title><![CDATA[[번역] 쉬운 도구는 디버깅하기 쉬운 도구다.]]></title><link><![CDATA[https://gompro.postype.com/post/3787808]]></link><description><![CDATA[<blockquote class="blockquote-type2"><p>이 글은 Martin Tournoij의 글 Easy means easy to debug를 번역한 글입니다. 다수의 의역이 포함되어 있으며, 원문을 읽고 싶으신 분들은 <a href="https://arp242.net/easy.html">Easy means easy to debug</a>을 참조하시기 바랍니다. 또한 이 문서는 <a href="https://creativecommons.org/licenses/by/4.0/">cc-by 4.0</a> 라이센스를 준수합니다.</p></blockquote><p>어떤 프레임워크나 라이브러리, 도구가 "<strong>쉽다</strong>"는 건 무슨 의미일까? 여기엔 다양한 의견이 있겠지만 나는 사용하기 쉬운 도구는 <em>디버깅하기 쉬운 도구</em> 라고 생각한다. 사람들이 프로그램, 프레임워크, 라이브러리, 파일 포맷 등이 사용하기 편하다고 말할 땐, "보세요. 이 정도 노력으로 이 정도 일을 할 수 있어요. 정말 쉽지 않나요?" 같은 식으로 말하곤 한다. 하지만 그것만으론 충분하지 않다.</p><p>코드는 한 번 작성하면 언제나 디버깅 사이클을 거치게 되어 있다. 이는 단순히 코드에서 버그를 찾아내는 것만을 말하진 않는다. 여기에는 코드를 읽고 이해하는 모든 과정이 포함된다. 결국 디버깅을 하려면 코드 전체를 이해해야 한다. 그러니 "디버깅하기 쉽다"는 말에는 "이해하기 쉽다"는 의미도 포함된다.</p><p>사용성 측면의 추상화는 가끔 그 코드가 정확히 어떤 동작을 수행하는지 이해하기 어렵게 만든다. 물론 이는 어떤 상황에선 나쁘지 않은 타협점(tradeoff)일 수 있다. 하지만 나라면 코드를 나중에 더 이해하기 쉽고 디버깅하기 쉬운 방향으로 고치기 위해 더 많은 노력을 쏟을 것 같다. 나중에 돌이켜보면 이런 노력이 그만한 값어치를 했다는 걸 깨닫을 것이다.</p><p>단순함 그 자체가 디버깅하기 쉬운 프로그램을 만드는 건 아니지만 가장 중요한 부분인 것도 사실이다. 질 좋은 문서를 갖추는건 큰 도움이 되지만 좋은 문서를 이용할 수 있는 상황이 흔하지는 않다.</p><p>코드를 이해하기 쉽고 디버깅하기 쉬운 방향으로 고쳤을 때의 이점은 분명하다. 디버깅하기 어려운 프로그램은 버그의 개수가 늘어나지 않더라도 계속 더 이해하기 어려워 진다. 이 때문에 프로그래머는 디버깅에 더 많은 시간을 쏟게 되고, 결국 프로그램은 더 많은 버그를 가지게 될 것이기 때문이다.</p><p>내 관찰에 따르면 회사는 고치기 어려운 버그에 시간을 들이는 일을 효용이 떨어지는 일로 보는 경향(not considered good Return Of Investment)이 있다. 그리고 오픈소스 프로젝트에선 대체적으로 소수의 핵심 인물을 제외하곤 다수가 일회성이나 작은 수정에 불과한 커밋에만 집중한다.</p><p>새로운 사실은 아니다. Brian W. Kernighan과 P. J. Plauger가 1974년 발행한 <em>The Elements of Programming Style</em> 에 따르면:</p><blockquote class="blockquote-type2"><p>모두가 프로그램을 처음 작성하는 것보다 디버깅하는 것이 두 배는 더 힘들다는 사실을 알고 있다. 그럼에도 처음 코드를 작성할 때 온갖 영리한 추상화를 집어넣는다면(as clever as you can be) 나중에 어떻게 디버깅을 할 것인가?</p></blockquote><p>온갖 영리한 추상화를 집어넣은 코드는 디버깅하기 어려운 코드가 된다. 이제 몇 가지 예시를 들텐데, 내 주장은 도구를 사용하는 것 자체가 나쁘다는 것은 아니다. 오히려 아래 예시들은 "사용하기 쉬운" 도구와 "디버깅하기 쉬운" 도구 간에 벌어지는 타혐점(tradeoff)을 분명하게 보여주기 위한 것들이다.</p><ul><li>ORM 라이브러리(주: 데이터베이스 쿼리, 마이그레이션 등을 쉽게 사용하기 위한 라이브러리)를 사용하면 데이터베이스 쿼리를 쉽게 사용할 수 있지만 그와 관련해서 문제가 생겼을 때 이를 고치는 건 그 도구를 사용하지 않을 때보다 어렵다.</li><li>다수의 테스트 라이브러리가 디버깅을 어렵게 만들기도 한다. 루비의 rspec이 좋은 예시인데, 내가 만약 설정을 잘못하게 되면, 그 후에 무엇이 잘못되었는지 파악하려면 꽤 많은 시간을 들여야한다. 이는 에러메시지가 이해하기 어렵기 때문이다. 자세한 것은 <a href="https://arp242.net/testing.html">Testing isn’t everything</a>포스팅을 읽어보기 바란다.</li><li>자바스크립트 프레임워크의 동작 전체를 이해하는 건 어려운 일이다. 영리한 상태 관리는 굉장한 편의성을 제공하고 그 자체로 훌륭한 도구지만, 상태(state)가 예상한 방향대로 변화하지 않으면 관련된 스택오버플로우 질문이나 깃허브 이슈가 있기를 바라면서 한참을 해매야한다. 이런 라이브러리들이 상태 관리를 쉽게 하게끔 도와주는 것은 사실이고 이런 라이브러리를 사용하는게 나쁘다는 건 아니다. 하지만 내가 보기엔 이 도구들은 "사용의 편의성"에만 너무 집중한 나머지 "디버깅의 편의성"을 잃어버린 것 같다.</li><li>도커(Docker)는 사용성을 높여주는 훌륭한 도구지만,</li></ul><figure class="code"><textarea>ERROR: for elasticsearch  Cannot start service elasticsearch:
-oci runtime error: container_linux.go:247: starting container process caused "process_linux.go:258:
-applying cgroup configuration for process caused \"failed to write 898 to cgroup.procs: write
-/sys/fs/cgroup/cpu,cpuacct/docker/b13312efc203e518e3864fc3f9d00b4561168ebd4d9aad590cc56da610b8dd0e/cgroup.procs:
-invalid argument\""</textarea><pre class="cm-s-default" data-type="text/plain"></pre></figure><p class="indent">   이런 에러메시지나</p><figure class="code"><textarea>ERROR: for elasticsearch  Cannot start service elasticsearch: EOF</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>     이런 메시지가 나오면 그저 막막할 수밖에 없다.</p><ul><li>Systemd는 SysV init.d 스크립트보다 쉽다.<br />Lennart Poettering의 책 systemd myths 에서 그는 systemd가 왜 사용하기 쉬운지를 설명하기 위해 아래와 같이 말했다.</li></ul><blockquote class="blockquote-type2"><p>Systemd는 SysV init.d 스크립트보다 쉬운 이유는 쉘 스크립트를 작성하는 것보다 systemd 유닛 파일을 작성하는게 더 쉽기 때문입니다.</p></blockquote><p>내가 그의 의견 전체에 동의하지 않는 것은 아니다. 일반적으로 쉘 스크립트는 길고 장황해서 이해하기 어렵지만 - <a href="https://arp242.net/shell-scripting-trap.html">the shell scripting trap</a> - 그렇다고 하더라도 사용자가 유닛 파일을 작성하기 쉽게 만들려면 상당한 레벨의 추상화가 필요하며,이는 systemd 자체는 그보다 훨씬 복잡하다는 것을 의미한다. 또 사용자도 이러한 복잡성 때문에 불편을 겪을 수 있다. 내가 겪은 <a href="https://unix.stackexchange.com/questions/185495/why-does-systemctl-enable-rpcbind-change-the-volume-of-my-sound-and-how-do-i">이슈</a>와 <a href="https://cgit.freedesktop.org/systemd/systemd/commit/?id=6e392c9c45643d106673c6643ac8bf4e65da13c1">해결책</a>를 한 번 살펴보길 바란다. 결코 이해하기 쉽다고는 말할 수 없을 것이다.</p><div><hr class="hr hr-solid"></div><p>사견:</p><p>프로그래밍을 배우다보면 개발의 목적이 "유용한 것을 만드는 것"에서 "멋진 도구를 사용해보는 것"으로 바뀔 때가 있습니다. 소위 말하는 라이브러리 덕후가 되는 것이죠.</p><p>물론 적은 코드로 많은 일을 할 수 있는 도구는 분명 멋지지만 그 도구의 디버깅 경험(User Experience처럼 개발자에게는 디버깅 경험이 있다고 생각합니다.)이 나쁘다면 훌륭한 도구가 아니라고 생각합니다. 그러다보니 이러니 저러니 해도 많은 사람들이 사용하는 다루기 쉬운 도구로 계속 돌아오는 것 같아요. 이런 저런 불평하다가도 다른 도구를 사용하면서 스택오버플로우 질문 뒤질 것 생각하면...</p><p>개발자라면 누구나 원작자처럼 디버깅하기 어려운 도구때문에 곤란을 겪은 경험이 있을 것이라고 생각합니다. 저한테는 Typescript나 Redux 혹은 Angularjs가 그랬죠. 디버깅하기 어렵다고 그런 도구들을 버릴 수 있는 건 아니지만 언제나 더 디버깅하기 쉬운 도구를 찾게 되는 것 같아요.</p><p>재밌게 읽으셨다면 원작자분의 원문도 읽어보시기 바랍니다. 좋은 인사이트가 담겨있다고 생각해요. 😀</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 10 May 2019 13:00:38 +0900</pubDate></item><item><title><![CDATA[[Typescript] async array methods]]></title><link><![CDATA[https://gompro.postype.com/post/3765793]]></link><description><![CDATA[<p>Node.js의 forEach 혹은 filter는 동기적으로 동작합니다. </p><p>그렇기 때문에 async function과 함께 동작하게 만들려면 약간의 트릭이 필요한데요.</p><p>아래와 같은 식으로 할 수 있습니다.</p><figure class="code"><textarea>// ArrayExt.ts
-Array.prototype.asyncFilter = async function(callback) {
-    const fail = Symbol();
-    return (await Promise.all(
-        this.map(async (item) =&gt; ((await callback(item)) ? item : fail)),
-    )).filter((i) =&gt; i !== fail);
-};
-
-Array.prototype.asyncForEach = async function(callback) {
-    for (let index = 0; index &lt; this.length; index++) {
-        await callback(this[index], index, this);
-    }
-};</textarea><pre class="cm-s-default" data-type="text/typescript"></pre></figure><p>1. 먼저 Array.prototype에 새로운 두 메쏘드, asyncFilter와 asyncForEach를 추가해줍니다.</p><p>2. callback 인자는 이제 promise이기 때문에 Promise.all과 await을 사용할 수 있습니다.</p><p>3. 하지만 prototype만 추가하면 typescript 컴파일러가 아래와 같이 불평을 합니다.</p><figure class="code"><textarea>Property 'asyncFilter' does not exist on type 'any[]'.</textarea><pre class="cm-s-default" data-type="text/typescript"></pre></figure><p>즉, Array 타입에는 asyncFilter라는 프로퍼티가 없다는 것이죠.</p><p>이 경우에는 위의 두 메쏘드에 대한 인터페이스를 정의해줘야합니다.</p><figure class="code"><textarea>interface Array&lt;T&gt; {
-    asyncFilter(
-        callback: (element: T, index?: number, array?: T[]) =&gt; Promise&lt;boolean&gt;,
-    ): Promise&lt;T[]&gt;;
-
-    asyncForEach(
-        callback: (element: T, index?: number, array?: T[]) =&gt; Promise&lt;void&gt;,
-    ): Promise&lt;void&gt;;
-}</textarea><pre class="cm-s-default" data-type="text/typescript"></pre></figure><p>본문에서는 filter와 forEach만 추가했지만 map이나 reduce도 같은 방식으로 할 수 있습니다.</p><p>이제 asyncFilter나 asyncForEach가 필요한 파일에 우리가 만든 ArrayExt.ts 파일을 import 해주기만 하면 됩니다.</p><figure class="code"><textarea>import "./ArrayExt"
-
-// .asyncFilter, .asyncForEach가 추가되었습니다!</textarea><pre class="cm-s-default" data-type="text/typescript"></pre></figure><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Mon, 06 May 2019 10:26:41 +0900</pubDate></item><item><title><![CDATA[[iOS] TabBar shadow 커스터마이징]]></title><link><![CDATA[https://gompro.postype.com/post/3676259]]></link><description><![CDATA[<p>iOS TabBar의 기본 Shadow를 커스터마이징하려면 먼저 기본 shadow 스타일을 빈 이미지로 초기화한 다음 커스텀 스타일을 적용해야 한다.</p><p>그러므로 UITabBarController를 상속하는 CustomTabBarController를 만들고 viewDidLoad에서 스타일을 설정하게 해줬다.</p><figure class="code"><textarea>import UIKit
-
-class CustomTabBarController: UITabBarController {
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupStyle()
-    }
-
-    func setupStyle() {
-        UITabBar.clearShadow()
-        tabBar.layer.applyShadow(color: .gray, alpha: 0.3, x: 0, y: 0, blur: 12)
-    }
-}</textarea><pre class="cm-s-default" data-type="text/x-swift"></pre></figure><p>다음으로 기본 그림자 스타일을 초기화하는 함수와 그림자를 적용하는 함수는 다른 파일에 아래와 같이 만들어뒀다.</p><figure class="code"><textarea>import Foundation
-import UIKit
-
-extension CALayer {
-    // Sketch 스타일의 그림자를 생성하는 유틸리티 함수
-    func applyShadow(
-        color: UIColor = .black,
-        alpha: Float = 0.5,
-        x: CGFloat = 0,
-        y: CGFloat = 2,
-        blur: CGFloat = 4
-    ) {
-        shadowColor = color.cgColor
-        shadowOpacity = alpha
-        shadowOffset = CGSize(width: x, height: y)
-        shadowRadius = blur / 2.0
-    }
-}
-
-extension UITabBar {
-    // 기본 그림자 스타일을 초기화해야 커스텀 스타일을 적용할 수 있다.
-    static func clearShadow() {
-        UITabBar.appearance().shadowImage = UIImage()
-        UITabBar.appearance().backgroundImage = UIImage()
-        UITabBar.appearance().backgroundColor = UIColor.white
-    }
-}</textarea><pre class="cm-s-default" data-type="text/x-swift"></pre></figure><p>끝!</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/19/15/15/cd0fac44fdb7ee6d93bc0cc1988e5ff8.png?w=1000&q=85" data-width="908" data-height="690" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/19/15/15/cd0fac44fdb7ee6d93bc0cc1988e5ff8.png?w=1000&q=85" alt="" /></a></div></figure><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 19 Apr 2019 15:19:21 +0900</pubDate></item><item><title><![CDATA[삽질 기록#1]]></title><link><![CDATA[https://gompro.postype.com/post/3672221]]></link><description><![CDATA[<p>일을 하다보면 금방 해결책이 생각나지 않는 경우가 있다.</p><p>그리고 경험상 이런 케이스들은 제대로 정리해놓지 않고 지나가면 까먹을 확률이 높다.</p><p><br /></p><p>1. EUC-KR 문자 인코딩</p><p>웬만한 경우에는 문자 인코딩을 건들 필요가 없다.</p><p>Third Party api도 대부분 REST api에 utf-8을 사용하기 때문이다.</p><p>그러나 늘 그렇듯 예외는 존재한다.</p><p>프로젝트에서 고객 실명 인증이 필요한 경우가 생겨서 구글링을 하다보니 NICE평가정보에서 실명확인 서비스를 제공하고 있었다.</p><p>신청을 하고 며칠쯤 지나니 담당자분께서 암호화 모듈과 매뉴얼을 보내주셨다.</p><p>그런데 매뉴얼을 읽으려고 보니 php/jsp/asp 용 매뉴얼만 있고, node.js용 매뉴얼이 없었다.</p><p>그래도 다행히 php용 매뉴얼을 얼추 적용할 수 있는 구조였다.</p><p>(암호화 모듈에 이름, 주민등록번호 및 아이디/패스워드를 넘겨주고 실행코드를 받아오는 식)</p><p>매뉴얼대로 chmod 755를 입력하고 모듈을 실행시켰으나 실행파일이 아니라는 에러만 계속 나길래 파일을 다시 살펴보니 윈도우/리눅스 용 버전 두 개만 있었다.</p><p>담당자분께 물어보니 맥용 모듈이 따로 있었고 메일을 보내니 금방 보내주셨다.</p><p><br /></p><p>이렇게 상황이 일단락된줄 알았으나 이번에는 모듈이 계속 같은 리턴코드만 돌려주는 것이었다.</p><p>리턴코드관련 문서를 읽어보니 에러는 이름, 주민등록번호, 아이디/패스워드 중 하나 이상의 정보가 누락된 경우에 발생한다고 적혀있었다.</p><p>물론 console.log를 찍어보면 모든 값을 정상적으로 받고 있었다.</p><p>그래서 다시 메일을 보내니 euc-kr 인코딩 관련 문제가 아니냐는 답변을 받을 수 있었다.</p><p>젠장... 이제까지 영어 튜토리얼과 외국 api 서비스만으로 개발을 배워온 나에게는 굉장히 생소한 문제였다.</p><p>당연히 인코딩에 대한 개념도 크게 잡혀있지 않았고, 그 필요성도 크게 느끼지 못했다.</p><p>그 결과 아래와 같은 코드가 나오게 되었다.</p><figure class="code"><textarea>function verifyRealName(name, juminNumber) {
-    const encoded = iconv.encode(name, 'euc-kr');
-    const decoded = iconv.decode(encoded, 'euc-kr');
-    
-    return exec(`${exePath} ... ${decoded}`);
-}</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>얼핏 보기에는 문제가 없는 코드처럼 보인다. </p><p>name을 euc-kr로 인코딩한 뒤 다시 디코딩해서 exec 함수에 넘겨준다.</p><p>그러나 내가 간과한 것은 자바스크립트의 스트링 인코딩이 UCS-2/UTF-16과 가장 비슷한 형태라는 점이었다.</p><p>iconv.encode를 통해 인코딩된 버퍼를 decoded라는 변수에 저장하면 euc-kr로 디코딩된 스트링은 UCS-2/UTF-16로 해석되기 때문에 결과적으로 console.log를 호출했을 때 원래의 값으로 보이게 된다.</p><p>그 결과 exec 함수의 인자로 decoded를 넘겨줘봐야 ���� 와 같은 깨진 글자들로 인식할 수밖에 없다.</p><p>이 경우 유일한 해결책은 </p><p>1. 인코딩된 버퍼를 파일로 저장한다.</p><p>2. cat 명령어를 사용해서 저장된 파일을 "그대로" 읽어들인다.</p><p>3. 결과값을 실행명령에 넘긴다.</p><p>가 된다.</p><p>코드로는</p><figure class="code"><textarea>function verifyRealName(name, juminNumber) {
-    const encoded = iconv.encode(name, 'euc-kr');
-    
-    // 인코딩된 버퍼를 임시저장할 경로
-    const tempPath = path.resolve('app/temp');
-    fs.writeFileSync(tempPath, encoded);
-    
-    // command substitution -&gt; `` or $()
-    // 명령어 실행 결과를 다른 명령어의 인자로 넘겨줌
-    // 이 경우에는 cat이 파일에 담긴 바이트를 읽어서 그대로 전달
-    return exec(`${exePath} ... \`cat ${tempPath}\``);
-}</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>이렇게 처리할 수 있다.</p><p>이틀 동안 삽질을 하고 나니 다시 한 번 리눅스와 가깝게 지낼 필요가 있다는 점을 느꼈다.</p><p><br /></p><p>2. nuxt 앱에서 hash link 사용하기</p><p>nuxt는 vue app을 위한 서버사이드렌더링 프레임워크다.</p><p>nuxt의 라우팅 처리는 vue-router를 통해 이뤄지는데, 이 경우 hash anchor (#id) 처리가 전통적인 html 페이지들과는 달라지게 된다.</p><p>전통적인 html 페이지에서 hash anchor는 몇 번을 누르더라도 해당 요소로 이동한다.</p><p>그러나 vue-router를 사용할 경우 scroll behavior에서 hash anchor 처리를 해주더라도 처음 페이지를 로드할 때만 스크롤이 동작할 뿐 두 번째로 링크를 누를 경우에는 아무런 반응이 없다.</p><p>결국 이 문제를 해결할 유일한 방법은 html 요소를 찾은 다음, 요소의 y 위치와 스크롤된 y 위치를 더해서 수동으로 스크롤 함수를 호출하는 것이다.</p><p>이 경우 아래와 같은 방식으로 코드를 작성할 수 있다.</p><figure class="code"><textarea>goToSection(idx) {
-    if (idx === 3) {
-        setTimeout(() =&gt; {
-            // related-items 아이디를 가진 요소를 찾음
-            const [target] = document.querySelector('#related-items').getClientRects();
-            const y = window.scrollY + target.top;
-            
-            // smooth scroll 옵션이 지원되는 브라우저에는 smooth scroll 옵션을 집어넣음.
-            const scrollOptions = scrollHelpers.buildScrollOptions(0, y);
-            window.scroll(scrollOptions);
-            
-            // vuetify 탭은 애니메이션을 사용하므로 약간의 딜레이를 줘서 동작을 자연스럽게 한다.
-        }, 200);
-    }
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>참고)</p><p>1. UTF-8 encoded html pages show � (questions marks) instead of characters<br />(<a href="https://stackoverflow.com/questions/5445137/utf-8-encoded-html-pages-show-questions-marks-instead-of-characters">https://stackoverflow.com/questions/5445137/utf-8-encoded-html-pages-show-questions-marks-instead-of-characters</a>)</p><p>2. Let’s talk about Javascript string encoding</p><p>(<a href="https://kevin.burke.dev/kevin/node-js-string-encoding/">https://kevin.burke.dev/kevin/node-js-string-encoding/</a>)</p><p>3. Convert iso-8859-1 to utf-8 javascript</p><p>(<a href="https://stackoverflow.com/questions/27155419/convert-iso-8859-1-to-utf-8-javascript">https://stackoverflow.com/questions/27155419/convert-iso-8859-1-to-utf-8-javascript</a>)</p><p>4. Backticks vs braces in Bash</p><p>(<a href="https://stackoverflow.com/questions/22709371/backticks-vs-braces-in-bash">https://stackoverflow.com/questions/22709371/backticks-vs-braces-in-bash</a>)</p><p>5. How to handle anchors (bookmarks) with Vue Router?</p><p>(<a href="https://stackoverflow.com/questions/45201014/how-to-handle-anchors-bookmarks-with-vue-router">https://stackoverflow.com/questions/45201014/how-to-handle-anchors-bookmarks-with-vue-router</a>)</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Thu, 18 Apr 2019 16:43:39 +0900</pubDate></item><item><title><![CDATA[직접 부딪히며 배우는 Node.js]]></title><link><![CDATA[https://gompro.postype.com/post/3610754]]></link><description><![CDATA[<h4>패키지 - 개념 및 둘러보기</h4><div><hr class="hr hr-solid-short"></div><p>첫 시간에도 한 번 언급하긴 했습니다만 저희는 express라는 프레임워크를 활용해서 웹 서버를 구축하고 있습니다. 이쯤해서 자주 사용되는 용어들을 정리하고 한 번 짚고 넘어가면 좋을 것 같네요.</p><p>첫 번째 용어는 패키지 입니다.</p><p>패키지는 라이브러리 혹은 모듈이라고도 불리며, 간단히 말해서 이미 다른 개발자가 작성한 코드입니다.</p><p>Node.js는 이런 패키지들을 쉽게 설치/삭제/관리하기 위해서 npm이라는 소프트웨어를 사용하는데요.</p><p>Node.js를 설치하셨다면 자동으로 같이 설치되므로 따로 설치하실 필요는 없습니다.</p><p>한 번 <a href="https://www.npmjs.com/">npm 공식 사이트</a>로 이동해서 구경을 해볼까요?</p><p>저는 머신러닝에도 관심이 많기 때문에 한 번 머신러닝이라고 검색해보겠습니다.</p><p><br /></p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/05/b042c0a810c39ee0f247fa539543f1a0.png?w=1000&q=85" data-width="1349" data-height="779" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/05/b042c0a810c39ee0f247fa539543f1a0.png?w=1000&q=85" alt="" /></a></div></figure><p>이 중 검색결과 최상단에 있는 @tensorflow/tfjs를 눌러 들어가보겠습니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/05/d0ef865eb75ec99a7b26a33eca92ad98.png?w=1000&q=85" data-width="1275" data-height="692" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/05/d0ef865eb75ec99a7b26a33eca92ad98.png?w=1000&q=85" alt="" /></a></div></figure><p>패키지에 대한 설명과 함께 인스톨 커맨드, 주간 다운로드 수, 버전, 마지막으로 버전이 나온 날, 깃헙 저장소 링크 등 수 많은 정보를 찾을 수 있습니다.<br />(오른쪽 패널을 보시면 됩니다!)</p><p>패키지를 사용하면 개발을 빠르게 진행할 수 있습니다. 또 모든 코드를 직접 작성하기보다는 패키지의 도움을 받는 것이 더 나은 경우가 많죠.</p><p>하지만 패키지를 선택할 때는 조금 신중할 필요가 있습니다.</p><p>혹시나 자신이 선택한 패키지가 이전에 전혀 관리가 되지 않는 패키지인 것은 아닌지,</p><p>이 패키지와 비슷한 기능을 하면서도 사용하는 사람이 더 많고, 활발하게 관리가 되는 패키지는 없는지 등을 고려할 필요가 있습니다.</p><p>그러므로 웬만하면 last published가 2년 이내인 라이브러리를 사용할 것을 권장합니다.</p><p>물론 이는 개인적인 권장사항이고 꼭 필요한 기능이라면 이 기준을 충족하지 않더라도 사용해야 합니다.</p><p>끝으로 단 11줄의 코드가 수많은 프로젝트에 패닉을 안겨줬던 left-pad 사건을 소개한 글의 링크를 올립니다.</p><p><a href="http://www.bloter.net/archives/253447">11줄의 코드, 인터넷을 패닉에 빠뜨리다</a></p><p><br /></p><h4>패키지 - 설치/삭제/버전 보기</h4><div><hr class="hr hr-solid-short"></div><p>패키지가 어떤 것이고 어떤 패키지를 사용해야하는지 알아봤으니 이제 본격적으로 패키지를 설치/삭제/관리하는 방법에 대해서 살펴봅시다.</p><p>저는 랜덤하게 스트링을 생성하는 기능을 가진 패키지를 찾고 싶습니다.</p><p>그럴 때 저는 npm ~ 과 같은 형식으로 구글에 검색을 합니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/ef7ae2a38e09fbd2d225e9f68e8d2cf8.png?w=1000&q=85" data-width="1004" data-height="830" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/ef7ae2a38e09fbd2d225e9f68e8d2cf8.png?w=1000&q=85" alt="" /></a></div></figure><p>가장 위에 있는 패키지부터 순서대로 관찰을 하면서 너무 오랫동안 관리가 안 된 패키지는 아닌지 확인합니다. (last publish 날짜를 확인해줍니다.)</p><p>대부분의 패키지가 2~3년 이상 정도 지난 패키지들이라 조금 많이 스크롤을 내리다보니 randomatic이라는 패키지를 발견했습니다.</p><p>last publish도 5달 전이고 weekly downloads도 500만건이 넘어갑니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/0c9366c3833979aab916bd3e05cae1c7.png?w=1000&q=85" data-width="1236" data-height="667" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/0c9366c3833979aab916bd3e05cae1c7.png?w=1000&q=85" alt="" /></a></div></figure><p>이제 npm의 오른쪽 패널 repository라고 적힌데서 깃허브 링크를 타고 넘어가봅시다.</p><p>스크롤을 내리면 간략한 설명과 함께 인스톨 커맨드와 사용법을 볼 수 있습니다.</p><p>많은 패키지들이 이와 비슷한 형식으로 설치 방법 및 사용법 등을 제공하기 때문에 앞으로 자주 마주치게 될 것입니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/34cd23c786af8e78f49e3237c5a261cc.png?w=1000&q=85" data-width="1030" data-height="818" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/34cd23c786af8e78f49e3237c5a261cc.png?w=1000&q=85" alt="" /></a></div></figure><p>npm을 사용해 패키지를 설치할 때는 npm install [package-name] --flag의 형식을 따릅니다.</p><p>flag에 대해서는 시리즈를 진행하면서 차차 알아가보도록 하겠습니다. 만약 궁금하신분이 있으시다면 맨 아래 참조What is the --save option for npm install?을 보시면 됩니다 :)</p><p>이제 다시 코드 샌드박스에 접속해서 화면 우측 아래 터미널/콘솔이라고 적힌 부분에서 + 버튼을 눌러 봅시다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/9b1ae40781f853e8fef0a909c068bac4.png?w=1000&q=85" data-width="545" data-height="335" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/9b1ae40781f853e8fef0a909c068bac4.png?w=1000&q=85" alt="" /></a></div></figure><p>새로운 터미널 창이 열렸네요! 이제 여기다가 아까 전에 봤던 인스톨 커맨드를 붙여넣읍시다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/969220c8bacea973f8f8f800a83d18d7.png?w=1000&q=85" data-width="518" data-height="323" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/969220c8bacea973f8f8f800a83d18d7.png?w=1000&q=85" alt="" /></a></div></figure><p>그리고 엔터를 누르고 잠시 기다리면</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/43e3e0410f2d74f3ef405db762852abe.png?w=1000&q=85" data-width="514" data-height="311" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/43e3e0410f2d74f3ef405db762852abe.png?w=1000&q=85" alt="" /></a></div></figure><p>설치가 완료되었네요.</p><p>어떤 점이 달라졌는지 살펴보죠.</p><p>먼저 package.json 파일의 dependencies 필드에 randomatic이 추가되었습니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/d1b3e712e52fb757b35ba0fdb034c3f9.png?w=1000&q=85" data-width="229" data-height="112" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/d1b3e712e52fb757b35ba0fdb034c3f9.png?w=1000&q=85" alt="" /></a></div></figure><p>그리고 package-lock.json이라는 파일이 새로 생겼습니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/dd9c750852302f1e4981518196bc0c07.png?w=1000&q=85" data-width="629" data-height="721" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/dd9c750852302f1e4981518196bc0c07.png?w=1000&q=85" alt="" /></a></div></figure><p>여기서는 길게 설명하지 않고 다만 설치가 완료되면 저런 식으로 package.json에 우리가 설치한 패키지명이 표시된다는 점만 짚고 넘어가겠습니다.</p><p>만약 이미 설치한 패키지를 제거하고 싶다면?</p><p>그 때는</p><figure class="code"><textarea>npm uninstall [package-name]</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>의 형식으로 터미널에 입력해줍니다.</p><p><br /></p><h4>패키지 - 사용하기</h4><div><hr class="hr hr-solid-short"></div><p>먼저</p><figure class="code"><textarea>// const는 자바스크립트 es6 문법으로 상수를 의미합니다!
-// var 대신 const를 사용하는 것이 권장됩니다.
-const randomize = require('randomatic');</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>이 부분을 express 아래에 추가합니다.</p><figure class="code"><textarea>const express = require("express");
-const randomize = require("randomatic");
-...</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>randomatic 저장소의 README의 API 부분을 읽어보니 대충 패턴과 길이 그리고 옵션을 인자로 줄 수 있는 것 같네요.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/a355c2d5be51b94d8583b42eb9205f45.png?w=1000&q=85" data-width="950" data-height="539" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/a355c2d5be51b94d8583b42eb9205f45.png?w=1000&q=85" alt="" /></a></div></figure><p>GET /users 라우트 부분을 아래와 같이 바꿔봅시다.</p><figure class="code"><textarea>...
-
-app.use(express.static("public"));
-
-app.get("/users", (req, res) =&gt; {
-  // 알파벳 대소문자와 숫자로 구성된 10자리 랜덤 스트링을 만듭니다.
-  const randomString = randomize("Aa0", 10);
-  res.send(randomString);
-});
-
-...</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/7a06ca2036edd016766f1d00daef8961.png?w=1000&q=85" data-width="488" data-height="463" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/7a06ca2036edd016766f1d00daef8961.png?w=1000&q=85" alt="" /></a></div></figure><p>짝짝짝!</p><p>앞으로도 새로운 패키지를 사용해야될 일이 있다면 지금처럼 깃허브 저장소의 README를 읽고 그래도 사용하면 됩니다.</p><p>만약 패키지를 사용하던 중 예상하지 못한 버그가 발생하거나 README에 나오지 않는 사용법이 궁금하다면 issue를 남길 수도 있습니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/08/a3f939b8e43ef4f1b1730fd0b1c09fc2.png?w=1000&q=85" data-width="1067" data-height="579" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/08/a3f939b8e43ef4f1b1730fd0b1c09fc2.png?w=1000&q=85" alt="" /></a></div></figure><p>이 저장소는 현재 세 개의 진행 중인 issue가 있는 모양이네요.</p><p>빨간 bug 태그가 붙은 issue도 있고, 로고 사용이나 히브리 문자 기능을 추가하자는 issue도 보이네요.</p><p>이 외에도 사용법을 물어본다거나 (stackoverflow로 가서 찾아보라고 하는 경우도 있지만요…) 하는 것도 가능합니다.</p><p>물론 사용자가 많지 않은 패키지의 경우 많은 issue가 열리지 않고 그만큼 버그 제보나 기능 추가가 더딜 수밖에 없습니다.</p><p>그렇기 때문에 사용자 수(혹은 다운로드 수)가 많고 최근까지 활발하게 관리가 되는 패키지를 사용하는 것이 여러모로 정신건강에 이롭습니다.</p><p><br /></p><h4>마치며</h4><div><hr class="hr hr-solid-short"></div><p>오늘은 패키지와 npm에 대해서 알아보았습니다.</p><p>혹시 이해가 잘 되지 않거나 개선이 필요한 내용이 있다면 알려주세요. 더 좋은 컨텐츠를 제작하는 거름이 됩니다.</p><p>그럼 다음 시간까지 안녕!</p><p><br /></p><h4>참조</h4><div><hr class="hr hr-solid-short"></div><ol><li><a href="http://www.bloter.net/archives/253447">11줄의 코드, 인터넷을 패닉에 빠뜨리다</a></li><li><a href="https://stackoverflow.com/questions/19578796/what-is-the-save-option-for-npm-install">What is the --save option for npm install?</a></li></ol><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Sun, 07 Apr 2019 12:15:36 +0900</pubDate></item><item><title><![CDATA[직접 부딪히며 배우는 Node.js]]></title><link><![CDATA[https://gompro.postype.com/post/3606891]]></link><description><![CDATA[<h4>정적 파일 제공하기</h4><div><hr class="hr hr-solid-short"></div><p>모든 웹사이트에 없어서는 안 될 핵심적인 기능은 html, css, js 파일 혹은 이미지와 같은 정적 파일(static files)을 제공하는 것입니다.</p><p>express를 사용하면 단 한 줄만으로 정적 파일을 제공하는 서버를 만들 수 있습니다.</p><p>src 폴더 바깥에 public이라는 이름의 폴더를 만듭니다.</p><p>폴더는 EXPLORER 패널의 가장 오른쪽 아이콘을 누르고 이름을 입력하면 됩니다.</p><p>그리고 아래 사진처럼 아무 이미지나 새로운 폴더 아래에 저장합니다. (이미지 업로드는 두 번째 아이콘을 누르면 됩니다.)</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/1c66081d73b561ca2c3dede223ed326e.png?w=1000&q=85" data-width="282" data-height="271" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/1c66081d73b561ca2c3dede223ed326e.png?w=1000&q=85" alt="" /></a></div></figure><p>이제 첫 시간에 작성했던 코드를 아래와 같이 수정합니다.</p><figure class="code"><textarea>const express = require("express");
-const app = express();
-
-// 추가된 코드!
-app.use(express.static("public"));
-
-...</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>그리고 브라우저의 url을 <a href="https://qkq47354q9.sse.codesandbox.io/cat.jpeg%EA%B3%BC">https://qkq47354q9.sse.codesandbox.io/cat.jpeg과</a> 같은 식으로 입력하고</p><p>엔터키를 누르면 귀여운 고양이 사진을 볼 수 있습니다! (만약 파일 이름을 다른 식으로 지었다면 그 파일 이름을 확장자까지 정확하게 입력해야합니다.)</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/4465884d919a84ad13c9001e06085663.png?w=1000&q=85" data-width="516" data-height="420" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/4465884d919a84ad13c9001e06085663.png?w=1000&q=85" alt="" /></a></div></figure><p>이제 우리 서버는 정적 파일을 제공할 수 있습니다.</p><p>만약 폴더의 이름이나 위치를 수정하고 싶다면 어떻게 해야 할까요?</p><p>한 번 public폴더의 위치를 src폴더 아래로 옮겨봅시다. (드래그로 폴더를 이동할 수 있습니다.)</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/452023713043f05ce04260e130dab155.png?w=1000&q=85" data-width="273" data-height="183" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/452023713043f05ce04260e130dab155.png?w=1000&q=85" alt="" /></a></div></figure><p>그리고 브라우저의 새로고침 버튼을 누르면?</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/26ebcc4ae3925ab03ee504819db5b202.png?w=1000&q=85" data-width="510" data-height="414" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/26ebcc4ae3925ab03ee504819db5b202.png?w=1000&q=85" alt="" /></a></div></figure><p>위와 같은 에러 메시지를 볼 수 있을 겁니다.</p><p>이는 서버가 cat.jpeg라는 파일이 존재하는 경로를 찾는데 실패했기 때문입니다.</p><p>그러므로 경로를 아래와 같이 수정해줘야합니다.</p><figure class="code"><textarea>app.use(express.static("src/public"));</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>이제 새로고침을 하면 다시 고양이 사진을 볼 수 있습니다 :)</p><p><br /></p><h4>경로?</h4><div><hr class="hr hr-solid-short"></div><p>경로(path)는 웹 개발을 배우는데 있어 핵심적인 개념입니다.</p><p>아까 정적 파일 제공을 배울 때 잘못된 경로를 입력하니 파일을 찾을 수 없었던 것처럼</p><p>경로를 잘못 지정하게 되면 예상하지 못한 결과를 만나게 되기 때문입니다.</p><p>경로란 간단하게 컴퓨터에 존재하는 어떤 파일 혹은 폴더의 위치를 말하는데, 크게 두 가지 형태가 존재합니다.</p><p>첫 번째는 상대경로 입니다.</p><p>상대경로는 ./cat.jpeg와 같은 형태로 사용되며, 맨 앞의 .은 현재 경로를 의미합니다.</p><p>만약 제가 지금 public 폴더에 있다면 위의 ./cat.jpeg는 cat.jpeg파일을 가리키게 됩니다.</p><p>두 번째는 절대경로 입니다.</p><p>절대경로는 public/cat.jpeg와 같은 형태로 사용되며, 서버의 최상위 폴더를 기준으로 한 파일의 절대적인 위치를 말합니다.</p><p>즉 우리의 경우 public이나 src와 같은 폴더처럼 폴더의 가장 상위 폴더를 기준으로 파일의 위치를 말하게 되는 것이죠.</p><figure class="code"><textarea>Q 위에서 작성한 public 폴더의 위치를 상대경로로 나타내면 어떻게 될까요?
-
-A 가장 상위 폴더를 현재 경로로 나타내기 때문에 `./public`과 같이 나타낼 수 있겠죠?</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><h4>라우팅 소개</h4><div><hr class="hr hr-solid-short"></div><p>다음은 express가 제공하는 두 번째 핵심 기능인 라우팅입니다.</p><p>라우팅이란 url을 바꿀 때마다 서버에 새로운 요청을 하고 응답을 받는 일련의 과정을 가르킵니다.</p><p>이해가 잘 안 되시나요?</p><p>예를 들어봅시다.</p><p><a href="https://comic.naver.com/webtoon/weekday.nhn">네이버 웹툰</a>으로 접속을 해봅시다.</p><p>여기서 저는 제가 좋아하는 <a href="https://comic.naver.com/webtoon/list.nhn?titleId=720121&amp;weekday=sat">치즈인더트랩</a>의 페이지로 이동합니다.</p><p>url webtoon의 뒷 부분이 바뀐 걸 눈치채셨나요? 거기에다가 ?글자와 함께 이상한 것들이 잔뜩 생겼군요.</p><p>여기서 한 번 특정 회차로 이동해봅시다.</p><p>1회의 url을 잘 살펴보면 이번에도 아까 달라졌다는 것을 발견할 수 있습니다.</p><p>즉,</p><figure class="code"><textarea>네이버 웹툰 메인
-https://comic.naver.com/webtoon/weekday.nhn
-
-치즈인더트랩 소개
-https://comic.naver.com/webtoon/list.nhn?titleId=720121&amp;weekday=sat
-
-치즈인더트랩 1회
-https://comic.naver.com/webtoon/detail.nhn?titleId=720121&amp;no=1&amp;weekday=sat</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>의 순서로 url이 계속해서 바뀐 것을 알 수 있습니다.</p><p>이는 유저가 계속해서 다른 자원(resource)를 요청했기 때문입니다.</p><p>여기서 자원이란 파일 혹은 서버의 데이터베이스에 저장된 데이터를 의미합니다.</p><p>이는 웹툰의 경우처럼 웹툰 이미지 파일이 될 수도 있고 데이터베이스에 저장된 제 프로필 정보가 될 수도 있겠죠.</p><p>그리고 이처럼 서로 다른 자원을 요청하고 서버가 그 요청에 대한 응답을 돌려주는 과정이 모두 url을 바꿈으로서 이뤄진다는 사실도 알았습니다.</p><p><br /></p><h4>http</h4><div><hr class="hr hr-solid-short"></div><p>라우팅을 이해하고 사용하려면 http가 무엇인지 어느 정도 알 필요가 있습니다.</p><p>http란 간단히 말하면 인터넷 상에서 정보를 주고 받기 위한 규칙입니다.</p><p>웹 사이트의 주소가 http 혹은 https로 시작하는 것은 이들 사이트가 http라는 규칙을 사용하기 때문입니다.</p><p>이전 라우팅 소개에서 유저가 네이터 웹툰의 각 페이지로 이동할 때마다 서로 다른 자원을 요청한다는 이야기를 했습니다.</p><p>이를 조금 더 자세하게 이야기하면</p><p>GET <a href="https://comic.naver.com/webtoon/list.nhn?titleId=720121&amp;weekday=sat">https://comic.naver.com/webtoon/list.nhn?titleId=720121&amp;weekday=sat</a> 요청을 통해 치즈인더트랩의 소개 페이지를 요청했다라고 말할 수 있습니다.</p><p>아래는 모질라 재단의 http 메시지 문서에서 http 요청을 설명한 부분입니다.</p><blockquote class="blockquote-type2"><p>참조: <a href="https://developer.mozilla.org/ko/docs/Web/HTTP/Messages">https://developer.mozilla.org/ko/docs/Web/HTTP/Messages</a></p></blockquote><figure class="code"><textarea>첫번째는 HTTP 메서드로, 영어 동사(GET, PUT,POST) 혹은 명사(HEAD, OPTIONS)를 사용해 서버가 수행해야 할 동작을 나타냅니다. 
-예를 들어, GET은 리소스를 클라이언트로 가져다 달라는 것을 뜻하며, POST는 데이터가 서버로 들어가야 함을 의미(리소스를 새로 만들거나
-수정하기 위해, 또는 클라이언트로 돌려 보낼 임시 문서를 생성하기 위해)합니다.
-
-두번째로 오는 요청 타겟은 주로 URL, 또는 프로토콜, 포트, 도메인의 절대 경로로 나타낼 수도 있으며 이들은 요청 컨텍스트에 의해 특정지어
-집니다. 요청 타겟 포맷은 HTTP 메소드에 따라 달라집니다. 포맷에는 다음과 같은 것들이 있습니다.
-
-origin 형식: 끝에 '?'와 쿼리 문자열이 붙는 절대 경로입니다. 이는 가장 일반적인 형식이며, GET, POST, HEAD, OPTIONS 메서드와
-함께 사용합니다.
-POST / HTTP 1.1
-GET /background.png HTTP/1.0
-HEAD /test.html?query=alibaba HTTP/1.1
-OPTIONS /anypage.html HTTP/1.0
-absolute 형식: 완전한 URL 형식입니다. 프록시에 연결하는 경우 대부분 GET과 함께 사용됩니다.
-GET http://developer.mozilla.org/en-US/docs/Web/HTTP/Messages HTTP/1.1
-authority 형식: 도메인 이름 및 옵션 포트(':'가 앞에 붙습니다)로 이루어진 URL의 authority component 입니다. 
-HTTP 터널을 구축하는 경우에만 CONNECT와 함께 사용할 수 있습니다.
-CONNECT developer.mozilla.org:80 HTTP/1.1
-asterisk 형식: OPTIONS와 함께 별표('*') 하나로 간단하게 서버 전체를 나타냅니다. 
-OPTIONS * HTTP/1.1
-
-마지막으로 HTTP 버전이 들어갑니다. 메시지의 남은 구조를 결정하기 때문에, 응답 메시지에서 써야 할 HTTP 버전을 알려주는 역할을 합니다.</textarea><pre class="cm-s-default" data-type="text/plain"></pre></figure><p>어렵게 느껴질 수 있는 부분이지만 저희가 같이 네이버 웹툰을 보기 위해 여러 페이지를 이동한 과정과 같은 맥락으로 볼 수 있습니다.</p><p>핵심은 서버에 대한 유저의 요청을 http 메서드와 url로 나타낼 수 있다는 것입니다.</p><p>이 부분을 이해하셨다면 이제 본격적으로 express의 라우팅을 배울 수 있습니다.</p><p>더 읽어보기 - <a href="https://developer.mozilla.org/ko/docs/Web/HTTP/Messages">http 메시지</a></p><p><br /></p><h4>express의 라우팅</h4><div><hr class="hr hr-solid-short"></div><p>express에서는 어떤 식으로 라우팅이 이뤄질까요?</p><figure class="code"><textarea>app.use(express.static("public"));
-
-// 여기서부터 코드를 작성해주세요.
-app.get('/users', (req, res) =&gt; {
-  res.send('get user!');
-});
-
-app.get('/users/:userId', (req, res) =&gt; {
-  const userId = req.params.userId; // /users/1 /users/2에서 1, 2 와 같이 users뒤에 오는 경로를 변수에 저장한다.
-  res.send(userId);
-});
-
-app.post('/users', (req, res) =&gt; {
-  res.send('post user!');
-});
-
-app.put('/users', (req, res) =&gt; {
-  res.send('put user!');
-});
-
-app.delete('/users', (req, res) =&gt; {
-  res.send('delete user!');
-});</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>이전 파트에서 얘기했던 것과 비슷하게 http 메서드과 /users와 같이 그에 상응하는 url을 명시해주었습니다.</p><p>그리고 함수의 두 번째 인자로는 req, res 두 개의 인자를 가지는 콜백함수를 이용하여 적절한 응답을 돌려주었습니다.</p><p>이제 위의 코드가 어떤 식으로 동작하는지 살펴봅시다.</p><p>/users로 이동했을 때:</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/6db21f0adc0a919719e5d8003c868fb6.png?w=1000&q=85" data-width="509" data-height="467" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/6db21f0adc0a919719e5d8003c868fb6.png?w=1000&q=85" alt="" /></a></div></figure><p>/users/1로 이동했을 때:</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/0397a55f2f2055df6a38e8e853821780.png?w=1000&q=85" data-width="510" data-height="469" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/0397a55f2f2055df6a38e8e853821780.png?w=1000&q=85" alt="" /></a></div></figure><p>아직 세 가지 경우가 더 남았다구요?</p><p>아쉽게도 브라우저에 url을 입력해서 이동하는 방식으로는 get 요청에만 응답할 수 있습니다.</p><p>나머지의 응답값을 보기 위해서는 특별한 프로그램이 필요한데요.</p><p>저는 Postman이라는 프로그램을 사용하겠습니다.</p><p><a href="https://www.getpostman.com/downloads/">다운로드</a>로 이동한뒤 운영체제에 맞는 버전을 설치해줍니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/8c45afc832c3fe46a9eea351816a89a0.png?w=1000&q=85" data-width="952" data-height="594" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/8c45afc832c3fe46a9eea351816a89a0.png?w=1000&q=85" alt="" /></a></div></figure><p>처음 실행하면 위와 같은 화면을 볼 수 있습니다.</p><p>여기서 GET이라고 적힌 부분을 클릭하면 POST, PUT 혹은 DELETE등의 다른 http 메서드를 이용한 요청을 할 수 있습니다.</p><p>한 번 POST 요청을 해볼까요?</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/101915234c8a8a1b658f1832dc229c6a.png?w=1000&q=85" data-width="952" data-height="519" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/101915234c8a8a1b658f1832dc229c6a.png?w=1000&q=85" alt="" /></a></div></figure><p>코드에 적힌 대로 응답값을 돌려줍니다.</p><p>2회차 전체 코드:</p><figure class="code"><textarea>const express = require("express");
-const app = express();
-
-app.use(express.static("public"));
-
-app.get("/users", (req, res) =&gt; {
-  res.send("get user!");
-});
-
-app.get("/users/:userId", (req, res) =&gt; {
-  const userId = req.params.userId;
-  res.send(userId);
-});
-
-app.post("/users", (req, res) =&gt; {
-  res.send("post user!");
-});
-
-app.put("/users", (req, res) =&gt; {
-  res.send("put user!");
-});
-
-app.delete("/users", (req, res) =&gt; {
-  res.send("delete user!");
-});
-
-//create a server object:
-app.get("/", function(req, res) {
-  res.write("Hello World!..."); //write a response to the client
-  res.end(); //end the response
-});
-
-app.listen(8080, function() {
-  console.log("server running on 8080");
-}); //the server object listens on port 8080</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p><br /></p><h4>마치며</h4><div><hr class="hr hr-solid-short"></div><p>두 번째 시간에는 정적 파일 제공과 기본적인 라우팅 개념 그리고 라우팅이 express 앱에서 어떤 식으로 동작하는 지를 살펴보았습니다.</p><p>그럼 다음 시간에 봐요~</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Sat, 06 Apr 2019 21:32:22 +0900</pubDate></item><item><title><![CDATA[직접 부딪히며 배우는 Node.js]]></title><link><![CDATA[https://gompro.postype.com/post/3606731]]></link><description><![CDATA[<h4>Node.js란?</h4><figure class="code"><textarea>Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine.</textarea><pre class="cm-s-default" data-type="text/plain"></pre></figure><p>Node.js는 크롬 브라우저의 V8 자바스크립트 엔진 기반의 런타임입니다. 이는 자바스크립를 실행할 수 있는 독립적인 프로그램을 말하죠. 이 말은 다르게 말하면 브라우저 상에서만 동작했던 자바스크립트가 이제는 브라우저 밖에서도 동작한다는 것을 의미합니다.</p><p>이러한 특징 때문에 Node.js를 사용하면 서버와 클라이언트 양 쪽에서 같은 언어를 사용할 수 있습니다. 이는 자바스크립트를 알고 있다면 하나의 웹 애플리케이션을 처음부터 끝까지 만들 수 있다는 것을 의미합니다!</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/58/d8b3427424bcb2fdc498d5bd5ffe90b6.png?w=1000&q=85" data-width="993" data-height="414" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/58/d8b3427424bcb2fdc498d5bd5ffe90b6.png?w=1000&q=85" alt="" /></a></div></figure><p>&lt;티오베 랭킹 7위에 빛나는 자바스크립트&gt;</p><p><a href="https://medium.com/@olinations/the-javascript-runtime-environment-d58fa2e60dd0">자바스크립트 런타임이 궁금하다면?</a></p><p><br /></p><h4>Node.js의 인기</h4><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/59/990c9f47df73c9f31c4e54b9784cb2b2.png?w=1000&q=85" data-width="1169" data-height="621" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/59/990c9f47df73c9f31c4e54b9784cb2b2.png?w=1000&q=85" alt="" /></a></div></figure><p>&lt;구글 트렌드 - 전 세계&gt;</p><p>Node.js의 구글 검색량은 2009년 등장 직후 현재까지 8 ~ 10배 가까이 늘어났으며, Node.js의 가장 대표적인 프레임워크 express.js의 Github 스타 수는 43000여 개에 이릅니다. Node.js가 선풍적인 인기를 끄는 상황은 비단 해외의 일만은 아닙니다. 검색 범위를 우리나라로 변경하더라도 상당수의 기업과 개발자들이 Node.js에 관심을 가지고 있다는 것을 부정할 수는 없죠.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/59/e6994b48b64d9a8600b8cdc096f1cc99.png?w=1000&q=85" data-width="1177" data-height="624" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/59/e6994b48b64d9a8600b8cdc096f1cc99.png?w=1000&q=85" alt="" /></a></div></figure><p>&lt;구글 트렌드 - 우리나라&gt;</p><p>구글에 Node.js 구인과 같이 검색하면 아래처럼 무려 60개 이상의 기업이 Node.js 개발자를 모집하는 공고를 냈습니다. 그리고 Node.js는 특히 스타트업에서 큰 인기를 끌고 있습니다. 이는 많은 스타트업들이 빠른 속도로 작업 결과를 낼 수 있는 생산성 높은 언어를 선호하기 때문입니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/00/5759013811cb646b15ff9051b1eda6b0.png?w=1000&q=85" data-width="676" data-height="624" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/00/5759013811cb646b15ff9051b1eda6b0.png?w=1000&q=85" alt="" /></a></div></figure><p>Node.js를 배울 준비가 되셨나요?</p><p><br /></p><h4>들어가기</h4><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/01/c997b59b01e194270f59a4f4ca4909e6.png?w=1000&q=85" data-width="731" data-height="678" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/01/c997b59b01e194270f59a4f4ca4909e6.png?w=1000&q=85" alt="" /></a></div></figure><p><br /></p><figure class="code"><textarea>여: 플러그인을 설치한 뒤로 많은 고객들이 빈 화면만 보인다고 얘기하네요. 하던 일은 잠시 멈추고 이것부터 해결해줬으면 좋겠어요.
-빨간옷 남: 글쎄요, 제 컴푸터에서는 잘 돌아가던걸요.
-여: 오, 그래요? 그럼 다행이네요. 고칠 필요가 없겠어요.
-여: 그냥 모든 고객 분들께 당신 컴퓨터를 쓰라고 하면 될테니까요. 참나!
-파란옷 남: 방금 조금 비꼰 거 같지 않았어?
-빨간옷 남: 아냐 저 정도면 양반이지.</textarea><pre class="cm-s-default" data-type="text/plain"></pre></figure><p>저는 맥북을 사용하고 있습니다. 하지만 제 글을 읽으시는 분들은 윈도우나 리눅스를 사용하고 있을 수도 있죠. 그래서 컴퓨터에 직접 작업환경을 설정하기보다는 웹 IDE를 사용하여 코드 설명과 데모 프로그램 시현 등을 진행하고자 합니다.</p><p>저는 <a href="https://codesandbox.io">codesandbox</a>를 사용하도록 하겠습니다. 계정이 없으신 분들은 링크를 타고 이동하셔서 계정을 생성해주세요. 깃허브 계정이 필요한 모양이니 깃허브 계정이 없다면 그것부터 만들고나서 진행하도록 하죠.</p><p>로그인을 하고나면 아래와 같은 화면이 나옵니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/f8a19bd706cff1302afae1b3e6063010.png?w=1000&q=85" data-width="1319" data-height="631" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/f8a19bd706cff1302afae1b3e6063010.png?w=1000&q=85" alt="" /></a></div></figure><p>이제 기본적인 <a href="https://codesandbox.io/embed/1zq5389zq4?fontsize=14">express 서버 셋업 링크</a>를 타고 들어가서 우측 상단의 Open in Editor 버튼을 눌러줍니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/f401c831be5618550cb91485ef126865.png?w=1000&q=85" data-width="1337" data-height="675" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/f401c831be5618550cb91485ef126865.png?w=1000&q=85" alt="" /></a></div></figure><p>그 다음 또 우측 상단의 Fork 버튼을 누르게 되면 이 저장소의 코드를 수정할 수 있게 됩니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/de0ee93aa296ea39189b2eb97cdb85e4.png?w=1000&q=85" data-width="1335" data-height="637" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/de0ee93aa296ea39189b2eb97cdb85e4.png?w=1000&q=85" alt="" /></a></div></figure><p>뒤로 가기 버튼을 눌러서 메인 화면을 확인해보면 이제 express라는 이름을 가진 샌드박스 (codesandbox에서는 각 저장소를 샌드박스라고 부르는 것 같습니다.)가 보일 겁니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/65d21e5f13eaade4c99622854a5d6193.png?w=1000&q=85" data-width="1316" data-height="564" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/65d21e5f13eaade4c99622854a5d6193.png?w=1000&q=85" alt="" /></a></div></figure><p>짝짝짝!</p><p><br /></p><h4>Express.js?</h4><p>분명 위에서는 Node.js를 배운다고 했던 것 같은데 갑자기 express.js 샌드박스를 만들었네요. 이는 <a href="https://medium.com/@cainwatson/creating-a-vanilla-node-server-638cb62afaeb">Node.js만으로도 충분히 웹서버를 만들 수 있지만</a>, 수많은 귀찮은 일들을 직접 해야만 합니다. 여기서는 그런 스트레스를 줄이고 웹 서버를 만드는 방법을 배운다는 애초의 목적에 집중하기 위해 express.js를 선택하게 되었습니다.</p><p><br /></p><h4>Hello World</h4><p>src/index.js 파일을 살펴봅시다.</p><figure class="code"><textarea>const express = require("express");
-const app = express();
-
-//create a server object:
-app.get("/", function(req, res) {
-  res.write("Hello World!..."); //write a response to the client
-  res.end(); //end the response
-});
-
-app.listen(8080, function() {
-  console.log("server running on 8080");
-}); //the server object listens on port 8080</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>단 열 줄도 안 되는 코드로 웹 서버 작성을 마쳤습니다. 무슨 마법같은 건 아닙니다.</p><blockquote class="blockquote-type2"><p>이 튜토리얼은 자바스크립트 + 약간의 es6를 이해한다는 전제를 하고 있습니다.<br />만약 그렇지 않다면 코드카데미의 자바스크립트 강의를 먼저 마쳐주세요.<br />첫 줄부터 천천히 살펴봅시다.</p></blockquote><figure class="code"><textarea>const express = require("express");</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>express라는 변수에 express라는 패키지 (라이브러리 혹은 모듈이라고도 합니다. 여기서는 패키지로 통일하도록 하겠습니다.)를 불러왔네요. 그리고</p><figure class="code"><textarea>const app = express();</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>app 변수에 express 서버를 선언했습니다.</p><figure class="code"><textarea>//create a server object:
-app.get("/", function(req, res) {
-  res.write("Hello World!..."); //write a response to the client
-  res.end(); //end the response
-});</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>GET / 라우트를 선언하고, Hello World!...라는 글자를 응답값으로 돌려준뒤, 응답을 마칩니다.</p><figure class="code"><textarea>app.listen(8080, function() {
-  console.log("server running on 8080");
-}); //the server object listens on port 8080</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>서버를 8080번 포트에 연결하고, server running on 8080이라는 메시지를 콘솔에 출력합니다.</p><p><br /></p><h4>마치며</h4><p>이렇게 헬로월드 튜토리얼을 마쳤습니다. 그러면 다음 시간까지 안녕!</p><p><br /></p><h4>참조</h4><ul><li>[번역] 자바스크립트의 과거 (<a href="https://wit.nts-corp.com/2014/08/13/1925">https://wit.nts-corp.com/2014/08/13/1925</a>)</li><li>The javascript Runtime Environment (<a href="https://medium.com/@olinations/the-javascript-runtime-environment-d58fa2e60dd0">https://medium.com/@olinations/the-javascript-runtime-environment-d58fa2e60dd0</a>)</li><li>Creating A Vanilla Node Server (<a href="https://medium.com/@cainwatson/creating-a-vanilla-node-server-638cb62afaeb">https://medium.com/@cainwatson/creating-a-vanilla-node-server-638cb62afaeb</a>)</li><li>[IT열쇳말] 노드JS (<a href="http://www.bloter.net/archives/255115">http://www.bloter.net/archives/255115</a>)</li></ul><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Sat, 06 Apr 2019 21:18:40 +0900</pubDate></item><item><title><![CDATA[[번역] 유니코드 문자열을 정규화 해야하는 이유]]></title><link><![CDATA[https://gompro.postype.com/post/3528300]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/%EB%B2%88%EC%97%AD-%EC%9C%A0%EB%8B%88%EC%BD%94%EB%93%9C-%EC%8A%A4%ED%8A%B8%EB%A7%81%EC%9D%84-%EB%85%B8%EB%A9%80%EB%9D%BC%EC%9D%B4%EC%A7%95-%ED%95%B4%EC%95%BC%ED%95%98%EB%8A%94-%EC%9D%B4%EC%9C%A0">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 22 Mar 2019 11:09:33 +0900</pubDate></item><item><title><![CDATA[[책 추천] How Linux Works: What Every Superuser Should Know]]></title><link><![CDATA[https://gompro.postype.com/post/3457094]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/%EC%B1%85-%EC%B6%94%EC%B2%9C-How-Linux-Works-What-Every-Superuser-Should-Know-vxjsznhfd5">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 08 Mar 2019 16:48:38 +0900</pubDate></item><item><title><![CDATA[실용적인 테스트 코드 작성하기 (JS)]]></title><link><![CDATA[https://gompro.postype.com/post/3402076]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/%EC%8B%A4%EC%9A%A9%EC%A0%81%EC%9D%B8-%ED%85%8C%EC%8A%A4%ED%8A%B8-%EC%BD%94%EB%93%9C-%EC%9E%91%EC%84%B1%ED%95%98%EA%B8%B0">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Wed, 27 Feb 2019 16:23:01 +0900</pubDate></item><item><title><![CDATA[Server Side Rendering 레시피 3가지]]></title><link><![CDATA[https://gompro.postype.com/post/2909190]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/Server-Side-Rendering-%EB%A0%88%EC%8B%9C%ED%94%BC-3%EA%B0%80%EC%A7%80">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Thu, 13 Dec 2018 21:18:06 +0900</pubDate></item><item><title><![CDATA[[Machine Learning] 에어비앤비 가격 예측]]></title><link><![CDATA[https://gompro.postype.com/post/2894578]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/Machine-Learning-%EC%97%90%EC%96%B4%EB%B9%84%EC%95%A4%EB%B9%84-%EA%B0%80%EA%B2%A9-%EC%98%88%EC%B8%A1">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Mon, 10 Dec 2018 16:59:23 +0900</pubDate></item><item><title><![CDATA[[HackerRank] Hackerrank In String]]></title><link><![CDATA[https://gompro.postype.com/post/2871671]]></link><description><![CDATA[<p>+ 본 게시물은 velog에서 보실 수 있습니다.</p><p><br /></p><figure class="embed" data-url="https://velog.io/@leejh3224/HackerRank-Hackerrank-In-String">
-<div class="inner">
-<a class="embed-link" href="https://velog.io/@leejh3224/HackerRank-Hackerrank-In-String" target="_blank">
-<div class="embed-img" style="background-image: url('https://images.velog.io/post-images/leejh3224/53ef8bb0-f875-11e8-8150-b5d2c1881964/hackerrank.png');"></div>
-<div class="embed-body">
-<h5 class="embed-title">[HackerRank] Hackerrank In String</h5>
-<p class="embed-text">문제 설명 https://www.hackerrank.com/challenges/hackerrank-in-a-string/problem 시도 최초로 목표로 하는 글자를 찾은 다음에는 최초 목표 글자의 다음 인덱스부터 찾기 시작한다는데서 착안해서 아래와 같이 풀었다. 스택을 사용할 경우의 시간 복잡도는 O(n)으로 전보다 개선되었음을 알 수 있다....</p>
-<cite class="embed-url">https://velog.io</cite>
-</div>
-</a>
-</div>
-</figure>
-<section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Thu, 06 Dec 2018 02:38:13 +0900</pubDate></item><item><title><![CDATA[[HackerRank] Two Characters]]></title><link><![CDATA[https://gompro.postype.com/post/2866644]]></link><description><![CDATA[<p>+ 본 게시물은 velog에서 보실 수 있습니다.</p><figure class="embed" data-url="https://velog.io/@leejh3224/HackerRank-Two-Characters">
-<div class="inner">
-<a class="embed-link" href="https://velog.io/@leejh3224/HackerRank-Two-Characters" target="_blank">
-<div class="embed-img" style="background-image: url('https://images.velog.io/post-images/leejh3224/d8e507b0-f7c0-11e8-90f9-7566cb7959c4/hackerrank.png');"></div>
-<div class="embed-body">
-<h5 class="embed-title">[HackerRank] Two Characters</h5>
-<p class="embed-text">문제 설명 https://www.hackerrank.com/challenges/two-characters/problem 시도 다이내믹 프로그래밍 문제라는 생각이 들어서 dp 배열을 만들어서 어떻게 해볼까 생각했지만 "Alternating"(abab와 같이 서로 교차하면서 바뀌는 문자열)을 어떻게 파악할 수 있을지가 감이 오지 않았다. Discuss...</p>
-<cite class="embed-url">https://velog.io</cite>
-</div>
-</a>
-</div>
-</figure>
-<section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Wed, 05 Dec 2018 00:14:57 +0900</pubDate></item><item><title><![CDATA[[HackerRank] Matrix Layer Rotation]]></title><link><![CDATA[https://gompro.postype.com/post/2857398]]></link><description><![CDATA[<p>+ 본 게시물은 velog<a href="https://velog.io/@leejh3224/Hackerrank-Matrix-Layer-Rotation"></a>에서 보실 수 있습니다.</p><figure class="embed" data-url="https://velog.io/@leejh3224/Hackerrank-Matrix-Layer-Rotation">
-<div class="inner">
-<a class="embed-link" href="https://velog.io/@leejh3224/Hackerrank-Matrix-Layer-Rotation" target="_blank">
-<div class="embed-img" style="background-image: url('https://images.velog.io/post-images/leejh3224/75a5fd00-f64c-11e8-bec6-75e09f38e9d9/hackerrank.png');"></div>
-<div class="embed-body">
-<h5 class="embed-title">[Hackerrank] Matrix Layer Rotation</h5>
-<p class="embed-text">https://www.hackerrank.com/challenges/matrix-rotation-algo/problem 행렬을 돌면서 이전의 x, y 포지션을 받아서 새로운 x, y 포지션을 넘겨주는 함수를 만드는 식으로 접근해봤다. 메인이 되는 함수에서는 행렬을 레이어 by 레이어로 나눠서 반복문을 돌렸다. 여기서 레이어란 아래와 같은 행렬이 있을 때, 를 말한다.</p>
-<cite class="embed-url">https://velog.io</cite>
-</div>
-</a>
-</div>
-</figure>
-<section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Mon, 03 Dec 2018 01:13:05 +0900</pubDate></item><item><title><![CDATA[[알고리즘] Dijkstra in python3]]></title><link><![CDATA[https://gompro.postype.com/post/2772830]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-%EC%BD%94%EB%93%9C-%EC%A0%95%EB%A6%AC-Dijkstra-in-python3-cajoi4a9c3">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 16 Nov 2018 13:22:05 +0900</pubDate></item><item><title><![CDATA[[알고리즘] Bellman-Ford in python3]]></title><link><![CDATA[https://gompro.postype.com/post/2772822]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-Bellman-Ford-in-python3-rtjoiiwlb1">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 16 Nov 2018 13:19:58 +0900</pubDate></item><item><title><![CDATA[Python meets Economics: 데이터 시각화]]></title><link><![CDATA[https://gompro.postype.com/post/2665807]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/Python-meets-Economics-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EC%8B%9C%EA%B0%81%ED%99%94-42jnmui7fp">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Wed, 24 Oct 2018 17:19:36 +0900</pubDate></item><item><title><![CDATA[Postcss-preset-env: Use tomorrow’s CSS today]]></title><link><![CDATA[https://gompro.postype.com/post/2657673]]></link><description><![CDATA[<p>이 글은 <a href="https://velog.io/@leejh3224/Postcss-preset-env-Use-tomorrows-CSS-today">velog</a>에서도 보실 수 있습니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/40/4d8ea543768c2b2d034a09fe082d43f6.png?w=1000&q=85" data-width="300" data-height="185" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/40/4d8ea543768c2b2d034a09fe082d43f6.png?w=1000&q=85" alt="" /></a></div></figure><h4>Postcss?</h4><p><br /></p><p><strong>Postcss</strong>는 css에서 바벨과 같은 역할을 수행하는 도구라고 할 수 있습니다.<br /><br />웹팩이나 걸프와 같은 빌드 도구와 사용할 수 있는 각종 플러그인을 제공하죠.<br /><br />그 중 대표적인 것들로는<br /><br />- autoprefixer: vender-prefix를 추가해줌<br />- stylelint: eslint처럼 문법 검사를 수행<br />- postcss-module: css module 지원<br /><br />등이 있습니다.</p><p><br /></p><p>create-react-app에서도 적극적으로 Postcss를 활용하고 있는데요,<br />웹팩 설정 부분을 찬찬히 살펴보면 Postcss의 여러 플러그인(특히 autoprefixer)을 활용하고 있음을 알 수 있습니다.<br /><br />그래서 flexbox나 grid 같은 속성에 일일히 -moz와 같은 접두사를 붙여주지 않아도 됐던 것이죠.</p><p><br /></p><h4>Postcss-preset-env</h4><p><br /></p><p>제가 오늘 소개할 플러그인은 postcss-preset-env입니다.<br /><br />복잡한 바벨 설정이 preset-env 하나로 거의 대부분 정리되듯이 Postcss를 사용하는 대부분의 use-case가 이 플러그인 하나로 해결됩니다.</p><blockquote class="blockquote-type2"><p><br />create-react-app v2를 사용하시는 분들은 이미 postcss-preset-env가 설정되어 있습니다! 😃<br />아래의 설정은 react-scripts version 1.1.5 기준입니다.</p><p><br /></p></blockquote><p>먼저 eject명령을 수행합니다.</p><figure class="code"><textarea>yarn eject // 질문에 Y를 선택하시면 최종적으로 eject됩니다.</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>이제 폴더를 확인하시면 config폴더가 생성된 것을 확인할 수 있을텐데요,<br /><br />먼저 개발 설정부터 건드려봅시다.<br /><br />webpack.config.dev에 들어가서</p><p><br /></p><figure class="code"><textarea>{
-    loader: require.resolve('postcss-loader'),
-    options: {
-      // Necessary for external CSS imports to work
-      // https://github.com/facebookincubator/create-react-app/issues/2677
-      ident: 'postcss',</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>위와 같은 부분을 찾아줍니다.<br /><br />그리고 아래의 플러그인 설정을</p><p><br /></p><figure class="code"><textarea>plugins: () =&gt; [
-  require('postcss-flexbugs-fixes'),
-  require('postcss-preset-env')({
-    stage: 0, // 모든 기능 사용
-    browsers: [
-      '&gt;1%',
-      'last 4 versions',
-      'Firefox ESR',
-      'not ie &lt; 9', // React doesn't support IE8 anyway
-    ],
-    flexbox: 'no-2009',
-  }),
-],</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>와 같이 바꿔준다음,</p><p><br /></p><figure class="code"><textarea>yarn add postcss-preset-env -D</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>로 설치해줍니다.<br /><br />설정 끝이냐구요? 네! 끝입니다. 정말 간단하죠.<br /><br />이제 App.css를 조금 바꿔봅시다.</p><figure class="code"><textarea>.App {
-  text-align: center;
-
-  &amp; .logo {
-    animation: App-logo-spin infinite 20s linear;
-    height: 80px;
-  }
-
-  &amp; .header {
-    background-color: var(--black);
-    height: 150px;
-    padding: 20px;
-    color: var(--white);
-  }
-
-  &amp; .title {
-    font-size: 1.5em;
-  }
-
-  &amp; .intro {
-    font-size: large;
-  }
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>그리고 App.js를 조금 수정해줍니다.</p><p><br /></p><figure class="code"><textarea>// App-header &gt; App header 와 같이 클래스명을 변경해줍니다.
-&lt;header className="App header"&gt; 
-  &lt;img src={logo} className="App logo" alt="logo" /&gt; 
-  &lt;h1 className="App title"&gt;Welcome to React&lt;/h1&gt;
-&lt;/header&gt;</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>scss를 사용하시던 분이라면 바로 눈치챌 수 있는 부분도 있을텐데요,<br /><br />nesting의 spec이 scss와는 조금 다릅니다.</p><p><br /></p><figure class="code"><textarea>.App {
-  &amp;-logo {
-    /* rules */
-  }
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>와 같이 표현할 경우 .App-logo 클래스를 타겟으로 규칙을 적용합니다.<br /><br />이 같은 경우를 편의상 scss의 name prefix라고 표현하겠습니다.<br /><br />name prefix의 개념은 scss에서는 유효하지만 안타깝게도 css의 nesting module의 최신 spec (Level 3)에서는 그렇지 않습니다.<br /><br />오로지 두 개의 다른 대상을 선택자 혹은 선택자 없이 연결할 때만 nesting을 활용할 수 있습니다.<br /><br />다음은 표준 스펙 문서의 Motivation 부분에 수록된 코드입니다.</p><p><br /></p><figure class="code"><textarea>table.colortable td {
-  text-align:center;
-}
-table.colortable td.c {
-  text-transform:uppercase;
-}
-table.colortable td:first-child, table.colortable td:first-child+td {
-  border:1px solid black;
-}
-table.colortable th {
-  text-align:center;
-  background:black;
-  color:white;
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br />이 부분은 조금 염두에 둬야할 부분이 되겠네요.</p><p><br /></p><figure class="code"><textarea>table.colortable {
-  &amp; td {
-    text-align:center;
-    &amp;.c { text-transform:uppercase }
-    &amp;:first-child, &amp;:first-child + td { border:1px solid black }
-  }
-  &amp; th {
-    text-align:center;
-    background:black;
-    color:white;
-  }
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>이렇게 줄였습니다.</p><p><br /><br />각설하고, 개발 서버를 띄우면 전과 같은 모습의 화면을 볼 수 있습니다.</p><p><br /></p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/47/98b6f030cff0a3de899b92d2b528846c.png?w=1000&q=85" data-width="1518" data-height="664" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/47/98b6f030cff0a3de899b92d2b528846c.png?w=1000&q=85" alt="" /></a></div></figure><p>Tada! 완벽하군요. 전처리기의 힘을 빌려야만 가능했던 rule nesting이 css 확장자에서도 가능해졌습니다.<br /><br />설정이 간편한건 덤이구요.</p><p><br /></p><h4>Stylelint?</h4><p><br /></p><p>create-react-app을 사용하고 있는 분들이라면 eslint의 경고창이 굉장히 익숙하게 느껴지실 겁니다.<br /><br />css도 lint를 통해 코드 품질을 높일 수 있습니다.<br /><br />다시 webpack 설정을 열어볼까요?<br /><br />마지막으로 설정했던 부분에 아래와 같이 stylelint를 추가해줍니다.</p><p><br /></p><figure class="code"><textarea>plugins: () =&gt; [
-  require('stylelint')({
-    configFile: `${process.cwd()}/.stylelintrc.json`,
-  }),
-  require('postcss-flexbugs-fixes'),
-  require('postcss-preset-env')({</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>그리고 src 디렉토리 바깥에 .stylelintrc.json 파일을 생성해주시고,<br /><br />아래의 내용을 추가해줍니다.</p><p><br /></p><figure class="code"><textarea>{
-  "extends": "stylelint-config-standard"
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>마지막으로 필요한 플러그인들을 설치해줍니다.</p><p><br /></p><figure class="code"><textarea>yarn add stylelint stylelint-config-standard -D</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>끝!</p><p><br /></p><p><strong>vscode 사용자들을 위한 팁</strong><br />마켓에서 postcss를 검색하면 다운로드 수가 가장 많은 플러그인은 postcss syntax 지만 syntax highlighting이 잘 되지 않습니다. 대신 language postcss를 추천합니다.</p><p><br /></p><h4>기능 둘러보기</h4><p><br /></p><p>모든 기능은 <a href="https://preset-env.cssdb.org/features">이 곳</a>에서 확인하실 수 있습니다.</p><p>유용한 기능들이 정말 많았지만 제가 미리 써보고 가장 괜찮았던 기능 몇 가지만 먼저 소개하겠습니다.</p><p><br /></p><p><strong>첫 번째</strong>는 <a href="https://developer.mozilla.org/ko/docs/Web/CSS/Using_CSS_variables">css 변수</a>입니다.<br /><br />오랫동안 scss와 같은 전처리기를 사용해야하는 이유였던 변수를 css에서 바로 사용해볼 수 있습니다.</p><p><br /></p><figure class="code"><textarea>:root {
-    --h1-font-size: 2.25rem;
-}
-
-h1 {
-    font-size: var(--h1-font-size);
-}
-
-/* 블락 레벨 사용 */
-.box {
-  --padding: 24px;
-
-  padding: var(--padding);
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>위의 예시처럼 `:root` 가상 선택자를 사용하면 전역변수로 사용할 수 있으며, 블락 레벨에서 사용하는 것도 가능합니다.<br /><br />문법은 --변수명이며, -로 단어 사이를 구분해줍니다.<br /><br />사용할 때는 var(변수명)과 같이 할 수 있습니다.<br /><br />css 변수는 padding이나 margin을 계산할 때 굉장히 유용하게 활용할 수 있습니다.</p><p><br /></p><figure class="code"><textarea>:root {
-    --base-padding: 8px;
-}
-
-.box {
-    /* 80px의 padding이 추가되었습니다! */
-    padding: calc(var(--base-padding) * 10);
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p><strong>두 번째</strong>는 custom media query와 custom selector입니다.<br /><br /><br />사용법은 아래와 같습니다.</p><figure class="code"><textarea>@custom-media --narrow-window (30em &lt;= width &lt; 50em);
-@custom-selector :--heading h1, h2, h3, h4, h5, h6;
-
-:--heading {
-  text-align: center;
-
-  /* nesting과 결합하면 더욱 표현력 좋게 나타낼 수 있습니다. */
-  @media (--narow-window) {
-      text-align: right;
-  }
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><figure class="code"><textarea>@custom-media --narrow-window (30em &lt;= width &lt; 50em);</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br />이 부분을 눈여겨 보신 분들도 있을 텐데요, <a href="https://www.w3.org/TR/mediaqueries-4/#range-context">media query ranges spec</a>에 따라 일반적으로 범위를 표현하듯이 범위를 나타낼 수 있게 되었습니다.</p><p><br /></p><figure class="code"><textarea>@custom-media --narrow-window (30em &lt;= width) and (width &lt; 50em);</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>대신 말이죠.</p><p><br /></p><p><strong>세 번째</strong>는 두 개의 새로운 선택자입니다.<br /><br />- :<strong>matches </strong>: 1개 이상의 클래스를 매치할 수 있습니다.<br /><br />- :<strong>not </strong>: 해당되는 클래스를 제외하고 매치합니다.<br /><br />이런 선택자가 유용한 경우는 보통 list에서 마지막 아이템이나 첫 아이템을 제외하고 스타일링을 할 때입니다.</p><p><br /></p><figure class="code"><textarea>ul {
-  &amp; li:not(:last-child) {
-      padding-bottom: 16px;
-  }
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>이제 더 이상 마지막 아이템에 들어간 padding-bottom을 없애기 위해 추가적인 룰을 더하지 않아도 됩니다.<br /><br />만세!<br /><br />네 번째는<a href="https://www.w3.org/TR/css-logical-1/"> logical property/values</a> 입니다.<br /><br />이 spec은 React Native를 다뤄봤다면 익숙할 수평, 수직 방향의 padding 혹은 margin을 더하기 위한 속성입니다.<br /><br />spec의 기본적인 내용은 글을 쓰는 순서에 따라 서로 다른 방향으로 요소를 정렬하기 때문에 right나 left같은 단어 대신 start나 end를 사용한다는 것인데요,<br /><br />아래 그림을 보시죠.</p><p><br /></p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/53/7aa94702da64eae4773f478dc6567f88.png?w=1000&q=85" data-width="1572" data-height="924" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/53/7aa94702da64eae4773f478dc6567f88.png?w=1000&q=85" alt="" /></a></div></figure><p>&lt;출처&gt; W3C css spec<br /><br />위처럼 글을 쓰는 방향에 따라 border나 margin, padding 등이 다르게 적용된다는 것이죠.<br /><br />이 속성은 마치 flexbox처럼 x축과 y축에 따라 영향을 주는 방향이 결정되는데요,<br /><br />글쓰는 방향 (dir)을 바꾸지 않았다면 x축은 inline, y축은 block으로 생각할 수 있습니다.<br /><br />그러므로</p><p><br /></p><figure class="code"><textarea>.box {
-    border-block: 1px solid black;
-    padding-block: 24px;
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>와 같이 설정하면,</p><p><br /></p><figure class="code"><textarea>.box {
-    border-top: 1px solid black;
-    border-bottom: 1px solid black;
-    padding-top: 24px;
-    padding-bottom: 24px;
-}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>와 같이 변환됩니다.<br /><br />수평 padding이나 margin을 줘야할 때가 굉장히 잦은데 저런 식으로 간편하게 해결할 수 있게 되었습니다.<br /><br />이상으로 기능 소개를 마치겠습니다.</p><p><br /></p><h4>CSS의 미래?</h4><p><br /></p><p>css는 css3를 통해 굉장한 변화를 겪었습니다.<br /><br />정말 많은 property가 생기고 자연스러운 애니메이션, 유용한 레이아웃 도구 등이 생겨났죠.<br /><br />아마 앞으로도 더 많은 변화를 겪을 것이고, 웹 개발자로서 항상 새로운 spec에 관심을 두고 지켜봐야한다고 생각합니다.<br /><br />css를 잘 다룬다는 것은 사실 얼마나 spec에 대해 잘 알고 있으냐와 같은 말입니다.<br /><br />모두 즐거운 css 합시다!</p><p><br /></p><p>참고<br />- spec 을 알아야하는 이유: <a href="https://css-tricks.com/forums/topic/why-cant-we-center-something-vertically-using-margin-auto-0/">왜 margin: auto는 수직방향으로 정렬하지 않나요?</a><br />- <a href="https://www.w3.org/Style/CSS/specs.en.html">w3c css spec 둘러보기</a></p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"><li class="product-item"><i class="fal fa-code"></i><span class="ml-1">코드</span><b>12</b><span>줄</span></li></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Mon, 22 Oct 2018 17:56:52 +0900</pubDate></item><item><title><![CDATA[페이지네이션, 커서 기반? 페이지 기반?]]></title><link><![CDATA[https://gompro.postype.com/post/2650985]]></link><description><![CDATA[<p>이 글은 <a href="https://velog.io/@leejh3224/%ED%8E%98%EC%9D%B4%EC%A7%80%EB%84%A4%EC%9D%B4%EC%85%98-%EC%BB%A4%EC%84%9C%EA%B8%B0%EB%B0%98-%ED%8E%98%EC%9D%B4%EC%A7%80%EA%B8%B0%EB%B0%98"><u>Velog</u></a> 에서도 보실 수 있습니다.</p><h4><br /></h4><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/21/13/03/115c5cac27c2ba91d3c550ef56a80b31.png?w=1000&q=85" data-width="557" data-height="406" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/21/13/03/115c5cac27c2ba91d3c550ef56a80b31.png?w=1000&q=85" alt="" /></a></div></figure><h4>들어가며</h4><p><br /></p><p>페이지네이션(Pagination) 이란 한정된 네트워크 자원을 효율적으로 활용하기 위해 쿼리의 결과값으로 리턴된 리소스를 `분할하여 전달`하는 것을 의미한다.<br /><br />즉, 데이터베이스에 만 개의 투두(todo) 아이템이 있을 때, 한 번에 만 개를 돌려주는 대신 0번부터 49번까지 50개씩 돌려주는 것을 의미한다. 여기서 다음 요청이 들어오면 50번부터 99번까지, 또 다음 요청이 들어오면 100번부터 149번까지 돌려준다. 이렇게 함으로써 네트워크의 낭비를 막고, 빠른 응답을 기대할 수 있게 된다.<br /><br />전통적인 페이지네이션 방식은 현재의 위치를 의미하는 offset (page) 과 한 번응답 시 돌려줄 갯수를 의미하는 limit(per_page), 두 가지의 파라미터를 이용한다. 그러므로 전통적인 페이지네이션을 통한 get요청은 아래와 같은 모습을 띈다.</p><figure class="code"><textarea>https://todo.com/todos?offset=5&amp;limit=30 // 페이지는 5번, 갯수는 30개!</textarea><pre class="cm-s-default" data-type="text"></pre></figure><h4><br /></h4><h4>SNS의 시대</h4><p><br /></p><p>전통적인 페이지네이션은 오랜 기간 잘 작동해왔다. 문제는 페이스북이나 인스타그램과 같이 잦은 수정/생성/삭제가 반복되는 SNS 서비스가 등장하면서 더 이상 효율적으로 작동하지 못하게 되었다는 것이다.<br /><br />예를 들어 유저가 1페이지를 요청하여 5개의 아이템을 돌려준 상황을 가정하자. 그리고 30분쯤 후에 유저가 2페이지를 요청한다고 할 때, 만약 그 사이에 3개의 새로운 아이템이 추가된다면 2개의 아이템이 중복으로 전송된 셈이 된다.</p><figure class="code"><textarea>Item 1 - 10
-
-Read #1 page = 1, count = 5
-Item 10 - 6
-
-+ 3 Item
-
-Read #2 page = 2, count = 5
-Item 13 - 9 // 2개의 중복 발생!</textarea><pre class="cm-s-default" data-type="text"></pre></figure><h4><br /></h4><h4>Cursor based pagination</h4><p><br /></p><p>이 같은 문제를 해결하기 위해 트위터는 커서 기반 페이지네이션을 활용했다. 커서 기반 페이지네이션이란 무엇일까? 쉽게 생각해보면 우리가 흔히 책을 읽을 때 사용하는 책갈피를 생각해볼 수 있다. 책갈피를 끼워두면 굳이 앞에서부터 페이지를 셀 필요 없이 곧장 읽은 데부터 다시 읽을 수 있다. 이전에 읽은 부분으로 넘어가는 것도 어렵지 않다. 책갈피가 Index의 역할을 하기 때문이다.<br /><br />이쯤에서 트위터의 구현 방식을 살펴보자.<br />트위터는 끊임없이 변하는 타임라인을 효율적으로 읽어들이기 위해서 max_id라는 인자를 활용한다. 즉, 이전에 읽어들인 트윗의 아이디 중에서 가장 작은 아이디를 다음 요청에 count와 함께 전달하는 것이다.<br /><br />이는 다음과 같다.</p><figure class="code"><textarea>초기: Tweet 1 - 10
-
-Read #1, count = 5
-Tweet 10 - 6
-
-+ 2 Tweets
-
-Read #2, max_id = 6, count = 5
-Tweet 6 - 2
--&gt; 새로운 트윗이 추가되더라도 max_id부터 읽어들이기 때문에 상관없음.</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>여기서 주목할 점은 max_id를 활용함으로써 중복되는 트윗의 수를 최소한으로 유지할 수 있다는 점이다. (늘 max_id에 해당되는 트윗만 중복됨)</p><h4><br /></h4><h4>More optimization?</h4><p><br /></p><p>다음과 같은 경우를 생각해보자.</p><figure class="code"><textarea>초기: Tweet 1-10까지 읽음. Tweet 11-18번이 추가됨.
-
-Read #1, count = 5
-Tweet 18 - 14
-
-Read #2, count = 5, max_id = 14
-Tweet 14 - 10, 두 개의 중복 발생!</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>위의 경우와는 달리 두 개의 중복이 발생하고 말았다. 이는 10번 트윗을 읽었다는 것을 전달하지 않았기 때문에 발생한 문제이다.<br /><br />트위터는 since_id라는 인자를 활용해서 이 상황을 해결했다. </p><p>since_id를 활용하면 상황은 아래와 같이 달라진다.</p><p><br /></p><figure class="code"><textarea>초기: Tweet 1-10까지 읽음. Tweet 11-18번이 추가됨.
-
-Read #1, count = 5, since_id = 10
-Tweet 18 - 14
-
-Read #2, count = 5, max_id = 14, since_id = 10
-Tweet 14 - 11, 더 이상 10번을 읽어들이지 않음!</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>이미 10번 트윗을 읽었다는 정보가 전달됐기 때문에 더 이상 이미 읽은 트윗을 전달하지 않는다.</p><h4><br /></h4><h4>결론</h4><p><br /></p><p>전통적인 페이지네이션 방식은 오랫동안 네트워크 낭비를 줄여주는 기능을 담당해왔다. 하지만 실시간성을 띄는 SNS 서비스의 등장으로 리소스가 자주 수정/생성/삭제되는 상황이 늘어나자 중복 전송의 가능성이 커졌다. 트위터는 커서 기반 페이지네이션을 통해 실시간으로 변화하는 타임라인 상에서 리소스의 중복 전송을 효과적으로 막아냈다.</p><p><br /></p><blockquote class="blockquote-type2"><p><strong>참고</strong><br />트위터 API 문서: Get Tweet timelines<br />(<a href="https://developer.twitter.com/en/docs/tweets/timelines/guides/working-with-timelines.html">https://developer.twitter.com/en/docs/tweets/timelines/guides/working-with-timelines.html</a>)</p></blockquote><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Sun, 21 Oct 2018 13:03:31 +0900</pubDate></item></channel></rss>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Junyong Lee</title>
+    <link>https://brunch.co.kr/@@QFh</link>
+    <description>베이 지역 스타트업에서 엔지니어로 일하고 있습니다.</description>
+    <language>ko</language>
+    <pubDate>Sun, 12 May 2019 08:57:38 GMT</pubDate>
+    <generator>Kakao Brunch</generator>
+    <image>
+      <title>베이 지역 스타트업에서 엔지니어로 일하고 있습니다.</title>
+      <url>https://img1.daumcdn.net/thumb/C100x100/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fguest%2Fimage%2F9K5BgK-TUxAG6DJR2N9odeV2SSc</url>
+      <link>https://brunch.co.kr/@@QFh</link>
+      <width>100</width>
+      <height>100</height>
+    </image>
+    <item>
+      <title>실리콘 밸리 주니어 취업기 - 인터뷰 준비(중) - 데이터 구조 / 알고리즘 리뷰</title>
+      <link>https://brunch.co.kr/@@QFh/5</link>
+      <description>해당 글은 실리콘 밸리 주니어 개발자 취업기 중 4번째 글입니다.   1. 해외 취업을 결심하기 전에 체크해야 할 것들2. 자신에게 맞는 가능한 취업 경로 파악하기3. 인터뷰 준비(상) - 지원 시기 정하기, 이력서 작성하기4. 인터뷰 준비(중) - 데이터 구조 / 알고리즘 리뷰 (현재 글)5. 인터뷰 준비(하) - 실제 인터뷰 준비하기6. 오퍼를 받았다면</description>
+      <pubDate>Fri, 29 Sep 2017 06:31:44 GMT</pubDate>
+      <author>Junyong Lee</author>
+      <guid>https://brunch.co.kr/@@QFh/5</guid>
+    </item>
+    <item>
+      <title>실리콘 밸리 주니어 개발자 취업기 - 인터뷰 준비(상) - 지원 시기 정하기, 이력서 작성하기</title>
+      <link>https://brunch.co.kr/@@QFh/4</link>
+      <description>해당 글은 실리콘 밸리 주니어 개발자 취업기 중 3번째 글입니다.   1. 해외 취업을 결심하기 전에 체크해야 할 것들2. 자신에게 맞는 가능한 취업 경로 파악하기3.&amp;nbsp;인터뷰 준비(상) - 지원 시기 정하기, 이력서 작성하기 (현재 글)4. 인터뷰 준비(중) - 데이터 구조 / 알고리즘 리뷰5. 인터뷰 준비(하) -&amp;nbsp;실제 인터뷰 준비하기6. 오퍼를 받았다면</description>
+      <pubDate>Wed, 23 Aug 2017 06:14:41 GMT</pubDate>
+      <author>Junyong Lee</author>
+      <guid>https://brunch.co.kr/@@QFh/4</guid>
+    </item>
+    <item>
+      <title>실리콘 밸리 주니어 개발자 취업기 (2) - 2.&amp;nbsp;가능한 취업 경로 파악하기 (비자란 무엇인가)</title>
+      <link>https://brunch.co.kr/@@QFh/3</link>
+      <description>해당 글은 실리콘 밸리 주니어 개발자 취업기 중 2번째 글입니다.   1. 해외 취업을 결심하기 전에 체크해야 할 것들2. 자신에게 맞는 가능한 취업 경로 파악하기 (현재 글)3. 인터뷰 준비(상) - 지원 시기 정하기, 이력서 작성하기4. 인터뷰 준비(중) - 데이터 구조 / 알고리즘 리뷰5. 인터뷰 준비(하) - 실제 인터뷰 준비하기6. 오퍼를 받았다면</description>
+      <pubDate>Mon, 31 Jul 2017 07:31:34 GMT</pubDate>
+      <author>Junyong Lee</author>
+      <guid>https://brunch.co.kr/@@QFh/3</guid>
+    </item>
+    <item>
+      <title>실리콘 밸리 주니어 개발자 취업기 (1) - 1. 취업을 결심하기 전에 체크해야 할 것들</title>
+      <link>https://brunch.co.kr/@@QFh/2</link>
+      <description>미국 스타트업에서 풀타임 개발자로 일하게 된 지 5달이 지났다.&amp;nbsp;그동안&amp;nbsp;친구나 학교 선배, 교수님들, 그리고 해외 취업 페이스북 그룹에서 현장에 계신 많은 선배분들의 도움이 있어 취업이 가능했기에&amp;nbsp;앞으로 해외 취업을 목표로 하시는 많은 분들에게 그 감사함을&amp;nbsp;되돌려 드리기 위해&amp;nbsp;해외 취업, 특히 미국 실리콘 밸리 구직에 관한 글을 쓰기로 했다. 다만 '내 경&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2FQFh%2Fimage%2FzphsT3tNjZ95xUeW5ZLQrNVwlMI.jpg" width="500" /&gt;</description>
+      <pubDate>Sat, 29 Jul 2017 19:33:43 GMT</pubDate>
+      <author>Junyong Lee</author>
+      <guid>https://brunch.co.kr/@@QFh/2</guid>
+    </item>
+  </channel>
+</rss>

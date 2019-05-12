@@ -1,1671 +1,199 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Blog For Me</title>
-    <description>Really For ME</description>
-    <link>http://sungbine.github.io</link>
-    <atom:link href="http://sungbine.github.iofeed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Mon, 12 Oct 2015 00:10:29 +0000</pubDate>
-    <lastBuildDate>Mon, 12 Oct 2015 00:10:29 +0000</lastBuildDate>
-    <generator>Jekyll v2.4.0</generator>
-    
-      <item>
-        <title>Django 스터디 4장. Django의 핵심기능</title>
-        <description>&lt;h1&gt;CH4. Django의 핵심기능&lt;/h1&gt;
-
-&lt;h2&gt;4.1 Admin 사이트 꾸미기&lt;/h2&gt;
-
-&lt;p&gt;장고의 admin 사이트는 데이터베이스에 들어 있는 데이터를 쉽게 관리 할 수 있도록 데이터의 생성/조회/변경/삭제 등의 기능을 제공한다. ==프로세스의 기동/정지/조회 등의 프로세스 관리기능은 제공하지 않는다!==&lt;/p&gt;
-
-&lt;h3&gt;4.1.1 데이터 입력 및 수정&lt;/h3&gt;
-
-&lt;p&gt;레코드 상세보기 화면에서는 &lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Save&lt;/li&gt;
-&lt;li&gt;Save and continue editing&lt;/li&gt;
-&lt;li&gt;Save and add another&lt;/li&gt;
-&lt;li&gt;Delete&lt;/li&gt;
-&lt;li&gt;History&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;기능을 제공하고 있다.(설명은 생략)&lt;/p&gt;
-
-&lt;h3&gt;4.1.2 필드 순서변경&lt;/h3&gt;
-
-&lt;p&gt;필드 순서를 변경하고 싶다면 admin.py&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;class QuestionAdmin(admin.ModelAdmin):
-    field = [&amp;#39;pub_date&amp;#39;, &amp;#39;question_text&amp;#39;] #필드 순서변경
-
-admin.site.register(Question, QuestionnAdmin)
-admin.site.register(Choice)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;위처럼 QuestionAdmin 클래스를 ModelAmdin을 상속받아 정의해, field를 생성하고 admin.site.register()함수의 두 번째 인자로 등록하면 순서변경이 가능하다.&lt;/p&gt;
-
-&lt;h3&gt;4.1.3 각 필드를 분리해서 보여주기&lt;/h3&gt;
-
-&lt;p&gt;필드를 분리해서 보여 주는 경우&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;class QuestionAdmin(admin.ModelAdmin):
-    fieldsets = [
-        (&amp;#39;Question Statemnet&amp;#39;, {&amp;#39;fields&amp;#39; : [&amp;#39;question_text&amp;#39;]}),
-        (&amp;#39;Date Information&amp;#39;, {&amp;#39;fields&amp;#39; : [&amp;#39;pub_date&amp;#39;]}),
-        ]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;위처럼 하면 admin 화면에서 두개 의 필드를 다른 셋처럼 보여준다.&lt;/p&gt;
-
-&lt;h3&gt;4.1.4 필드 접기&lt;/h3&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;class QuestionAdmin(admin.ModelAdmin):
-    fieldsets = [
-        (&amp;#39;Question Statemnet&amp;#39;, {&amp;#39;fields&amp;#39;: [&amp;#39;question_text&amp;#39;], &amp;#39;classes&amp;#39;: [&amp;#39;collapse&amp;#39;]}),
-        (&amp;#39;Date Information&amp;#39;, {&amp;#39;fields&amp;#39;: [&amp;#39;pub_date&amp;#39;]}),
-    ]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h3&gt;4.1.5 외래키 관계화면&lt;/h3&gt;
-
-&lt;p&gt;외래키를 가진 Choice 모델의 경우 항목 추가시 Question을 선택해야만 항목을 선택할 수 있다. 항목이 많아질 경우 매우 번거로워 지는문제가 발생한다.&lt;/p&gt;
-
-&lt;h3&gt;4.1.6 Question 및 Choice를 한 화면에서 변경하기&lt;/h3&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;class ChoiceInline(admin.StackedInline):
-    model = Choice
-    extra = 2
-
-class QuestionAdmin(admin.ModelAdmin):
-    fieldsets = [
-        (None, {&amp;#39;fields&amp;#39;: [&amp;#39;question_text&amp;#39;], &amp;#39;classes&amp;#39;: [&amp;#39;collapse&amp;#39;]}),
-        (&amp;#39;Date Information&amp;#39;, {&amp;#39;fields&amp;#39;: [&amp;#39;pub_date&amp;#39;]}),
-    ]
-    inlines = [ChoiceInline]
-
-admin.site.register(Question, QuestionAdmin)
-admin.site.register(Choice)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;위처럼 변경하면 하나의 화면에서 두개의 모델을 한번에 편집 가능하다.
-extra 변수는 추가될 항목을 미리 2개까지 작성해둔다라는 뜻이다.&lt;/p&gt;
-
-&lt;h3&gt;4.1.7 테이블 형식으로 보여주기&lt;/h3&gt;
-
-&lt;p&gt;항목이 많아질 경우에는 화면이 길어져서 불편할 수 있다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;class ChoiceInline(admin.TabularInline)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;으로 변경하면 테이블 형식으로 보여준다.&lt;/p&gt;
-
-&lt;h3&gt;4.1.8 레코드 리스트 항목 지정하기&lt;/h3&gt;
-
-&lt;p&gt;Admin사이트의 첫 페이지에서 테이블명을 클릭하면, 해등 테이블의 레코드 리스트가 나온다.
-여기에 나오는 레코드 리스트의 제목은 model.py 에서 지정했던 __unicode__ 함수에 정의된 내용이 나타난다.
-레코드 리스트에 나타나는 추가항목을 지정하고 싶다면 아래처럼하면 된다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;inlines = [ChoiceInline]
-list_display = (&amp;#39;question_text&amp;#39;, &amp;#39;pub_date&amp;#39;)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;QuestionAdmin 클래스에 위 한줄을 추가하면 두개의 컬럼을 확인 할 수 있다.&lt;/p&gt;
-
-&lt;h3&gt;4.1.9 list_filter&lt;/h3&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;list_filter = [&amp;#39;pub_date&amp;#39;]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;를 추가하면 필터링 기능까지 추가된다.(pub_date은 date타입이기 때문에 any date, today 등의 필터링 옵션을 제공한다.)&lt;/p&gt;
-
-&lt;h3&gt;4.1.10 search_fields&lt;/h3&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;search_fields = [&amp;#39;question_text&amp;#39;]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;를 지정하면 검색할 수 있는 필드를 제공한다. (박스에 단어를 입력하면 장고가 LIKE 쿼리를 이용해 해당 필드에서 검색한다. 여러개 지정할 수 있다.)&lt;/p&gt;
-
-&lt;h3&gt;4.1.11 Admin 사이트 템플릿 수정&lt;/h3&gt;
-
-&lt;p&gt;Admin 사이트 템플릿은 장고의 템플릿 시스템을 사용한다.
-Admin 사이트 모양을 변경하기 위해서는 장고의 기본 Admin 템플릿 파일을 프로젝트로 복사해야한다.
-새로운 템플릿 디렉토리를 생성하고 settings.py에 등록해야한다.
-&lt;code&gt;
- python -c &amp;quot;import sys; sys.path = sys.path[1:]; import django; print django.__path__&amp;quot;
-&lt;/code&gt;
- 위 명령을 실행하면 장고 위치를 알 소 있다.&lt;/p&gt;
-
-&lt;p&gt;그리고 django/contrib/admin/templates/admin/base_site.html 을 복사해 우리가 만든 templates/admin 폴더에 넣고 setting.py 에 등록해아한다.==(꼭 admin폴더에 넣어야한다!!)==&lt;/p&gt;
-
-&lt;p&gt;하지만
- &lt;code&gt;TEMPLATE_DIRS = [os.path.join(BASE_DIR, &amp;#39;templates&amp;#39;)]&lt;/code&gt; 책에 나온 대로 추가하면 (1.8버전 이상의 장고에서는) 아래 그림과 같은 에러가 발생한다.&lt;/p&gt;
-
-&lt;p&gt;이땐 &lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;TEMPLATES = [
-    {
-        &amp;#39;BACKEND&amp;#39;: &amp;#39;django.template.backends.django.DjangoTemplates&amp;#39;,
-        &amp;#39;DIRS&amp;#39;: [os.path.join(BASE_DIR, &amp;#39;templates&amp;#39;)],
-        &amp;#39;APP_DIRS&amp;#39;: True,
-        &amp;#39;OPTIONS&amp;#39;: {
-            &amp;#39;context_processors&amp;#39;: [
-                &amp;#39;django.template.context_processors.debug&amp;#39;,
-                &amp;#39;django.template.context_processors.request&amp;#39;,
-                &amp;#39;django.contrib.auth.context_processors.auth&amp;#39;,
-                &amp;#39;django.contrib.messages.context_processors.messages&amp;#39;,
-            ],
-        },
-    }
-]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;위와 같이 바뀐 설정을 해줘야한다. 하나의 속성이라도 없어지게 되면 에러가 발생한다.&lt;/p&gt;
-
-&lt;p&gt;이 템플릿 파일을 이용하면 내가 원하는 admin 화면을 꾸밀 수 있다.&lt;/p&gt;
-
-&lt;h2&gt;4.2 장고 파이썬 쉘로 데이터 조작하기&lt;/h2&gt;
-
-&lt;p&gt;Admin 사이트는 장고의 장점중 하나가 바로 데이터의 관리가 편리하다. 장고는 추가적으로 파이썬 쉘을 이용하여 데이터를 관리 할 수 있는 API도 제공하고 있다.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;사용하는 이유&lt;/strong&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;인터넷이 느려 admin 접속이 어려울 때&lt;/li&gt;
-&lt;li&gt;복잡한 조건의 검색하는 것처럼 Admin 사이트보다 더 다양한 데이터 관리 명령이 가능&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;strong&gt;쉘 시작&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;$ python manage.py shell&lt;/code&gt; &lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;위의 명령을 이용하면 장고 파이썬 쉘을 실행&lt;/li&gt;
-&lt;li&gt;위 명령역시 파이썬의 쉘을 기동하는 것과 동일&lt;/li&gt;
-&lt;li&gt;차이점은 장고 파이썬 쉘은 manage.py 모듈에서 정의한 DJANGO_SETTINGS_MODULE 속성을 이용해 미리 mysite/settings.py 모듈을 임포트 하는 것&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;strong&gt;장고의 클래스는 곧 테이블이고 객체가 곧 레코드 이다.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;h3&gt;4.2.1 Create - 데이터 생성/입력&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;객체 생성  &amp;gt; save()&lt;/li&gt;
-&lt;li&gt;save() 명령을 실행하기 전에는 메모리만 반영된 상태&lt;/li&gt;
-&lt;li&gt;내부적으로 INSERT문을 실행한다.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;4.2.2 Read - 데이터 조회&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;QuerySet 객체를 이용&lt;/li&gt;
-&lt;li&gt;QuerySet은 데이터베이스 테이블로부터 꺼내 온 객체의 collection&lt;/li&gt;
-&lt;li&gt;QuerySet은 필터를 가질 수 있음(조건을 지정해 검색/추출 할 수있음)&lt;/li&gt;
-&lt;li&gt;SQL 용어도 QuerySet 은 SELECT문에 해당, 필터는 WHERE, LIMIT에 해당&lt;/li&gt;
-&lt;li&gt;object객 체를 이용해야 QuerySet을 얻을 수 있음&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;code&gt;Question.objects.all()&lt;/code&gt; 은 &lt;code&gt;Question테이블.레코드.모두&lt;/code&gt; 라고 해석 할 수있다.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;filter() : 주어진 조건에 맞는 객체들을 담고 있는 QuerySet collection 반환&lt;/li&gt;
-&lt;li&gt;exclude() : 주어진 조건에 맞지 않는 객체들을 담고 있는 QuerySet collection 반환&lt;/li&gt;
-&lt;/ul&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;#example
-Question.objects.filter(
-    quetion_text_startwith=&amp;#39;What&amp;#39;
-).exclude(
-    pub_date_gte=datetime.date.today()
-).filter(
-    pub_date_gte=datetime(2005, 1, 30)
-)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;처럼 사용가능.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;one_entry = Question.object.get(pk=1)
-Question.obejct.all()[:5]    # 4번까지
-Question.object.all()[5:10]  # 5부터 9번까지
-Question.object.all()[:10:2] # 뭐지...........
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;와 같은 파이썬 배열의 슬라이싱 문법(?) 사용가능&lt;/p&gt;
-
-&lt;h3&gt;4.2.3 Update - 데이터 수정&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;필드값 수정 후  save() 메소드 호출&lt;/li&gt;
-&lt;li&gt;SQL의 UPDATE에 해당&lt;/li&gt;
-&lt;/ul&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;q.question_text = &amp;#39;What is your favorite hobby ?&amp;#39;
-q.save()
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;여러 개의 객체를 동시에 수정할 경우
-&lt;code&gt;
-Question.objects.filter(pub_date_year=2007).update(question_text=&amp;#39;Everything is the same&amp;#39;)
-&lt;/code&gt;&lt;/p&gt;
-
-&lt;h3&gt;4.2.4 - 데이터 삭제&lt;/h3&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;Question.objects.filter(pub_date_year=2005).delete()
-Question.objects.all().delete()
-Question.objects.delete()  #사용불가
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;장고에서 세번째 명령은 허용하지 않는다.&lt;/p&gt;
-
-&lt;h3&gt;4.2.5 polls 애플리케이션의 데이터 실습&lt;/h3&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;from pools.models import Question, Choice
-
-#timezone은 settings.py에 타임존 셋팅이 잘 되어있어야 한다.
-
-from django.utils import timezone 
-q = Question(question_text = &amp;quot;what&amp;#39;s up?&amp;quot;, pub_date=timezone.now())
-q.save()
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;from pools.models import Question, Choice
-
-Question.objects.filter(id=1)
-Question.objects.filter(question_text_startwith=&amp;#39;what&amp;#39;)
-
-from django.utils import timezone
-current_year = timezone.now().year
-Question.objects.get(pub_date_year=current_year)
-
-Question.objects.get(id=100) #exception 발생 존재하지 않는 데이터
-
-Question.objects.get(id=1)
-Question.objects.get(pk=1) #위 구문과 동일
-
-q = Question.object.get(pk = 1)
-
-#질문에 해당하는 답변 모두 조회
-q.choice_set.all()
-
-#create() 함수를 호출하면 Choice 개게를 생성해서 데이터베이스에 저장하고, 
-#choice_set 리스트에 추가한 다음 해당 객체(choice)를 반환한다.
-q.choice_set.create(choice_text=`Sleeping&amp;#39;, votes=0)
-
-#생성된 객체는 c 에 들어감
-c = q.choice_set.create(choice_text=`Eating&amp;#39;, votes=0)
-
-#연결된 Question객체를 조회 할 수 있음
-c.question
-
-q.choice_set.all()
-q.choice_set.count()
-
-
-#언더바2개 __를 이용해 연결된 객체간의 관계를 표현 가능
-Choice.objects.filter(question__pub_date__year=current_year)
-
-#choice_set에서 하나만 삭제
-c = q.choice_set.filter(choice_text__startswith=&amp;#39;Reading&amp;#39;)
-c.delete();
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h2&gt;4.3 템플릿 시스템&lt;/h2&gt;
-</description>
-        <pubDate>Sun, 11 Oct 2015 09:00:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/10/11/django4.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/10/11/django4.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>Oracle Synonym과 Grant</title>
-        <description>&lt;h1&gt;Oracle의 Grant와 Synonym에 대해 알아 보자.&lt;/h1&gt;
-
-&lt;p&gt;&amp;quot;여러 DB 계정에서 같은 DB의 동일한 테이블에 접근하려면 어떻게 해야할까?&amp;quot;&lt;/br&gt;
-&amp;quot;어떤 계정은 Select권한만 있으면 좋겠고, 어떤 계정은 Intert와 Select가 있었으면 좋겠다면?&amp;quot;&lt;br&gt;
-위와 같은 경우처럼 DB는 여러 계정을 만들어 상황에 맞게 권한을 설정해서 사용할 수있다. &lt;/p&gt;
-
-&lt;p&gt;예를 들어 A라는 계정은 모든 DML을 사용할 수 있다고 하자. 그런데 필요에 의해 A계정의 TableA 라는 테이블 SELECT만 가능한 B 계정이 필요해 졌다. &lt;/p&gt;
-
-&lt;p&gt;이럴 때 사용하는 명령어가 바로 &lt;strong&gt;&lt;em&gt;&lt;highlight start&gt;GRANT&lt;highlight end&gt;&lt;/em&gt;&lt;/strong&gt; 이다.&lt;br&gt;
-GRANT는 계정에 권한을 부여 할 수있는데, 이를 사용할 수 있는 계정은 그 객체(예를 들어 TABLE)의 OWNER만이 부여 할 수있다.&lt;br&gt;&lt;/p&gt;
-
-&lt;p&gt;위의 예제에서는 A라는 계정으로 B 계정에 TableA에 GRANT를 설정함으로서 B가 TableA를 SELECT 하도록 할 수있다&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;GRANT select on A.TableA to B 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;라고 하면 B는 &lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;SELECT * FROM A.TableA
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;가 가능해 진다.&lt;/p&gt;
-
-&lt;h3&gt;이렇게 각 권한을 부여 할 수있도록 하는 것이 바로  GRANT 이다.&lt;/h3&gt;
-
-&lt;p&gt;근데 불편한 점이 한가지 눈에 띈다. 보통 우리가 쿼리를 작성할때는 Table명만을 사용하여 쿼리르 작성하지 위의 경우처럼 A.TableA라고 계정명을 함께 사용하지 않는다. 아주 번거롭고 귀찮은 쿼리 작성이 될것이다. 이를 위해 사용하는 것이 바로 &lt;strong&gt;&lt;em&gt;Synonym&lt;/em&gt;&lt;/strong&gt;이다.&lt;/p&gt;
-
-&lt;p&gt;Synonym은 객체의 OWNER가 아닌 권한을 부여 받은 계정에서 적용 할 수있다.&lt;em&gt;(해당 계정은 Synonym 생성 권한이 필요하다. 없다면 sys계정을 통해 부여할 수있다.)&lt;/em&gt;&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;CREATE synonym TableA for A.TableA
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;라고 작성하면 B 계정에서도&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;SELECT * FROM TableA 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;의 쿼리가 정상적으로 동작하게 된다.&lt;/p&gt;
-
-&lt;p&gt;일종의 Alias를 지정하는 방법인 것이다.&lt;/p&gt;
-
-&lt;p&gt;내가 헷갈렸던 부분은 Synonym에도 기본적으로 권한이 들어가지 않을까 하는 것이었다. 그러나 Synonym은 권한을 부여하지는 않는다. 이를 사용하기 위해서는 꼭 Grant로 권한이 부여된 상태에서만 가능하다는 것을 잊지 말아야 한다.&lt;/p&gt;
-
-&lt;h1&gt;Tip. Synonym 제어 쿼리&lt;/h1&gt;
-
-&lt;h2&gt;synonym 확인&lt;/h2&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;SELECT * FROM user_sysnonyms 
--- 현재 계정의 synonym만 확인
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt; SELECT * FROM all_sysnonyms  
- -- 모든 계정의 synonym을 확인
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;위의 두가지 쿼리를 통해 synonym을 확인 할 수있다.&lt;/p&gt;
-
-&lt;h2&gt;synonym 삭제&lt;/h2&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;DROP synonym TableA 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;라고 하면 삭제된다.&lt;/p&gt;
-
-&lt;h1&gt;&lt;em&gt;참고로 MySql과 Cubrid에서는 synonym을 지원하고 있지 않다.&lt;/em&gt;&lt;/h1&gt;
-</description>
-        <pubDate>Sat, 27 Jun 2015 14:34:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/06/27/synonym_vs_grant.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/06/27/synonym_vs_grant.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>AngularJS 공부하기 - Form model binding</title>
-        <description>&lt;h1&gt;Form model binding&lt;/h1&gt;
-
-&lt;p&gt;이전시간에 AngularJs는 Double Binding을 이용해 model과 view의 동기화한다고 공부했다. 그래서 model이 수정되면 view도 수정되고, view가 수정되면 model이 수정된다고 했다.
-그렇다면 view가 수정되었을때 어떻게 model에 결과를 반영할 수있을까? 사용자의 입력을 받을 수 있는 form 태그를 이용해서 model을 수정할 수 있다.&lt;/p&gt;
-
-&lt;script src=&quot;https://gist.github.com/sungbine/4ca108e12bee53b5ba5c.js&quot;&gt; &lt;/script&gt;
-
-&lt;p&gt;위와 같은 코드가 있다면, model에 어떻게 binding 할까&lt;/p&gt;
-
-&lt;h3&gt;새롭게 등장하는 ng-model directives를 이용하면 할 수있다.&lt;/h3&gt;
-
-&lt;script src=&quot;https://gist.github.com/sungbine/6357bfa9b463383c94a0.js&quot;&gt; &lt;/script&gt;
-
-&lt;p&gt;위처럼 ng-model을 각 요소에 지정하면 지정된 model의 변수로 select, checkbox, radio, textarea 와 같은 다양한 사용자 input들이 model로 binding된다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;&amp;lt;input ng-model=&amp;quot;item.isAgree&amp;quot; type=&amp;quot;checkbox&amp;quot; /&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;와 같은 ng-model 처럼 사용할 수있고, checkbox 의 경우 이 item.isAgree라는 property를 true/false로 셋하게 된다.&lt;/p&gt;
-
-&lt;p&gt;이번에는 짧게 마무리하고 다음시간에는 ng-submit을 이용해서 controller에 연결된 함수를호출 할 수 있는 방법에 대해 알아 보겠다.&lt;/p&gt;
-
-&lt;h1&gt;To be continue..&lt;/h1&gt;
-</description>
-        <pubDate>Sun, 21 Jun 2015 14:27:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/06/21/angular_js_8.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/06/21/angular_js_8.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>resultMap - Extends attribute 사용</title>
-        <description>&lt;p&gt;개발 중 발생하지 않은 에러가 발생하여 많은 시간 낭비를 한 케이스가 있어 공유하고자 한다.&lt;/p&gt;
-
-&lt;p&gt;ibatis 를 사용하던중(myBatis도 동일할 것이다) resultMapper를 구현하고 select 절의 result를 맵핑해서 사용하는 케이스가 있다.&lt;/p&gt;
-
-&lt;p&gt;이 때 resultMap의 attribute중 extends 가 있는데 이것은 기존의 resultMap을 재사용하는 케이스를 나타낸다.&lt;/p&gt;
-
-&lt;p&gt;예를 들어&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;&amp;lt;resultMap id=&amp;quot;aaa&amp;quot; resultClass =&amp;quot;AAA&amp;quot;&amp;gt;
-     &amp;lt;result property=&amp;quot;receiptSeq&amp;quot; column=&amp;quot;receipt_seq&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;purchaseApplyMId&amp;quot; column=&amp;quot;purchase_apply_m_id&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;draftDocNo&amp;quot; column=&amp;quot;draft_doc_no&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;bizNpartnerId&amp;quot; column=&amp;quot;biz_npartner_id&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;npartnerId&amp;quot; column=&amp;quot;npartner_id&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;compId&amp;quot; column=&amp;quot;comp_id&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;contractFlag&amp;quot; column=&amp;quot;contract_flag&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;chargeEmpNo&amp;quot; column=&amp;quot;charge_emp_no&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;contractNm&amp;quot; column=&amp;quot;contract_nm&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;contractClassCd&amp;quot; column=&amp;quot;contract_class_cd&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;startDay&amp;quot; column=&amp;quot;start_day&amp;quot;/&amp;gt;
-&amp;lt;/resultMap&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;와 같은 resultMap 이 존재하고&lt;/p&gt;
-
-&lt;p&gt;이것을 기본으로하는 확장 resultMap을 사용하고자 할때 사용하는 attribute이다. 마치 OOP의 상속 개념과 비슷하다고 할 수있다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;&amp;lt;resultMap id=&amp;quot;bbb&amp;quot; resultClass =&amp;quot;BBB&amp;quot; extends=&amp;quot;aaa&amp;quot;&amp;gt;
-     &amp;lt;result property=&amp;quot;endDay&amp;quot; column=&amp;quot;end_day&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;personalInfoOfferFlag&amp;quot; column=&amp;quot;personal_info_offer_flag&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;contractKindCd&amp;quot; column=&amp;quot;contract_kind_cd&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;slamContractId&amp;quot; column=&amp;quot;slam_contract_id&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;slamContractNm&amp;quot; column=&amp;quot;slam_contract_nm&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;privateContractFlag&amp;quot; column=&amp;quot;private_contract_flag&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;privateContractReason&amp;quot; column=&amp;quot;private_contract_reason&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;autoExtensionFlag&amp;quot; column=&amp;quot;auto_extension_flag&amp;quot;/&amp;gt;
-
-&amp;lt;/resultMap&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;라고 작성하면 실제로는 aaa와 bbb를 합친 &lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;&amp;lt;resultMap id=&amp;quot;aaabbb&amp;quot; resultClass =&amp;quot;BBB&amp;quot; extends=&amp;quot;aaa&amp;quot;&amp;gt;
-&amp;lt;result property=&amp;quot;receiptSeq&amp;quot; column=&amp;quot;receipt_seq&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;purchaseApplyMId&amp;quot; column=&amp;quot;purchase_apply_m_id&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;draftDocNo&amp;quot; column=&amp;quot;draft_doc_no&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;bizNpartnerId&amp;quot; column=&amp;quot;biz_npartner_id&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;npartnerId&amp;quot; column=&amp;quot;npartner_id&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;compId&amp;quot; column=&amp;quot;comp_id&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;contractFlag&amp;quot; column=&amp;quot;contract_flag&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;chargeEmpNo&amp;quot; column=&amp;quot;charge_emp_no&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;contractNm&amp;quot; column=&amp;quot;contract_nm&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;contractClassCd&amp;quot; column=&amp;quot;contract_class_cd&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;startDay&amp;quot; column=&amp;quot;start_day&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;endDay&amp;quot; column=&amp;quot;end_day&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;personalInfoOfferFlag&amp;quot; column=&amp;quot;personal_info_offer_flag&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;contractKindCd&amp;quot; column=&amp;quot;contract_kind_cd&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;slamContractId&amp;quot; column=&amp;quot;slam_contract_id&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;slamContractNm&amp;quot; column=&amp;quot;slam_contract_nm&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;privateContractFlag&amp;quot; column=&amp;quot;private_contract_flag&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;privateContractReason&amp;quot; column=&amp;quot;private_contract_reason&amp;quot;/&amp;gt;
-     &amp;lt;result property=&amp;quot;autoExtensionFlag&amp;quot; column=&amp;quot;auto_extension_flag&amp;quot;/&amp;gt; 
-&amp;lt;/resultMap&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;와 같은 resultMap 이 완성되는 것이다.&lt;/p&gt;
-
-&lt;h1&gt;발생했던 문제!&lt;/h1&gt;
-
-&lt;p&gt;문제는 이것을 이용 할때는 select 구문에서 부모의 resultMap인 aaa의 property도 모두 select구문에 들어있어야 한다는 것이다. 그렇지 않을 경우 에러가 발생한다. &lt;/p&gt;
-
-&lt;h3&gt;하지만!!&lt;/h3&gt;
-
-&lt;p&gt;만약 쿼리의 실행결과가 존재하지않는다면! 쿼리의 실행결과가 아무것도 나오지 않는다면 에러가 발생하지 않기 때문에 정상적으로 동작하는 것으로 오해하기 쉽다.
-그러나 실행결과가 1row 라도 존재하면, 바로 에러가 발생하게 된다.&lt;/p&gt;
-
-&lt;p&gt;select 절의 resultMap을 활용할때 꼭 extends 여부를 확인해야 한다!!&lt;/p&gt;
-</description>
-        <pubDate>Tue, 16 Jun 2015 19:11:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/06/16/resultMap_extends_issue.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/06/16/resultMap_extends_issue.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>AngularJS 공부하기 - Tab 컨트롤러로 분리하기</title>
-        <description>&lt;h1&gt;지난 시간 공부한 좋지 않은 코드&lt;/h1&gt;
-
-&lt;p&gt;지난 시간에 AngularJs를 통해 tab을 만드는 것을 공부했다. 이전의 코드가 기억 나는가?&lt;/p&gt;
-
-&lt;script src=&quot;https://gist.github.com/sungbine/8951ddcf8b7b35c54db6.js&quot;&gt; &lt;/script&gt;
-
-&lt;p&gt;이 코드는 단순한 탭을 구현한다. 그런데 html과 script가 혼합된 이런 코드는 가독성과 유지보수성 측면에서 매우 비 효율적이다. 지금은 코드가 짧지만 만약 복잡한 로직이 들어가게 된다던가 길어지게 되면 가독성이 떨어지게 될 것이다.
-이를 해결하기 위해 이번시간에는 이 코드에서 로직을 분리해 새로운 컨트롤러르르 만들어 볼 것이다.&lt;/p&gt;
-
-&lt;h1&gt;Tab 컨트롤러 분리하기&lt;/h1&gt;
-
-&lt;p&gt;우선 새로운 컨트롤러를 추가해 보자&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;app.controller(&amp;quot;TabController&amp;quot;, function() { });&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;위처럼 &amp;#39;TabControoler&amp;#39;라는 이름의 기본 컨트 컨트롤러를 생성한다. 
-이 컨트롤러를 template에 등록하고 현재 template에 들어있는 로직을 controller의 function에 method의 형태로 정의 해야한다.&lt;/p&gt;
-
-&lt;h2&gt;초기값&lt;/h2&gt;
-
-&lt;p&gt;우선 &lt;code&gt;ng-init=&amp;quot;tab=1&amp;quot;&lt;/code&gt; 으로 구현했던 초기 페이지 지정을 컨트롤러로 구현해보겠다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;app.controller(&amp;quot;TabController&amp;quot;, function() { 
-    this.tab = 1;
-});
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;위처럼 &lt;code&gt;this.tab = 1;&lt;/code&gt;을 이용해 초기값을 지정할 수있다.&lt;/p&gt;
-
-&lt;h2&gt;탭 클릭시 탭 번호 지정&lt;/h2&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;&amp;lt;ul&amp;gt;
-  &amp;lt;li&amp;gt; &amp;lt;a href ng-click=&amp;quot;tab = 1&amp;quot;&amp;gt; First tab &amp;lt;/a&amp;gt; &amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt; &amp;lt;a href ng-click=&amp;quot;tab = 2&amp;quot;&amp;gt; Second tab &amp;lt;/a&amp;gt; &amp;lt;/li&amp;gt;
-  &amp;lt;li&amp;gt; &amp;lt;a href ng-click=&amp;quot;tab = 3&amp;quot;&amp;gt; Third tab &amp;lt;/a&amp;gt; &amp;lt;/li&amp;gt;
-
-&amp;lt;/ul&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;위의  코드에서 &lt;code&gt;ng-click=&amp;quot;tab = 1&amp;quot;&lt;/code&gt; 이 부분은 로직으로 &lt;code&gt;tab = 1&lt;/code&gt;을 하나의 함수로 분리해 보자.
-&lt;code&gt;ng-click=&amp;quot;setTab(1)&amp;quot;&lt;/code&gt; 이렇게 변경 하고 controller에서 setTab(tabNum) 함수를 정의하면 효과적으로 텝 번호를 지정하는 로직을 관리할 수있다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;app.controller(&amp;quot;TabController&amp;quot;, function() { 
-    this.tab = 1;
-    this.setTab = function(tabNum) {
-        this.tab = tabNum;
-    };
-} );
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;이렇게 구현하면 로직을 성공적으로 분리할 수있다.&lt;/p&gt;
-
-&lt;h2&gt;탭 클릭 시 보이는 탭 변경&lt;/h2&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;&amp;lt;div ng-show=&amp;quot;tab === 1&amp;quot;&amp;gt;
-  &amp;lt;h4&amp;gt; First tab &amp;lt;/h4&amp;gt;
-  &amp;lt;p&amp;gt; AAAAAAAAAAAAAAA &amp;lt;/p&amp;gt;
-&amp;lt;/div&amp;gt;
-&amp;lt;div ng-show=&amp;quot;tab === 2&amp;quot;&amp;gt;
-  &amp;lt;h4&amp;gt; Second tab &amp;lt;/h4&amp;gt;
-  &amp;lt;p&amp;gt; BBBBBBBBBBBBBBB &amp;lt;/p&amp;gt;
-&amp;lt;/div&amp;gt;
-&amp;lt;div ng-show=&amp;quot;tab === 3&amp;quot;&amp;gt;
-  &amp;lt;h4&amp;gt; Third tab &amp;lt;/h4&amp;gt;
-  &amp;lt;p&amp;gt; CCCCCCCCCCCCCCC &amp;lt;/p&amp;gt;
-&amp;lt;/div&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;위에서 &lt;code&gt;ng-show=&amp;quot;tab ===1&amp;quot;&lt;/code&gt;도 역시 코드에 비교 로직이 포함되어있다. 이것을 이전 방법처럼 컨트롤러의 method로 분리해 보겠다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;&amp;lt;div ng-show=&amp;quot;isSelected(1)&amp;quot;&amp;gt;
-  &amp;lt;h4&amp;gt; First tab &amp;lt;/h4&amp;gt;
-  &amp;lt;p&amp;gt; AAAAAAAAAAAAAAA &amp;lt;/p&amp;gt;
-&amp;lt;/div&amp;gt;
-&amp;lt;div ng-show=&amp;quot;isSelected(2)&amp;quot;&amp;gt;
-  &amp;lt;h4&amp;gt; Second tab &amp;lt;/h4&amp;gt;
-  &amp;lt;p&amp;gt; BBBBBBBBBBBBBBB &amp;lt;/p&amp;gt;
-&amp;lt;/div&amp;gt;
-&amp;lt;div ng-show=&amp;quot;isSelected(3)&amp;quot;&amp;gt;
-  &amp;lt;h4&amp;gt; Third tab &amp;lt;/h4&amp;gt;
-  &amp;lt;p&amp;gt; CCCCCCCCCCCCCCC &amp;lt;/p&amp;gt;
-&amp;lt;/div&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;이제 &lt;code&gt;isSelected(tabNum)&lt;/code&gt; 라는 함쉬를 controller에 등록해 보자.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;app.controller(&amp;quot;TabController&amp;quot;, function() { 
-    this.tab = 1;
-    this.setTab = function(tabNum) {
-        this.tab = tabNum;
-    };
-    this.isSelected = function(tabNum) {
-        return this.tab === tabNum;
-    };
-} );
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;이렇게 하면 로직을 모두 컨트롤러에 분리 할 수있다.&lt;/p&gt;
-
-&lt;h1&gt;mvc 패턴을 지키면 개발의 효율성, 코드의 가독성과 유지/보수성이 증가함으로 꼭 이러한 정책을 잘 지켜야 한다.&lt;/h1&gt;
-</description>
-        <pubDate>Sat, 06 Jun 2015 14:27:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/06/06/angular_js_7.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/06/06/angular_js_7.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>AngularJS 공부하기 - 2way binding</title>
-        <description>&lt;p&gt;이 내용은 아래의 문서를 번역한 내용임을 밝힙니다.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://docs.angularjs.org/guide/databinding&quot;&gt;원본-https://docs.angularjs.org/guide/databinding&lt;/a&gt;&lt;/p&gt;
-
-&lt;h1&gt;1. Data Biniding&lt;/h1&gt;
-
-&lt;p&gt;Angular app에서 data-binding은 view와 model사이의 데이터 자동 동기화를 말한다. Angular의 data-binding구현 방법은 application의 single-source-truth(단일 데이터 소스) 정책을 따르도록 한다. view는 model의 투사일 뿐이다라는 말이다. 만약 model이 변하면 view역시 변할 수밖에 없다. 그 반대의 경우도 마찬가지 이다.&lt;/p&gt;
-
-&lt;h1&gt;2. 기존 Template의 Data Binding&lt;/h1&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://docs.angularjs.org/img/One_Way_Data_Binding.png&quot; alt=&quot;&quot;&gt;
-대부분의 template system 들은 오로지 한반향의로 data를 bind한다(template과 model을 병합해서 하나의 view를 만들어 내는방식이다). 병합이 이루어지고 난 이후에 model이나 template에 변화가 생기더라도 자동으로 view에 반영하질 못한다. 게다가 사용자가 view를 변화시키더라도 model값은 변하지 않는다. 이것은 개발자가 view와 model, model과 view의 순간적인 동기화를 위한 코드를 작성해야한다는 것을 의미한다.&lt;/p&gt;
-
-&lt;h1&gt;3. Angular Template의 Data Binding&lt;/h1&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://docs.angularjs.org/img/Two_Way_Data_Binding.png&quot; alt=&quot;&quot;&gt;
-Angular Template은 위의 경우와 다르게 동작한다. template(HTML, markup, directives)은 브라우저에 의해 compile된다. 이 컴파일 과정에서 live view를 생성한다. view에 어떤 변화가 나타나면 이것 역시 model에 반영된다. 또한 model이 변화면 view에도 전파가 이루어진다(변화한다). model은 이 application의 single-source-of-truth 이다. 프로그래머는 매우 간단하게 model을 프로그래밍 할 수있다. 이것은 view를 단순히 model의 투영체로 생각할수있게 한다.&lt;/p&gt;
-
-&lt;p&gt;view가 단순히 model의 투영체이기 때문에, controller는 view와 완전하게 분리될 수있다. 그리고 view를 신경쓸 필요가 없다. 이 것은 controller가 view와 DOM/browser와 관련된 것들과 완전하게 분리됨을 의미하기 때문에 test를 하기에도 매우 용이하다.&lt;/p&gt;
-</description>
-        <pubDate>Sun, 31 May 2015 12:35:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/05/31/angular_js_6.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/05/31/angular_js_6.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>AngularJS 공부하기 - Tab</title>
-        <description>&lt;p&gt;오늘 공부할 내용은 TAB에 대해서 공부 해 보도록 하겠다.&lt;/p&gt;
-
-&lt;h1&gt;TAB?&lt;/h1&gt;
-
-&lt;p&gt;메뉴가 여러개 존재하고 각 메뉴에 따라 다른 내용이 출력되길 원할 때 우리는 흔히 TAB 이라고 불리는 컴포넌트(?)를 사용한다.&lt;/p&gt;
-
-&lt;h1&gt;AngularJS 에서 기본Tab 구현&lt;/h1&gt;
-
-&lt;p&gt;AngularJS에서는 expression을 이용해서 Tab을 편하게 개발할 수 있다.&lt;/p&gt;
-
-&lt;script src=&quot;https://gist.github.com/sungbine/4eeecaa53a1c1292d2f0.js&quot;&gt; &lt;/script&gt;
-
-&lt;p&gt;위와 같은 방법으로 구현을 하면  &lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;ng-click=&amp;quot;tab = 1&amp;quot;&lt;/code&gt; &lt;/p&gt;
-
-&lt;p&gt;이 부분에서 tab이라는 변수에 1을 할당해주는 것이 되고, {tab}} 이 표현식에 tab에 들어있는 숫자가 화면에 랜더링 된다.&lt;/p&gt;
-
-&lt;p&gt;이런것이 가능한 이유는 AngularJs는 2-way Data Biding을 하기 때문이다. 이 부분은 다음에 자세히 알아보도록 하겠다.&lt;/p&gt;
-
-&lt;p&gt;그렇다면 본격적으로 tab을 구현해 보자&lt;/p&gt;
-
-&lt;script src=&quot;https://gist.github.com/sungbine/1b73a12fbb6c81774b7e.js&quot;&gt; &lt;/script&gt;
-
-&lt;p&gt;위처럼 html을 작성하면 ng-show directive에 의해 tab에 할당되는 값이 1,2,3으로 변함에 따라 ng-show의 expression조건이 변하게 되어 보이는 tab이 달라지게 된다.&lt;/p&gt;
-
-&lt;p&gt;간단하게 tab을 구현할 수 있다.&lt;/p&gt;
-
-&lt;h1&gt;초기 Tab의 값 지정&lt;/h1&gt;
-
-&lt;p&gt;위의 코드를 실행해 보면 tab의 초기값이 없기 때문에 처음 페이지를 로드하게되면 아무런 페이지도 나타나지 않는다.&lt;/p&gt;
-
-&lt;p&gt;이때 초기값을 지정해 줄 수있는 directive가 있다.
-ng-init 을 사용하게 되면 페이지가 로드 되면서 실행되는 expression을 지정 할 수 있다.&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;ng-init = &amp;quot;tab = 1&amp;quot;&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;위와같은 코드를 집어넣게 되면 현재 scope에 서 사용하는 tab에 초기값을 지정할 수있다.(scope에 유의 바란다)&lt;/p&gt;
-
-&lt;h1&gt;현재 활성화된 tab에 클래스지정하기&lt;/h1&gt;
-
-&lt;p&gt;부트스트랩 css를 사용하게 되면 .active 클래스가 존재하는데 이 클래스를 현재 활성화된 tab에 지정 하고자 할때는 어떻게 하는지 알아 보자.&lt;/p&gt;
-
-&lt;p&gt;기존의&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;&amp;lt;li&amp;gt; &amp;lt;a href ng-click=&amp;quot;tab =1&amp;quot;&amp;gt;First Tab&amp;lt;/a&amp;gt;&amp;lt;/li&amp;gt;&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;를&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;&amp;lt;li ng-class=&amp;quot;{ active:tab === 3}&amp;quot;&amp;gt;&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;이렇게 ng-class directive를 쓰면 뒤의 expressiond을 판단해서 active 클래스를 추가할 수있다.&lt;/p&gt;
-
-&lt;p&gt;여기까지 기본적인 tab구현 방법에 대해 알아 보았다.
-이번시간에는 ng-init, ng-class 두개의 directive가 더 등장하였다. 앞으로 추가되는 directive가 무엇이 있을지 더 궁금해진다.&lt;/p&gt;
-
-&lt;h1&gt;to be continue...&lt;/h1&gt;
-</description>
-        <pubDate>Sun, 31 May 2015 11:23:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/05/31/angular_js_5.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/05/31/angular_js_5.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>AngularJS 공부하기 - 다양한 Directives &amp; Filter</title>
-        <description>&lt;p&gt;지난시간에는 컨트롤러의 데이터를 HTML 문서에서 보여줄 수있는 Expression에 대해 공부했습니다.
-또한 ng-show, ng-hide, ng-repeat와 같은 directive에 대해 공부했습니다.
-오늘은 더욱 다양한 directive와 filter에 대해 고부해 보도록 하겠습니다.&lt;/p&gt;
-
-&lt;h1&gt;Directives&lt;/h1&gt;
-
-&lt;p&gt;지금까지 배운 Directives 는&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;ng-app (HTML페이지에 angular App을 인식시킴)&lt;/li&gt;
-&lt;li&gt;ng-controller (HTML페이지에 컨트롤러를 인식시킴)&lt;/li&gt;
-&lt;li&gt;ng-show (해당 요소를 보일지를 결정)&lt;/li&gt;
-&lt;li&gt;ng-hide (해당 요소를 안보일지르 결정)&lt;/li&gt;
-&lt;li&gt;ng-repeat (Array의 각각의 item을 순회)&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;이상 5가지 입니다.&lt;/p&gt;
-
-&lt;p&gt;새롭게 추가된 directive는 ng-src 입니다.&lt;/p&gt;
-
-&lt;script src=&quot;https://gist.github.com/sungbine/663f01abee49afb4d302.js&quot;&gt; &lt;/script&gt;
-
-&lt;p&gt;위처럼 만약 object에 이미지 주소가 들어있을때 쓰이는 directive가 바로 ng-src 입니다. &lt;/p&gt;
-
-&lt;script src=&quot;https://gist.github.com/sungbine/a608ae44bccec74ba493.js&quot;&gt; &lt;/script&gt;
-
-&lt;p&gt;와 같은 코드는 자주 보셨을 것입니다. 만약 여기에&lt;/p&gt;
-
-&lt;p&gt;처럼 작성하면 동작하지 않습니다. 이럴때는&lt;/p&gt;
-
-&lt;script src=&quot;https://gist.github.com/sungbine/9a09f078ff3abb34c601.js&quot;&gt; &lt;/script&gt;
-
-&lt;p&gt;로 작성해주어야 합니다.&lt;/p&gt;
-
-&lt;h1&gt;Filter&lt;/h1&gt;
-
-&lt;p&gt;이번에 배워볼 것은 Filter 입니다.&lt;/p&gt;
-
-&lt;p&gt;&amp;quot;$100&amp;quot; 을 표현하기위해서는&lt;br&gt;
-&lt;script src=&quot;https://gist.github.com/sungbine/04d118923a3c5e787352.js&quot;&gt; &lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;처럼 표현식을 사용해야한다.
-그런데 &amp;quot;$100.00&amp;quot;을 표현하려면 어떻게 해야할까?
-이럴때 사용하는 것이 바로 filter이다. 
-&lt;script src=&quot;https://gist.github.com/sungbine/666e5f4e3f2f63e15656.js&quot;&gt; &lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;이렇게 &amp;#39;|&amp;#39;와 뒤에 filter명을 써주면 원하는 format으로 만들어 출력해준다.&lt;/p&gt;
-
-&lt;p&gt;이밖에 filter는 &lt;/p&gt;
-
-&lt;script src=&quot;https://gist.github.com/sungbine/5ee996a66cbebbdc7436.js&quot;&gt; &lt;/script&gt;
-
-&lt;p&gt;가 존재한다. 이밖의 filter는 다음에 다시 정리해 보도록 하겠다.&lt;/p&gt;
-
-&lt;h1&gt;to be continue...&lt;/h1&gt;
-</description>
-        <pubDate>Mon, 18 May 2015 21:48:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/05/18/angular_js_4.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/05/18/angular_js_4.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>AngularJS 공부하기(3)</title>
-        <description>&lt;p&gt;지난 시간에는 AngularJs의 주요 개념 4가지에 대해 살펴보았고, HTML문서에서 어떻게 Angular를 불러오는지에 대해 공부 하였다. &lt;/p&gt;
-
-&lt;p&gt;이번시간에는 Controller에 대해 공부하도록 하겠다.&lt;/p&gt;
-
-&lt;h1&gt;Controller란?&lt;/h1&gt;
-
-&lt;p&gt;컨트롤러란 App이 실제로 행동하는 행동을 Function으로 구현한 것을 말한다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;(function(){
-    var app = angular.module(&amp;#39;myapp&amp;#39;, [ ]);
-    app.controller(&amp;#39;SomeController&amp;#39;, function() { 
-        ~~~~~~~~~~~~~~ 
-    });
-})();
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;위와 같은 코드가 실행되면, app이라는 angularJs의 module에 &amp;#39;SomeController&amp;#39; 라는이름의 컨트롤러가 삽입되게 되고, 그 행동은 function()으로 구현된다.&lt;/p&gt;
-
-&lt;p&gt;예를 들어보겠다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;(function(){
-    var app = angular.module(&amp;#39;myapp&amp;#39;, [ ]);
-    app.controller(&amp;#39;SomeController&amp;#39;, function() { 
-        this.sampleData = { 
-            name : &amp;#39;sungbin&amp;#39;
-            age : 20
-            description : &amp;#39;genius&amp;#39;
-        }
-    });
-})();
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;위 코드 컨트롤러를 생성하였다고 한다면 이것을 HTML에서는 아래처럼 사용할 수잇다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;!DOCTYPE html&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;ng-app=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;store&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;link&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;stylesheet&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/css&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;bootstrap.min.css&amp;quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/head&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;body&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;ng-controller=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;SomeController as con&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;h1&amp;gt;&lt;/span&gt; Name = &lt;span class=&quot;nt&quot;&gt;&amp;lt;/h1&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;h2&amp;gt;&lt;/span&gt; Age =  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/h2&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;p&amp;gt;&lt;/span&gt; Description =  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/javascript&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;angular.min.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/javascript&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;app.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/body&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;이렇게 사용하면 &amp;#39;과 &amp;#39;로 둘러싸인 expression을 해석한 angular가 원하는 결과를 보여줄 것이다.&lt;/p&gt;
-
-&lt;p&gt;여기서 주의해야할 점은 div에서 선언된 controller이기 때문에 div 밖에서 위와같은 expression을 사용할 수 없다. 오로지 div내에서만 controller가 유효하다.&lt;/p&gt;
-
-&lt;h2&gt;Dynamic Web을위한 Tip1&lt;/h2&gt;
-
-&lt;p&gt;web페이지를 작성하다보면 동적이나 어떤 요소가 보이거나 보이지 않아야하는 경우가 자주 발생한다.
-기존에 어떤 버튼이 어떤 js의 Data에 따라 보이거나 혹은 보이지 않게 하기 위해 jQuery의 .show()와 .hide() 함수를 사용했다. 
-AngularJS에서는 더 욱 직관적인 방법을 제공하고 있다. 
-위 sampleData를 아래처럼 바꾸어 보겠다.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;(function(){
-    var app = angular.module(&amp;#39;myapp&amp;#39;, [ ]);
-    app.controller(&amp;#39;SomeController&amp;#39;, function() { 
-        this.sampleData = { 
-            name : &amp;#39;sungbin&amp;#39;
-            age : 20
-            description : &amp;#39;genius&amp;#39;
-            visible : true
-        }
-    });
-})();
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;controller의 스코프 범위에서 
-&lt;code&gt;&amp;lt;button ng-show=&amp;quot;sampleData.visible&amp;quot;&amp;gt;NewButton&amp;lt;/button&amp;gt;&lt;/code&gt;
-이처럼 ng-show directive를 이용하면 직관적이고 손쉽게 동적으로 show/hide되는 버튼을 제작할 수있다. 이밖에도 ng-hide(ng-show와 true,false 옵션이 반대)가 존재하며 button 뿐만아니라 &amp;lt;div&amp;gt;,&amp;lt;p&amp;gt; 처럼 다은 HTML tag에서도 사용이 가능하기 때문에 활용도 놉다고 할 수 있다.&lt;/p&gt;
-
-&lt;h2&gt;Dynamic Web을위한 한가지 Tip2&lt;/h2&gt;
-
-&lt;p&gt;Controller의 Data가 여러개일 경우 Array를 이용할 수도 있다. &lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;        this.sampleArray = [{ 
-            name : &amp;#39;sungbin&amp;#39;
-            age : 20
-            description : &amp;#39;genius&amp;#39;
-            visible : true
-        },
-        { 
-            name : &amp;#39;boing&amp;#39;
-            age : 20
-            description : &amp;#39;pretty&amp;#39;
-            visible : true
-        }]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;이때는 &lt;code&gt;sampleArray[0].name&lt;/code&gt;처럼 사용하면 된다.
-그리고  &lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;!DOCTYPE html&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;ng-app=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;store&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;link&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;stylesheet&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/css&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;bootstrap.min.css&amp;quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/head&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;body&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;ng-controller=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;SomeController as con&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;div&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;h1&amp;gt;&lt;/span&gt; Name = &lt;span class=&quot;nt&quot;&gt;&amp;lt;/h1&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;h2&amp;gt;&lt;/span&gt; Age =  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/h2&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;p&amp;gt;&lt;/span&gt; Description =  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;div&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;h1&amp;gt;&lt;/span&gt; Name = &lt;span class=&quot;nt&quot;&gt;&amp;lt;/h1&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;h2&amp;gt;&lt;/span&gt; Age =  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/h2&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;p&amp;gt;&lt;/span&gt; Description =  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/javascript&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;angular.min.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/javascript&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;app.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/body&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;보통은 이렇게 사용할 수있지만.... 효율적이지 않다. AngularJS는 더욱 효율적이고 강력한 Directive를 제공한다.
-그것은 바로! ng-repeat 이다. 
-위 코드를&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;!DOCTYPE html&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;ng-app=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;store&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;link&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;stylesheet&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/css&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;bootstrap.min.css&amp;quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/head&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;body&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;ng-controller=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;SomeController as con&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;ng-repeat=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;obj in con.sampleArray&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;h1&amp;gt;&lt;/span&gt; Name =  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/h1&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;h2&amp;gt;&lt;/span&gt; Age =  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/h2&amp;gt;&lt;/span&gt;
-            &lt;span class=&quot;nt&quot;&gt;&amp;lt;p&amp;gt;&lt;/span&gt; Description =  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/javascript&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;angular.min.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/javascript&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;app.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/body&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;이처럼 바꾸면 더 효율적인 개발이 가능하다.&lt;/p&gt;
-
-&lt;p&gt;오늘은 controller를 활용하는 기본방법과 활용법에 대해 공부해 보았다.&lt;/p&gt;
-
-&lt;p&gt;To be continue...&lt;/p&gt;
-</description>
-        <pubDate>Mon, 11 May 2015 22:08:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/05/11/angular_js_3.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/05/11/angular_js_3.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>AngularJS 공부하기(2)</title>
-        <description>&lt;h1&gt;이내용은 codeschool(http://codeschool.com) 내용에 따라 공부하면서 정리한 글입니다. (전문가가 아니기 때문에 깊이있는 지식이아닙니다. 또한 잘못된 정보가 있을 수 있으니 잘못된 정보는 댓글로 알려주시면 수정해 나가도록 하겠습니다.)&lt;/h1&gt;
-
-&lt;p&gt;이전 시간에 AngularJS의 기본개념과 사용이유 등 간단한 정보에 대해 공부했다면 이제는 실제로 웹페이지에 어떻게 적용되는지 알아보도록 하겠다.&lt;/p&gt;
-
-&lt;p&gt;angularjs에서 중요한 개념이 4가지가 존재한다.&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;Directives&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Modules&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Controllers&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Expressions&lt;/p&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;AngularJS는 module단위로 구현되고 사용이된다. html에서 모듈을 등록하고 동작하게 할 수있고 다른 모듈에서 또다른 모듈을 사용할 수있어, 확장성과 유지 보수성이 높다고 할 수있다.&lt;/p&gt;
-
-&lt;p&gt;app.js라는 스크립트에서 &lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;app&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;angular&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;something&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]);&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;app이라는 변수를 선언하고 anuglar 모듈을 생성 할수 있다.
-something 이라는 이름의 모듈이 생성된다. (something은 모듈이름이 되고, 뒤에 []는 이 모듈에 사용될 라이브러리 의존성이 배열로 나열된다)&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;!DOCTYPE html&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;link&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;stylesheet&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/css&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;bootstrap.min.css&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/haed&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;body&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/javascript&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;angular.min.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;text/javascript&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;app.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/body&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;일단 위에서 생성한 모듈을 html에서 import한다.
-그리고 html tag에서 &lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;ng-app=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;something&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;라고 수정하하자. 그러면 html 도큐먼트가 로드될때, 이 angular app이 함께 실행 된다.&lt;/p&gt;
-
-&lt;p&gt;위에서 생성한 것이 Module이고, 이 모듈을 html에게 명시한 ng-app 이 Directive이다.&lt;/p&gt;
-
-&lt;p&gt;그리고 Directive가 선언된 html의 요소(tag)에서는 아래와 같은 expression이 가능하다.&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;p&amp;gt;&lt;/span&gt;
-  2 + 4 = 
-  Hello
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;이렇게 표현하면 &amp;#39;{{&amp;#39;,&amp;#39;}}&amp;#39; 로 둘러싸인 수식이 angular가 해석하고 원하는 값을 지정해 준다. 위 같으 코드의 결과는&lt;/p&gt;
-
-&lt;p&gt;2 + 4 = 6
-Hello sungbin&lt;/p&gt;
-
-&lt;p&gt;이 출력된다.&lt;/p&gt;
-
-&lt;p&gt;지금까지 directive를 이용해 html에게 angular를 선언하고 생성된 모듈을 html에 주입해 보았다.
-다음시간에는 controller에 대해 공부해 보도록하겠다.&lt;/p&gt;
-</description>
-        <pubDate>Sun, 03 May 2015 23:27:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/05/03/angular_js_2.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/05/03/angular_js_2.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>AngularJs Study(1)</title>
-        <description>&lt;p&gt;code school(https://www.codeschool.com/paths/javascript#angular-js)로 AngularJS를 공부한 내용을 정리해 본다.&lt;/p&gt;
-
-&lt;h1&gt;준비!&lt;/h1&gt;
-
-&lt;h2&gt;반드시 알아야하는것&lt;/h2&gt;
-
-&lt;ol&gt;
-&lt;li&gt;HTML &amp;amp; CSS&lt;/li&gt;
-&lt;li&gt;JavaScript
-위 두가지를 모르면 개발할 수없다.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h2&gt;Angulr를 쓰는 이유? - Dynamic Web을 만드는데 큰 도움이 된다.&lt;/h2&gt;
-
-&lt;ol&gt;
-&lt;li&gt;JavaScript 코드 정리에 도움이 된다.&lt;/li&gt;
-&lt;li&gt;빠른 반응형 웹사이트를 만드는데 도움이 된다.&lt;/li&gt;
-&lt;li&gt;jQuery와 잘 호환한다.&lt;/li&gt;
-&lt;li&gt;test가 편하다.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3&gt;전통적인 website&lt;/h3&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/angular1.png&quot; alt=&quot;전통적인 Web request/response&quot;&gt;
-최초 사용자의 요청에 대해 html을 response해준다.
-두번째 요청에 대해서도 데이터와 함께 html을 response한다.&lt;/p&gt;
-
-&lt;h3&gt;Angular를 이용한 website&lt;/h3&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/angular2.png&quot; alt=&quot;Angular Web request/response&quot;&gt;
-최초 사용자의 요청에 대해 html을 response한다.
-두번째 요청에 대해서는 데이터만 json으로 response한다.&lt;/p&gt;
-
-&lt;p&gt;두가지를 비교해보면 angular 를 이용한 반응형 web을 구현할 경우 훨씬 효율적인 구현이 가능한다.&lt;/p&gt;
-
-&lt;h2&gt;필요한 것&lt;/h2&gt;
-
-&lt;ol&gt;
-&lt;li&gt;Twitter Bootstrap css&lt;/li&gt;
-&lt;li&gt;AngularJS libary&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;이파일이 html에 import되면 angularJS의 시작준비는끝이 난다.&lt;/p&gt;
-
-&lt;p&gt;다음 시간에는 본격적으로 module을 만들고 controller를 이용해 html가 angularJS를 어떻게 include하는지에 대해 알아보겠다&lt;/p&gt;
-
-&lt;p&gt;TO BE CONTINUE...&lt;/p&gt;
-</description>
-        <pubDate>Sat, 25 Apr 2015 17:53:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/04/25/angular_js_1.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/04/25/angular_js_1.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>IBATIS에 LIST 파라미터 넘기고 구현하기</title>
-        <description>&lt;p&gt;ibatis SQL mapper를 작성하는 중 LIST를 파라미터로 넘겨야하는 상황이되었다. &lt;/p&gt;
-
-&lt;p&gt;조사한 내용을 기족해 본다.&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;k&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target_col&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;table_name&lt;/span&gt;
- &lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column1&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;IN&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;a&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;c&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;위 같은 쿼리를 mapper를 이용해서 작성하려고 할때, 조건문에 있는 &amp;quot;IN ( &amp;#39;a&amp;#39;,&amp;#39;b&amp;#39;,&amp;#39;c&amp;#39;)&amp;quot; 조건을 dynamic 하게 생성하려고한다. parameter에 a,b,c가 리스트로 들어있는 경우 구현방법을 알아보자&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;k&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target_col&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;table_name&lt;/span&gt;
- &lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column1&lt;/span&gt; 
-&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;iterate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;property&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;&amp;quot;column1&amp;quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;&amp;quot;(&amp;quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;&amp;quot;)&amp;quot;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conjunction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;&amp;quot;,&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;column1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;iterate&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;위 같은방법으로 &lt;iterate&gt; statement를 이용할 수 있다.&lt;/p&gt;
-
-&lt;p&gt;iterate와 함께 이용가능한 속성들을 다음과 같다.
-prepend - 표현식앞에 붙는 SQL (optional)
-property - 반복되기 위한 LIST타입의 변수(required)
-open - iteration 앞에 붙을 문자열(optional)
-close - iteration 뒤에 붙을 문자열(optional)
-conjuction - 각 iteration 중간에 붙는 문자열, AND, OR와 함께쓰면 유용함(optional)&lt;/p&gt;
-
-&lt;h1&gt;One more thing!&lt;/h1&gt;
-
-&lt;p&gt;controller에서 넘어오는 parameter가 list하나가 아닌 map객체에 담겨서 여러 객체가 오더라도 위와같이 간단히 사용이 가능하다.
-괜히 parameterMap 속성을 이용하지 않아도 사용이 가능하다. 괜한 삽질로 parameterMap을 만들지 않고 parameterClass =&amp;quot;hashmap&amp;quot; 을 사용하면 간단하다!&lt;/p&gt;
-
-&lt;p&gt;끝!&lt;/p&gt;
-</description>
-        <pubDate>Sat, 25 Apr 2015 17:53:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/04/25/IBATIS_passing_list_params.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/04/25/IBATIS_passing_list_params.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>GIT 잘못된 머지방법</title>
-        <description>&lt;p&gt;GIT을 이용한 개발 중 Merge의 실수로 큰 어려움을 겪었다.&lt;/p&gt;
-
-&lt;p&gt;이 글을 보는 개발자라면 이러한 머지 방법은 지양하는 것이 좋을것이다.&lt;/p&gt;
-
-&lt;p&gt;사건은이러하다.&lt;/p&gt;
-
-&lt;p&gt;develope의 branch에 A 개발자는 자신의 개발중인 코드를 merge했다.&lt;/p&gt;
-
-&lt;p&gt;B는 develope에서 브랜치를 새로 만들고, 자신의 코드를 개발하여 커밋하였다.&lt;/p&gt;
-
-&lt;p&gt;그리고 이 커밋을 master에 merge하게된다. 그런데 이때 B는 A의 코드가 master에 머지되는 것을원치 않아 의도적으로 A의 코드를 삭제하고 merge를 했다. (이후 A가 코드를 merge하면 아무 문제가 없을것이라 착각하고..)&lt;/p&gt;
-
-&lt;p&gt;하지만 A가 자신의 코드를 master에 merge하려고 할때, merge할 커밋에 A의 코드가 정상적으로 나오지않는다. 그 이유는 이미 B의 이전 merge시점에서 A의 코드를 지워버렸기 때문에이다. A가 merge하려는 코드가 B가 merge한 시점의 이전의 버전이라면 A가 지워버린 것이 그대로 반영된다.
-결과적으로 A의 코드가 정상적으로 master에 merge할 수 없게 된다. &lt;/p&gt;
-
-&lt;p&gt;이것을 해결하는 방법은 여러가지가 있을 수 있다. 내가 시도했던 방법은 아래 두가지있다.&lt;/p&gt;
-
-&lt;p&gt;1.revert 기능의 이용 - 잘못된 커밋을 revert시키고 다시 commit하기&lt;/p&gt;
-
-&lt;p&gt;2.merge시점 이전의 브랜치에서 새로운 branch 를 생성하고 이후 시점의 commit을 cherrypick으로 merge 한다.&lt;/p&gt;
-
-&lt;p&gt;2번방법을 이용해 이번 문제를 해결했다.
-단순한 merge가 가능한(새로운 브랜치를 생성하기 이전에 생성된 브랜치) branch는 merge를 하면되지만, 그렇지않은(새로운브랜치를 생성하기 이후에 master에서 생성된 branch의 경우는 나의 잘못된 커밋을 포함하고있다) 브랜치는 변경이력들만 따로 cherrypick이 필요하다.&lt;/p&gt;
-
-&lt;p&gt;위의 방법을 통해 식은땀나는 상황을 해결 할 수있었다.&lt;/p&gt;
-
-&lt;p&gt;결론 : merge시점에 자신이 프로그래밍하지 않은 코드에 대해서는 unstaging하면 큰일이 발생한다.&lt;/p&gt;
-</description>
-        <pubDate>Sun, 19 Apr 2015 23:14:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/04/19/git_merge_mistake.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/04/19/git_merge_mistake.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>ORACLE의 MERGE SQL</title>
-        <description>&lt;p&gt;오라클 기반의 서비스를 운영하는 중 큐브리드나 MySql에서 보지 못한 문법을 발견하게되었다. 그래서 한번 찾아보고 사용법에 대해 정리해 보았다.&lt;/p&gt;
-
-&lt;p&gt;Merge SQL2003에서 표준 SQL로 도입된 구문이다. 그래서 Oracle Database, DB2, Miscrosoft SQL Server, Firebird에서 적용되었다.&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;n&quot;&gt;MERGE&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;INTO&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;컬럼&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;테이블&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;USING&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;서브&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;테이블&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;ON&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;조건&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-   &lt;span class=&quot;k&quot;&gt;WHEN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MATCHED&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;THEN&lt;/span&gt;
-     &lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;SET&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;컬럼&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;값&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;컬럼&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;값&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...]&lt;/span&gt;
-   &lt;span class=&quot;k&quot;&gt;WHEN&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NOT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MATCHED&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;THEN&lt;/span&gt;
-     &lt;span class=&quot;k&quot;&gt;INSERT&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;컬럼&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;컬럼&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...])&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;VALUES&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;값&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;값&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...])&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;와 같은 형태의 SLQ문이 쓰이게 되고, 조건에 따라서 insert문과 update문이 실행되는 SQL문이다.&lt;/p&gt;
-
-&lt;p&gt;만약 위 구문을 쓰지 않게 되면 select -&amp;gt; 조건비교 -&amp;gt; update or insert와 같은 과정을 직접 구현해야하는 불편함이 있다.
-위 구문만으로 조건에 따라 insert or update를 한번에 처리할 수있다. 하지만 현재 CUBRID에는 적용되지않아 위 과정을 직접 응용단에서 구현해야한다.
-효과적으로 사용하기 위해서 &amp;#39;컬럼 | 테이블&amp;#39;란에 Oracle의 더미 테이블로 사용할 수 있는 DUAL을 쓰게 된다면 테이블의 조인이 아닌 하나의 테이블의 값 비교로 간편한 구현이 가능하다.&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;n&quot;&gt;MERGE&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;INTO&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;타켓테이블&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;USING&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DUAL&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;ON&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;조건&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;WHEN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MATCHED&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;THEN&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;SET&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;..&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;WHEN&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NOT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MATCHED&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;THEN&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;INSERT&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;컬럼&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;컬럼&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;..&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;VALUES&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;VALUE1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;VALUES2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;..&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;와같이 사용하면 편리하다.&lt;/p&gt;
-</description>
-        <pubDate>Mon, 06 Apr 2015 20:20:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/04/06/merge_sql.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/04/06/merge_sql.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title> ibatis $preferredOrder$, #value# 의 차이 </title>
-        <description>&lt;p&gt;ibatis로 개발을 하는중에 controller에서 넘어오는 값이 &amp;#39;$&amp;#39;로 감쌓지는 경우와 &amp;#39;#&amp;#39;로 감쌓지는 경우를 보게되어, 두개의 차이점을 찾아 보게 되었다.&lt;/p&gt;
-
-&lt;h3&gt;$preferredOrder$는 이곳에 들어오는 문자열 그대로 query문이 만들어진다.&lt;/h3&gt;
-
-&lt;p&gt;예를 들어&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;k&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;table1&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;col1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;$whereClaus$&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;이라는 쿼리를  mapper에 작성했다고 가정하자. 그리고 whereCond라는 변수(맵객체의 키가 whereCond인 경우 포함)에 &amp;quot;kim&amp;quot; 이라는 문자열이 들어있다면, 위의 쿼리는 &lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;k&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;table1&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;col1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;kim&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;이라는 쿼리가 완성되어 실행될 것이다.&lt;/p&gt;
-
-&lt;h3&gt;#value#는 값만 넘겨준다.&lt;/h3&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;k&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;table1&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;col1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;whereClaus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;맵퍼에 이런 쿼리가 존재한다. 그리고 whereClaus에 &amp;quot;kim&amp;quot;이라는 문자열이 들어있다면
-결과적으로 실행되는 쿼리는 위의 1에서와 같은 결과를 실행하게 된다. 그렇다면 차이점은?&lt;/p&gt;
-
-&lt;p&gt;유심히 보면&lt;/p&gt;
-
-&lt;p&gt;&amp;#39;$whereClaus$&amp;#39;; 이것과 #whereClaus#; 의 차이는 따움표에 있다. $$는 따움표로 감쌓져 있는데 그 이유는 문자열 그대로를 넘기기때문에 따움표가 없으면 &amp;quot;kim&amp;quot;이라는 문자열을 쿼리는 
-SELECT * FROM table1 WHERE col1 = kim 
-이렇게 생성되고 데이터 타입이 맞지 않기때문에 에러를 뱉어낼 것이다.&lt;/p&gt;
-
-&lt;p&gt;반대로 ##로 감쌓여 있는 것은 값을 넘겨서 이것이 문자열인지 잘알고 제대로된 쿼리가 수행된다.
-이 같은 차이가 발생하는 이유는 동작원리가 다르기 때문이다.&lt;/p&gt;
-
-&lt;p&gt;SELECT * FROM table1 WHERE col1 = &amp;#39;$whereClaus$&amp;#39;; 이 쿼리가 동작하는 순서는&lt;/p&gt;
-
-&lt;p&gt;1) SELECT * FROM table1 WHERE col1 = &amp;#39;$whereClaus$&amp;#39;; 에서 $whereClaus$가 문자열 &amp;quot;kim&amp;quot;으로 대체되어 등록된다.
-2) 등록된 쿼리가 실행된다.&lt;/p&gt;
-
-&lt;p&gt;SELECT * FROM table1 WHERE col1 = #whereClaus#;가  동작하는 순서는
-1) SELECT * FROM table1 WHERE col1 = #whereClaus#; 에서 SELECT * FROM table1 WHERE col1 = ?; 쿼리가 등록된다. 
-2) 등록된 쿼리에 ?에  넘겨진 변수가 채워진다.
-3) 쿼리가 실행된다.&lt;/p&gt;
-
-&lt;p&gt;두 과정의 차이가 보이는가?&lt;/p&gt;
-
-&lt;p&gt;&amp;#39;$preferredOrder$&amp;#39;는 쿼리가 쿼리 파서에 들어가기 전에 이미 쿼리가 만들어져서 실행되고
-&amp;#39;#value#&amp;#39;는 쿼리파서에 들어간후 preparedStatement가 되고 데이터가 바인딩되어 실행되는 차이가 있는 것이다.&lt;/p&gt;
-
-&lt;p&gt;사용처에 따라 골라쓰면 유용하게 사용할 수 있다.&lt;/p&gt;
-
-&lt;p&gt;&amp;#39;#value#&amp;#39;는 조건절에 변수를 선언하고 쓸경우 유용하고, &amp;#39;$preferredOrder$&amp;#39;는 조건절이 아닌 다른 절에 직접 스트링을 집어넣을 수있다는 장점이 있다. 다이나믹하게 테이블을 변경한다던가 dml자체를 수정 할 수있도록 할 수있다는 강력한 기능이 있다.&lt;/p&gt;
-</description>
-        <pubDate>Mon, 30 Mar 2015 09:00:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/03/30/ibatis_pass_param.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/03/30/ibatis_pass_param.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>SQL에서 CONNECT BY 와 START WITH의 활용</title>
-        <description>&lt;p&gt;SQL문중 특이한 SQL 문이 존재한다.&lt;/p&gt;
-
-&lt;p&gt;CONNECT BY와 SATRT WITH 문이 그것이다. 이 구문은 ORACLE DB에 존재하던 구문으로 CUBRID에서도 지원하고 있다.&lt;/p&gt;
-
-&lt;p&gt;이 구문을 사용하는 때는 하나의 디비에 계층형으로 이루어진 DB를 다루는데 유용한다.&lt;/p&gt;
-
-&lt;p&gt;예를 들어 &lt;/p&gt;
-
-&lt;p&gt;| id | name | upper_id |
-| 1  | 자동차 | 0|
-| 2  | 바퀴 | 1|
-| 3  | 고무 | 2|&lt;/p&gt;
-
-&lt;p&gt;와 같은 형태의 DB 가 존재한다고 할 때, 고무의 상위 항목은 바퀴이고 바퀴의 방위 카테고리는 자동차이다&lt;/p&gt;
-
-&lt;p&gt;자동차가 바퀴를 포함하고 바퀴는 고무를 포함하는 관계를 하나의 DB로 표현하면 이러한 식으로 표현이 가능하다. (이러한 구조를 순환관계 테이블이라고도 부른다.)&lt;/p&gt;
-
-&lt;p&gt;위 순환관계 테이블에서고무를 조회할때 고무가 포함되는 상위 카테고리를 알고 싶을때, CONNECT BY와 START WITH를 사용하면 효과적으로 조회할 수있다.&lt;br/&gt;&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;k&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; 
-  &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mydb&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;START&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;WITH&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;upperId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;CONNECT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;PRIOR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;upper_id&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;라는 구문을 사용하면 계층화된 db를 접근이 가능하다.&lt;/p&gt;
-
-&lt;p&gt;START WITH 구문은 계층화된 구조의 루트노드를 지정하기 위해 사용된다.
-CONNECT BY PRIOR절은 부모와 자식노드간의 관계를 설정하기 위해 사용되었다. 특히 PRIOR 은 upper_id가 아닌 id앞에 붙어야한다.  부모노드의 id와 현재 노드의 upper_id간의 관계설정을 위해 부모 노드의 id에 PRIOR 을 지정해야한다.&lt;/p&gt;
-
-&lt;p&gt;또한 특정 조건의 열에대해서 필터링을 위해서는 FROM과 START WITH사이에 WHERE 절을 삽입 할 수있다.
-&lt;br/&gt;&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;k&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mydb&lt;/span&gt;
- &lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;1&amp;#39;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;START&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;WITH&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;upperId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;0&amp;#39;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;CONNECT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;PRIOR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;upper_id&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;위와 같은 절이 가능하다. 절의 실행 순서는 START WITH -&amp;gt; CONNECT BY PRIOR -&amp;gt; WHERE 임을 유의해야한다.&lt;/p&gt;
-
-&lt;p&gt;또한 connect by는 잘못된 구조의 DB에서 잘못사용하는 경우 무한루프가 발생할 수있다. 이때 connect by prior은 에러를 발생시키지만  connect by nocycle prior 을 사용하면 에러가 나지않고 처리할 수있다.&lt;/p&gt;
-
-&lt;p&gt;그리고 한가지 유용한 가상의 컬럼이 존재한다. 
-LEVEL이라는 컬럼으로 실제 TREE 구조에서의 level을 의미하며 깊이를 알 수있어 유용하게 활용 할 수있다.&lt;/p&gt;
-
-&lt;p&gt;참고 : 
-&lt;br/&gt;
-&lt;a href=&quot;http://egloos.zum.com/crekim/v/2955373&quot;&gt;creative_KIM&lt;/a&gt;
-&lt;br/&gt;
-&lt;a href=&quot;http://javaking75.blog.me/220010605201&quot;&gt;자바킹&lt;/a&gt;&lt;/p&gt;
-</description>
-        <pubDate>Tue, 24 Mar 2015 21:00:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/03/24/connect_by_and_start_with.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/03/24/connect_by_and_start_with.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>javascript에서 문자열 replaceAll하기</title>
-        <description>&lt;p&gt;자바에서 문자열 함수 중 replaceAll() 함수가 존재한다. 이것은 문자열 내의 하나의 문자를 모두 찾아서 원하는 문자로 바꿔주는 기능을 한다.
-자바스크립트에서도 당연히 존재할 줄 알았던 이 기능이 없다는 사실에 당황했다.&lt;/p&gt;
-
-&lt;p&gt;하지만 이와 동일한 기능을 수행하게 할수있다!&lt;/p&gt;
-
-&lt;p&gt;어떻게?&lt;/p&gt;
-
-&lt;p&gt;정규식과 replace의 옵션을 이용해서!&lt;/p&gt;
-
-&lt;p&gt;var tmpStr = &amp;#39;abcdefgabaa&amp;#39;;&lt;/p&gt;
-
-&lt;p&gt;라는 문자열이 존재할때, &lt;/p&gt;
-
-&lt;p&gt;tmpStr.replace(/a/g, &amp;#39;!&amp;#39;);&lt;/p&gt;
-
-&lt;p&gt;라고 쓰면 &amp;#39;a&amp;#39;가 모두 &amp;#39;!&amp;#39;로 바뀐다&lt;/p&gt;
-
-&lt;p&gt;원리는 간단하다.  /a/는 정규식으로 a를 찾는것이고 g는 모든 문자열에서 &amp;#39;a&amp;#39;를  다 찾아라른 옵션이 된다. 그렇게 지정하게 되면 replaceAll()과 같은 기능을 수행할 수있다. 한가지 추가로 tmpStr.replace(/a/gi, &amp;#39;!&amp;#39;); 와 같이 gi옵션을 쓰기도 하는데 i옵션은 대소문자 구분을 하지 않는다는 뜻이다.&lt;/p&gt;
-
-&lt;p&gt;꿀팁!&lt;/p&gt;
-</description>
-        <pubDate>Mon, 16 Mar 2015 09:00:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/03/16/javascript-replaceAll.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/03/16/javascript-replaceAll.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>HTML INPUT 태그의 콤마가 포함된 STRING의 SPRING에서의 파라미터 바인딩</title>
-        <description>&lt;p&gt;프로그래밍 중 이상한 현상을 경험했다. Spring 프레임웍으로 서비스중인 웹어플리케이션의  input 태그의 value에 &amp;quot;123,444,555&amp;quot; 처럼 숫자와 컴마로 구성된 값을 컨트롤러로 전송했다. 이 값을 바인딩 하는 VO의 변수 타입이 String[] foo이었고, 이때 내가 의도한 것은 foo[0]=&amp;quot;123,444,555&amp;quot; 가 assign되길 기대했다. 그런데 바인딩 결과는 foo[0] = &amp;quot;123&amp;quot;, foo[1] = &amp;quot;444&amp;quot;, foo[2] = &amp;quot;555&amp;quot; 로 하나의 배열로 변수에 할당되었다. 그 이유가 궁금해 조사해 보았다.&lt;/p&gt;
-
-&lt;p&gt;이유는 스프링에서 기본으로 제공하는 바인더가 이런 기능을 포함하고 있기 때문이다. &lt;a href=&quot;http://springsource.tistory.com/15&quot;&gt;참고&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;위의 링크에 따르면 Spring의 기본 property editor가 &amp;#39;,&amp;#39;를 포함한 스트링에 대해 배열로 처리하게 되어있다. &lt;/p&gt;
-
-&lt;p&gt;리퀘스트가 들어오면 3가지 과정으로 동작한다.&lt;br/&gt;
-1. 파라미터 타입의 오브젝트 생성&lt;br/&gt;
-2. 웹파라미터 바인딩&lt;br/&gt;
-3. validation&lt;br/&gt;&lt;/p&gt;
-
-&lt;p&gt;세개의 과정을 거치는중 binding하는 과정이 있다. 이 때 프로젝에서 별도의 binder를 지정해주지않았기 때문에 Spring의 기본 property eiditor를 사용했고, 원하지 않은 방법으로 바인딩이 이루어졌던 것이다.
-이를 해결하기 위해 별도의 binder를 지정해 주므로서 해결이 가능하다. 
-바인딩하는 방법에는 두가지가 있다.  xml을 통해 resolver를 지정해 주거나,  initBinder 함수와 annotation 을 사용하는 방법이다.
-내가 처리했던 방법은 컨트롤러를 수정하기 보다 front에서 넘어 오는값에서 &amp;#39;,&amp;#39;를 제거하는 방법을 택했다(이유는 db에 저장될때 다시 ,가 제거되어야 하기때문에 두번의 과정을 거치는 것보다 효율적이라 생각했기 때문이다)&lt;/p&gt;
-
-&lt;p&gt;이 관련된 것을 조사하는중 url파라미터와 modelAttriubte 가 처리되는 handler의 차이가 있다는 것을 알게 되었고 이다음에 이부분에 집중 분석해 봐야할 필요성을 느꼈다.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://springsource.tistory.com/15&quot;&gt;참고-Rednics Blog(http://springsource.tistory.com/15)&lt;/a&gt;&lt;/p&gt;
-</description>
-        <pubDate>Sat, 07 Mar 2015 15:00:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/03/07/input_comma_seperated_value.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/03/07/input_comma_seperated_value.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>tomcat6 에서 tomcat7 migration 하기</title>
-        <description>&lt;p&gt;현재 사용하고 잇는 tomcat 6.0.x 버전을 더 높은 버전의 tomcat으로 migration 하기 위해 필요한 내용이다.
-이 글은 http://tomcat.apache.org/migration-7.html 사이트의 내용을 정리한 것임을 밝힌다.&lt;/p&gt;
-
-&lt;p&gt;http://tomcat.apache.org/migration.html 페이지에 내용을 통해 다른 버전의 migration을 확인할 수 있다.&lt;/p&gt;
-
-&lt;h1&gt;6.0.x에서 7.0.x 로 migration하기&lt;/h1&gt;
-
-&lt;h3&gt;Java 6&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Apache Tomcat 7.0.x는 Java 6이상의 버전이 필요 하다. (Apache Tomcat 6.0.x는 Java5를 필요로한다)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;Servlet 3.0 API&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Apache Tomcat7은 Java Servlet 3.0, JavaServer Pages(JSP) 2.2, Expression Langues(EL) 2.2을 지원한다(&lt;a href=&quot;http://wiki.apache.org/tomcat/Specifications&quot;&gt;spec&lt;/a&gt;).&lt;/li&gt;
-&lt;li&gt;JSP페이지에 아래와 같은 Wildcard import 문법을 사용하는 경우 Sevlet API에서 새롭게 추가된 클래스와 충돌이 발생할 수있다. 그러면 Tomcat 7은 컴파일을 정지한다. 아래 코드는 &amp;quot;a&amp;quot; 패키지에 Part 클래스가 있는 경우이다.
-&lt;br /&gt; &lt;br /&gt; 
-  &lt;code&gt;
-  &amp;lt;%@page import=&amp;quot;a.*&amp;quot;%&amp;gt;
-  &amp;lt;% Part page = new Part(); %&amp;gt;
-&lt;/code&gt;
-  &lt;br /&gt; &lt;br /&gt; 
-이 현상이 발생하는 이유는 javax.servlet.http.* 의 implicit import와 a.*이 동일한 Part 정의를 제공하기 때문이다. (Servlet 3.0에 Part 클래스가 추가되었다.) 해결책은 import=&amp;quot;a.Part&amp;quot; 와같은  explicit import 방법을 사용하는 것이다.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;정규식(Regular expressions)&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;정규식을 활용한 모든 설정 옵션값은 콤마나 세미콜론으로 구분된 리스트형태의 정규식보다 하나의 정규식을 요구한다(java.util.regex를 사용). &lt;/li&gt;
-&lt;li&gt;이것은 아래와 관련된다
-
-&lt;ul&gt;
-&lt;li&gt;RemoteAddrFilter, RemoteHostFilter, RemoteAddrValve, RemoteHostValve의  allow와 deny 어트리뷰트들&lt;/li&gt;
-&lt;li&gt;RemoteIpFilter, RemoteIpValve 의 internalProxies와 trustedProxies 어트리뷰트들&lt;/li&gt;
-&lt;li&gt;ReplicationValve의 filter 어트리뷰트&lt;/li&gt;
-&lt;li&gt;HTTP connectos의 restrictedUserAgents, noCompressionUserAgents 어트리뷰트들&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;분리된 여러 정규식을 하나로 합치는 방법은 &amp;quot;|&amp;quot; 연산자(or)를 이용하는 것이다. &amp;quot;|&amp;quot;연산자는 Tomcat이전버전과도 호환한다.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;배포(Deployemnt)&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;XML 컨텍스트 기술파일(META-INF/context.xml)은 더이상 배포된 WAR와 디렉토리에서 호스트의 xmlBase로 복사되지 않는다. Tomcat6과 같이 복사하기 위해서는 Host 요소의 copyXML 속성을 true로 셋팅이 필요하다.&lt;/li&gt;
-&lt;li&gt;7.0.12부터 7.0.47까지 버전에서는 호스트의 appBase밖의 WAR는 unpack 되지 않는다(Host의 unpackWARs 셋을 하더라도). 이 unpacking은 7.0.48 이후로 지원한다.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;관리 어플리케이션(Manager Application)&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;관리 어플리케이션은 tomcat7이후로 재구성되었고 어떤 URL은 바뀌었다. 관리 어플리케이션에 접근하기 위해 사용되는 모든 URL들은 아래의 옵션중 하나로 시작해야한다.
-
-&lt;ul&gt;
-&lt;li&gt;&lt;ContextPath&gt;/html - HTML GUI&lt;/li&gt;
-&lt;li&gt;&lt;ContextPath&gt;/text - text interface&lt;/li&gt;
-&lt;li&gt;&lt;ContextPath&gt;/jmxproxy - JMX proxy&lt;/li&gt;
-&lt;li&gt;&lt;ContextPath&gt;/status - status pages&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;HTML 인터페이스는 CSRF(Cross Site Request Forgery)에 대비해 보안이 되어있다. 그러나 text, JMX인터페이스는 그렇지 않다. CSRF 보안을 위해 아래의 사항을 따라야한다.
-
-&lt;ul&gt;
-&lt;li&gt;manager-gui 권한과 manager-script 또는 manager-jmx권한들을 분리되어야 한다.&lt;/li&gt;
-&lt;li&gt;manager-script나 manager-jmx 권한을 이용해 브라우저로 관리 어플리케이션에 접근하는 경우에 세션이 종료되고난후 반드시 브라우저를 종료해야한다.
-기본 설정과 대부분의 realm들이 이것을 지원하지 않기 때문에 역할 명령어(role command)는 제거되었다.&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;호스트 관리 어플리케이션(Host Manager Application)&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;홋트 관리 어플리케이션은 tomcat7이후로 재구성되었고 어떤 URL은 바뀌었다. 관리 어플리케이션에 접근하기 위해 사용되는 모든 URL들은 아래의 옵션중 하나로 시작해야한다.
-
-&lt;ul&gt;
-&lt;li&gt;&lt;ContextPath&gt;/html - HTML GUI 페이지&lt;/li&gt;
-&lt;li&gt;&lt;ContextPath&gt;/text - text 인터페이스
-주목할점은 text interface URL이 기존 &amp;quot;&lt;ContextPath&gt;&amp;quot; 에서  &amp;quot;&lt;ContextPath&gt;/text&amp;quot;로 바뀐것이다.&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;권한(role)들은 단일 admin권한에서 아래처럼 두개의 권한으로 분리된 호스트 관리 어플리케이션을 사용해야햔다. 사용자는  기능적으로 필요한 역할을 할당해야한다.
-* amdin-gui - HTML GUI와 상태페이지 접근을 허용한다.
-* admin-script - text 인터페이스와 상태페이지 접근은 허용한다.
-HTML 인터페이스는 CSRF에 대해 보안이 되어있지만 text 인터페이스는 그렇지 않다. CSRF 보안을 위해 아래를 따라라.
-* admin-gui 권한을 가진 사용자는 admin-script 권한을 가져서는 안된다.
-* admin-script권한을 가진 사용자가 브라우저를 통해 접근하는 경우세션이 종료되고난후 반드시 브라우저를 종료해야한다.&lt;/p&gt;
-
-&lt;h3&gt;세션 관리 설정&lt;/h3&gt;
-
-&lt;p&gt;세션관리에 많은 변화가 있었다. 이것은 세션을 생성되고 제거할때 또는 세션의 아이디생성하는 성능을 향상하기 위해 이루어졌다. 세션 아이디 생성의 변화는 java.secure.ScureRandom을 사용하면서 변화했다. 설정의 변화는 이렇다.
-* Manager의 randomClass 속성은 secureRandomClass로 바뀌었고, 제공되는 클래스는 반드시 java.secure.SecureRandom을 확장해야한다.
-* secureRandomAlgorithm과 secureRandomProvider의 두개의 새로운 property들은 ScureRandom의 구현선택을 활성화하기 위해 추가되었다.
-* algorithm 속성은 제거되었다.
-* entropy 속성은 제거되었다.&lt;/p&gt;
-
-&lt;p&gt;java.secure.SecureRandom과 관련된 이슈중 하나는 이것의 초기화시 entropy 소스에 있는 임의(random)의 데이터를 요구하는 것이다. 어떤 entorpy 소스 구현에서는 임이의 데이타를 모으는데 어느정도 시간이 걸릴 수있다. 만약 세션아이디 생성의 초기화가 100ms 이상의 시간을 사용한다면 아래의 진단 메시지가 로그에 나타날 것이다.
-ex:
-DATE org.apache.catalina.util.SessionIdGenerator createSecureRandom 
-INFO: Creation of SecureRandom instance for session ID generation using [SHA1PRNG] took [406] milliseconds.&lt;/p&gt;
-
-&lt;p&gt;JRE를 통해 entropy 소스를 바꾸는 것이 가능하다. (ex : -Djava.security.egd=file:/dev/./urandom)&lt;/p&gt;
-
-&lt;h3&gt;세션쿠기 설정(Session cokie configuration)&lt;/h3&gt;
-
-&lt;p&gt;Servlet 3.0 스펙에서 SessionCookieConfig가 추가되면서 코드의 복잡도를 낮추기위해 많은 수의 쿠키설정 옵션이 제거되었다. 
-* Connector.emptySessionPath: 이 옵션은 제거되었다. 글로벌 context.xml(CATALINA_BASE/conf/context.xml)의 sessionCokiePath=&amp;quot;/&amp;quot;설정을 동일한 기능이 가능하다.
-* org.apache.catalina.SESSION_COOKIE_NAME 시스템프로퍼티: 이 옵션도 제거되었다. 글로벌 contex.xml 파일의 sessionCookieName 설정을 통해 동일한 기능이 가능하다.
-* org.apache.catalina.SESSION_PARAMETER_NAME 시스템프로퍼티: 이 옵션도 제거되었다. 글로벌 contex.xml 파일의 sessionCookieName 설정을 통해 동일한 기능이 가능하다.
-* Context.disableURLRewriting: 이 옵션도 제거되었다. 웹어플리케이션이나 CATALINA_BASE/conf/web.xml 파일의 session-config/tracking-mode 요소를 설정함으로써 동일한 기능이 가능한다.&lt;/p&gt;
-
-&lt;p&gt;Tomcat7에서 세션과 SSO 쿠키는 기본값으로 HttpOnly플래그가 셋팅되어 보내진다. 이것은 자바스크립트로가 접근하는것을 막기위해 브라우저에게 지시하는 것이다. 이는 더 안전한 방법이지만, 자바스크립트가 쿠키의 값에 접근하는 것을 방지한다. 이 기능은 Context 요소의 useHttpOnly 속성을 통해 조절된다.(이미 Tomcat6.0의 마지막 버전에서도 구현이 되어있지만 기본적으로 false로 설정되어있다. 이를 사용하기위해서는 CATALINA_BASE/conf/context.xml 파일의 useHttpOnly=&amp;quot;true&amp;quot;를 설정함으로써 사용가능하다)&lt;/p&gt;
-
-&lt;h3&gt;쿠기(Cookies)&lt;/h3&gt;
-
-&lt;p&gt;톰캣은 기본적으로 스펙을 준수하지않은 이름만 쿠키인 것들은 더이상 수용하지 않다. 그러나 새로운 시스템 프로퍼티가 추가되었다. org.apache.tomcat.util.http.ServerCooki.ALLOW_NAME_ONLY 는 이러한 쿠키를 수용할 수있게 한다.&lt;/p&gt;
-
-&lt;h3&gt;요청 속성(Request attributes)&lt;/h3&gt;
-
-&lt;p&gt;커스텀 request속성 javax.servlet.request.ssl_session(새로운 표준 request 속성을 위해 제거되었다. servlet 스펙문서의 javax.servlet.request.ssl_session_id에서 확인가능하다) 은 SSL 세션아이디에 접근하기 위해 제공된다. 커스텀 request속성은 tomcat8에서 제거될 것이다.&lt;/p&gt;
-
-&lt;h3&gt;Comet&lt;/h3&gt;
-
-&lt;p&gt;코맷 클래스가 org.apache.catalina package 에서 the org.apache.catalina.comet package 으로 옮겨졌다. 코맷을 사용하는 코드는 새로운 패키지 이름을 반영하여 재 컴파일 해야한다.&lt;/p&gt;
-
-&lt;h3&gt;XML 검증(validation)&lt;/h3&gt;
-
-&lt;p&gt;XML 검증 설정이 간편해 졌다. xmlValidation과 xmlNamespaceAware 속성이 Host요소에서 제거됐다. 이 속성들은 tldValidation과 tldNamespaceAware와 같이 Context 요소마다 설정된다. 기본설정(fales) 은 바뀌지 않았다. 그러나 Servlet의 스펙에 의하면, 만약 org.apache.catalina.STRICT_SERVLET_COMPLIANCE 스스템 프로퍼티가 true로 설정 되어있다면 XML 검증과 namespace 인지가 초기값으로 활성화될 것이다.&lt;/p&gt;
-
-&lt;h3&gt;시스템 프로퍼티&lt;/h3&gt;
-
-&lt;p&gt;org.apache.catalina.STRICT_SERVLET_COMPLIANCE 시스템 프로퍼티가 수정되었다. 각각의 변화는 해당하는 시스템 프로퍼티에 의해 조절된다. 기본적인 행위는 변화지 않았다. 이제 org.apache.catalina.STRICT_SERVLET_COMPLIANCE 시스템프로퍼티는 spec 준수 기본값이 다른 시스템 프로퍼티에서 사용되는지 아닌지를 주절한다. 만약 org.apache.catalina.STRICT_\SERVLET_COMPLIANCE이 true라면 개별적인 시스템 프로퍼티보다 언제나 우선시 된다.
-org.apache.coyote.MAX_TRAILER_SIZE는 제거됐다. 그리고 Connector의 maxTrailerSize가 이를 대체한다.&lt;/p&gt;
-
-&lt;h3&gt;conf/web.xml 파일의 처리&lt;/h3&gt;
-
-&lt;p&gt;Servlet 3.0 spec은 어플리케이션의 web.xml 파일이 어떻게 web fragments와 annotations를 조합하는지 정의한다. 서버전반의 기본값을 정의 하는 conf/web.xml파일의 처리는 이런 rule 구현의 결과로 변했다.
-주목할만한 변화는 글로벌 conf/web.xml에 정의된 필터가 이제는 web application의 web.xml을 따른다는 점이다.&lt;/p&gt;
-
-&lt;h3&gt;Welcom 파일 처리&lt;/h3&gt;
-
-&lt;p&gt;welcome파일의 처리는 Servlet 3.0 spec의 설명을 따르도록 변했다. 만약 welcome 파일들의 리스트에 servlet에 의해 처리되는 파일(예를 들어 *.jsp)이 추가되어있을 경우 변화된 행위를 관측할 수 있다. Context 의 resourceOnlyServlets 을 보길바란다.&lt;/p&gt;
-
-&lt;h3&gt;Annotation 스캐닝&lt;/h3&gt;
-
-&lt;p&gt;Annotation 스캐닝은 웹어플리케이션의 startup 시간에 영향을 미친다. 또한 클래스의 스캔에 필요한 메모리 양도 늘어난다. Servlet 2.4와 그 이전버전을 스캔을 사용하는 어플리케이션은 이점을 유의해야한다.
-이 이슈를 다루는 여러방법이 있다. 추천하는 방법은 이러한 어플리케이션들은 annotation스캐닝을 요구하지않는다고 마크하는 것이다. WEB-INF/web.xml 파일에서 아래의 절차로 가능하다.
-* web-app 요소에 웹어플리케이션이 사용하는 spec의 버전이 3.0이 되도록 바꿔라. 이것은 기본 conf/web.xml파일에서 version. xsi:schemaLocation, xmlns, xmlns:xsi 속성을 복사할 수 있다.
-* metadata-compete=&amp;quot;true&amp;quot; 속성을 web-app 요소에 추가하라.
-* &lt;absolute-ordering/&gt; 속성을 추가하라.
-metadata-complete 속성은 Servlet 2.5 스펙부터 지원하기 시작했다. absolute-ordering은 Servlet 3.0을 요구한다.&lt;/p&gt;
-
-&lt;p&gt;두 번째 방법은 JarScanner 컴포넌트가 특정 JAR파일(이름에따라)을 무시하도록 설정하는것이다. 이것은 보통 conf/catalina.properties파일에서 설정한다. &lt;a href=&quot;http://tomcat.apache.org/tomcat-7.0-doc/config/systemprops.html&quot;&gt;System properties&lt;/a&gt;챕터의 jarsToSkip을 확인하라. Tomcat 7.0.30을 시작으로 Servlet 3.0에서 JARs 스캐닝(annotation과 웹어플리케이션 fragment)과 TLD 스캐닝(tag 라이브러리들)에서 분리시켜서 스킵하는 설정하는것이 가능하다. 톰캣의 이후 버전은 더욱 나은 방법을 제공할 것이다.&lt;/p&gt;
-
-&lt;h3&gt;TLD 처리&lt;/h3&gt;
-
-&lt;p&gt;TLD처리에서 많은 향상이 있었다. 게다가 일관성을 향상하고 중복을 제거하기 위해 내부적인 리펙토링을 했고, 많은 기능적인 향상이 있었다.
-* 이제는 태그 파일의 EL 처리가 태그파일에 선언된 JSP 버전과 일괄성이 있게 되었다.
-* JSP 스펙의 JSP 7.3.1의 요구사항이 이제는 강요된다. 그리고 TLD파일들은 WEB-INF/lib 나 WEB-INF/classes 위치에 존재하는것이 허용되지 않는다.&lt;/p&gt;
-
-&lt;h3&gt;내부 API들(Internal APIs)&lt;/h3&gt;
-
-&lt;p&gt;Tomcat 7 내부 API들이 대부분이 Tomcat 6과 호환하지만 세부적인 수준에서 많은 변화가 있었다. 때문에 바이너리(binary)호환은 하지 않느다. Tomcat의 내부 API를 사용하는 커스텀 컴포넌트의 개발자는 관련된 API의 JavaDoc을 확인하길 바란다.&lt;/p&gt;
-
-&lt;p&gt;특히 주의할 점은
-* 모든 컴포넌트들이 확장하고 있는 Lifecycle interface의 표준구현
-* 제네릭의 사용
-* Host conntext의 유일한 식별자로서의 Context path를 사용하기보다 Context의 이름의 직접 사용의 경우&lt;/p&gt;
-
-&lt;h3&gt;JSP 컴파일러&lt;/h3&gt;
-
-&lt;p&gt;성능 최적화의 하나를 컨트롤하는 JspServlet의 초기화 파라미터의 이름이 genStrAsCharArray에서 genStringAsCharArray로 바뀌었고 Apache Ant의 Jasper Task의 관련된 속성의 이름과 일관된다.&lt;/p&gt;
-
-&lt;h1&gt;7.0.x 로 업그레이드 하기(Upgrading 7.0.x)&lt;/h1&gt;
-
-&lt;h3&gt;Tomcat 7.0.x의 주목할만한 변화&lt;/h3&gt;
-
-&lt;p&gt;Tomcat개발자는 완벽하게 이전 버전화 호환하게 패치를 릴리즈 하려고 한다. 때때로, 버그를 고치기위해 이전 버전과의 호환성을 지키지 못하는 경구가 있다. 대부분의 경우 이런 변화는 간과된다. 이 섹션은 이전버전과 완벽히 호환되지 않고 업그레이드 할때 충돌이 있을수 있는 변화를 나열한다.
-* 7.0.51 이후에는 웹어플리케이션 클래스 로더가 시스템 클래스 로더보다 클래스를 로딩하는데 높은 우선권을 가진다.&lt;/p&gt;
-
-&lt;h3&gt;Tomcat 7.0.x 설정 파일의 차이점들&lt;/h3&gt;
-
-&lt;p&gt;Apache Tomcat 의 인스턴스를 7의 한버전에서 7의 다른 버전으로 업그레이드할때(특별히 분리된 $CATALINA_HOME 과 $CATALINA_BASE를 를 사용하는 경우), 새로운 설정들이나 적용되는 기본값이 달라지는 설정파일을 확인해야한다. 이것을 보조하기 &lt;a href=&quot;http://tomcat.apache.org/migration-7.html&quot;&gt;여기&lt;/a&gt;의 맨 아래 폼을 참고하길 바란다.&lt;/p&gt;
-
-&lt;h1&gt;기타&lt;/h1&gt;
-
-&lt;p&gt;원본출처 - &lt;a href=&quot;http://tomcat.apache.org/migration-7.html&quot;&gt;아파치 톰캣&lt;/a&gt;&lt;/p&gt;
-</description>
-        <pubDate>Sat, 28 Feb 2015 14:00:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/02/28/tomcat6_to_tomcat7.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/02/28/tomcat6_to_tomcat7.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>tomcat과 apache 연동하면서 겪은 애로 사항</title>
-        <description>&lt;p&gt;Tomcat과 Apache 웹서버를 직접 설치하면서 겪은 어려움과 해결법을 나열해 보겠다.
-Linux CentoOS 6.6, jdk 1.8, Tomcat 8.0, Apache HTTP 웹서버 2.4.9 버전을 이용했다.&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;jdk 버전 바꾸기
-/etc/alternatives라는 명령어를 이용해 여러버전의 JDK가 설치되어있는 환경의 Default JDK 변경할 수 있다.
-처음 할당받은 서버에 이미 JDK 1.6이 설치가 되어있는 상황이었는데, JDK 1.8을 사용해야하는 상황이었기 때문에 어떻게 변경할 수있을지 고민이 많았다. alternatives라는 명령을 이용해 해결할 수 있었다.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;alternatives --install /usr/bin/java java /user/wh/jdk1.6.0_35/bin/java 100 ## JDK를 변경가능한 리스트에 추가한다.&lt;/li&gt;
-&lt;li&gt;alternatives --config java ## 이 옵션을 이용하면 멋진UI(?)를 통해 변경이 가능하다.
-이뿐만 아니라, 명령어를 직접 입력하는 방법이 있는것같으나(사실 이렇게 해결했는데 어떻게 했는지 검색해도 도통 찾을수가 없다.) 이방법이 훨씬 편리하고 간단하다.&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;apache build 시 에러1
-apache 빌드시 
-./configure
---prefix=/usr/local/apache2 
---enable-all&lt;br&gt;
---enable-so
---with-included-apr
---with-mpm=prefork
-이런 명령으로 configure을 하게 된다. 이때 이전 단계에서 apr과 apr-util의 위치를 잘못 지정해 주는 바람에 빌드가 되지 않아 많은 삽질을 햇다.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;apache build 시 에러2
-빌드를 준비하는 과정에서  yum install make gcc gcc-c++ autoconf automake libtool pkgconfig findutils 이런 명령어를 인테넷에서 그래도 썼는데 저중 어디선가 제대로 설치가 되지 않아서 무엇인가 찾을 수 없다는 메세지를 보았다. 하나하나 꼼꼼히 다시 설치해서 해결했다. 그리고 jk_mod를 컴파일하는 과정에서 apxs의 경로를 설정해주는데 이것은 /usr/local/bin 폴더에 pcre라는 파일이 존재하느데, 이곳으로 경로를 지정해줘야 성공적으로 빌드가 된다.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;tomcat과 apache의 권한 문제...
-이것은 아주 특수한 케이스일 수 있다(우리 사내에서만 해당) su(root를 위임한)계정과 그렇지 않은 계정을 이용해 apache와 tomcat을 설치하게 되는데.. 두개를 모두 su계정으로 설치했더니 tomcat이 동작하지않는 문제가 생겼다. 이것은 어떤 이유인지 정확히 모르겠으나(알아보겟다!!!) tomcat을 su계정이 아닌 계정으로 설치했더니 해결되었다.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;connector설정 문제..
-tomcat과 apache를 연동하기 위해 connector를 설치했는데 apache의 http.conf파일로 jk_mod 무듈을 로드하고 virtual host를 지어해야하는 설정이 필요하다. 아직 http.conf파일의 구조와 기능(특히 virtualhost)에 대해 지식이 부족하여 많은 공부가 필요하다. 일단은 인터넷에 있는 가이드를 참고하여 진행했다.&lt;/p&gt;&lt;/li&gt;
-&lt;/ol&gt;
-</description>
-        <pubDate>Mon, 23 Feb 2015 20:00:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/02/23/Tomcat-Apache-connector.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/02/23/Tomcat-Apache-connector.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>was와 웹서버의 차이 – 톰캣과 아파치를 구별하지 못하는 사람을 위해</title>
-        <description>&lt;p&gt;평소 tomcat과 apache를 잘 구분하지 못하여 공부한 내용을 정리해 본다.&lt;/p&gt;
-
-&lt;p&gt;아파치 톰캣을 이용해서 웹서버를 띄우고 개발을 진행해왔다. 그런데 실제 일을 하면서 서버를 실핼할때 단순히 tomcat만 쓰는게 아니라 apache라는 프로그램을 별도로 실행하는 것에 혼란이 왔다. 그리고 평소에 apache tomcat은 그렇다면 두개의 프로그램을 합쳐놓은 것인가를 고민하게 되어 정리해 보았다.&lt;/p&gt;
-
-&lt;h1&gt;apache 란?&lt;/h1&gt;
-
-&lt;p&gt;apach란 것은 소프트웨어 단체 이름이다. 그리고 우리가 흔히 부르는 아파치서버라는 것은 이제단에서 후원하는 오픈소프 프로젝트 커뮤니티에서 만든 http웹서버를 지칭하는 말이다. (아파치 프로젝트는 웹서버 외에도 여러가지 프로젝트를 진행하고 있다고 한다. 이건 추후에 조사해볼것이다.)
-http 웹서버는 http 요청을 처리할 수 있는 웹서버이고, 아파치 http서버는 http요청을 처리하는 웹서버인 것이다. 클라이언트가 GET, POST, DELETE 등등의 메소드를 이용해 요청을 하면 이 프로그램이 어떤 결과를 돌려주는 기능을 한다.
-아파치는 웹서버 이다!&lt;/p&gt;
-
-&lt;h1&gt;tomcat 이란?&lt;/h1&gt;
-
-&lt;p&gt;tomcat은 흔히 WAS(Web Application Server)라고 말한다. WAS는 웹서버와 웹 컨테이너의 결합으로 다양한 기능을 컨테이너에 구현하여 다양한 역할을 수행할 수 있는 서버를 말한다. 클라이언트의 요청이 있을 때 내부의 프로그램을 통해 결과를 만들어내고 이것을 다시 클라이언트에 전달해주는 역할을 하는 것이 바로 웹 컨테이너 이다. 앞에서 본 아파치 웹 서버와 차이는 이 컨테이너 기능이 가능하냐의 차이가 가장 크다고 생각한다.
- &lt;img src=&quot;http://cfile24.uf.tistory.com/image/156A50404F93CDE817331E&quot; alt=&quot;was구조&quot;&gt;
- 이미지출처 : http://gap85.tistory.com/45&lt;/p&gt;
-
-&lt;p&gt;WAS역시 웹 서버로써 역할을 수행할 수 있기 때문에 둘을 잘 구별하지 못하면 필자 같은 혼란이 생길 수 있다.&lt;/p&gt;
-
-&lt;h1&gt;둘의 차이는?&lt;/h1&gt;
-
-&lt;p&gt;그렇다면 WAS만 쓰면 되지 어째서 웹서버를 따로 쓰느냐는 의문이 생길 수 있다. 그 이유는 목적이 다르기 때문이다.
-웹 서버는 정적인 데이터를 처리하는 서버이다. 이미지나 단순 html파일과 같은 리소스를 제공하는 서버는 웹 서버를 통하면 WAS를 이용하는 것보다 빠르고 안정적이다(왜? 다른 글 소스로 써볼까?)
-WAS는 동적인 데이터를 처리하는 서버이다. DB와 연결되어 데이터를 주고 받거나 프로그램으로 데이터 조작이 필요한 경우에는 WAS를 활용 해야 한다.&lt;/p&gt;
-
-&lt;h1&gt;기타(리눅스에서 설치 및 연동하기)&lt;/h1&gt;
-
-&lt;p&gt;두 서버의 목적의 차이 때문에 두 개의 서버를 연동해서 사용하면 더욱 효과적인 서비스를 제공할 수 있다.
-사용자 요청은 http 웹 서버를 통해 받고 내부 프로그램은 was를 통해 처리하는 식으로 한다면 정적인 데이터와 동적인 데이터를 효과적으로 처리가 가능할 것이다.&lt;/p&gt;
-
-&lt;p&gt;연동에 관련된 부분은 정리가 이곳을 보고 참조해보길 바란다.
-&lt;a href=&quot;http://blog.naver.com/pengooni/100010558793&quot;&gt;tomcat 과 apache 연동하기&lt;/a&gt;&lt;/p&gt;
-</description>
-        <pubDate>Sun, 15 Feb 2015 18:00:00 +0000</pubDate>
-        <link>http://sungbine.github.io/tech/post/2015/02/15/tomcat%EA%B3%BC%20apache%EC%9D%98%20%EC%97%B0%EB%8F%99.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/tech/post/2015/02/15/tomcat%EA%B3%BC%20apache%EC%9D%98%20%EC%97%B0%EB%8F%99.html</guid>
-        
-        
-        <category>tech</category>
-        
-        <category>post</category>
-        
-      </item>
-    
-      <item>
-        <title>Welcome to Jekyll!</title>
-        <description>&lt;p&gt;You’ll find this post in your &lt;code&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
-
-&lt;p&gt;To add new posts, simply add a file in the &lt;code&gt;_posts&lt;/code&gt; directory that follows the convention &lt;code&gt;YYYY-MM-DD-name-of-post.ext&lt;/code&gt; and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.&lt;/p&gt;
-
-&lt;p&gt;Jekyll also offers powerful support for code snippets:&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Hi, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;Tom&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; prints &amp;#39;Hi, Tom&amp;#39; to STDOUT.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;Check out the &lt;a href=&quot;http://jekyllrb.com&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://github.com/jekyll/jekyll-help&quot;&gt;Jekyll’s dedicated Help repository&lt;/a&gt;.&lt;/p&gt;
-</description>
-        <pubDate>Thu, 12 Feb 2015 16:55:58 +0000</pubDate>
-        <link>http://sungbine.github.io/jekyll/update/2015/02/12/welcome-to-jekyll.html</link>
-        <guid isPermaLink="true">http://sungbine.github.io/jekyll/update/2015/02/12/welcome-to-jekyll.html</guid>
-        
-        
-        <category>jekyll</category>
-        
-        <category>update</category>
-        
-      </item>
-    
-  </channel>
+<rss version="2.0">
+<channel>
+<title>김성렬 개발 블로그</title>
+<link>https://kimsoungryoul.tistory.com/</link>
+<description>개발  학습관련  ...</description>
+<language>ko</language>
+<pubDate>Sun, 12 May 2019 17:54:28 +0900</pubDate>
+<generator>TISTORY</generator>
+<managingEditor>김성렬</managingEditor>
+<image>
+<title>김성렬 개발 블로그</title>
+<url>https://tistory3.daumcdn.net/tistory/2605653/attach/c2294f09535140078bfd2e2cc41d7259</url>
+<link>https://kimsoungryoul.tistory.com</link>
+<description>개발  학습관련  ...</description>
+</image>
+<item>
+<title>Django 아키텍처 개요</title>
+<link>https://kimsoungryoul.tistory.com/58</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: &quot;ca-pub-2845037409573333&quot;,
+    enable_page_level_ads: true
+  });
+&lt;/script&gt;&lt;/div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:850px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/992C284E5C120DA20A&quot; filemime=&quot;image/jpeg&quot; filename=&quot;장고로고.jpg&quot; height=&quot;478&quot; width=&quot;850&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-size: 18pt;&quot;&gt;파이썬 진영 &lt;/span&gt;&lt;span style=&quot;font-size: 18pt;&quot;&gt;대표 웹 애플리케이션 프레임워크 Django &lt;/span&gt;&lt;span style=&quot;font-size: 18pt;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:249px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9979664D5C12100F3B&quot; filemime=&quot;image/jpeg&quot; filename=&quot;spring 패키지.png&quot; height=&quot;258&quot; width=&quot;249&quot;/&gt;&lt;/span&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:377px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99D684445C120ED82B&quot; filemime=&quot;image/jpeg&quot; filename=&quot;스크린샷 2018-12-13 오후 4.48.18.png&quot; height=&quot;356&quot; width=&quot;377&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;보편적으로 Layer단위로 나누고 그 안에서 도메인 &lt;/span&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;별로 로직을 분리하는&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;스프링 과 다르게&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;장고는 도메인 단위로 분리한 뒤에 그 안에서 Layer를 나눈다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;Django는여러개의 App을 가진다 (현 이미지에서는 member&amp;nbsp;orders&amp;nbsp;payments&amp;nbsp;product&amp;nbsp;webPage가 장고의 애플리케이션이다.)&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;이러한앱들을 ROOT Application(현이미지에서는 configuration)의 settings.py 파일에서 @Configuration객체 에서 작업해는 것처럼&amp;nbsp;&amp;nbsp;설정 작업을 해준다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;그리고 모든 HTTP 요청들은 ROOT Application의 url 을 통해서 각자의 App으로 로직을 타고 들어가는 방식이다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;&lt;u&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;장고의 구조 이해의 가장 중요한 부분은 settings.py의 구성을 이해하는 것이다.&lt;/span&gt;&lt;/u&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 18pt;&quot;&gt;Settings.py의 구조&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;1. INSTALLED_APPS&lt;/span&gt;&lt;/p&gt;&lt;pre style=&quot;background-color:#2b2b2b;color:#a9b7c6;font-family:'Menlo';font-size:9.0pt;&quot;&gt;&lt;p&gt;&lt;span style=&quot;color:#808080;&quot;&gt;# Application definition&lt;br /&gt;&lt;/span&gt;INSTALLED_APPS = [&lt;/p&gt;&lt;p&gt;     &lt;span style=&quot;color: rgb(204, 120, 50);&quot;&gt;#최초 장고 프로젝트 생성시 등록되있는 Application &lt;/span&gt;&lt;br /&gt;    &lt;span style=&quot;color:#6a8759;&quot;&gt;'django.contrib.admin'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, # 장고의 꽃 관리자 App이다 &lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'django.contrib.auth'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, # 장고 기본제공 회원 관리앱 장고프로젝트를 생성하는 동시에 회원관리하는 App 개발이 끝나있다. &lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'django.contrib.contenttypes'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, # http contenttype이 아니라 장고 App별 컨텐츠들 관리&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'django.contrib.sessions'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;,  # 우리가 아는 그 세션,쿠키.  장고 회원관리 앱과 더불어 인증 로직을 지원한다.&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'django.contrib.messages'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'django.contrib.staticfiles'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, # 장고의 정적 파일들 관리 해주는 app&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;    'django_extensions'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, # 장고의 유틸리티 기능 확장 이건 다양해서 구글링 해서 찾아보시는게 &lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'rest_framework'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, # 순수 장고는 html을 반환해주는 전통적인 웹 프로젝트를 목적으로 만들어 졌습니다. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;                      # 그래서 API 형식에 대해서는 커스터&lt;/span&gt;&lt;span style=&quot;color: rgb(204, 120, 50); font-size: 9pt;&quot;&gt;마이징 해줘야하는 부분이 많아요 &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(204, 120, 50); font-size: 9pt;&quot;&gt;                      # 그래서 장고가 REST API를 지원해주는 APP DRF를 만들어 두었습니다 그게 이거입니다&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'drf_yasg'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;,       # 장고 API 문서 자동화 도구  이건 다른 포스트에서 따로 설명드리겠습니다... &lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    # 위 이미지에 만들어져있는 APP들을 등록한것 이렇게 등록안하면 &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    # 스프링에서 @Bean 안붙이면 그냥 자바 객체이듯이 그냥 장고에서도 파이썬 패키지에 불과함&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'member.apps.MemberAppConfig'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'product.apps.ProductAppConfig'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'orders.apps.OrdersAppConfig'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'payments.apps.PaymentsConfig'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#6a8759;&quot;&gt;'webpage.apps.WebpageConfig'&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;&lt;br /&gt;&lt;/span&gt;]&lt;/p&gt;&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 18.6667px;&quot;&gt;2. MIDDLEWARE&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 18.6667px;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 18.6667px;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 18.6667px;&quot;&gt;3. DATABASES&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>Django</category>
+<category>Architecture</category>
+<category>django</category>
+<category>Python</category>
+<category>Spring</category>
+<author>김성렬</author>
+<guid>https://kimsoungryoul.tistory.com/58</guid>
+<comments>https://kimsoungryoul.tistory.com/58#entry58comment</comments>
+<pubDate>Thu, 13 Dec 2018 17:25:27 +0900</pubDate>
+</item>
+<item>
+<title>기계 학습 관련 기술들</title>
+<link>https://kimsoungryoul.tistory.com/57</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: &quot;ca-pub-2845037409573333&quot;,
+    enable_page_level_ads: true
+  });
+&lt;/script&gt;&lt;/div&gt;&lt;h1&gt;매개 변수의 갱신&lt;/h1&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;h3&gt;신경망 학습의 목적은 손실함수의 값을 가능한 낮추는 매개변수를 찾는 것이다. 이는 곧 매개 변수의 최적 값을 찾는 문제이며, 이러한 문제를 푸는 것을 최적화(Optimization)라고 한다.&lt;/h3&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;h2&gt;1. 확률적 경사 하강법(SGD)&lt;/h2&gt;&lt;h3 style=&quot;margin-left: 2em;&quot;&gt;1.1 개요&lt;/h3&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;&amp;nbsp;&amp;nbsp;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9925494F5BC2FD282F&quot; filemime=&quot;image/jpeg&quot; filename=&quot;333.jpg&quot; height=&quot;281&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9920804F5BC2FD2930&quot; filemime=&quot;image/jpeg&quot; filename=&quot;maxresdefault.jpg&quot; height=&quot;281&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;여기서 X는 갱신할 가중치 매개변수고&lt;/p&gt;&lt;p&gt;라운드 f / 라운드 x0 는 손실함수의 기울기 이다.&lt;br /&gt;&lt;/p&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;SGD는 기울어진 방향으로 일정 거리만 가겠다는 단순한 방법이다.&lt;/div&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;&lt;pre style=&quot;background-color:#2b2b2b;color:#a9b7c6;font-family:'굴림체';font-size:7.2pt;&quot;&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;class &lt;/span&gt;SGD:&lt;br /&gt;    &lt;span style=&quot;color:#cc7832;&quot;&gt;def &lt;/span&gt;&lt;span style=&quot;color:#b200b2;&quot;&gt;__init__&lt;/span&gt;(&lt;span style=&quot;color:#94558d;&quot;&gt;self&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;/span&gt;lr=&lt;span style=&quot;color:#6897bb;&quot;&gt;0.01&lt;/span&gt;):&lt;br /&gt;        &lt;span style=&quot;color:#94558d;&quot;&gt;self&lt;/span&gt;.lr=lr&lt;br /&gt;    &lt;br /&gt;    &lt;span style=&quot;color:#cc7832;&quot;&gt;def &lt;/span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;update&lt;/span&gt;(&lt;span style=&quot;color:#94558d;&quot;&gt;self&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;/span&gt;params&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;/span&gt;grads):&lt;br /&gt;        &lt;span style=&quot;color:#cc7832;&quot;&gt;for &lt;/span&gt;key &lt;span style=&quot;color:#cc7832;&quot;&gt;in &lt;/span&gt;params.keys():&lt;br /&gt;            params[key]-=&lt;span style=&quot;color:#94558d;&quot;&gt;self&lt;/span&gt;.lr*grads[key]&lt;/pre&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;초기화 할때 받은 인수인 lr(learning rate)를 뜻한다.&lt;/div&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;이 학습률을 인스턴스 변수로 유지하고,&lt;/div&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;upgrade() 메서드로 SGD 과정에서 반복해서 불린다.&lt;/div&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;h3 style=&quot;margin-left: 2em;&quot;&gt;1.2 단점&amp;nbsp;&lt;/h3&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;SGD는 단순하고 구현도 쉽지만, 문제에 따라서는 비효휼적일 때가 있다.&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;u&gt;SGD의 단점은 비등방성&lt;span style=&quot;font-size: 9pt;&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 8pt;&quot;&gt;(방향에 따라 성질, 즉 기울기가 달라지는 )&lt;/span&gt;&lt;/b&gt;&lt;/span&gt; 함수에서는&lt;/u&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;u&gt;탐색 경로가 비효율적이라는 것이다.&lt;/u&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h3 style=&quot;margin-left: 2em;&quot;&gt;1.3 단점 개선 방법&lt;/h3&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;1. 모멘텀&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;2. AdaGrad&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;3. Adam&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>Artificial Intelligence</category>
+<author>김성렬</author>
+<guid>https://kimsoungryoul.tistory.com/57</guid>
+<comments>https://kimsoungryoul.tistory.com/57#entry57comment</comments>
+<pubDate>Sun, 14 Oct 2018 17:31:59 +0900</pubDate>
+</item>
+<item>
+<title>신경망 학습이란 무엇인가?[밑바닥 딥러닝]</title>
+<link>https://kimsoungryoul.tistory.com/56</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: &quot;ca-pub-2845037409573333&quot;,
+    enable_page_level_ads: true
+  });
+&lt;/script&gt;&lt;/div&gt;&lt;h1&gt;신경망 학습이란?&lt;/h1&gt;&lt;h3 style=&quot;margin-left: 2em;&quot;&gt;- 훈련 데이터로부터 가중치 매개변수의 최적값을 자동으로 획득하는 것&lt;/h3&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;h2&gt;데이터 주도 학습
+&lt;/h2&gt;&lt;div style=&quot;margin-left: 2em;&quot;&gt;- 기계학습은 데이터에서 답을찾아서 패턴을 발견하고 데이터로 결론을 도출하는것&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;b&gt;MINST :&lt;/b&gt;&lt;/span&gt;손글씨를 인식하는&amp;nbsp; 머신러닝을 공부하기에 유명한 데이터 셋?&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: square;&quot;&gt;&lt;ul style=&quot;list-style-type: square;&quot;&gt;&lt;li&gt;손으로 쓴 5라는 것에서 패턴을 찾기란 어렵다.&lt;/li&gt;&lt;li&gt;머신러닝이 효율적&lt;/li&gt;&lt;li&gt;지도학습을 이용&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;h3&gt;&lt;br /&gt;&lt;/h3&gt;&lt;h3&gt;&lt;br /&gt;&lt;/h3&gt;&lt;h3&gt;지도학습이란?&lt;/h3&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;b style=&quot;color: rgb(34, 34, 34); font-family: sans-serif; font-size: 14px;&quot;&gt;지도 학습&lt;/b&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: sans-serif; font-size: 14px;&quot;&gt;&amp;nbsp;(Supervised Learning)은 훈련 데이터(Training Data)로부터 하나의 함수를 유추해내기 위한&amp;nbsp;&lt;/span&gt;&lt;a href=&quot;https://ko.wikipedia.org/wiki/%EA%B8%B0%EA%B3%84_%ED%95%99%EC%8A%B5&quot; title=&quot;기계 학습&quot; style=&quot;color: rgb(11, 0, 128); background-image: none; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; font-family: sans-serif; font-size: 14px;&quot;&gt;기계 학습&lt;/a&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: sans-serif; font-size: 14px;&quot;&gt;(Machine Learning)의 한 방법이다. 훈련 데이터는 일반적으로 입력 객체에 대한 속성을 벡터 형태로 포함하고 있으며 각각의 벡터에 대해 원하는 결과가 무엇인지 표시되어 있다. 이렇게 유추된 함수 중 연속적인 값을 출력하는 것을&amp;nbsp;&lt;/span&gt;&lt;a href=&quot;https://ko.wikipedia.org/wiki/%ED%9A%8C%EA%B7%80%EB%B6%84%EC%84%9D&quot; class=&quot;mw-redirect&quot; title=&quot;회귀분석&quot; style=&quot;color: rgb(11, 0, 128); background-image: none; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; font-family: sans-serif; font-size: 14px;&quot;&gt;회귀분석&lt;/a&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: sans-serif; font-size: 14px;&quot;&gt;(Regression)이라 하고 주어진 입력 벡터가 어떤 종류의 값인지 표식하는 것을&amp;nbsp;&lt;/span&gt;&lt;a href=&quot;https://ko.wikipedia.org/wiki/%EB%B6%84%EB%A5%98&quot; title=&quot;분류&quot; style=&quot;color: rgb(11, 0, 128); background-image: none; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; font-family: sans-serif; font-size: 14px;&quot;&gt;분류&lt;/a&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: sans-serif; font-size: 14px;&quot;&gt;(Classification)라 한다. 지도 학습기(Supervised Learner)가 하는 작업은 훈련 데이터로부터 주어진 데이터에 대해 예측하고자 하는 값을 올바로 추측해내는 것이다. 이 목표를 달성하기 위해서는 학습기가 &quot;알맞은&quot; 방법을 통하여 기존의 훈련 데이터로부터 나타나지 않던 상황까지도 일반화하여 처리할 수 있어야 한다. 사람과 동물에 대응하는 심리학으로는&amp;nbsp;&lt;/span&gt;&lt;a href=&quot;https://ko.wikipedia.org/w/index.php?title=%EA%B0%9C%EB%85%90_%ED%95%99%EC%8A%B5&amp;amp;action=edit&amp;amp;redlink=1&quot; class=&quot;new&quot; title=&quot;개념 학습 (없는 문서)&quot; style=&quot;color: rgb(165, 88, 88); background-image: none; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; font-family: sans-serif; font-size: 14px;&quot;&gt;개념 학습&lt;/a&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: sans-serif; font-size: 14px;&quot;&gt;(Concept Learning)을 예로 들 수 있다.&lt;/span&gt;&lt;/div&gt;&lt;p style=&quot;text-align: right;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;a href=&quot;https://ko.wikipedia.org/wiki/%EC%A7%80%EB%8F%84_%ED%95%99%EC%8A%B5&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;https://ko.wikipedia.org/wiki/%EC%A7%80%EB%8F%84_%ED%95%99%EC%8A%B5&lt;/a&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;h3&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;손실함수 (loss Function)&lt;br /&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/h3&gt;&lt;div&gt;학습을 통해 최적의 가중치 매개변수를 결정하기 위한 지표로 손실함수를 사용한다.&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;손실함수의 오차값을 가장 적게 만드는 것이 신경망의 학습목표이고&lt;/div&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;h2&gt;손실함수는 두가지&lt;/h2&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;h3&gt;평균 제곱 오차 (mean squared error, MSE)&lt;/h3&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:353px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99EECA505BB87A8C30&quot; filemime=&quot;image/jpeg&quot; filename=&quot;qqqqq.png&quot; height=&quot;143&quot; width=&quot;353&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;Y 는&amp;nbsp; 신경망의 OUTPUT 이다&amp;nbsp;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;파이썬 구현 함수&amp;nbsp;&lt;/p&gt;&lt;pre style=&quot;background-color:#2b2b2b;color:#a9b7c6;font-family:'Menlo';font-size:9.0pt;&quot;&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;def &lt;/span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;mean_square_error&lt;/span&gt;(y&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;/span&gt;t=&lt;span style=&quot;color:#8888c6;&quot;&gt;list&lt;/span&gt;()):&lt;br /&gt;    &lt;span style=&quot;color:#cc7832;&quot;&gt;return &lt;/span&gt;np.sum((y-t)**&lt;span style=&quot;color:#6897bb;&quot;&gt;2&lt;/span&gt;)/t.size&lt;/pre&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;h3&gt;교차 엔트로피 오차 (Croos Entroypy Error ,CEE)&lt;/h3&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:353px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99CAFC3B5BB87DB011&quot; filemime=&quot;image/jpeg&quot; filename=&quot;다운로드.png&quot; height=&quot;143&quot; width=&quot;353&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;h3&gt;왜 손실함수를 설정하는가?&lt;/h3&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;숫자 인식의 경우도 우리의 궁극적인 목적은 높은 정확도를 끌어내는 매개변수 값을 찾는 것이다.&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;신경망 학습에서는 미분의 역활에 주목하야한다.&lt;/div&gt;&lt;div&gt;가상의 신경망이 있고 그 신경망의 어느 한 가중치 매개변수에 주목한다고 할때,&lt;/div&gt;&lt;div&gt;이때 그 가중치 매개변수의 손실함수의 미분이란 '가중치 매개변수의 값을 아주 조금&amp;nbsp; 변화 시켰을때 손실함수가 어떻게 변하나 ?' 라는 의미 이다.&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;if 미분값이 음수면 그 가중치 매개변수를 양의 방향으로 변화 시켜 손실함수의 값을 줄일수 있다.&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;but&amp;nbsp; 미분값이 0이면 매개 변수를 어느쪽으로 움직여도 손실함수의 값은 달라지지 않는다.&amp;nbsp;&lt;/div&gt;&lt;div&gt;그래서 그 가중치 매개 변수의 갱신은 거기서 멈춰야한다.&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;정확도를 지표로 삼으면 미분이 대부분의 장소에서 0이 되버린다.&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;반면에 손실함수를 지표로 삼는다면 매개변수의 값이 조금 변하면 그에 반응하여 손실 함수의 값도 0.9742.... 처럼 연속적으로 변화 하는 것이다.&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;계단 미분 함수의 미분은 대부분의 장소에서 0이다 그결과 계단함수를 손실함수 로 사용하면 아무런 효과가 없게 된다.&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;그렇기에 시그모이드 함수의 미분은 연속적으로 변하고 곡선의 기울기도 연속적으로 변한다&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>Artificial Intelligence</category>
+<author>김성렬</author>
+<guid>https://kimsoungryoul.tistory.com/56</guid>
+<comments>https://kimsoungryoul.tistory.com/56#entry56comment</comments>
+<pubDate>Sat, 06 Oct 2018 18:18:35 +0900</pubDate>
+</item>
+<item>
+<title>SQL Select 의 기초</title>
+<link>https://kimsoungryoul.tistory.com/55</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: &quot;ca-pub-2845037409573333&quot;,
+    enable_page_level_ads: true
+  });
+&lt;/script&gt;&lt;/div&gt;&lt;h2&gt;1. SELECT 의 기본 구조&amp;nbsp;&lt;/h2&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:448px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9902A84A5BB0C56132&quot; filemime=&quot;image/jpeg&quot; filename=&quot;casq_1.jpg&quot; height=&quot;242&quot; width=&quot;448&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;Select 구문의 순서는 위의 그림과 같다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;h4&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;b&gt;Select&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;//조회할것이다.&lt;/b&gt;&lt;/span&gt;&lt;/h4&gt;&lt;h4&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;b&gt;*&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;// 어떤 데이터를&lt;/b&gt;&lt;/span&gt;&lt;/h4&gt;&lt;h4&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;b&gt;from&amp;nbsp; Table&amp;nbsp; // 테이블로 부터&lt;/b&gt;&lt;/span&gt;&lt;/h4&gt;&lt;h4&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;b&gt;where&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 어떤 조건을 가진&lt;/b&gt;&lt;/span&gt;&lt;/h4&gt;&lt;h4&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;group by&amp;nbsp; &amp;nbsp; &amp;nbsp; // 어떤데이터들을&amp;nbsp; 특정 column&lt;/span&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;기준으로 &lt;/span&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;묶는다.&lt;/span&gt;&lt;/b&gt;&lt;/h4&gt;&lt;h4&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;b&gt;having&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 특정 조건을 가지고 있는 row 만 추출한다&lt;/b&gt;&lt;/span&gt;&lt;/h4&gt;&lt;div&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Order By&amp;nbsp; &amp;nbsp; &amp;nbsp;// 해당 row 들을 어떤 컬럼을 기준으로 정렬할 것이다&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;/ul&gt;&lt;h4&gt;&lt;br /&gt;&lt;/h4&gt;&lt;h3&gt;&lt;br /&gt;&lt;/h3&gt;&lt;h2&gt;2. Join 이란&amp;nbsp;&lt;/h2&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;text-align: center;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9960CC475BB0C7CD0A&quot; filemime=&quot;image/jpeg&quot; filename=&quot;2179CE5058EF620F20.png&quot; height=&quot;370&quot; style=&quot;text-align: center;&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br class=&quot;Apple-interchange-newline&quot;&gt;SQL 에서 다양한 조인 연산이 존재한다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;Cross join&lt;/p&gt;&lt;p&gt;inner join&lt;/p&gt;&lt;p&gt;outer join&lt;/p&gt;&lt;p&gt;self join&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;이들중 기능적인 관점으로 분류한 것은&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;Cross Join&lt;/p&gt;&lt;p&gt;Inner Join&lt;/p&gt;&lt;p&gt;Outer Join&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;이렇게 3가지 인데&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;Cross join 은 사실상 안쓰이는 거니 논외로 친다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h3&gt;2.1 INNER JOIN&lt;/h3&gt;&lt;p&gt;조인되는 두 테이블 모두에 데이터가 존재해야 row를 가져온다.&lt;/p&gt;&lt;p&gt;두 테이블중 한 곳이라도 NULL 이면 데이터를 조회 하지 않는다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;select * &lt;b&gt;from &lt;/b&gt;Employees E&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;&lt;b&gt;inner join &lt;/b&gt;Departments D&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;on E.dept_id=D.dept_id&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h3&gt;2.2 OUTER JOIN (with LEFT&amp;nbsp;RIGHT JOIN)&lt;/h3&gt;&lt;h4&gt;FULL OUTER&amp;nbsp;&lt;/h4&gt;&lt;p&gt;조인 이 되는 두 테이블에서 NULL을 허용한다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;이렇게 쓰는 경우는 잘없음&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h4&gt;LEFT OUTER&amp;nbsp; &amp;nbsp;&lt;/h4&gt;&lt;p&gt;구동 테이블의 NULL을 허용하지 않음&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h4&gt;RIGHT OUTER&lt;/h4&gt;&lt;p&gt;내부 테이블의 NULL을 허용하지 않음&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;h3&gt;성능을 고려한 알고리즘&amp;nbsp;&lt;/h3&gt;&lt;h4&gt;1. Nested Loops&amp;nbsp;&lt;/h4&gt;&lt;p&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;SQL에서 JOIN은 한번에 두개의 테이블만 결합 하므로 본질적으로 이중 반복과 같은 의미이다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;그렇기 때문에 Join 쿼리의 수행시간은 table(A)* table(B)&amp;nbsp; 이다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;여기서 접근하는 레코드의 수는 A * B 와 B * A 는 서로 같다&amp;nbsp;&lt;/p&gt;&lt;p&gt;그러나 실제 성능에서는&amp;nbsp; 좀 다른 의미를 가질수 있다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;두테이블이 서로 조인할때 결합키에 인덱스가 존재한다면 해당 인덱스를 통해 DBMS는 내부 테이블을 완전히 순환 하지 않아도 된다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;이상적인 경우는 구동테이블 (from A 테이블)의 레코드 한개에 내부테이블(join B 테이블)이&amp;nbsp;&lt;/p&gt;&lt;p&gt;1대1 관계인 경우이다 .&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;이 경우 반복없이&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;1. A 에서 row&amp;nbsp;조회&amp;nbsp;&lt;/p&gt;&lt;p&gt;2. 인덱싱으로 B 조회&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;A *2 번의 실행 시간 이 걸린다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h4 style=&quot;margin-left: 2em;&quot;&gt;결론 :&lt;/h4&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&amp;nbsp;내부 테이블의 결합키에 &lt;b&gt;인덱싱이 존재&lt;/b&gt;한다면&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;구동테이블은 작은 테이블&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;내부테이블은 큰 테이블 로&amp;nbsp;&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;조인 할수록&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;u&gt;내부테이블의 인덱싱을 탐색하여 반복 생략 효과가 커진다.&amp;nbsp;&lt;/u&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h4&gt;1.2 Nested Loops 의 단점&lt;/h4&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;히트되는 레코드가 너무 많은 경우 기대한 만큼의 응답시간이 안나오기도 한다.&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;예를 들어&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;점포테이블과 주문 테이블의 경우&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;하나의 점포에 대해 여러개의 주문이 대응하므로&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;구동테이블은 작은 점포테이블&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;결합키는 점포테이블의 ID,&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;내부 테이블은 큰 주문테이블로 JOIN&amp;nbsp; 할 경우&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;위 설명대로라면 좋은 성능을 기대할수 있지만&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;한 점포당 수백 수천건의 주문 row 가 히트한다면&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;반복 횟수가 너무 많아서 결국 성능이 떨어진다.&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;이런경우에는 해시를 통해 해결할수 있다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h4&gt;2. HASH&lt;/h4&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;해쉬 방식은 먼저 읽어들인 구동테이블의 ID 로&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;해시 테이블을 만들고 이어서 내부테이블을 읽어 들여서 해시값이 일치하는지를 확인하는 방식이다.&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;이 경우 해시라는 방식&amp;nbsp;특성상 속도가 조회속도가 좋지만 문제는&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;메모리를 크게 소모한다.&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;메모리가 부족하면 저장소를 사용하므로 지연이 발생한다.&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;b&gt;유용한경우&lt;/b&gt;&lt;/p&gt;&lt;ol style=&quot;list-style-type: decimal;&quot;&gt;&lt;ol style=&quot;list-style-type: decimal;&quot;&gt;&lt;li&gt;구동테이블로 쓸만한 충분히 작은 테이블이 존재하지 않는경우&lt;/li&gt;&lt;li&gt;내부테이블이 매우 거대한경우 (ex = &amp;gt;점포 : 주문)&amp;nbsp;&lt;/li&gt;&lt;/ol&gt;&lt;/ol&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;b&gt;Caution&amp;nbsp;&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;Hash 결합은 반드시 양쪽 테이블의 레코드를 전부 읽어야 하므로&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;테이블 풀스캔이 사용되는 경우가 많다.&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;그렇기에 풀스캔에 걸리는 시간도 고려해봐야한다.&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h3&gt;&lt;br /&gt;&lt;/h3&gt;&lt;h3&gt;지연 로딩 과 즉시 로딩 (Lazy &amp;amp; Eager) 그리고 1+N 문제&lt;/h3&gt;&lt;div&gt;&lt;dl style=&quot;box-sizing: border-box; margin: 0.3em 0px;&quot;&gt;&lt;dt style=&quot;color: rgb(0, 10, 25); font-family: &amp;quot;\\B098눔고딕&amp;quot;, nanumgothic, se_NanumGothic, sans-serif; font-size: 16px; box-sizing: border-box; line-height: inherit; font-weight: 700;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/dt&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;장고는 Lazy Eager 하다는 표현을 안쓰고&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;쿼리셋에서 쓰는 함수들도 inner outer를 사용한다는 것을 유추할만한&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;네이밍이 없다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;좋다 나쁘다 할것없이 그냥 그러하다.&lt;/span&gt;&lt;/p&gt;&lt;dt style=&quot;color: rgb(0, 10, 25); font-family: &amp;quot;\\B098눔고딕&amp;quot;, nanumgothic, se_NanumGothic, sans-serif; font-size: 16px; box-sizing: border-box; line-height: inherit; font-weight: 700;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/dt&gt;&lt;dt style=&quot;color: rgb(0, 10, 25); font-family: &amp;quot;\\B098눔고딕&amp;quot;, nanumgothic, se_NanumGothic, sans-serif; font-size: 16px; box-sizing: border-box; line-height: inherit; font-weight: 700;&quot;&gt;&lt;ul style=&quot;box-sizing: border-box; margin-top: 0px; margin-bottom: 1rem; color: rgb(52, 58, 64); font-family: &amp;quot;Helvetica Neue&amp;quot;, Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400;&quot;&gt;&lt;a href=&quot;https://docs.djangoproject.com/en/1.10/ref/models/querysets/#select-related&quot; style=&quot;box-sizing: border-box; background-color: transparent; color: rgb(27, 110, 196);&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: Gulim, 굴림;&quot;&gt;select_related()&lt;/span&gt;&lt;/a&gt;&lt;ul style=&quot;box-sizing: border-box; margin-top: 0px; margin-bottom: 0px;&quot;&gt;&lt;li style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: Gulim, 굴림;&quot;&gt;ForeignKey, OneToOneField 관계에서 활용&lt;/span&gt;&lt;/li&gt;&lt;li style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: Gulim, 굴림;&quot;&gt;ForeignKey/OneToOneField 관계에서 Lazy하게 쿼리하지 않고, DB단에서 INNER JOIN 으로 쿼리할 수 있다.&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;li style=&quot;box-sizing: border-box;&quot;&gt;&lt;a href=&quot;https://docs.djangoproject.com/en/1.10/ref/models/querysets/#prefetch-related&quot; style=&quot;background-color: transparent; box-sizing: border-box; color: rgb(27, 110, 196);&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: Gulim, 굴림;&quot;&gt;prefetch_related()&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;ul style=&quot;box-sizing: border-box; margin-top: 0px; margin-bottom: 0px;&quot;&gt;&lt;li style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: Gulim, 굴림;&quot;&gt;ManyToManyField, ForeignKey의 reverse relation 에서 활용&lt;/span&gt;&lt;/li&gt;&lt;li style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: Gulim, 굴림;&quot;&gt;각 관계 별로 DB 쿼리를 수행하고, 파이썬 단에서 조인을 수행한다.&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;/dt&gt;&lt;dt style=&quot;box-sizing: border-box; line-height: inherit; text-align: right;&quot;&gt;&lt;font color=&quot;#000a19&quot;&gt;&lt;span style=&quot;font-size:8pt;&quot;&gt;&lt;a href=&quot;https://wayhome25.github.io/django/2017/06/20/selected_related_prefetch_related/&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;https://wayhome25.github.io/django/2017/06/20/selected_related_prefetch_related/&lt;/a&gt;&lt;/span&gt;&lt;/font&gt;&lt;/dt&gt;&lt;dt style=&quot;color: rgb(0, 10, 25); font-family: &amp;quot;\\B098눔고딕&amp;quot;, nanumgothic, se_NanumGothic, sans-serif; font-size: 16px; box-sizing: border-box; line-height: inherit; font-weight: 700; text-align: right;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/dt&gt;&lt;dt style=&quot;color: rgb(0, 10, 25); font-family: &amp;quot;\\B098눔고딕&amp;quot;, nanumgothic, se_NanumGothic, sans-serif; font-size: 16px; box-sizing: border-box; line-height: inherit; font-weight: 700; text-align: right;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/dt&gt;&lt;dt style=&quot;color: rgb(0, 10, 25); font-family: &amp;quot;\\B098눔고딕&amp;quot;, nanumgothic, se_NanumGothic, sans-serif; font-size: 16px; box-sizing: border-box; line-height: inherit; font-weight: 700;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/dt&gt;&lt;dt style=&quot;color: rgb(0, 10, 25); font-family: &amp;quot;\\B098눔고딕&amp;quot;, nanumgothic, se_NanumGothic, sans-serif; font-size: 16px; box-sizing: border-box; line-height: inherit; font-weight: 700;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;N+1 Query Problem&lt;/span&gt;&lt;/dt&gt;&lt;dt style=&quot;color: rgb(0, 10, 25); font-family: &amp;quot;\\B098눔고딕&amp;quot;, nanumgothic, se_NanumGothic, sans-serif; font-size: 16px; box-sizing: border-box; line-height: inherit; font-weight: 700;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;N+1 쿼리 문제, N+1 SELECT 문제, N+1 문제&lt;/span&gt;&lt;/dt&gt;&lt;/dl&gt;&lt;ul style=&quot;box-sizing: border-box; font-family: &amp;quot;\\B098눔고딕&amp;quot;, nanumgothic, se_NanumGothic, sans-serif; margin: 0.3em 0px 0px 1.6em; padding: 0px; color: rgb(0, 10, 25); font-size: 16px;&quot;&gt;&lt;li style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;쿼리 1번으로 N건을 가져왔는데, 관련 컬럼을 얻기 위해 쿼리를 N번 추가 수행하는 문제&lt;/span&gt;&lt;/li&gt;&lt;li style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;쿼리결과 건수마다 참조 정보를 얻기 위해 건수만큼 반복해서 쿼리를 수행하게 되는 문제&lt;/span&gt;&lt;/li&gt;&lt;li style=&quot;box-sizing: border-box;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;DB쿼리 수행비용(횟수)이 크기 때문에,&lt;/span&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;a href=&quot;https://zetawiki.com/wiki/Eager_%EB%A1%9C%EB%94%A9&quot; class=&quot;mw-redirect&quot; title=&quot;Eager 로딩&quot; style=&quot;box-sizing: border-box; background-color: transparent; color: rgb(0, 153, 221); word-break: break-all;&quot;&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;eager 로딩&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;등의 방법으로 해결하는 것이 권장됨&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;참고 문헌&lt;/p&gt;&lt;ul style=&quot;list-style-type: square;&quot;&gt;&lt;li&gt;http://www.sqlprogram.com/Basics/sql-join.aspx&lt;/li&gt;&lt;li&gt;SQL 레벨업 [저자 미크, 역자 윤인성]&lt;/li&gt;&lt;li&gt;자바&amp;nbsp;ORM 표준&amp;nbsp;JPA 프로그래밍 [저자 김영한]&lt;/li&gt;&lt;li&gt;https://wayhome25.github.io/django/2017/06/20/selected_related_prefetch_related/&lt;/li&gt;&lt;/ul&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>DataBase</category>
+<category>join</category>
+<category>select</category>
+<category>SQL</category>
+<category>데이터베이스</category>
+<author>김성렬</author>
+<guid>https://kimsoungryoul.tistory.com/55</guid>
+<comments>https://kimsoungryoul.tistory.com/55#entry55comment</comments>
+<pubDate>Sun, 30 Sep 2018 23:49:07 +0900</pubDate>
+</item>
+<item>
+<title>클라우드 컴퓨팅 참조 아키텍쳐</title>
+<link>https://kimsoungryoul.tistory.com/54</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: &quot;ca-pub-2845037409573333&quot;,
+    enable_page_level_ads: true
+  });
+&lt;/script&gt;&lt;/div&gt;&lt;h3&gt;3.1 NIST의 클라우드 컴퓨팅 참조 아키텍쳐&lt;/h3&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99977D3D5BB092FC02&quot; filemime=&quot;image/jpeg&quot; filename=&quot;2012-07-28cloudreferencearchitectureopenplatform-11-728.jpg&quot; height=&quot;346&quot; style=&quot;&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;h3&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99A5B83D5BB092FD01&quot; filemime=&quot;image/jpeg&quot; filename=&quot;ciobiz__30182232496413.jpg&quot; height=&quot;265&quot; style=&quot;&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/h3&gt;&lt;h3&gt;&lt;b&gt;&lt;span style=&quot;background-color: inherit; font-family: inherit; font-size: 12pt; font-style: inherit; text-align: inherit; text-decoration-line: inherit; color: rgb(92, 92, 92);&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/b&gt;&lt;/h3&gt;&lt;h3&gt;&lt;b&gt;&lt;span style=&quot;background-color: inherit; font-family: inherit; font-size: 12pt; font-style: inherit; text-align: inherit; text-decoration-line: inherit; color: rgb(92, 92, 92);&quot;&gt;클라우드 컴퓨팅(cloud computing) 아키텍처는 아래로부터 물리적 시스템계층, 가상화계층(하이퍼바이저), 로비저닝 계층,&amp;nbsp;서비스 관리체계 계층,&lt;/span&gt;&lt;span style=&quot;background-color: inherit; font-family: inherit; font-size: 12pt; font-style: inherit; text-align: inherit; text-decoration-line: inherit; color: rgb(92, 92, 92);&quot;&gt;그리고 서비스 계층의 5계층으로 구분합니다.&lt;/span&gt;&lt;/b&gt;&lt;/h3&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99C338395BB094900B&quot; filemime=&quot;image/jpeg&quot; filename=&quot;gw_021.png&quot; height=&quot;349&quot; style=&quot;&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>Cloud Computing</category>
+<author>김성렬</author>
+<guid>https://kimsoungryoul.tistory.com/54</guid>
+<comments>https://kimsoungryoul.tistory.com/54#entry54comment</comments>
+<pubDate>Sun, 30 Sep 2018 18:35:28 +0900</pubDate>
+</item>
+<item>
+<title>클라우드 컴퓨팅의 기초 개념과 모델</title>
+<link>https://kimsoungryoul.tistory.com/53</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: &quot;ca-pub-2845037409573333&quot;,
+    enable_page_level_ads: true
+  });
+&lt;/script&gt;&lt;/div&gt;&lt;h3&gt;2.1 클라우드 컴퓨팅의 구성요소&lt;/h3&gt;&lt;div&gt;클라우드 제공자&lt;/div&gt;&lt;div&gt;클라우드 클라이언트 또는 클라우드 단말&lt;/div&gt;&lt;div&gt;클라우드 네트워크&lt;/div&gt;&lt;div&gt;클라우드 보안&lt;/div&gt;&lt;div&gt;클라우드 서비스 브로커&amp;nbsp;&lt;/div&gt;&lt;div&gt;클라우드 소비자&lt;/div&gt;&lt;div&gt;클라우드 서비스 소유자&lt;/div&gt;&lt;div&gt;클라우드 자원 관리자&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h3&gt;2.2 클라우드 컴퓨팅의 특성&lt;/h3&gt;&lt;p&gt;주문형 자가 서비스 (on -demand - self -service)&lt;/p&gt;&lt;p&gt;폭넓은 네트워크 접근(broad network access)&lt;/p&gt;&lt;p&gt;자원 풀링 (resource pooling)&lt;/p&gt;&lt;p&gt;신속한 탄력성(rapid elasticity)&lt;/p&gt;&lt;p&gt;측정된 서비스 (measured service)&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h3&gt;2.3 서비스 모델&amp;nbsp;&lt;/h3&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;SaaS (Software as a Service&lt;/span&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;)&lt;/span&gt;&lt;/b&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;완전한 서비스를 클라우드 환경 기반에서 제공&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;PaaS (Pla&lt;/span&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;tform as a Service&lt;/span&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;)&lt;/span&gt;&lt;/b&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;RDS 와 같은 서비스 개발에 필요한 플랫폼을 제공&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;IaaS(Infrastructure as a Service&lt;/span&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;)&lt;/span&gt;&lt;/b&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;기본만 갖춰진 인프라 환경의&amp;nbsp;컴퓨팅 자원을 제공&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;Daas(Desktop as a Service&lt;/span&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;)&lt;/span&gt;&lt;/b&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;고객의 데스크탑이 클라우드 인프라 상에서 VM 형태로 실행되며&lt;/p&gt;&lt;p&gt;사용자는 다양한 경량 클라이언트나 제로 클라이언트를 이용해 데스크탑에 접근할수 있다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:334px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99BCDC435BB08DFE25&quot; filemime=&quot;image/jpeg&quot; filename=&quot;download.png&quot; height=&quot;151&quot; style=&quot;&quot; width=&quot;334&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h3&gt;2.4 전개 모델 (Deployment Model)&lt;/h3&gt;&lt;p&gt;&lt;u style=&quot;font-size: 13px;&quot;&gt;NIST 의 Deployment Model은 프라이빗 커뮤니티 퍼블릭, 하이브리드 클라우드로 구분할수 있다.&lt;/u&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;ol style=&quot;list-style-type: decimal;&quot;&gt;&lt;li&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;프라이빗 클라우드(private cloud&lt;/span&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;)&lt;/span&gt;&lt;/b&gt;&lt;/li&gt;&lt;li&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;커뮤니티 클라우드(community cloud&lt;/span&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;)&lt;/span&gt;&lt;/b&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;&lt;b&gt;퍼블릭 클라우드(public cloud)&lt;/b&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;&lt;b&gt;하이브리드 클라우드 (hybrid cloud)&lt;/b&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;모바일 클라우드&lt;/span&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;(moblie cloud)&lt;/span&gt;&lt;/b&gt;&lt;/li&gt;&lt;/ol&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9997704E5BB0917A32&quot; filemime=&quot;image/jpeg&quot; filename=&quot;52085_61801_1226.jpg&quot; height=&quot;215&quot; style=&quot;&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>Cloud Computing</category>
+<author>김성렬</author>
+<guid>https://kimsoungryoul.tistory.com/53</guid>
+<comments>https://kimsoungryoul.tistory.com/53#entry53comment</comments>
+<pubDate>Sun, 30 Sep 2018 18:07:13 +0900</pubDate>
+</item>
+<item>
+<title>클라우드 컴퓨팅의 개요</title>
+<link>https://kimsoungryoul.tistory.com/52</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: &quot;ca-pub-2845037409573333&quot;,
+    enable_page_level_ads: true
+  });
+&lt;/script&gt;&lt;/div&gt;&lt;h1&gt;1. 클라우드 컴퓨팅 의 개요&lt;/h1&gt;&lt;h3&gt;1.1 클라우드 컴퓨팅은 IT 자원 렌탈 샵이다.&lt;/h3&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;컴퓨팅 자원 : EC2&lt;/li&gt;&lt;li&gt;스토리지 자원 : S3&amp;nbsp;&lt;/li&gt;&lt;li&gt;네트워크 자원 : Virtual Private Cloud(VPC)&amp;nbsp;&lt;/li&gt;&lt;li&gt;데이터 베이스 : RDS&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h3&gt;1.2&amp;nbsp;주요 개념 및 용어&amp;nbsp;&lt;/h3&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;클라우드&lt;/span&gt;&amp;nbsp;&lt;/li&gt;&lt;/ul&gt;&lt;div&gt;원격으로 iT 자원을 준비해 확작,측정 가능한 방식으로 제공하는 IT환경&amp;nbsp;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;Virtual Machine&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;div&gt;클라우드 컴퓨팅 환경에서는 하나의 물리적 서버상에 하이퍼바이져라고 하는 SW가 여러개의 VM을 생성하여 사용자에게 제공을 하게 된다.&lt;/div&gt;&lt;div&gt;VM상에서는 서로 다른 OS 를 사용할수 있으며&amp;nbsp;&lt;/div&gt;&lt;div&gt;컴퓨팅 자원을 서로 적절히 할당하여 사용할수 있다.&amp;nbsp;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;수평 확장&amp;nbsp;&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;div&gt;Scale Out&amp;nbsp;&lt;/div&gt;&lt;div&gt;Scale In&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;수직 확장&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Scale Up&lt;/p&gt;&lt;p&gt;Scale Down&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;클라우드 서비스&amp;nbsp;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;IaaS // 아이아스&lt;/p&gt;&lt;p&gt;PaaS // 파스&lt;/p&gt;&lt;p&gt;SaaS // 사스&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h3&gt;1.3 클라우드 컴퓨팅의 장점&lt;/h3&gt;&lt;ol style=&quot;list-style-type: decimal;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;투자 및 비용감소&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;확장석 증가&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;가용성 및 신뢰성 증가&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;이동성 증가&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;보안 강화&lt;/span&gt;&lt;/li&gt;&lt;/ol&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>Cloud Computing</category>
+<author>김성렬</author>
+<guid>https://kimsoungryoul.tistory.com/52</guid>
+<comments>https://kimsoungryoul.tistory.com/52#entry52comment</comments>
+<pubDate>Sun, 30 Sep 2018 17:30:22 +0900</pubDate>
+</item>
+<item>
+<title>인공신경망이란 무엇인가</title>
+<link>https://kimsoungryoul.tistory.com/51</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: &quot;ca-pub-2845037409573333&quot;,
+    enable_page_level_ads: true
+  });
+&lt;/script&gt;&lt;/div&gt;&lt;h1 style=&quot;margin-left: 2em;&quot;&gt;2.인공신경망&lt;/h1&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;ol style=&quot;list-style-type: decimal;&quot;&gt;&lt;li&gt;&lt;h4&gt;퍼셉트론으로 복잡한 함수도 표현할수 있다 (이론상으로)&lt;/h4&gt;&lt;/li&gt;&lt;li&gt;&lt;h4&gt;가중치를 설정하는 작업은 여전히 사람이 수동으로 해야한다는 문제점이 여전히 있다.&lt;/h4&gt;&lt;/li&gt;&lt;/ol&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;인공신경망은 2번에 해당하는 문제점을 해결해준다.&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h2&gt;2.1 신경망의 예&lt;/h2&gt;&lt;div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:300px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99AAF94E5B9E10450A&quot; filemime=&quot;image/jpeg&quot; filename=&quot;300px-Colored_neural_network.svg.png&quot; height=&quot;361&quot; width=&quot;300&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;입력층, 은닉층, 출력층 3개로 나누어져있다.&lt;/li&gt;&lt;/ul&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;b= 편향&amp;nbsp; , bias&amp;nbsp;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;h2&gt;2.2 활성화 함수의 등장 Activation Function&lt;/h2&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;h3&gt;활성화함수 식&lt;/h3&gt;&lt;/li&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;h3&gt;y= h(a)&lt;/h3&gt;&lt;/li&gt;&lt;li&gt;&lt;h3&gt;a= b+w1*x1+w2*x2&lt;/h3&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;div style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;h4&gt;2.3 활성화 함수 시그모이드 함수&lt;/h4&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-family: Batang, 바탕; font-size: 12pt;&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;&lt;span style=&quot;font-size: 10pt;&quot;&gt;시그모이드 함수&lt;/span&gt;&amp;nbsp;&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;&lt;span style=&quot;font-family: Batang, 바탕; font-size: 12pt;&quot;&gt;&lt;b&gt;h(x)= 1/1+exp(-x)&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;h4&gt;2.4 계단 함수 구현하기&lt;/h4&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;pre style=&quot;background-color:#2b2b2b;color:#a9b7c6;font-family:'굴림체';font-size:7.2pt;&quot;&gt;&lt;br /&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;import &lt;/span&gt;matplotlib.pylab &lt;span style=&quot;color:#cc7832;&quot;&gt;as &lt;/span&gt;plt&lt;br /&gt;&lt;br /&gt;&lt;br /&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;def &lt;/span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;step_function&lt;/span&gt;(x):&lt;br /&gt;    &lt;span style=&quot;color:#cc7832;&quot;&gt;return &lt;/span&gt;np.array(x &amp;gt; &lt;span style=&quot;color:#6897bb;&quot;&gt;0&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#aa4926;&quot;&gt;dtype&lt;/span&gt;=np.int)&lt;br /&gt;&lt;br /&gt;&lt;br /&gt;x = np.arange(-&lt;span style=&quot;color:#6897bb;&quot;&gt;5.0&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;5.0&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;0.1&lt;/span&gt;)&lt;br /&gt;y = step_function(x)&lt;br /&gt;plt.plot(x&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;y)&lt;br /&gt;plt.ylim(-&lt;span style=&quot;color:#6897bb;&quot;&gt;0.1&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;1.1&lt;/span&gt;)&lt;br /&gt;plt.show()&lt;br /&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;div style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99446B345B9E166A18&quot; filemime=&quot;image/jpeg&quot; filename=&quot;캡처.jpg&quot; height=&quot;374&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;계단 &lt;/span&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;함수는 어느 경계점을 기점으로&amp;nbsp;&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;/div&gt;&lt;div style=&quot;text-align: center;&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;출력값을 0,1&amp;nbsp; 두가지 값으로 바꿔준다.&lt;/span&gt;&lt;/b&gt;&lt;/div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;h4&gt;2.5 시그모이드 함수 구현&lt;/h4&gt;&lt;div&gt;&lt;pre style=&quot;background-color:#2b2b2b;color:#a9b7c6;font-family:'굴림체';font-size:7.2pt;&quot;&gt;&lt;br /&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;def &lt;/span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;sigmoid&lt;/span&gt;(x0):&lt;br /&gt;    &lt;span style=&quot;color:#cc7832;&quot;&gt;return &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;1 &lt;/span&gt;/ (&lt;span style=&quot;color:#6897bb;&quot;&gt;1 &lt;/span&gt;+ np.exp(-x0))&lt;br /&gt;&lt;br /&gt;&lt;br /&gt;x = np.array([-&lt;span style=&quot;color:#6897bb;&quot;&gt;1.0&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;1.0&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;2.0&lt;/span&gt;])&lt;br /&gt;sigmoid(x)&lt;br /&gt;&lt;br /&gt;x = np.arange(-&lt;span style=&quot;color:#6897bb;&quot;&gt;5.0&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;5.0&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;0.1&lt;/span&gt;)&lt;br /&gt;y = sigmoid(x)&lt;br /&gt;plt.plot(x&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;y)&lt;br /&gt;plt.ylim(-&lt;span style=&quot;color:#6897bb;&quot;&gt;0.1&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;1.1&lt;/span&gt;)&lt;br /&gt;plt.show()&lt;/pre&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/993F41355B9E18640D&quot; filemime=&quot;image/jpeg&quot; filename=&quot;캡처.jpg&quot; height=&quot;379&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;시그모이드 함수와 계단함수의 가장 큰차이는&lt;/p&gt;&lt;p&gt;매끄러움의 차이이다&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;부드러운 곡선이며 (=미분가능한 함수이며)&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;두 함수는 모두 입력값에 관계없이 0~1 사이의 값을 출력해준다는 공통점이 있다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;시그모이드는 비선형 함수 이다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h4&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;인공 신경망에서는 활성화 함수로 비선형 함수를 사용해야한다.&lt;/span&gt;&lt;/b&gt;&lt;/h4&gt;&lt;h4&gt;&lt;b&gt;선형함수를 이용하면&amp;nbsp; 신경망의 층을 깊게하는 의미가 없어지기 때문이다.&lt;/b&gt;&lt;/h4&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;층을 쌓는 혜택을 얻고싶다면 활성화 함수로 반드시 비선형 함수를 사용해야한다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h4&gt;2.6 출력층 설계하기&lt;/h4&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: square;&quot;&gt;&lt;li&gt;&lt;b&gt;신경망은 분류와 회귀 모두에 이용할수 있다.&lt;/b&gt;&lt;/li&gt;&lt;li&gt;&lt;b&gt;다만 둘중 어떤 문제냐에 따라 출력층에서 사용하는 활성화 함수가 달라진다.&lt;/b&gt;&lt;/li&gt;&lt;ul style=&quot;list-style-type: square;&quot;&gt;&lt;li&gt;&lt;b&gt;항등함수&lt;/b&gt;&lt;/li&gt;&lt;li&gt;&lt;b&gt;소프트맥수 함수&lt;/b&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-size: 10pt;&quot;&gt;NOTE : 기계학습 문제는 분류(Classification)와 회귀(regression&lt;/span&gt;&lt;span style=&quot;font-size: 10pt;&quot;&gt;)로 나뉩니다.&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-size: 10pt;&quot;&gt;분류는 불연속 수치 분석 (성별 :남or여)&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-size: 10pt;&quot;&gt;회귀는 연속적인 수치 분석 (몸무게 50kg ~ 80kg&lt;/span&gt;&lt;span style=&quot;font-size: 10pt;&quot;&gt;)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>Artificial Intelligence</category>
+<category>김성렬</category>
+<category>머신러닝</category>
+<category>인공신경망</category>
+<category>인공지능</category>
+<author>김성렬</author>
+<guid>https://kimsoungryoul.tistory.com/51</guid>
+<comments>https://kimsoungryoul.tistory.com/51#entry51comment</comments>
+<pubDate>Sun, 16 Sep 2018 18:06:36 +0900</pubDate>
+</item>
+<item>
+<title>퍼셉트론이란 무엇인가</title>
+<link>https://kimsoungryoul.tistory.com/50</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: &quot;ca-pub-2845037409573333&quot;,
+    enable_page_level_ads: true
+  });
+&lt;/script&gt;&lt;/div&gt;&lt;h1&gt;1.퍼셉트론이란?&lt;/h1&gt;&lt;ul style=&quot;list-style-type: square;&quot;&gt;&lt;li&gt;신경망의 기원이 되는 알고리즘&amp;nbsp;&lt;/li&gt;&lt;li&gt;y= 0 or 1 의 값을 가지며&lt;/li&gt;&lt;/ul&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;b&gt;i)&amp;nbsp; w1*x1+w2*x2 &amp;lt;&amp;nbsp;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: &amp;quot;Apple SD Gothic Neo&amp;quot;, arial, sans-serif; font-size: 12pt;&quot;&gt;θ&amp;nbsp; then y =&amp;nbsp;0&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;b&gt;ii)&amp;nbsp; w1*x1+w2*x2 &amp;gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: &amp;quot;Apple SD Gothic Neo&amp;quot;, arial, sans-serif; font-size: 12pt;&quot;&gt;θ&amp;nbsp; then y = 1&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;b&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: &amp;quot;Apple SD Gothic Neo&amp;quot;, arial, sans-serif; font-size: 12pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;h2&gt;1.1 퍼셉트론 구현하기&lt;/h2&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;h4&gt;간단한 구현&amp;nbsp;&lt;/h4&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;pre style=&quot;background-color:#2b2b2b;color:#a9b7c6;font-family:'굴림체';font-size:7.2pt;&quot;&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;def &lt;/span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;AND&lt;/span&gt;(x1&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;x2):&lt;br /&gt;    w1&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;w2&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;theta = &lt;span style=&quot;color:#6897bb;&quot;&gt;0.5&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;0.5&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;0.7&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;    &lt;/span&gt;tmp = x1 * w1 + x2 * w2&lt;br /&gt;    &lt;span style=&quot;color:#cc7832;&quot;&gt;if &lt;/span&gt;tmp &amp;lt;= theta:&lt;br /&gt;        &lt;span style=&quot;color:#cc7832;&quot;&gt;return &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;0&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;elif &lt;/span&gt;tmp &amp;gt; theta:&lt;br /&gt;        &lt;span style=&quot;color:#cc7832;&quot;&gt;return &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;1&lt;/span&gt;&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;실행&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;pre style=&quot;background-color:#2b2b2b;color:#a9b7c6;font-family:'굴림체';font-size:7.2pt;&quot;&gt;&lt;span style=&quot;color:#8888c6;&quot;&gt;print&lt;/span&gt;(AND(&lt;span style=&quot;color:#6897bb;&quot;&gt;0&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;0&lt;/span&gt;))&lt;br /&gt;&lt;span style=&quot;color:#8888c6;&quot;&gt;print&lt;/span&gt;(AND(&lt;span style=&quot;color:#6897bb;&quot;&gt;1&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;0&lt;/span&gt;))&lt;br /&gt;&lt;span style=&quot;color:#8888c6;&quot;&gt;print&lt;/span&gt;(AND(&lt;span style=&quot;color:#6897bb;&quot;&gt;0&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;1&lt;/span&gt;))&lt;br /&gt;&lt;span style=&quot;color:#8888c6;&quot;&gt;print&lt;/span&gt;(AND(&lt;span style=&quot;color:#6897bb;&quot;&gt;1&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;1&lt;/span&gt;))&lt;br /&gt;&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;결과&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;b&gt;0&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;b&gt;0&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;b&gt;0&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;b&gt;1&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;&lt;br /&gt;&lt;/div&gt;&lt;h2&gt;1.2&amp;nbsp;가중치와 편향 도입&lt;/h2&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;h4&gt;구현 numpy사용&amp;nbsp;&lt;/h4&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;div style=&quot;margin-left: 2em;&quot;&gt;&lt;pre style=&quot;background-color:#2b2b2b;color:#a9b7c6;font-family:'굴림체';font-size:7.2pt;&quot;&gt;&lt;br /&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;def &lt;/span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;AND2&lt;/span&gt;(x1&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;x2):&lt;br /&gt;    x = np.array([x1&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;x2])&lt;br /&gt;    w = np.array([&lt;span style=&quot;color:#6897bb;&quot;&gt;0.5&lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;0.5&lt;/span&gt;])&lt;br /&gt;    b = -&lt;span style=&quot;color:#6897bb;&quot;&gt;0.7&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;    &lt;/span&gt;tmp = np.sum(w * x) + b&lt;br /&gt;&lt;br /&gt;    &lt;span style=&quot;color:#cc7832;&quot;&gt;if &lt;/span&gt;tmp &amp;lt;= &lt;span style=&quot;color:#6897bb;&quot;&gt;0&lt;/span&gt;:&lt;br /&gt;        &lt;span style=&quot;color:#cc7832;&quot;&gt;return &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;0&lt;br /&gt;&lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;else&lt;/span&gt;:&lt;br /&gt;        &lt;span style=&quot;color:#cc7832;&quot;&gt;return &lt;/span&gt;&lt;span style=&quot;color:#6897bb;&quot;&gt;1&lt;br /&gt;&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;h2&gt;1.3 퍼셉트론의 한계&amp;nbsp;&lt;/h2&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;h4&gt;XOR게이트를 구현할수 없다.&lt;/h4&gt;&lt;/li&gt;&lt;li&gt;&lt;b&gt;비선형 영역을 표현할수 없다&lt;/b&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;p style=&quot;margin-left: 2em; text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:326px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99AAB6415B9E069B01&quot; filemime=&quot;image/jpeg&quot; filename=&quot;images.png&quot; height=&quot;132&quot; width=&quot;326&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 16em;&quot;&gt;-선형과 비선형 -&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;margin-left: 2em;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;h2&gt;1.4 하지만 다중퍼셉트론이라면 가능하다&amp;nbsp;&lt;/h2&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;ul style=&quot;list-style-type: disc;&quot;&gt;&lt;li&gt;&lt;h4&gt;구현&amp;nbsp;&lt;/h4&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;/ul&gt;&lt;div style=&quot;margin-left: 4em;&quot;&gt;&lt;pre style=&quot;background-color:#2b2b2b;color:#a9b7c6;font-family:'굴림체';font-size:7.2pt;&quot;&gt;&lt;br /&gt;&lt;span style=&quot;color:#cc7832;&quot;&gt;def &lt;/span&gt;&lt;span style=&quot;color:#ffc66d;&quot;&gt;XOR&lt;/span&gt;(x1&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;/span&gt;x2):&lt;br /&gt;    s1=NAND(x1&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;/span&gt;x2)&lt;br /&gt;    s2=OR(x1&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;/span&gt;x2)&lt;br /&gt;    y=AND(s1&lt;span style=&quot;color:#cc7832;&quot;&gt;,&lt;/span&gt;s2)&lt;br /&gt;    &lt;span style=&quot;color:#cc7832;&quot;&gt;return &lt;/span&gt;y&lt;/pre&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;h3&gt;1.5 정리&lt;/h3&gt;&lt;ol style=&quot;list-style-type: decimal;&quot;&gt;&lt;ol style=&quot;list-style-type: decimal;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;퍼셉트론은 입출력을 갖춘 알고리즘&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;퍼셉트론에서는 가중치와 편향을 설정&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;AND, OR 게이트 등 구현가능&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;but ! XOR 는 구현불가&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;2층 퍼셉트론을 이용하면 XOR게이트를 표현할 수 있다.&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;다중 퍼셉트론은 비선형 영역도 표현 가능하다.&lt;/span&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/ol&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>Artificial Intelligence</category>
+<category>김성렬</category>
+<category>머신러닝</category>
+<category>인공지능</category>
+<category>퍼셉트론</category>
+<author>김성렬</author>
+<guid>https://kimsoungryoul.tistory.com/50</guid>
+<comments>https://kimsoungryoul.tistory.com/50#entry50comment</comments>
+<pubDate>Sun, 16 Sep 2018 16:37:46 +0900</pubDate>
+</item>
+<item>
+<title>AWS해커톤 후기 Amathon</title>
+<link>https://kimsoungryoul.tistory.com/49</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: &quot;ca-pub-2845037409573333&quot;,
+    enable_page_level_ads: true
+  });
+&lt;/script&gt;&lt;/div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;&lt;b&gt;AWS 해커톤 후기&amp;nbsp;&amp;nbsp;&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;팀원들이 너무 좋았다&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;학교에서 억지로 구성된 팀원들과&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;작업하던 내용과는 차원이 달랐다&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;다들 자기 포지션에 대해 잘 아시고&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;디자이너 분도 한분계시고&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;(디자이너가 있어야 어플 퀄리티가 살아난다...)&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;이렇게 재미있게 작업할줄이야&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;S3를 내가 연결못해서 기능하나가 구현못됬다 ㅠ&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;처음써보는거는 역시 삽질이 ㅠㅠ&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99369E4E5B559B8005&quot; filemime=&quot;image/jpeg&quot; filename=&quot;AWS수정보_n.jpg&quot; height=&quot;375&quot; style=&quot;&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;IOS 학생 개발자(2명) 분들이셨는데&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;잘하셨다&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;b&gt;역시 세상은 넓고 나는 보잘것 없다는 것 ...&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99578E4E5B559B8117&quot; filemime=&quot;image/jpeg&quot; filename=&quot;AWS수정본2_n.jpg&quot; height=&quot;375&quot; style=&quot;&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;앞에 심사위원으로 계신분들 중 페북에서 자주 뵜던 신상재님이 계신지 몰랐다;;;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;젠장...&amp;nbsp;&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;이렇게 피드백 해주시니 너무 감사할 따름이다..&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;개인적인 평가는&amp;nbsp; SKTOpenAPI 에서 데이터 빼와서&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;그 데이터 기반으로 넣고 빼는 거 밖에 기능이 없어서&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;내용이 너무 아쉽다.&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;AWS를 잘 활용한것도 아니고&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;아키텍처도 노말하고...&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;앞조에서 AWS로 아키텍처를 모던 구성해서&amp;nbsp;작업하신 분들이 계셨는데&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;그런 결과물이 좀더 엔지니어스러운 결과물 같아서&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;멋져보였다.&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:500px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/993C884E5B559B811A&quot; filemime=&quot;image/jpeg&quot; filename=&quot;신상재님후기.jpg&quot; height=&quot;534&quot; style=&quot;&quot; width=&quot;500&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>Forum Reviews</category>
+<category>Amathon</category>
+<category>aws</category>
+<category>해커톤</category>
+<category>후기</category>
+<author>김성렬</author>
+<guid>https://kimsoungryoul.tistory.com/49</guid>
+<comments>https://kimsoungryoul.tistory.com/49#entry49comment</comments>
+<pubDate>Mon, 23 Jul 2018 18:21:35 +0900</pubDate>
+</item>
+</channel>
 </rss>

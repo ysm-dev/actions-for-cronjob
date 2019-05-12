@@ -1,111 +1,777 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:cc="http://cyber.law.harvard.edu/rss/creativeCommonsRssModule.html">
-    <channel>
-        <title><![CDATA[Stories by Vayne Cha on Medium]]></title>
-        <description><![CDATA[Stories by Vayne Cha on Medium]]></description>
-        <link>https://medium.com/@minslovey?source=rss-2b096a43c480------2</link>
-        <image>
-            <url>https://cdn-images-1.medium.com/fit/c/150/150/1*lJrm2cl5_eaozTndHXD8vA.jpeg</url>
-            <title>Stories by Vayne Cha on Medium</title>
-            <link>https://medium.com/@minslovey?source=rss-2b096a43c480------2</link>
-        </image>
-        <generator>Medium</generator>
-        <lastBuildDate>Sun, 12 May 2019 08:45:43 GMT</lastBuildDate>
-        <atom:link href="https://medium.com/feed/@minslovey" rel="self" type="application/rss+xml"/>
-        <webMaster><![CDATA[yourfriends@medium.com]]></webMaster>
-        <atom:link href="http://medium.superfeedr.com" rel="hub"/>
-        <item>
-            <title><![CDATA[“Moneyball” in Esports?]]></title>
-            <link>https://medium.com/@minslovey/moneyball-in-esports-89fe69887758?source=rss-2b096a43c480------2</link>
-            <guid isPermaLink="false">https://medium.com/p/89fe69887758</guid>
-            <category><![CDATA[esport]]></category>
-            <dc:creator><![CDATA[Vayne Cha]]></dc:creator>
-            <pubDate>Tue, 04 Sep 2018 04:34:48 GMT</pubDate>
-            <atom:updated>2018-10-11T01:36:42.333Z</atom:updated>
-            <content:encoded><![CDATA[<blockquote>You will be able to digest and enjoy the following post better if you have some background knowledge of the game <em>League of Legends</em>(I will refer to it as LOL from now on), but I tried to write the post using accessible terminology so that anyone can understand the overall context.</blockquote><p>MVP? Although players who make flashy plays might leave deep impressions on their audience, they may not be selected as game MVPs. Players that are favored by head coaches might not be their teams’ best players. In addition, we might underrate players because of their ill-tempered personalities.</p><p>Given that no one can avoid the “danger” of such subjective decision-making, is there any way to make totally objective decisions? If you want to approach gameplay from a data driven perspective, where should you start?</p><h3>Win Contribution</h3><p>Imagine that you are the General Manager(GM) of a professional team. What`s keeping you up late at night?</p><p>1. <em>Who are the good and bad players on our team? If we plan on scouting, which position should we concentrate on?</em></p><p>2. <em>Are our players competitive in the league?</em></p><p>3. What’s the reasonable compensation level for our players?</p><p>These are some of the questions that you must consider as a general manager. However, the lack of objective data makes answering them extremely difficult. A team’s winning rate does not reveal exactly how well the players are playing, and individual KDA (Kill Death Assist) [1] is too simple of a data-point to represent a player’s playing abilities.</p><p>We need a new index and it needs to answer the three questions listed above. In my opinion, we need an index that enables us to evaluate match processes in specific contexts. In other words, we need to evaluate the “real” skill of the players. This raises the following important question: how should we define “skill”? I would like to define it as “a player`s contribution level to his or her team ’s winning.” Let’s consider the below metrics.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/600/1*oenfGOncpZj_mjAQWUzaGA.jpeg" /></figure><p>By isolating each position’s win contribution, we can construct graphs like those above. These graphs lead to the following conclusions.</p><p>1. <em>The blue bar represents the average win contribution. The red bar represents win contribution per game.</em></p><p>2. <em>A score of 1 means that your skill is exactly at the league median.</em></p><p>3. <em>This team has strong TOP and ADC players. With a 1.2 in TOP and 1.2 in ADC, the TOP and ADC players’ abilities are 1.2 times better than the abilities of average league players.</em></p><p>4. <em>However, if you look closely, TOP has ups and downs. In his lows, his score dips to 0.6, and, in his highs, the score rises to 2.0. However, ADC has no ups and downs. He consistently contributes to victory in the 1.1 range.</em></p><p>5. <em>The weakest link on this team is SUP because his win contribution is the lowest. At this performance level, we need to reconsider whether SUP has sufficient skill to play in the league. We also need to take into consideration his/her interaction with ADC. SUP’s play is easily influenced by how ADC plays.</em></p><p>6. <em>JUG is playing okay while completing his part of the game. He also doesn’t have any ups and downs. However, we can’t expect JUG to produce a play that could overturn the game situation.</em></p><p>7. <em>The team’s total score is 4.9 and the average score is 0.98. Therefore, the roster is weaker than the league average.</em></p><p>8. <em>We can dig into the reasons for TOP’s ups and downs. For example, TOP’s performance may dip and rise due to different growth rates depending on the lane fight situations.</em></p><p>This is a fairly basic translation of data, but it comes much closer to an objective analysis than a GM or head coach commenting “I think he/she is not playing well.”</p><h3>The GG Function — GG(x)</h3><p>GG(x) is an engine that scientifically calculates win contributions. GGtics(http://ggtics.com) has spent the past two years working to ensure its accuracy. [3] If you feed GG(x) with match content data, you can get the match win contributions. The development of the GG(x) engine was based on several different principles, which I outline below:</p><p>1. <em>Every move during the match will have an impact on the game’s outcome. Moves can have either positive impacts or negative impacts. Each positive impact will receive a “+” score and each negative impact will receive a “-” score.</em></p><p>2. <em>The same move can have a different impact depending on the time progression. Intuitively, we know that a death just before the end of a match has a much more significant negative impact on the game than a death that happens even before lane fight begins. A death right before the end of the game may cause a team to lose.</em></p><p>3. <em>Different expectations apply to different positions [2]. For example, if we state “ADC needs to commit at least 10 damage in a game,” then this is our expectation. If ADC commits exactly 10 damage, then we give ADC 1 point, and we give ADC 2 points if he/she commits 20 damage, and so on. Additionally, the expectations for ADC differ from those for SUP. For example, the expectation that ADC will “commit damage to the enemy champion” is high, while the expectation of “widening vision by warding” is much higher for SUP.</em></p><p>From this perspective, what moves should the engine really track? Does the engine track every move we make in a game? The answer is “No.” The engine only tracks the key index; the engine decides factors like coefficiency, measurement accessibility, improvement possibility, and more.</p><p><em>“I want to see my dodge rate.”</em></p><p><em>Q. “Why do you want to see your dodge rate?”<br>A. “Because I want to know my survival rate.”</em></p><p><em>Q. “Why do you want to know your survival rate?”<br>A. “Because I want to survive while committing significant damage in team fights.”</em></p><p><em>Q. “Why is it necessary to survive in a team fight?”<br>A. “Because I need to survive in order to pursue objectives like the Tower, Baron, or Dragon.”</em></p><p><em>… (omitted)</em></p><p><em>Q. “Why do you need to ….?”<br>A. “To win.”</em></p><p>Repeating questions like this over and over always eventually brings up a common final reponse: the desire for victory. Victory in <em>LOL </em>involves destroying the Nexus. Given this common goal, let’s trace the process of destroying the Nexus in reverse order.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*P7XQRgYJk8GWwhVaFJvkww.png" /></figure><p>To destroy the Nexus, you must destroy the Nexus Tower. To destroy the Nexus Tower, you must destroy the Inhibitor Tower. To destroy the Inhibitor Tower, you must destroy the Inner and Outer Towers. To destroy the Inner and Outer Towers, you must win in small and big team fights. This breakdown is somewhat simplified, but we can conclude that <em>LOL </em>is a game in which players gradually reach the goal of “destroying the Nexus” by repeatedly winning team fights.[4]</p><p>In this context, a player’s skill depends on how much the player can contribute to wins in team fights. This leads to the question: what kind of abilities do you need to win team fights? After 2 years of examining various perspectives and conducting different analyses, GGtics concluded the core abilities are “Positioning,” “Map reading,” and “Growth.”</p><p>“Positioning” refers to how well a player can position himself/herself in a team fight to participate in the fight by dodging opponents’ skills. <br>“Map reading” refers to how well a player can collect information from the game and use that information to make correct decisions. <br>“Growth” literally means the ability to grow and this includes winning or losing a lane fight.</p><p>Any player will agree that developing skills in these three areas will enable you to win team fights. We therefore draw the following conclusions:</p><blockquote>Player skill = Win contribution = Positioning, Map reading, Growth = GG(x)</blockquote><h3>Recognition and improvement</h3><p>Once we have confidence in the win contribution calculated by GG(x), we can better assess the current situation and improve it.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*51EavIO6FU6HV2iGBEcGrQ.png" /></figure><p>1. <em>Understand whether a player lacks skill in positioning, map reading, or growth.</em></p><p>2. <em>For example, a player who lacks positioning skill needs to check if the problem stems from hit, dodging, targeting, or moving issues. Review the index if the problem can be tracked with data, and if it is not for technical reasons, then the coaching staff can examine the situation.</em></p><p>3. <em>Try to use feedback to improve. Improving problem areas will make team fights easier and will eventually result in more team fight wins.</em></p><p>4. <em>Track win contributions and monitor changes; if necessary, repeat the whole process beginning with the first step.</em></p><p>This is similar to the startup cycle embraced by Lean Startup. The important thing to recognize here is that data doesn’t do everything for you. Data will help you see the situation objectively, but, ultimately, the coaching staff needs to learn the nuances of their players and help them improve.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*CF_6ib0pnB5boadi5wplIQ.png" /></figure><h3>ESports Moneyball</h3><figure><img alt="" src="https://cdn-images-1.medium.com/max/1000/1*KO6ujUDGHDO0unyZKDYSKQ.jpeg" /><figcaption>This is a scene from the movie, “Moneyball.” The movie is based on the true story of Oakland Athletics, a MLB team with a low budget that was able to win the Championship after introducing data-based game strategies. After the emergence of the Moneyball phenomenon, every professional baseball team in U.S. has begun playing baseball based on data.</figcaption></figure><p>Esports has a short history. The sport’s newborn (relative to other leagues’ professional teams) professional teams are competing and progressing. The high ranked teams can maintain and manage their positions by tracking win contributions. The mid ranked teams can get the “push” they need to advance to higher rankings. The low ranked teams can use this approach as an opportunity to improve by objectively observing their specific situations. Although the win contribution index seems simple, it is extremely useful. If we continuously approach the games objectively using the win contribution index, we may see a revolution in Esports just like the one depicted in the movie, “Moneyball.”</p><blockquote><em>Contact : support@ggtics.com<br>https://your.gg</em></blockquote><p><strong>Footnotes</strong></p><p><em>[1] “KDA = (Kills + Assists) / Deaths” is a simplified mathematical equation. The more points you receive on Kill/Assists and the more time you play consistently, the more points you receive overall. This index is widely used among </em>LOL <em>gamers due to its simplicity.</em></p><p><em>[2] There are 5 positions in </em>LOL<em>. An</em>LOL <em>team is similar to a company that has a business planner, a developer, and a designer who have the same goal but different professional expertise and responsibilities.</em></p><p><em>[3] GG(x)’s accuracy is measured in various ways. One way involves checking how similar GG(x)’s decision making is to the decision making of Master ranked players (top 0.1% in Korea). When we measured accuracy in this way, we found that GG(x)’s decisions were 90% similar to those of Master ranked player’s. We also measured accuracy in other mechanical ways.</em></p><p><em>[4] If you are unfamiliar with </em>LOL<em>, you can understand this as what you need to do to reach a certain goal.</em></p><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=89fe69887758" width="1" height="1">]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[ESports에서 머니볼 혁신이 가능할까?]]></title>
-            <link>https://medium.com/@minslovey/esports%EC%97%90%EC%84%9C-%EB%A8%B8%EB%8B%88%EB%B3%BC-%ED%98%81%EC%8B%A0%EC%9D%B4-%EA%B0%80%EB%8A%A5%ED%95%A0%EA%B9%8C-fbf39ce42a53?source=rss-2b096a43c480------2</link>
-            <guid isPermaLink="false">https://medium.com/p/fbf39ce42a53</guid>
-            <category><![CDATA[ggtics]]></category>
-            <category><![CDATA[league-of-legends]]></category>
-            <category><![CDATA[esport]]></category>
-            <dc:creator><![CDATA[Vayne Cha]]></dc:creator>
-            <pubDate>Thu, 21 Jun 2018 05:24:26 GMT</pubDate>
-            <atom:updated>2018-08-23T15:21:19.063Z</atom:updated>
-            <content:encoded><![CDATA[<blockquote>리그 오브 레전드(이하 롤)에 대한 이해가 있을 때 원활히 읽을 수 있는 글입니다만, 롤을 모르는 분들도 전반적인 맥락을 이해하며 읽을 수 있도록 최대한 쉬운 용어로 쓴 글입니다.</blockquote><p>MVP는 누구인가? 경기에서 화려한 플레이를 한 선수는 모두에게 깊은 인상을 남기지만 그 선수가 MVP는 아닐 수 있다. 감독의 마음에 꼭 드는 선수가 실제 실력은 별로일 수 있다. 성격이 괴팍하여 모두에게 미움을 받는 선수의 실력을 과소평가할 수 있다. 어느 누구도 이런 주관의 위험에서 벗어나지 못한다. 좀 더 객관적으로 이런 결정을 할 수는 없을까? 데이터 관점으로 접근한다면 어디서 시작하는 게 좋을까?</p><h3>승리 공헌도</h3><p>스스로 프로팀 구단주라고 상상해보자. 어떤 고민을 할까?</p><ol><li>우리 팀에서 누가 잘하는 선수이고 누가 못 하는 선수일까? 다음에 선수 영입을 한다면 어떤 포지션을 중점적으로 해야 하나?</li><li>우리 팀의 선수층은 리그에서 경쟁력이 있는 걸까?</li><li>선수의 연봉은 얼마가 적당할까?</li></ol><p>구단을 운영하려면 이런 질문을 안 할 수 없을 것이다. 그러나 현재는 이런 질문에 답하려 할 때 참고할 객관적 데이터가 별로 없다. 팀의 승률만 갖고는 어떤 선수가 얼마나 잘하는지 알 수 없고, 선수별 KDA(Kill Death Assist)[1]는 선수의 실력을 대표하기에는 지나치게 단순하다.</p><p>새로운 지표가 필요하다. 그리고 이 지표는 최소한 위 세 가지 질문에 답을 할 수 있어야 한다. 난 이런 맥락에서 경기 과정을 평가하는 지표가 필요하다고 생각한다. 즉, 선수의 실제 실력을 평가하자는 얘기다. 그렇다면 실력이란 무엇인가? 승리에 공헌한 정도이다. 이를 앞으로 승리 공헌도라 부르겠다. 다음 그림을 보자.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/600/1*E1lMBw5nFbYp35ZzDrXMvw.jpeg" /></figure><p>팀의 리그 경기마다 역할별[2] 승리 공헌도를 뽑는다면 위 그림과 같은 그래프를 만들 수 있다. 위 그래프를 이용해 아래와 같은 해석을 할 수 있다.</p><ol><li><em>파란색은 평균 승리 공헌도를 의미한다. 빨간색은 게임별 승리 공헌도를 의미한다.</em></li><li><em>1점은 리그에서 딱 평균 수준이라는 것을 의미한다.</em></li><li><em>이 팀은 TOP과 ADC가 강한 팀이다. TOP 평균 1.2, ADC 평균 1.2로써 리그 평균보다 1.2배 정도 우수한 능력을 가지고 있다.</em></li><li><em>그러나, 자세히 보면 TOP은 기복이 좀 심한 편이다. 낮을 때는 0.6부터 높을 때는 2.0까지 왔다 갔다 한다. 반면 ADC는 기복이 거의 없다. 대부분 1.1 부근에서 안정적으로 승리에 공헌한다.</em></li><li><em>이 팀의 가장 큰 약점은 SUP이다. 승리 공헌도가 항상 낮기 때문이다. 이정도면 SUP의 수준이 현재 리그에 걸맞는지 생각해볼 필요도 있다.다만 ADC와의 상호작용도 고려해야 한다. SUP은 ADC의 플레이에 영향을 크게 받을 수 있다.</em></li><li><em>JUG은 매우 무난하고 본인 몫 정도는 해내고 있다. 기복도 심하지 않다. 그러나, 경기에 판세를 크게 바꾸는 능력을 기대하기 어려울 것 같다.</em></li><li><em>팀의 총점은 4.9점이고 평균은 0.98이다. 따라서 리그 평균에 비교해 다소 실력이 부족한 선수층이라 볼 수 있다.</em></li><li><em>TOP은 상세한 분석을 통해 기복이 심한 이유를 조사해볼 수 있다. 예를 들어 라인전 성장 여부로 기복이 생길 수 있다.</em></li></ol><p>매우 기초적인 해석이지만 구단주나 감독이 이런 데이터도 없이 “저 선수 너무 못하는 것 같은데?” 판단하는 것보다 훨씬 객관적이다. 그렇다면 승리 공헌도는 어떻게 계산할 수 있을까?</p><h3>The GG(x)</h3><p>GG(x)는 승리 공헌도를 과학적으로 계산하려 만든 엔진이다. GGtics는 지난 2년 동안 이 엔진을 정확하게 만들려 노력해왔다. [3] 게임 내용을 담은 데이터를 GG(x) 엔진에 넣으면 승리 공헌도가 나온다. GG(x) 엔진을 개발할 때 몇 가지 관점이 있었는데 주요한 내용은 아래와 같다.</p><ol><li><em>경기 내 모든 행동 각각은 승리에 미치는 영향이 있다. <br></em>긍정적 영향도 있고, 부정적 영향도 있다. 긍정적 영향에는 +, 부정적 영향에는 -점수를 준다.</li><li><em>같은 행동이라도 시간대에 따라 영향도가 달라진다. <br></em>직관적으로 생각해봐도 라인전 단계의 1데스보다 게임 종료 직전의 1데스가 게임의 승리에 미치는 부정적 영향이 훨씬 크다고 짐작할 수 있다. 게임 종료 직전 1데스는 바로 게임을 패배로 이끌기 때문이다.</li><li><em>역할[2]별로 기대치가 있다. <br></em>기대치는 역할별로 최소한 해주어야 하는 기준이다. 예로 ADC는 딜을 10 정도 넣어야 한다고 기대한다면 이게 바로 기대치다. 정확히 10을 넣으면 1점, 20을 넣으면 2점 이렇게 생각할 수 있다. 또한, ADC의 기대치와 SUP의 기대치는 다르다. 예를 들어 “데미지는 주는 행위”의 기대치는 ADC가 훨씬 높으며, “와드를 설치해 시야를 확보하는 행위”의 기대치는 SUP 훨씬 높을 수 있다.</li></ol><p>그렇다면 이런 관점에서 실제로 추적하는 행동은 무엇인가? 경기 내 모든 행동을 다 추적하는 것인가? 그렇지 않다. 승리와의 상관 계수, 측정 용이성, 개선 가능성 등을 고려하여 핵심적 지표만 추적한다. 실제 프로팀 미팅에서 받았던 질문을 시작으로 핵심 지표를 정의해보자.</p><p><em>“스킬 회피율을 보고 싶다.”</em></p><p><em>Q. “스킬 회피율을 왜 보고 싶은가?”<br>A. “생존력이 있는지 궁금하기 때문이다.”</em></p><p><em>Q. “왜 생존력이 궁금한가?”<br>A. “팀 파이트에서 데미지를 잘 넣으면서도 생존하기를 바라기 때문이다.”</em></p><p><em>Q. “팀 파이트에서 생존하는 게 왜 필요한가?”<br>A. “살아남아야 타워, 바론, 용과 같은 오브젝트를 노릴 수 있기 때문이다.”</em></p><p><em>… (중략)</em></p><p><em>Q. “…왜 필요한가?”<br>A. “승리하기 위해서다.”</em></p><p>질문을 거듭하다 보면 결국 승리하기 위해서라는 결론에 이른다. 롤에서의 승리란 곧 넥서스 철거이다. 그렇다면 아래 그림을 보며 넥서스 철거에 이르는 과정을 역추적해보자.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/849/1*sbMjJf0CdtMtKGaO4ZAoIA.jpeg" /></figure><p>넥서스를 철거하려면 쌍둥이 타워를 철거해야 한다. 쌍둥이 타워를 철거하려면 억제기를 철거해야 한다. 억제기를 철거하려면 1,2,3차 타워를 철거해야 한다. 1,2,3차 타워를 철거하려면 크고 작은 교전에서 이겨야 한다. 조금 단순화 시킨 면이 있지만 결국 롤은 반복적인 교전 승리를 통해 넥서스 철거라는 목표에 점차 도달하는 게임이라 할 수 있다.[4] 따라서 교전을 승리를 이끄는 능력야말로 선수의 실력이라 할 수 있다. 그렇다면 교전을 이기려면 어떤 능력이 필요할까? GGtics는 지난 2년 동안 다양한 관점의 분석을 통해 교전 승리에 필요한 핵심 능력이 ‘포지셔닝’, ‘맵리딩’, ‘성장’이라 판단하게 되었다.</p><p>포지셔닝은 교전에서 얼마나 자리를 잘 잡고 상대방의 스킬을 피하며 전투를 할 수 있는지를 의미한다. 맵리딩은 게임에서 발생하는 정보를 수집하고 올바른 판단을 할 수 있는지를 의미한다. 성장은 말 그대로 성장하는 능력을 의미하며 라인전을 포함한다. 이 세 가지를 잘하면 교전에서 승리할 수 있다는 것에 그 누구도 이견은 없을 것이다. 결국 아래와 같은 형태로 정리할 수 있다.</p><blockquote>실력 = 승리 공헌도 = 포지셔닝, 맵리딩, 성장 능력 = GG(x)</blockquote><h3>인지와 개선</h3><p>GG(x)로 계산하는 승리 공헌도에 신뢰가 간다면 이제는 상황을 인지하고 개선해볼 수 있다.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*MLQ56tyW5gD4u96JfcaIBA.png" /></figure><ol><li>포지셔닝, 맵리딩, 성장 중에 어떤 부분이 부족한지를 파악한다.</li><li>만약 포지셔닝이 부족하다면 스킬 적중, 스킬 회피, 타게팅, 무빙 등에서 문제가 없는지 살펴본다. 데이터로 추적이 가능한 것은 지표를 보고, 기술적 이유 등으로 데이터가 없다면 코치가 직접 살펴본다.</li><li>피드백을 통해 개선을 시도한다. 개선된다면 교전 승리가 용이해질 것이고 결국 더 많이 승리할 수 있을 것이다.</li><li>승리 공헌도를 다시 추적하여 변화를 확인하고 필요하다면 1번부터 다시 시작한다.</li></ol><p>이는 Lean Startup에서 주장하는 스타트업의 사이클과 비슷하다. 중요한 점은 데이터가 모든 것을 해주지 않는다는 점이다. 데이터는 객관적인 상황 인지(Measure)를 돕지만 결국 감독이나 코치가 선수의 세밀한 부분을 관찰 및 판단(Learn)하여 선수의 실력이 개선(Build)되도록 도와야 한다.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*3h5YH-KBu9vAVSU0nbl8aQ.png" /><figcaption>Lean Startup 사이클</figcaption></figure><h3>ESports 머니볼</h3><figure><img alt="" src="https://cdn-images-1.medium.com/max/1000/1*D4ZjqDrPwzcDWHn8uoA7qA.jpeg" /><figcaption>영화 머니볼의 한 장면이다. 머니볼은 데이터 기반의 전략으로 저예산 구단을 혁신하여 우승에 이르는 과정을 담고 있는 실화 바탕 영화다. 머니볼 사건 이후 미국 프로야구팀 모두가 데이터 기반의 야구를 하게 된다.</figcaption></figure><p>ESport는 아직 역사가 짧다. 생긴 지 몇 년 안 된 프로 구단끼리 빠르게 발전하며 경쟁하고 있는 양상이다. 이미 상위권에 있는 팀이라면 승리 공헌도를 추적함으로써 좀 더 예측 가능한 관리와 유지를 꾀할 수 있다. 중위권에 있는 팀이라면 상위권으로 치고 나갈 수 있는 동력을 만들 수 있다. 하위권에 있는 팀이라면 팀의 상황을 객관적으로 조명하여 개선할 기회를 얻을 것이다. 승리 공헌도는 단순해 보이지만 매우 유용하다. 승리 공헌도와 같은 객관적 접근을 지속적으로 시도한다면 ESports에서도 영화 머니볼과 같은 혁신을 만들 수 있을 것이다.</p><p>GGtics는 현재 함께 협업할 프로팀을 찾고 있다. GGtics와 협업하는 프로팀은 자신의 팀을 체계적으로 관리할 수 있게 될뿐더러, GGtics와 함께 구단에 재정에 도움이 될 다양한 사업을 할 수 있을 것이다.</p><p>GGtics 연락처<br>* support@ggtics.com</p><p>각주</p><p><em>[1] ‘KDA = (Kills + Assists) / Deaths’로 구성한 간단한 수식이다. 킬/어시스트 점수를 많이 얻고 본인은 안정적으로 플레이 할 때 점수가 높아지는 구조다. 쉽고 단순해 롤 게이머들 사이에서 널리 활용되는 지표이다.</em></p><p><em>[2] 롤에서는 5가지 정도 역할이 있다. 회사에서 기획자, 개발자, 디자이너가 같은 목적을 갖고 일하지만 별도의 전문성 및 책임을 갖는 것과 유사하다.</em></p><p><em>[3] GG(x)의 정확도는 여러 방법으로 측정한다. 그 중 하나는 한국 서버 기준 마스터 수준(상위 0.1%)의 판단과 GG(x)의 판단이 얼마나 유사한지 보는 것이다. 이렇게 측정했을 때 마스터의 판단과 GG(x)의 판단이 90% 유사했다. 그 외 기계적인 측정도 한다.</em></p><p><em>[4] 롤을 잘 모르시는 분이라면 단순히 목적을 이루려고 할 때 어떤 것을 해야 하는지 추적하는 정도로 이해하셔도 무방하다.</em></p><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=fbf39ce42a53" width="1" height="1">]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[GGtics 구인]]></title>
-            <link>https://medium.com/@minslovey/ggtics-%EA%B5%AC%EC%9D%B8-67eb7876e14b?source=rss-2b096a43c480------2</link>
-            <guid isPermaLink="false">https://medium.com/p/67eb7876e14b</guid>
-            <dc:creator><![CDATA[Vayne Cha]]></dc:creator>
-            <pubDate>Tue, 16 May 2017 07:14:41 GMT</pubDate>
-            <atom:updated>2017-05-16T08:41:57.842Z</atom:updated>
-            <content:encoded><![CDATA[<figure><img alt="" src="https://cdn-images-1.medium.com/max/450/1*jGyEk77RE7TCDQli-JtC9A.png" /></figure><p>GGtics에서 북미 서비스를 함께 만들 인재를 찾고 있습니다. 전통적인 방법으로 채용공고를 냈고, 지인에게 부탁도 드려보았습니다만 후보자조차 만나 뵙기가 어렵네요. 고민 끝에 GGtics가 그동안 어떻게 준비해왔고 또 앞으로를 어떻게 생각하고 있는지 설명하면 혹 누군가에게 매력을 줄 수 있지 않을까 하여 미디엄에 구인 글을 써보려 합니다.</p><h3>지금까지의 도전과 노력</h3><p>GGtics 서비스 대상인 롤은 세계적인 게임입니다. 따라서 GGtics는 첫 서비스 개발부터 기술적으로 북미, 유럽 등에 진출할 것을 고려하며 만들었습니다. i18n에 대한 준비는 물론이고, 해외의 사용자 체감 속도가 떨어지지 않도록 가급적 CDN 자원을 이용하기도 했습니다. 기능 개발을 할 때는 국내 환경에 종속 될 만한 부분이 없도록 신경 쓰곤 했고요.</p><p>또한, 전 세계적으로 게임을 제일 잘하는 한국 사용자에게 분석 정확도를 인정받으려 노력해왔습니다. 사실 작년 4월에 첫 서비스를 했을 때는 사용자들에게 비판을 많이 받았습니다. 분석 정확도가 떨어지는 형편 없는 서비스로 보시더라고요. 비판하는 것을 보니 관심은 있다고 생각했고, 제 생각 이상으로 사용자가 정확도를 중요하게 여기는 점에 많이 놀랐습니다.</p><p>이후 정확도 향상에 많은 노력을 기울였습니다. 만들고 싶은 기능 모두 뒤로하고 분석 엔진을 개선하려 노력했습니다. 이렇게 노력하다 보니 ‘GGtics 점 같은 것 아냐?’라는 의견에서 최근 ‘GGtics 꽤 정확하다’라는 의견으로 변화하는 모습을 보게 되었습니다. 실제로 최근 사용자 의견 중 정확도에 대한 긍정적 의견은 아래와 같습니다.</p><blockquote>05/15-이거 정확해요.. 저한테 1등주는거보니 정확하네요 객관적으로 누가봐도 제가 잘하거든요.. 제 mmr내에서요. 미묘한걸 잘캐치해내나봐요 종종 2인분 하드캐리도 나오는데 드물죠?</blockquote><blockquote>05/15 -그냥 쌉 정확</blockquote><blockquote>05/14 -아주 구구절절 맞는 설명이었습니다.</blockquote><blockquote>05/14 -조ㅗㅗㅗ오ㅗ나 정확</blockquote><blockquote>05/13 -이 게임하면서 느낀건데 순위가 잘한사람대로 정확하네요</blockquote><p>한편 부정적 의견도 있습니다. 수치만 보니 게임이 제대로 분석이 되냐는 자주 듣는 의견이고, 욕설이 담긴 의견도 올라옵니다. 저희는 이런 의견을 피하지 않고 개선에 활용합니다. 더 정확한 분석을 하려면 어떻게 해야 할지 말 그대로 “매일” 고민하고 있습니다. 아래는 최근 정확도 관련 부정적 사용자 의견입니다. 마지막은 심한 욕설인데 현장감을 전하고자 넣었습니다.</p><blockquote>05/16 -이게말이됨? 그냥 압도적인 브랜드캐리인데 이걸 4등매기는 롤닥터 클라스 ㄷ 롤닥터가아니고 롤환자인듯</blockquote><blockquote>05/16 -20분동안 cs만먹은원딜이 1등?</blockquote><blockquote>05/15 -쓰레쉬 서포터의 기여도가 낮게 책정된 것 같습니다</blockquote><blockquote>05/15 -소라카에게 중요한것은 딜량도 킬도 아님</blockquote><blockquote>05/15 -ㅅ비ㅏㄹ애*뒤짐</blockquote><p>이렇게 부정적 의견이 많음에도 북미에 진출할 생각을 하는 것이 이상할지 모르겠습니다. 설명하자면 저희는 정답이 없는 분석 엔진을 만들고 있습니다. 왜냐하면 롤 게임을 평가하는 국제적 혹은 보편적 기준이 없기 때문입니다. 축구도 기준이 없기에 MVP를 선정할 때 여러 전문가의 의견이 엇갈리는 것이 이해를 돕는 유사한 예입니다.</p><p>저희는 ‘과학적 합리성을 최대화’하는 방향으로 개선하려 노력합니다. 때로 저희의 주관이 과학적 합리성을 넘으려 할 때 경계하는 편입니다. 또한, 당장 사용자가 비판하는 부분을 보통 꼼수라 부르는 쉬운 길로 해결하는 것도 경계합니다. 이런 중심을 갖고 개선하면 많은 사람이 인정하고 신뢰하는 분석 엔진이 될 수 있을 것이라 기대합니다.</p><p>저희가 일하는 방식은 이렇습니다. 팀 내부에서 어떤 항목에 대한 가중치가 너무 크다고 판단을 합니다. 이때 그래 너무 심하네 가중치 -1점 이런 방식으로 해결하지 않습니다. 가중치 조정이 -1점이어야 하는 과학적 근거가 없기 때문입니다. 그럼 어떻게 할까요? 과학적 방식으로 가중치를 구해 적용하거나, 분석 모델이 해당 가중치를 더 정확하게 결정하도록 개선합니다.</p><h3>북미 진출</h3><p>북미 진출을 할 시기라 보는 이유가 있습니다. 첫째는 국내에서 비판을 받아가며 어느 정도 서비스가 준비되었다 보기 때문입니다. 100% 완벽한 서비스는 없는 것이니, 결국 북미에 서비스할만한 정도냐가 중요하다 생각했습니다. 언급한 대로 그동안 정확도 개선에 힘썼습니다. 작년이면 북미에서 비판을 많이 받았겠지만, 지금은 기대를 해봐도 된다 생각합니다.</p><p>둘째는 “정확하지 않다”라는 선입견이 없는 북미 사용자에게 현재의 서비스를 보여주고 성과를 볼 수 있기 때문입니다. 작년 첫 오픈 때 서비스가 국내 대형 커뮤니티 중심으로 많이 전파되었지만 많은 사용자가 실망했습니다. 현재 국내에는 ‘부정확’이라는 쪽으로 이미지가 굳어진 것 같습니다. 이런 이미지 없이 도전해볼 기회입니다.</p><p>셋째는 서비스에 새로운 계기가 생기기라 예상하기 때문입니다. 게임사업에 대한 인식이 비교적 척박한 국내에서도 긍정적 제안을 받아왔습니다. 북미에 가면 더 좋은 제안이 있을 것 같습니다. 좀 막연하긴 하지만요. 또한, 북미 진출 후 저희 분석 엔진을 오픈소스화 할 계획도 있습니다. 여러 개발자와 함께 롤 분석의 기준을 만들고 개선할 기회가 생길 것입니다.</p><p>북미 진출을 한 후 안정화가 되면 유럽, 일본, 호주, 터키, 라틴 아메리카 등으로 서비스를 확장할 예정입니다. 확장성 맥락에서 GGtics의 장점은 여러 국가의 사용자 후보군이 이미 존재하고, 실제로 서비스를 제공하는 비용이 비교적 크지 않다는 점입니다. 저는 각 나라의 사용자가 저희 서비스를 사용해본 후 어떤 의견을 줄지 기대가 큽니다.</p><h3>인재상</h3><p>지금까지 저희가 해온 일과 앞으로 하고 싶은 일을 간단히 정리했습니다. 아래는 저희가 찾는 인재상입니다.</p><p>필수</p><ol><li>GGtics가 잘 될 것 같다고 느끼시는 분</li><li>롤 30레벨 이상 / 롤 랭크게임 경험자</li><li>비즈니스 영어 가능한 분</li></ol><p>우대</p><ol><li>위 필수 항목 외 전문 기술을 보유하신 분</li><li>예로 FE 개발, 마케팅, 기획, 회계 등 작은 기업에 도움이 될만한 모든 것</li></ol><p>업무</p><ol><li>서비스 메세지 번역</li><li>북미 사용자 대응, 이후 유럽 등으로 범위 확장될 수 있음</li></ol><p>회사</p><ol><li>성남 분당 근처 재택근무 형태, 단 상황에 따라 사무실 근무 체계로 바뀔 수 있음</li><li>세심한 케어는 어려운 환경, 목표가 뚜렷하고 자기주도성이 강한 분만 적응 가능할 것으로 예상</li><li>대표는 미디엄에서 느껴지는 긍정적 이미지에 * 0.1+a 정도 하면 대략 실제 수준에 근접할 것으로 예상</li><li>자율 휴가, 도서 구매비 지원하고 둘 다 기본적으로 제한 없음</li></ol><p>FAQ</p><p>Q) 재택근무이니 외국에서 근무해도 되나요?</p><p>A) 업무만 문제 없이 할 수 있는 환경이라면 가능합니다. 그러나, 만나서 긴밀하게 협의 할 일도 자주 있어서 선택이 가능한 상황이라면 가까운 거리에 계신 분을 선호할 것 같긴 합니다.</p><p>Q) 돈은 어떻게 버나요?</p><p>A) 아직 돈은 못 벌고 있습니다. 서비스 성장에만 집중하고 있습니다. 현재 두 차례 투자를 받았으며, 한 번 정도 더 받을 계획이 있습니다. 그러나, 현실적으로 3차 투자받는 것이 쉽지는 않아보입니다. 재정적 관점에서 보면 안정적 기업은 아닙니다.</p><p>Q) 토익 몇점 이상이면 되나요? 기준이 있나요?</p><p>A) 실제 업무만 잘 하실 수 있으면 됩니다.</p><p>Q) 북미에서 홍보를 어떻게 할 예정인가요?</p><p>A) 그동안 게임 커뮤니티에 누군가 GGtics 스샷을 올리고, 여기 어딘지 나도 알려달라고 답글이 달리는 상황을 수십 번 보았습니다. 해외에서도 이런 바이럴 모델이 작동할 것으로 기대하고 있으며, 기본적으로 Reddit과 같은 커뮤니티 중심으로 초기에 서비스 소개를 하는 형태의 씨앗을 뿌리며 시작하려 합니다.</p><p>관심이 있으신 분은 아래 메일로 연락해주세요. 혹은 가볍게 질의하고자 하시는 분은 페메로 연락주셔도 됩니다. 또한, 주위에 소개를 간절히 부탁드립니다. 함께 할 좋은 인재가 꼭 필요합니다.</p><p>메일 : minchang@loldoc.me</p><p>페북 : <a href="https://www.facebook.com/minslovey">https://www.facebook.com/minslovey</a></p><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=67eb7876e14b" width="1" height="1">]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[혼자라도 할 각오]]></title>
-            <link>https://medium.com/@minslovey/%ED%98%BC%EC%9E%90%EB%9D%BC%EB%8F%84-%ED%95%A0-%EA%B0%81%EC%98%A4-679fda12be7e?source=rss-2b096a43c480------2</link>
-            <guid isPermaLink="false">https://medium.com/p/679fda12be7e</guid>
-            <dc:creator><![CDATA[Vayne Cha]]></dc:creator>
-            <pubDate>Wed, 10 May 2017 14:36:43 GMT</pubDate>
-            <atom:updated>2017-05-11T06:23:21.625Z</atom:updated>
-            <content:encoded><![CDATA[<figure><img alt="" src="https://cdn-images-1.medium.com/max/500/1*eOtnjgybPmHxajN2OjA2Wg.jpeg" /></figure><blockquote>공동 창업자를 구하지 못하고, 비전으로 다른 사람을 설득하지 못한 것은 전적으로 나의 부족함 때문일 것이다. 이 부분을 인정하고 글을 시작하고 싶다.</blockquote><p>창업 전에는 친한 누군가가 GGtics의 비전을 보고 합류할지 알았다. 그래서 내가 함께 일하고 싶은 여러 친구에게 제안하곤 했다. 모두 거절당했지만 당시에는 크게 개의치 않았다. 그런데, 스타트업에 관심이 없어 합류하지 않겠다던 친구가 얼마 후 대기업 급여가 보장되는 스타트업 가는 것 보고 여러 생각이 들었다. 현실적인 조건이나 창업자의 자질 같은 것 말이다.</p><p>또 큰 회사 대표를 하셨던 분이 출자한 스타트업이 나와 비슷한 시기에 시작하는 것을 보았다. 그곳에 전에 함께 일하던 개발자, 기획자, 리더 여러 명이 합류하는 것을 보고 다시 한번 생각에 잠겼다. 내가 가진 이상과 현실의 차이랄까? 현실 인식 같은게 생겼다. 결과로 좋은 회사 다니는 분들께는 제안을 안 하게 되었다. 여러 이유로 우리 회사에 오라 할 자신이 없었다.</p><p>옛 동료 중 몇몇이 내가 창업을 했다는 소식을 듣고 스타트업 관련해 얘기 나누고 싶다며 만나자고 했었다. 혹시나 하는 마음에 기대를 하고 열 일 젖혀두고 만나보았다. 아쉽게도 그분들은 스타트업에 관심은 있지만, 우리 회사에 대한 관심은 요즘 표현으로 1도 없었다. 아쉬움은 있지만 그분들의 입장에서 상담을 해주곤 했다.</p><p>더 멋쩍을 때도 있었다. 누군가 GGtics에 관심을 보여 사전 만남 식으로 차를 마시며 얘기를 나눴다. 2~3시간 얘기하고 생각해본다며 헤어졌다. 그 후 연락이 없었다. 어느 날 갑자기 연락이 왔다. 혹시나 해 기대를 갖고 또 열 일 젖혀두고 달려나갔다. 최근 몇백 억의 투자를 받은 유망 스타트업을 갈지, 대기업을 갈지 고민 상담이었다. 즐겁게 대화했지만 현실을 다시 느꼈다.</p><p>채용 할 때는 서비스의 비전에 공감해서 지원하는 분은 아직 한 번도 못 본 것 같다. 하도 채용이 안 되어 혹시 돈을 많이 주면 비전에 공감이 안 되더라도 기능적으로 우수한 분이라도 찾을까 싶어 연봉 6,000만 원으로 올려보았다. 지원 꽤 하더라. 근데 나로서도 받는 만큼 역할을 해줄 분을 찾다보니 채용은 못 했다.</p><p>이런 과정을 거치며 진짜 이 서비스 비전에 공감하고 나와 함께 어려움을 헤쳐갈 한 사람이 없는 게 안타까웠다. 왜 그럴까? 생각을 하노라면 결국 내 부족함에 눈이 가곤 했다. 그러지 않으려 했다. 그러나, 생각을 거듭하다보면 어느샌가 자책하고 있었다. 그러다 나름의 각오를 다진 계기가 있다. 에반 월리엄스의 다소 슬픈 얘기를 읽고 나서이다.</p><p>블로거닷컴, 트위터, 미디엄 모두 세계적으로 유명한 서비스이다. 이 세 서비스에 모두 관여한 사람이 바로 에반 월리엄스다. 난 에반을 롤 모델로 삼고 있다. 이유는 두 가지이다. 첫째는 정말 아름다운 서비스인 미디엄을 만들었기 때문이다. 또 하나는 그 어렵다는 커뮤니티 서비스를 창업가로서 세 개나 만들었기 때문이다.</p><p>에반의 경력만 보면 무척 화려하다. 어떻게 커뮤니티 서비스 3개를 세계 정상급으로 성장시키는거지? 보통 다 이렇게 생각할거다. 그런데 아까 언급한 얘기가 있다. 에반이 블로거닷컴을 창업해 대표로 있던 시절이다. 회사에 돈이 떨어져 갔다. 공동 창업자들이 기업형 블로그로 돈을 벌자고 했다. 에반은 대표로써 거절했고, 돈이 떨어지는 시점에 공동 창업자들은 모두 떠난다.</p><p>에반은 혼자 남아 블로그닷컴을 유지보수한다. 익숙하지 않은 자바를 공부해가며 코딩한다. 휴가를 갔다가 서비스에 문제가 생겨 대응하느라 휴가를 망치기도 한다. 이 때 가장 힘들었다고 한다. 어쨌든 에반은 혼자 버텼고 블로거닷컴은 구글에 인수된다. 그 다음은 모두 알듯이 구글에서 나와 트위터를 창업하고, 이후에는 미디엄을 창업한다.</p><p>난 에반이 혼자 남은 얘기를 아주 좋아한다. 용기를 얻기 때문이다. 난 일 할 때 경주마 같다는 얘기를 종종 듣는다. 그래서 뭔가에 집중할 때면 주위를 잘 못 보아 때로 주위 사람이 상처 받곤 한다. 창업하니 회사 다닐 때보다 이런 성향이 더 강해졌다. 이 때문에 에반의 얘기가 남 얘기 같지 않았다. 내게도 충분히 닥칠 수 있는 일이라 생각했다.</p><blockquote>공동창업자들이 떠날 때 에반도 혹평을 받았을 것 같다. 에반은 모두 떠날 때 어떤 마음이었을까?</blockquote><p>때로 난 “혼자라도 할 각오”를 다지곤 한다. 이미 개발자는 나 혼자이고, 어쩌면 시간이 흐르고 회사의 상황이 바뀌면 진짜 혼자가 될지도 모르겠다. 혹시나 이런 상황이 오더라도 부족함은 인정하되 자책하지 않으려 한다. 에반처럼 그냥 내가 가진 역량으로 할 수 있는 일을 꾸준히 해야겠다. 사실 이미 에반처럼 장애 대응은 혼자 다 하고 있다. 신기하게 여행 가면 꼭 장애나더라.</p><p>이런 글을 쓴다고 해서 우울함에 빠져있거나, 좋은 환경으로 시작하는 회사를 질투하거나 그런 것은 아니다. 오히려 어려움은 있지만 거듭 고민하며 즐겁게 헤쳐나가는 편이다. 단지 창업의 양면을 모두 얘기하는 것이다. 달콤한 얘기는 많지만 이런 얘기는 별로 없다. 이런 얘기야말로 현장의 땀 냄새 같은 것 아닐까? 썩 유쾌하지는 않지만 분명 존재하는 것 말이다.</p><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=679fda12be7e" width="1" height="1">]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[기록의 이유]]></title>
-            <link>https://medium.com/@minslovey/%EA%B8%B0%EB%A1%9D%EC%9D%98-%EC%9D%B4%EC%9C%A0-b9aecc315d08?source=rss-2b096a43c480------2</link>
-            <guid isPermaLink="false">https://medium.com/p/b9aecc315d08</guid>
-            <dc:creator><![CDATA[Vayne Cha]]></dc:creator>
-            <pubDate>Thu, 27 Apr 2017 21:32:22 GMT</pubDate>
-            <atom:updated>2017-04-28T08:14:38.158Z</atom:updated>
-            <content:encoded><![CDATA[<figure><img alt="" src="https://cdn-images-1.medium.com/max/480/1*iHiOi1SAY2GYm9ouinA7AQ.jpeg" /></figure><p>최근 창업 얘기를 이곳에 기록한다. 얘기를 늘어놓다 보면 내 부족함과 한계가 드러난다. 현명한 분이 내 글을 읽는다면 글 너머에 숨겨져 있는 부족함까지 보실 것이다. 그 외에도 고민이 많다. 투자자가 보고 걱정하면 어쩌지? 혹 스타트업계에서 불이익을 당하는 거 아닐까? 여기에 시간을 써도 될까? 그럼에도 기록하려 애 쓰는 이유가 있다.</p><p>첫째는 나 자신과 회사를 위해서이다. 예전부터 글 쓰기는 내가 현재 하는 일을 더 잘할 수 있게 도와줬다. 취업이 잘 안 되어 고생하던 시절에는 취직을 할 수 있게 도왔고, 개발자로 일하던 시절에는 여러 복잡한 생각을 잘 정리해 나름의 생각을 가질 수 있게 도왔다. 지금 이렇게 글을 쓰면 내가 하는 일을 더 잘하게 되고 결국 회사에도 도움이 된다는 소신이 있다.</p><p>둘째는 즐겁기 때문이다. 내 생각을 하얀 바탕에 문장으로 작성하는 순간은 항상 묘한 즐거움이 있다. 특히 미디엄은 글 쓰기 감성을 매우 많이 자극하는 편이다. 게다가 정말로 즐거운 순간은 글 쓴 후이다. 난 글을 쓰고 누군가 읽어주길 바라는 편이라 페이스북에 자주 공유한다. 누군가 이 글을 읽어줄 때 큰 기쁨을 느끼곤 한다.</p><p>셋째는 이후 창업 할 개발자를 위해서이다. 예전 창업하려 했더니 나를 아끼는 개발자 선배 몇몇이 말리더라. 난 지나치게 개발자스럽기 때문에 안 된다는 것이다. 좀 사업가 다운 개발자였으면 기대라도 해볼텐데 말이다. 난 개발자스러운 것도 나름 강점이라 판단하고 시작했지만, 생각만큼 결과가 안 나올 때면 날 말리던 선배의 얼굴이 생각나기도 한다.</p><p>난 개발자이기 때문에 개발자 특유의 생각이 있을 것 같다. 그렇다면 내가 창업 중 생각하고 느꼈던 것은 특별히 개발자 출신 창업가에게 더욱 많이 와 닿고 공감이 되지 않을까? 게다가 만약 내가 소기의 성과를 거둔다면 사업과 멀어 보이던 개발자도 열심히 노력하니 이 정도는 할 수 있더라라는 사례가 될 수도 있겠다. 그러면 다른 개발자도 도전할 용기를 가질테고 말이다.</p><p>넷째는 고전하는 과정을 기록하기 위해서이다. 스타트업계에 유명한 책은 대개 성공한 사람이 쓴 책이다. 따라서 책을 읽어보면 멋진 얘기가 압도적으로 많다. 이런 책은 창업 전에는 좋다. 그런데 막상 창업하고 나면 부작용이 생긴다. 책과는 달리 현실이 비참하니 난 병신이구나 생각이 든다. 이성적으로 생각해보면 당연히 그 정도는 아니지만 때로 이 생각을 피하기 어렵다.</p><p>그나마 <a href="https://ridibooks.com/v2/Detail?id=1238000077">하드씽</a>이라는 책에서 이게 아니라는 것을 명확하게 알려준다. 많은 대표가 표현하지 않을 뿐이지 너랑 비슷하게 고통을 겪고 있다고 말이다. 주위를 둘러보면 멋진 얘기만 지나치게 많은 것 같다. 그런데, 창업해보니 고전하는 사례가 더 궁금하더라. 예로 넷플릭스 이야기에서는 구글 이야기에서 느끼지 못했던 성장통을 느꼈고 내게 큰 용기를 주었다.</p><blockquote>사실 투자자가 가장 신경 쓰인다. 바꿔 생각해본다. 내가 믿고 투자한 대표가 있다. 그런데, 이 대표가 블로그에 우울한 얘기 쓴다. 힘들다고 한다. 한편으로 본인은 측정도 잘 못 해서 시간 허비했다고 한다. 성공을 바라는 투자자 입장에서 답답하지 않을까? 이 때문에 공개적 글쓰기를 망설였지만 일단은 그냥 써보려 한다. 넓은 이해를 바라며 말이다.</blockquote><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=b9aecc315d08" width="1" height="1">]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[린 스타트업]]></title>
-            <link>https://medium.com/@minslovey/%EB%A6%B0-%EC%8A%A4%ED%83%80%ED%8A%B8%EC%97%85-e4597735a726?source=rss-2b096a43c480------2</link>
-            <guid isPermaLink="false">https://medium.com/p/e4597735a726</guid>
-            <dc:creator><![CDATA[Vayne Cha]]></dc:creator>
-            <pubDate>Thu, 27 Apr 2017 20:23:55 GMT</pubDate>
-            <atom:updated>2017-05-02T09:19:17.312Z</atom:updated>
-            <content:encoded><![CDATA[<figure><img alt="" src="https://cdn-images-1.medium.com/max/641/1*k5_dtD2BpcDWXNQegLXibg.jpeg" /></figure><ul><li>2013년 여름 린 스타트업이라는 책을 알게 되었고 <em>즉시</em> 구매해 읽었다. 책을 사기 전부터 굉장히 빼어난 책이라는 얘기를 많이 들었다. 때로 대중이 강력히 추천하는 책이지만 읽어보면 큰 감흥이 없을 때가 있는데, 린 스타트업이 내게 그런 책이었다. MVP 개념은 흥미로웠다. 하지만, 그 이상의 흥미를 갖지 못했다. 꾸역꾸역 읽다 읽을 마음이 더 들지 않아 책을 내려놓았다.</li></ul><p>얼마 전 린 스타트업을 책장에서 다시 빼 들었다. 오랜 시간이 지나 약간의 먼지가 묻어있었지만, 보관 상태는 괜찮았다. 책을 읽기 시작했다. 읽어봐서인지 서두에 내용이 약간 친숙했다. 그런데 뭔가 달랐다. 2013년 린 스타트업을 읽으며 받았던 느낌과 지금의 내가 받는 느낌이 아주 달랐다. 난 굶주린 사람처럼 책을 허겁지겁 읽어나갔다.</p><p>많은 사람이 같은 책을 시차를 두고 읽을 때 가치가 다르다고 얘기한다. 그런데, 난 이번처럼 이 사실을 강렬하게 경험한 적이 없다. 린 스타트업의 많은 문장이 나를 정확히 겨냥한 것 같다 느껴졌다. 지난 1년 6개월 동안 내가 했던 노력이 기억났다. 1년 6개월 전으로 돌아가면 어떤 것을 어떻게 달리했을까? 괴롭지만 한편으로 즐거운 생각을 시작했다.</p><blockquote>린 스타트업 관점으로 보면 난 그동안 어둠 속에서 눈 감고 직관에 의지해 걸어온 셈이네. 실험의 결과 혹은 영향을 최대한 정교하게 측정할 수 있는 기반을 닦아보자.우리 서비스의 현재 단계에서 어떤 지표를 가장 중요하게 볼지도 생각해봐야겠다.</blockquote><p>지난 1년 반을 돌아보면 몹시 분주하게 일했지만 내가 어디로 가고 있는지에 대한 고민이 부족했음을 인정하지 않을 수 없었다. 예로 현재 측정 기반으로는 주요 수치의 변화를 정확히 설명하기 어렵다. 왜 올랐는가? 왜 떨어졌는가? 물론 이런 설명이 쉽지 않긴 하다. 하지만, 잘 해야만 하는 일이기도 하다. 그렇기에 차분하게 고민하며 생각을 시작했다.</p><p>고민 끝에 5월의 첫 화두를 잡았다. 먼저 우리가 성장시켜야 하는 가장 중요한 지표를 다시 정의한다. 다음으로 이미 가지고 있는 측정 기반인 Google Analytics(이하 GA)와 , 자체 로그 수집 시스템으로 앞서 정의한 지표의 변화를 충분히 추적할 수 있는지 확인해본다. 마지막으로 위 판단을 토대로 쓸 만할 지표 추적 환경을 마련한다.</p><p>그렇다면 어떤 지표가 가장 중요할까? 단순 지표라 할 수 있는 DAU, MAU, 잔존율, 게임 분석 수 등은 계속 살펴보고 있었다. 이런 지표는 우리 서비스의 전반적 상태는 잘 드러내지만 구체적 피드백으로써는 작동하기 어렵다고 본다. 예로 최근에 DAU가 증가했다. 왜 올랐을까? 유력한 가설은 몇 있다. 근데 확신이 없다.</p><blockquote>Q) DAU가 왜 올랐어?</blockquote><blockquote>A) GA 기준 지난 1~4월 간에 동일 집단 분석(코호트 분석)보고서를 보면 2월 이후에 잔존율이 30% 정도 높아졌어. 이 영향이지 않을까?</blockquote><blockquote>Q) 그래? 그럼 잔존율은 왜 오른 거야?</blockquote><blockquote>A) 2월 19일에 분석 엔진 3.0 배포가 있었어. 이 때 대대적 개편을 하며 진단 정확도를 많이 높혔어. 이로 인한 효과로 보여.</blockquote><blockquote>Q) 확신해?</blockquote><blockquote>A) 아니 못 해. 왜냐하면 시즌7 랭크가 고조되면서 생긴 현상일 수도 있을 것 같아서야. 어쩌면 그냥 단순히 롤 사용자가 늘어났을지도 모르겠는데?</blockquote><p>우리 목표가 잔존율 혹은 재방문율 향상이라 가정해보자. 만약 DAU 향상이 2월 19일 정확도 향상 패치의 결과라는 것을 확신할 수만 있다면 내가 지금 할 일은 명확하다. 분석 엔진의 정확도를 계속 올리면 된다. 그리고, 정확도가 높아질수록 잔존율 또한 높아지는지 관찰하면 된다. 그런데 확신이 없으니 분석 엔진 정확도 개선을 하는 것도 왠지 찝찝하다.</p><blockquote>확신을 가질 수 있을 정도의 확실한 측정이 존재할까?</blockquote><blockquote>최선은 자신감을 가질 정도가 아닐까?</blockquote><p>이 실험은 성공 혹은 실패라 확신 혹은 증명 할 측정 방법이 존재할지 모르겠다. 어쩌면 이런 이유로 린 스타트업의 저자가 이 단계를 배움(Learn)이라고 표현했는지도 모르겠다. 배움은 정량적으로 볼 수 없기 때문이다. 그래도 일단 확신 혹은 증명을 목표로 해봐도 좋을 것 같다. 예로 상관계수가 0.9 이상 나오면 확신해도 되지 않을까?</p><p>지금 하는 고민에 참고가 될까 해서 “제로 투 원”을 읽어보았다. 좋은 내용이지만 큰 도움은 안 되었다. 다음으로 그로스 해킹을 읽어본다. 그로스 해킹은 도움이 된다. 5월의 화두를 생각하면 생각하면 부담도 있고, 또 이 부담으로 어떤 일이 생길지 기대도 된다. 이후 좋은 결실을 바탕으로 이 주제의 글을 이어 쓰면 참 기쁘겠다.</p><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=e4597735a726" width="1" height="1">]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[옳은 본질]]></title>
-            <link>https://medium.com/@minslovey/%EC%98%B3%EC%9D%80-%EB%B3%B8%EC%A7%88-bfcc892cf652?source=rss-2b096a43c480------2</link>
-            <guid isPermaLink="false">https://medium.com/p/bfcc892cf652</guid>
-            <dc:creator><![CDATA[Vayne Cha]]></dc:creator>
-            <pubDate>Thu, 20 Apr 2017 14:09:51 GMT</pubDate>
-            <atom:updated>2017-04-21T04:08:06.094Z</atom:updated>
-            <content:encoded><![CDATA[<figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*UyngPcu7S-ZWzkLsrMNK0g.jpeg" /></figure><p>2015년 가을 창업에 대한 심각한 고민을 시작했다. “할까, 말까?” 하루에 수십번 고민했다. 난 창업에 대한 관심은 컸지만 충분한 지식이 없었다. 손쉬운 방법으로 책을 닥치는 대로 읽기 시작했다. 시중에 나온 창업에 대한 조언을 담은 책부터, 여러 스타트업의 고군분투를 담은 책도 읽었다. 짧은 기간에 약 10여 권이 넘는 책을 게걸스럽게 읽었다.</p><p>읽다 보니 여러 책에 등장하는 공통적인 주장이 몇 있었다. 예로 스타트업은 자원이 매우 부족하므로 “본질에 집중해라” 같은 주장이었다. 스타트업은 자금의 여유가 없으니깐 당연히 본질에 집중해야 하는 것 아냐? 당시 책을 읽을 때는 너무 당연한 얘기라 그냥 받아들이고 공감했다. 그렇다면 난 창업 후 잘 아는 대로 본질에 집중했을까?</p><p>그렇다고 할 자신이 없다. 예로 GGtics의 핵심기능은 “롤 게임 분석”이다. 통계/수학을 활용해 게임을 과학적으로 분석해 게이머의 강약 점을 알려준다. 우리 사용자는 이 기능을 가장 좋아한다. 그런데 난 오픈 후 반년이 넘도록 다른 주제에 집중했다. “게임을 안 할 때도 사용자가 오게 하려면 읽을거리를 만들어볼까?”, “오버워치 관련 서비스도 만들어볼까?”</p><p>위 시도가 잘 되었으면 이 글을 쓰지 않았을 것이다. 결과적으로 위 시도는 모두 실패했다. 게임 안 할 때 방문하는 사용자를 늘리지도 못했고, 오버워치 관련 앱은 만들었으나 운영 할 여력이 안 되어 형편없이 서비스하다 결국 앱 게시를 중단했다. 이쯤 되니 내가 뭔가 잘못하고 있다는 생각이 들었다. 결국, 예전 책에서 보았던 집중해야 할 본질이 무엇인지 다시 생각하게 되었다.</p><p>고민 끝에 “게임 분석을 최고의 품질로 제공하는 것”을 집중해야 할 본질이라 정의하게 되었다. 근거는 이렇다. 첫째 우리 서비스에서 제공했던 기능 중 사용자가 가장 즐겨 쓰는 기능이라는 점, 둘째 아직 품질에 대한 사용자 불만이 높다는 점, 마지막으로 게임 분석을 최고의 품질로 제공하는 것에 온 힘을 쏟아도 시간이 부족하다는 점이다.</p><p>그런데, 자신이 없었다. 내가 한 판단이 옳은 것일까? 정말 이 방향으로 모든 노력을 기울여도 되는가? 참 어려운 순간이었다. 자신감이 충만했던 때는 느끼지 못했지만 현실에서 거듭 실패하다 보니 이런 결정조차 두려워졌다. 자연스레 누군가에게 내 판단을 위임하고 의지하고 싶었다. 그러나, 침착하게 다시 생각해보면 의지할 문제는 아니었다.</p><p>창업자는 누구도 가보지 않은 성난 바다를 건너는 사람이라 본다. 육지에 누군가 무전으로 조언을 해도 와 닿지 않는다. 당장 거친 파도가 배를 덮으려 하는데 조언이 무슨 소용인가? 일단 이 파도를 무사히 넘고 목표 지점으로 계속 향할 ‘용기’와 ‘기지’가 무엇보다 필요하다. 이중 기지는 패턴화할 수 없다고 본다. 어느 순간 어떤 기지가 필요할지는 바다 상태에 의존적이기 때문이다.</p><p>예전 사업적 성공을 한 70~80년대 미국의 여러 대기업의 성공 요인을 분석한 책 얘기를 들었다. 이 책은 꽤 인기가 많았으나 이후 비웃음거리로 전락했다. 이 책에 나왔던 기업 중 상당수가 예전의 영광을 잃어버렸기 때문이다. 책의 주장대로라면 해당 기업은 너무 탁월한 속성을 가지고 있어 계속 성공 가도를 달려야 할 것 같은데 그렇지 않았다.</p><p>또한, 가끔 어떤 창업가의 성공/실패에 대한 인터뷰를 보면 이런 말이 나온다. “당시 무엇에 집중했습니다.” 보통 결과는 2개로 갈린다. 성공이냐 실패냐. 그런데 재밌는 것은 어떤 결론을 이어 붙혀도 전혀 어색하지 않다. “우리 회사가 집중해야할 것은 A였는데 B에 집중해서 실패했죠.” 혹은 “ 과감하게 A에 집중한 덕분에 지금 성공했죠”</p><p>위 두 사례를 보면 미리 알 수 있는 옳은 본질이 존재한다고 보기 어렵다. 오히려 결과의 중요성을 강조하는 사례로 보일 정도이다. 같은 판단을 했어도 결과에 따라 성공 요인 혹은 실패 요인으로 보일 수 있을 것이다. 어떤 결과가 나오지 전까지는 본질이 옳은지 그른지는 아무도 판단하지 못한다. 그냥 어느 순간 결과가 나오면 결과 중심으로 과정을 살펴볼 수 있을 뿐이다.</p><p>여러 생각을 하다보니 결과가 나오기 전 옳음의 여부는 누구도 알 수 없으니 우리 팀의 결정이 최선이라는 소신이 생겼다. 결국, 나의 여정은 거친 바다의 파도를 맞아도 정신을 잃지 않고 최선을 다해 목표로 향하는 것이라 본다. 방향을 잘못 잡을 수 있다. 포기하지 말고 조타에 집중하자. 지속적 조타가 도착을 보장하지 않는다. 하지만, 도착확률을 높일 것이다.</p><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=bfcc892cf652" width="1" height="1">]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[짧은 글]]></title>
-            <link>https://medium.com/@minslovey/%EC%A7%A7%EC%9D%80-%EA%B8%80-271777ed720e?source=rss-2b096a43c480------2</link>
-            <guid isPermaLink="false">https://medium.com/p/271777ed720e</guid>
-            <dc:creator><![CDATA[Vayne Cha]]></dc:creator>
-            <pubDate>Mon, 03 Apr 2017 00:42:09 GMT</pubDate>
-            <atom:updated>2017-04-18T03:04:16.842Z</atom:updated>
-            <content:encoded><![CDATA[<p>2007년에 티스토리에서 블로그를 시작했다. 당시 개발 관련 글을 많이 썼다. 글 하나를 쓰는데 최소 며칠에서 몇 달까지 걸렸다. 내게 글 하나를 쓴다는 것은 생각과 문장을 지겨울 정도로 다듬는 것을 뜻했다. 당시의 글을 읽어보면 당시에 나름 얼마나 진지하게 고민했는지 느껴진다. 지금은 그렇게 글 쓸 수 있을지 모르겠다.</p><p>창업하고 미디엄을 시작하며 새로운 도전을 해보기로 했다. 빠르게 짧은 글을 써보는 것이다. 지금껏 미디엄에 쓴 글은 보통 1시간 이내 쓴 글이 많다. 신중한 퇴고 단계를 거치지 않고 기껏해야 맞춤법 검사 정도 한다. 그런데 이렇게 글을 쓰다 보니 가끔 공허한 느낌이 든다. 읽을거리가 많아 가뜩이나 복잡한 세상에 또 하나의 공산품 같은 글을 던지는 느낌이랄까?</p><p>그럼에도 짧은 글을 써보려 한다. 창업해보니 지금이 아니면 생생하게 기록하지 못할 것 같은 소재가 넘실된다. 난 소재가 떠올랐을 때 바로 쓰는 것이 중요하다 보는데, 소재에 대한 첫 감정이 희미해진 후 쓰면 아무리 노력해도 좋은 글이 나오기 어렵다 보기 때문이다. 계속 쓰며 노력하면 짧음에도 깊은 생각을 담은 좋은 글이 충분히 나올 수 있지 않을까?</p><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=271777ed720e" width="1" height="1">]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[수학 탐험]]></title>
-            <link>https://medium.com/@minslovey/%EC%88%98%ED%95%99-%ED%83%90%ED%97%98-44d4f7b910bc?source=rss-2b096a43c480------2</link>
-            <guid isPermaLink="false">https://medium.com/p/44d4f7b910bc</guid>
-            <dc:creator><![CDATA[Vayne Cha]]></dc:creator>
-            <pubDate>Wed, 29 Mar 2017 03:27:38 GMT</pubDate>
-            <atom:updated>2017-04-21T02:22:33.199Z</atom:updated>
-            <content:encoded><![CDATA[<p>처음 개발자가 되었을 때부터 막연히 수학을 동경했다. 아마도 당시 유명한 회사이던 썬마이그로시스템즈의 이야기를 들어서일 거다. 썬 창업 초기 빌 조이라는 인물이 들어오게 된다. 그는 동부의 수학 천재로 유명했다고 한다. 놀라운 것은 빌 조이가 썬에 입사하자 당대의 뛰어난 엔지니어들이 빌과 함께 일하고 싶다는 이유로 썬에 입사했다고 한다.</p><p>미국 수학자의 멋진 이야기를 보며 수학이 같은 IT업계에서 일하는 나의 현실에도 큰 영향을 미칠 것 같았지만 그렇지 않았다. 개발을 몇 년 해도 수학을 사용한 일은 단 한 번도 없었다. 주위에 누가 빌 조이와 같이 수학을 잘하는지도 알기 어려웠다. 검색 쪽에서도 랭킹 모델링 같은 일을 하는 일부가 수학을 쓴다고 들었으나 경험해보진 못했다.</p><p>그런데도 수학에 대한 나의 동경은 쉽사리 없어지지 않았다. 2007년 나는 목 마른 사람처럼 수학을 찾고 있었다. 내가 원하는 것은 수능 수학이 아니었다. 수학 그 자체에 대한 지식과 경험을 갖고 싶었다. 여러 책을 구매해 살펴보았다. 당시 거미 수학, 선형대수학, 수학 콘서트, 재밌는 통계 등 제목은 잘 생각 안 나지만 아무튼 여러 책을 읽어보았다.</p><p>모두 내게는 큰 도움이 안 된다 느꼈다. 또 다른 책을 찾던 중 나는 내 인생에 있어 큰 영향을 미친 책을 발견했다. 바로 <a href="http://www.aladin.co.kr/shop/wproduct.aspx?ItemId=1951476">이야기로 아주 쉽게 배우는 대수학</a>이다. 이 책을 읽으며 처음으로 수학의 아름다움과 재미를 맛볼 수 있었다. 짝수와 짝수를 더하면 왜 짝수가 되는지와 같은 증명이 너무 좋았다. <a href="http://minslovey.tistory.com/58">당시 이 증명을 읽은 후 감격에 차 정리한 글</a>도 있다.</p><p>다음으로 인상 깊었던 책은 <a href="http://www.aladin.co.kr/shop/wproduct.aspx?ItemId=591536">어느 수학자의 변</a>명이라는 책이었다. 이 책은 수학을 가르치는 책은 아니었고 하디라는 대수학자의 수필을 담은 책이었다. 수필 내용 중 명제의 모순을 증명하는 귀류법에 대한 내용이 매우 인상 깊었다. 난 당시 귀류법에 대해 처음 알게 되었는데 정말 깜짝 놀랐다. 이런 방법으로 증명을 끌어내는 게 경이로웠다.</p><p>이렇게 수학을 하나씩 배워가는 것은 무척 즐거운 일이었다. 그러나, 수학을 활용할 일이 없어서일까? 그 후 수학에 대한 흥미가 차츰 식었다. 어쩌면 수학뿐 아니라 학습 그 자체에 대한 흥미를 잃었는지도 모르겠다. 2010년 당시를 생각하면 회사 생활이 굉장히 나른했던 것으로 기억한다. 이렇게 수학과 거리가 멀어지던 중 2013년에 변화의 계기가 찾아왔다.</p><p>2013년 나는 추천 알고리즘을 개발하고 있었다. 당시 상관계수, 협업 필터링 등의 개념을 공부했으나 어려움을 느꼈다. 예를 들어 Pearson을 공부할 때 개념이나 수식을 보면 머리가 굳는 것 같았다. 당시 내부적으로는 Tanimoto 수식을 사용했는데 정확히 이해 안 한 상태로 개발하다 조직장에게 심한 무안을 당해 곤욕스러웠다.</p><p>그 후로 시간이 될 때마다 수학에 가까워지려 더욱 노력했다. 일단 추천을 개발한 경험이 있었기에 상관계수 수식을 공부했다. 또한, K-Means와 같은 알고리즘을 코딩해보며 2차원 공간에 익숙해지기도 했다. 그러던 중 회사에서 좋은 프로젝트를 만났다. 문자열을 이용한 검색/매치를 해야하는 프로젝트였다. 이때 전통적 검색에서 매우 중요한 TF-IDF라는 수식을 배울 수 있었다.</p><p>TF-IDF를 만지작거리는 것은 매우 특별한 경험이었다. 당시 우리 서비스 환경에 맞게 TD-IDF 수식을 수정하고 그 결과를 확인해보곤 했다. 일 하다보니 너무 재미있어 밤 늦게까지 수식을 고치며 열중했던 기억이 난다. 나름대로 검색/매치에 대한 평가도 했었다. 정답집합을 정의하고 엔진을 실행해 정답을 맞춘 개수만큼 점수를 주는 방식이었다.</p><p>창업을 준비하며 통계수학을 공부하기 시작했다. 통계수학은 좀 많이 어려워 힘들게 공부했다. 가끔 누군가와 대화를 나누다 보면 통계는 평균이 거의 전부라 생각하시는 분도 있는데, 평균이 통계에 중요한 개념은 맞다고 본다. 그러나, 내가 본 통계의 세계는 훨씬 넓다. 지금 머신러닝에서 사용하는 수 많은 개념이 통계학에서 나온 것만 봐도 그렇다.</p><p>이렇게 나는 수학을 독학으로 공부해왔다. 언젠가는 a, b 두 수가 있을 때 a + b와 a * b의 결과의 차이점에 대해서도 한참 생각해봐야 할 정도로 수에 대한 감각이 많이 부족했다. 분산을 구할 때 굳이 왜 ^2을 한 후에 다시 sqrt를 하는지 너무 궁금했고, 어떤 수식을 볼 때 왜 뜬금 없이 어떤 영역에 log(x)를 씌우는지 몰라 여기저기 헤맸었다.</p><p>지금도 난 여전히 수학을 즐겁게 공부하고 있다. 가끔 처음보는 수식이 바로 이해가 되는 순간이 있다. 이 순간 내게 일어난 변화에 경이로움을 느끼곤 한다. 창업 후 시간이 많이 없지만 기회가 되면 내가 공부한 수학에 대한 글을 써보려 한다. 수학 비전공 혹은 한 때 수학을 하나도 몰랐던 개발자가 수학을 바라보는 시각을 정리하는 일이 될 것이다.</p><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=44d4f7b910bc" width="1" height="1">]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[부족함 -> 성장]]></title>
-            <link>https://medium.com/@minslovey/%EB%B6%80%EC%A1%B1%ED%95%A8-%EC%84%B1%EC%9E%A5-6d5cbf4005cc?source=rss-2b096a43c480------2</link>
-            <guid isPermaLink="false">https://medium.com/p/6d5cbf4005cc</guid>
-            <dc:creator><![CDATA[Vayne Cha]]></dc:creator>
-            <pubDate>Mon, 27 Mar 2017 09:19:26 GMT</pubDate>
-            <atom:updated>2017-03-27T09:42:24.331Z</atom:updated>
-            <content:encoded><![CDATA[<p>예전에 페이스북에 성장에 대한 짤막한 글을 쓴 적이 있다. 핵심 내용은 개발자로서 나를 되돌아보았더니 계단형으로 성장하더라라는 매우 흔하디흔한 글이다. 그 흔한 경험을 지금도 계속하고 있다. 이 경험은 어떤 면에서 근사한 경험, 어떤 면에서 괴로운 경험이다.</p><p>창업을 이렇게 표현해도 되겠다. “나도 모르던 나 자신과의 만남” 나는 만남 후 가장 먼저 극심한 두려움을 느꼈다. 왜냐하면 내가 생각했던 것보다 나 자신이 훨씬 더 형편없다 느꼈기 때문이다. 창업이 깨끗한 거울이 되어 나 자신을 그대로 정확히 비추는 것 같았다.</p><p>부끄럽지만 개발자 시절 나는 내가 꽤 괜찮은 사람인지 알았다. 우리나라의 큰 인터넷 회사에서 큰 어려움 없이 지냈고 승진도 빨리했기 때문이다. 그러나 창업을 하니 턱 끝까지 숨이 차올랐다. 의사소통, 영어, 수학, 인성, 기획, 사업뿐 아니라 개발에서도 부족함이 많이 느껴졌다.</p><p>다른 것도 아니고 개발마저도 부족하다 느낄 때 솔직히 너무 힘들었다. 마지막 자존심까지 산산이 깨져버린 느낌이랄까. 그러나 다행히 나는 한 가지 소중한 경험이 있었다. 느낀 부족함 만큼 발전한 경험이다. 부족함을 얼마나 채울 수 있을지 모르겠지만 조금씩 채워지는 것은 분명하다.</p><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=6d5cbf4005cc" width="1" height="1">]]></content:encoded>
-        </item>
-    </channel>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kay on the rails</title>
+    <description>Kay as known as Hannal walks on the rails
+</description>
+    <link>http://blog.hannal.com/</link>
+    <atom:link href="http://blog.hannal.com/feed.xml" rel="self" type="application/rss+xml" />
+    <pubDate>Wed, 16 Jan 2019 13:44:30 +0000</pubDate>
+    <lastBuildDate>Wed, 16 Jan 2019 13:44:30 +0000</lastBuildDate>
+    <generator>Jekyll v3.7.4</generator>
+    
+      <item>
+        <title>테슬라 모델 X 구매기</title>
+        <description>&lt;p&gt;얼마 전에 테슬라 모델 X를 샀다. 전기차 보조금을 받지 못하다보니 조금이라도 저렴하게 사려고 여러 방법을 모색했다. 돌이켜보면 복잡하거나 어려운 건 없으며 이미 여러 곳에 도움이 되는 정보가 많은데, 내 상황을 기준으로 구매 과정을 정리해본다.&lt;/p&gt;
+
+&lt;p&gt;분명 이 글이 구매 과정에 도움이 될 터이니 구매한다면 내 테슬라 리퍼럴 코드를 사용해주시라. :)&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://ts.la/kyeongmook93899&quot;&gt;https://ts.la/kyeongmook93899&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;구매-방법-별-테슬라-종류&quot;&gt;구매 방법 별 테슬라 종류&lt;/h2&gt;
+
+&lt;p&gt;리스 등을 제외한 구매하는 방법에 따라 테슬라는 크게 세 가지 종류가 있다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;일반 차량&lt;/li&gt;
+  &lt;li&gt;인벤토리 차량&lt;/li&gt;
+  &lt;li&gt;테슬라코리아의 플릿카 중고판매 (이하 플릿카)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;일반 차량은 정식 경로(?)이자 일반화 된 구매 차량이다. 테슬라 홈페이지에서 차량 옵션을 지정하고 계약하면 공장에서 주문 내용에 맞는 차량을 생산한다. 장점은 옵션을 입맛대로 지정할 수 있고, 단점은 다른 두 종류에 비해 비싸고 출고하는 기간이 길다.&lt;/p&gt;
+
+&lt;p&gt;인벤토리 차량은 여러 이유로 창고에 대기하는 &lt;em&gt;새 차&lt;/em&gt;이다. 그래서 계약하면 일반 차량에 비해 빠르게 출고 받으며, 경우에 따라서는 할인을 조금 해준다. 단점은 옵션이 적용된 완성 차량을 사는 것이므로 내가 원하는 옵션이 적용된 차량을 사지 못할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;플릿카는 법인 등이 한 번에 다수를 구매하는 플릿 판매를 뜻하는데, 전시, 시승 등 여러 용도로 테슬라 차량을 테슬라 코리아도 구매한다. 이런 차량을 판매하는 것이다. 중고차를 파는 것이므로 가격이 저렴한데, 차에 따라 주행 거리, 상태, 옵션이 다르므로 가격은 제각각이다.&lt;/p&gt;
+
+&lt;p&gt;인벤토리 차량과 플릿카는 홈페이지 등에 나오지 않으므로 매장에 전화해서 재고 등을 직접 문의하면 된다.&lt;/p&gt;
+
+&lt;h2 id=&quot;향상된-오토파일럿&quot;&gt;향상된 오토파일럿&lt;/h2&gt;
+
+&lt;p&gt;구매할 때 “향상된 오토파일럿”은 꼭 추가하길 추천한다. 만약 이 옵션을 뺄 것이라면 다른 전기차를 사는 게 가격이나 충전 인프라 등을 고려해 더 낫다. 테슬라 차주 사이에서는 오토파일럿 옵션을 뺄 것이라면 차라리 차량을 빼고 오토파일럿을 사라는 우스개소리가 나올 정도로 테슬라의 오토파일럿(옵션명 : 향상된 오토파일럿)은 만족스럽다.&lt;/p&gt;
+
+&lt;h2 id=&quot;선납금-오토캐시백&quot;&gt;선납금 오토캐시백&lt;/h2&gt;
+
+&lt;p&gt;차량 구매에 들어가는 돈을 카드로 결제하면 일정 비율로 현금을 돌려주는 카드 상품으로 오토캐시백이 있다. 요즘은 1% 중후반에서 2% 초중반까지 돌려주는 것 같다.&lt;/p&gt;
+
+&lt;p&gt;나는 일반 할부로 구매하므로 선납금에 대해 오토캐시백을 활용할 수 있었다. 선납금은 계약금을 포함하는데, 계약금을 먼저 납입한 뒤 출고할 때쯤 나머지 선납금 잔금을 납입한다. 그래서 오토캐시백도 두 번에 걸쳐 나눠서 진행하면 된다. 예를 들어 총 선납금을 3,000만원으로 잡으면 계약금 1,000만원에 대해 오토캐시백 적용하고, 잔금 2,000만원을 납입할 때 오토캐시백을 적용하면 된다.&lt;/p&gt;
+
+&lt;p&gt;오토캐시백은 웹에서 검색하면 여러 업체가 나온다. 혹은 네이버 까페에서 오토캐시백으로 검색하면 활동이 왕성한 까페 몇 개가 나오는데, 그곳에서 상담 신청을 하면 연락이 온다. 주의할 점은 테슬라 코리아가 판매하는 차량에 대해 오토캐시백이 안 되는 카드사가 있다는 점이다. 오토캐시백 상담자에게 꼭 확인하자. 캐시백 비율은 카드사에서 직접 받는 것보다 중개/영업인(?)에게서 받는 것이 더 좋다. 예를 들어 하나카드 오토캐시백은 1% 초중반인데, 중개/영업 업체 끼고 하나카드 오토캐시백을 진행하면 1% 중반 이상 받는다.&lt;/p&gt;
+
+&lt;p&gt;다음과 같이 오토캐시백을 받는 결제가 진행된다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;오토캐시백을 진행할 카드사 선택. 기존에 사용하는 카드로도 가능하나 이 경우 신규 고객 유치가 아니기 때문에 캐시백 비율이 줄어든다.&lt;/li&gt;
+  &lt;li&gt;오토캐시백 받을 금액을 정함.&lt;/li&gt;
+  &lt;li&gt;자신이 선택한 카드사로부터 가상계좌번호를 받으면 그곳에 계약금을 입금.&lt;/li&gt;
+  &lt;li&gt;결제에 사용할 카드에 해당 금액에 대해 특별한도가 승인됨. 자신이 기존에 보유한 카드 한도가 계약금 보다 낮아도 무방하다. 예치한 계약금에 대해 특별한도 처리가 되기 때문이다. 이 금액은 테슬라 코리아쪽에 결제를 할 때 빠져 나간다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;선납금 잔금도 2~4번 과정을 그대로 반복한다. 잔금은 출고 방식에 따라 초기 견적 내용과 달라지므로 최종 잔금 안내를 받고 나서 잔금에 대한 오토캐시백을 진행하자.&lt;/p&gt;
+
+&lt;p&gt;차량 계약금과 선납금은 전화 통화로 결제한다. 결제 금액을 분할할 수 있다. 나는 차량을 직접 등록하는 등 몇 가지 이유로 최종 잔금이 확정될 때까지 잔금 액수가 몇 번 변동되었다. 그래서 변동되지 않을 만한 단위와 나머지 자잘한 금액으로 분할해서 결제했다. 무슨 말이냐면 예를 들어 잔금이 2,XXX만원이 될 것으로 예상된다면 오토캐시백으로 2,000만원을 신청하고, 잔금을 결제할 때 테슬라 코리아에 2,000만원과 나머지 금액으로 나눠서 결제하겠다고 요청한 것이다. 오토캐시백을 받으려면 먼저 오토캐시백을 적용받을 금액을 예치해야 하고 이 과정이 몇 시간 걸릴 수도 있는데, 잔금이 정확하게 최종 확정되는 건 오토캐시백 준비를 마친 이후 단계이기 때문이다.&lt;/p&gt;
+
+&lt;p&gt;당연한 얘기지만 차량 구매 금액에 대한 오토캐시백이다. 등록비나 부대 비용은 오토캐시백 대상이 아니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;차량-자가-등록&quot;&gt;차량 자가 등록&lt;/h2&gt;
+
+&lt;p&gt;차량 등록을 직접 했다. 대행으로 진행하면 차량 번호를 못 고르며 대행비가 들지만, 직접 등록하면 자동차등록소에서 제시하는 후보군 중 하나를 고를 수 있고 대행비도 아낀다. 절차도 간단하다.&lt;/p&gt;
+
+&lt;p&gt;먼저 테슬라 코리아측의 내 담당 OA에게 혹은 차량 출고 담당자에게 차량 등록을 직접 할 것이라고 알려준다. 차량 출고 담당자는 선납금을 모두 치를 때쯤 정해져 연락이 온다. 자가 등록을 한다고 하면 테슬라 코리아에서 필요한 서류를 등기로 보내준다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;리스 계약서 (리스 구매인 경우, 리스사에서 제공)&lt;/li&gt;
+  &lt;li&gt;세금계산서&lt;/li&gt;
+  &lt;li&gt;테슬라코리아 위임장&lt;/li&gt;
+  &lt;li&gt;테슬라코리아 사용인감계&lt;/li&gt;
+  &lt;li&gt;자동차 제작증&lt;/li&gt;
+  &lt;li&gt;자동차 배출가스 인증서&lt;/li&gt;
+  &lt;li&gt;자동차 소음인증서&lt;/li&gt;
+  &lt;li&gt;자동차 제원표&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;구매자는 주민등록등본(법인은 법인등기부등본)과 자동차 보험증권 사본만 준비하면 된다.&lt;/p&gt;
+
+&lt;p&gt;자동차 보험은 차대번호를 테슬라코리아로부터 받으면 가입할 수 있다. 주의할 점은 자동차보험 개시일이 자동차 등록일과 같거나 이전이어야 한다. 나는 자동차 등록을 하려는 날과 출고하는 날이 주말 제외하면 하루 차이라서 보험개시일을 출고일에 맞추는 실수를 했다. 당연히 자동차 등록은 거부되었고 부랴부랴 자동차보험을 해약하고 새로 가입했다.&lt;/p&gt;
+
+&lt;p&gt;자동차등록은 아무 자동차등록소에서 해도 된다. 주민등록 상 거주지에 따라 공채 비용이 발생한다. (2019년 1월 16일 내용 보완)&lt;/p&gt;
+
+&lt;p&gt;자동차등록소에 가서 자동차 신규등록 신청서를 작성하고 제출한다. 접수하는 데 2,000원, 인지료 3,000원 &lt;em&gt;현금&lt;/em&gt;이 필요하다. 임시 번호판은 필요 없다. 자동차 번호는 미리 정해진 후보들 중 하나를 선택하는 것이다. 모두 마음에 들지 않으면 다음 날 등록 신청 과정을 다시 진행해도 된다. 번호를 고르면 등록 신청이 접수된다. 다음은 징수과에 가서 세금(취등록세)을 낸다. 세금은 신용카드로 결제할 수 있다. 약 700만원 정도인데 2019년엔 감면 금액이 줄어들기 때문에 납부할 세금이 더 늘어난다. 징수과에서 징수를 마치고 확인을 받으면 차량 등록이 끝난다.&lt;/p&gt;
+
+&lt;p&gt;차량 등록이 끝나면 선택한 차량 번호를 들고 번호판 제작과에 가서 번호판을 만든다. 일반 하얀 색 번호판과 전기차에 사용하는 파란 색 번호판이 가격이 다른데, 파란 색 번호판이 더 비싸다. 전기차이므로 반드시 파란 색 번호판을 만들 필요는 없어서 일부러 차량 외관 색에 어울리게 흰색 번호판을 고르는 경우도 있다. 번호판이 파란 색이어야만 친환경 차량 혜택을 받는 것이 아니며, 친환경 차량이라는 걸 알아보기 용이한 장점이 있다.&lt;/p&gt;
+
+&lt;p&gt;…고 알고 있었는데, 잘못된 내용이다. 내 경우 흰색 번호판으로 만들었다가 찝찝해서 파란색 번호판으로 변경/제작했다. 알고보니 이는 행정 착오이며, 2017년 6월 9일 이후 출고된 전기차는 파란색 번호판 장착이 의무이다. (2019년 1월 16일 내용 보완)&lt;/p&gt;
+
+&lt;p&gt;번호판은 긴 것으로 만들어야 한다. 번호판과 나사, 저공해 차량 스티커를 받으면 모든 과정이 끝난다. 번호판 가드(가이드)는 테슬라에서 제공하므로 받지 않아도 되며, 당연히 번호판도 테슬라 코리아에서 달아준다.&lt;/p&gt;
+
+&lt;h2 id=&quot;자동차-보험&quot;&gt;자동차 보험&lt;/h2&gt;
+
+&lt;p&gt;자동차 보험은 사람 마다 조건이 천차만별이므로 자동차보험 견적 업체를 이용해 비교 견적을 받으면 된다. 내 경우 가장 비싼 견적과 가장 저렴한 견적의 금액이 약 20만원 가까이 차이났다. 적용할 수 있는 할인 항목이 있으니 보험사 별로 견적을 받을 때 해당 항목으로 할인이 얼마나 되는 지 확인한다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;차선유지장치&lt;/li&gt;
+  &lt;li&gt;긴급제동장치 (전방충돌방지)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;테슬라 차량 펌웨어 v9에는 블랙박스 기능이 추가됐지만, 이걸로 블랙박스 할인이 가능한지는 모르겠다. 차선유지장치는 현재(2018년 12월) 기준으로 대부분 보험사에 할인 항목으로 있는 것으로 보이고, 긴급제동장치는 일부 보험사에서만 할인해주는 것 같다. 해당 기능은 차량에 부가 설치한 것이 아닌 기본 탑재라고 대답하면 된다. 나는 블랙박스, 만 6세, 차선유지장치, 대중교통이용에 대해 할인을 받아 20% 가까이 할인 받았다. 또 보험사에 따라서는 특정 결제 방법에 대해 캐시백을 해주는데, 난 이 부분에서도 3만원을 캐시백 받았다.&lt;/p&gt;
+
+&lt;p&gt;보험 가입할 때 블랙박스 장착 증빙, 차선유지장치 증빙을 할 수 없으므로 할인 항목에서 제외한다. 출고 후 전화를 걸어 증빙자료인 사진을 보내서 할인 받을 금액을 환급 받는다.&lt;/p&gt;
+
+&lt;p&gt;자동차 보험 가입 담보 중 “자기신체손해”와 “자동차 손해”를 선택하는 부분이 있는데, 자동차 상해가 보험비는 좀 더 높지만 조건이 좋다. 자기신체손해는 진단에 따른 부상 급수에 따라 보험금이 지급되고 자동차 상해는 실비 100%를 지급하기 때문이다. 그런데 내가 가입한 보험사에서는 다른 실손보험과 중복 보상을 하지 않는다. 이미 나는 실손보험에 가입했기 때문에 고민 끝에 자기신체손해를 선택했다. 이 부분은 보험사와 상담해보길 권한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;전기차에-유용한-결제-카드와-전기차-충전-카드&quot;&gt;전기차에 유용한 결제 카드와 전기차 충전 카드&lt;/h2&gt;
+
+&lt;p&gt;결제에는 크게 두 가지 카드를 많이 사용한다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;BC그린카드&lt;/li&gt;
+  &lt;li&gt;신한EV카드&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이 부분에 대한 자세한 내용은 &lt;a href=&quot;https://cafe.naver.com/teslaownersclub&quot;&gt;한국 테슬라 오너스 클럽&lt;/a&gt;에 잘 정리된 글, &lt;a href=&quot;https://cafe.naver.com/teslaownersclub/2274&quot;&gt;충전 카드와 할인용 신용 카드에 대한 이해
+충전 카드와 할인용 신용 카드에 대한 이해&lt;/a&gt;를 참고하자. 이 글에서는 내 상황에 맞춘 내용만 정리하자면,&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;거주지 주차장에 공용 완속 충전기(파워큐브)가 있어서 이 충전 시설 이용하는 데 신한EV 카드 사용&lt;/li&gt;
+  &lt;li&gt;이외 공용 충전 서비스에 결제 카드로 BC그린카드 사용&lt;/li&gt;
+  &lt;li&gt;하이패스 결제 카드로 신한EV 카드 사용&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;신한EV카드의 경우 신한EV카드 + 신한하이패스로 신청해야 한다. 두 카드를 따로 따로 신청해도 되지만 번거롭다.&lt;/p&gt;
+
+&lt;p&gt;BC그린카드는 BC카드에서 발행하므로 입맛에 맞는 금융권 카드사의 카드로 신청하면 된다. 나는 연회비가 없는 하나BC그린카드 v1 으로 신청했다. 주의할 점은 이 카드는 하나카드 모바일 앱에서는 검색이 안 되므로 웹에서 검색해서 주문하면 된다.&lt;/p&gt;
+
+&lt;p&gt;충전용 카드는 환경부에서 발급하는 카드와 한국전기차충전서비스(줄여서 한전충)에서 발급하는 해피차저 카드를 주로 사용한다. 전기차 충전 업체가 다양하므로 자신의 환경과 상황에 맞는 카드를 발급 받으면 되는데, 환경부 카드와 한전충 카드로 대부분 불편을 겪지 않고 소화할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;해피차저 카드와 환경부 카드 모두 차량 등록하기 전, 그러니까 차량 번호를 발급 받기 전에 해당 카드를 발급 받을 수 있다. 해피차저 카드는 아무 차량 번호로 카드를 먼저 발급 받고, 이후에 차량 번호가 나오면 기존에 입력한 차량 번호를 실제 차량 번호로 수정하면 된다. 환경부 카드의 경우 웹페이지에서 차량 번호를 변경할 수 없는데, 전화(1661-9408)해서 변경해달라고 하면 된다. 카드를 신청하면 실물 카드가 우편으로 배송되는데, 실물 카드 수령 전에 카드번호가 먼저 나온다.&lt;/p&gt;
+
+&lt;h2 id=&quot;하이패스&quot;&gt;하이패스&lt;/h2&gt;
+
+&lt;p&gt;전기차 할인이 되는 하이패스는 차량 등록을 해야 구매할 수 있다. 주로 AP 500과 AP 700 제품을 사용하는 것 같은데, 난 하이패스 카드를 언제든 꼈다 뺐다 할 수 있는 AP 500을 샀다. 정리하면 나는 AP 500 기기에 신한 하이패스 카드를 꽂으며, 후불형인 이 하이패스 카드에 신한EV 카드를 연동하였다. 이렇게 조합하면 톨게이트 비용 50%를 캐시백 받는데, 전기차는 50% 할인을 받으므로 결국 톨게이트 비용이 0원인 셈이다. 아쉬운 점은 이 프로모션이 2019년 2월에 종료된다는 점인데, 소문에 따르면 기간이 연장될 것을 기대하고 있는 분위기이다.&lt;/p&gt;
+
+&lt;p&gt;민자 고속도로의 경우 전기차 할인이 안 되는 곳이 있다(많이 혹은 대부분).&lt;/p&gt;
+
+&lt;h2 id=&quot;충전-어댑터&quot;&gt;충전 어댑터&lt;/h2&gt;
+
+&lt;p&gt;일부 플릿카를 제외하면 요즘 구매하는 차량은 거의 모두 북미형 충전 포트이다. 테슬라 독자 포트이므로 테슬라에서 운영하는 충전소 외엔 충전하지 못하는데, 국내 충전 시설을 이용하려면 충전기와 테슬라를 연결해주는 어댑터를 따로 마련해야 한다. 이 어댑터를 테슬라 코리아에서 판매할 수 없는 상황이어서 차량 구매 시 어댑터 가격을 빼주는데, 테슬라 온라인 스토어 등에서 직접 구매해야 한다.&lt;/p&gt;
+
+&lt;p&gt;급속 충전 어댑터는 차데모를 사야 한다. 문제는 2018년 4월에 공표된 우리나라의 표준 충전 방식에 차데모 어댑터를 사용할 수 없으며, 차데모 어댑터를 사용할 수 있던 기존 충전기도 점차 줄어든다는 점이다. 즉 차데모 어댑터는 시한부이다. 꽤 비싸기 때문에 구매 여부를 잘 생각해야 한다. 나는 고민 끝에 안 샀다.&lt;/p&gt;
+
+&lt;p&gt;완속 충전은 J1772 어댑터를 사면 된다. 차데모와 마찬가지로 테슬라 온라인 스토어에서 판매한다.&lt;/p&gt;
+
+&lt;p&gt;테슬라 온라인 스토어는 테슬라 웹페이지에서 국가를 북미로 선택하면 접근할 수 있다. 직구는 되지 않으므로 배송 대행 서비스를 이용해야 한다. 배송은 매우 느려서 테슬라 온라인 스토어에서 배송 대행지까지 물품이 도착하는 데 10~14일 정도 소요된다. 나는 블랙 프라이데이 등 연말 상황이라서 배송 대행지에서도 7일 넘게 시간이 소요됐다. 차데모나 J1772 어댑터가 필요하다면 넉넉잡아 출고 전에 한 달 정도 시간을 염두에 두고 일찌감치 주문하길 추천한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;블랙박스&quot;&gt;블랙박스&lt;/h2&gt;
+
+&lt;p&gt;차체가 워낙 커서 주차 상태에서 테러 당할 여지가 있다. 모델 X를 주차면이 좁은 곳에 세우면 주차면을 거의 꽉 채우고도 앞으로 머리가 빼꼼 나와서 문콕이나 범퍼 충돌을 당하는 경우가 많아 보인다. 그래서 블랙박스를 주차 중에도 동작하는 상시전원으로 사용하고자 했다. 상시 전원으로 블랙박스를 사용하려면 OBD 2에 연결하거나 보조 배터리를 사용하는데, 나는 고민 끝에 보조 배터리를 추가하여 블랙박스를 상시로 켜둔다. 테슬라의 12V 배터리는 여느 내연차 보다 용량이 작다고 한다. 그래서 자칫 12V 배터리를 과용하다 방전시키는 경우가 있다고 한다. 거대한 배터리를 품고 있는 전기차인데 정작 상시전원으로 12V 배터리를 사용하는 건 내연차 보다 더 제약을 받을 수 있다니 모순되게 느껴진다.&lt;/p&gt;
+
+&lt;p&gt;OBD 2에 연결하여 사용하는 데 성공한 차주에 따르면 아직 별 문제는 없다고 한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;커뮤니티&quot;&gt;커뮤니티&lt;/h2&gt;
+
+&lt;p&gt;테슬라 관련 커뮤니티가 몇 곳 있는데, &lt;a href=&quot;https://cafe.naver.com/teslaownersclub&quot;&gt;한국 테슬라 오너스 클럽&lt;/a&gt;은 기본으로 가입하길 추천한다. 이름처럼 꼭 테슬라 차주가 아니더라도 가입하고 활동할 수 있으며, 유용한 정보가 많다.&lt;/p&gt;
+
+&lt;h2 id=&quot;출고&quot;&gt;출고&lt;/h2&gt;
+
+&lt;p&gt;미리 잡은 출고 일시에 출고지(강서 서비스센터)로 가면 된다. 신분증과 차량 등록증을 가져가면 되며, 차량을 직접 등록했다면 번호판도 가져간다. 강서 서비스센터 인근에 딱히 식사할 만한 곳이 많진 않으니 출고 전후에 식사를 할 것이라면 시간 여유를 둘 필요가 있다.&lt;/p&gt;
+
+&lt;p&gt;테슬라 차량의 마감은 악명이 높다. 단차나 도장 등 문제를 꼼꼼히 살펴보자. 인도했다고 해서 모르쇠로 대응하지 않으며, 언제든 친절하게 단차 등 마감 문제에 대해 대응하고 해결해준다고 한다. 테슬라 키팝(간단히 말해서 차 열쇠) 두 개, 모바일 충전 커넥터, 월 커넥터, 인도 확인증 받으면 출고는 끝난다. 모델 X 7인승엔 작은 차량용 소화기가 제공되는데, 국민권익위원회에 따르면 &lt;a href=&quot;https://www.acrc.go.kr/acrc/board.do?command=searchDetail&amp;amp;menuId=050505&amp;amp;method=searchDetailViewInc&amp;amp;boardNum=71229&amp;amp;currPageNo=1&amp;amp;confId=4&amp;amp;conConfId=4&amp;amp;conTabId=0&amp;amp;conSearchCol=BOARD_TITLE&amp;amp;conSearchSort=A.BOARD_REG_DATE+DESC%2C+BOARD_NUM+DESC&quot;&gt;2019년 하반기부터 모든 차량에 의무 설치하도록 한다&lt;/a&gt;고 한다.&lt;/p&gt;
+
+</description>
+        <pubDate>Sat, 29 Dec 2018 02:00:00 +0000</pubDate>
+        <link>http://blog.hannal.com/2018/12/newbies-buying-guide-for-tesla-model-x/</link>
+        <guid isPermaLink="true">http://blog.hannal.com/2018/12/newbies-buying-guide-for-tesla-model-x/</guid>
+        
+        <category>테슬라</category>
+        
+        <category>모델X</category>
+        
+        <category>구매기</category>
+        
+        
+        <category>essay</category>
+        
+      </item>
+    
+      <item>
+        <title>생각 출력거름망</title>
+        <description>&lt;p&gt;말을 하거나 글을 쓰는 게 갈수록 힘에 부친다. 출력거름망이 늘어가기 때문이다. 사소하게는 오타 확인부터 시작해 맞춤법과 단어 뜻을 확인한다. 글이나 말 내용과 무관하지만 나와 조금이라도 연관된 이해관계자를 2008년부터 의식하고, 몇 년 전부터는 아직 몸과 머리에 익지 않은 정치적 올바름이나 꼰대성억제 거름망도 덧붙였다.&lt;/p&gt;
+
+&lt;p&gt;말 한 마디, 문장 하나 쓰는 데 이렇게까지 해야 하나 생각하기도 했다. 그런데 그렇게까지 해서 굳이 생각을 출력하지 않아도 괜찮더라. 아니다. 괜찮은 정도가 아니라 더 낫다. 그렇게까지 하지 않은 말이나 글을 남발했다. 내 말과 글 대다수는 세상에 그렇게까지 가치있는 영향을 끼치지 않는다. 그래서 출력하는 것과 출력하지 않는 차이가 크지 않다. 질과 양을 꾸준하고 일정하게 유지한다면 의미있게 차이나겠지만, 거름망 여러 겹을 거치는 의지력이 너무 많이 든다.&lt;/p&gt;
+
+&lt;p&gt;내가 말하거나 글로 쓰려는 생각을 표현하는 사람이 많다. 내 취향에 안 맞고 미묘하게 내 생각과는 다르곤 하지만, 그 차이 때문에 굳이 비싼 의지력을 들일 필요는 없다. 예전엔 들였는데 이제는 의지력이 달려서 아껴 써야 한다.&lt;/p&gt;
+
+&lt;p&gt;내가 바라는 해결책이 아니긴 하다. 여러 겹으로 작용하는 거름망에 익숙해져 거름망 모두를 한두 겹 거름망에 들어가는 의지력만으로도 통과하며 생각을 표현하고 싶다. 그런데 각 출력거름망은 고정되지 않아서 꾸준히 들여다보고 갱신해야 한다. 거름망을 통과하는 것도 벅찬데, 거름망 관리도 해야 한다.&lt;/p&gt;
+
+&lt;p&gt;개인 홈페이지부터 시작해 20년 넘게 유지한 개인 공간을 앞으로 어떡할 지 고민해본다.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 05 Feb 2018 02:00:00 +0000</pubDate>
+        <link>http://blog.hannal.com/2018/02/the-filters/</link>
+        <guid isPermaLink="true">http://blog.hannal.com/2018/02/the-filters/</guid>
+        
+        <category>생각표현</category>
+        
+        <category>블로그</category>
+        
+        <category>정치적 올바름</category>
+        
+        <category>political correctness</category>
+        
+        
+        <category>essay</category>
+        
+      </item>
+    
+      <item>
+        <title>소울부스터 개발 후기</title>
+        <description>&lt;p&gt;최근에 1년 동안 여성 맞춤 속옷을 제조하고 판매하는 소울부스터와 함께 일했다. 지난 1년을 돌아보는 후기를 적어본다. 참고로 기술 얘기 보다는 개발 과정(production)을 이야기하는, 말 그대로 개발 후기이다.&lt;/p&gt;
+
+&lt;p&gt;이 글은 글자가 많다. 다 읽기 귀찮으면 “세 줄 요약”과 “마무리”만 봐도 된다.&lt;/p&gt;
+
+&lt;h2 id=&quot;세-줄-요약&quot;&gt;세 줄 요약&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;소울부스터에 임시 개발 총괄자로 참여하여 프로젝트를 개시하고, 출시하여 운영했다.&lt;/li&gt;
+  &lt;li&gt;함께 개발팀도 구축했다.&lt;/li&gt;
+  &lt;li&gt;소울부스터는 연 이륙하기 시작했고 개발자를 충원하고 있다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;1-첫-만남&quot;&gt;1. 첫 만남&lt;/h2&gt;
+
+&lt;p&gt;2년 다닌 회사를 퇴사한 지 얼마 안 되어 지인 소개로 &lt;a href=&quot;https://www.soulbooster.co.kr&quot;&gt;소울부스터&lt;/a&gt;를 만났다. 여성 맞춤 속옷을 직접 제조하고 판매하는 사업으로 창업한 지 얼마 안 된 시기였고, 온라인 서비스를 직접 개발하기 위해 소프트웨어 개발팀(이하 개발팀) 구축을 모색하고 있었다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.soulbooster.co.kr&quot;&gt;&lt;img src=&quot;/assets/uploads/2018/01/soulbooster-image.png&quot; alt=&quot;사진 출처 : 소울부스터&quot; /&gt;&lt;/a&gt;
+&lt;a href=&quot;https://www.soulbooster.co.kr&quot;&gt;사진 출처 : 소울부스터&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;많은 회사가 소프트웨어 개발자(이하 개발자)를 뽑기 힘들고 어렵다며 아우성이다. 그들 말엔 온도 차가 있긴 하다만, 어쨌든 인력 시장이라는 측면에서 수요자는 다양해지고, 수는 늘고, 수요자의 사업 환경은 급변하여 수요는 빠르게 늘고 있는 데 반해 아직 공급은 수요를 못따라간다. 특히 괜찮은(?) 개발자 공급은 더욱 더 그렇다.&lt;/p&gt;
+
+&lt;p&gt;난 자체 개발하지 말고 쇼핑몰 제품을 구입하거나 쇼핑몰 호스팅 서비스로 먼저 서비스를 출시하는 걸 조심스레 권했다. 대개는 잘 만든 솔루션을 쓰는 것이 낫다. 일정이 변수가 아닌 상수에 가깝게 명확해져서 장사라는 쇼핑몰의 사업 본질을 실행하고 가설을 검증하는 데 필요한 기간이 짧고 예측 가능하기 때문이다. 물론 입맛에 딱 맞지 않은 부분도 있겠지만, 대개 그런 부분은 사업 운용에 핵심이 아닌 경우가 많다. 핵심은 팔려는 제품이 고객에게 가치를 전달하는 것이다.&lt;/p&gt;
+
+&lt;p&gt;소울부스터 박수영 대표는 소울부스터가 제공하는 가치는 고객 마다 다른 체형을 진단하여 몸에 잘 맞는 속옷을 제안하는 것이라 했다. 체형 진단을 위한 퀴즈 알고리즘을 중요한 사용자 경험으로 제공하고, 그러한 고객 경험을 서비스 시작부터 내재화해야 하기 때문에 개발팀을 초기부터 구축해야 한다고 했다. 동의했다.&lt;/p&gt;
+
+&lt;p&gt;합류 논의는 서로 신중했다. 난 소울부스터가 추구하는 가치와 그 가치에 접근하는 방법에 공감했지만, 내가 잘 모르는 사업 아이템이어서 목표에 이르는 과정이 잘 그려지지 않아 조심스러웠다. 박수영 대표 역시 첫 개발자 영입을 신중하고 조심스러운 입장으로 진행하고 있었다. 서로 조심스러웠지만, 박수영 대표는 마냥 개발을 미룰 순 없다고 생각했는지 실행 방법을 논의하자고 했다. 우리는  고심한 끝에 실행 계획을 수립했다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;체형 진단 퀴즈 서비스와 쇼핑몰 개발을 내가 총괄하여 목표 일정에 맞춰 출시한다.&lt;/li&gt;
+  &lt;li&gt;소울부스터는 개발자 구인을 계속 진행한다.&lt;/li&gt;
+  &lt;li&gt;우리의 목표는 소울부스터에 개발팀이 구축되고 연이륙하는 것이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;내가 정식으로 합류할 지 여부는 프로토타입 버전을 개발한 뒤에 다시 논의하기로 했다. 그렇게 우리의 협업은 시작되었다.&lt;/p&gt;
+
+&lt;h2 id=&quot;2-소울부스터-개발-과정&quot;&gt;2. 소울부스터 개발 과정&lt;/h2&gt;
+&lt;p&gt;구현에 사용할 도구(기술 스택)를 선택하는 중요한 기준은 개발 공정과 개발팀 두 가지를 구축한다는 목표에 근간을 두었다.&lt;/p&gt;
+
+&lt;h3 id=&quot;back-end&quot;&gt;Back-end&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Application Server : Python 3, Django&lt;/li&gt;
+  &lt;li&gt;DBMS, Storage : MySQL 5.7, Redis&lt;/li&gt;
+  &lt;li&gt;OS : Ubuntu 16 LTS&lt;/li&gt;
+  &lt;li&gt;Infrastructure : Amazon Web Service&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;소울부스터는 나와 처음 만나기 전에 체형을 진단하는 퀴즈 알고리즘을 이미 상당히 설계한 상태였다. 데이터 관계와 논리 체계가 상당히 정형화 되어 있었는데, 향후 더 확장해서 활용할 가능성과 의도가 보였다.&lt;/p&gt;
+
+&lt;p&gt;아니, 가능성과 의도가 보인 정도가 아니라 출시 버전에 넣기엔 너무 스펙이 크니 줄이자고 제안할 정도였다. 난 글자로 길게 설명하고 떠드는 걸 좋아하는데 박수영 대표는 나보다 더했다. 정말 온갖 정보를 고객에게 주고 싶어했다. 그 마음은 좋지만, 서비스 기획자 경험 상 우리만 힘들지 고객은 제대로 읽지 않을 가능성이 컸다. 박수영 대표 주변에서도 비슷한 피드백을 줬는지 알고리즘을 초기 기획에 비해 좀 더 압축하고(줄인 게 아니라 압축이다) 글자 양도 줄였는데, 여전히 내 기준으로는 너무 많았다. 너무 친절한데… 이것도 팀이 성장하는 과정이라 생각하고 더 잔소리(?)하지 않고 기획대로 구현하기로 했다.&lt;/p&gt;
+
+&lt;p&gt;그런 점에서 Back-end 프로그래밍 언어로 &lt;a href=&quot;https://www.python.org&quot;&gt;Python&lt;/a&gt;이 적합했다. Python은 쉽고 실용적이며 생산성이 좋다. 생태계가 활발하여 좋은 도구도 많으며, 다양한 용도로도 사용할 수 있다. 특히 최근엔 데이터 처리나 분석에 적극 활용되고 있다. 그래서 쇼핑몰과 퀴즈 서비스를 만들기에도 적절하고, 퀴즈 알고리즘이 더 고도화되고 데이터가 많아졌을 때에도 유용하며, 데이터 욕심이 많고 고객이 원하면 재빨리 제공하고 싶어 몸이 달아오르는 박수영 대표의 요청에 대응하려면 쉽고 유연한 Python이 제격이었다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.djangoproject.com&quot;&gt;Django&lt;/a&gt;는 Python으로 웹 애플리케이션 서버를 개발할 때 많이 사용된다. 나는 Django의 여러 기능 중 Admin 기능을 무척 좋아하는데, Django Admin 기능을 이용하여 손쉽고 빠르게, 그리고 확장성 있게 서비스 관리 도구를 개발할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.facebook.com/hello.kaycha/photos/a.1543127105756752.1073741829.439007509502056/1542628302473299/&quot;&gt;&lt;img src=&quot;/assets/uploads/2018/01/django-admin-speech-on-djangogirls-seoul-2017.png&quot; alt=&quot;DjangoGirls Seoul 2017 11월 세미나에서 발표한 “날로 먹는 Django Admin 활용”&quot; /&gt;&lt;/a&gt;
+&lt;a href=&quot;https://www.facebook.com/hello.kaycha/photos/a.1543127105756752.1073741829.439007509502056/1542628302473299/&quot;&gt;DjangoGirls Seoul 2017 11월 세미나에서 발표한 “날로 먹는 Django Admin 활용”&lt;/a&gt; 중에서&lt;/p&gt;
+
+&lt;p&gt;서비스를 첫 출시할 때엔 관리 도구가 없더라도 당장 문제는 없다. 여차하면 개발자가 출동하여 해결해도 된다. 그러다보니 관리 도구 개발은 후순위로 밀리고 서비스 출시일까지 사용단 기능을 개발하는 데 일정을 맞추기 일쑤이다. 그래도 시간이 촉박하니 이해할 수 있긴 하지만, 달려야 할 때 관리 도구가 미비하여 발목을 잡을 우려가 있다. 서비스 사용량이 늘고 다뤄야 할 자료가 많아지면 협업과 분업이 중요하다. 잘 만든 서비스 관리 도구는 팀의 업무 효율을 높이고 안정성을 높이며, 팀에 필요한 정보를 유통하는 데 기여한다. 그래서 관리 도구를 제대로 준비해놓지 않으면 사업이 성장하느라 한창 바쁠 때 티도 안 나고 개발할 맛도 별로 없는 관리 도구 만드느라 개발팀이 병목이 되기 십상이다.&lt;/p&gt;
+
+&lt;p&gt;물론 서비스 관리 도구를 고도화하는 건 한도 끝도 없다. 저기 앉아 있는 개발자에게서 여유가 느껴지면 막 이것 저것 추가하고 고쳐달라고 말하고 싶다. 하다 못해 차트라도 그려주거나 버튼이라도 예쁘게 해달라고 하고 싶지 않던가. 하지만 한정된 자원으로 높은 실행력을 내야 하는 스타트업은 적정선에서 끊어야 한다. 그 적정선 수준까지는 Django Admin으로도 충분히 빠르고 강력하게 만들 수 있다.&lt;/p&gt;
+
+&lt;p&gt;이외 환경은 사용자가 많거나 자료가 많거나 개발 편의성이 좋은 점을 기준으로 선택했다.&lt;/p&gt;
+
+&lt;h3 id=&quot;front-end&quot;&gt;Front-end&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Web browser : IE 9 이상&lt;/li&gt;
+  &lt;li&gt;HTML 5, CSS 3, JavaScript(ECMA 6), Vue.js 2 + Webpack 2&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Front-end 기술스택은 기준이 명확했다. 인터넷 익스플로러 8(IE 8) 이하 버전은 지원하지 않는다. 2017년에도 여전히 한국에선 IE 8 점유율을 쓰는 시대 저항 세력이 있지만, 한정된 자원으로 서비스를 개발해야 하는 스타트업의 현실적인 한계가 있었다. 그리고 서비스 이용자 중 모바일 사용자가 훨씬 많을 것이라 확신했다. 난 서비스 출시 버전에선 IE 8를 지원하지 않는 대신 좀 더 나은 기술로 고객의 서비스 사용 경험을 증대시키고 개발 효율을 높이자고 제안했고, 박수영 대표는 흔쾌히 수용했다. 실은 제발 IE 8은 지원하지 맙시다! 에 가까웠다. 😭&lt;/p&gt;
+
+&lt;p&gt;소울부스터는 의류 쇼핑몰이라는 점과 박수영 대표의 성향을 고려 했을 때 사용단 UI 수정이 많을 거라 예상했다. 실제로 매우 많았다. 그래서 현대 UI 프로그래밍에 적합한 도구가 필요했는데, 지금이나 그 당시나 React.js, Angular가 주요 축이다. 난 React.js와 Angular의 장점을 제공하면서도 학습과 활용이 상대적으로 쉬운 &lt;a href=&quot;https://vue.js&quot;&gt;Vue.js&lt;/a&gt;를 선택했다. React.js와 Angular에 비해서는 사용자 층이나 생태계가 크진 않았지만, 빠르게 성장하고 있었고 사용하기 쉬웠으며, 무엇보다도 친절하고 다정한 한국어 자료가 잘 정리되어 있었다. React.js나 Angular 숙련자를 영입하기 쉽지 않다면 구인한 Front-end개발자가 학습해서라도 활용할 상황을 염두에 뒀다. React.js나 Agnular 경험자라면 어렵지 않게 Vue.js를 사용할 수 있으며, 이 셋과 관련된 기술을 모르더라도 Vue.js는  React.js나 Angular에 비해 쉽게 입문할 수 있다고 판단했다. 왜냐하면 내가 그랬으니까.&lt;/p&gt;
+
+&lt;p&gt;시행착오는 있었지만, Vue.js는 만족스러웠다. 부분적으로 그리고 보수적으로 도입했는데, 기술 스택이 너무 복잡해지지 않으면서도 개발 효율이 상승했으며 성능과 기능도 만족스러웠다. 그리고 반짝 두각을 드러내다 사라지지 않고 빠르게 점유율이 늘어서 Vue.js 경험자도 빠르게 늘고 있어서 면접 자리에서 Vue.js를 사용해봤거나 학습 중인 개발자를 만나는 빈도도 늘고 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;기타&quot;&gt;기타&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Slack/Jandi&lt;/li&gt;
+  &lt;li&gt;Trello&lt;/li&gt;
+  &lt;li&gt;Bitbucket&lt;/li&gt;
+  &lt;li&gt;MailChimp&lt;/li&gt;
+  &lt;li&gt;아임포트&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;나는 주로 원격 근무를 한다. 제품이나 서비스를 운영하고 있거나 개발 총괄자가 있는 프로젝트에서 원격 근무는 해봤지만, 프로젝트 시작부터 원격 근무를 해본 적은 없었다. 프로젝트 초기엔 팀과 소통을 많이 하기 때문에 다소 걱정이 들었다. 하지만 소프트웨어 개발자는 나 한 명이니 개발 관련하여 얼굴 맞대고 논의하는 일은 바보같은 코드를 짠 3일 전의 나를 오늘의 내가 구박하는 그런 경우가 대부분이었다. 그래서 일주일에 1~2회 정도 사무실에 출근하고, 소통 채널을 적극 활용하여 원격 근무를 해도 협업에 큰 지장이 없도록 노력했다.&lt;/p&gt;
+
+&lt;p&gt;이슈 빈도가 빈번하지 않거나 외부 상황에 의존하는 일이 일정할 땐 원격 근무가 별 문제는 없었다. 물론 비동기로 소통을 나누기 때문에 동기식 소통에 익숙한 사람에겐 불편할 수도 있다. 다행히 박수영 대표는 팀에 엄청 많은 일을 할당했고, 동기식으로 협업해서는 도저히 일정을 맞출 수 없었다. 각자 알아서 업무 맥락(context)을 관리하며 비동기로 업무를 해치워야 했고, 뜻하지 않게 비동기식 협업이 동작했다. 😂&lt;/p&gt;
+
+&lt;p&gt;나는 온라인 협업 도구 사용으로 비동기로 협업하더라도 효율이 떨어지지 않게 유도하려고 노력했다. 그렇다고 엄격하게 도구 사용 규칙을 정하거나 강제하지 않았다. 핵심 원칙을 하나 정하고, 그 원칙을 지키도록 유도했다. 그 원칙이란 바로 공개와 개방이다. 되도록이면 &lt;a href=&quot;https://trello.com&quot;&gt;Trello&lt;/a&gt;와 &lt;a href=&quot;https://slack.com&quot;&gt;Slack&lt;/a&gt;/&lt;a href=&quot;https://www.jandi.com&quot;&gt;Jandi&lt;/a&gt;를 사용하여 이슈를 팀 내에서는 누구나 확인할 수 있게 공개했다. Slack/Jandi나 email, Trello 어디에도 기록이 남지 않은 업무 요청을 가끔 반려하기도 했다.&lt;/p&gt;
+
+&lt;p&gt;박수영 대표는 서비스 기획자 역할도 하고 있었으므로 사소한 이슈라도 거의 모든 email에 참조자에 참여시켰다. 그래도 정보 불일치 상황을 피하고자 출근할 땐 진행 상황과 주요 이슈를 동기화했다. 몇 가지 아쉬운 점은 있지만, 아직 출시하지 않은 제품이나 서비스를 개발하는 단계에서도 원격 근무가 동작할 수 있는 가능성을 발견하기도 했고, 해결해야 할 문제도 발견했다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://iamport.kr&quot;&gt;아임포트&lt;/a&gt;는 결제 대행(Payment Gateway) 서비스 연동을 대신해주는 중개 서비스이다. 대행을 대신한다니 뭔가 복잡하게 보이는데, 아임포트를 사용하면 번거롭고 짜증나는 PG연동 작업을 아주 간편하게 해치울 수 있다. 게다가 PG를 하나만 연동할 경우 무료이며, 복수 개 PG를 연동하더라도 한 번만 결제하면 되므로 사용하지 않을 이유가 없었다. 게다가 아임포트는 결제 기능 구현 일정에 영향을 미치는 외부 의존도를 상당히 낮춰줬다. 외부 의존도가 높은 이슈가 많을수록 일정 추정이 어려워지고 팀 스트레스를 높이기 때문에 우린 아임포트에게 많은 도움을 받은 셈이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://mailchimp.com&quot;&gt;MailChimp&lt;/a&gt;는 Non-paid 마케팅 채널 중 하나인 email 마케팅을 하는 데 매우 유용하다. 개발자의 지원이 없이도 email 마케팅을 수행하고 운영하는 데 필요한 기술 요소를 활용할 수 있으며, MailChimp가 머신러닝으로 최적화하여 제안하는 여러 가설과 실행 방법은 비숙련자의 가설과 계획보다 나은 경우가 많다. 그래서 email 마케팅에 필요한 기술 지원에 내가 손을 쓸 일은 없었으며, 회원가입, 주문 안내 등 안내 email을 발송하는 용도로 MailChimp의 서비스 중 하나인 Mandrill사용했다.&lt;/p&gt;
+
+&lt;h2 id=&quot;3-소프트웨어-개발팀-구축&quot;&gt;3. 소프트웨어 개발팀 구축&lt;/h2&gt;
+&lt;p&gt;소프트웨어 개발을 해본 적이 없거나 모르는 창업자는 어떤 분야 개발자가 팀에 필요한 지, 경력은 어느 정도여야 하는 지, 어떤 사람이어야 하고, 어떤 기술을 다룰 줄 알아야 하는 지 궁금해하곤 한다. 모두 챙겨야 할 요건이긴 하다. 하지만 전제해야 할 것이 두 가지 있다. 스타트업 팀 구축(building)을 주제로 강연할 때 마다 일관된게 주장하는 내용이기도 하다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;창업자가 해결하고자 하는 문제를 풀고 싶어 하는 사람이어야 한다.&lt;/li&gt;
+  &lt;li&gt;회사와 함께 성장하는 지속 가능한 팀을 함께 만들어야 한다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;많은 창업자가 개발팀이 필요하다고 하지만 대화를 나눠보면 실제로는 개발팀이 목표가 아니라 제품이나 서비스가 목표인 경우가 많다. 사업의 목적과 목표가 소프트웨어 개발이 아니라면 틀린 생각은 아니지만, 개발팀이 필요한 것과 개발팀이 만들어낼 결과물이 필요한 것은 구분해야 한다. 후자라면 꼭 내부 개발팀을 고집할 필요가 없다. 오히려 내부 개발팀을 구축해서 실행력이 더뎌지거나 품질 낮은 제품을 만들기도 하고, 적지 않은 돈과 시간과 정신 에너지를 쓰고 개발팀을 해체하는 경우가 무척 많다.&lt;/p&gt;
+
+&lt;p&gt;개발팀과 함께 창업의 이유(why)를 함께 고민하고, 그 문제를 풀 방법을(how) 모색하여 고객에게 적합한 제품이나 서비스(what)가 나와야 한다. 그래서 개발자 개개인은 전문 기술 분야를 갖고 있더라도 팀은 문제를 해결하는 데 필요한 기술 스택을 어떻게든 소화할 수(풀스택) 있어야 한다. 풀스택이라 함은 능력이나 경력이 될 수도 있지만 더 중요한 건 문제를 풀겠다는 태도(마음)이다.&lt;/p&gt;
+
+&lt;p&gt;그런 점에서 소울부스터는 개발자 영입이 쉽진 않았다. 아무래도 여성 맞춤 속옷 사업 아이템에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;여성&lt;/code&gt;이 큰 인상을 끼치고, 적어도 내 지인이나 인터뷰를 본 남성 개발자 중에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;여성&lt;/code&gt; 속옷과 관련된 주제에 문제를 고민하는 경우는 없었다. 그래서 인터뷰를 볼 때 소울부스터가 해결하고자 하는 문제는 &lt;code class=&quot;highlighter-rouge&quot;&gt;맞춤&lt;/code&gt;이라는 것에 초점을 두고자 했다. 박수영 대표가 내게 들려준 비전과 창업 이유를 최대한 기술과 개발로 풀어서 전달하려 노력했다.&lt;/p&gt;
+
+&lt;p&gt;인터뷰 볼 때 중요시 여긴 또다른 요소는 서비스 운영 경험이었다. 박수영 대표는 실행력이 좋고, 또 성격도 급한 편이다. 필요하거나 중요한 일이면 설령 그게 하기 싫거나 까다로운 일이라도 망설이지 않고 기꺼이 직접 실행하는 사람이다. 이런 대표자의 실행력은 서비스를 운영하여 사업 실적이 바로 바로 발생하는 실 운영 환경에서 개발자에게 압박과 부담으로 작용한다. 그런 상황에 일정 기간 노출된 경험이 필요했다.&lt;/p&gt;
+
+&lt;p&gt;개발팀의 중요 고객 중 하나인 내부 고객, 그러니까 개발팀이 만든 도구를 사용하는 비개발팀 동료을 위한 관리 도구를 고도화하는 업무도 지루하고 재미없는 경우가 많다. 잘 드러나지 않는달까? 그래서 새로운 제품이나 기능을 만드는 건 좋아하지만 서비스 운영에 필요한 개발 업무는 싫어하는 개발자도 있다. 먹고 살아야 하니 일은 하지만 발휘하는 집중력에 차이가 크면 개발자 개인과 개발팀 혹은 회사 모두 불행한 상황에 놓인 것이나 마찬가지이다. 인내할 줄 알아야 한다. 더 나아가 그런 환경에서도 같은 문제에 대해서 더 나은 해결책을 모색하는 호기심을 유지하고 실행하는 체력과 자기 관리를 할 수 있어야 한다. 그걸 넘어서 아예 서비스 운영 개발을 좋아하면 더 좋고.&lt;/p&gt;
+
+&lt;p&gt;박수영 대표에게 이런 생각을 피력했고, 이럴 경우 생각보다 개발팀 구축에 시간이 오래 걸릴 수 있다는 걸 일러두었다. 그 생각보다 오래 걸린 시간이 그 생각보다 더 오래 걸리긴 했지만, 마침내 Front-end와 Back-end 각 한 명씩 구인하는 데 성공했다.&lt;/p&gt;
+
+&lt;p&gt;서비스를 출시한 이후 한결 개발자 구인 기회가 많아졌다. 출시 전에는 아무리 잘 설명해봐야 실제로 동작하는 눈에 보이는 실체가 없으니 회사 정체성은 여성 속옷 쇼핑몰에 그쳤다. 소울부스터에서 고심 끝에 만들고 계속 진보하는 체형 진단 퀴즈 알고리즘이 고객에게 어떤 가치를 주는 지 입사 지원자에게 확신시키기 어려웠다. 하지만 서비스를 출시하고 직접 공장에서 제조한 제품을 고객에게 팔고, 퀴즈 알고리즘을 사용하는 고객 경험과 고객 응대 경험이 쌓이자 팀의 정체성은 더 뚜렷해졌다. 나는 그런 점들이 어우러져 입사 지원 수도 늘고 회사의 비전을 미리 살펴보고 관심있는 사람이 지원하는 빈도가 늘었다고 생각한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;마무리&quot;&gt;마무리&lt;/h2&gt;
+&lt;p&gt;함께 프로젝트를 하기로 한 지 만 1년이 됐다. 나는 시간 당 비용을 청구했는데, 서비스 안정화 이후 내가 프로젝트에 들이는 시간이 확 줄었고 그만큼 내 수입도 (무척) 줄었다 😔. 그렇다. 박수영 대표와 함께 정한 우리의 목표에 도달한 것이다. 개발팀을 구축했고, 회사와 팀은 성장하고 매출도 상승하며 연 이륙을 시작하고 있었다.&lt;/p&gt;
+
+&lt;p&gt;얼마 전 우리는 계약을 공식 종료했다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/uploads/2018/01/soulbooster-product-unboxing.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;소울부스터 팀은 여전히 실행력을 유지하고 있고, 제품에 만족하는 고객도 계속 늘고 있는 것 같다. 직접 돈 주고 제품을 산 내 아내도 소울부스터 제품에 만족하고 있다. 그래서 두 번 샀다. 난 프로젝트를 개시하여 출시하고, 운영하며 안정화하고, 개발팀 구축도 함께 하며 작지만 야무지고 단단하게 성장하는 팀을 곁에서 보았기에 여러모로 소울부스터에 정이 간다. 소울부스터의 성공을 기원하며 개발 후기를 마쳐본다.&lt;/p&gt;
+
+&lt;p&gt;아참, 소울부스터에서 시니어 개발자를 충원하고 있다고 한다. 소프트웨어적 상상력을 발휘하기 좋은 사업 아이템이자 사업 비전이라 생각한다. 관심있는 개발자는 recruit@soulbooster.co.kr 로 문을 두드려 보길 추천해 본다. 추천인 코드는 hannal (농담). 아니면 내게 자리를 마련해달라고 연락을 해도 좋다. 위에 명기된 기술 스택을 경험했다면 좋겠지만, 그렇지 않더라도 서로 적합하다면 문제 될 것 없다. 문제가 안 된다는 건 현 소울부스터 개발팀이 살아있는 사례라서 말할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;One more thing. 소울부스터처럼 서비스 개발부터 개발팀 구축, 운영까지, 혹은 프로젝트를 의뢰나 문의하실 분은 kay@hannal.net 으로 문의하세요. 😍&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;2018년 1월 12일 추가 : 소울부스터에서는 샘 방지 위생 팬티인 시즈더데이를 전문으로 취급하는 쇼핑몰인 &lt;a href=&quot;http://www.seizetheday.co.kr/&quot;&gt;시즈더데이&lt;/a&gt;를 2017년 12월에 출시했다. 팬티 제품은 브레지어와 달리 가슴 체형 진단을 하지 않아도 되고, 회원가입을 하지 않아도 손쉽게 주문할 수 있도록 별도 쇼핑몰을 구축한 것인데, 흥미로운 점은 쇼핑몰 호스팅 서비스를 사용한 점이다. 개발팀을 보유한 회사의 대표가 이런 판단을 실제로 실행하는 게 생각보다 쉽지 않다. 정말 사업 측면에서 놀라운 실행력이다. 개발자로서 이런 사업 실행력과 판단에 박수를 보내본다.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 10 Jan 2018 02:00:00 +0000</pubDate>
+        <link>http://blog.hannal.com/2018/01/soulbooster-production-story/</link>
+        <guid isPermaLink="true">http://blog.hannal.com/2018/01/soulbooster-production-story/</guid>
+        
+        <category>소울부스터</category>
+        
+        <category>soulbooster</category>
+        
+        <category>개발 후기</category>
+        
+        <category>팀 빌딩</category>
+        
+        <category>python</category>
+        
+        <category>django</category>
+        
+        <category>vuejs</category>
+        
+        <category>여성 속옷</category>
+        
+        <category>쇼핑몰</category>
+        
+        
+        <category>devlife</category>
+        
+      </item>
+    
+      <item>
+        <title>일하는 방식 고민.</title>
+        <description>&lt;p&gt;난 하루에 집중해서 6~8시간, 일주일에 3~4일만 일하는 게 좋을 것 같다.&lt;/p&gt;
+
+&lt;p&gt;딴짓하지 않고 자신을 몽땅 짜낼만큼 높은 집중력을 내면서 항상성을 유지할 수 있는 하루 최대 근무 시간은 6시간이 최대치인 것 같다. 8시간도 큰 부담은 없는데, 사람이 언제나 전력 질주하듯 집중력을 발휘할 수 있는 건 아니니 기준은 하루 6시간 집중하는 데 맞추고 좀 여유를 내고 싶은 날은 8시간 일하면 될 것 같다.&lt;/p&gt;
+
+&lt;p&gt;자신을 짜내듯 일하면 업무 탈진한다. 탈진했다고 퇴사해서 충전하는 건 업무 맥락, 팀웍 구축 비용이 너무 아깝다. 그러므로 평소에(?) 일하듯이 평소에 공부하고 경험하며 충전해야 한다. 나는 느리고 시간을 많이 투입해야 해서 하루에 3시간은 학습에 쓰고, 일주일에 하루 정도는 온전히 경험성 활동에 써야 하는 것 같다. 이것도 멍하니 읽고 감상하는 게 아니라 의식하고 의도한 활동으로 해야 한다. 안 그러면 남는 게 없는 것 같다.&lt;/p&gt;
+
+&lt;p&gt;주 중에 일과 학습에 집중해서 달리려면 그 주를 회고하고 다음 주를 계획하는 데 하루 정도는 써야 한다. 물론 노는 것도 포함해서. 그리고 온전히 쉬는 날은 최소 하루 보장하고.&lt;/p&gt;
+
+&lt;p&gt;이렇게 해서 먹고 살 수 있을까? 일주일에 100시간씩 일해야 성공할 기회가 생긴다고 한다. 성공하거나 시간과 자본에서 어느 정도 자유를 얻은 지인을 보면 그런 것 같다. 물론 죽도록 일해서 결국 죽거나 동력을 잃거나 실패하는 사람은 있다. 그런데 느슨하게(?) 일해서 성공한 경우는 적어도 내 주변엔 없고, 사회에 알려진 사례도 못본 것 같다.&lt;/p&gt;
+
+&lt;p&gt;실은 나 혼자라면 그런 삶에 곧 도달할 것 같다. 문제는 언제까지 지속할 수 있느냐이다. 1~2년이 아니라 5년, 10년, 20년 이후에도 이렇게 일해서 먹고 살 수 있을까? 자본 소득이 뒷받쳐주지 않는 현 상황에서는 낙관하지 못한다.&lt;/p&gt;
+
+&lt;p&gt;나 혼자가 아니라 팀이라면 장기 지속할 가능성이 클 것 같다. 한 사람이 하는 일을 두 사람이 하면 된다. 팀 복잡도가 올라가서 발생하는 누수를 감안하면 두 사람이 소화하는 것보다 한 사람이 하는 게 더 나을지도 모른다. 하지만 예측 가능한 일정과 높은 질을 꾸준하게 내려면 한 사람이 하는 일을 두 사람이 하루 6~8시간, 주 3~4일 근무하며 처리해야 가능할 것 같다. 물론 팀원의 프로 의식과 그런 문화를 지키고 발전시키려는 태도와 마음을 서로 강하게 믿어야 가능하다. 결국 누구와 함께 하느냐가 가장 중요한 문제이다.&lt;/p&gt;
+
+&lt;p&gt;그렇다고 같은 일을 많은 사람이 한 팀으로 모이는 건 아니다. 오히려 일을 쪼개고 쪼갠 일에 대해 온전히 위임하고 권한을 발휘하도록 하여 개개인 간 의존성을 낮춰야 한다. 팀은 다른 조직에 비해 오히려 큰데 일은 다른 조직보다 더 원자화 되어 동작하는 그런 조직을 어떻게 만들어야 할 지 아직은 잘 모르겠다.&lt;/p&gt;
+</description>
+        <pubDate>Sat, 06 Jan 2018 10:00:00 +0000</pubDate>
+        <link>http://blog.hannal.com/2018/01/thinking-of-how-to-work/</link>
+        <guid isPermaLink="true">http://blog.hannal.com/2018/01/thinking-of-how-to-work/</guid>
+        
+        <category>조직</category>
+        
+        <category>일</category>
+        
+        <category>팀</category>
+        
+        
+        <category>devlife</category>
+        
+      </item>
+    
+      <item>
+        <title>Django 템플릿에서 VariableDoesNotExist 예외 오류 대응하기</title>
+        <description>&lt;p&gt;한 줄 요약 : Django 템플릿 엔진은 템플릿 필터에 대해서 항상 조용한 실패 처리(silent failure)를 하진 않는다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Django Template은 없는 템플릿 변수나 템플릿 변수의 속성, 키, 색인이 없어도 오류 상황을 일으키지 않고 조용히 오류 상황을 잠재운다. 일명 Silent failure 동작이다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{{ lorem.ipsum.hello.world }}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;lorem&lt;/code&gt;이라는 템플릿 변수가 없든 &lt;code class=&quot;highlighter-rouge&quot;&gt;lorem&lt;/code&gt; 템플릿 변수는 있는데 이 객체에 &lt;code class=&quot;highlighter-rouge&quot;&gt;ipsum&lt;/code&gt;이라는 키나 속성이 없다고 가정하자. 최종 템플릿 맥락이 출력(치환)이면 Django는 변수나 키, 속성이 없다는 오류 상황을 일으키지 않으며, 저 템플릿 변수 위치엔 아무것도 출력되지 않는다. 템플릿 변수를 출력(render)하거나 템플릿 태그에서 사용할 때는 이처럼 Silent failure로 동작한다.&lt;/p&gt;
+
+&lt;p&gt;하지만 템플릿 필터를 거치는 경우엔 &lt;code class=&quot;highlighter-rouge&quot;&gt;VariableDoesNotExist&lt;/code&gt; 예외(exception)가 발생한다. 예외 이름에서 드러나듯이 템플릿 변수가 없다는 뜻이다.&lt;/p&gt;
+
+&lt;p&gt;예를 들어, 존재하지 않는 템플릿 변수인 &lt;code class=&quot;highlighter-rouge&quot;&gt;not_exist_var&lt;/code&gt;를 &lt;code class=&quot;highlighter-rouge&quot;&gt;divisibleby&lt;/code&gt; 템플릿 필터에 사용하면 예외 오류가 발생한다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{{ '1234'|divisibleby:not_exist_var }}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이에 대해 Django 공식 문서에서는 다음과 같이 설명한다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Thus, filter functions should avoid raising exceptions if there is a reasonable fallback value to return. In case of input that represents a clear bug in a template, raising an exception may still be better than silent failure which hides the bug. ( 출처 : &lt;a href=&quot;https://docs.djangoproject.com/en/1.11/howto/custom-template-tags/#writing-custom-template-filters&quot;&gt;custom-template-tags - writing-custom-template-filter&lt;/a&gt; )&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;간단히 말해서 템플릿 필터 함수에서는 버그를 숨기는 Silent failure 보다는 예외를 일으키는 게 낫다고 한다. 실제로 Django 내장 템플릿 필터를 보면 대체물을 대신 반환해도 될 만한 경우엔 Exception 처리를 잡아내서 오류 상황을 피하지만, 그 외의 경우엔 Exception이 발생하게 냅둔다. 문제는 그 정책이 예상을 벗어나는 경우에 발생한다. 난 &lt;code class=&quot;highlighter-rouge&quot;&gt;default&lt;/code&gt; 템플릿 필터에서 조용한 실패 처리를 하지 않는 상황을 만났다. &lt;code class=&quot;highlighter-rouge&quot;&gt;default&lt;/code&gt; 템플릿 필터는 대개 다음과 같이 사용한다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{{ empty_var|default:'비었수다' }}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;나도 비슷하게 사용했다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{{ apple.attr3|default:lemon.attrdict.color }}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Django 템플릿 엔진 동작에 익숙하다면 다음과 같이 동작하길 기대(예상)한다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;apple.attr3&lt;/code&gt;가 없으면 &lt;code class=&quot;highlighter-rouge&quot;&gt;lemon.attrdict['color']&lt;/code&gt;를 대신 출력&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;lemon.attrdict&lt;/code&gt;에 &lt;code class=&quot;highlighter-rouge&quot;&gt;color&lt;/code&gt; 키가 없으면 결국 아무것도 출력하지 않고 Silent failure.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;딱히 Exception이 발생할만한 로직이 아니고, &lt;code class=&quot;highlighter-rouge&quot;&gt;default&lt;/code&gt; 필터 함수를 봐도 인자 두 개 받아서 &lt;code class=&quot;highlighter-rouge&quot;&gt;return value or arg&lt;/code&gt;로 동작하는 것 뿐이다. 다시 말해 &lt;code class=&quot;highlighter-rouge&quot;&gt;default&lt;/code&gt; 템플릿 필터인 Python 함수는 두 개 인자를 받는데, 첫 번째 인자로 받는 &lt;code class=&quot;highlighter-rouge&quot;&gt;|&lt;/code&gt; 앞에 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;apple.attr3&lt;/code&gt;가 있으면 해당 객체를 반환하고, 없으면 두 번째 인자로 받는 &lt;code class=&quot;highlighter-rouge&quot;&gt;:&lt;/code&gt; 뒤에 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;lemon.attrdict.color&lt;/code&gt;를 반환한다.&lt;/p&gt;
+
+&lt;p&gt;하지만 실제로는 &lt;code class=&quot;highlighter-rouge&quot;&gt;VariableDoesNotExist&lt;/code&gt; 예외 오류가 발생한다. 이 예외는 &lt;code class=&quot;highlighter-rouge&quot;&gt;with&lt;/code&gt; 템플릿 태그로 해결하면 된다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://gist.github.com/hannal/9de33b54a749457d7f29c5f30c5e9136&quot;&gt;with 템플릿 태그로 VariableDoesNotExist 예방&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;with&lt;/code&gt; 템플릿 태그는 Silent failure 처리를 해주니 &lt;code class=&quot;highlighter-rouge&quot;&gt;with&lt;/code&gt; 템플릿 태그로 만든 임시 템플릿 변수인 &lt;code class=&quot;highlighter-rouge&quot;&gt;colour&lt;/code&gt;엔 출력할(render) 게 없는 빈 객체가 할당이 된다. &lt;code class=&quot;highlighter-rouge&quot;&gt;with&lt;/code&gt; 템플릿 태그를 안 쓴 경우엔 Silent failure를 해주는 놈이 없다보니 Exception이 그대로 나버린 것이다. 이 문제가 까다로운 이유는 Django 디버깅 화면에서는 문제가 있는 템플릿 줄(line)을 가리키지 않고 Exception이 발생한 Django 소스를 보여주는 데 있다. 평범한 속성명이나 키 이름을 쓰다가는 고생하기 십상이다.&lt;/p&gt;
+
+&lt;p&gt;흔히 겪는 상황은 아닐 것 같다. 나는 모델에 &lt;code class=&quot;highlighter-rouge&quot;&gt;JSONField&lt;/code&gt;를 썼고, 이 모델필드의 &lt;code class=&quot;highlighter-rouge&quot;&gt;dict&lt;/code&gt; 객체에 특정 키(위 예제 기준으로는 &lt;code class=&quot;highlighter-rouge&quot;&gt;colour&lt;/code&gt;키)가 없어서 발생한 거였다. 뷰 함수에서 넘겨주는 템플릿 변수 이름대로라면 금방 발견했을 것 같다.&lt;/p&gt;
+
+&lt;p&gt;삼천포 요약 : 변수 네이밍을 괴랄하게 하면 디버깅에 도움이 된다.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 26 Jun 2017 00:00:00 +0000</pubDate>
+        <link>http://blog.hannal.com/2017/06/django-template-variabledoesnotexist-exception/</link>
+        <guid isPermaLink="true">http://blog.hannal.com/2017/06/django-template-variabledoesnotexist-exception/</guid>
+        
+        <category>django</category>
+        
+        <category>template</category>
+        
+        <category>템플릿</category>
+        
+        
+        <category>devlife</category>
+        
+      </item>
+    
+      <item>
+        <title>시트로엥 C4 칵투스 두 달 소감.</title>
+        <description>&lt;p&gt;올해 한국에 출시한 시트로엥 C4 칵투스를 샀다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;운행 기간 : 두 달&lt;/li&gt;
+  &lt;li&gt;운행 거리 : 약 1,600km&lt;/li&gt;
+  &lt;li&gt;평균 연비 : 리터 당 18~19km&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;총평&quot;&gt;총평&lt;/h3&gt;
+
+&lt;p&gt;재밌는 차다. 개성이 강해서 호불호가 극명하게 갈릴 것 같다. 난 선호에 가깝다. 점수를 매기자면 5점 만점에 4점. 30대 3~4인 가정에 추천한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;특성&quot;&gt;특성&lt;/h3&gt;
+
+&lt;h4 id=&quot;1-연비&quot;&gt;1. 연비&lt;/h4&gt;
+
+&lt;p&gt;도심 내 평속 40~60km 정도일 때 연비는 리터 당 17~18km정도로 측정된다. 고속도로 타서 평속 80~90km로 달리면 연비는 22~25km까지 찍는다. 2016년 11월 기준으로 서울 시내 버스 요금이 기본 요금 1,200원에 10km 초과 시 5km 마다 100원씩 가산되고 경유가 리터 당 대략 1,200~1,300원이니까 연비만 놓고 보면 버스 요금보다 저렴하다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/uploads/2016/11/c4-cactus-fuel-efficient.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;연비 효율을 높이려는 노력이 곳곳에서 보인다. 먼저 차가 멈추면 엔진을 껐다가 출발할 때 다시 켜는 기능을 들 수 있다. 차량 동작을 완전히 끈 게 아니라 엔진만 끄고, 제동 페달에 발을 떼는 순간 빠르게 다시 시동을 건다. 반응성이 좋아서 불편하진 않다. 하루에 두세 시간 정도 운전하면 에코 유지 시간이 몇 십 분 정도 된다. 몇 십 분 주행을 안 한 셈이니 꽤 연류를 아낀 것이다.&lt;/p&gt;
+
+&lt;h4 id=&quot;2-디자인&quot;&gt;2. 디자인&lt;/h4&gt;
+
+&lt;p&gt;눈에 띄는 디자인이다. 선이 또렷하고 야무지게 생겼다. 특히 얼굴이 재밌게 생겨서 사람들이 흘깃 눈길 한 번씩은 보낸다. (｀^´) 이렇게 생겼달까?&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/uploads/2016/11/c4-cactus-front.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;자동차 외관에 플라스틱류 소재가 이렇게 많이 사용된 건 처음 본다. 그 유명한(?) 옆면 에어범퍼도 그렇고, 차 전면부나 후면부 곳곳에도 다소 말랑한 플라스틱 소재가 붙어 있다. 좋고 나쁘고를 떠나서 특이하긴 하다. 색깔도 다양하고 강렬한데, 외형이 워낙 특이해서 난 무난하게 흰색을 골랐다. 흰색이 예쁘다.&lt;/p&gt;
+
+&lt;p&gt;내부 인테리어도 아늑하고 귀여운 편이다.&lt;/p&gt;
+
+&lt;h4 id=&quot;3-공간-크기&quot;&gt;3. 공간, 크기&lt;/h4&gt;
+
+&lt;p&gt;차체는 작은 편이다. 키나 덩치가 큰 사람에겐 다소 좁게 느껴질 것이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/uploads/2016/11/c4-cactus-size.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그런데 안쪽 공간은 생각보다 여유롭다. 넓다기 보다는 여유감이 있어 답답하지 않다는 뜻이다. 앞좌석은 자잘한 조작 장치를 버튼식으로 바꾸고 대시보드 디스플레이에 몰아 넣어서 변속 레버 부근 공간이 여유롭다. 보조석은 에어백을 상단으로 옮기고, 앞쪽 가방식 수납 공간에 소지품을 넣을 수 있다.&lt;/p&gt;
+
+&lt;p&gt;뒷좌석은 다소 좁게 느껴질 여지가 있는데, 자잘한 장치를 쳐내서 공간이 깔끔하고(휑하고) 전방과 상향 시야가 탁 트여서 심리상 편안함을 준다. 하지만 키가 큰 사람이 앉기엔 좁은 건 어쩔 수 없다. 뒷좌석엔 isofix 방식인 유아 카시트를 두 대 장착할 수 있으며, 고리 구멍이 표시되어 있어 연결하기 쉽다. 카시트 두 개 놓으면 뒷좌석은 사실상 공간이 남지 않는다.&lt;/p&gt;
+
+&lt;p&gt;트렁크는 생활 물품을 담고 다니기 괜찮은 정도이며 넓은 편은 아니다. 나는 유모차, 자동차 용품 등을 넣고 다니는데, 장 본 물품을 상자 하나에 담아서 트렁크에 담을 정도는 된다. 유모차를 넣고 다니기엔 괜찮지만, 유모차를 싣고 장을 많이 본 날엔 좁다.&lt;/p&gt;
+
+&lt;p&gt;뒷좌석 창문은 바깥쪽으로 살짝 열린다. 싫어하는 사람이 꽤 있을 것 같은데, 난 오히려 마음에 든다. 뒷좌석엔 유아 카시트 장착하고 꼬맹이를 앉히기 때문에 아예 꼬맹이가 활짝 열지 못하는 게 마음 편하다. 아이가 타지 않을 때에는 대부분 나 혼자 차를 타거나 동승자 한 명이 보조석에 앉기 때문에 뒷좌석 창문 열 일이 없다. 뒷좌석 창문이 아래로 열리지 않아서 뒷좌석 문짝 안쪽의 수납 공간이 넓다. 어느 정도로 넓냐면 하루 외출하는 데 쓸 아이 기저귀, 소형 우유팩, 간식통을 담을 수 있다. 아이가 용변을 봐서 돌돌 만 기저귀 서너 개는 넉넉히 들어간다.&lt;/p&gt;
+
+&lt;h4 id=&quot;4-에어범퍼&quot;&gt;4. 에어범퍼&lt;/h4&gt;
+
+&lt;p&gt;예쁜 외관에 눈에 띄게 전혀 다른 재질로 된 에어범퍼가 차 옆면에 꽤 넓게 자리잡고 있다. 내 차는 흰색이고 에어범퍼는 검정색인데, 흰색 몸체는 유광이고 에어범퍼는 무광이라 더 이질감이 크다. 딱 문콕 당할 위치에 에어범퍼가 있어서 문콕 스트레스가 거의 사라진다. 실제로 문콕을 몇 번 당한 것 같은데, 에어범퍼와 바퀴 부근 플라스틱류 소재에 찍힌 자국이 생겼더라. 차체 철판 면은 깨끗하고.&lt;/p&gt;
+
+&lt;p&gt;차 옆면이 어딘가에 닿을 때 가장 먼저 에어범퍼가 닿아서 차체 흠집에 대응할 여지가 있다. 좁은 공간을 우회전하며 들어가다 차 오른쪽 부위가 입구 기둥에 닿는 사고(?)가 발생한 적이 있다. 차체가 뭔가에 닿는 느낌이 들자마자 더 진입하지 않고 후진해서 차를 뺐는데, 에어범퍼가 닿아서 차체엔 아무런 흠집이 생기지 않았다. 에어범퍼가 없었다면 흠집이 생겼거나 최악의 경우 찌그러졌을 것이다.&lt;/p&gt;
+
+&lt;h4 id=&quot;5-편의-기능&quot;&gt;5. 편의 기능&lt;/h4&gt;
+
+&lt;p&gt;크루즈 기능을 처음 써봤는데 설명으로 들었을 때보다 편했다. 일정 속도로 꾸준히 달리는 장거리 이동 중에 무척 유용했지만, 피곤한 운전 상황은 도심 운전인데 도심 안에서는 쓸모가 없어서 아쉬웠다. 크루즈 기능을 쓰면서 자동운전 기능을 더 기대하게 됐다. 다음 차는 자동운전 기능이 있는 걸로 사야겠다.&lt;/p&gt;
+
+&lt;p&gt;주유구는 차 열쇠로 열어야 한다. 실내에서 원격으로 열지 못한다. 이건 호불호가 갈리지 않을 것 같다. 매우 불편하다. 열쇠를 빼서 주유원에게 주면 시동이 꺼졌으므로 창문을 닫지 못한다. 그래서 직접 주유하는 셀프 주유소를 이용하는 편인데, 그래도 싫다.&lt;/p&gt;
+
+&lt;p&gt;하드웨어 조작 장치가 몇 개 없다. 대부분 대시보드에 터치 방식으로 옮겨 넣었다. 그래서 공간이 여유로운데, 날씨가 추워지면 터치를 제대로 인식 못하는 경우가 있다. 운전 중엔 가능한 다른 조작을 해서는 안 되긴 하지만 그래도 운전 중에 냉난방을 조절하는 등 뭔가를 조작하는 경우가 왕왕 있는데, 화면 터치로 해야해서 불편한 경우가 생기곤 한다.&lt;/p&gt;
+
+&lt;p&gt;변속 관련 하드웨어 조작 장치도 마찬가지여서 변속 막대가 아예 없다. 대신 운전(D), 후진(R), 정차(N) 변속 제어를 큼직한 버튼 세 개가 맡는다. 발렛 파킹하는 사람들이 당황하곤 한다.&lt;/p&gt;
+
+&lt;p&gt;벤치식 좌석과 패브릭 시트(?)가 꽤 편안하다. 몸이 푹 잠기는 편안함은 아니고 배기는 부위 없이 안정된 편안함이다.&lt;/p&gt;
+
+&lt;p&gt;창문을 세척할 때 분무액은 와이퍼에서 직접 분사하는 방식인데, 세척액이 시야를 가리는 시간이 매우 짧다. 처음엔 세척액이 제대로 분무되지 않은 줄 알 정도이다.&lt;/p&gt;
+
+&lt;p&gt;Apple Carplay 기능이나 Android Auto 기능을 지원하지 않는다. 아쉽다.&lt;/p&gt;
+
+&lt;h4 id=&quot;6-주행&quot;&gt;6. 주행&lt;/h4&gt;
+
+&lt;p&gt;내가 좋아하는 소리를 내진 않는다. 난 조용하고 얌전한 차를 좋아하며, 다소 묵직한 운전감을 선호한다. 이 차는 가볍다. 차체가 가벼운 편이기도 하지만, 엔진 소리나 운전감이 좋게 말하면 경쾌하고 나쁘게 말하면 가볍다. 차가 가볍다보니 고속 주행 시 바닥에서 올라오는 진동과 소리가 크다. 더욱이 정차 시 에코 상태로 전환되어 엔진이 꺼져서 아주 조용한 상황을 경험하게 되기 때문에 더 비교된다.&lt;/p&gt;
+
+&lt;p&gt;완전 자동 변속 장치가 아니고, 수동 변속을 기반으로 자동 변속을 해주는 변속 방식이다. 연비는 좋은데, 변속될 때 차가 꿀렁거리는 수동 변속의 단점을 안고 있다. 잘 운전하면(?) 꿀렁거림을 줄일 수 있지만, 변속 중 꿀렁거리는 상황을 피하기 힘든 경우도 있다. 1단으로 오르막길 오르는데 RPM이 상승해서 2단으로 바뀌면 순간 꿀렁, 그런데 곧 힘이 부쳐서 다시 1단으로 바뀌면 또 꿀렁. 고속도로에서 6단으로 달리던 중 추월하려고 가속 페달을 밟으면 RPM이 부족해서 5단으로 변속되어 꿀렁, 근데 평지라서 금방 RPM이 진정되면 다시 6단으로 바뀌어서 또 꿀렁. 수동 변속 차량을 오래 운전해서 수동 변속을 좋아하는데도 이 변속 패턴은 짜증나곤 한다.&lt;/p&gt;
+
+&lt;p&gt;보기보다 힘이 괜찮다. 수동 변속 특유의 RPM 장난질로 튀어나가는 힘도 제법이고, 시속 130km까지는 뻗어나가는 힘도 괜찮다. 근데 고속 주행에 적합한 차는 아니긴 하다.&lt;/p&gt;
+
+&lt;p&gt;방향 전환과 제동하는 느낌도 묵직해서 밀리지 않아 안전감 있다. 급곡선을 돌 때는 차 중안 부근이, 급제동을 걸 때는 차 엉덩이 부근이 땅으로 꾹 눌리는 느낌이 든달까? 주행감은 상당히 가벼워서 과속 방지턱도 퉁퉁 튀듯 넘는 기분이 드는데, 방향 전환과 제동은 묵직해서 비교되어 재밌다. 상대적으로 묵직한 게 아니라 정말 묵직하다. 새 차라 그런가? 마음에 든다.&lt;/p&gt;
+
+&lt;p&gt;사람은 자신의 몸이 움직이는 공간을 인지하고 있다. 부딪히지 않고 좁은 틈을 지나갈 수 있는지, 줄넘기를 하는 저 사람과 어느 정도 떨어져야 안전한지 무의식 중에 파악한다. 운전석에 앉으면 자신의 몸을 기준으로 인식된 개인 공간이 차체만큼 확장된다. 마치 차체가 내 몸이 된 것처럼. 이 인지와 실제 차체와 동기화되는 비율이 높을수록 마음이 편하고 안정되는데, 동기화 수준을 떨어뜨리는 요소가 몇 가지 있다. 운전석 기준으로 사각, 후사경에서 인식되는 차 뒷쪽 공간과 실제 차 엉덩이 위치의 위치 차이, 운전석에서 보이는 후드(보닛) 거리와 실제 후드 길이 차이 등이다. 이 차는 내 체형에 잘 맞아서 시야가 좋다. 차체가 SUV에 비해선 낮고, 세단보다는 아주 조금 더 높아서 운전석 높이가 적당하다. 그리고 사각(죽은 시야각)이 거의 없다.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 28 Nov 2016 02:00:00 +0000</pubDate>
+        <link>http://blog.hannal.com/2016/11/citroen-c4-cactus/</link>
+        <guid isPermaLink="true">http://blog.hannal.com/2016/11/citroen-c4-cactus/</guid>
+        
+        <category>citroen</category>
+        
+        <category>시트로엥</category>
+        
+        <category>칵투스</category>
+        
+        <category>cactus</category>
+        
+        
+        <category>essay</category>
+        
+      </item>
+    
+      <item>
+        <title>책, Flask 기반의 파이썬 웹 프로그래밍 소감</title>
+        <description>&lt;p&gt;Flask 입문서가 국내 집필서로 나왔다. &lt;a href=&quot;http://www.aladin.co.kr/shop/wproduct.aspx?ItemId=83637353&quot;&gt;Flask 기반의 파이썬 웹 프로그래밍&lt;/a&gt;인데 국내 집필서로는 처음으로 보인다.&lt;/p&gt;
+
+&lt;p&gt;Flask는 경량 웹 프레임웍이다. 경량이라지만 꼭 필요한 건 갖춰져 있어서 바퀴 재발명하는 재미(?)를 만끽하기에도 좋고, 유연해서 확장하기도 좋다. 나도 애용하는데, 한 가지 아쉬운 점이 있고 한 가지 궁금한 점이 있다.&lt;/p&gt;
+
+&lt;p&gt;아쉬운 점은 공식 문서가 불친절하다는 것이다. 방향 제시 수준으로만 설명하고 나머지는 알아서 하라는 식이다. 그래서 종종 flask 소스 코드를 까보곤 하며, 내가 VIM이나 Sublime text를 쓰다가 PyCharm을 쓰게 된 것도 구현체 이동 기능으로 Flask 소스 코드를 편하게 까보기 위해서이다. 문서 보다 Flask 소스 코드 보는 경우가 더 많다. 그래서 Python으로 웹 프로그래밍에 입문하려는 사람에겐 Django를 추천한다. 도구 자체를 익히기엔 Flask가 간결해서 좋지만, 입문자가 독학하는 데 도움이 될 만한 친절한 문서가 많지 않다.&lt;/p&gt;
+
+&lt;p&gt;궁금한 점은 다른 사람은 어떻게 구조를 잡고 쓰고 있는가 이다. 자기 입맛대로 쓰면 그만인 웹 프레임웍이긴 하지만, 그래도 궁금하긴 하다. &lt;a href=&quot;https://github.com/teampopong/pokr.kr&quot;&gt;팀 포퐁의 pokr 소스 코드&lt;/a&gt;를 본 뒤로는 더 궁금해졌다. Django는 구조가 그래도 고만고만한 경향이 있는데, Flask는 정말 다양하겠다는 생각이 들었다.&lt;/p&gt;
+
+&lt;p&gt;이 책은 두 가지 중 하나는 꽤 충족시켜 준다. 공식 문서보다 친절한데 그렇다고 막 장황하지도 않다. 공식 문서를 보고 “설명이 이게 끝?”이라 생각이 든다면, 이 책은 거기서 한 수준 정도 더 설명한다. 설명을 하는 기반 코드가 대체로 공식 문서에 나온 예제이고 거의 동일한데, 그래서 좋은 점은 공식 문서를 볼 때 좀 더 친근하게 느낄 것이고 정석(?) 활용을 학습한다는 점이다. 아쉬운 점은 내가 궁금해하는 걸 해소하진 않는다는 점이다.&lt;/p&gt;
+
+&lt;p&gt;Flask이든 Django이든 잘 활용하려면 각 도구가 지향하는 철학이나 방향을 공감하고 이해해야 한다고 본다. 이 책은 그런 공감을 일으키기엔 얕지만, 얕아서 편하게 읽기에 좋다. 자취생을 위한 간편 요리법을 다루는 책 같다. 입문자를 위한 책인지는 잘 모르겠고, 웹 프로그래밍을 해본 사람이 Flask에 얼른 입문해서 써먹을 때 더 유용해 보인다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;이 책은 출판사 &lt;a href=&quot;http://www.jpub.kr&quot;&gt;제이펍&lt;/a&gt;에서 내게 증정해준 것이다. 내게 리뷰 같은 걸 요구하지 않고 보내준 것이지만, 국내에 Flask를 다루는 국내 집필서가 없어서 반가운 마음에 나 스스로 쓴 비대가성 글이다.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 07 Jul 2016 16:00:00 +0000</pubDate>
+        <link>http://blog.hannal.com/2016/07/book-python-web-programming-with-flask/</link>
+        <guid isPermaLink="true">http://blog.hannal.com/2016/07/book-python-web-programming-with-flask/</guid>
+        
+        <category>python</category>
+        
+        <category>flask</category>
+        
+        <category>책리뷰</category>
+        
+        
+        <category>essay</category>
+        
+      </item>
+    
+      <item>
+        <title>프로그램 짜는 세탁소집 첫째 아들.</title>
+        <description>&lt;p&gt;오프라인 영역에서 이뤄지던 세차, 세탁, 주차, 배달 등 다양한 서비스가 O2O(online to offline) 서비스로 등장하고 있다. 창업자나 창업팀을 보면 자신이 하던 오프라인 직업에 IT 기술을 접목하거나 창업자가 IT 분야 개발자인데 특정 오프라인 분야의 덕후인 경우가 많다. 온라인과 오프라인을 함께 이해하고 활용할 줄 알고 접목하기 때문에 기존 온라인에서만 혹은 오프라인에서만 일을 하던 사람과 다른 접근을 하거나 좀 더 빠른 실행이 가능한 것이라 본다.&lt;/p&gt;
+
+&lt;p&gt;스스로 판과 규칙을 짜는 주도성을 갖는 경향이 강한 온라인 분야와는 달리 오프라인 영역은 오랜 세월 쌓인 사용자 경험칙이 강하다. 오프라인 특유의 사용자 경험칙은 대를 이어온 손맛과 비슷하다. 감성 영역이란 얘기다. 그 감성은 세대나 정서 차이로 취향에 안 맞기도 하지만, 요는 기계가 엄청나게 많은 차원으로 학습해도 파악하기 어려운 미세한 감성 영역을 이해하고 접근한다는 데 있다.&lt;/p&gt;
+
+&lt;p&gt;그래서 나는 다음 세대 O2O 서비스는 세탁소집 아들, 자동차 정비소 딸, 미용실 둘째 아들이 일으키는 모습을 기대한다. 단, 조건이 있다. 이들은 소프트웨어를 이해하고 당연히 활용한다는 사고 체계를 갖춰야 한다. 무선인 전화기, 터치 인터페이스, 사회 관계는 온라인에서도 지속된다는 당연한 인식이 기본으로 깔려 있으며, 기계가 할 일을 쉽게 시키는 사고 방식과 체계를 갖춘 세대. 세탁소에서 바삐 움직이는 &lt;strong&gt;콤퓨타&lt;/strong&gt; 세탁기를 보며 콤퓨타와 세탁 너머를 상상할 수 있는 세대.&lt;/p&gt;
+</description>
+        <pubDate>Sun, 05 Jun 2016 22:00:00 +0000</pubDate>
+        <link>http://blog.hannal.com/2016/06/who-starts-up-o2o-service/</link>
+        <guid isPermaLink="true">http://blog.hannal.com/2016/06/who-starts-up-o2o-service/</guid>
+        
+        <category>경험</category>
+        
+        <category>가업</category>
+        
+        <category>startup</category>
+        
+        <category>o2o</category>
+        
+        
+        <category>essay</category>
+        
+      </item>
+    
+      <item>
+        <title>프로그래밍 입문자를 위한 몇 가지 조언</title>
+        <description>&lt;p&gt;2014년 11월 4일부터 &lt;a href=&quot;http://www.fastcampus.co.kr/&quot;&gt;패스트캠퍼스&lt;/a&gt;에서 웹 서비스 개발을 주제로 강의하여 얼마 전에 네 번째 기수를 마쳤다. Python과 Django를 이용해 웹 서비스 개발 공정을 겪는 것이 커리큘럼 주제인데, 1기에 대한 이야기는 &lt;a href=&quot;http://blog.hannal.com/2015/03/devlife-s1-04/&quot;&gt;Python과 Django 강의&lt;/a&gt;라는 글로 작성했다. 이번 글에선 어떻게 Python과 Django를 공부하면 좋을 지 1년 간 강의하며 고민했고 몇 가지 원리에 대해서는 정리되어 공유해 본다. 내가 강의한 주제가 Python과 Django, 그리고 웹 프로그래밍이어서 그렇지, 프로그래밍에 대한 공부 방법이라고 해도 무방하다고 생각한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;강의-개요&quot;&gt;강의 개요&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이름 : &lt;a href=&quot;http://www.fastcampus.co.kr/dev_camp_wsd/&quot;&gt;웹 서비스 개발 캠프&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;주제
+    &lt;ul&gt;
+      &lt;li&gt;Python과 Django를 강사의 경험을 담아 심도있게 다룬다.&lt;/li&gt;
+      &lt;li&gt;웹 서비스를 개발하는 공정을 Back-end 중심으로 경험하며 웹 프로그램을 개발하여 배치(deployment)한다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;수강 대상자
+    &lt;ul&gt;
+      &lt;li&gt;다른 언어나 프레임워크를 써봤고, Django에 입문하려는 사람&lt;/li&gt;
+      &lt;li&gt;Python이나 웹 프로그래밍 중급 과정에 진입하려는 사람&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;강의 시간
+    &lt;ul&gt;
+      &lt;li&gt;1기 : 90시간&lt;/li&gt;
+      &lt;li&gt;2기 : 64시간&lt;/li&gt;
+      &lt;li&gt;3기 : 48시간&lt;/li&gt;
+      &lt;li&gt;4기 : 40시간&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;손으로-반복-반복-그리고-또-반복&quot;&gt;손으로 반복, 반복, 그리고 또 반복&lt;/h3&gt;
+
+&lt;p&gt;뭔가 만들려 하면 막막해서 시작을 떼지 못하겠다는 입문자가 무척 많다.&lt;/p&gt;
+
+&lt;p&gt;책을 보거나 강의를 듣는 중엔 다 안다. 물어보면 대답도 한다. 근데 막상 코드를 짜라고 하면 힘겨워한다. 질문하며 코드 흐름을 자연스레 유도하면 대답은 하는데, 그 대답을 코드로 옮기질 못하기도 한다. 커리큘럼 초반엔 잘 따라오는데, 중반에 접어들어 학습하는 주제와 범위가 늘면 눈에 띄게 힘들고 어려워 하는 경우도 있다.&lt;/p&gt;
+
+&lt;p&gt;그에 반해 빈 파일에 코드를 채워넣는 걸 주저하지 않는 사람도 있다. 원래 다른 분야에서 프로그래밍을 했거나 다른 언어로 웹 프로그래밍을 한 사람이야 그렇다 쳐도, 사실상 입문자여서 이 강의를 듣기엔 다소 무리하는 수강자인데도 곧잘 코드를 작성한다. 입문자여서 프로그래밍이나 Python, Django에 대한 지식과 경험이 부족하여 이론을 설명하면 이해는 못하는데 코드는 어쨌든 작성해 간다. 심지어 자신이 무슨 코드를 짰는지 이해하지 못하면서도 말이다.&lt;/p&gt;
+
+&lt;p&gt;이런 차이는 반복량에 있다. 눈으로는 코드와 이론을 알지만, 손은 모른다. 프로그래밍 언어도 언어의 한 종류이다. 아무리 영어 단어나 문법을 외워도 말을 하지 않고 글을 쓰지 않으면 표현하기 어렵다. 마찬가지로 눈으로 이론을 공부하고 코드를 읽어도 손으로 코드를 짜지 않으면 코딩은 되지 않는다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://scienceon.hani.co.kr/34106&quot;&gt;시시하고 아는 코드라도 직접 손으로 쳐야 한다. 한 번 쳐보고 넘어가지 말고, 다양하게 응용하며 여러 번 쳐봐야 한다&lt;/a&gt;. 손에도 코드를 새겨야 한다. 코드를 손에 새기는 가장 쉽고 좋은 방법은 딱 세 개이다. 반복, 반복, 그리고 또 반복하는 것이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;복습&quot;&gt;복습&lt;/h3&gt;
+
+&lt;p&gt;학습한 건 가능한 빨리 복습해야 학습 효과가 크다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;우선 배운 걸 그대로 따라하는 복습을,&lt;/li&gt;
+  &lt;li&gt;시간이 있다면 응용하는 복습을&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;하는 게 좋다. 나는 첫 번째 복습 방법을 교재에 반영하여 수강자가 수업 내용을 떠올리도록 유도한다. 큰 주제 별로 교재를 구성하되, 작은 주제는 강의 흐름에 맞추어 배치하여 스토리텔링을 하려 한다. 중요한 내용은 몇 번 반복 등장하고, 가끔 다른 주제가 먼저 등장하기도 하는데 교재를 한 장 한 장 읽어 나가도록 구성하여 교재를 그대로 따라 복습하면 강의를 떠올리도록 한 것이다.&lt;/p&gt;
+
+&lt;p&gt;두 번째 복습 방법은 과제를 내서 유도한다. 아무리 의지가 가득해도 입문자에게 독학이 어려운 이유 중 하나는 학습한 내용을 응용하여 복습하기 어렵기 때문이다. 과제 풀이를 열심히 한 수강자는 커리큘럼 후반으로 가며 다루는 주제가 다양해 질수록 과제를 푼 효과를 보는데, 새 주제가 등장하더라도 이전 주제와 연계되거나 응용하기 때문이다. 책이나 교육 웹사이트로 학습하는데 실습 문제나 과제가 나오면 꼭 풀기를 권한다.&lt;/p&gt;
+
+&lt;p&gt;강의 시간은 기수를 거듭할수록 줄어 들었는데, 수강자가 복습하지 않으면 강의 시간이 아무리 길어도 별 효과가 없었기 때문이다. 실제로 4기는 강의 시간이 1기의 반도 안 됐지만 진도와 강의 주제의 깊이는 별 차이가 없었다.&lt;/p&gt;
+
+&lt;h3 id=&quot;질문&quot;&gt;질문&lt;/h3&gt;
+
+&lt;p&gt;공부하고 있는 걸 머리에 선명하게 새기는 또 다른 방법은 학습자가 질문하는 것인데, 복습한 사람이 질문을 하는 편이었다. 내 경우는 과제에 함정(?)을 심어 놓는데, 과제를 제출한 사람 중 함정에 대해 질문한 사람 없이 문제를 잘 해결했다면 수강자들이 진도를 잘 따라오고 있다고 판단하여 수업에서 좀 더 깊은 내용을 다루거나 더 많은 양을 다룬다. 함정에 빠진 피해자는 질문을 하게 되는데, 함정에 빠진데다 질문을 하여 답변을 받기 때문에 기억에 남을 가능성이 높다고 본다.&lt;/p&gt;
+
+&lt;p&gt;독학할 때엔 이러한 피드백 과정을 겪기 어렵다. 혼자서 웹에서 검색하여 문제를 해결해도 문제의 앞뒤 맥락을 이해하기 보다는 답에 초점을 맞추어 넘어가기 십상이기 때문이다. 나는 문제에 부딪혀서 스스로 해결하지 못하여 웹에서 해결 방법을 찾으면 반드시 따로 갈무리 하여 쌓아놓고, 일정 시간 뒤에 갈무리 한 자료들의 범주를 나누고 복기한다. 갈무리 당시엔 개별 문제이지만, &lt;a href=&quot;http://scienceon.hani.co.kr/33793&quot;&gt;시간이 흘러 쌓인 문제들을 분류해놓고 보면 각 문제가 서로 연결되어 문제 상황과 맥락을 이해&lt;/a&gt;하게 된다.&lt;/p&gt;
+
+&lt;p&gt;질문과 답변을 주고 받는 소통은 피드백 과정이기도 하다. &lt;a href=&quot;http://scienceon.hani.co.kr/33829&quot;&gt;피드백을 받지 못하면 실력은 늘지 않는다&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;질문하고 답을 찾자. 질문 하려면 질문할 준비가 돼야 한다. 그 준비란 바로 실습과 복습이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;함께-공부하기&quot;&gt;함께 공부하기&lt;/h3&gt;
+
+&lt;p&gt;팀은 1기 때부터 계속 조성하려 애썼다. 1기 때는 강사 입장에선 운좋게도 수강자들이 스스로 팀을 짜서 팀 프로젝트를 수행했었다. 2기 때는 권유를 해봤고, 3기 때는 오리엔테이션 때 아예 팀 조성 시간을 갖고 팀 프로젝트를 정해주었으며 팀장에겐 작은 사례(?)를 하기도 했다. 4기 때는 3기 때와 거의 같으나 수시로 팀 프로젝트를 상기시키며 좀 더 독려했다. 하지만 팀 운영은 잘 안 됐다. 복습과 과제 수행도 버거운데 팀 활동은 더 시간 내기 어려웠다는 수강자가 많았다.&lt;/p&gt;
+
+&lt;p&gt;하지만 여전히 팀 조성과 활동을 하도록 관심을 투자할 가치가 있다. 팀은 아니지만 지인과 나란히 앉아 공부하거나 서로 도우며 공부한 수강자는 혼자서 수업에 참여한 수강자에 비해 실패나 난관에 흔들리는 정도가 덜했다. 질문도 왕성하게 하고 붙임성 있게 다른 수강자와 교류하며 수업에 왕성하게 참여하는 수강자는 그 자신이 수업에서 거둬가는 게 많기도 하지만, 다른 수강자에게도 영향을 많이 끼친다. 그런 참여 활동이 &lt;a href=&quot;http://scienceon.hani.co.kr/33907&quot;&gt;당사자 뿐만 아니라 동료 수강자에게 피드백을 주고 받는 과정&lt;/a&gt;이기 때문이다.&lt;/p&gt;
+
+&lt;p&gt;입문자일 수록 함께 공부할 동료를 구하라고 권하고 싶다.&lt;/p&gt;
+
+&lt;h3 id=&quot;마치며&quot;&gt;마치며&lt;/h3&gt;
+
+&lt;p&gt;재작년에 &lt;a href=&quot;http://blog.hannal.com/2014/5/principles_for_efficient_training/&quot;&gt;근거기반훈련 워크샵에 참석해 효과적 훈련의 원리&lt;/a&gt;를 배웠다. 막상 내게 제대로 활용하지 않았는데, 1년 여 강의하며 몇 가지 원리는 뚜렷하게 효과를 체험했다. &lt;a href=&quot;http://www.fastcampus.co.kr/dev_camp_wpb/&quot;&gt;웹 프로그래밍 입문&lt;/a&gt;과 &lt;a href=&quot;http://www.fastcampus.co.kr/dev_camp_wsd/&quot;&gt;웹 서비스 개발&lt;/a&gt;을 주제로 강의하긴 하지만, 꼭 내 강의가 아니더라도 혼자 공부하거나 지인과 공부하며 활용하면 충분히 효과를 볼 것이라 생각한다.&lt;/p&gt;
+
+</description>
+        <pubDate>Wed, 13 Jan 2016 01:45:00 +0000</pubDate>
+        <link>http://blog.hannal.com/2016/01/how-to-study-programming/</link>
+        <guid isPermaLink="true">http://blog.hannal.com/2016/01/how-to-study-programming/</guid>
+        
+        <category>python</category>
+        
+        <category>django</category>
+        
+        <category>강의</category>
+        
+        <category>패스트캠퍼스</category>
+        
+        
+        <category>devlife</category>
+        
+      </item>
+    
+      <item>
+        <title>2016년을 맞이하며 20년 전 판을 생각하다</title>
+        <description>&lt;h3 id=&quot;게임-개발&quot;&gt;게임 개발&lt;/h3&gt;
+
+&lt;p&gt;20년 전에 첫 게임을 만들었다. 내 &lt;a href=&quot;http://blog.hannal.com/profile/&quot;&gt;필명인 한날은 이 게임 이름에서 비롯&lt;/a&gt;된 것이다. 어설프고 재미없고 허섭했지만, 내 게임을 만들어 친구들과 내 게임 얘기를 나누었다. 내 고교 시절 생활기록부를 보니 장래 희망이 컴퓨터 프로그래머라 적혀 있었다. 당시엔 게임 개발이라는 직업이 사회에 인식되기 전이라서 편의상 게임 개발자 대신 컴퓨터 프로그래머라 적은 것인데, 20년이 지난 지금은 정말 게임 개발자가 아니라 컴퓨터 프로그래머가 되어 있다.&lt;/p&gt;
+
+&lt;p&gt;가끔 언제 다시 게임 업계에 돌아오냐는 안부성 질문을 받곤 한다. 게임 업계에 돌아갈 지 안 갈 지 아직은 모르겠다. 하지만 난 게임을 만들어 왔고, 앞으로도 게임을 만들 것이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;홈페이지&quot;&gt;홈페이지&lt;/h3&gt;
+
+&lt;p&gt;20년 전에 내 홈페이지를 처음 열었다. 1997년부터는 게임 개발, 프로그래밍 등을 주제로 운영하다 &lt;a href=&quot;https://web.archive.org/web/19991012051013/http://dimanche.co.kr/index-kr.html&quot;&gt;1998년에 도메인을 사서 나 나름대로 브랜드&lt;/a&gt;를 만들고 유지하려 했다. 꾸준하진 않지만 완전히 놓지 않고 계속 운영해 온 지난 20년을 스스로 대견하게 여긴다.&lt;/p&gt;
+
+&lt;p&gt;나를 표현하는 익숙한 방법이 내 홈페이지 또는 블로그이다. 앞으로도 내 공간에 글을 쓸 것이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;판&quot;&gt;판&lt;/h3&gt;
+
+&lt;p&gt;작더라도 내 판을 만들어야 한다는 생각을 해왔다. 아무리 잘하고 위협스러워도 남의 판에서는 승산이 없다. 판의 주인이 판을 엎고 새 규칙을 짜면 그만이다. 주인이 판 엎지 않게 아양 떨고 비위 맞추고, 규칙을 바꾸면 바꿀 규칙을 예측하며 그 판에 길들여지면 더이상 희망이 없다. 차라리 판의 주인이 한 짓에 삐쳐서 그 판을 떠나는 게 낫다. 내 판을 만들어 사람들이 내 판에 들어오고, 그 판을 키워야 한다. 그래야 내가 바라는 진정한 독립이 이뤄진다.&lt;/p&gt;
+
+&lt;p&gt;하지만 난 그동안 준비되지 않았으며 진심으로 독립을 갈망한 것이 아니었을지도 모른다는 생각을 했다. 내 판을 만들어야 한다고 주창했지만 정작 말로만 고민했을 뿐, 실행할만큼 고민하지 않았다. 여전히 남의 판에 기대어 마이너 버전 수준에서 내 몸뚱아리를 업그레이드 하려 아둥바둥거렸다.&lt;/p&gt;
+
+&lt;p&gt;앞으로 3~4년 뒤부터는 갈수록 내 판을 만드는 데 들이는 노력이 비싸질 것이라 예상한다. 내 판을 만드는 비용이 비싸질수록 포기할 가능성이 커지고, 포기하는 그때부터 남의 판에서 움직이는 장기말이자 노예가 될 것이다.&lt;/p&gt;
+
+&lt;p&gt;20년 전에 막연히 내 판을 만들어야 한다는 생각을 한 것 같다. 능력도 없으면서 게임 만들자며 사람들 꼬셔 게임개발팀을 만들었고, 하루 방문자가 몇 명이더라도 내 홈페이지에 내 글을 남기려 했다. 내 스토리를 갖고 싶었고 만들려 애썼다. 길들여지지 말자. 내 판의 20년 전 원시형을 잊지 말고 포기하지 말자.&lt;/p&gt;
+
+&lt;p&gt;그렇게 다짐하며 각오를 세운다.&lt;/p&gt;
+</description>
+        <pubDate>Sat, 02 Jan 2016 07:00:49 +0000</pubDate>
+        <link>http://blog.hannal.com/2016/01/hello_2016/</link>
+        <guid isPermaLink="true">http://blog.hannal.com/2016/01/hello_2016/</guid>
+        
+        <category>2016년</category>
+        
+        <category>판</category>
+        
+        
+        <category>essay</category>
+        
+      </item>
+    
+  </channel>
 </rss>

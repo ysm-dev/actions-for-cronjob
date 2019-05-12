@@ -1,674 +1,602 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="https://quarl894.github.io/atom.xml" rel="self" type="application/atom+xml" /><link href="https://quarl894.github.io/" rel="alternate" type="text/html" /><updated>2019-01-07T16:41:40+00:00</updated><id>https://quarl894.github.io/atom.xml</id><title type="html">YoungJung Blog</title><subtitle>Software Programmer</subtitle><author><name>김영중</name></author><entry><title type="html">Mvp 패턴 1 개념</title><link href="https://quarl894.github.io/articles/2019-01/MVP-%ED%8C%A8%ED%84%B4-1-%EA%B0%9C%EB%85%90" rel="alternate" type="text/html" title="Mvp 패턴   1 개념" /><published>2019-01-07T16:20:00+00:00</published><updated>2019-01-07T16:20:00+00:00</updated><id>https://quarl894.github.io/articles/2019-01/MVP%20%ED%8C%A8%ED%84%B4%20-%201%20%EA%B0%9C%EB%85%90</id><content type="html" xml:base="https://quarl894.github.io/articles/2019-01/MVP-%ED%8C%A8%ED%84%B4-1-%EA%B0%9C%EB%85%90">&lt;h3 id=&quot;개념&quot;&gt;[개념]&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="https://qpfmtlcp.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://qpfmtlcp.github.io/" rel="alternate" type="text/html" /><updated>2019-05-09T15:03:00+00:00</updated><id>https://qpfmtlcp.github.io/feed.xml</id><title type="html">Jay의 기록 보관소</title><subtitle>A archive about technology and stuff related</subtitle><author><name>Jay</name></author><entry><title type="html">Django choices 정리</title><link href="https://qpfmtlcp.github.io/blog/django-choices-%EC%A0%95%EB%A6%AC/" rel="alternate" type="text/html" title="Django choices 정리" /><published>2018-10-16T00:00:00+00:00</published><updated>2018-10-16T00:00:00+00:00</updated><id>https://qpfmtlcp.github.io/blog/django-choices-%EC%A0%95%EB%A6%AC</id><content type="html" xml:base="https://qpfmtlcp.github.io/blog/django-choices-%EC%A0%95%EB%A6%AC/">&lt;p&gt;Django의 CharField의 choices 옵션을 가끔 사용하는데&lt;br /&gt;
+코드를 작성할 때 한 번씩 헷갈려서 정리한다.&lt;br /&gt;
+데이터베이스에 저장되는 값은 ‘RED’, 보이는 값은 ‘red’&lt;/p&gt;
 
-&lt;p&gt;MVP 패턴은 Model-View-Presnet로 이루어진다.&lt;/p&gt;
+&lt;hr /&gt;
 
-&lt;p&gt;Model : 데이터 관리&lt;/p&gt;
+&lt;h2 id=&quot;기본적인-방법&quot;&gt;기본적인 방법&lt;/h2&gt;
 
-&lt;p&gt;View : 화면 표현&lt;/p&gt;
+&lt;p&gt;장고 공식문서에서 제공하는 기본적인 방법이다.&lt;br /&gt;
+케이스가 많아질수록 코드가 길어지는 문제가 있다.&lt;/p&gt;
 
-&lt;p&gt;Presenter : Model 과 View를 연결시키는 다리 역할&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Pepper(models.Model):
+    Red = 'RED'
+    Green = 'GREEN'
 
-&lt;p&gt;기본적으로 모든 데이터 관리는 Model, 모든 화면 표현은 View가 둘 사이를 이어주는 것은 Presenter가 수행함.&lt;/p&gt;
-
-&lt;h3 id=&quot;간단-예시&quot;&gt;[간단 예시]&lt;/h3&gt;
-
-&lt;p&gt;상황 : 검색 버튼을 누르면 화면에 이미지가 뜸&lt;/p&gt;
-
-&lt;p&gt;사용자&lt;/p&gt;
-&lt;ol&gt;
-  &lt;li&gt;검색 버튼을 클릭함&lt;/li&gt;
-  &lt;li&gt;화면에 이미지가 뜸&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;앱&lt;/p&gt;
-&lt;ol&gt;
-  &lt;li&gt;M, V, P 초기화 : 앱이 생성되면서 Model, View, Presenter가 생성되고 등록됨.&lt;/li&gt;
-  &lt;li&gt;P -&amp;gt; V : Presenter에서 View에게 버튼을 그리라고 명령&lt;/li&gt;
-  &lt;li&gt;V : 버튼을 그리고 대기&lt;/li&gt;
-  &lt;li&gt;사용자가 버튼을 누름.&lt;/li&gt;
-  &lt;li&gt;V -&amp;gt; P : View가 Presenter에게 버튼이 눌림을 알림.&lt;/li&gt;
-  &lt;li&gt;P -&amp;gt; M : 검색해서 이미지를 가져오라고 명령.&lt;/li&gt;
-  &lt;li&gt;M 동작 : 검색해서 이미지를 찾음.&lt;/li&gt;
-  &lt;li&gt;M -&amp;gt; P : 검색한 이미지를 전달함.&lt;/li&gt;
-  &lt;li&gt;p -&amp;gt; V : View에게 이미지를 전달하고 화면에 띄우라고 명령&lt;/li&gt;
-  &lt;li&gt;V 동작 : 이미지를 화면에 띄움&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;각자의 일을 절대 침범하지 않음.&lt;/p&gt;
-
-&lt;h3 id=&quot;mvc-vs-mvp&quot;&gt;[MVC vs MVP]&lt;/h3&gt;
-
-&lt;p&gt;MVC는 Model - View - Controller로 이루어진 디자인 패턴입니다.&lt;/p&gt;
-
-&lt;p&gt;Controller와 Presenter의 역할을 비슷하지만 다릅니다.&lt;/p&gt;
-
-&lt;p&gt;MVC패턴은 사용자가 이벤트를 발생했을 때 Controller가 먼저 반응을 합니다.&lt;/p&gt;
-
-&lt;p&gt;그 후 Model에게 데이터를 요청하고 맞는 View에게 반환합니다.&lt;/p&gt;
-
-&lt;p&gt;MVP패턴은 사용자가 이벤트를 발생했을 때 View가 먼저 반응을 합니다.&lt;/p&gt;
-
-&lt;p&gt;그 후 해당 이벤트를 담당하는 Presenter를 호출하고 Model의 작업을 받은 후 View에게 반환합니다.&lt;/p&gt;
-
-&lt;p&gt;하지만 Android에서는 사용자 이벤트 반응이 View가 첫번째일수 밖에 없어 View가 곧 Controller역할도 수행해야 합니다.&lt;/p&gt;
-
-&lt;p&gt;이 때문에, 각각의 책임을 분리시키지 못하고, 모듈화시키기가 어렵습니다.&lt;/p&gt;
-
-&lt;h3 id=&quot;mvp를-써야하는-이유&quot;&gt;[MVP를 써야하는 이유]&lt;/h3&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;코드를 모듈화 시킬 수 있다.&lt;/li&gt;
-  &lt;li&gt;협업시에 기능별로 분리되어 있어 작업하기 수월하다.&lt;/li&gt;
-  &lt;li&gt;유닛테스트 하기 용이하다.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h4 id=&quot;참고자료&quot;&gt;참고자료&lt;/h4&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://awesometic.tistory.com/32?category=964088&quot;&gt;MVP blog&lt;/a&gt;&lt;/p&gt;</content><author><name>김영중</name></author><category term="Android" /><summary type="html">[개념]</summary></entry><entry><title type="html">Android 상식알아가기</title><link href="https://quarl894.github.io/articles/2018-12/Android-%EC%83%81%EC%8B%9D%EC%95%8C%EC%95%84%EA%B0%80%EA%B8%B0" rel="alternate" type="text/html" title="Android 상식알아가기" /><published>2018-12-27T08:20:00+00:00</published><updated>2018-12-27T08:20:00+00:00</updated><id>https://quarl894.github.io/articles/2018-12/Android%20%EC%83%81%EC%8B%9D%EC%95%8C%EC%95%84%EA%B0%80%EA%B8%B0</id><content type="html" xml:base="https://quarl894.github.io/articles/2018-12/Android-%EC%83%81%EC%8B%9D%EC%95%8C%EC%95%84%EA%B0%80%EA%B8%B0">&lt;h3 id=&quot;개요&quot;&gt;[개요]&lt;/h3&gt;
-
-&lt;p&gt;Android 개발을 하면서 자연스럽게 접하는 것들이 많습니다. 하지만, 왜 이렇게 쓰는지 그냥 넘기고 사용하는 것들이 많습니다. 이런것들은 하나씩 포스팅하여 알아가려고 합니다.&lt;/p&gt;
-
-&lt;h2 id=&quot;dp-vs-sp&quot;&gt;DP vs SP&lt;/h2&gt;
-
-&lt;p&gt;layout 개발시 TextView의 값을 디자이너는 dp로 줬는데 인터넷에서는 sp로 해야한다는 글을 볼 수 있습니다.
-먼저, 글꼴은 sp로 주는 것이 일반적입니다.&lt;/p&gt;
-
-&lt;p&gt;dp와 sp의 정의부터 알아봅시다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://quarl894.github.io/assets/posts/20181227/dp_sp.png&quot; alt=&quot;dp_sp&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;dp와 sp는 화면의 크기에 따라 비율이 바뀝니다. 따라서, 다양한 기기 호환을 위해 px대신에 android에서 사용합니다.&lt;/p&gt;
-
-&lt;p&gt;그럼 왜 글꼴은 sp냐?&lt;/p&gt;
-
-&lt;p&gt;== sp는 System의 font설정에 따라 값이 변경됩니다. ==&lt;/p&gt;
-
-&lt;p&gt;만약에 노인분들이나 저시각자를 위해 System상에서 Font를 크게 적용시켰다면 sp는 그에 맞게 대처합니다.&lt;/p&gt;
-
-&lt;p&gt;하지만, dp는 화면의 크기에 따라 달라지지, font 설정은 영향을 미치지 않습니다.&lt;/p&gt;
-
-&lt;p&gt;따라서, Font를 따로 설정을 안할경우 둘 사이에 차이점은 없습니다. 단, 우리는 대부분 Font를 커스텀하기 때문에 sp로 하는 것을 추천드립니다.&lt;/p&gt;</content><author><name>김영중</name></author><category term="Android, tip" /><summary type="html">[개요]</summary></entry><entry><title type="html">에라토스테네스의 체 외워야할 알고리즘</title><link href="https://quarl894.github.io/articles/2018-10/%EC%97%90%EB%9D%BC%ED%86%A0%EC%8A%A4%ED%85%8C%EB%84%A4%EC%8A%A4%EC%9D%98-%EC%B2%B4-%EC%99%B8%EC%9B%8C%EC%95%BC%ED%95%A0-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98" rel="alternate" type="text/html" title="에라토스테네스의 체   외워야할 알고리즘" /><published>2018-10-01T16:20:00+00:00</published><updated>2018-10-01T16:20:00+00:00</updated><id>https://quarl894.github.io/articles/2018-10/%EC%97%90%EB%9D%BC%ED%86%A0%EC%8A%A4%ED%85%8C%EB%84%A4%EC%8A%A4%EC%9D%98%20%EC%B2%B4%20-%20%EC%99%B8%EC%9B%8C%EC%95%BC%ED%95%A0%20%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98</id><content type="html" xml:base="https://quarl894.github.io/articles/2018-10/%EC%97%90%EB%9D%BC%ED%86%A0%EC%8A%A4%ED%85%8C%EB%84%A4%EC%8A%A4%EC%9D%98-%EC%B2%B4-%EC%99%B8%EC%9B%8C%EC%95%BC%ED%95%A0-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98">&lt;h3 id=&quot;소수-구하기&quot;&gt;[소수 구하기]&lt;/h3&gt;
-
-&lt;p&gt;시간복잡도 : O(nloglongn)&lt;/p&gt;
-
-&lt;h4 id=&quot;간략한-설명&quot;&gt;간략한 설명&lt;/h4&gt;
-
-&lt;p&gt;2부터 자기자신을 제외한 배수를 지워나간다.
-반복되면서 2,3,5,7 … 등의 자신만 나눠지는 소수만이 살아남게 된다.&lt;/p&gt;
-
-&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Eratos&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;prime&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;boolean&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MAX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;];&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;prime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;prime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
-
-        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MAX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-            &lt;span class=&quot;n&quot;&gt;prime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
-        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-        &lt;span class=&quot;c1&quot;&gt;//true가 소수&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MAX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MAX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-            &lt;span class=&quot;c1&quot;&gt;//해당 배수는 다 false&lt;/span&gt;
-                &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-                    &lt;span class=&quot;n&quot;&gt;prime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
-                &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-            &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    Color = (
+        (Red, _('red')),
+        (Green, _('green')),
+    )
+    
+    color = models.CharField(max_length=10, choices=Color)
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;참고자료 : &lt;a href=&quot;http://&quot;&gt;https://ko.wikipedia.org/wiki/%EC%97%90%EB%9D%BC%ED%86%A0%EC%8A%A4%ED%85%8C%EB%84%A4%EC%8A%A4%EC%9D%98_%EC%B2%B4&lt;/a&gt;&lt;/p&gt;</content><author><name>김영중</name></author><category term="소수, 알고리즘" /><summary type="html">[소수 구하기]</summary></entry><entry><title type="html">허불허 어른을 위한 돼지 저금통</title><link href="https://quarl894.github.io/articles/2018-05/%ED%97%88%EB%B6%88%ED%97%88-%EC%96%B4%EB%A5%B8%EC%9D%84-%EC%9C%84%ED%95%9C-%EB%8F%BC%EC%A7%80-%EC%A0%80%EA%B8%88%ED%86%B5" rel="alternate" type="text/html" title="허불허 어른을 위한 돼지 저금통" /><published>2018-05-27T06:20:00+00:00</published><updated>2018-05-27T06:20:00+00:00</updated><id>https://quarl894.github.io/articles/2018-05/%ED%97%88%EB%B6%88%ED%97%88-%EC%96%B4%EB%A5%B8%EC%9D%84%20%EC%9C%84%ED%95%9C%20%EB%8F%BC%EC%A7%80%20%EC%A0%80%EA%B8%88%ED%86%B5</id><content type="html" xml:base="https://quarl894.github.io/articles/2018-05/%ED%97%88%EB%B6%88%ED%97%88-%EC%96%B4%EB%A5%B8%EC%9D%84-%EC%9C%84%ED%95%9C-%EB%8F%BC%EC%A7%80-%EC%A0%80%EA%B8%88%ED%86%B5">&lt;p&gt;&lt;img src=&quot;https://quarl894.github.io/assets/posts/20180527/img_huh.jpeg&quot; alt=&quot;Image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;사용할 때는 간편하다.&lt;/p&gt;
 
-&lt;p&gt;다운로드 링크 : &lt;a href=&quot;https://play.google.com/store/apps/details?id=youngjung.test.free&quot;&gt;허불허&lt;/a&gt; &lt;br /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;설명&quot;&gt;[설명]&lt;/h3&gt;
-
-&lt;p&gt;어릴 적에 모두 돼지 저금통에 저금을 해본 기억이 있으실 겁니다. 돼지 저금통은 많은 어린이들의 첫 경제 관념을 형성하는 것에 도움을 주고 있습니다. 그렇다면 어른을 위한 돼지 저금통은 없을까요? “허불허”는 모든 어른들이 가지고 있는 돼지 저금통에 한푼 두푼 모아 성취감을 느꼈던 아날로그적인 기억을 디지털화하였습니다. ‘목돈을 마련하는 것’과 ‘소비패턴을 파악하는 것’은 재테크의 첫 걸음이라고 할 수 있습니다. 이는 아주 단순하고 쉬운 두 가지 방법, ‘충동구매할 뻔한 것을 저금’하고, ‘카테고리 랭킹을 확인함’으로써 이룰 수 있습니다.&lt;/p&gt;
-
-&lt;p&gt;“재테크.. 듣기만 해도 너무 복잡하고 어려워서 어떻게 시작해야할 지 모르겠어요..”
-“매번 돈을 쓸 때 마다 똑똑한 소비인지 의심이 돼요.”&lt;/p&gt;
-
-&lt;p&gt;이제 결제버튼을 누르기 전에 가볍게 “허불허” 하세요! 재미있게 허불허하면서 자연스럽게 소비패턴을 바꾸고 목표도 달성하는 자신을 발견하게 될 것입니다.&lt;/p&gt;
-
-&lt;h3 id=&quot;주요-기능&quot;&gt;[주요 기능]&lt;/h3&gt;
-
-&lt;h4 id=&quot;의뢰하기&quot;&gt;의뢰하기&lt;/h4&gt;
-&lt;p&gt;자신의 소비를 검증받기 위한 의뢰 영수증을 작성해보세요.&lt;/p&gt;
-
-&lt;h4 id=&quot;의뢰서-평가&quot;&gt;의뢰서 평가&lt;/h4&gt;
-&lt;p&gt;다른 사람들로부터 받은 의뢰서를 평가해주세요!&lt;/p&gt;
-
-&lt;h4 id=&quot;레벨링-시스템&quot;&gt;레벨링 시스템&lt;/h4&gt;
-&lt;p&gt;허불허를 사용하는 당신은 도장요정입니다. 앱을 사용하면 사용할 수록 도장요정이 더욱 똑똑해져요!&lt;/p&gt;
-
-&lt;h4 id=&quot;재테크-정보&quot;&gt;재테크 정보&lt;/h4&gt;
-&lt;p&gt;레벨에 따라 열리는 실전 재테크 정보와 함께 여러분의 첫 재테크를 완성해보세요!&lt;/p&gt;
-
-&lt;h4 id=&quot;평가된-영수증-리스트&quot;&gt;평가된 영수증 리스트&lt;/h4&gt;
-&lt;p&gt;다른 사람들이 평가해준 영수증들을 토대로 구매를 할지 말지 결정해보세요. 구매를 하지 않는다면 바로 저금하기를 눌러 금액을 누적시킬 수 있어요!&lt;/p&gt;
-
-&lt;h4 id=&quot;마이페이지&quot;&gt;마이페이지&lt;/h4&gt;
-&lt;p&gt;자신이 설정한 목표 대비 현재까지 모은 금액을 그래프로 확인 가능해요. 카테고리 랭킹을 통해 몰랐던 나의 소비패턴도 알 수 있어요!&lt;/p&gt;
-
-&lt;h4 id=&quot;푸쉬알림-기능&quot;&gt;푸쉬알림 기능&lt;/h4&gt;
-&lt;p&gt;의뢰서가 평가되면 자동으로 푸쉬 알림이 갑니다.&lt;/p&gt;
-
-&lt;h3 id=&quot;사용-기술--라이브러리&quot;&gt;사용 기술 &amp;amp; 라이브러리&lt;/h3&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Google Login API&lt;/li&gt;
-  &lt;li&gt;Firebase RealtimeDataBase&lt;/li&gt;
-  &lt;li&gt;Firebase Cloud functions&lt;/li&gt;
-  &lt;li&gt;Firebase Cloud messaging&lt;/li&gt;
-  &lt;li&gt;ahoy-onboarding libray&lt;/li&gt;
-  &lt;li&gt;RecycerView&lt;/li&gt;
-  &lt;li&gt;Calligraphy library&lt;/li&gt;
-  &lt;li&gt;Circleindicator&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h4 id=&quot;-이-서비스를-개발한-사람들&quot;&gt;※ 이 서비스를 개발한 사람들&lt;/h4&gt;
-
-&lt;p&gt;기획자 : 최다희&lt;/p&gt;
-
-&lt;p&gt;디자이너 : 김지희&lt;/p&gt;
-
-&lt;p&gt;개발자 : 김영중, 이상우, 편주영&lt;/p&gt;</content><author><name>김영중</name></author><category term="구글 플레이, 런칭" /><summary type="html"></summary></entry><entry><title type="html">Java &amp;amp; android 개발상식(1)</title><link href="https://quarl894.github.io/articles/2018-04/Java-&-Android-%EA%B0%9C%EB%B0%9C%EC%83%81%EC%8B%9D(1)" rel="alternate" type="text/html" title="Java &amp; android 개발상식(1)" /><published>2018-04-24T13:14:00+00:00</published><updated>2018-04-24T13:14:00+00:00</updated><id>https://quarl894.github.io/articles/2018-04/Java%20&amp;%20Android%20%EA%B0%9C%EB%B0%9C%EC%83%81%EC%8B%9D(1)</id><content type="html" xml:base="https://quarl894.github.io/articles/2018-04/Java-&amp;-Android-%EA%B0%9C%EB%B0%9C%EC%83%81%EC%8B%9D(1)">&lt;h2 id=&quot;안드로이드에서-enum-사용을-자제시킨-이유는&quot;&gt;안드로이드에서 Enum 사용을 자제시킨 이유는?&lt;/h2&gt;
-
-&lt;p&gt;ENUM의 각 값은 객체이며 각 선언은 객체를 참조하기 위해 런타임 메모리를 사용합니다.&lt;/p&gt;
-
-&lt;p&gt;따라서 ENUM 값은 Integer 또는 String 상수보다 많은 메모리를 사용합니다.&lt;/p&gt;
-
-&lt;p&gt;단일 ENUM을 추가하면 최종 DEX 파일의 크기 가 증가합니다. 또한 런타임 오버 헤드 문제가 발생하고 응용 프로그램에 더 많은 공간이 필요합니다.&lt;/p&gt;
-
-&lt;p&gt;Android에서 ENUM을 과도하게 사용하면 DEX 크기가 증가하고 런타임 메모리 할당 크기가 늘어납니다.&lt;/p&gt;
-
-&lt;p&gt;응용 프로그램이 더 많은 ENUM을 사용하는 경우 ENUM 대신 정수 또는 문자열 상수를 사용하는 것이 좋습니다.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://brunch.co.kr/@oemilk/94&quot;&gt;참고 사이트&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;string-객체-생성과-문자열-리터럴&quot;&gt;String 객체 생성과 문자열 리터럴&lt;/h2&gt;
-
-&lt;h4 id=&quot;string-생성-방법&quot;&gt;String 생성 방법&lt;/h4&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;new 연산자를 이용한 방식&lt;/li&gt;
-  &lt;li&gt;리터럴을 이용한 방식&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;1번 방식처럼 new 연산자를 사용하면 Heap 영역에 존재하게 되고 리터럴을 이용하면 String constant pool 영역에 존재하게 됩니다.&lt;/p&gt;
-
-&lt;h4 id=&quot;동작방식&quot;&gt;동작방식&lt;/h4&gt;
-
-&lt;p&gt;리터럴로 선언하게 된 변수는 내부적으로 String의 intern() 메소드를 호출합니다. intern() 메소드는 주어진 문자열이 String constant pool에 있는지 검색 후 있다면 주소를 반환하고 없다면 String constant pool에 넣고 새로운 주소값을 반환하게 됩니다.&lt;/p&gt;
-
-&lt;p&gt;밑의 코드에서 s3.intern()을 하게 되면 먼저 String constant pool에 저장되어있던 s1의 주소를 불러오게 되므로 s1==s3가 true를 반환하게 됩니다.&lt;/p&gt;
-
-&lt;h4 id=&quot;equal-메소드와-의-차이&quot;&gt;equal 메소드와 ==의 차이&lt;/h4&gt;
-
-&lt;p&gt;equal은 문자열을 비교합니다. 주소가 아닌 내용을 비교하기 때문에 문자열이 같다면 true를 반환하게 됩니다.&lt;/p&gt;
-
-&lt;p&gt;==은 주소를 비교합니다. 따라서, 문자열이 같아도 Heap영역에 있는 주소와 String constant pool에 있는 주소는 다르기 때문에 false를 반환하게 됩니다.&lt;/p&gt;
-
-&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Hello&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Hello&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//true&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;equals&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//true&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;//false&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;equals&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//true&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;s3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;intern&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//true&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;equals&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//true&lt;/span&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;qs = Pepper.objects.filter(color=Pepper.Red)
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;h2 id=&quot;자바-어노테이션이란&quot;&gt;자바 어노테이션이란?&lt;/h2&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;enum-클래스를-사용하는-방법&quot;&gt;Enum 클래스를 사용하는 방법&lt;/h2&gt;
+
+&lt;p&gt;파이썬 3.4부터 제공되는 &lt;a href=&quot;https://docs.python.org/3/library/enum.html&quot;&gt;Enum&lt;/a&gt;을 이용하는 방법이 있다.&lt;br /&gt;
+케이스가 많아져도 코드가 많이 길어지지 않게 작성할 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# utils.py
+from enum import Enum
+
+class ChoiceEnum(Enum):
+    @classmethod
+    def choices(cls):
+        return tuple((x.name, x.value) for x in cls)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from utils import ChoiceEnum
+
+class Pepper(models.Model):
+    class Color(ChoiceEnum):
+        RED = _('red')
+        GREEN = _('green')
+    color = models.CharField(max_length=10, choices=Color.choices())
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;하지만 사용할 때 다음과 같이 코드가 길어지는 부분이 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;qs = Pepper.objects.filter(color=Pepper.Color.RED.value)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;직접 ChoiceEnum 클래스를 수정할 수도 있겠지만&lt;br /&gt;
+다음에 소개할 패키지가 많은 부분 개선된 기능을 제공한다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;django-model-utils를-사용하는-방법&quot;&gt;django-model-utils를 사용하는 방법&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/jazzband/django-model-utils&quot;&gt;django-model-utils&lt;/a&gt;은 장고의 모델과 관련된 유틸리티를 제공하는 패키지이다.&lt;br /&gt;
+MonitorField와 같은 필드들과 더불어 다양한 모델과, 모델 매니저를 애용하고 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class Pepper(models.Model):
+    Color = Choices(
+        ('RED', _('red')),
+        ('GREEN', _('green')),
+    )
+    color = models.CharField(max_length=10, choices=Color)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;케이스를 선언할 때 코드량이 많아지지 않으면서 사용할 때도 간결하다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;qs = Pepper.objects.filter(color=Pepper.Color.RED)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;현재는 주로 인덱스와 함께 IntegerField에 저장하는 방법을 가장 많이 이용한다.&lt;br /&gt;
+아래와 같이 저장할 값과 상수명을 독립적으로 사용할 수 있어 코드의 가독성에 도움이 된다.
+또 데이터베이스에 저장하는 용량이나 방법을 개선하기에 용이하고 마이그레이션도 쉬워지는 장점이 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pepper&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;COLOR&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Choices&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RED&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;red&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GREEN&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;green&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;color&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IntegerField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;choices&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;COLOR&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;COLOR&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GREEN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;@property&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;readable_color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;COLOR&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;참고&quot;&gt;참고&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;&quot;&gt;https://github.com/jazzband/django-model-utils&lt;/a&gt;
+&lt;a href=&quot;&quot;&gt;https://docs.djangoproject.com/ko/1.11/ref/models/fields/&lt;/a&gt;
+&lt;a href=&quot;&quot;&gt;http://anthonyfox.io/2017/02/choices-for-choices-in-django-charfields/&lt;/a&gt;&lt;/p&gt;</content><author><name>Jay</name></author><category term="blog" /><category term="Django" /><summary type="html">Django의 CharField의 choices 옵션을 가끔 사용하는데 코드를 작성할 때 한 번씩 헷갈려서 정리한다. 데이터베이스에 저장되는 값은 ‘RED’, 보이는 값은 ‘red’</summary></entry><entry><title type="html">Two Scoops of Django</title><link href="https://qpfmtlcp.github.io/reading/Two-Scoops-of-Django/" rel="alternate" type="text/html" title="Two Scoops of Django" /><published>2018-09-12T00:00:00+00:00</published><updated>2018-09-12T00:00:00+00:00</updated><id>https://qpfmtlcp.github.io/reading/Two-Scoops-of-Django</id><content type="html" xml:base="https://qpfmtlcp.github.io/reading/Two-Scoops-of-Django/">&lt;div class=&quot;side-by-side&quot;&gt;
+    &lt;div class=&quot;toleft&quot;&gt;
+        &lt;a href=&quot;https://kyobobook.co.kr/product/detailViewKor.laf?barcode=9788966261840&quot;&gt;
+            &lt;img class=&quot;image-vertical&quot; src=&quot;/assets/images/books/two-scoops-of-django.jpg&quot; /&gt;
+        &lt;/a&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;toright&quot;&gt;
+        &lt;p&gt;
+        대니얼 로이 그린펠드, 오드리 로이 그린펠드 지음
+        &lt;br /&gt;
+        김승진 옮김
+        &lt;br /&gt;
+        인사이트
+        &lt;br /&gt;
+        2016년 08월 12일
+        &lt;/p&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;장고로 프로젝트를 진행한다면 구비해두라고 추천하고 싶은 책이다.&lt;br /&gt;
+전반적인 내용을 얕지도 깊지도 않게 적절히 설명해주고 있다.
+더불어 언급된 패키지들의 이름만이라도 어렴풋이 기억한다면 언젠가 도움이 되리라 생각한다.&lt;br /&gt;
+앞쪽은 시간이 있을 때 순서대로 읽고, 뒷부분은 필요에 따라 발췌독하면 좋을 것 같다.&lt;/p&gt;</content><author><name>Jay</name></author><category term="reading" /><category term="Django" /><summary type="html">대니얼 로이 그린펠드, 오드리 로이 그린펠드 지음 김승진 옮김 인사이트 2016년 08월 12일</summary></entry><entry><title type="html">독서 노트 시작하기</title><link href="https://qpfmtlcp.github.io/blog/%EA%B0%80%EB%A5%B4%EC%B9%98%EA%B3%A0-%EB%B0%B0%EC%9A%B0%EB%A9%B4%EC%84%9C-%EC%84%9C%EB%A1%9C-%EC%84%B1%EC%9E%A5%ED%95%9C%EB%8B%A4/" rel="alternate" type="text/html" title="독서 노트 시작하기" /><published>2018-09-05T16:43:00+00:00</published><updated>2018-09-05T16:43:00+00:00</updated><id>https://qpfmtlcp.github.io/blog/%EA%B0%80%EB%A5%B4%EC%B9%98%EA%B3%A0-%EB%B0%B0%EC%9A%B0%EB%A9%B4%EC%84%9C-%EC%84%9C%EB%A1%9C-%EC%84%B1%EC%9E%A5%ED%95%9C%EB%8B%A4</id><content type="html" xml:base="https://qpfmtlcp.github.io/blog/%EA%B0%80%EB%A5%B4%EC%B9%98%EA%B3%A0-%EB%B0%B0%EC%9A%B0%EB%A9%B4%EC%84%9C-%EC%84%9C%EB%A1%9C-%EC%84%B1%EC%9E%A5%ED%95%9C%EB%8B%A4/">&lt;h2 id=&quot;교학상장敎學相長-가르치고-배우면서-서로-성장한다&quot;&gt;교학상장(敎學相長), 가르치고 배우면서 서로 성장한다&lt;/h2&gt;
+
+&lt;p&gt;나는 지금껏 독학 위주로 공부해왔다.&lt;br /&gt;
+다른 사람과 함께하며 습득하며 속도를 조절하는 수고가 적어 편했고, 그 당시의 집중력에 맞게 원하는 만큼 이해할 수 있기에 그게 좋았다. 그러다 보니 눈으로 읽고 스스로 한 번 정리하고 공부를 마치는 경우가 대부분이었고, 언젠가 다시 그 지식을 설명해야 할 때 술술 나오지 않는 경험을 자주 겪었다.&lt;/p&gt;
+
+&lt;p&gt;블로그를 시작한 계기도 이런 이유였던 것 같다.&lt;br /&gt;
+‘반쪽짜리 지식의 나머지 반쪽을 채우고 싶다.’&lt;br /&gt;
+그 어딘가 있을 누군가에게 도움을 주겠다는 마음가짐으로&lt;br /&gt;
+공부한 것을 공유한다면 서로 성장할 수 있지 않을까?&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;개발을 시작하며 &lt;a href=&quot;https://www.sangkon.com/2016/02/10/good_books_for_dev/&quot;&gt;&lt;strong&gt;내 마음대로 선정한 프로그래머 필독서&lt;/strong&gt;&lt;/a&gt;라는 글을 참고해서 읽고 싶은 책의 리스트를 정리했고, 하나하나 읽어나가고 있다.
+마침 기록으로 남길 수 있는 블로그를 시작했으니 적극적으로 활용하는 게 좋겠다.&lt;/p&gt;
+
+&lt;p&gt;최근에 읽은 &lt;a href=&quot;https://brunch.co.kr/@sungkibaek/45&quot;&gt;&lt;strong&gt;나는 책을 어떻게 읽고 정리하는가?&lt;/strong&gt;&lt;/a&gt;라는 글을 참고해서 읽은 책부터 정리하려고 한다.&lt;br /&gt;
+평소 독서 습관대로 눈으로 빠르게 일독하면서 간단한 메모를 하고, 두 번째 읽으면서 내용을 따로 정리해두려고 한다.&lt;br /&gt;
+블로그에 책의 정보, 이미지, 간단한 감상평을 적고 태그로 분류한다면 깔끔하게 정리될 것 같다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;아직은 독서 리스트에 좋은 책들이 많이 남아있고, 또 최근에 &lt;a href=&quot;https://www.sangkon.com/2018/08/27/good_books_for_dev_2018/&quot;&gt;프로그래머 필독서&lt;/a&gt;가 업데이트되면서 덩달아 내 독서 리스트에도 다량의 책이 추가됐다. 덕분에 블로그 글 업데이트를 걱정하지 않아도 될 것 같다.&lt;br /&gt;
+이번 글을 시작으로 언젠가 블로그에 너무 많은 독서 후기로 인해 고민하는 날을 기대해본다.&lt;/p&gt;</content><author><name>Jay</name></author><category term="blog" /><category term="Etc" /><summary type="html">교학상장(敎學相長), 가르치고 배우면서 서로 성장한다</summary></entry><entry><title type="html">장고 API 속도 개선하기</title><link href="https://qpfmtlcp.github.io/blog/%EC%9E%A5%EA%B3%A0-API-%EC%86%8D%EB%8F%84-%EA%B0%9C%EC%84%A0%ED%95%98%EA%B8%B0/" rel="alternate" type="text/html" title="장고 API 속도 개선하기" /><published>2018-08-20T10:59:00+00:00</published><updated>2018-08-20T10:59:00+00:00</updated><id>https://qpfmtlcp.github.io/blog/%EC%9E%A5%EA%B3%A0-API-%EC%86%8D%EB%8F%84-%EA%B0%9C%EC%84%A0%ED%95%98%EA%B8%B0</id><content type="html" xml:base="https://qpfmtlcp.github.io/blog/%EC%9E%A5%EA%B3%A0-API-%EC%86%8D%EB%8F%84-%EA%B0%9C%EC%84%A0%ED%95%98%EA%B8%B0/">&lt;p&gt;Redis와 장고의 context를 활용해 API 속도를 향상했던 경험을 간단한 예시로 다루어 보려고 한다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;동작하는-api-구현&quot;&gt;동작하는 API 구현&lt;/h2&gt;
+
+&lt;p&gt;버블티 판매 사이트의 대시보드 서버를 구현해야 하는 상황이라고 가정해보자.
+먼저 주문 전체를 보여주기 위한 API를 개발한다.
+테스트를 위해 장고 프로젝트를 생성하고 두 개의 앱을 만든다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root
+  options
+    admin.py
+    models.py
+  orders
+    models.py
+    serializers.py
+    views.py
+	
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이미 운영되고 있는 커머스 시스템은 주문에 대한 옵션을 코드로 해시해서 데이터베이스로 관리하고 있다. API에서는 옵션코드를 풀어서 전달해야 한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/django-api-performance/database.png&quot; alt=&quot;database&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;운영 담당자는 주문의 옵션을 수시로 추가/수정한다.
+따라서 옵션코드를 실제 옵션으로 변환하기 위해 데이터를 직접 하드코딩하면 수정 사항에 대한 배포를 빈번하게 해야 할 것 같다. 데이터베이스에 직접 접근해서 옵션코드를 파싱해야겠다.&lt;/p&gt;
+
+&lt;p&gt;기존 시스템 스키마에 맞도록 모델을 작성한다.&lt;br /&gt;
+규모가 큰 시스템이라면 &lt;code class=&quot;highlighter-rouge&quot;&gt;inspectDB&lt;/code&gt; 명령어를 활용할 수 있다.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# options/models.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;django.db&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;OptionCodeBaseModel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;code&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CharField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max_length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CharField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max_length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Meta&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__str__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;
+    
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Flavor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OptionCodeBaseModel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;pass&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Sugar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OptionCodeBaseModel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;pass&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Ice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OptionCodeBaseModel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;pass&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# orders/models.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;django.db&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Order&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;option&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TextField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    
+    &lt;span class=&quot;c&quot;&gt;# ... 기타 데이터들&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;운영자가 옵션을 직접 수정할 수 있도록 장고 어드민을 제공한다.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# options/admin.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;django.contrib&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;admin&lt;/span&gt;
+
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;.models&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Flavor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Sugar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ice&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;admin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;site&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Flavor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;admin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;site&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Sugar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;admin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;site&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Ice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;전체 주문을 조회하는 API를 작성한다.&lt;br /&gt;
+커스텀 필드를 이용해 옵션코드를 풀어서 전달한다.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# orders/serializers.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;rest_framework&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;
+
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;options.models&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Flavor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Sugar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ice&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;.models&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ParsedOptionField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Field&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;to_representation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;code&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;split&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'-'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;flavor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Flavor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;ice&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ice&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;sugar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Sugar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'flavor'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flavor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'ice'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ice&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'sugar'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sugar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;OrderSerializer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ModelSerializer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Meta&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;fields&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'parsed_option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;n&quot;&gt;parsed_option&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ParsedOptionField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# orders/views.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;rest_framework.generics&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ListAPIView&lt;/span&gt;
+
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;.serializers&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OrderSerializer&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;.models&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;OrderListView&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ListAPIView&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;queryset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;serializer_class&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OrderSerializer&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;포스트맨을 이용해 API를 테스트한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/django-api-performance/first-api.png&quot; alt=&quot;first api&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;문제없이 잘 동작하는 것을 볼 수 있다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;redis를-이용한-caching&quot;&gt;Redis를 이용한 Caching&lt;/h2&gt;
+
+&lt;p&gt;시간이 흘러 주문이 많이 쌓인 상황을 가정해보자.&lt;br /&gt;
+임시로 데이터 생성을 위한 API를 작성하고,
+간단하게 스크립트를 작성해 테스트를 위한 데이터를 넣어준다.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;random&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;requests&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;code&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'{flavor}-{ice}-{sugar}'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;flavor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;choice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'TR'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'VN'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'SB'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]),&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;ice&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;choice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'3'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'4'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]),&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;sugar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;choice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'W1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'W3'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'B3'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;requests&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;post&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;'http://localhost:8000/order/'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;기존 API의 성능을 확인해본다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/django-api-performance/first-problem.png&quot; alt=&quot;first-problem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;API 조회 결과를 보면 알 수 있듯이 한 번의 GET 요청에 3초 가까이 걸린다.
+주문 하나당 추가적인 데이터베이스 쿼리가 필요하기 때문인 것 같다.
+Redis를 캐시로 사용해 성능을 개선해본다.
+&lt;code class=&quot;highlighter-rouge&quot;&gt;django-redis&lt;/code&gt; 설치 후, &lt;code class=&quot;highlighter-rouge&quot;&gt;settings.py&lt;/code&gt; 에 설정을 추가한다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ pip install django-redis
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# settings.py&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;CACHES&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;default&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&quot;BACKEND&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;django_redis.cache.RedisCache&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&quot;LOCATION&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;redis://127.0.0.1:6379/1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&quot;OPTIONS&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;&quot;CLIENT_CLASS&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;django_redis.client.DefaultClient&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;시리얼라이저를 수정해 간단하게 캐시를 적용할 수 있다.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# orders/serializers.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;django.core.cache&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;
+
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;rest_framework&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;
+
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;options.models&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Flavor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Sugar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ice&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;.models&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_data_from_cache_or_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ParsedOptionField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Field&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;to_representation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;flavor_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ice_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sugar_code&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;split&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'-'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'flavor'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_data_from_cache_or_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Flavor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flavor_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'ice'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_data_from_cache_or_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Ice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ice_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'sugar'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_data_from_cache_or_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Sugar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sugar_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;OrderSerializer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ModelSerializer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Meta&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;fields&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'parsed_option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;n&quot;&gt;parsed_option&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ParsedOptionField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;또는 장고 어드민에서 데이터에 대한 작업을 할 때 캐시에 올리고,
+시리얼라이저에서는 캐시에서 불러오기만 하는 방법으로 작성할 수도 있다.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# orders/models.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;django.db&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;django.core.cache&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;OptionCodeBaseModel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;code&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CharField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max_length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CharField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max_length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Meta&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__str__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;nb&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;nb&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;옵션코드가 생성/수정/삭제될 때 캐시에 적용되도록 모델 코드를 수정한다.&lt;/p&gt;
 
 &lt;blockquote&gt;
-  &lt;p&gt;어노테이션은 본질적인 목적은 소스 코드에 메타데이터를 표현하는 것입니다. 단순히 부가적인 표현뿐만 아니라 리플렉션reflection을 이용하면 어노테이션 지정만으로도 원하는 클래스를 주입한다는지 하는 것이 가능합니다.&lt;/p&gt;
+  &lt;p&gt;데이터에 대한 작업은 장고 어드민만 이용한다고 가정한다.&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;p&gt;많이들 접한 @Override나 @SuppressWarningS 등 자바에서 기본으로 제공하는 어노테이션들이 있다.&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# orders/serializers.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;django.core.cache&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;
 
-&lt;p&gt;또한 Meta 어노테이션으로 메타 어노테이션을 이용하여 커스텀 어노테이션을 만들 수 있습니다.&lt;/p&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;rest_framework&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;
 
-&lt;p&gt;&lt;a href=&quot;http://jdm.kr/blog/216&quot;&gt;자세한 내용&lt;/a&gt;&lt;/p&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;.models&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;
 
-&lt;h2 id=&quot;힙-메모리-영역과-스택-메모리-영역&quot;&gt;힙 메모리 영역과 스택 메모리 영역&lt;/h2&gt;
 
-&lt;p&gt;프로그램이 시작되면 메모리 영역에 올라가게 됩니다. 메모리 영역에 올라온 프로그램들은 CPU의 명령을 통해서 실행되게 되는데 크게 4가지로 구분되어 메모리에 올라갑니다.&lt;/p&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ParsedOptionField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Field&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;to_representation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;flavor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sugar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;split&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'-'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'flavor'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flavor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'ice'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'sugar'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sugar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 
-&lt;h4 id=&quot;코드-영역-code-segment&quot;&gt;코드 영역 (Code Segment)&lt;/h4&gt;
 
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;실제 프로그램 코드 자체가 적재되는 영역을 말합니다. C나 JAVA등의 개발 언어로 짜여진 프로그램은 컴퓨터가 이해할 수 있는 기계어의 형태로 컴파일 되어 파일 등에 저장되는데, 실제 이 파일의 프로그램에 대한 전체적인 코드 자체가 올라가는 영역입니다.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;프로그램 자체 영역으로 보시면 됩니다.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;OrderSerializer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ModelSerializer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Meta&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;fields&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'parsed_option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;n&quot;&gt;parsed_option&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ParsedOptionField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;h4 id=&quot;데이터-영역-data-segment&quot;&gt;데이터 영역 (Data Segment)&lt;/h4&gt;
+&lt;p&gt;데이터베이스 쿼리 대신 캐시만 이용하도록 수정한다.&lt;/p&gt;
 
-&lt;ul&gt;
-  &lt;li&gt;프로그램이 실행되면서 필요한 변수가 저장되는 영역인데, 이 데이터 영역은 프로그램이 구동되는 동안 항상 접근 가능한 변수가 저장되는 영역이라고 생각하시면 됩니다. 즉, 전역 변수(Global Variables)와 정적 변수(Static Variables)를 위한 할당 공간입니다.&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/django-api-performance/second-api.png&quot; alt=&quot;second-api&quot; /&gt;&lt;/p&gt;
 
-&lt;h4 id=&quot;스택-영역-stack-segment&quot;&gt;스택 영역 (Stack Segment)&lt;/h4&gt;
+&lt;p&gt;전자, 후자 모두 응답시간이 대략 0.6 ~ 0.8초 정도로 속도가 향상된 것을 볼 수 있다.&lt;/p&gt;
 
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;함수(또는 메서드, 프로시져 등) 내에 정의된 지역 변수(Local Variables)가 저장되는 영역입니다.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;스택의 구조를 활용하여 함수의 지역 변수 메모리를 관리하면 위의 메커니즘을 쉽게 구현할 수 있기 때문에 스택 형태로 영역을 만들어 활용하였고, 그리하여 스택 영역(스택 세그먼트)라 이름이 붙었습니다.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
+&lt;hr /&gt;
 
-&lt;h4 id=&quot;힙-영역-heap-segment&quot;&gt;힙 영역 (Heap Segment)&lt;/h4&gt;
+&lt;h2 id=&quot;context를-이용한-데이터-전달하기&quot;&gt;context를 이용한 데이터 전달하기&lt;/h2&gt;
 
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;힙 영역은 위에서 관리가 가능한 데이터 외에 다른 형태의 데이터를 관리하기 위한 빈 공간(Free Space)입니다. 어떤 형태의 데이터가 있을까요? 바로 동적 할당(Dynamic Allocation)을 통해 생성된 동적 변수(Dynamic Variables)를 관리하기 위한 영역입니다.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;힙 영역은 위의 다른 영역(데이터, 스택 등)을 모두 할당하고 남은 공간입니다. (남은 공간이라하여 딱히 영역에 제한이 있거나 그런 것은 아니고, 시스템의 메모리 공간 여유에 따라서 달라집니다.)&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Java 나 C++ 등에서 ‘new’ 를 통해, C에서 ‘malloc’, ‘calloc’ 등을 통해 동적으로 생성되는 변수를 저장하기 위해 할당되는 영역이라고 생각하시면 됩니다.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;데이터 영역과 스택 영역은 컴파일러가 미리 공간을 예측하고 할당할 수 있지만, 동적 변수는 어느 시점에 어느 정도의 공간으로 할당 될지 정확하게 예측할 수 없기 때문에 프로그램 실행 중(Runtime)에 결정됩니다.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;계속 주문이 쌓이는 것을 가정해 5000개의 데이터를 추가로 넣었다.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://quarl894.github.io/assets/posts/20180424/memory_img.png&quot; alt=&quot;메모리 영역&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/django-api-performance/third-problem.png&quot; alt=&quot;third-problem&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://ooz.co.kr/244&quot;&gt;참조 사이트&lt;/a&gt;&lt;/p&gt;</content><author><name>김영중</name></author><category term="Android" /><summary type="html">안드로이드에서 Enum 사용을 자제시킨 이유는?</summary></entry><entry><title type="html">비트마스크 기초편</title><link href="https://quarl894.github.io/articles/2018-03/%EB%B9%84%ED%8A%B8%EB%A7%88%EC%8A%A4%ED%81%AC-%EA%B8%B0%EC%B4%88%ED%8E%B8" rel="alternate" type="text/html" title="비트마스크 기초편" /><published>2018-03-22T14:10:00+00:00</published><updated>2018-03-22T14:10:00+00:00</updated><id>https://quarl894.github.io/articles/2018-03/%EB%B9%84%ED%8A%B8%EB%A7%88%EC%8A%A4%ED%81%AC%20%EA%B8%B0%EC%B4%88%ED%8E%B8</id><content type="html" xml:base="https://quarl894.github.io/articles/2018-03/%EB%B9%84%ED%8A%B8%EB%A7%88%EC%8A%A4%ED%81%AC-%EA%B8%B0%EC%B4%88%ED%8E%B8">&lt;h2 id=&quot;어려운-비트마스크&quot;&gt;어려운 비트마스크&lt;/h2&gt;
+&lt;p&gt;API 응답까지 3.7초의 시간이 걸린다.
+주문이 더 쌓일수록 쿼리가 심하게 느려지는 현상은 여전하다.&lt;/p&gt;
 
-&lt;p&gt;비트마스크는 알고리즘을 풀 때 간간히 필요합니다.&lt;/p&gt;
+&lt;p&gt;한 건의 주문당 세 번의 데이터 조회하는 구조가 문제인 것 같다.
+따라서 요청할 당시에 필요한 데이터 전체를 캐싱하고, 모든 주문의 옵션코드를 파싱하는데 사용하도록 한다.
+이렇게 수정하면 주문의 개수가 아무리 많아져도 요청 한 번에 일정 수의 쿼리만 사용하는 장점이 있다.&lt;/p&gt;
 
-&lt;p&gt;비트마스크 없이는 못 푸는 문제를 점점 많이 접하게 되서 공부차 올립니다.&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# orders/models.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;django.db&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;django.core.cache&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;
 
-&lt;h2 id=&quot;비트마스크를-사용한-코드의-장점&quot;&gt;비트마스크를 사용한 코드의 장점&lt;/h2&gt;
 
-&lt;ul&gt;
-  &lt;li&gt;더 빠른 수행 시간&lt;/li&gt;
-  &lt;li&gt;더 간결한 코드&lt;/li&gt;
-  &lt;li&gt;더 작은 메모리 사용량&lt;/li&gt;
-  &lt;li&gt;연관 배열을 배열로 대체 : boolean으로 체크하는 배열을 비트마스크를 써서 int[]로 나타낼 수 있다. 큰 시간과 메모리 차이를 불러온다.&lt;/li&gt;
-&lt;/ul&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;OptionCodeBaseModel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;code&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CharField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max_length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CharField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max_length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Meta&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__str__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;nb&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        
+        &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_meta&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;values&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_meta&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;model_name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;values&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;nb&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
-&lt;h2 id=&quot;비트마스크-사용법&quot;&gt;비트마스크 사용법&lt;/h2&gt;
+        &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_meta&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;values&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_meta&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;model_name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;values&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;&lt;strong&gt;8개의 비트를 사용하고자 한다.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;view에서 코드 변환을 위한 데이터 전체를 불러와 context로 넘겨준다.&lt;/p&gt;
 
-&lt;p&gt;int bitmask를 비트마스크 변수로 선언한다.&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# orders/views.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;django.core.cache&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;
 
-&lt;p&gt;비트는 맨 오른쪽 비트가 0번 비트고 총 8개 비트면 0~7의 범위를 갖는다.&lt;/p&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;rest_framework.generics&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ListAPIView&lt;/span&gt;
 
-&lt;p&gt;bitmask 변수의 우측 8개 비트만 사용한다는 것이다.&lt;/p&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;.serializers&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OrderSerializer&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;.models&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;
 
-&lt;p&gt;&lt;strong&gt;비트 상태 0 : 꺼짐. 1 : 켜짐&lt;/strong&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://quarl894.github.io/assets/posts/20180322/bitmask.png&quot; alt=&quot;bitmask&quot; /&gt;&lt;/p&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;OrderListView&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ListAPIView&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;queryset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;serializer_class&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OrderSerializer&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_serializer_context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_serializer_context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'flavor'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'flavor'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'ice'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'ice'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'sugar'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'sugar'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;이런식이 된다.&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# orders/serializers.py&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;rest_framework&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;
 
-&lt;p&gt;배열로 표현한다면 idx[8]={1,2,4,8,16,32,64,128}; 이 된다.&lt;/p&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;.models&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;
 
-&lt;p&gt;idx[n]==(1«n) 이다. 연산자 우선순위에 유의한다&lt;/p&gt;
 
-&lt;h2 id=&quot;비트-기본-연산&quot;&gt;비트 기본 연산&lt;/h2&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ParsedOptionField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Field&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;to_representation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;flavor_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ice_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sugar_code&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;split&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'-'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'flavor'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'flavor'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flavor_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'ice'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'ice'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ice_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;'sugar'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'sugar'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sugar_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://quarl894.github.io/assets/posts/20180322/bitmask_1.png&quot; alt=&quot;비트연산&quot; /&gt;&lt;/p&gt;
 
-&lt;h4 id=&quot;비트마스크-기본-문제&quot;&gt;비트마스크 기본 문제&lt;/h4&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;OrderSerializer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serializers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ModelSerializer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Meta&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Order&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;fields&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'parsed_option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;n&quot;&gt;parsed_option&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ParsedOptionField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'option'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://www.acmicpc.net/problem/12813&quot;&gt;이진수 연산&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;포스트맨을 이용해 10번의 API 요청을 보내본다.&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://www.acmicpc.net/problem/11723&quot;&gt;집합&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/django-api-performance/third-api.png&quot; alt=&quot;third api&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://www.acmicpc.net/problem/11811&quot;&gt;데스스타&lt;/a&gt;&lt;/p&gt;</content><author><name>김영중</name></author><category term="비트마스크" /><summary type="html">어려운 비트마스크</summary></entry><entry><title type="html">It 직무 평가 시험</title><link href="https://quarl894.github.io/articles/2018-03/IT-%EC%A7%81%EB%AC%B4-%ED%8F%89%EA%B0%80-%EC%8B%9C%ED%97%98" rel="alternate" type="text/html" title="It 직무 평가 시험" /><published>2018-03-15T12:50:00+00:00</published><updated>2018-03-15T12:50:00+00:00</updated><id>https://quarl894.github.io/articles/2018-03/IT%20%EC%A7%81%EB%AC%B4%20%ED%8F%89%EA%B0%80%20%EC%8B%9C%ED%97%98</id><content type="html" xml:base="https://quarl894.github.io/articles/2018-03/IT-%EC%A7%81%EB%AC%B4-%ED%8F%89%EA%B0%80-%EC%8B%9C%ED%97%98">&lt;h2 id=&quot;시험-복원-문제-정리&quot;&gt;시험 복원 문제 정리&lt;/h2&gt;
+&lt;p&gt;평균 API 응답시간이 0.5초 이내로 상당히 빨라진 것을 볼 수 있다.&lt;/p&gt;</content><author><name>Jay</name></author><category term="blog" /><category term="Django" /><summary type="html">Redis와 장고의 context를 활용해 API 속도를 향상했던 경험을 간단한 예시로 다루어 보려고 한다.</summary></entry><entry><title type="html">내 프로필을 위한 셀프 디버깅</title><link href="https://qpfmtlcp.github.io/blog/%EB%82%B4-%ED%94%84%EB%A1%9C%ED%95%84%EC%9D%84-%EC%9C%84%ED%95%9C-%EC%85%80%ED%94%84-%EB%94%94%EB%B2%84%EA%B9%85/" rel="alternate" type="text/html" title="내 프로필을 위한 셀프 디버깅" /><published>2018-08-09T13:05:00+00:00</published><updated>2018-08-09T13:05:00+00:00</updated><id>https://qpfmtlcp.github.io/blog/%EB%82%B4-%ED%94%84%EB%A1%9C%ED%95%84%EC%9D%84-%EC%9C%84%ED%95%9C-%EC%85%80%ED%94%84-%EB%94%94%EB%B2%84%EA%B9%85</id><content type="html" xml:base="https://qpfmtlcp.github.io/blog/%EB%82%B4-%ED%94%84%EB%A1%9C%ED%95%84%EC%9D%84-%EC%9C%84%ED%95%9C-%EC%85%80%ED%94%84-%EB%94%94%EB%B2%84%EA%B9%85/">&lt;p&gt;최근에 비긴메이트라는 서비스를 알게 됐다.
+비긴메이트는 스타트업을 위한 사람과 사람을 이어주는 팀 빌딩 플랫폼이다.
+지금도 다양한 사람들이 적극적으로 팀원을 찾고 있는 모습을 볼 수 있다.
+나도 가끔 방문해서 그들이 어떤 아이디어를 가지고 세상을 바꾸고 싶어 하는지 살펴본다.&lt;/p&gt;
 
-&lt;p&gt;음…. 먼저 시험은 정처기와 비슷하게 나왔습니다. 정처기를 미리 공부했다면 잘 봤을텐데…ㅎㅎ&lt;/p&gt;
+&lt;p&gt;그런데 어제 비긴메이트를 이용하다가 우연히 홈페이지에 문제가 있는 것을 발견했다.
+궁금해서 좀 살펴봤더니, 잠깐의 시간을 투자하면 클라이언트에서 해결할 수도 있을 것으로 보였다.
+빨리 해결하고 싶은 마음에 직접 디버깅했던 내용을 정리하고자 한다.&lt;/p&gt;
 
-&lt;h2 id=&quot;데이터베이스&quot;&gt;데이터베이스&lt;/h2&gt;
+&lt;hr /&gt;
 
-&lt;ol&gt;
-  &lt;li&gt;데이터베이스 특징 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;스키마 종류 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;트랜잭션 특성 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;회복 기법 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;그림 주어지고 후위 순회 시 옳은 것은?&lt;/li&gt;
-  &lt;li&gt;데이터베이스 설계시 고려해야 할 사항 중 옳지 않은 것은?&lt;/li&gt;
-&lt;/ol&gt;
+&lt;h2 id=&quot;팀-탈퇴가-안-돼요&quot;&gt;팀 탈퇴가 안 돼요&lt;/h2&gt;
 
-&lt;h2 id=&quot;전자계산기&quot;&gt;전자계산기&lt;/h2&gt;
+&lt;p&gt;얼마 전 처음 보는 팀에서 나를 초대한다는 알람을 받았다.
+감사한 마음에 프로젝트의 내용을 천천히 살펴보고자 팀에 참여했다.
+그런데 해당 팀이 내 프로필에 보이는 게 아닌가?
+내 프로필의 “참여 팀”은 내가 직접 참여했던 팀으로 사용하고 싶은데…&lt;/p&gt;
 
-&lt;ol&gt;
-  &lt;li&gt;직접 주소지정방식에서 고려해야 할 사항이 아닌 것은?&lt;/li&gt;
-  &lt;li&gt;Channel 의한 I/O 특징 중 옳지 않은 것은?(CPU와 관련하여 물어봄)&lt;/li&gt;
-  &lt;li&gt;인터럽트 설명해주고 어떤 인터럽트인가?&lt;/li&gt;
-  &lt;li&gt;메모리 인터리빙 특징&lt;/li&gt;
-  &lt;li&gt;메모리 관리 하드웨어 MMU 특징 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;가상메모리 특징 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;MISD 설명주어지고 MISD 고르는 문제&lt;/li&gt;
-&lt;/ol&gt;
+&lt;p&gt;바로 프로필을 되돌리고 싶어 팀을 탈퇴를 시도했다.
+그런데, 탈퇴 버튼을 눌러도 팀에서 탈퇴가 되지 않는다.
+잘못 눌렀나 싶어서 반복해서 눌러도 변화가 없다.&lt;br /&gt;
+왜 이러나 싶어 개발자 모드를 켜고 다시 눌러본다.&lt;/p&gt;
 
-&lt;h2 id=&quot;운영체제&quot;&gt;운영체제&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/self-debugging-for-my-profile/check-error.png&quot; alt=&quot;Error message&quot; /&gt;&lt;/p&gt;
 
-&lt;ol&gt;
-  &lt;li&gt;로더의 역할 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;PCB에서 얻을 수 없는 정보는?&lt;/li&gt;
-  &lt;li&gt;멀티 스레드 특징 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;LRU가 무엇인가?&lt;/li&gt;
-  &lt;li&gt;가상 기억장치 특징&lt;/li&gt;
-  &lt;li&gt;스케줄링 중 하나 설명 주어지고 어떤 스케줄링인가?(SCAN)&lt;/li&gt;
-  &lt;li&gt;직접 파일 특징 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;커널 특징 중 옳지 않은 것은?&lt;/li&gt;
-&lt;/ol&gt;
+&lt;p&gt;DELETE 요청이 400 에러를 응답하고, 요청 URL의 쿼리스트링 변수의 값이 &lt;code class=&quot;highlighter-rouge&quot;&gt;undefined&lt;/code&gt; !?&lt;br /&gt;
+왠지 &lt;code class=&quot;highlighter-rouge&quot;&gt;teamMateIDX&lt;/code&gt;만 잘 넘겨주면 해결될 것 같아 직접 시도해보기로 했다.&lt;/p&gt;
 
-&lt;h2 id=&quot;소프트웨어-공학&quot;&gt;소프트웨어 공학&lt;/h2&gt;
+&lt;hr /&gt;
 
-&lt;ol&gt;
-  &lt;li&gt;좋은 소프트웨어를 만들기 위해 고려해야할 사항이 아닌것은?&lt;/li&gt;
-  &lt;li&gt;소프트웨어 프로젝트 개발 영역을 결정하는 주요 요소가 아닌것은?&lt;/li&gt;
-  &lt;li&gt;HIPO 특징 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;HIPO 종류 설명 중 옳지 않은 것은?&lt;/li&gt;
-  &lt;li&gt;응집도와 결합도 관련 문제 (응집도는 높을수록 좋음. 결합도는 낮을수록 좋음)&lt;/li&gt;
-  &lt;li&gt;화이트 박스와 블랙 박스 테스트 구분 문제&lt;/li&gt;
-  &lt;li&gt;다형성? 영어로 설명주어지고 답 찾는 문제&lt;/li&gt;
-&lt;/ol&gt;
+&lt;h2 id=&quot;잠깐의-시간-투자&quot;&gt;잠깐의 시간 투자&lt;/h2&gt;
 
-&lt;h2 id=&quot;데이터-통신&quot;&gt;데이터 통신&lt;/h2&gt;
+&lt;p&gt;가장 먼저 렌더링 된 html을 살펴보니 자바스크립트 코드가 스크립트로 전부 올라와 있다.&lt;br /&gt;
+쉽게 풀릴 것 같다. 바로 팀을 탈퇴하는 메소드를 찾아본다.&lt;/p&gt;
 
-&lt;ol&gt;
-  &lt;li&gt;다중 접속 방식 설명 주어지고 찾는 문제&lt;/li&gt;
-  &lt;li&gt;네트워크 관련장비 특징 중 해당하는 것 찾기(리피터,라우터,스위치, 게이트웨이)&lt;/li&gt;
-  &lt;li&gt;DSU가 무엇인지&lt;/li&gt;
-  &lt;li&gt;프레임구조에서 프레임 종류를 알 수 있는 곳은?&lt;/li&gt;
-  &lt;li&gt;경로 설정 방식 설명 주어지고 해당하는 방식 찾기&lt;/li&gt;
-  &lt;li&gt;망 특징 주어지고 해당하는 망 형태 찾기&lt;/li&gt;
-  &lt;li&gt;CSMA/CD 특징&lt;/li&gt;
-&lt;/ol&gt;</content><author><name>김영중</name></author><category term="직무평가시험" /><summary type="html">시험 복원 문제 정리</summary></entry><entry><title type="html">It 직무 평가 시헙 답 정리</title><link href="https://quarl894.github.io/articles/2018-03/IT-%EC%A7%81%EB%AC%B4-%ED%8F%89%EA%B0%80-%EC%8B%9C%ED%97%99-%EB%8B%B5-%EC%A0%95%EB%A6%AC" rel="alternate" type="text/html" title="It 직무 평가 시헙 답 정리" /><published>2018-03-15T12:50:00+00:00</published><updated>2018-03-15T12:50:00+00:00</updated><id>https://quarl894.github.io/articles/2018-03/IT%20%EC%A7%81%EB%AC%B4%20%ED%8F%89%EA%B0%80%20%EC%8B%9C%ED%97%99%20%EB%8B%B5%20%EC%A0%95%EB%A6%AC</id><content type="html" xml:base="https://quarl894.github.io/articles/2018-03/IT-%EC%A7%81%EB%AC%B4-%ED%8F%89%EA%B0%80-%EC%8B%9C%ED%97%99-%EB%8B%B5-%EC%A0%95%EB%A6%AC">&lt;h2 id=&quot;중요도에-따른-설명-추가&quot;&gt;중요도에 따른 설명 추가&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/self-debugging-for-my-profile/delete-method.png&quot; alt=&quot;Delete method&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;시험 외 중요하다 생각하는 것들 추가&lt;/p&gt;
+&lt;p&gt;map, filter 등의 Array 메소드는 ES5 문법이라고 알고 있는데, IE8 이하를 지원하기 위해 직접 작성한 것 같다.
+헤더를 추가하는 것으로 봐서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Request Headers&lt;/code&gt;를 살펴보면 인증 관련 정보를 알 수 있을 것 같다.&lt;/p&gt;
 
-&lt;h2 id=&quot;데이터베이스&quot;&gt;데이터베이스&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/self-debugging-for-my-profile/user-info-method.png&quot; alt=&quot;User info method&quot; /&gt;&lt;/p&gt;
 
-&lt;h4 id=&quot;데이터베이스-특징-중-옳지-않은-것은&quot;&gt;데이터베이스 특징 중 옳지 않은 것은?&lt;/h4&gt;
+&lt;p&gt;로그인한 사용자 정보를 얻어오는 부분에서 헤더를 생성하는 것을 확인할 수 있다.
+토큰 기반 인증을 사용하니 토큰을 얻기 위해 네트워크를 열어 해당 요청을 찾아본다.&lt;/p&gt;
 
-&lt;p&gt;-&amp;gt; 실시간 접근성, 동시 공유, 계속적인 변화, 내용에 의한 참조&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/self-debugging-for-my-profile/request-header.png&quot; alt=&quot;Request header&quot; /&gt;&lt;/p&gt;
 
-&lt;h4 id=&quot;스키마-종류-중-옳지-않은-것은&quot;&gt;스키마 종류 중 옳지 않은 것은?&lt;/h4&gt;
+&lt;p&gt;내 토큰과 함께 명시적 지속연결, 세션 아이디 등도 같이 보인다.
+아직 세션이 유지되는지, 정말 토큰이 유효한지 등을 확인하기 위해 유저 정보를 요청해본다.
+API 요청을 위해 포스트맨을 사용했다.&lt;/p&gt;
 
-&lt;p&gt;-&amp;gt; 외부 스키마(사용자 관점), 개념 스키마(조직이나 기관 관점), 내부 스키마(물리적 관점)&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/self-debugging-for-my-profile/user-info-response.png&quot; alt=&quot;User info response&quot; /&gt;&lt;/p&gt;
 
-&lt;h4 id=&quot;트랜잭션-특성-중-옳지-않은-것은&quot;&gt;트랜잭션 특성 중 옳지 않은 것은?&lt;/h4&gt;
+&lt;p&gt;유저 정보가 넘어오는 것을 확인했다. 유저 정보에서 팀과 관련되어 얻을 수 있는 정보는 팀 인덱스뿐이었다.
+일단 사용하고자 하는 변수가 유저 정보에 포함되어 있지 않아서 아까 URL이 잘못된 것은 확인했다.
+추가적인 시도로 URL에 undefined 대신 팀 인덱스를 넣고 유효한 토큰이 담긴 헤더와 함께 요청해봤다.&lt;/p&gt;
 
-&lt;p&gt;-&amp;gt; 원자성, 일관성, 영속성, 독립성&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/self-debugging-for-my-profile/last-request.png&quot; alt=&quot;Last request&quot; /&gt;&lt;/p&gt;
 
-&lt;h4 id=&quot;회복-기법-중-옳지-않은-것은&quot;&gt;회복 기법 중 옳지 않은 것은?&lt;/h4&gt;
+&lt;p&gt;500 Error. 아마 서버가 원하는 건 &lt;code class=&quot;highlighter-rouge&quot;&gt;teamIDX&lt;/code&gt;가 아니라 &lt;code class=&quot;highlighter-rouge&quot;&gt;teamMateIDX&lt;/code&gt;인 것 같다.&lt;br /&gt;
+사실 처음에 대부분 전역변수로 선언된 것을 확인하면서 디버깅은 아주 짧게 끝났다.
+콘솔에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;axios.delete(URL, {headers: headers})&lt;/code&gt;를 통해 바로 결과를 알 수 있었다.&lt;/p&gt;
 
-&lt;p&gt;-&amp;gt; 그림자 페이지 교체, 연기 갱신, 즉각 갱신, 검사점&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/self-debugging-for-my-profile/delete-request.png&quot; alt=&quot;Delete request&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;-&amp;gt; 그림 주어지고 후위 순회 시 옳은 것은?&lt;/p&gt;
+&lt;p&gt;경험상 이런 경우는 버그가 아니라 프론트엔드 배포가 백엔드 개발, 배포보다 빨랐던 경우였다.
+여기까지 시도하고 클라이언트 쪽에서 더 문제를 해결할 수가 없을 것 같아 정리하기로 한다.
+마지막으로 위의 내용을 간단하게 정리해서 비긴메이트 팀에 전달했다.
+버그가 아니라 밀린 일정 같아 오히려 개발팀에서 기분이 나쁘지 않았으면 다행이라고 생각한다.&lt;/p&gt;
 
-&lt;h4 id=&quot;데이터베이스-설계시-고려해야-할-사항-중-옳지-않은-것은&quot;&gt;데이터베이스 설계시 고려해야 할 사항 중 옳지 않은 것은?&lt;/h4&gt;
+&lt;hr /&gt;
 
-&lt;p&gt;-&amp;gt; 하드웨어 성능&lt;/p&gt;
+&lt;p&gt;자려고 누웠는데 문득 API를 전부 확인해본 게 아니었다는 것을 깨달았다.&lt;br /&gt;
+‘팀 상세 정보에 대한 API가 있을 텐데, 혹시 팀원의 상세 정보도 같이 넘길까?’&lt;/p&gt;
 
-&lt;h4 id=&quot;데이터-모델의-구성-3요소&quot;&gt;데이터 모델의 구성 3요소&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/self-debugging-for-my-profile/team-detail-response.png&quot; alt=&quot;Team detail response&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;-&amp;gt; 구조, 연산, 제약조건&lt;/p&gt;
+&lt;p&gt;예상대로 &lt;code class=&quot;highlighter-rouge&quot;&gt;teamMateIDX&lt;/code&gt;를 응답에 포함하는 team/detail 요청이 있었다.&lt;br /&gt;
+마지막으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;teamMateIDX&lt;/code&gt;를 이용해 삭제를 시도한다.&lt;/p&gt;
 
-&lt;h4 id=&quot;분산-데이터-베이스-제공하는-4가지-투명성&quot;&gt;분산 데이터 베이스 제공하는 4가지 투명성&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/self-debugging-for-my-profile/success.png&quot; alt=&quot;Success&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;-&amp;gt; 위치, 중복, 병행, 장애&lt;/p&gt;
-
-&lt;h4 id=&quot;병행-기법-종류&quot;&gt;병행 기법 종류&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 타임스탬프, 로킹, 낙관적 기법&lt;/p&gt;
-
-&lt;h2 id=&quot;전자계산기&quot;&gt;전자계산기&lt;/h2&gt;
-
-&lt;h4 id=&quot;channel-의한-io-특징-중-옳지-않은-것은cpu와-관련하여-물어봄&quot;&gt;Channel 의한 I/O 특징 중 옳지 않은 것은?(CPU와 관련하여 물어봄)&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; CPU 관여 없이 입출력 수행, CPU와 독립적인 처리가 이뤄짐, 자체적으로 코드 수정 가능, 명령어 구성요소에 속도와는 관련없다,&lt;/p&gt;
-
-&lt;h4 id=&quot;인터럽트-설명해주고-어떤-인터럽트인가&quot;&gt;인터럽트 설명해주고 어떤 인터럽트인가?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 외부: 기계 장애, 내부: 명령어 오작동, SVC 시스템 호출 : 사용자가 의도적으로 호출한 경우&lt;/p&gt;
-
-&lt;h4 id=&quot;메모리-인터리빙-특징&quot;&gt;메모리 인터리빙 특징&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; Instruction의 빠른 처리 속도를 위해 중앙처리장치의 속도와 기억장치의 속도를 유효 Cycle 동안 병행 실행.&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 기억장치 모듈에 순차적으로 번갈아가면서 접근(저장 공간 확대X)&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 데이터를 디스크에 분산 저장&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 연속된 위치를 서로 다른 뱅크로 구성하여 하나의 주소를 통하여 여러 개의 주소를 동시에 접근&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 모듈 수 만큼 데이터 양에 해당하는 워드의 수를 동시에 읽을 수 있음.&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 중앙처리 장치와 기억장치 사이에 실질적인 대역폭을 늘리기 위한 방법으로 사용&lt;/p&gt;
-
-&lt;h4 id=&quot;메모리-관리-하드웨어-mmu-특징-중-옳지-않은-것은&quot;&gt;메모리 관리 하드웨어 MMU 특징 중 옳지 않은 것은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 논리 주소를 물리 주소로 변환&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 허용되지 않는 메모리 접근을 방지&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 메모리 동적 재배치&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 가상 주소 공간을 물리 주소 공간으로 변환(압축X)&lt;/p&gt;
-
-&lt;h4 id=&quot;가상메모리-특징-중-옳지-않은-것은&quot;&gt;가상메모리 특징 중 옳지 않은 것은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 가상 기억장치의 목적은 주기억장치의 용량 확보(속도 개선X)&lt;/p&gt;
-
-&lt;h4 id=&quot;misd-설명주어지고-misd-고르는-문제&quot;&gt;MISD 설명주어지고 MISD 고르는 문제&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 다중 명령어, 단일 데이터 흐름&lt;/p&gt;
-
-&lt;h2 id=&quot;운영체제&quot;&gt;운영체제&lt;/h2&gt;
-
-&lt;h4 id=&quot;로더의-역할-중-옳지-않은-것은&quot;&gt;로더의 역할 중 옳지 않은 것은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 할당, 연결, 재배치, 적재&lt;/p&gt;
-
-&lt;h4 id=&quot;pcb에서-얻을-수-없는-정보는있는-거-외우기&quot;&gt;PCB에서 얻을 수 없는 정보는?(있는 거 외우기)&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 프로세스 상태, 프로그램 카운터, 우선순위, 레지스터 보관 장소, 고유 구별자, 부모/자식 프로세스에 대한 포인터&lt;/p&gt;
-
-&lt;h4 id=&quot;멀티-스레드-특징-중-옳지-않은-것은&quot;&gt;멀티 스레드 특징 중 옳지 않은 것은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 병행성 증진, 프로세스 내부에만 존재, 서로 독립적 다중 수행 가능&lt;/p&gt;
-
-&lt;h4 id=&quot;lru가-무엇인가&quot;&gt;LRU가 무엇인가?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 가장 오랫동안 사용되지 않은 페이지 교체&lt;/p&gt;
-
-&lt;h4 id=&quot;가상-기억장치-특징&quot;&gt;가상 기억장치 특징&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 가상 기억장치의 주소를 주 기억장치의 주소로 바꾸는 주소 매핑 필요&lt;/p&gt;
-
-&lt;h4 id=&quot;스케줄링-중-하나-설명-주어지고-어떤-스케줄링인가scan&quot;&gt;스케줄링 중 하나 설명 주어지고 어떤 스케줄링인가?(SCAN)&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 진행 방향상 가장 짧은 거리에 있는 작업 먼저 실시&lt;/p&gt;
-
-&lt;h4 id=&quot;직접-파일-특징-중-옳지-않은-것은&quot;&gt;직접 파일 특징 중 옳지 않은 것은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 레코드는 해싱 함수에 의해 계산된 물리적 주소를 통해 직접 접근 가능&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 물리적 구조에 대한 지식 필요&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 판독이나 순서에 제약이 없음&lt;/p&gt;
-
-&lt;h4 id=&quot;커널-특징-중-옳지-않은-것은&quot;&gt;커널 특징 중 옳지 않은 것은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 하드웨어를 보호(캡슐화), 주기억장치에 상주, 프로세스 관리, 기억장치 관리, 입출력 관리&lt;/p&gt;
-
-&lt;h2 id=&quot;소프트웨어-공학&quot;&gt;소프트웨어 공학&lt;/h2&gt;
-
-&lt;h4 id=&quot;좋은-소프트웨어를-만들기-위해-고려해야할-사항이-아닌것은&quot;&gt;좋은 소프트웨어를 만들기 위해 고려해야할 사항이 아닌것은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 비용 X&lt;/p&gt;
-
-&lt;h4 id=&quot;소프트웨어-프로젝트-개발-영역을-결정하는-주요-요소가-아닌것은&quot;&gt;소프트웨어 프로젝트 개발 영역을 결정하는 주요 요소가 아닌것은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 기능, 성능, 제약 조건, 인터페이스, 신뢰도&lt;/p&gt;
-
-&lt;h4 id=&quot;hipo-특징-중-옳지-않은-것은&quot;&gt;HIPO 특징 중 옳지 않은 것은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 하향식 소프트웨어 개발 문서화 도구&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 인터페이스를 계층구조로 표현한 도형&lt;/p&gt;
-
-&lt;h4 id=&quot;hipo-종류-설명-중-옳지-않은-것은&quot;&gt;HIPO 종류 설명 중 옳지 않은 것은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 가시적 도표 : 전체적인 기능과 흐름을 보여줌&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 총체적 도표 : 입력,처리,출력에 대한 전반적인 정보 제공&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 세부적 도표 : 가시적 도표에 표시된 기능을 구성하는 기본 요소를 상세히 기술&lt;/p&gt;
-
-&lt;h4 id=&quot;응집도와-결합도-관련-문제-응집도는-높을수록-좋음-결합도는-낮을수록-좋음&quot;&gt;응집도와 결합도 관련 문제 (응집도는 높을수록 좋음. 결합도는 낮을수록 좋음)&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 응집도 높고 결합도 낮게&lt;/p&gt;
-
-&lt;h4 id=&quot;화이트-박스와-블랙-박스-테스트-구분-문제&quot;&gt;화이트 박스와 블랙 박스 테스트 구분 문제&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 화이트 박스 : 기초 경로, 조건, 루프, 데이터 흐름&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 블랙 박스 : 동치 분할, 경계값, 원인-효과, 오류 예측, 비교 검사&lt;/p&gt;
-
-&lt;h4 id=&quot;다형성-영어로-설명주어지고-답-찾는-문제&quot;&gt;다형성? 영어로 설명주어지고 답 찾는 문제&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 하나의 메시지에 여러가지 응답&lt;/p&gt;
-
-&lt;h2 id=&quot;데이터-통신&quot;&gt;데이터 통신&lt;/h2&gt;
-
-&lt;h4 id=&quot;다중-접속-방식-설명-주어지고-찾는-문제&quot;&gt;다중 접속 방식 설명 주어지고 찾는 문제&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; FDMA : 주파수 분할&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; TDMA : 시간 분할&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; CDMA : 주파수 +시간 분할&lt;/p&gt;
-
-&lt;h4 id=&quot;네트워크-관련장비-특징-중-해당하는-것-찾기리피터라우터스위치-게이트웨이&quot;&gt;네트워크 관련장비 특징 중 해당하는 것 찾기(리피터,라우터,스위치, 게이트웨이)&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 브리지 : 데이터 링크 계층 장비&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 라우터 : 경로 설정&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 게이트웨이 : 다른 네트워크 연결, 형식 변환&lt;/p&gt;
-
-&lt;h4 id=&quot;dsu가-무엇인지&quot;&gt;DSU가 무엇인지&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 신호의 변조없이 단지 유니폴라 신호를 바이폴라 신호로 변환&lt;/p&gt;
-
-&lt;h4 id=&quot;프레임구조에서-프레임-종류를-알-수-있는-곳은&quot;&gt;프레임구조에서 프레임 종류를 알 수 있는 곳은?&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 제어부&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 구조: 플래그 - 주소부 - 제어부 - 정보부 - FCS(오류검출) -플래그&lt;/p&gt;
-
-&lt;h4 id=&quot;경로-설정-방식-설명-주어지고-해당하는-방식-찾기&quot;&gt;경로 설정 방식 설명 주어지고 해당하는 방식 찾기&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 고정 : 미리 분석해서 경로를 미리 지정해놓는 방식&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 적응 : 전송 경로를 동적으로 결정&lt;/p&gt;
-
-&lt;p&gt;-&amp;gt; 범람 : 각 노드에 들어오는 패킷을 도착된 링크를 제외한 다른 모든 링크로 복사하여 전송&lt;/p&gt;
-
-&lt;h4 id=&quot;망-특징-주어지고-해당하는-망-형태-찾기&quot;&gt;망 특징 주어지고 해당하는 망 형태 찾기&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 버스형 : 한 개의 통신회선&lt;/p&gt;
-
-&lt;h4 id=&quot;csmacd-특징&quot;&gt;CSMA/CD 특징&lt;/h4&gt;
-
-&lt;p&gt;-&amp;gt; 자유 경쟁, 버스형, 계층형에서 이용, 일정 길이 이하 충돌 검출 못함, 전송량이 적을 때 효율적, 충돌 감지 시 전체에게 알림.&lt;/p&gt;</content><author><name>김영중</name></author><category term="직무평가시험답" /><summary type="html">중요도에 따른 설명 추가</summary></entry><entry><title type="html">코딩 잘하는법</title><link href="https://quarl894.github.io/articles/2018-02/%EC%BD%94%EB%94%A9-%EC%9E%98%ED%95%98%EB%8A%94%EB%B2%95" rel="alternate" type="text/html" title="코딩 잘하는법" /><published>2018-02-23T13:20:00+00:00</published><updated>2018-02-23T13:20:00+00:00</updated><id>https://quarl894.github.io/articles/2018-02/%EC%BD%94%EB%94%A9%20%EC%9E%98%ED%95%98%EB%8A%94%EB%B2%95</id><content type="html" xml:base="https://quarl894.github.io/articles/2018-02/%EC%BD%94%EB%94%A9-%EC%9E%98%ED%95%98%EB%8A%94%EB%B2%95">&lt;h2 id=&quot;코딩-잘하는-법&quot;&gt;코딩 잘하는 법&lt;/h2&gt;
-
-&lt;p&gt;알고 계시다면 댓글로 알려주세요 제발요…&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://quarl894.github.io/assets/posts/20180223/cry.jpg&quot; alt=&quot;cry&quot; /&gt;&lt;/p&gt;</content><author><name>김영중</name></author><category term="코딩" /><summary type="html">코딩 잘하는 법</summary></entry><entry><title type="html">Study cs 10일차(네트워크)</title><link href="https://quarl894.github.io/articles/2018-02/Study-CS-10%EC%9D%BC%EC%B0%A8(%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC)" rel="alternate" type="text/html" title="Study cs 10일차(네트워크)" /><published>2018-02-19T13:20:00+00:00</published><updated>2018-02-19T13:20:00+00:00</updated><id>https://quarl894.github.io/articles/2018-02/Study%20CS%2010%EC%9D%BC%EC%B0%A8(%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC)</id><content type="html" xml:base="https://quarl894.github.io/articles/2018-02/Study-CS-10%EC%9D%BC%EC%B0%A8(%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC)">&lt;h2 id=&quot;get-vs-post&quot;&gt;GET VS POST&lt;/h2&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://quarl894.github.io/assets/posts/20180219/get_post.jpg&quot; alt=&quot;GET&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;tcp-vs-udp&quot;&gt;TCP VS UDP&lt;/h2&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://quarl894.github.io/assets/posts/20180219/tcp_udp.png&quot; alt=&quot;TCP&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;3-way-handshake-를-사용하는-이유는&quot;&gt;3-way-handshake 를 사용하는 이유는?&lt;/h2&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Client -&amp;gt; Server에게 존재 및 준비 완료&lt;/li&gt;
-  &lt;li&gt;Server -&amp;gt; Client 패킷 받을 준비 완료&lt;/li&gt;
-  &lt;li&gt;준비 완료되면 보냄&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;CLinet, Server 둘다 존재를 알리고 패킷을 보낼 수 있다는 신호를 보내야 되기 대문에 2-way로는 부족하다.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&quot;http의-문제점&quot;&gt;HTTP의 문제점&lt;/h2&gt;
-
-&lt;p&gt;HTTP는 평문 통신이기 때문에 도청이 가능하다.&lt;/p&gt;
-
-&lt;p&gt;통신 상대를 확인하지 않기 때문에 위장이 가능하다.&lt;/p&gt;
-
-&lt;p&gt;완전성을 증명할 수 없기 때문에 변조가 가능하다.&lt;/p&gt;
-
-&lt;h3 id=&quot;tcpip-보안-방법&quot;&gt;TCP/IP 보안 방법&lt;/h3&gt;
-
-&lt;h4 id=&quot;통신-자체를-암호화&quot;&gt;통신 자체를 암호화&lt;/h4&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;SSL(Secure Socket Layer) or TLS(Transport Layer Security)라는 다른 프로토콜을 조합함으로써 HTTP의 통신 내용을 암호화할 수 있다. SSL을 조합한 HTTP를 HTTPS(HTTP Secure) or HTTP over SSL이라고 부른다.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h4 id=&quot;콘텐츠를-암호화&quot;&gt;콘텐츠를 암호화&lt;/h4&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;말 그대로 HTTP를 사용해서 운반하는 내용인, HTTP 메시지에 포함되는 콘텐츠만 암호화하는 것이다. 암호화해서 전송하면 받은 측에서는 그 암호를 해독하여 출력하는 처리가 필요하다.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&quot;dns-round-robin-방식의-문제점&quot;&gt;DNS Round Robin 방식의 문제점&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;1.서버의 수 만큼 공인 IP 주소가 필요함&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;부하 분산을 위해 서버의 대수를 늘리기 위해서는 그 만큼의 공인 IP가 필요하다.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;2.균등하게 분산되지 않음&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;모바일 사이트 등에서 문제가 될 수 있는데, 스마트폰의 접속은 캐리어 게이트웨이 라고 하는 프록시 서버를 경유 한다. 프록시 서버에서는 이름변환 결과가 일정 시간 동안 캐싱되므로 같은 프록시 서버를 경유 하는 접속은 항상 같은 서버로 접속된다. 또한 PC용 웹 브라우저도 DNS 질의 결과를 캐싱하기 때문에 균등하게 부하분산 되지 않는다. DNS 레코드의 TTL 값을 짧게 설정함으로써 어느 정도 해소가 되지만, TTL에 따라 캐시를 해제하는 것은 아니므로 반드시 주의가 필요하다.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;3.서버가 다운되도 확인 불가&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;DNS 서버는 웹 서버의 부하나 접속 수 등의 상황에 따라 질의결과를 제어할 수 없다. 웹 서버의 부하가 높아서 응답이 느려지거나 접속수가 꽉 차서 접속을 처리할 수 없는 상황인 지를 전혀 감지할 수가 없기 때문에 어떤 원인으로 다운되더라도 이를 검출하지 못하고 유저들에게 제공한다. 이때문에 유저들은 간혹 다운된 서버로 연결이 되기도 한다. DNS 라운드 로빈은 어디까지나 부하분산 을 위한 방법이지 다중화 방법은 아니므로 다른 S/W와 조합해서 관리할 필요가 있다.&lt;/p&gt;
-
-&lt;h2 id=&quot;방화벽-캐시서버가-하는-역할은&quot;&gt;방화벽 캐시서버가 하는 역할은?&lt;/h2&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;패킷은 인터넷 핵심부를 통과하여 웹 서버측의 LAN에 도착한다.&lt;/li&gt;
-  &lt;li&gt;기다리고 있던 방화벽이 도착한 패킷을 검사한다.&lt;/li&gt;
-  &lt;li&gt;패킷이 웹 서버까지 가야하는지 가지 않아도 되는지를 판단하는 캐시서버가 존재한다.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;굳이 서버까지 가지 않아도 되는 경우를 골라낸다.
-액세스한 페이지의 데이터가 캐시서버에 있으면 웹 서버에 의뢰하지 않고 바로 그 값을 읽을 수 있다. 페이지의 데이터 중에 다시 이용할 수 있는 것이 있으면 캐시 서버에 저장된다.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&quot;주소창에-특정-url-값을-입력시-브라우저-내에선-어떤일이-일어나는가&quot;&gt;주소창에 특정 URL 값을 입력시 브라우저 내에선 어떤일이 일어나는가?&lt;/h2&gt;
-
-&lt;p&gt;1.url에 입력된 값을 브라우저 내부에서 결정된 규칙에 따라 그 의미를 조사한다.&lt;/p&gt;
-
-&lt;p&gt;2.조사된 의미에 따라 Request 메시지를 만든다.&lt;/p&gt;
-
-&lt;p&gt;3.만들어진 메시지를 웹 서버로 전송한다.&lt;/p&gt;</content><author><name>김영중</name></author><category term="네트워크" /><summary type="html">GET VS POST</summary></entry></feed>
+&lt;p&gt;성공.
+깔끔해진 프로필을 보니 기분이 좋다.&lt;br /&gt;
+별거 아니었지만 나에겐 웹팩과 인증과 관련해서 복습까지 하게 된 좋은 계기였다.&lt;/p&gt;</content><author><name>Jay</name></author><category term="blog" /><category term="Web" /><summary type="html">최근에 비긴메이트라는 서비스를 알게 됐다. 비긴메이트는 스타트업을 위한 사람과 사람을 이어주는 팀 빌딩 플랫폼이다. 지금도 다양한 사람들이 적극적으로 팀원을 찾고 있는 모습을 볼 수 있다. 나도 가끔 방문해서 그들이 어떤 아이디어를 가지고 세상을 바꾸고 싶어 하는지 살펴본다.</summary></entry></feed>

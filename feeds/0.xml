@@ -1,688 +1,1650 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
 <channel>
-<title>밥풀(Bob-Full)의 개발자 일상</title>
-<link>https://bob-full.tistory.com/</link>
-<description>카카오 신입개발자 Bob입니다</description>
-<language>ko</language>
-<pubDate>Sun, 12 May 2019 17:11:47 +0900</pubDate>
-<generator>TISTORY</generator>
-<managingEditor>밥풀(Bob Full)</managingEditor>
-<image>
-<title>밥풀(Bob-Full)의 개발자 일상</title>
-<url>https://tistory2.daumcdn.net/tistory/2981987/attach/eb480b4d00354dd8b6a386b4d3270a09</url>
-<link>https://bob-full.tistory.com</link>
-<description>카카오 신입개발자 Bob입니다</description>
-</image>
-<item>
-<title>젠킨스  파이프라인 ( Jenkin pipeline ) - 병렬로 Job 실행하기</title>
-<link>https://bob-full.tistory.com/10</link>
-<description>&lt;p&gt;&lt;figure class='imageblock floatLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/sQbuY/btqu5xBrrCz/IVlKL9YBm19uhU2DlKLkK1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/sQbuY/btqu5xBrrCz/IVlKL9YBm19uhU2DlKLkK1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FsQbuY%2Fbtqu5xBrrCz%2FIVlKL9YBm19uhU2DlKLkK1%2Fimg.png' width=&quot;129&quot; height=&quot;175&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h1&gt;&amp;nbsp;&lt;/h1&gt;
-&lt;h1&gt;&amp;nbsp;&lt;/h1&gt;
-&lt;h1&gt;&lt;b&gt;Jenkins Pipeline&lt;/b&gt;&lt;/h1&gt;
-&lt;p&gt;&lt;b&gt;Jenkins Pipeline Flugin&lt;/b&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;연속적인 이벤트 혹은, Job의 그룹을 실행시킬 수 있는 젠킨스 플러그인&lt;/li&gt;
-&lt;li&gt;파이프 라인의 통합 및 구현을 지원&lt;/li&gt;
-&lt;li&gt;Pipeline 전용 DSL을 통해, '코드'로서 기능을 정의 및 생성 가능&lt;/li&gt;
-&lt;li&gt;Jenkinsfile을 통해 작업 생성&lt;/li&gt;
-&lt;li&gt;시각화 된, 빌드 화면으로 로그 실시간 로그 확인 가능&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://jenkins.io/doc/book/pipeline&quot;&gt;https://jenkins.io/doc/book/pipeline&lt;/a&gt;&amp;nbsp;- 파이프라인 문서&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;b&gt;작성 방법&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;Jenkinsfile 작성법 3가지&lt;/b&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;b&gt;Job&amp;nbsp;&lt;/b&gt;구성에서, 직접&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;b&gt;Jenkinsfile&lt;/b&gt;을 작성&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;SCM을 이용해서 Jenkinsfile&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;을 작성하는 법 -&amp;nbsp;&lt;b&gt;github&lt;/b&gt;에 관리 후 젠킨스에서 실행&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;Blueocean&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;플러그인으로 UI를 통해&amp;nbsp;&lt;b&gt;Jenkinsfile&amp;nbsp;&lt;/b&gt;작성 -&amp;nbsp;&amp;nbsp;&lt;b&gt;github&lt;/b&gt;에 관리&amp;nbsp;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr style=&quot;border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1px solid #cccccc; color: #172b4d; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;&quot; /&gt;
-&lt;h1&gt;&lt;b&gt;작성 예시&lt;/b&gt;&lt;/h1&gt;
-&lt;p&gt;&lt;b&gt;Jenkinsfile 예시&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;Jenkinsfile의 작성 방법은&amp;nbsp;&lt;a href=&quot;https://jenkins.io/doc/book/pipeline/syntax/&quot;&gt;https://jenkins.io/doc/book/pipeline/syntax/&lt;/a&gt;&amp;nbsp;에서 참고하였습니다.&lt;/b&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;b&gt;작성 방법은 2가지가 있습니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;Declarative Pipeline&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;: 보다 쉽게 작성 할 수 있게, 커스텀 되어 있음. Groovy-syntax기반 -&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;b&gt;Groovy 문법을 잘 몰라도 작성 가능&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;Scripted Pipeline&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;: Groovy기반, Declarative보다 효과적으로 많은 기능을 포함하여 작성 가능. 하지만 작성 난이도가 높음 -&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;b&gt;Groovy 문법을 잘 알아야 함&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;2가지 문법을 번갈아 사용 가능 - 동시에는 X&lt;/b&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;b&gt;&amp;nbsp;&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;예시&lt;/b&gt;&lt;/p&gt;
-&lt;h4&gt;&lt;b&gt;Declarative&amp;nbsp;&lt;/b&gt;&lt;/h4&gt;
-&lt;pre id=&quot;code_1557304453715&quot; class=&quot;prettyprint linenums xquery&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;pipeline {
-    agent none
-    stages{
-        stage('Parallel Test') {
-            parallel { 
-                stage('Build-test-1') {
-                    steps{ build 'Build-test-1' }
-                }
-                stage('Build-test-2') {
-                    steps{ build 'Build-test-2' }
-                }
-                stage('Build-test-3') {
-                    steps{ build 'Build-test-3' }
-                }
-            }
-        }
-        stage('Build-test-4') {
-            steps{
-                build 'Build-test-4'
-            }
-        }
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;b&gt;1 :&amp;nbsp;Declarative 시작 - pipeline&amp;nbsp;///&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;Scripted - node&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;2 : Backgroud로 돌아가는 agent를 정해줘야 함, 해당 파이프라인은 다른 job을 실행 하는 것이기 때문에, agent 불필요&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;&lt;b&gt;5 :&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;stage들을 병렬로 실행&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;7 : Build-test-1 이라는 이름의 job을 빌드&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;&lt;b&gt;17 : Parallel Test가 끝난 후, 다음 stage&lt;/b&gt;&lt;/b&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;h4&gt;&lt;b&gt;Scripted&amp;nbsp;&lt;/b&gt;&lt;/h4&gt;
-&lt;pre id=&quot;code_1557304478639&quot; class=&quot;prettyprint linenums xquery&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;node {
-  stage('Parallel-test') {
-      parallel 'Build-test-1' : {
-          build job : 'Build-test-1'
-      } , 'Build-test-2' : {
-          build job : 'Build-test-2'
-      } , 'Build-test-3' : {
-          build job : 'Build-test-3'
-      }
-  }
-  stage('Build-test-4') {
-     build job : 'Build-test-4'
-  }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;b&gt;1 : Scripted 시작&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;3 : parallel 밑으로, 이어서 build 1 2 3&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;11 : 전 stage가 끝이나야 동작&lt;/b&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;u&gt;&lt;b&gt;&amp;rarr; 해당 Jenkinsfile로 Pipleine을 동작할 경우, Build-test-1 ~ 3이 병렬로 실행 된 후, 모든 빌드가 끝나면 Build-test-4가 빌드&lt;/b&gt;&lt;/u&gt;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;&lt;u&gt;&amp;rarr; 두 가지, 방법 모두 같은 결과&lt;/u&gt;&lt;/b&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;b&gt;&lt;u&gt;이렇게, 두 개를 혼용하여 작성도 가능(같은 결과)&lt;/u&gt;&lt;/b&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;pre id=&quot;code_1557304504007&quot; class=&quot;prettyprint linenums xquery&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;node {
-  stage('Parallel-test') {
-      parallel 'Build-test-1' : {
-          build job : 'Build-test-1'
-      } , 'Build-test-2' : {
-          build job : 'Build-test-2'
-      } , 'Build-test-3' : {
-          build job : 'Build-test-3'
-      }
-  }
-}
-pipeline {
-    agent none 
-    stages {
-        stage('Build-test-4') {
-            steps {
-                build 'Build-test-4'
-            }
-        }
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;hr style=&quot;border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1px solid #cccccc; color: #172b4d; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;&quot; /&gt;
-&lt;h3&gt;&lt;b&gt;Job&amp;nbsp;&lt;/b&gt;&lt;span&gt;구성에서, 직접&amp;nbsp;&lt;/span&gt;&lt;b&gt;Jenkinsfile&amp;nbsp;&lt;/b&gt;&lt;span&gt;을 작성&lt;/span&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bJ96Xa/btqu5ePA7NU/oNfY2YQ8xej2m0KUMVwWW0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bJ96Xa/btqu5ePA7NU/oNfY2YQ8xej2m0KUMVwWW0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbJ96Xa%2Fbtqu5ePA7NU%2FoNfY2YQ8xej2m0KUMVwWW0%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&amp;nbsp;New item - pipeline 생성&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cBuxDD/btqu3rhOG9M/0AlgSaYXgPkV6R8MvzSeB1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cBuxDD/btqu3rhOG9M/0AlgSaYXgPkV6R8MvzSeB1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcBuxDD%2Fbtqu3rhOG9M%2F0AlgSaYXgPkV6R8MvzSeB1%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Pipeline 탭 클릭,&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;b&gt;Definition - Pipeline script&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;선택 후, 다음과 같이 작성하면 됩니다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/9aO6b/btqu3ATbfcp/U6hF5o0WG8u0lrhCIbwKJ0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/9aO6b/btqu3ATbfcp/U6hF5o0WG8u0lrhCIbwKJ0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2F9aO6b%2Fbtqu3ATbfcp%2FU6hF5o0WG8u0lrhCIbwKJ0%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;빌드 결과&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr style=&quot;border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1px solid #cccccc; color: #172b4d; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;&quot; /&gt;
-&lt;h3&gt;&lt;b&gt;SCM을 이용해서 Jenkinsfile&lt;/b&gt;&lt;span&gt;을 작성&lt;/span&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/UITA1/btqu5xVFso5/mBU8kdPVIsJm4XRtRky080/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/UITA1/btqu5xVFso5/mBU8kdPVIsJm4XRtRky080/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FUITA1%2Fbtqu5xVFso5%2FmBU8kdPVIsJm4XRtRky080%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;span&gt;Pipeline 탭 클릭,&amp;nbsp; Definition - Pipeline script from SCM&lt;/span&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span&gt;Git 선택 후, Repostory, Branch를 선택 후, Git저장소에 있는, Jenkinsfile 위치를 Script Path에 넣어주면 됨&lt;/span&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cxM4df/btqu621wqGt/Ti43SuTSCltkg5CsqBMTuK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cxM4df/btqu621wqGt/Ti43SuTSCltkg5CsqBMTuK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcxM4df%2Fbtqu621wqGt%2FTi43SuTSCltkg5CsqBMTuK%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;span&gt;빌드 결과&lt;/span&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr style=&quot;border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1px solid #cccccc; color: #172b4d; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;&quot; /&gt;
-&lt;h3&gt;&lt;b&gt;Blueocean&lt;/b&gt;&lt;span&gt;&amp;nbsp;플러그인으로 UI를 통해&amp;nbsp;&lt;/span&gt;&lt;b&gt;Jenkinsfile&amp;nbsp;&lt;/b&gt;&lt;span&gt;작성&lt;/span&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;추가적으로 Blueocean - pipeline 플러그인 설치가 필요합니다&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/c1Xes1/btqu54yYq7R/jxgGMb2jRpiUoa2dvdJHQ0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/c1Xes1/btqu54yYq7R/jxgGMb2jRpiUoa2dvdJHQ0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fc1Xes1%2Fbtqu54yYq7R%2FjxgGMb2jRpiUoa2dvdJHQ0%2Fimg.png' width=&quot;306&quot; height=&quot;282&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Blue Ocean 열기&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/DBHPn/btqu2T6LqZH/p7DZKZXligkILyp9HTHu61/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/DBHPn/btqu2T6LqZH/p7DZKZXligkILyp9HTHu61/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FDBHPn%2Fbtqu2T6LqZH%2Fp7DZKZXligkILyp9HTHu61%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;New Pipeline&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cKQzbc/btqu38a27o4/BBhLZwmn3peqitntOU4bJ0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cKQzbc/btqu38a27o4/BBhLZwmn3peqitntOU4bJ0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcKQzbc%2Fbtqu38a27o4%2FBBhLZwmn3peqitntOU4bJ0%2Fimg.png' width=&quot;483&quot; height=&quot;327&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Github 저장소 연결&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/b6cRqr/btqu3q4mhgT/dLkUgh2svZdWKmNHASvkcK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/b6cRqr/btqu3q4mhgT/dLkUgh2svZdWKmNHASvkcK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fb6cRqr%2Fbtqu3q4mhgT%2FdLkUgh2svZdWKmNHASvkcK%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;+ 버튼으로 stage 추가 가능, 오른쪽 Agent 선택 가능&lt;br /&gt;&lt;br /&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/dCH6p7/btqu61VRYHi/OXgqNbYQXaYM983lKaIKIk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/dCH6p7/btqu61VRYHi/OXgqNbYQXaYM983lKaIKIk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FdCH6p7%2Fbtqu61VRYHi%2FOXgqNbYQXaYM983lKaIKIk%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Build Job 추가&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/d1er8e/btqu5ehNzkU/OcG88UzN7ao5KdkfkhfR5k/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/d1er8e/btqu5ehNzkU/OcG88UzN7ao5KdkfkhfR5k/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fd1er8e%2Fbtqu5ehNzkU%2FOcG88UzN7ao5KdkfkhfR5k%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;위의 방식 대로 만들고 Save&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bH9T65/btqu6zZQoLR/V3eiFpPwk9xqSRtKV0JnSk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bH9T65/btqu6zZQoLR/V3eiFpPwk9xqSRtKV0JnSk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbH9T65%2Fbtqu6zZQoLR%2FV3eiFpPwk9xqSRtKV0JnSk%2Fimg.png' width=&quot;415&quot; height=&quot;364&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Github에 커밋 &amp;amp; 푸쉬&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bfVvzQ/btqu3AFCAWa/dl2obLKOL3bvNXt0YObkHk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bfVvzQ/btqu3AFCAWa/dl2obLKOL3bvNXt0YObkHk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbfVvzQ%2Fbtqu3AFCAWa%2Fdl2obLKOL3bvNXt0YObkHk%2Fimg.png' width=&quot;449&quot; height=&quot;507&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Push된 Jenkinsfile - 위의 예시와 동일&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/dVJeph/btqu6zS4Pej/bO5EKG5g78HHEpneo9llok/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/dVJeph/btqu6zS4Pej/bO5EKG5g78HHEpneo9llok/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FdVJeph%2Fbtqu6zS4Pej%2FbO5EKG5g78HHEpneo9llok%2Fimg.png' width=&quot;308&quot; height=&quot;172&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;빌드 결과&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;hr style=&quot;border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1px solid #cccccc; color: #172b4d; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;&quot; /&gt;
-&lt;p&gt;&lt;b&gt;[ 참고 ]&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;https://voidmainvoid.tistory.com/100&quot;&gt;https://voidmainvoid.tistory.com/100&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;https://blog.voidmainvoid.net/104&quot;&gt;https://blog.voidmainvoid.net/104&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/jenkinsci/pipeline-model-definition-plugin/wiki/getting-started&quot;&gt;https://github.com/jenkinsci/pipeline-model-definition-plugin/wiki/getting-started&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;https://stackoverflow.com/questions/53431587/how-to-run-two-jenkins-multi-phase-jobs-at-the-same-time&quot;&gt;https://stackoverflow.com/questions/53431587/how-to-run-two-jenkins-multi-phase-jobs-at-the-same-time&lt;/a&gt;&lt;/p&gt;</description>
-<category>SW개발</category>
-<category>Jenkin Parallel</category>
-<category>Jenkins</category>
-<category>Jenkinspipeline</category>
-<category>MultiJob</category>
-<category>Parallel</category>
-<category>Pipeline</category>
-<category>젠킨스</category>
-<category>젠킨스 병렬</category>
-<category>젠킨스파이프라인</category>
-<category>파이프라인</category>
-<author>사용자 밥풀(Bob Full)</author>
-<guid>https://bob-full.tistory.com/10</guid>
-<comments>https://bob-full.tistory.com/10#entry10comment</comments>
-<pubDate>Wed, 08 May 2019 17:41:31 +0900</pubDate>
-</item>
-<item>
-<title>Kotlin + Spring boot security + thymeleaf 로그인 구현(3)</title>
-<link>https://bob-full.tistory.com/9</link>
-<description>&lt;p&gt;&lt;a href=&quot;https://bob-full.tistory.com/7&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;2019/03/28 - [SW개발] - Kotlin + Spring boot security + thymeleaf 로그인 구현(1)&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;https://bob-full.tistory.com/8&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;2019/04/01 - [SW개발] - Kotlin + Spring boot security + thymeleaf 로그인 구현(2)&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bZV1fX/btqt7STO2Dd/3ueGEAnZUQS2QUPNDSUhp1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bZV1fX/btqt7STO2Dd/3ueGEAnZUQS2QUPNDSUhp1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbZV1fX%2Fbtqt7STO2Dd%2F3ueGEAnZUQS2QUPNDSUhp1%2Fimg.png' width=&quot;470&quot; height=&quot;370&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;이전 글까지, 따라왔다면 여기까지 만들어졌을겁니다.&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;이번 글에서는 Spring Security를 통해, 이전 글에서 만든 Provider를 빈으로 등록하고, 이를 통해 인증을 처리하는 config를 구현하겠습니다&lt;/span&gt;&lt;/p&gt;
-&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
-&lt;h2&gt;1. WebSeurityConfigurerAdpater 구현&lt;/h2&gt;
-&lt;p&gt;이 인터페이스는, 스프링 시큐리티에서 가장 핵심 적인 역할을 합니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;b&gt;AuthenticationManagerBuilder&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;:&amp;nbsp; AuthenticationProvider 설정&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;WebSecurity&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;: 전역 보안에 영향을 주는 구성 설정&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;HttpSecurity&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;: 어떠한 URL 경로를 보호해야하는지에 대한 정의, 자신만의 인증 매커니즘 정의&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;위의 세가지를, configure에 저장함으로서, 보안을 설정할 수 있습니다.&lt;/p&gt;
-&lt;pre id=&quot;code_1554358406812&quot; class=&quot;prettyprint kotlin linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;@Configuration
-@EnableWebSecurity
-class SecurityConfig : WebSecurityConfigurerAdapter() {
+	<title>DEVBLOG &#8211; 개발자 메타블로그</title>
+	<atom:link href="http://devblog.selfhow.com/feed/" rel="self" type="application/rss+xml" />
+	<link>http://devblog.selfhow.com</link>
+	<description>국내 개발자들 글 모음</description>
+	<lastBuildDate>Sun, 12 May 2019 08:17:08 +0000</lastBuildDate>
+	<language>ko-KR</language>
+	<sy:updatePeriod>hourly</sy:updatePeriod>
+	<sy:updateFrequency>1</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=4.9.10</generator>
+	<item>
+		<title>[[ 프로페셔널 프로그래머 ]] [ 모르는데 아는 척? 아는데 모르는 척? ]</title>
+		<link>http://devblog.selfhow.com/2019/05/13/%ed%94%84%eb%a1%9c%ed%8e%98%ec%85%94%eb%84%90-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%a8%b8-%eb%aa%a8%eb%a5%b4%eb%8a%94%eb%8d%b0-%ec%95%84%eb%8a%94-%ec%b2%99-%ec%95%84%eb%8a%94%eb%8d%b0/</link>
+		<pubDate>Sun, 12 May 2019 06:53:48 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-권수호]]></category>
+		<category><![CDATA[C]]></category>
 
-    @Autowired
-    fun provider() = MyAuthenticationProvider()
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67391</guid>
+		<description><![CDATA[<p>원문 링크 [ 모르는데 아는 척? 아는데 모르는 척? ] 미리보기 사실 &#8220;모르는데 아는 척&#8221;하는 경우나 &#8220;아는데 모르는 척&#8221;하는 경우 둘 다 나쁘다. 모르는데 아는 척하는 경우는 더 많이 아는 사람들에게 무시당할 가능성이 높고, 아는데 모르는 척하면 책임을 회피하는 것 처럼 보이기 때문이다. 모르면 그냥 모른다고 대 &#8230; 개발자 정보 권수호 님 글 더 보기 &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/13/%ed%94%84%eb%a1%9c%ed%8e%98%ec%85%94%eb%84%90-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%a8%b8-%eb%aa%a8%eb%a5%b4%eb%8a%94%eb%8d%b0-%ec%95%84%eb%8a%94-%ec%b2%99-%ec%95%84%eb%8a%94%eb%8d%b0/">[[ 프로페셔널 프로그래머 ]] [ 모르는데 아는 척? 아는데 모르는 척? ]</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='http://blog.naver.com/knix008/221535598782' target='_blank'>[ 모르는데 아는 척? 아는데 모르는 척? ]</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>사실 &#8220;모르는데 아는 척&#8221;하는 경우나 &#8220;아는데 모르는 척&#8221;하는 경우 둘 다 나쁘다. 모르는데 아는 척하는 경우는 더 많이 아는 사람들에게 무시당할 가능성이 높고, 아는데 모르는 척하면 책임을 회피하는 것 처럼 보이기 때문이다. 모르면 그냥 모른다고 대 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-권수호'>권수호 님 글 더 보기</a></li>
+<li>name : 권수호</li>
+<li>blog : <a href='http://blog.naver.com/PostList.nhn?blogId=knix008' target='_blank'>http://blog.naver.com/PostList.nhn?blogId=knix008</a></li>
+<li>rss : <a href='http://blog.rss.naver.com/knix008.xml' target='_blank'>http://blog.rss.naver.com/knix008.xml</a></li>
+<li>description : C</li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/13/%ed%94%84%eb%a1%9c%ed%8e%98%ec%85%94%eb%84%90-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%a8%b8-%eb%aa%a8%eb%a5%b4%eb%8a%94%eb%8d%b0-%ec%95%84%eb%8a%94-%ec%b2%99-%ec%95%84%eb%8a%94%eb%8d%b0/">[[ 프로페셔널 프로그래머 ]] [ 모르는데 아는 척? 아는데 모르는 척? ]</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[케세라세라] Elasticsearch 7.0의 몇 가지 변화</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ec%bc%80%ec%84%b8%eb%9d%bc%ec%84%b8%eb%9d%bc-elasticsearch-7-0%ec%9d%98-%eb%aa%87-%ea%b0%80%ec%a7%80-%eb%b3%80%ed%99%94/</link>
+		<pubDate>Sun, 12 May 2019 05:35:00 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-강명훈]]></category>
+		<category><![CDATA[보안]]></category>
 
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67389</guid>
+		<description><![CDATA[<p>원문 링크 Elasticsearch 7.0의 몇 가지 변화 미리보기 엘라스틱 7.0이 출시됐다. 성능이나 안정성은 당연히 좋아졌을테고, 당장 느낀 몇 가지 변화만 나열해보면,1. 마스터 노드 설정 필수. 버전 6까지는 노드가 하나뿐이면 별도 설정이 필요없었고, 둘 이상이면 discovery.zen.ping.unicas &#8230; 개발자 정보 강명훈 님 글 더 보기 name : 강명훈 blog : http://kangmyounghun.blogspot.kr/ rss : http://kangmyounghun.blogspot.com/feeds/posts/default description : 보안 googleplus &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%bc%80%ec%84%b8%eb%9d%bc%ec%84%b8%eb%9d%bc-elasticsearch-7-0%ec%9d%98-%eb%aa%87-%ea%b0%80%ec%a7%80-%eb%b3%80%ed%99%94/">[케세라세라] Elasticsearch 7.0의 몇 가지 변화</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='http://kangmyounghun.blogspot.com/2019/05/elasticsearch-70.html' target='_blank'>Elasticsearch 7.0의 몇 가지 변화</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>엘라스틱 7.0이 출시됐다. 성능이나 안정성은 당연히 좋아졌을테고, 당장 느낀 몇 가지 변화만 나열해보면,1. 마스터 노드 설정 필수.<br />
+버전 6까지는 노드가 하나뿐이면 별도 설정이 필요없었고, 둘 이상이면 discovery.zen.ping.unicas &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-강명훈'>강명훈 님 글 더 보기</a></li>
+<li>name : 강명훈</li>
+<li>blog : <a href='http://kangmyounghun.blogspot.kr/' target='_blank'>http://kangmyounghun.blogspot.kr/</a></li>
+<li>rss : <a href='http://kangmyounghun.blogspot.com/feeds/posts/default' target='_blank'>http://kangmyounghun.blogspot.com/feeds/posts/default</a></li>
+<li>description : 보안</li>
+<li>googleplus : <a href='https://plus.google.com/118273663905921239444' target='_blank'>https://plus.google.com/118273663905921239444</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%bc%80%ec%84%b8%eb%9d%bc%ec%84%b8%eb%9d%bc-elasticsearch-7-0%ec%9d%98-%eb%aa%87-%ea%b0%80%ec%a7%80-%eb%b3%80%ed%99%94/">[케세라세라] Elasticsearch 7.0의 몇 가지 변화</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[steve kim] 한국(김포) ~ 베이징공항</title>
+		<link>http://devblog.selfhow.com/2019/05/12/steve-kim-%ed%95%9c%ea%b5%ad%ea%b9%80%ed%8f%ac-%eb%b2%a0%ec%9d%b4%ec%a7%95%ea%b3%b5%ed%95%ad/</link>
+		<pubDate>Sun, 12 May 2019 04:01:20 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김희서]]></category>
 
-    override fun configure(auth: AuthenticationManagerBuilder) {
-        auth.authenticationProvider(provider())
-    }
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67385</guid>
+		<description><![CDATA[<p>원문 링크 한국(김포) ~ 베이징공항 미리보기 한국(김포) ~ 베이징공항 5년전과 같은 화장실. 유니온페이만 결제되는 것도 아쉬운점. &#8230; 개발자 정보 김희서 님 글 더 보기 name : 김희서 blog : https://blog.naver.com/khy960117 rss : https://rss.blog.naver.com/khy960117.xml facebook : https://www.facebook.com/gmltjdlek</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/steve-kim-%ed%95%9c%ea%b5%ad%ea%b9%80%ed%8f%ac-%eb%b2%a0%ec%9d%b4%ec%a7%95%ea%b3%b5%ed%95%ad/">[steve kim] 한국(김포) ~ 베이징공항</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.naver.com/khy960117/221535507278' target='_blank'>한국(김포) ~ 베이징공항</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>한국(김포) ~ 베이징공항 5년전과 같은 화장실. 유니온페이만 결제되는 것도 아쉬운점. &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김희서'>김희서 님 글 더 보기</a></li>
+<li>name : 김희서</li>
+<li>blog : <a href='https://blog.naver.com/khy960117' target='_blank'>https://blog.naver.com/khy960117</a></li>
+<li>rss : <a href='https://rss.blog.naver.com/khy960117.xml' target='_blank'>https://rss.blog.naver.com/khy960117.xml</a></li>
+<li>facebook : <a href='https://www.facebook.com/gmltjdlek' target='_blank'>https://www.facebook.com/gmltjdlek</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/steve-kim-%ed%95%9c%ea%b5%ad%ea%b9%80%ed%8f%ac-%eb%b2%a0%ec%9d%b4%ec%a7%95%ea%b3%b5%ed%95%ad/">[steve kim] 한국(김포) ~ 베이징공항</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[김 용묵의 절대공간 &#8211; 블로그] 교육자라는 직업, 교육 제도, 대학 관련 이야기</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ea%b9%80-%ec%9a%a9%eb%ac%b5%ec%9d%98-%ec%a0%88%eb%8c%80%ea%b3%b5%ea%b0%84-%eb%b8%94%eb%a1%9c%ea%b7%b8-%ea%b5%90%ec%9c%a1%ec%9e%90%eb%9d%bc%eb%8a%94-%ec%a7%81%ec%97%85-%ea%b5%90%ec%9c%a1/</link>
+		<pubDate>Sat, 11 May 2019 23:35:00 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김용묵]]></category>
+		<category><![CDATA[한글 언어, C++]]></category>
 
-    override fun configure(web: WebSecurity) {
-        web.ignoring().antMatchers(&quot;/resource/**&quot;, &quot;/static/**&quot;, &quot;/favicon.ico&quot;)
-    }
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67393</guid>
+		<description><![CDATA[<p>원문 링크 교육자라는 직업, 교육 제도, 대학 관련 이야기 미리보기 1. 교사의 특징과 특권 애들을 가르치는 교사는 단순히 소득과 지위 이상으로 여러 깨알같은 특권이 있으며, 근무 여건이 여느 직장인과는 다르다.먼저, 경찰· 군인· 소방관· 철도 기관사와 마찬가지로 전시 보직이 동일하게 유지된다. 전쟁 나도 애들을 &#8230; 개발자 정보 김용묵 님 글 더 보기 name : 김용묵 blog &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ea%b9%80-%ec%9a%a9%eb%ac%b5%ec%9d%98-%ec%a0%88%eb%8c%80%ea%b3%b5%ea%b0%84-%eb%b8%94%eb%a1%9c%ea%b7%b8-%ea%b5%90%ec%9c%a1%ec%9e%90%eb%9d%bc%eb%8a%94-%ec%a7%81%ec%97%85-%ea%b5%90%ec%9c%a1/">[김 용묵의 절대공간 &#8211; 블로그] 교육자라는 직업, 교육 제도, 대학 관련 이야기</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='http://moogi.new21.org/tc/1618' target='_blank'>교육자라는 직업, 교육 제도, 대학 관련 이야기</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+1. 교사의 특징과 특권<br />
+애들을 가르치는 교사는 단순히 소득과 지위 이상으로 여러 깨알같은 특권이 있으며, 근무 여건이 여느 직장인과는 다르다.먼저, 경찰· 군인· 소방관· 철도 기관사와 마찬가지로 전시 보직이 동일하게 유지된다. 전쟁 나도 애들을  &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김용묵'>김용묵 님 글 더 보기</a></li>
+<li>name : 김용묵</li>
+<li>blog : <a href='http://moogi.new21.org/' target='_blank'>http://moogi.new21.org/</a></li>
+<li>rss : <a href='http://moogi.new21.org/tc/rss' target='_blank'>http://moogi.new21.org/tc/rss</a></li>
+<li>description : 한글 언어, C++</li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ea%b9%80-%ec%9a%a9%eb%ac%b5%ec%9d%98-%ec%a0%88%eb%8c%80%ea%b3%b5%ea%b0%84-%eb%b8%94%eb%a1%9c%ea%b7%b8-%ea%b5%90%ec%9c%a1%ec%9e%90%eb%9d%bc%eb%8a%94-%ec%a7%81%ec%97%85-%ea%b5%90%ec%9c%a1/">[김 용묵의 절대공간 &#8211; 블로그] 교육자라는 직업, 교육 제도, 대학 관련 이야기</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[김태강] 동료의 신뢰를 얻는다는 것 &#8211; &#038;quot;너와 나의 연결고리&#038;quot;</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ea%b9%80%ed%83%9c%ea%b0%95-%eb%8f%99%eb%a3%8c%ec%9d%98-%ec%8b%a0%eb%a2%b0%eb%a5%bc-%ec%96%bb%eb%8a%94%eb%8b%a4%eb%8a%94-%ea%b2%83-quot%eb%84%88%ec%99%80-%eb%82%98%ec%9d%98-%ec%97%b0/</link>
+		<pubDate>Sat, 11 May 2019 23:08:26 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김태강]]></category>
+		<category><![CDATA[MBA]]></category>
 
-    override fun configure(http: HttpSecurity) {
-        http.csrf().disable().httpBasic()
-        http.headers().frameOptions().disable()
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67355</guid>
+		<description><![CDATA[<p>원문 링크 동료의 신뢰를 얻는다는 것 &#8211; &#38;quot;너와 나의 연결고리&#38;quot; 미리보기 연초 다면평가 결과를 매니저와 함께 읽어본 적 있다. 익명으로 작성된 수많은 평가들 중 나의 강점으로 자주 등장한 아마존 리더십 원칙은 &#8220;Earn trust&#8221;. 아마존 사이트에선 이를 &#60;Leaders listen attentively, speak &#8230; 개발자 정보 김태강 님 글 더 보기 name : 김태강 blog : https://brunch.co.kr/@taekangk rss : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ea%b9%80%ed%83%9c%ea%b0%95-%eb%8f%99%eb%a3%8c%ec%9d%98-%ec%8b%a0%eb%a2%b0%eb%a5%bc-%ec%96%bb%eb%8a%94%eb%8b%a4%eb%8a%94-%ea%b2%83-quot%eb%84%88%ec%99%80-%eb%82%98%ec%9d%98-%ec%97%b0/">[김태강] 동료의 신뢰를 얻는다는 것 &#8211; &amp;quot;너와 나의 연결고리&amp;quot;</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://brunch.co.kr/@@5sFx/74' target='_blank'>동료의 신뢰를 얻는다는 것 &#8211; &amp;quot;너와 나의 연결고리&amp;quot;</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>연초 다면평가 결과를 매니저와 함께 읽어본 적 있다. 익명으로 작성된 수많은 평가들 중 나의 강점으로 자주 등장한 아마존 리더십 원칙은 &#8220;Earn trust&#8221;. 아마존 사이트에선 이를 &lt;Leaders listen attentively, speak &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김태강'>김태강 님 글 더 보기</a></li>
+<li>name : 김태강</li>
+<li>blog : <a href='https://brunch.co.kr/@taekangk' target='_blank'>https://brunch.co.kr/@taekangk</a></li>
+<li>rss : <a href='https://brunch.co.kr/rss/@@5sFx' target='_blank'>https://brunch.co.kr/rss/@@5sFx</a></li>
+<li>description : MBA</li>
+<li>linkedin : <a href='https://www.linkedin.com/in/taekangk/' target='_blank'>https://www.linkedin.com/in/taekangk/</a></li>
+<li>instagram : <a href='https://www.instagram.com/taekangk/' target='_blank'>https://www.instagram.com/taekangk/</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ea%b9%80%ed%83%9c%ea%b0%95-%eb%8f%99%eb%a3%8c%ec%9d%98-%ec%8b%a0%eb%a2%b0%eb%a5%bc-%ec%96%bb%eb%8a%94%eb%8b%a4%eb%8a%94-%ea%b2%83-quot%eb%84%88%ec%99%80-%eb%82%98%ec%9d%98-%ec%97%b0/">[김태강] 동료의 신뢰를 얻는다는 것 &#8211; &amp;quot;너와 나의 연결고리&amp;quot;</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[IT 프리랜서 이야기] 프리랜서와 휴가의 상관관계</title>
+		<link>http://devblog.selfhow.com/2019/05/12/it-%ed%94%84%eb%a6%ac%eb%9e%9c%ec%84%9c-%ec%9d%b4%ec%95%bc%ea%b8%b0-%ed%94%84%eb%a6%ac%eb%9e%9c%ec%84%9c%ec%99%80-%ed%9c%b4%ea%b0%80%ec%9d%98-%ec%83%81%ea%b4%80%ea%b4%80%ea%b3%84/</link>
+		<pubDate>Sat, 11 May 2019 22:15:04 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-한고 (10년코더)]]></category>
+		<category><![CDATA[프리랜서]]></category>
 
-        http.authorizeRequests()
-                .antMatchers(&quot;/login&quot;).permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                .loginPage(&quot;/login&quot;).loginProcessingUrl(&quot;/auth&quot;)
-                .defaultSuccessUrl(&quot;/index&quot;, true)
-                .failureUrl(&quot;/login?error&quot;)
-                .and()
-                .logout()
-                .logoutSuccessUrl(&quot;/login?logout&quot;)
-                .deleteCookies(&quot;JSESSIONID&quot;)
-                .invalidateHttpSession(true)
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67349</guid>
+		<description><![CDATA[<p>원문 링크 프리랜서와 휴가의 상관관계 미리보기 휴가에 대해서는 &#8220;계약시&#8221;에 계약서에 명시 해 두세요. 보통 월단위로 계약하는 프리랜서이기에 연차 는 없습니다. 다만 월차의 개념은 보통 있어요. SI의 경우에는 쉼 없이 일하기도 합니다만, SM은 거의 무조건 월 1회 정도는 쉽니다. SI의 경우에 &#8230; 개발자 정보 한고 (10년코더) 님 글 더 보기 name : 한고 (10년코더) blog : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/it-%ed%94%84%eb%a6%ac%eb%9e%9c%ec%84%9c-%ec%9d%b4%ec%95%bc%ea%b8%b0-%ed%94%84%eb%a6%ac%eb%9e%9c%ec%84%9c%ec%99%80-%ed%9c%b4%ea%b0%80%ec%9d%98-%ec%83%81%ea%b4%80%ea%b4%80%ea%b3%84/">[IT 프리랜서 이야기] 프리랜서와 휴가의 상관관계</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://10yearscoder.tistory.com/entry/%ED%94%84%EB%A6%AC%EB%9E%9C%EC%84%9C%EC%99%80-%ED%9C%B4%EA%B0%80%EC%9D%98-%EC%83%81%EA%B4%80%EA%B4%80%EA%B3%84' target='_blank'>프리랜서와 휴가의 상관관계</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+휴가에 대해서는 &#8220;계약시&#8221;에 계약서에 명시 해 두세요.<br />
+보통 월단위로 계약하는 프리랜서이기에 연차 는 없습니다. 다만 월차의 개념은 보통 있어요.<br />
+SI의 경우에는 쉼 없이 일하기도 합니다만, SM은 거의 무조건 월 1회 정도는 쉽니다.<br />
+SI의 경우에 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-한고 (10년코더)'>한고 (10년코더) 님 글 더 보기</a></li>
+<li>name : 한고 (10년코더)</li>
+<li>blog : <a href='https://10yearscoder.tistory.com/' target='_blank'>https://10yearscoder.tistory.com/</a></li>
+<li>rss : <a href='https://10yearscoder.tistory.com/rss' target='_blank'>https://10yearscoder.tistory.com/rss</a></li>
+<li>description : 프리랜서</li>
+<li>github : <a href='https://github.com/tenyearscoder' target='_blank'>https://github.com/tenyearscoder</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/it-%ed%94%84%eb%a6%ac%eb%9e%9c%ec%84%9c-%ec%9d%b4%ec%95%bc%ea%b8%b0-%ed%94%84%eb%a6%ac%eb%9e%9c%ec%84%9c%ec%99%80-%ed%9c%b4%ea%b0%80%ec%9d%98-%ec%83%81%ea%b4%80%ea%b4%80%ea%b3%84/">[IT 프리랜서 이야기] 프리랜서와 휴가의 상관관계</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[서준수] 개발자 면접에서 중요한 것 &#8211; 주니어 개발자의 단상 (4)</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ec%84%9c%ec%a4%80%ec%88%98-%ea%b0%9c%eb%b0%9c%ec%9e%90-%eb%a9%b4%ec%a0%91%ec%97%90%ec%84%9c-%ec%a4%91%ec%9a%94%ed%95%9c-%ea%b2%83-%ec%a3%bc%eb%8b%88%ec%96%b4-%ea%b0%9c%eb%b0%9c%ec%9e%90%ec%9d%98/</link>
+		<pubDate>Sat, 11 May 2019 20:29:50 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-서준수]]></category>
+		<category><![CDATA[Kotlin]]></category>
 
-        http.sessionManagement().maximumSessions(1).maxSessionsPreventsLogin(true)
-    }
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67353</guid>
+		<description><![CDATA[<p>원문 링크 개발자 면접에서 중요한 것 &#8211; 주니어 개발자의 단상 (4) 미리보기 개발자 면접에서 중요한 것 나는 면접관으로 들어갈 만큼 경력이 많지 않다. 따라서 면접에서 무엇이 중요한지 정확하게 알 수 없다. 이 역시 나의 단상이다. 하지만 부정할 수 없을 것이라고 감히 예상해본다. 여러 가지 중요한 요소들이 있겠지만 딱 &#8230; 개발자 정보 서준수 님 글 더 보기 &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%84%9c%ec%a4%80%ec%88%98-%ea%b0%9c%eb%b0%9c%ec%9e%90-%eb%a9%b4%ec%a0%91%ec%97%90%ec%84%9c-%ec%a4%91%ec%9a%94%ed%95%9c-%ea%b2%83-%ec%a3%bc%eb%8b%88%ec%96%b4-%ea%b0%9c%eb%b0%9c%ec%9e%90%ec%9d%98/">[서준수] 개발자 면접에서 중요한 것 &#8211; 주니어 개발자의 단상 (4)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://brunch.co.kr/@@2Kn8/67' target='_blank'>개발자 면접에서 중요한 것 &#8211; 주니어 개발자의 단상 (4)</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>개발자 면접에서 중요한 것  나는 면접관으로 들어갈 만큼 경력이 많지 않다. 따라서 면접에서 무엇이 중요한지 정확하게 알 수 없다.  이 역시 나의 단상이다. 하지만 부정할 수 없을 것이라고 감히 예상해본다.  여러 가지 중요한 요소들이 있겠지만 딱  &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-서준수'>서준수 님 글 더 보기</a></li>
+<li>name : 서준수</li>
+<li>blog : <a href='https://brunch.co.kr/@mystoryg' target='_blank'>https://brunch.co.kr/@mystoryg</a></li>
+<li>rss : <a href='https://brunch.co.kr/rss/@@2Kn8' target='_blank'>https://brunch.co.kr/rss/@@2Kn8</a></li>
+<li>description : Kotlin</li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%84%9c%ec%a4%80%ec%88%98-%ea%b0%9c%eb%b0%9c%ec%9e%90-%eb%a9%b4%ec%a0%91%ec%97%90%ec%84%9c-%ec%a4%91%ec%9a%94%ed%95%9c-%ea%b2%83-%ec%a3%bc%eb%8b%88%ec%96%b4-%ea%b0%9c%eb%b0%9c%ec%9e%90%ec%9d%98/">[서준수] 개발자 면접에서 중요한 것 &#8211; 주니어 개발자의 단상 (4)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[사랑나무아빠의 행복한 세상] QC3.0 퀵차지 지원하는 주연테크보조충전기 캐리온 써봤어요~</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ec%82%ac%eb%9e%91%eb%82%98%eb%ac%b4%ec%95%84%eb%b9%a0%ec%9d%98-%ed%96%89%eb%b3%b5%ed%95%9c-%ec%84%b8%ec%83%81-qc3-0-%ed%80%b5%ec%b0%a8%ec%a7%80-%ec%a7%80%ec%9b%90%ed%95%98%eb%8a%94-%ec%a3%bc/</link>
+		<pubDate>Sat, 11 May 2019 19:49:07 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-전재훈]]></category>
+		<category><![CDATA[MES]]></category>
 
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67387</guid>
+		<description><![CDATA[<p>원문 링크 QC3.0 퀵차지 지원하는 주연테크보조충전기 캐리온 써봤어요~ 미리보기 안녕하세요. 사랑나무아빠입니다~여러분들은 #보조배터리 어떤 제품을 쓰시나요?국내에서 엄청난 대히트를 친 샤o미가 많을 것 같은데요.사실 저도 3개나 있어요. ^^;스마트폰을 살때 마다 사은품으로 받기도 했고, 선물로도 받았고요. (직접 구매한 적은 없 &#8230; 개발자 정보 전재훈 님 글 더 보기 name : 전재훈 blog : https://blog.naver.com/hupers rss : https://rss.blog.naver.com/hupers.xml description &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%82%ac%eb%9e%91%eb%82%98%eb%ac%b4%ec%95%84%eb%b9%a0%ec%9d%98-%ed%96%89%eb%b3%b5%ed%95%9c-%ec%84%b8%ec%83%81-qc3-0-%ed%80%b5%ec%b0%a8%ec%a7%80-%ec%a7%80%ec%9b%90%ed%95%98%eb%8a%94-%ec%a3%bc/">[사랑나무아빠의 행복한 세상] QC3.0 퀵차지 지원하는 주연테크보조충전기 캐리온 써봤어요~</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.naver.com/hupers/221535348912' target='_blank'>QC3.0 퀵차지 지원하는 주연테크보조충전기 캐리온 써봤어요~</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>안녕하세요. 사랑나무아빠입니다~여러분들은 #보조배터리 어떤 제품을 쓰시나요?국내에서 엄청난 대히트를 친 샤o미가 많을 것 같은데요.사실 저도 3개나 있어요. ^^;스마트폰을 살때 마다 사은품으로 받기도 했고, 선물로도 받았고요. (직접 구매한 적은 없 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-전재훈'>전재훈 님 글 더 보기</a></li>
+<li>name : 전재훈</li>
+<li>blog : <a href='https://blog.naver.com/hupers' target='_blank'>https://blog.naver.com/hupers</a></li>
+<li>rss : <a href='https://rss.blog.naver.com/hupers.xml' target='_blank'>https://rss.blog.naver.com/hupers.xml</a></li>
+<li>description : MES</li>
+<li>facebook : <a href='https://www.facebook.com/hupers' target='_blank'>https://www.facebook.com/hupers</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%82%ac%eb%9e%91%eb%82%98%eb%ac%b4%ec%95%84%eb%b9%a0%ec%9d%98-%ed%96%89%eb%b3%b5%ed%95%9c-%ec%84%b8%ec%83%81-qc3-0-%ed%80%b5%ec%b0%a8%ec%a7%80-%ec%a7%80%ec%9b%90%ed%95%98%eb%8a%94-%ec%a3%bc/">[사랑나무아빠의 행복한 세상] QC3.0 퀵차지 지원하는 주연테크보조충전기 캐리온 써봤어요~</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[빈꿈 EMPTYDREAM] 프랑스군, 아프리카 부르키나파소에서 인질 구출, 한국인 포함</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%eb%b9%88%ea%bf%88-emptydream-%ed%94%84%eb%9e%91%ec%8a%a4%ea%b5%b0-%ec%95%84%ed%94%84%eb%a6%ac%ec%b9%b4-%eb%b6%80%eb%a5%b4%ed%82%a4%eb%82%98%ed%8c%8c%ec%86%8c%ec%97%90%ec%84%9c-%ec%9d%b8%ec%a7%88/</link>
+		<pubDate>Sat, 11 May 2019 17:56:32 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-송주성(빈꿈)]]></category>
+		<category><![CDATA[IT 칼럼]]></category>
 
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;&lt;b&gt;1행 : @Cofiguration 어노테이션을 통해, configuration으로 등록합니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;2행 : WebSecurityConfigurerAdapter와 함께 사용되며, 스프링 시큐리티를 사용할 때 사용합니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;6행 : 이전에 만든 AuthenticationProvider를 빈으로 등록해줍니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;10행 : AuthenticationManageBuilder를 provider를 통해, 실질적 인증절차를 진행하게 해줍니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;14행 : 해당 접근에 대해, 무시를 해주는 코드를 넣습니다(전역)&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;18행 : csrf를 꺼줍니다 (Csrf를 사용할 때에는 필요 없는 코드입니다)&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;21행 : authorize에 관한 동작입니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;22행, 23행 : &quot;/login&quot;은 전체에게 공개, 이외에는 authentication을 통해 권한을 얻은 사람만 접근하게 합니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;25행 - 28행 : login에 관한 내용입니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;30행 - 33행 : logout에 관한 내용입니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;35행 : 세션 관리입니다. 현재 맥시멈을 1개로 두어, 동시로그인이 불가능하게 했습니다&amp;nbsp;&lt;/b&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;h2&gt;2. login page, index page 구현&lt;/h2&gt;
-&lt;p&gt;Spring security는 기본 로그인 페이지를 지원하지만, 보통은 커스텀 로그인 페이지를 만들고자 할 것입니다. 저는 타임리프 템플릿 엔진을 통해 로그인페이지를 간단히 구현하겠습니다.&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/b0PYrw/btqt4yPmjgM/AKZuBgJRBcJns57XO9KFFK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/b0PYrw/btqt4yPmjgM/AKZuBgJRBcJns57XO9KFFK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fb0PYrw%2Fbtqt4yPmjgM%2FAKZuBgJRBcJns57XO9KFFK%2Fimg.png' width=&quot;407&quot; height=&quot;180&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;타임리프는 기본적으로 resource 밑에, templates에 html파일을 통해 구현할 수 있습니다&lt;/li&gt;
-&lt;li&gt;로그인 페이지인 login.html과 , 로그인에 성공했을 때 들어가는 index.html을 만들었습니다&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;login.html&lt;/h4&gt;
-&lt;pre id=&quot;code_1554359332186&quot; class=&quot;prettyprint html xml linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;&amp;lt;!DOCTYPE html&amp;gt;
-&amp;lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xmlns:th=&quot;http://www.thymeleaf.org&quot;  xmlns:sec=&quot;http://www.thymeleaf.org/extras/spring-security&quot;&amp;gt;
-&amp;lt;head&amp;gt;
-    &amp;lt;title&amp;gt;Login page&amp;lt;/title&amp;gt;
-&amp;lt;/head&amp;gt;
-&amp;lt;body&amp;gt;
-    &amp;lt;script type=&quot;text/javascript&quot; sec:authorize=&quot;isAuthenticated()&quot;&amp;gt;
-        location.href = &quot;/index&quot;
-    &amp;lt;/script&amp;gt;
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67351</guid>
+		<description><![CDATA[<p>원문 링크 프랑스군, 아프리카 부르키나파소에서 인질 구출, 한국인 포함 미리보기   2019년 5월 1일, 두 명의 프랑스인이 아프리카 베냉(Benin)의 펜드자리 국립공원에서 사파리 관광을 하다가 납치됐다. 가이드는 사망했고, 그들이 타고 온 차는 불 타 있었다.   며칠 뒤 가이드의 시신이 발견됐고, 프랑스군은 드론 등을 &#8230; 개발자 정보 송주성(빈꿈) 님 글 더 보기 name : 송주성(빈꿈) blog &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%eb%b9%88%ea%bf%88-emptydream-%ed%94%84%eb%9e%91%ec%8a%a4%ea%b5%b0-%ec%95%84%ed%94%84%eb%a6%ac%ec%b9%b4-%eb%b6%80%eb%a5%b4%ed%82%a4%eb%82%98%ed%8c%8c%ec%86%8c%ec%97%90%ec%84%9c-%ec%9d%b8%ec%a7%88/">[빈꿈 EMPTYDREAM] 프랑스군, 아프리카 부르키나파소에서 인질 구출, 한국인 포함</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://emptydream.tistory.com/4772' target='_blank'>프랑스군, 아프리카 부르키나파소에서 인질 구출, 한국인 포함</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+ <br />
+2019년 5월 1일, 두 명의 프랑스인이 아프리카 베냉(Benin)의 펜드자리 국립공원에서 사파리 관광을 하다가 납치됐다. 가이드는 사망했고, 그들이 타고 온 차는 불 타 있었다.<br />
+ <br />
+며칠 뒤 가이드의 시신이 발견됐고, 프랑스군은 드론 등을  &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-송주성(빈꿈)'>송주성(빈꿈) 님 글 더 보기</a></li>
+<li>name : 송주성(빈꿈)</li>
+<li>blog : <a href='http://emptydream.tistory.com/' target='_blank'>http://emptydream.tistory.com/</a></li>
+<li>rss : <a href='http://emptydream.tistory.com/rss' target='_blank'>http://emptydream.tistory.com/rss</a></li>
+<li>description : IT 칼럼</li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%eb%b9%88%ea%bf%88-emptydream-%ed%94%84%eb%9e%91%ec%8a%a4%ea%b5%b0-%ec%95%84%ed%94%84%eb%a6%ac%ec%b9%b4-%eb%b6%80%eb%a5%b4%ed%82%a4%eb%82%98%ed%8c%8c%ec%86%8c%ec%97%90%ec%84%9c-%ec%9d%b8%ec%a7%88/">[빈꿈 EMPTYDREAM] 프랑스군, 아프리카 부르키나파소에서 인질 구출, 한국인 포함</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Stories by ismiadam on Medium] 창세기27장</title>
+		<link>http://devblog.selfhow.com/2019/05/12/stories-by-ismiadam-on-medium-%ec%b0%bd%ec%84%b8%ea%b8%b027%ec%9e%a5/</link>
+		<pubDate>Sat, 11 May 2019 17:43:20 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-최광성]]></category>
+		<category><![CDATA[React]]></category>
 
-    &amp;lt;h1&amp;gt;Login page&amp;lt;/h1&amp;gt;
-    &amp;lt;div th:if=&quot;${param.error}&quot;&amp;gt;
-        계정과 비밀번호 확인
-    &amp;lt;/div&amp;gt;
-    &amp;lt;div th:if=&quot;${param.logout}&quot;&amp;gt;
-        로그아웃
-    &amp;lt;/div&amp;gt;
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67341</guid>
+		<description><![CDATA[<p>원문 링크 창세기27장 미리보기 이삭은 애걸복걸하는 에서에게 “야곱에게 복을 모두 줬다. 너에게 줄것이 없다” 고 말한다. 말로하는거 돈도 안드는데 그냥 말해주지 라는생각을 했다. 하지만 이삭은 그럴 수 없었다. 왜냐하면 이삭에게 하나님의 복은 현물이었기 때문이다. 복이 실제 물건 &#8230; 개발자 정보 최광성 님 글 더 보기 name : 최광성 blog : https://medium.com/@cks3443 rss : https://medium.com/feed/@cks3443 description : React twitter &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/stories-by-ismiadam-on-medium-%ec%b0%bd%ec%84%b8%ea%b8%b027%ec%9e%a5/">[Stories by ismiadam on Medium] 창세기27장</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://medium.com/@cks3443/%EC%B0%BD%EC%84%B8%EA%B8%B027%EC%9E%A5-cd5f2777d480?source=rss-b65f82299220------2' target='_blank'>창세기27장</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+이삭은 애걸복걸하는 에서에게 “야곱에게 복을 모두 줬다. 너에게 줄것이 없다” 고 말한다.<br />
+말로하는거 돈도 안드는데 그냥 말해주지 라는생각을 했다.<br />
+하지만 이삭은 그럴 수 없었다.<br />
+왜냐하면 이삭에게 하나님의 복은 현물이었기 때문이다. 복이 실제 물건 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-최광성'>최광성 님 글 더 보기</a></li>
+<li>name : 최광성</li>
+<li>blog : <a href='https://medium.com/@cks3443' target='_blank'>https://medium.com/@cks3443</a></li>
+<li>rss : <a href='https://medium.com/feed/@cks3443' target='_blank'>https://medium.com/feed/@cks3443</a></li>
+<li>description : React</li>
+<li>twitter : <a href='https://twitter.com/cks3443' target='_blank'>https://twitter.com/cks3443</a></li>
+<li>github : <a href='https://github.com/cks3443' target='_blank'>https://github.com/cks3443</a></li>
+<li>pinterest : <a href='https://www.pinterest.co.kr/cks3443/' target='_blank'>https://www.pinterest.co.kr/cks3443/</a></li>
+<li>rocketpunch : <a href='https://www.rocketpunch.com/@cks3443' target='_blank'>https://www.rocketpunch.com/@cks3443</a></li>
+<li>twitch : <a href='https://www.twitch.tv/cks3443' target='_blank'>https://www.twitch.tv/cks3443</a></li>
+<li>udemy : <a href='https://www.udemy.com/user/552ef145c589c' target='_blank'>https://www.udemy.com/user/552ef145c589c</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/stories-by-ismiadam-on-medium-%ec%b0%bd%ec%84%b8%ea%b8%b027%ec%9e%a5/">[Stories by ismiadam on Medium] 창세기27장</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[서준수] 역시는 역시, 보라카이 (2)</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ec%84%9c%ec%a4%80%ec%88%98-%ec%97%ad%ec%8b%9c%eb%8a%94-%ec%97%ad%ec%8b%9c-%eb%b3%b4%eb%9d%bc%ec%b9%b4%ec%9d%b4-2/</link>
+		<pubDate>Sat, 11 May 2019 16:26:16 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-서준수]]></category>
+		<category><![CDATA[Kotlin]]></category>
 
-    &amp;lt;form th:action=&quot;@{/auth}&quot; method=&quot;post&quot;&amp;gt;
-        &amp;lt;input type=&quot;text&quot; id=&quot;username&quot; name=&quot;username&quot; autofocus=&quot;autofocus&quot; placeholder=&quot;id&quot;/&amp;gt; &amp;lt;br /&amp;gt;
-        &amp;lt;input type=&quot;password&quot; id=&quot;password&quot; name=&quot;password&quot; placeholder=&quot;pw&quot;/&amp;gt; &amp;lt;br /&amp;gt;
-        &amp;lt;input type=&quot;submit&quot; value=&quot;Log in&quot; /&amp;gt;
-    &amp;lt;/form&amp;gt;
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67018</guid>
+		<description><![CDATA[<p>원문 링크 역시는 역시, 보라카이 (2) 미리보기 보라카이 (2019.04.26 ~ 2019.04.30) 계획이 없었지만 마음속 하나의 룰은 격일 액티비티, 격일 휴식이었다. 즉, 하루 액티비티를 하면 다음 날은 그냥 쉬는 게 목표였다. 첫째 날에 헬멧 다이빙을 했으니 둘째 날은 쉬는 게 맞다. 하지 &#8230; 개발자 정보 서준수 님 글 더 보기 name : 서준수 blog : https://brunch.co.kr/@mystoryg &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%84%9c%ec%a4%80%ec%88%98-%ec%97%ad%ec%8b%9c%eb%8a%94-%ec%97%ad%ec%8b%9c-%eb%b3%b4%eb%9d%bc%ec%b9%b4%ec%9d%b4-2/">[서준수] 역시는 역시, 보라카이 (2)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://brunch.co.kr/@@2Kn8/65' target='_blank'>역시는 역시, 보라카이 (2)</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>보라카이 (2019.04.26 ~ 2019.04.30) 계획이 없었지만 마음속 하나의 룰은 격일 액티비티, 격일 휴식이었다. 즉, 하루 액티비티를 하면 다음 날은 그냥 쉬는 게 목표였다. 첫째 날에 헬멧 다이빙을 했으니 둘째 날은 쉬는 게 맞다. 하지 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-서준수'>서준수 님 글 더 보기</a></li>
+<li>name : 서준수</li>
+<li>blog : <a href='https://brunch.co.kr/@mystoryg' target='_blank'>https://brunch.co.kr/@mystoryg</a></li>
+<li>rss : <a href='https://brunch.co.kr/rss/@@2Kn8' target='_blank'>https://brunch.co.kr/rss/@@2Kn8</a></li>
+<li>description : Kotlin</li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%84%9c%ec%a4%80%ec%88%98-%ec%97%ad%ec%8b%9c%eb%8a%94-%ec%97%ad%ec%8b%9c-%eb%b3%b4%eb%9d%bc%ec%b9%b4%ec%9d%b4-2/">[서준수] 역시는 역시, 보라카이 (2)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[이승훈 Hoon Lee] Ringle 1:1 화상영어_3가지 차별점 +무료체험 &#8211; 영어로 일하는/공부중인 non-native&#038;nbsp;위한 1:1 화상영어 서비스</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ec%9d%b4%ec%8a%b9%ed%9b%88-hoon-lee-ringle-11-%ed%99%94%ec%83%81%ec%98%81%ec%96%b4_3%ea%b0%80%ec%a7%80-%ec%b0%a8%eb%b3%84%ec%a0%90-%eb%ac%b4%eb%a3%8c%ec%b2%b4%ed%97%98-%ec%98%81%ec%96%b4/</link>
+		<pubDate>Sat, 11 May 2019 16:25:48 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-이승훈]]></category>
+		<category><![CDATA[스타트업]]></category>
 
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67329</guid>
+		<description><![CDATA[<p>원문 링크 Ringle 1:1 화상영어_3가지 차별점 +무료체험 &#8211; 영어로 일하는/공부중인 non-native&#38;nbsp;위한 1:1 화상영어 서비스 미리보기 Ringle 은  영어로 일하는 또는 영어로 공부하는 non-native speaker 를 위한 1:1 화상 영어 학습 솔루션입니다. Ringle 은 학술 토론 또는 비즈니스 미팅 시 ‘Content 로는 밀리지 않지만, 영어 때문에 손해를 본다고 &#8230; 개발자 정보 이승훈 님 글 더 보기 name &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%9d%b4%ec%8a%b9%ed%9b%88-hoon-lee-ringle-11-%ed%99%94%ec%83%81%ec%98%81%ec%96%b4_3%ea%b0%80%ec%a7%80-%ec%b0%a8%eb%b3%84%ec%a0%90-%eb%ac%b4%eb%a3%8c%ec%b2%b4%ed%97%98-%ec%98%81%ec%96%b4/">[이승훈 Hoon Lee] Ringle 1:1 화상영어_3가지 차별점 +무료체험 &#8211; 영어로 일하는/공부중인 non-native&amp;nbsp;위한 1:1 화상영어 서비스</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://brunch.co.kr/@@2weV/71' target='_blank'>Ringle 1:1 화상영어_3가지 차별점 +무료체험 &#8211; 영어로 일하는/공부중인 non-native&amp;nbsp;위한 1:1 화상영어 서비스</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>Ringle 은  영어로 일하는 또는 영어로 공부하는 non-native speaker 를 위한 1:1 화상 영어 학습 솔루션입니다.  Ringle 은 학술 토론 또는 비즈니스 미팅 시 ‘Content 로는 밀리지 않지만, 영어 때문에 손해를 본다고  &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-이승훈'>이승훈 님 글 더 보기</a></li>
+<li>name : 이승훈</li>
+<li>blog : <a href='https://brunch.co.kr/@seunghoon82' target='_blank'>https://brunch.co.kr/@seunghoon82</a></li>
+<li>rss : <a href='https://brunch.co.kr/rss/@@2weV' target='_blank'>https://brunch.co.kr/rss/@@2weV</a></li>
+<li>description : 스타트업</li>
+<li>slideshare : <a href='https://www.slideshare.net/frhyme' target='_blank'>https://www.slideshare.net/frhyme</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%9d%b4%ec%8a%b9%ed%9b%88-hoon-lee-ringle-11-%ed%99%94%ec%83%81%ec%98%81%ec%96%b4_3%ea%b0%80%ec%a7%80-%ec%b0%a8%eb%b3%84%ec%a0%90-%eb%ac%b4%eb%a3%8c%ec%b2%b4%ed%97%98-%ec%98%81%ec%96%b4/">[이승훈 Hoon Lee] Ringle 1:1 화상영어_3가지 차별점 +무료체험 &#8211; 영어로 일하는/공부중인 non-native&amp;nbsp;위한 1:1 화상영어 서비스</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[?Nam의 IT세상] [책리뷰] 익스트림 프로그래밍 &#8211; 켄트벡 &#8211;</title>
+		<link>http://devblog.selfhow.com/2019/05/12/nam%ec%9d%98-it%ec%84%b8%ec%83%81-%ec%b1%85%eb%a6%ac%eb%b7%b0-%ec%9d%b5%ec%8a%a4%ed%8a%b8%eb%a6%bc-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%b0%8d-%ec%bc%84%ed%8a%b8%eb%b2%a1/</link>
+		<pubDate>Sat, 11 May 2019 16:12:00 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-남영환]]></category>
+		<category><![CDATA[Java, Javascript, Clojure]]></category>
 
-    &amp;lt;h3&amp;gt;Admin : admin/123 &amp;lt;/h3&amp;gt;
-    &amp;lt;h3&amp;gt;User : user/456 &amp;lt;/h3&amp;gt;
-    &amp;lt;script src=&quot;//code.jquery.com/jquery-2.2.4.min.js&quot;&amp;gt;&amp;lt;/script&amp;gt;
-&amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li style=&quot;text-align: justify;&quot;&gt;&lt;b&gt;2행 : 타임리프 엔진을 사용한다는 것을 명시합니다 - sec의 경우 1번글에서 보이는 spring security5용을 따로 의존성 추가를 해줘야합니다 (스프링 부트 기본 설정에서 빠짐)&lt;/b&gt;&lt;/li&gt;
-&lt;li style=&quot;text-align: justify;&quot;&gt;&lt;b&gt;7행 - 9행 : isAutenticated() - 현재 인증이 완료된 상태이면 login페이지가 아닌 index페이지로 연결&lt;/b&gt;&lt;/li&gt;
-&lt;li style=&quot;text-align: justify;&quot;&gt;&lt;b&gt;12행, 15행 : 각각 get으로 파라미터가 error, logout이 들어오면 아래의 내용을 출력해줍니다&lt;/b&gt;&lt;/li&gt;
-&lt;li style=&quot;text-align: justify;&quot;&gt;&lt;b&gt;19행 : authentication을 진행할 url ( 위에 configure(httpsecurity)에 지정해준 loginProcessingUrl과 동일해야 합니다)&lt;/b&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;Index.html&lt;/h3&gt;
-&lt;pre id=&quot;code_1554359657124&quot; class=&quot;prettyprint html xml linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;&amp;lt;!DOCTYPE html&amp;gt;
-&amp;lt;html xmlns:sec=&quot;http://www.thymeleaf.org/extras/spring-security&quot; &amp;gt;
-&amp;lt;head&amp;gt;
-    &amp;lt;meta charset=&quot;UTF-8&quot;&amp;gt;
-    &amp;lt;title&amp;gt;Example&amp;lt;/title&amp;gt;
-&amp;lt;/head&amp;gt;
-&amp;lt;body&amp;gt;
-    &amp;lt;span sec:authorize=&quot;hasRole('ROLE_ADMIN')&quot;&amp;gt;
-        &amp;lt;button&amp;gt;
-            &amp;lt;a href=&quot;/logout&quot;&amp;gt;&amp;lt;h2&amp;gt;ADMIN Logout&amp;lt;/h2&amp;gt;&amp;lt;/a&amp;gt;
-        &amp;lt;/button&amp;gt;
-    &amp;lt;/span&amp;gt;
-    &amp;lt;span sec:authorize=&quot;hasRole('ROLE_USER')&quot;&amp;gt;
-        &amp;lt;button&amp;gt;
-            &amp;lt;a href=&quot;/logout&quot;&amp;gt;&amp;lt;h2&amp;gt;USER Logout&amp;lt;/h2&amp;gt;&amp;lt;/a&amp;gt;
-        &amp;lt;/button&amp;gt;
-    &amp;lt;/span&amp;gt;
-&amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;8행, 13행 : sec:auhtorize=&quot;hasRole('~~')&quot; : ~~라는 권한을 가질 경우, 동작하게 하는 함수입니다&lt;/li&gt;
-&lt;li&gt;10행, 14행 : &quot;/logout&quot; - httpsecurity에 정해놓은, logout url로 가게 해줍니다&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;h2&gt;3. WebMvcConfigurer 구현&lt;/h2&gt;
-&lt;p&gt;index페이지와, login페이지를 연결해줄 Configuerer를 구현합니다&lt;/p&gt;
-&lt;pre id=&quot;code_1554359919853&quot; class=&quot;prettyprint kotlin linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;@Configuration
-class MvcConfig : WebMvcConfigurer{
-    override fun addViewControllers(registry: ViewControllerRegistry) {
-        registry.addViewController(&quot;/login&quot;).setViewName(&quot;/login&quot;)
-        registry.addViewController(&quot;/index&quot;).setViewName(&quot;/index&quot;)
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;&lt;b&gt;기본적으로 resource/templates 가 기본으로 설정돼 있습니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;3행 : ViewControllerRegistry에 /login url(controller)에, login.html(view)를 등록해줍니다&amp;nbsp;&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;4행 : 3행과 마찬가지로 index를 등록합니다&lt;/b&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cnQ0p2/btqt4yaQ7OA/76V5DU5kea00AjcmTrP0zk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cnQ0p2/btqt4yaQ7OA/76V5DU5kea00AjcmTrP0zk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcnQ0p2%2Fbtqt4yaQ7OA%2F76V5DU5kea00AjcmTrP0zk%2Fimg.png' width=&quot;365&quot; height=&quot;367&quot;&gt;&lt;/span&gt;&lt;figcaption&gt;&lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;여기까지 따라오셨다면 기본적인 로그인 구현은 끝이났습니다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
-&lt;h2&gt;4. 실행 결과&lt;/h2&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/pYfag/btqt7SGoTbZ/V5vk1OTbxbfpjIZktewdB0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/pYfag/btqt7SGoTbZ/V5vk1OTbxbfpjIZktewdB0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FpYfag%2Fbtqt7SGoTbZ%2FV5vk1OTbxbfpjIZktewdB0%2Fimg.png' width=&quot;384&quot; height=&quot;361&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;스프링 부트를 실행 시켜준 뒤, localhost:8080(기본호스트)로 연결해준 화면입니다&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/oSJ4Z/btqt3IY3wOh/KhaWHaZXH8eJR9kT8KldY0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/oSJ4Z/btqt3IY3wOh/KhaWHaZXH8eJR9kT8KldY0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FoSJ4Z%2Fbtqt3IY3wOh%2FKhaWHaZXH8eJR9kT8KldY0%2Fimg.png' width=&quot;374&quot; height=&quot;149&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;admin, 123으로 Login했을 때의 화면입니다. role이 ROLE_ADMIN이기 때문에, ADMIN_Logout버튼이 나옵니다.&lt;/li&gt;
-&lt;li&gt;Logout을 누르면 다시 loginpage로 돌아갑니다&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/FU25V/btqt3IdGpyZ/ecUwafjJxdMVLvKOI8Web1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/FU25V/btqt3IdGpyZ/ecUwafjJxdMVLvKOI8Web1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FFU25V%2Fbtqt3IdGpyZ%2FecUwafjJxdMVLvKOI8Web1%2Fimg.png' width=&quot;344&quot; height=&quot;276&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot;&gt;
-&lt;li&gt;로그아웃을 했기 때문에, logout파라미터가 붙었기 때문에, 로그아웃을 출력해줬습니다&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bT9sf6/btqt8KVqcu3/B7IklqOlRId72gQ3wb2nUK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bT9sf6/btqt8KVqcu3/B7IklqOlRId72gQ3wb2nUK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbT9sf6%2Fbtqt8KVqcu3%2FB7IklqOlRId72gQ3wb2nUK%2Fimg.png' width=&quot;291&quot; height=&quot;122&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;user로 로그인을 했을 때의 페이지입니다.&amp;nbsp;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
-&lt;p&gt;지금까지 Spring Security를 이용하여, 간단한 로그인 페이지를 구현해보았습니다.&lt;/p&gt;
-&lt;p&gt;궁금한 점이 있다면 댓글 달아주세요&lt;/p&gt;
-&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/bobfull/spring-kotlin-security-study&quot;&gt;https://github.com/bobfull/spring-kotlin-security-study&lt;/a&gt;&lt;/p&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;예제 코드가 있는 github 주소입니다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;figure id=&quot;og_1554360592661&quot; contenteditable=&quot;false&quot; data-ke-type=&quot;opengraph&quot;&gt;&lt;a href=&quot;https://github.com/bobfull/spring-kotlin-security-study&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot; data-original-url=&quot;https://github.com/bobfull/spring-kotlin-security-study&quot;&gt;
-&lt;div class=&quot;og-image&quot; style=&quot;background-image: url('https://scrap.kakaocdn.net/dn/d0FFV5/hyABQ2d19P/BCc8nGDMY9wOm6eZJEcPP0/img.png?width=420&amp;amp;height=420&amp;amp;face=0_0_420_420');&quot;&gt;&amp;nbsp;&lt;/div&gt;
-&lt;div class=&quot;og-text&quot;&gt;
-&lt;p class=&quot;og-title&quot;&gt;bobfull/spring-kotlin-security-study&lt;/p&gt;
-&lt;p class=&quot;og-desc&quot;&gt;Contribute to bobfull/spring-kotlin-security-study development by creating an account on GitHub.&lt;/p&gt;
-&lt;p class=&quot;og-host&quot;&gt;github.com&lt;/p&gt;
-&lt;/div&gt;
-&lt;/a&gt;&lt;/figure&gt;</description>
-<category>SW개발</category>
-<category>kotlin</category>
-<category>Spring</category>
-<category>springboot</category>
-<category>SpringFramework</category>
-<category>springsecurity</category>
-<category>Thymeleaf</category>
-<category>스프링</category>
-<category>스프링부트</category>
-<category>스프링시큐리티</category>
-<category>코틀린</category>
-<author>사용자 밥풀(Bob Full)</author>
-<guid>https://bob-full.tistory.com/9</guid>
-<comments>https://bob-full.tistory.com/9#entry9comment</comments>
-<pubDate>Thu, 04 Apr 2019 15:50:43 +0900</pubDate>
-</item>
-<item>
-<title>Kotlin + Spring boot security + thymeleaf 로그인 구현(2)</title>
-<link>https://bob-full.tistory.com/8</link>
-<description>&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/btD50x/btqt0sOqgyE/7vvADLdIXbXEAWda0PBCZ0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/btD50x/btqt0sOqgyE/7vvADLdIXbXEAWda0PBCZ0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbtD50x%2Fbtqt0sOqgyE%2F7vvADLdIXbXEAWda0PBCZ0%2Fimg.png' width=&quot;263&quot; height=&quot;336&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;https://bob-full.tistory.com/7&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;2019/03/28 - [SW개발] - Kotlin + Spring boot security + thymeleaf 로그인 구현(1)&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;프로젝트가 무사히 생성 됐다면, 위 화면처럼 됐을겁니다.&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;간단한 로그인 구현은 이렇게 만들어진 프로젝트에서 해보겠습니다.&lt;/p&gt;
-&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
-&lt;h2&gt;1. UserDeatails 인터페이스 구현&lt;/h2&gt;
-&lt;p&gt;Security에서 사용할 UserDetails객체를 구현합니다. 이는 사용자의 정보를 담아주는 역할을 합니다.&lt;/p&gt;
-&lt;pre id=&quot;code_1554096210096&quot; class=&quot;prettyprint kotlin linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;class MyUserDetail(val id : String, val pw : String, val role : String) : UserDetails {
-    override fun getAuthorities(): MutableCollection&amp;lt;out GrantedAuthority&amp;gt; {
-        val authorities = ArrayList&amp;lt;GrantedAuthority&amp;gt;()
-        authorities.add(SimpleGrantedAuthority(role))
-        return authorities
-    }
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67347</guid>
+		<description><![CDATA[<p>원문 링크 [책리뷰] 익스트림 프로그래밍 &#8211; 켄트벡 &#8211; 미리보기 최근 Object Thinking 이라는 책을 한 반정도 읽다가 포기했다. 수 많은 메타포들과 마치 어학영수시절 글쓰기 시절의 글처럼 한 문장을 지나갈 때마다 의미가 동일해도 무슨 토플 시험 보듯, 단어가 계속 바뀌고 바뀌다 보니 점점 읽어가는 속도가 &#8230; 개발자 정보 남영환 님 글 더 보기 name : 남영환 &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/nam%ec%9d%98-it%ec%84%b8%ec%83%81-%ec%b1%85%eb%a6%ac%eb%b7%b0-%ec%9d%b5%ec%8a%a4%ed%8a%b8%eb%a6%bc-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%b0%8d-%ec%bc%84%ed%8a%b8%eb%b2%a1/">[?Nam의 IT세상] [책리뷰] 익스트림 프로그래밍 &#8211; 켄트벡 &#8211;</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='http://www.whynam.com/2019/05/blog-post.html' target='_blank'>[책리뷰] 익스트림 프로그래밍 &#8211; 켄트벡 &#8211;</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>최근 Object Thinking 이라는 책을 한 반정도 읽다가 포기했다. 수 많은 메타포들과 마치 어학영수시절 글쓰기 시절의 글처럼 한 문장을 지나갈 때마다 의미가 동일해도 무슨 토플 시험 보듯, 단어가 계속 바뀌고 바뀌다 보니 점점 읽어가는 속도가 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-남영환'>남영환 님 글 더 보기</a></li>
+<li>name : 남영환</li>
+<li>blog : <a href='http://www.whynam.com/' target='_blank'>http://www.whynam.com/</a></li>
+<li>rss : <a href='http://www.whynam.com/feeds/posts/default' target='_blank'>http://www.whynam.com/feeds/posts/default</a></li>
+<li>description : Java, Javascript, Clojure</li>
+<li>googleplus : <a href='https://plus.google.com/113718280768717218211' target='_blank'>https://plus.google.com/113718280768717218211</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/nam%ec%9d%98-it%ec%84%b8%ec%83%81-%ec%b1%85%eb%a6%ac%eb%b7%b0-%ec%9d%b5%ec%8a%a4%ed%8a%b8%eb%a6%bc-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%b0%8d-%ec%bc%84%ed%8a%b8%eb%b2%a1/">[?Nam의 IT세상] [책리뷰] 익스트림 프로그래밍 &#8211; 켄트벡 &#8211;</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[조대협의 블로그] SRE #3-SRE의 주요 지표 SLI/SLO (Service Level Indicatior, Service Level Objectives)</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ec%a1%b0%eb%8c%80%ed%98%91%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-sre-3-sre%ec%9d%98-%ec%a3%bc%ec%9a%94-%ec%a7%80%ed%91%9c-sli-slo-service-level-indicatior-service-level-objectives/</link>
+		<pubDate>Sat, 11 May 2019 15:39:12 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-조병욱(조대협)]]></category>
+		<category><![CDATA[Java]]></category>
 
-    override fun getPassword() = pw
-    
-    override fun getUsername() = id
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67339</guid>
+		<description><![CDATA[<p>원문 링크 SRE #3-SRE의 주요 지표 SLI/SLO (Service Level Indicatior, Service Level Objectives) 미리보기 SRE #3-SRE 주요 지표 (SLI/SLO) 조대협 (http://bcho.tistory.com) 이글은 앞글 (https://bcho.tistory.com/1327)과 연결 됩니다. 앞에 까지 SRE가 무엇이고, SRE가 하는일은 무엇이며, 어떻 &#8230; 개발자 정보 조병욱(조대협) 님 글 더 보기 name : 조병욱(조대협) blog : http://bcho.tistory.com/ rss : http://bcho.tistory.com/rss description : Java slideshare &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%a1%b0%eb%8c%80%ed%98%91%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-sre-3-sre%ec%9d%98-%ec%a3%bc%ec%9a%94-%ec%a7%80%ed%91%9c-sli-slo-service-level-indicatior-service-level-objectives/">[조대협의 블로그] SRE #3-SRE의 주요 지표 SLI/SLO (Service Level Indicatior, Service Level Objectives)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://bcho.tistory.com/1328' target='_blank'>SRE #3-SRE의 주요 지표 SLI/SLO (Service Level Indicatior, Service Level Objectives)</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>SRE #3-SRE 주요 지표 (SLI/SLO) 조대협 (http://bcho.tistory.com) 이글은 앞글 (https://bcho.tistory.com/1327)과 연결 됩니다. 앞에 까지 SRE가 무엇이고, SRE가 하는일은 무엇이며, 어떻 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-조병욱(조대협)'>조병욱(조대협) 님 글 더 보기</a></li>
+<li>name : 조병욱(조대협)</li>
+<li>blog : <a href='http://bcho.tistory.com/' target='_blank'>http://bcho.tistory.com/</a></li>
+<li>rss : <a href='http://bcho.tistory.com/rss' target='_blank'>http://bcho.tistory.com/rss</a></li>
+<li>description : Java</li>
+<li>slideshare : <a href='https://www.slideshare.net/Byungwook' target='_blank'>https://www.slideshare.net/Byungwook</a></li>
+<li>facebook : <a href='https://www.facebook.com/terry.cho.7' target='_blank'>https://www.facebook.com/terry.cho.7</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%a1%b0%eb%8c%80%ed%98%91%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-sre-3-sre%ec%9d%98-%ec%a3%bc%ec%9a%94-%ec%a7%80%ed%91%9c-sli-slo-service-level-indicatior-service-level-objectives/">[조대협의 블로그] SRE #3-SRE의 주요 지표 SLI/SLO (Service Level Indicatior, Service Level Objectives)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[이승훈 Hoon Lee] Career 개발:&#038;nbsp;상상치 못한 길 vs. 안정적 성장</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ec%9d%b4%ec%8a%b9%ed%9b%88-hoon-lee-career-%ea%b0%9c%eb%b0%9cnbsp%ec%83%81%ec%83%81%ec%b9%98-%eb%aa%bb%ed%95%9c-%ea%b8%b8-vs-%ec%95%88%ec%a0%95%ec%a0%81-%ec%84%b1%ec%9e%a5/</link>
+		<pubDate>Sat, 11 May 2019 15:05:56 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-이승훈]]></category>
+		<category><![CDATA[스타트업]]></category>
 
-    override fun isCredentialsNonExpired() = true
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67327</guid>
+		<description><![CDATA[<p>원문 링크 Career 개발:&#38;nbsp;상상치 못한 길 vs. 안정적 성장 미리보기 좋은 커리어를 개발하고 싶은 것은 모든 사람의 바람일 것이다. 예전에는 몰랐는데, 10년 이상 사회생활을 하니까 보이는 재밌는 발견들이 몇 개 있다. 1년 단위로만 보면, 대개 큰 무리수를 두지 않고 안정적으로 경력을 개발해 나가는 사람들이 여러모로 &#8230; 개발자 정보 이승훈 님 글 더 보기 name : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%9d%b4%ec%8a%b9%ed%9b%88-hoon-lee-career-%ea%b0%9c%eb%b0%9cnbsp%ec%83%81%ec%83%81%ec%b9%98-%eb%aa%bb%ed%95%9c-%ea%b8%b8-vs-%ec%95%88%ec%a0%95%ec%a0%81-%ec%84%b1%ec%9e%a5/">[이승훈 Hoon Lee] Career 개발:&amp;nbsp;상상치 못한 길 vs. 안정적 성장</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://brunch.co.kr/@@2weV/70' target='_blank'>Career 개발:&amp;nbsp;상상치 못한 길 vs. 안정적 성장</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>좋은 커리어를 개발하고 싶은 것은 모든 사람의 바람일 것이다.  예전에는 몰랐는데, 10년 이상 사회생활을 하니까 보이는 재밌는 발견들이 몇 개 있다. 1년 단위로만 보면, 대개 큰 무리수를 두지 않고 안정적으로 경력을 개발해 나가는 사람들이 여러모로 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-이승훈'>이승훈 님 글 더 보기</a></li>
+<li>name : 이승훈</li>
+<li>blog : <a href='https://brunch.co.kr/@seunghoon82' target='_blank'>https://brunch.co.kr/@seunghoon82</a></li>
+<li>rss : <a href='https://brunch.co.kr/rss/@@2weV' target='_blank'>https://brunch.co.kr/rss/@@2weV</a></li>
+<li>description : 스타트업</li>
+<li>slideshare : <a href='https://www.slideshare.net/frhyme' target='_blank'>https://www.slideshare.net/frhyme</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%9d%b4%ec%8a%b9%ed%9b%88-hoon-lee-career-%ea%b0%9c%eb%b0%9cnbsp%ec%83%81%ec%83%81%ec%b9%98-%eb%aa%bb%ed%95%9c-%ea%b8%b8-vs-%ec%95%88%ec%a0%95%ec%a0%81-%ec%84%b1%ec%9e%a5/">[이승훈 Hoon Lee] Career 개발:&amp;nbsp;상상치 못한 길 vs. 안정적 성장</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[동글동글 라이프] [분당/정자역 직장인]  단체 회식 하기 좋은 맛있는 돼지 고기집 숙달돼지</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%eb%8f%99%ea%b8%80%eb%8f%99%ea%b8%80-%eb%9d%bc%ec%9d%b4%ed%94%84-%eb%b6%84%eb%8b%b9-%ec%a0%95%ec%9e%90%ec%97%ad-%ec%a7%81%ec%9e%a5%ec%9d%b8-%eb%8b%a8%ec%b2%b4-%ed%9a%8c%ec%8b%9d-%ed%95%98/</link>
+		<pubDate>Sat, 11 May 2019 15:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-이광헌]]></category>
+		<category><![CDATA[Perl]]></category>
 
-    override fun isEnabled() = true
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67325</guid>
+		<description><![CDATA[<p>원문 링크 [분당/정자역 직장인] 단체 회식 하기 좋은 맛있는 돼지 고기집 숙달돼지 미리보기 안녕하세요. 동글동글 라이프의 동글아빠입니다. 정자역에서 단체 회식할 때 자주가는 돼지고기 전문점을 소개드립니다. 지난 4월달에도 가고 5월에 또 갔던 곳이라 이미 검증 된 곳이죠. 갔던 분들의 평도 좋고 50명 이상의 인원이 회식 &#8230; 개발자 정보 이광헌 님 글 더 보기 name : 이광헌 &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%eb%8f%99%ea%b8%80%eb%8f%99%ea%b8%80-%eb%9d%bc%ec%9d%b4%ed%94%84-%eb%b6%84%eb%8b%b9-%ec%a0%95%ec%9e%90%ec%97%ad-%ec%a7%81%ec%9e%a5%ec%9d%b8-%eb%8b%a8%ec%b2%b4-%ed%9a%8c%ec%8b%9d-%ed%95%98/">[동글동글 라이프] [분당/정자역 직장인]  단체 회식 하기 좋은 맛있는 돼지 고기집 숙달돼지</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://honeyperl.tistory.com/463' target='_blank'>[분당/정자역 직장인]  단체 회식 하기 좋은 맛있는 돼지 고기집 숙달돼지</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>안녕하세요.</p>
+<p>동글동글 라이프의 동글아빠입니다.</p>
+<p>정자역에서 단체 회식할 때 자주가는 돼지고기 전문점을 소개드립니다.</p>
+<p>지난 4월달에도 가고 5월에 또 갔던 곳이라 이미 검증 된 곳이죠.</p>
+<p>갔던 분들의 평도 좋고 50명 이상의 인원이 회식 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-이광헌'>이광헌 님 글 더 보기</a></li>
+<li>name : 이광헌</li>
+<li>blog : <a href='http://honeyperl.tistory.com/' target='_blank'>http://honeyperl.tistory.com/</a></li>
+<li>rss : <a href='http://honeyperl.tistory.com/rss' target='_blank'>http://honeyperl.tistory.com/rss</a></li>
+<li>description : Perl</li>
+<li>linkedin : <a href='https://www.linkedin.com/in/h0ney/' target='_blank'>https://www.linkedin.com/in/h0ney/</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%eb%8f%99%ea%b8%80%eb%8f%99%ea%b8%80-%eb%9d%bc%ec%9d%b4%ed%94%84-%eb%b6%84%eb%8b%b9-%ec%a0%95%ec%9e%90%ec%97%ad-%ec%a7%81%ec%9e%a5%ec%9d%b8-%eb%8b%a8%ec%b2%b4-%ed%9a%8c%ec%8b%9d-%ed%95%98/">[동글동글 라이프] [분당/정자역 직장인]  단체 회식 하기 좋은 맛있는 돼지 고기집 숙달돼지</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[사랑나무아빠의 행복한 세상] [팔아요] IT기기 및 가습기 / 미개봉 및 신품수준</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ec%82%ac%eb%9e%91%eb%82%98%eb%ac%b4%ec%95%84%eb%b9%a0%ec%9d%98-%ed%96%89%eb%b3%b5%ed%95%9c-%ec%84%b8%ec%83%81-%ed%8c%94%ec%95%84%ec%9a%94-it%ea%b8%b0%ea%b8%b0-%eb%b0%8f-%ea%b0%80%ec%8a%b5/</link>
+		<pubDate>Sat, 11 May 2019 14:58:27 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-전재훈]]></category>
+		<category><![CDATA[MES]]></category>
 
-    override fun isAccountNonExpired() = true
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67337</guid>
+		<description><![CDATA[<p>원문 링크 [팔아요] IT기기 및 가습기 / 미개봉 및 신품수준 미리보기 집에 있는 물건들 정리 한번 합니다.왜냐구요?사고 싶은 IT기기가 생겼거든요~ ^^;그것은 바로~~~ 맨 뒤에 공개하겠습니다!#IT #프로그래머 이다보니 #IT기기 에 욕심이 좀 있습니다.단지, 그것이 욕심이였을뿐 현실은 월화수목금금금에서 벗어나질 못 &#8230; 개발자 정보 전재훈 님 글 더 보기 name : 전재훈 blog : https://blog.naver.com/hupers rss : https://rss.blog.naver.com/hupers.xml &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%82%ac%eb%9e%91%eb%82%98%eb%ac%b4%ec%95%84%eb%b9%a0%ec%9d%98-%ed%96%89%eb%b3%b5%ed%95%9c-%ec%84%b8%ec%83%81-%ed%8c%94%ec%95%84%ec%9a%94-it%ea%b8%b0%ea%b8%b0-%eb%b0%8f-%ea%b0%80%ec%8a%b5/">[사랑나무아빠의 행복한 세상] [팔아요] IT기기 및 가습기 / 미개봉 및 신품수준</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.naver.com/hupers/221535255793' target='_blank'>[팔아요] IT기기 및 가습기 / 미개봉 및 신품수준</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>집에 있는 물건들 정리 한번 합니다.왜냐구요?사고 싶은 IT기기가 생겼거든요~ ^^;그것은 바로~~~ 맨 뒤에 공개하겠습니다!#IT #프로그래머 이다보니 #IT기기 에 욕심이 좀 있습니다.단지, 그것이 욕심이였을뿐 현실은 월화수목금금금에서 벗어나질 못 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-전재훈'>전재훈 님 글 더 보기</a></li>
+<li>name : 전재훈</li>
+<li>blog : <a href='https://blog.naver.com/hupers' target='_blank'>https://blog.naver.com/hupers</a></li>
+<li>rss : <a href='https://rss.blog.naver.com/hupers.xml' target='_blank'>https://rss.blog.naver.com/hupers.xml</a></li>
+<li>description : MES</li>
+<li>facebook : <a href='https://www.facebook.com/hupers' target='_blank'>https://www.facebook.com/hupers</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%82%ac%eb%9e%91%eb%82%98%eb%ac%b4%ec%95%84%eb%b9%a0%ec%9d%98-%ed%96%89%eb%b3%b5%ed%95%9c-%ec%84%b8%ec%83%81-%ed%8c%94%ec%95%84%ec%9a%94-it%ea%b8%b0%ea%b8%b0-%eb%b0%8f-%ea%b0%80%ec%8a%b5/">[사랑나무아빠의 행복한 세상] [팔아요] IT기기 및 가습기 / 미개봉 및 신품수준</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[김원호의 Dev Log] [Algorithm] 괄호 쌍 만들기</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ea%b9%80%ec%9b%90%ed%98%b8%ec%9d%98-dev-log-algorithm-%ea%b4%84%ed%98%b8-%ec%8c%8d-%eb%a7%8c%eb%93%a4%ea%b8%b0/</link>
+		<pubDate>Sat, 11 May 2019 14:40:48 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김원호]]></category>
+		<category><![CDATA[Javascript]]></category>
 
-    override fun isAccountNonLocked() = true
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;&lt;b&gt;1 행 : 객체가 가지게 되는, 데이터입니다 - 예시에서는 id, pw, role(역할)&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;2행 : 객체가 가지게 되는, 권한(authorites)을 반환합니다 - 예시에서는, role의 값을 역할로 반환해줍니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;8행. 9행 : 각각 패스워드와 아이디를 반환합니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;나머지 : 이 객체가 유효한지에 대한 정보를 반환합니다&lt;/b&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;h2&gt;2. AuthenticationProvider 인터페이스 구현&lt;/h2&gt;
-&lt;p&gt;Security에서, 내가 받을 UserDetails의 정보를 바탕으로, authenticate를 직접 수행해 줄, provider입니다. 이 인터페이스를 구현함으로서 Security는 Authentication을 할 수 있습니다.&lt;/p&gt;
-&lt;pre id=&quot;code_1554096520369&quot; class=&quot;prettyprint kotlin linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;@Service
-class MyAuthenticationProvider : AuthenticationProvider {
-    companion object {
-        val idAndPw = mapOf(&quot;admin&quot; to &quot;123&quot;, &quot;user&quot; to &quot;456&quot;)
-        val idAndRole = mapOf(&quot;admin&quot; to &quot;ROLE_ADMIN&quot;, &quot;user&quot; to &quot;ROLE_USER&quot;)
-    }
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67008</guid>
+		<description><![CDATA[<p>원문 링크 [Algorithm] 괄호 쌍 만들기 미리보기 주어진 수 대로 괄호 쌍을 만드는 문제를 해결합니다. &#8230; 개발자 정보 김원호 님 글 더 보기 name : 김원호 blog : https://undefine.me/ rss : https://undefine.me/rss.xml description : Javascript github : https://github.com/likelionWonho facebook : https://www.facebook.com/wonho.kim.100</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ea%b9%80%ec%9b%90%ed%98%b8%ec%9d%98-dev-log-algorithm-%ea%b4%84%ed%98%b8-%ec%8c%8d-%eb%a7%8c%eb%93%a4%ea%b8%b0/">[김원호의 Dev Log] [Algorithm] 괄호 쌍 만들기</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://undefine.me/posts/18' target='_blank'>[Algorithm] 괄호 쌍 만들기</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>주어진 수 대로 괄호 쌍을 만드는 문제를 해결합니다. &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김원호'>김원호 님 글 더 보기</a></li>
+<li>name : 김원호</li>
+<li>blog : <a href='https://undefine.me/' target='_blank'>https://undefine.me/</a></li>
+<li>rss : <a href='https://undefine.me/rss.xml' target='_blank'>https://undefine.me/rss.xml</a></li>
+<li>description : Javascript</li>
+<li>github : <a href='https://github.com/likelionWonho' target='_blank'>https://github.com/likelionWonho</a></li>
+<li>facebook : <a href='https://www.facebook.com/wonho.kim.100' target='_blank'>https://www.facebook.com/wonho.kim.100</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ea%b9%80%ec%9b%90%ed%98%b8%ec%9d%98-dev-log-algorithm-%ea%b4%84%ed%98%b8-%ec%8c%8d-%eb%a7%8c%eb%93%a4%ea%b8%b0/">[김원호의 Dev Log] [Algorithm] 괄호 쌍 만들기</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[alice_k106님의 블로그] 169. [Prometheus] 1편 : Prometheus (프로메테우스) 사용 방법, 기본 개념, 데이터 구조</title>
+		<link>http://devblog.selfhow.com/2019/05/12/alice_k106%eb%8b%98%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-169-prometheus-1%ed%8e%b8-prometheus-%ed%94%84%eb%a1%9c%eb%a9%94%ed%85%8c%ec%9a%b0%ec%8a%a4-%ec%82%ac%ec%9a%a9-%eb%b0%a9%eb%b2%95/</link>
+		<pubDate>Sat, 11 May 2019 12:34:18 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-용찬호]]></category>
+		<category><![CDATA[Docker, RTOS]]></category>
 
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67020</guid>
+		<description><![CDATA[<p>원문 링크 169. [Prometheus] 1편 : Prometheus (프로메테우스) 사용 방법, 기본 개념, 데이터 구조 미리보기 이번 포스트에서는 프로메테우스 (Prometheus) 에 대한 전반적인 사용 방법에 대해서 다룬다. k8s와 같은 CNCF의 OSS들은 대부분 프로메테우스를 데이터 백엔드로 사용하기 때문에, 대략적으로라도 사용 방법을 알아두는 것이 좋다. 1. Pro &#8230; 개발자 정보 용찬호 님 글 더 보기 name : 용찬호 &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/alice_k106%eb%8b%98%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-169-prometheus-1%ed%8e%b8-prometheus-%ed%94%84%eb%a1%9c%eb%a9%94%ed%85%8c%ec%9a%b0%ec%8a%a4-%ec%82%ac%ec%9a%a9-%eb%b0%a9%eb%b2%95/">[alice_k106님의 블로그] 169. [Prometheus] 1편 : Prometheus (프로메테우스) 사용 방법, 기본 개념, 데이터 구조</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.naver.com/alice_k106/221535163599' target='_blank'>169. [Prometheus] 1편 : Prometheus (프로메테우스) 사용 방법, 기본 개념, 데이터 구조</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>이번 포스트에서는 프로메테우스 (Prometheus) 에 대한 전반적인 사용 방법에 대해서 다룬다. k8s와 같은 CNCF의 OSS들은 대부분 프로메테우스를 데이터 백엔드로 사용하기 때문에, 대략적으로라도 사용 방법을 알아두는 것이 좋다. 1. Pro &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-용찬호'>용찬호 님 글 더 보기</a></li>
+<li>name : 용찬호</li>
+<li>blog : <a href='http://blog.naver.com/alice_k106' target='_blank'>http://blog.naver.com/alice_k106</a></li>
+<li>rss : <a href='https://rss.blog.naver.com/alice_k106.xml' target='_blank'>https://rss.blog.naver.com/alice_k106.xml</a></li>
+<li>description : Docker, RTOS</li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/alice_k106%eb%8b%98%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-169-prometheus-1%ed%8e%b8-prometheus-%ed%94%84%eb%a1%9c%eb%a9%94%ed%85%8c%ec%9a%b0%ec%8a%a4-%ec%82%ac%ec%9a%a9-%eb%b0%a9%eb%b2%95/">[alice_k106님의 블로그] 169. [Prometheus] 1편 : Prometheus (프로메테우스) 사용 방법, 기본 개념, 데이터 구조</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Jins&#8217; Dev Inside] 알고리즘 풀이 시 자주 사용되는 bit 연산 모음</title>
+		<link>http://devblog.selfhow.com/2019/05/12/jins-dev-inside-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98-%ed%92%80%ec%9d%b4-%ec%8b%9c-%ec%9e%90%ec%a3%bc-%ec%82%ac%ec%9a%a9%eb%90%98%eb%8a%94-bit-%ec%97%b0%ec%82%b0-%eb%aa%a8%ec%9d%8c/</link>
+		<pubDate>Sat, 11 May 2019 12:22:09 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-박진성]]></category>
+		<category><![CDATA[Back-end]]></category>
 
-    override fun authenticate(authentication: Authentication): Authentication {
-        val authToken = authentication as UsernamePasswordAuthenticationToken
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67016</guid>
+		<description><![CDATA[<p>원문 링크 알고리즘 풀이 시 자주 사용되는 bit 연산 모음 미리보기   실무에서 bit 연산을 사용할 때에는 주로 플래그 값들을 미리 정의해놓고 마스킹 하는 용도로 사용하지만, 알고리즘 문제를 풀 때에는 조합을 만들어낼 때에나, check 배열 또는 인덱스 값을 값싸게 저장하기 위한 용도로 많이 사용하게 된다. &#8230; 개발자 정보 박진성 님 글 더 보기 name : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/jins-dev-inside-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98-%ed%92%80%ec%9d%b4-%ec%8b%9c-%ec%9e%90%ec%a3%bc-%ec%82%ac%ec%9a%a9%eb%90%98%eb%8a%94-bit-%ec%97%b0%ec%82%b0-%eb%aa%a8%ec%9d%8c/">[Jins&#8217; Dev Inside] 알고리즘 풀이 시 자주 사용되는 bit 연산 모음</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://jins-dev.tistory.com/entry/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-%ED%92%80%EC%9D%B4-%EC%8B%9C-%EC%9E%90%EC%A3%BC-%EC%82%AC%EC%9A%A9%EB%90%98%EB%8A%94-bit-%EC%97%B0%EC%82%B0-%EB%AA%A8%EC%9D%8C' target='_blank'>알고리즘 풀이 시 자주 사용되는 bit 연산 모음</a></p>
+<hr />
+<h4>미리보기</h4>
+<p> <br />
+실무에서 bit 연산을 사용할 때에는 주로 플래그 값들을 미리 정의해놓고 마스킹 하는 용도로 사용하지만,<br />
+알고리즘 문제를 풀 때에는 조합을 만들어낼 때에나, check 배열 또는 인덱스 값을 값싸게 저장하기 위한 용도로 많이 사용하게 된다. &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-박진성'>박진성 님 글 더 보기</a></li>
+<li>name : 박진성</li>
+<li>blog : <a href='http://jins-dev.tistory.com/' target='_blank'>http://jins-dev.tistory.com/</a></li>
+<li>rss : <a href='http://jins-dev.tistory.com/rss' target='_blank'>http://jins-dev.tistory.com/rss</a></li>
+<li>description : Back-end</li>
+<li>linkedin : <a href='https://www.linkedin.com/in/jinsung-park-6b459370/' target='_blank'>https://www.linkedin.com/in/jinsung-park-6b459370/</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/jins-dev-inside-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98-%ed%92%80%ec%9d%b4-%ec%8b%9c-%ec%9e%90%ec%a3%bc-%ec%82%ac%ec%9a%a9%eb%90%98%eb%8a%94-bit-%ec%97%b0%ec%82%b0-%eb%aa%a8%ec%9d%8c/">[Jins&#8217; Dev Inside] 알고리즘 풀이 시 자주 사용되는 bit 연산 모음</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[steve kim] 5월11일</title>
+		<link>http://devblog.selfhow.com/2019/05/12/steve-kim-5%ec%9b%9411%ec%9d%bc-3/</link>
+		<pubDate>Sat, 11 May 2019 11:31:32 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김희서]]></category>
 
-        return when (idAndPw[authToken.principal.toString()] == authToken.credentials.toString()) {
-            false -&amp;gt; {
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67333</guid>
+		<description><![CDATA[<p>원문 링크 5월11일 미리보기 #화학실험 퀴즈2 ppt2장 &#8230; 개발자 정보 김희서 님 글 더 보기 name : 김희서 blog : https://blog.naver.com/khy960117 rss : https://rss.blog.naver.com/khy960117.xml facebook : https://www.facebook.com/gmltjdlek</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/steve-kim-5%ec%9b%9411%ec%9d%bc-3/">[steve kim] 5월11일</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.naver.com/khy960117/221535128172' target='_blank'>5월11일</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>#화학실험 퀴즈2 ppt2장 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김희서'>김희서 님 글 더 보기</a></li>
+<li>name : 김희서</li>
+<li>blog : <a href='https://blog.naver.com/khy960117' target='_blank'>https://blog.naver.com/khy960117</a></li>
+<li>rss : <a href='https://rss.blog.naver.com/khy960117.xml' target='_blank'>https://rss.blog.naver.com/khy960117.xml</a></li>
+<li>facebook : <a href='https://www.facebook.com/gmltjdlek' target='_blank'>https://www.facebook.com/gmltjdlek</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/steve-kim-5%ec%9b%9411%ec%9d%bc-3/">[steve kim] 5월11일</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Jaejun Yoo&#8217;s Playground] Signal Processing For Communications (0)</title>
+		<link>http://devblog.selfhow.com/2019/05/12/jaejun-yoos-playground-signal-processing-for-communications-0/</link>
+		<pubDate>Sat, 11 May 2019 11:30:00 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-유재준]]></category>
+		<category><![CDATA[머신러닝]]></category>
 
-                throw BadCredentialsException(&quot;Id &amp;amp; Password are Not Matched&quot;)
-            }
-            true -&amp;gt; {
-                val userDetail = MyUserDetail(authToken.principal.toString(), authToken.credentials.toString(), idAndRole[authToken.principal.toString()]!!)
-                UsernamePasswordAuthenticationToken(userDetail, userDetail.pw, userDetail.authorities)
-            }
-        }
-    }
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67024</guid>
+		<description><![CDATA[<p>원문 링크 Signal Processing For Communications (0) 미리보기 이 시리즈는 signal processing을 학부 때 배웠으나 여러 이유로 이해를 잘 하지 못하다가 뒤늦게서야 유용성을 깨닫고 개인적으로 공부하며 정리한 흔적이다.결국 machine learning을 하든 deep learning을 하든 모두 신호를 &#8230; 개발자 정보 유재준 님 글 더 보기 name : 유재준 blog : http://jaejunyoo.blogspot.com rss : http://jaejunyoo.blogspot.com/feeds/posts/default description : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/jaejun-yoos-playground-signal-processing-for-communications-0/">[Jaejun Yoo&#8217;s Playground] Signal Processing For Communications (0)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='http://jaejunyoo.blogspot.com/2019/05/signal-processing-for-communications.html' target='_blank'>Signal Processing For Communications (0)</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>이 시리즈는 signal processing을 학부 때 배웠으나 여러 이유로 이해를 잘 하지 못하다가 뒤늦게서야 유용성을 깨닫고 개인적으로 공부하며 정리한 흔적이다.결국 machine learning을 하든 deep learning을 하든 모두 신호를 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-유재준'>유재준 님 글 더 보기</a></li>
+<li>name : 유재준</li>
+<li>blog : <a href='http://jaejunyoo.blogspot.com' target='_blank'>http://jaejunyoo.blogspot.com</a></li>
+<li>rss : <a href='http://jaejunyoo.blogspot.com/feeds/posts/default' target='_blank'>http://jaejunyoo.blogspot.com/feeds/posts/default</a></li>
+<li>description : 머신러닝</li>
+<li>linkedin : <a href='https://www.linkedin.com/in/jaejunyoo/' target='_blank'>https://www.linkedin.com/in/jaejunyoo/</a></li>
+<li>facebook : <a href='https://www.facebook.com/thinking.factory' target='_blank'>https://www.facebook.com/thinking.factory</a></li>
+<li>googleplus : <a href='https://plus.google.com/+JaeJunYoo' target='_blank'>https://plus.google.com/+JaeJunYoo</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/jaejun-yoos-playground-signal-processing-for-communications-0/">[Jaejun Yoo&#8217;s Playground] Signal Processing For Communications (0)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Jaejun Yoo&#8217;s Playground] Signal Processing For Communications (1)</title>
+		<link>http://devblog.selfhow.com/2019/05/12/jaejun-yoos-playground-signal-processing-for-communications-1/</link>
+		<pubDate>Sat, 11 May 2019 11:03:00 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-유재준]]></category>
+		<category><![CDATA[머신러닝]]></category>
 
-    override fun supports(authentication: Class&amp;lt;*&amp;gt;?): Boolean = true
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;&lt;b&gt;1행 : Provider를 @Service 어노테이션을 통해, 빈 등록을 해줍니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;3~6행 : 실제로는 데이터베이스 등에 있는 값으로, 로그인을 해야합니다. 하지만 편의상 예시로 만든 프로젝트이기 때문에 직접 코드로에 값을 넣어주었습니다. admin(id) / 123(pw) / ROLE_ADMIN (role)&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;9행 : 실제로 authenticate를 해주는 method를 오버라이드 하였습니다 - authentication객체는, 후에 html를 통해, 받아오는 id, pw가 담긴 객체입니다.&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;10행 : authentication의 객체로, Username과 Password가 담긴 UsernamepasswordAuthenticationToken을 만들어줍니다&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;13~22행 : id와 pw가 일치하면, role과함께 userdeail이 담긴 token을 반환해줍니다. 일치하지않으면 BadCredentialsException을 발생시킵니다.&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;24행 : 넘어온 authentication 객체가 유효한지 반환하는 method입니다.&lt;/b&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
-&lt;p&gt;여기까지, Authentication을 하기 위한, Userdetail과 Provider에 관한 구현입니다.&lt;/p&gt;</description>
-<category>SW개발</category>
-<category>kotlin</category>
-<category>Spring</category>
-<category>springboot</category>
-<category>SpringFramework</category>
-<category>Thymeleaf</category>
-<category>스프링</category>
-<category>스프링부트</category>
-<category>스프링시큐리티</category>
-<category>코틀린</category>
-<category>타임리프</category>
-<author>사용자 밥풀(Bob Full)</author>
-<guid>https://bob-full.tistory.com/8</guid>
-<comments>https://bob-full.tistory.com/8#entry8comment</comments>
-<pubDate>Mon, 01 Apr 2019 14:36:21 +0900</pubDate>
-</item>
-<item>
-<title>Kotlin + Spring boot security + thymeleaf 로그인 구현(1)</title>
-<link>https://bob-full.tistory.com/7</link>
-<description>&lt;p&gt;IDE는 intellij를 사용하도록 하겠습니다&lt;/p&gt;
-&lt;h2&gt;1. 프로젝트 생성&lt;/h2&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/LfkJb/btqtWZrkvp1/Qjer2tvKADtODr3Dachlb0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/LfkJb/btqtWZrkvp1/Qjer2tvKADtODr3Dachlb0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FLfkJb%2FbtqtWZrkvp1%2FQjer2tvKADtODr3Dachlb0%2Fimg.png' width=&quot;497&quot; height=&quot;317&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;&amp;nbsp; 스프링 이니셜라이저를 이용하여, 부트 프로젝트를 생성합니다 - Comunity 버전은 &lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;http://start.spring.io&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;start.spring.io&lt;/a&gt;&lt;/span&gt;에서 생성할 수 있습니다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/sMpw3/btqtUjydJvf/NPG5koSDJmE3x0wKlgKo01/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/sMpw3/btqtUjydJvf/NPG5koSDJmE3x0wKlgKo01/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FsMpw3%2FbtqtUjydJvf%2FNPG5koSDJmE3x0wKlgKo01%2Fimg.png' width=&quot;487&quot; height=&quot;274&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
-&lt;li&gt;코틀린 프로젝트로 생성합니다. jdk버전은 8을 기준으로 하겠습니다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/Ao0JN/btqtWIQS4Zp/NCH16U7nHLW9bjMu4YJx1k/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/Ao0JN/btqtWIQS4Zp/NCH16U7nHLW9bjMu4YJx1k/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FAo0JN%2FbtqtWIQS4Zp%2FNCH16U7nHLW9bjMu4YJx1k%2Fimg.png' width=&quot;291&quot; height=&quot;194&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul style=&quot;list-style-type: square;&quot; data-ke-list-type=&quot;square&quot;&gt;
-&lt;li&gt;필요한 디펜던시는 3가지입니다. Web을 통해, mvc세팅, thymeleaf 템플릿 엔진, 그리고 가장 중요한 Security를 추가해줍니다.&lt;/li&gt;
-&lt;li&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; -&amp;gt; &lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://github.com/ihoneymon/spring-boot-orm-learn/blob/master/THYMELEAF_TEMPLATE_ENGINE.md&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;thymeleaf란?&lt;/a&gt;&lt;/span&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;pre id=&quot;code_1553759728618&quot; class=&quot;prettyprint xml&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;&amp;lt;dependency&amp;gt;
-    &amp;lt;groupId&amp;gt;org.thymeleaf.extras&amp;lt;/groupId&amp;gt;
-    &amp;lt;artifactId&amp;gt;thymeleaf-extras-springsecurity5&amp;lt;/artifactId&amp;gt;
-&amp;lt;/dependency&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;마지막으로 이런식으로 생성된 프로젝트의 pom.xml 에, thymeleaf + security 관련 디펜던시를 추가해줍니다.&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/biaG2P/btqtT6lz98T/6MmEfVduXPdIFGLl84aauk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/biaG2P/btqtT6lz98T/6MmEfVduXPdIFGLl84aauk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbiaG2P%2FbtqtT6lz98T%2F6MmEfVduXPdIFGLl84aauk%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;* 모두 완료하셨다면, 프로젝트가 생성됐을 겁니다.&lt;/p&gt;</description>
-<category>SW개발</category>
-<category>kotlin</category>
-<category>Spring</category>
-<category>springsecurity</category>
-<category>Thymeleaf</category>
-<category>스프링</category>
-<category>스프링부트</category>
-<category>스프링부트시큐리티</category>
-<category>스프링시큐리티</category>
-<category>코틀린</category>
-<category>타임리프</category>
-<author>사용자 밥풀(Bob Full)</author>
-<guid>https://bob-full.tistory.com/7</guid>
-<comments>https://bob-full.tistory.com/7#entry7comment</comments>
-<pubDate>Thu, 28 Mar 2019 16:58:52 +0900</pubDate>
-</item>
-<item>
-<title>Spring Boot Security</title>
-<link>https://bob-full.tistory.com/6</link>
-<description>&lt;p style=&quot;position: absolute;&quot;&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p style=&quot;font-size: 1.25em;&quot;&gt;&lt;b&gt;웹 보안의 3요소&lt;/b&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Principal - &lt;span&gt;사용자&lt;/span&gt; : &lt;span&gt;현재&lt;/span&gt; &lt;span&gt;서비스에&lt;/span&gt; &lt;span&gt;접근하기&lt;/span&gt; &lt;span&gt;위한&lt;/span&gt; &lt;span&gt;주체&lt;/span&gt;&lt;/li&gt;
-&lt;li&gt;Authentication - &lt;span&gt;인증&lt;/span&gt; : &lt;span&gt;사용자를&lt;/span&gt; &lt;span&gt;확인하는&lt;/span&gt; &lt;span&gt;과정&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/li&gt;
-&lt;li&gt;Authorization - &lt;span&gt;인가&lt;/span&gt; : &lt;span&gt;확인&lt;/span&gt; &lt;span&gt;된&lt;/span&gt; &lt;span&gt;사용자에&lt;/span&gt; &lt;span&gt;대한&lt;/span&gt; &lt;span&gt;권한&lt;/span&gt; &lt;span&gt;검사&lt;/span&gt; &lt;span&gt;및&lt;/span&gt; &lt;span&gt;부여&lt;/span&gt;&lt;br /&gt;&amp;rarr; Spring boot Security&lt;span&gt;는&lt;/span&gt; &lt;span&gt;이&lt;/span&gt; 3&lt;span&gt;가지를&lt;/span&gt; &lt;span&gt;쉽게&lt;/span&gt; &lt;span&gt;사용가능하며&lt;/span&gt;, &lt;span&gt;확장성&lt;/span&gt; &lt;span&gt;또한&lt;/span&gt; &lt;span&gt;매우&lt;/span&gt; &lt;span&gt;높음&lt;/span&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p style=&quot;font-size: 1.25em;&quot;&gt;&lt;b&gt;Spring&amp;nbsp; Security&amp;nbsp;&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/uHDgk/btqtUAsVVEk/8DNbsz5jQAxDBDTpBPK8sk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/uHDgk/btqtUAsVVEk/8DNbsz5jQAxDBDTpBPK8sk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FuHDgk%2FbtqtUAsVVEk%2F8DNbsz5jQAxDBDTpBPK8sk%2Fimg.png' width=&quot;195&quot; height=&quot;181&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;span&gt;Spring Framework&lt;/span&gt;를&lt;span&gt; &lt;/span&gt;기반으로&lt;span&gt;, &lt;/span&gt;포괄적인&lt;span&gt; &lt;/span&gt;보안시스템을&lt;span&gt; &lt;/span&gt;제공하는&lt;span&gt; &lt;/span&gt;오픈&lt;span&gt; &lt;/span&gt;플랫폼&lt;/li&gt;
-&lt;li&gt;&lt;b&gt;Spring boot starter&lt;/b&gt;&lt;span&gt;에&lt;/span&gt; &lt;span&gt;포함시켜&lt;/span&gt; &lt;span&gt;작업할&lt;/span&gt; &lt;span&gt;수&lt;/span&gt; &lt;span&gt;있음&lt;/span&gt;&lt;br /&gt;&amp;rarr;&amp;nbsp;&amp;nbsp;&lt;b&gt;@EnableWebSecurity &lt;span&gt;어노테이션과&lt;/span&gt;, WebSeucrityConfigureAdapter &lt;span&gt;인터페이스를&lt;/span&gt; &lt;span&gt;통해&lt;/span&gt; &lt;span&gt;간단히&lt;/span&gt; &lt;span&gt;구현&lt;/span&gt; &lt;span&gt;가능&lt;/span&gt;&lt;/b&gt;&lt;/li&gt;
-&lt;li&gt;참고할만한&lt;span&gt; &lt;/span&gt;자료&lt;/li&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;span&gt;&lt;span&gt;&lt;/span&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://spring.io/projects/spring-security&quot;&gt;https://spring.io/projects/spring-security&lt;/a&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&quot;color: #000000;&quot;&gt;&amp;nbsp;- 스프링 시큐리티 기술문서&lt;/span&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://sjh836.tistory.com/165&quot;&gt;https://sjh836.tistory.com/165&lt;/a&gt;&lt;/span&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://okky.kr/article/382738&quot;&gt;https://okky.kr/article/382738&lt;/a&gt;&amp;nbsp;-&amp;nbsp;&lt;/span&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://tramyu.github.io/java/spring/spring-security/&quot;&gt;https://tramyu.github.io/java/spring/spring-security/&lt;/a&gt;&amp;nbsp;&lt;span style=&quot;color: #000000;&quot;&gt;- 스프링 시큐리티의 간략한 구조&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/ul&gt;
-&lt;p style=&quot;font-size: 1.25em;&quot;&gt;&lt;b&gt;Spring boot Security&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/dzq0OD/btqtT6eOrZm/apuTh5ktGPHCRckWRGjkqk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/dzq0OD/btqtT6eOrZm/apuTh5ktGPHCRckWRGjkqk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fdzq0OD%2FbtqtT6eOrZm%2FapuTh5ktGPHCRckWRGjkqk%2Fimg.png' width=&quot;232&quot; height=&quot;116&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Spring Security&lt;span&gt;에&lt;/span&gt; &lt;span&gt;스타터를&lt;/span&gt; &lt;span&gt;제공해&lt;/span&gt;, &lt;span&gt;더&lt;/span&gt; &lt;span&gt;빠른&lt;/span&gt; &lt;span&gt;설정을&lt;/span&gt; &lt;span&gt;지원하는&lt;/span&gt; &lt;span&gt;프로젝트&lt;/span&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span&gt;Principal + Authentication을 통해 Authorization을 쉽게 가능&lt;/span&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span&gt;전통적인&lt;/span&gt; &lt;span&gt;인증방식&lt;/span&gt;(principe + credential), &lt;span&gt;이중&lt;/span&gt; &lt;span&gt;인증방식&lt;/span&gt;,&amp;nbsp; OAuth2 &lt;span&gt;인증방식&lt;/span&gt; &lt;span&gt;모두&lt;/span&gt; &lt;span&gt;지원&lt;/span&gt;&lt;/li&gt;
-&lt;li&gt;참고할만한&lt;span&gt; &lt;/span&gt;자료&lt;/li&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;span&gt;&lt;span&gt;&lt;/span&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://gs.saro.me/dev?tn=480&quot;&gt;https://gs.saro.me/dev?tn=480&lt;/a&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&amp;nbsp;&lt;span style=&quot;color: #000000;&quot;&gt;- Spring boot Security 예제&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;
-&lt;li&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://syaku.tistory.com/373&quot;&gt;https://syaku.tistory.com/373&lt;/a&gt;&amp;nbsp;&lt;span style=&quot;color: #000000;&quot;&gt;- 스프링 부트 시큐리티 설정과 사용자 인증&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;b&gt;&lt;span&gt;[Maven 의존성 추가로 사용가능]&lt;/span&gt;&lt;/b&gt;&lt;/h4&gt;
-&lt;pre id=&quot;code_1553758578064&quot; class=&quot;prettyprint linenums xml&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;&amp;lt;dependency&amp;gt;
- &amp;lt;groupId&amp;gt;org.springframework.boot&amp;lt;/groupId&amp;gt;
- &amp;lt;artifactId&amp;gt;spring-boot-starter-security&amp;lt;/artifactId&amp;gt;
-&amp;lt;/dependency&amp;gt; &lt;/code&gt;&lt;/pre&gt;</description>
-<category>SW개발</category>
-<category>보안</category>
-<category>스프링</category>
-<category>스프링부트</category>
-<category>스프링부트시큐리티</category>
-<category>스프링시큐리티</category>
-<category>시큐리티</category>
-<author>사용자 밥풀(Bob Full)</author>
-<guid>https://bob-full.tistory.com/6</guid>
-<comments>https://bob-full.tistory.com/6#entry6comment</comments>
-<pubDate>Thu, 28 Mar 2019 16:00:10 +0900</pubDate>
-</item>
-<item>
-<title>해피뉴이어 무지 후기</title>
-<link>https://bob-full.tistory.com/5</link>
-<description>&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;2019년 한정판 무지 구매했습니당.&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;2019년 황금돼지 해에 맞춰, 돼지 옷을 입은 무지에요.&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:400px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/991946335C683DA229&quot; filemime=&quot;image/jpeg&quot; filename=&quot;1.jpg&quot; height=&quot;500&quot; width=&quot;400&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;사실 일반 무지 인형에, 돼지 꼬까옷을 입을 인형입니다.&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:400px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/990D3B375C683DE11E&quot; filemime=&quot;image/jpeg&quot; filename=&quot;2.jpg&quot; height=&quot;500&quot; width=&quot;400&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;돼지 꼬까 옷을 벗기면, 순백의 하얀 무지 &amp;gt;&amp;lt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:400px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99E632345C683DFF1D&quot; filemime=&quot;image/jpeg&quot; filename=&quot;3.jpg&quot; height=&quot;500&quot; width=&quot;400&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;실은 그냥 무지가 아니라, 리틀 무지입니다.&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;귀엽네요... 한정판이에요..&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
-<category>일상</category>
-<category>2019년</category>
-<category>리틀무지</category>
-<category>무지</category>
-<category>카카오</category>
-<category>카카오 무지</category>
-<category>카카오프렌즈</category>
-<category>카카오후기</category>
-<category>프렌즈샵</category>
-<category>한정판</category>
-<category>해피뉴이어리미티드무지</category>
-<category>황금돼지</category>
-<author>사용자 밥풀(Bob Full)</author>
-<guid>https://bob-full.tistory.com/5</guid>
-<comments>https://bob-full.tistory.com/5#entry5comment</comments>
-<pubDate>Sun, 17 Feb 2019 01:46:36 +0900</pubDate>
-</item>
-<item>
-<title>감귤 라이언 미니인형 &amp; 키링 후기</title>
-<link>https://bob-full.tistory.com/4</link>
-<description>&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;제주도에서 사온 감귤라이언 미니인형과 키링입니다. &lt;b&gt;사실 귤보다 곶감같아요&lt;/b&gt;. &lt;strike&gt;곶감라이언~&lt;/strike&gt;&lt;/p&gt;&lt;p style=&quot;clear: none; float: none; text-align: center;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:320px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/993B42405C617A5815&quot; filemime=&quot;image/jpeg&quot; filename=&quot;KakaoTalk_20190211_222949547.jpg&quot; height=&quot;426&quot; width=&quot;320&quot;/&gt;&lt;/span&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:320px;text-align: center;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99E663395C617B7714&quot; filemime=&quot;image/jpeg&quot; filename=&quot;KakaoTalk_20190211_224036107.jpg&quot; height=&quot;426&quot; style=&quot;text-align: center;&quot; width=&quot;320&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;RYAN 라이언 - 위트의 아이콘, 믿음직 스러운 조언자 라이언&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;덩치가 크고 표정이 무뚝뚝하지만, 여리고 섬세한 소녀감성을 지닌 반전 매력의 소유자&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;둥둥섬의 왕위 계승자였으나, 자유로운 삶을 동경해 탈출!&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;지금은 카카오프렌즈에서 든든한 조언자 역할을 하며 색다른 즐거움을 선사하고 있다.&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:320px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/992D1B405C617A5916&quot; filemime=&quot;image/jpeg&quot; filename=&quot;KakaoTalk_20190211_222950150.jpg&quot; height=&quot;426&quot; width=&quot;320&quot;/&gt;&lt;/span&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:320px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/995170405C617A5914&quot; filemime=&quot;image/jpeg&quot; filename=&quot;KakaoTalk_20190211_222950568.jpg&quot; height=&quot;426&quot; width=&quot;320&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:400px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/998475335C617C2209&quot; filemime=&quot;image/jpeg&quot; filename=&quot;KakaoTalk_20190211_224035564.jpg&quot; height=&quot;533&quot; style=&quot;&quot; width=&quot;400&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;마지막 사진은, 미니인형 귀에 달린 라이언 키링&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
-<category>일상</category>
-<category>감귤라이언</category>
-<category>곶감라이언</category>
-<category>라이언</category>
-<category>라이언 후기</category>
-<category>제주 카카오</category>
-<category>제주라이언</category>
-<category>카카오</category>
-<category>카카오 프렌즈 샵</category>
-<category>카카오프렌즈</category>
-<author>사용자 밥풀(Bob Full)</author>
-<guid>https://bob-full.tistory.com/4</guid>
-<comments>https://bob-full.tistory.com/4#entry4comment</comments>
-<pubDate>Mon, 11 Feb 2019 22:45:32 +0900</pubDate>
-</item>
-<item>
-<title>2018년 하반기 취업준비 후기(Kakao 최종 합격)</title>
-<link>https://bob-full.tistory.com/3</link>
-<description>&lt;div style=&quot;TEXT-ALIGN: left&quot;&gt;안녕하세요.&lt;br /&gt;&lt;br /&gt;2018년 하반기 취업준비 후기입니다. &lt;br /&gt;직무 - Sw개발&lt;br /&gt;&lt;br /&gt;&lt;b&gt;&lt;big&gt;1) 서류전형&lt;/big&gt;&lt;/b&gt;&lt;br /&gt;자기소개서는 방학 때, 상반기에 학교 다니면서 방향을 잡았고, 단기 인턴을 하면서 조금씩 적어나가기 시작했어요. &lt;br /&gt;&lt;br /&gt;처음으로 서류전형에 도전하는만큼, 많은 합격을 바라진 않았지만, 우수수 쓰는대로 다 떨어지고.. 포기할 때 쯤 Cns 합격 소식을 들었을 땐 정말 기뻤어요.&lt;br /&gt;&lt;br /&gt;&lt;span style=&quot;COLOR: #5369be&quot;&gt;&lt;b&gt;&lt;span style=&quot;COLOR: #5369be&quot;&gt;&lt;b&gt;서류 합격 : Lg cns&lt;/b&gt;&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;br /&gt;&lt;span style=&quot;COLOR: #759931&quot;&gt;&lt;span style=&quot;COLOR: #dea214&quot;&gt;&lt;span style=&quot;COLOR: #5369be&quot;&gt;&lt;b&gt;&lt;span style=&quot;COLOR: #759931&quot;&gt;서류 무승부 : 삼성전자(다수 합격)&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;br /&gt;&lt;span style=&quot;COLOR: #de5214&quot;&gt;&lt;b&gt;&lt;span style=&quot;COLOR: #de5214&quot;&gt;&lt;span style=&quot;COLOR: #5369be&quot;&gt;&lt;span style=&quot;COLOR: #de5214&quot;&gt;&lt;b&gt;서류 불합격 : 현대모비스, SK 하이닉스, Lg 전자, Kt, SK C&amp;amp;C, 현대오트론... 등등 다수&lt;/b&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;br /&gt;&lt;b&gt;--------------&lt;/b&gt;&lt;b&gt;------------&lt;/b&gt;&lt;br /&gt;&lt;br /&gt;&lt;big&gt;&lt;b&gt;2) 인적성&lt;/b&gt;&lt;/big&gt;&lt;big&gt;&lt;b&gt;, 코딩테스트&lt;/b&gt;&lt;/big&gt;&lt;br /&gt;보다시피, 서류는 우수수 떨어져서.. LG CNS와 삼성전자에 기회가 생겼어요&lt;br /&gt;--------------------&lt;br /&gt;&lt;b&gt;LG CNS 인적성 후기&lt;/b&gt;&lt;br /&gt;&lt;b&gt;직무&lt;/b&gt; - 1지망 IoT / 2지망 SW개발&lt;br /&gt;&lt;br /&gt;&lt;b&gt;준비)&lt;/b&gt; &lt;big&gt;&lt;small&gt;CNS 월요일에 결과를 얻고, 바로 토요일에 시험이었어요. 중간에 졸업발표까지 겹쳐서 힘들었어요. 시중에 있는 LG 인적성 문제집 2개를 사서 5일동안 풀었어요.&lt;/small&gt;&lt;/big&gt;&lt;big&gt;&lt;small&gt; &lt;/small&gt;&lt;/big&gt;&lt;br /&gt;&lt;br /&gt;&lt;b&gt;시&lt;/b&gt;&lt;b&gt;험) &lt;/b&gt;CNS는 기존 LG공통 인적성과 함께, ITQ라는 과목을 보게 됐어요. 그로 인해 시간은 시험을 오후 내내 보게 됐어요. 중간에 에너지바도 나눠줬는데, 이거 아니었으면 배고파서 죽을뻔 했네요..&lt;br /&gt;난이도는, 진짜 어려웠어요. 6교시 도형추리(?)는 15문제 중 6문제 정도 밖에 못풀었거든요... 그래도 걱정이었던 ITQ는 고등학고 수학수준이어서 쉽게 봤어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과)&lt;/b&gt;&lt;b&gt; 합격&lt;/b&gt;&lt;br /&gt;진짜 망했다고, 생각해서 사실 합격할거란 생각도 하지 못했어요. 체감상 ITQ가 중요했던 것 같고, 내가 어려운건 남들도 어렵다는걸 깨달을 수 있었어요&lt;br /&gt;&lt;br /&gt;----------------------&lt;br /&gt;&lt;br /&gt;&lt;b&gt;삼성전자 SW역량테스트 후기&lt;/b&gt;&lt;br /&gt;생활가전 sw개발&lt;br /&gt;&lt;b&gt;준비)&lt;/b&gt; 삼성 Sw익스퍼트 아카데미 라는 사이트에서 준비했어요. 역량모의문제 + BFS DFS 시뮬레이션 위주로 준비하면, 왠만큼 합격할 수 있을 것이라 생각했습니다.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;시험)&lt;/b&gt; 오후에 시험을 봤어요. 1번은 백준에서 나무재테크란 문제로 찾을 수 있고, 2번은 아기상어라는 문제로 찾아 볼 수 있어요. 2번은 bfs를 이용해서 40분만에 풀었는데.. 1번이 남은시간 안에 도저히 안풀리더라구요... 그래서 2번만 풀고 제출하고 나왔습니다.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과)&lt;/b&gt; &lt;b&gt;합격&lt;/b&gt;&lt;b&gt; (2지망 직무로 합격 - SW개발)&lt;/b&gt;&lt;br /&gt;다들 보통 1문제가 컷이라고 했고, 저 또한 합격 통보를 받게 됐습니다. &lt;br /&gt;&lt;br /&gt;----------------------&lt;br /&gt;&lt;br /&gt;&lt;b&gt;카카오 코딩테스트 후기 - 1차&lt;/b&gt;&lt;br /&gt;- 개발자 블라인드 전형&lt;br /&gt;&lt;b&gt;준비) &lt;/b&gt;준비는, 주로 종만북이라고 불리는 &lt;u&gt;알고리즘 문제해결전략&lt;/u&gt; 이라는 책 위주로 1년 간 꾸준리 공부했어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;시험)&lt;/b&gt; 1차는 온라인으로 진행됐고,&amp;nbsp; 2017년 보다는 좀 어렵다는 느낌이었어요. 커트라인은 공개 되지 않아서 모르지만, 작년과 비슷한 것 같았어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과) 합격&lt;/b&gt;&lt;br /&gt;7문제 중에, 과반수 이상을 풀었고 합격했습니다.&lt;br /&gt;&lt;br /&gt;-----------------------&lt;br /&gt;&lt;br /&gt;&lt;b&gt;카카오 코딩테스트 후기 - 2차&lt;/b&gt;&lt;br /&gt;&lt;b&gt;준비)&lt;/b&gt; 1차에 합격하면, 카카오에서 키워드를 줍니다. 이 키워드를 바탕으로, 약 2주 간 열심히 공부했어요. 중간에 추석도 껴있어서 집중하기가 좀 힘들었어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;시험)&lt;/b&gt; 2차 시험은, 오프라인으로 치뤄졌습니다. 대기시간까지 총 6시간 진행 된 만큼, 먹을 게 많았어요(호두과자랑 과자 등등). 시험 방식이 살짝 평소와 달랐던게 힘들었고, 금방 적응하지 못해서 시험 막바지에나 답을 제출 할 수 있었어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과) 합격&lt;/b&gt;&lt;br /&gt;겨우겨우 제출했고, 중간순위도 매우 낮았던 걸로 기억해서 반은 포기하고 있었는데 붙었어요. &lt;br /&gt;&lt;br /&gt;&lt;b&gt;-------------------------&lt;/b&gt;&lt;br /&gt;&lt;br /&gt;&lt;big&gt;&lt;b&gt;3) 면접 후기 &lt;/b&gt;&lt;/big&gt;&lt;br /&gt;면접은 총 LG CNS 1차, 카카오 1,2차를 세 번을 봤습니다. 삼성전자는 LG CNS 부트캠프 일정과 겹쳐서 가지 않았어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;면접 준비) &lt;/b&gt;학부 생활 중에 했던 프로젝트를 정리했어요. 그런 경험들에서 힘든 점, 좋았던 점, 창의적인 경험 들을 상반기부터 계속 생각하고 뽑아냈습니다. 이를 바탕으로 스터디도 진행했어요.&lt;br /&gt;-----------------&lt;br /&gt;&lt;b&gt;LG CNS 1차 면접)&lt;/b&gt; 실무진 면접이었어요. 평범한 다대다면접이었고, 간단한 전공 지식과 자기소개서 기반의 질문들이 이어졌어요. &lt;br /&gt;저는 인적성 결과에서 2지망 직무로 바꼈기 때문에, 자소서 기반 질문에서 큰 질문을 못 받았고, 평소 생각들을 자주 물으셨습니다.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과) 합격&lt;/b&gt;&lt;br /&gt;합격 후에 부트캠프라는 전형을 참가하게 됐습니다.&lt;br /&gt;------------------&lt;br /&gt;&lt;br /&gt;&lt;b&gt;카카오 1차 면접) &lt;/b&gt;면접은 토론인터뷰랑 기술인터뷰였어요. 각 면접이 긴 시간 동안, 전공지식과 더불어 대화 방식을 봤습니다. 면접자들을 되게 챙겨준다는 느낌이 많이 들어서 되게 좋았어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과) 합격&lt;/b&gt;&lt;br /&gt;분위기가 너무 좋아서? 오히려 떨어질 것 같아 걱정했지만 붙었어요. &lt;br /&gt;&lt;br /&gt;-----------------&lt;br /&gt;&lt;b&gt;카카오 최종면접)&lt;/b&gt;&lt;b&gt; &lt;/b&gt;일반적인 다대다 면접이었습니다. 왜 카카오인지, 왜 개발자인지 등의 기본적인 질문들은 되게 심층적으로 물으셨습니다. 저를 모두 보여주고 온 면접이었어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과) 최종합격&lt;/b&gt;&lt;br /&gt;최종합격 당시에, Lg cns 부트캠프 진행 중이여서, 중도 퇴소를 하고 바로 집으로 가서 자랑했어요..ㅎㅎ&lt;br /&gt;
-&lt;p style=&quot;FLOAT: none; TEXT-ALIGN: center; CLEAR: none&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:225px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99E83A3C5BEFF0CB37&quot; filemime=&quot;image/jpeg&quot; filename=&quot;제목 없음.png&quot; height=&quot;309&quot; width=&quot;225&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;FLOAT: none; TEXT-ALIGN: center; CLEAR: none&quot;&gt; 입사 축하 선물&lt;/p&gt;
-&lt;p style=&quot;TEXT-ALIGN: left&quot;&gt;&amp;nbsp;&lt;/p&gt;합격 선물과 함께... 길다면 길고, 짧다면 짧았던 취업 준비가 끝나고 카카오 입사 OT를 기다리고 있습니다!!&lt;br /&gt;&lt;br /&gt;궁금한게 있으신 분들은 댓글 달아주시면 성심성의껏 알려드릴게요!!&lt;br /&gt;&lt;/div&gt;</description>
-<category>SW개발</category>
-<category>LG CNS</category>
-<category>SW개발</category>
-<category>개발자 면접</category>
-<category>면접</category>
-<category>면접 준비</category>
-<category>면접 후기</category>
-<category>시작</category>
-<category>인적성</category>
-<category>인적성 후기</category>
-<category>취업</category>
-<category>취업 준비</category>
-<category>카카오</category>
-<category>카카오 면접</category>
-<category>카카오 블라인드</category>
-<category>카카오 블라인드 후기</category>
-<category>코딩테스트</category>
-<category>코테</category>
-<category>코테 후기</category>
-<category>프로그래머</category>
-<author>사용자 밥풀(Bob Full)</author>
-<guid>https://bob-full.tistory.com/3</guid>
-<comments>https://bob-full.tistory.com/3#entry3comment</comments>
-<pubDate>Sat, 17 Nov 2018 17:44:28 +0900</pubDate>
-</item>
-</channel>
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67022</guid>
+		<description><![CDATA[<p>원문 링크 Signal Processing For Communications (1) 미리보기 What Is Digital Signal Processing? 신호(signal)와 신호 처리(signal processing) 대해서 정의를 내리자면 각각 다음과 같다: 신호: 시간 혹은 공간에 대해 변화하는 현상에 대한 formal descrip &#8230; 개발자 정보 유재준 님 글 더 보기 name : 유재준 blog : http://jaejunyoo.blogspot.com rss : http://jaejunyoo.blogspot.com/feeds/posts/default description : 머신러닝 linkedin : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/jaejun-yoos-playground-signal-processing-for-communications-1/">[Jaejun Yoo&#8217;s Playground] Signal Processing For Communications (1)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='http://jaejunyoo.blogspot.com/2019/05/signal-processing-for-communications-1.html' target='_blank'>Signal Processing For Communications (1)</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+What Is Digital Signal Processing?<br />
+신호(signal)와 신호 처리(signal processing) 대해서 정의를 내리자면 각각 다음과 같다:<br />
+신호: 시간 혹은 공간에 대해 변화하는 현상에 대한 formal descrip &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-유재준'>유재준 님 글 더 보기</a></li>
+<li>name : 유재준</li>
+<li>blog : <a href='http://jaejunyoo.blogspot.com' target='_blank'>http://jaejunyoo.blogspot.com</a></li>
+<li>rss : <a href='http://jaejunyoo.blogspot.com/feeds/posts/default' target='_blank'>http://jaejunyoo.blogspot.com/feeds/posts/default</a></li>
+<li>description : 머신러닝</li>
+<li>linkedin : <a href='https://www.linkedin.com/in/jaejunyoo/' target='_blank'>https://www.linkedin.com/in/jaejunyoo/</a></li>
+<li>facebook : <a href='https://www.facebook.com/thinking.factory' target='_blank'>https://www.facebook.com/thinking.factory</a></li>
+<li>googleplus : <a href='https://plus.google.com/+JaeJunYoo' target='_blank'>https://plus.google.com/+JaeJunYoo</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/jaejun-yoos-playground-signal-processing-for-communications-1/">[Jaejun Yoo&#8217;s Playground] Signal Processing For Communications (1)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[steve kim] 5월11일</title>
+		<link>http://devblog.selfhow.com/2019/05/12/steve-kim-5%ec%9b%9411%ec%9d%bc-2/</link>
+		<pubDate>Sat, 11 May 2019 10:52:24 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김희서]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67331</guid>
+		<description><![CDATA[<p>원문 링크 5월11일 미리보기 6. 연속주기신호의 #주파수 해석 ~ p.28 #신호및시스템 &#8230; 개발자 정보 김희서 님 글 더 보기 name : 김희서 blog : https://blog.naver.com/khy960117 rss : https://rss.blog.naver.com/khy960117.xml facebook : https://www.facebook.com/gmltjdlek</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/steve-kim-5%ec%9b%9411%ec%9d%bc-2/">[steve kim] 5월11일</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.naver.com/khy960117/221535107623' target='_blank'>5월11일</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>6. 연속주기신호의 #주파수 해석 ~ p.28 #신호및시스템 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김희서'>김희서 님 글 더 보기</a></li>
+<li>name : 김희서</li>
+<li>blog : <a href='https://blog.naver.com/khy960117' target='_blank'>https://blog.naver.com/khy960117</a></li>
+<li>rss : <a href='https://rss.blog.naver.com/khy960117.xml' target='_blank'>https://rss.blog.naver.com/khy960117.xml</a></li>
+<li>facebook : <a href='https://www.facebook.com/gmltjdlek' target='_blank'>https://www.facebook.com/gmltjdlek</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/steve-kim-5%ec%9b%9411%ec%9d%bc-2/">[steve kim] 5월11일</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[책쓰는 프로그래머 유동환] [Flutter] #2 Hello Flutter 만들기</title>
+		<link>http://devblog.selfhow.com/2019/05/12/%ec%b1%85%ec%93%b0%eb%8a%94-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%a8%b8-%ec%9c%a0%eb%8f%99%ed%99%98-flutter-2-hello-flutter-%eb%a7%8c%eb%93%a4%ea%b8%b0/</link>
+		<pubDate>Sat, 11 May 2019 07:34:14 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-유동환]]></category>
+		<category><![CDATA[도서 집필]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67010</guid>
+		<description><![CDATA[<p>원문 링크 [Flutter] #2 Hello Flutter 만들기 미리보기 들어가는 글: 어떤 언어(플랫폼)을 배우던 Hello XXX 는 친숙하시죠? 오늘은 세상에서 가장 간단한 플러터 앱을 만들어 봅니다. 소스는 10줄 남짓인데 그럴싸한 앱 화면이 나옵니다. 1. 첫 플러터 앱 생성 안드로이드 스튜디오를 시작하고, 새 &#8230; 개발자 정보 유동환 님 글 더 보기 name : 유동환 blog : https://brunch.co.kr/@yudong rss &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%b1%85%ec%93%b0%eb%8a%94-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%a8%b8-%ec%9c%a0%eb%8f%99%ed%99%98-flutter-2-hello-flutter-%eb%a7%8c%eb%93%a4%ea%b8%b0/">[책쓰는 프로그래머 유동환] [Flutter] #2 Hello Flutter 만들기</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://brunch.co.kr/@@6dD/106' target='_blank'>[Flutter] #2 Hello Flutter 만들기</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>들어가는 글: 어떤 언어(플랫폼)을 배우던 Hello XXX 는 친숙하시죠? 오늘은 세상에서 가장 간단한 플러터 앱을 만들어 봅니다. 소스는 10줄 남짓인데 그럴싸한 앱 화면이 나옵니다.  1. 첫 플러터 앱 생성  안드로이드 스튜디오를 시작하고, 새 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-유동환'>유동환 님 글 더 보기</a></li>
+<li>name : 유동환</li>
+<li>blog : <a href='https://brunch.co.kr/@yudong' target='_blank'>https://brunch.co.kr/@yudong</a></li>
+<li>rss : <a href='https://brunch.co.kr/rss/@@6dD' target='_blank'>https://brunch.co.kr/rss/@@6dD</a></li>
+<li>description : 도서 집필</li>
+<li>slideshare : <a href='https://www.slideshare.net/koreacio' target='_blank'>https://www.slideshare.net/koreacio</a></li>
+<li>linkedin : <a href='https://www.linkedin.com/in/donghwan-yu-0140b597/' target='_blank'>https://www.linkedin.com/in/donghwan-yu-0140b597/</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/12/%ec%b1%85%ec%93%b0%eb%8a%94-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%a8%b8-%ec%9c%a0%eb%8f%99%ed%99%98-flutter-2-hello-flutter-%eb%a7%8c%eb%93%a4%ea%b8%b0/">[책쓰는 프로그래머 유동환] [Flutter] #2 Hello Flutter 만들기</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Huns.me] CORS 실패 시, 응답 개체의 status는 왜 0일까?</title>
+		<link>http://devblog.selfhow.com/2019/05/11/huns-me-cors-%ec%8b%a4%ed%8c%a8-%ec%8b%9c-%ec%9d%91%eb%8b%b5-%ea%b0%9c%ec%b2%b4%ec%9d%98-status%eb%8a%94-%ec%99%9c-0%ec%9d%bc%ea%b9%8c/</link>
+		<pubDate>Sat, 11 May 2019 05:42:00 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김훈민(김코딩)]]></category>
+		<category><![CDATA[Web]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67000</guid>
+		<description><![CDATA[<p>원문 링크 CORS 실패 시, 응답 개체의 status는 왜 0일까? 미리보기 … &#8230; 개발자 정보 김훈민(김코딩) 님 글 더 보기 name : 김훈민(김코딩) blog : http://huns.me/ rss : http://huns.me/feed description : Web slideshare : https://www.slideshare.net/jeokrang github : https://github.com/CoderK facebook : https://www.facebook.com/jeokrang</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/huns-me-cors-%ec%8b%a4%ed%8c%a8-%ec%8b%9c-%ec%9d%91%eb%8b%b5-%ea%b0%9c%ec%b2%b4%ec%9d%98-status%eb%8a%94-%ec%99%9c-0%ec%9d%bc%ea%b9%8c/">[Huns.me] CORS 실패 시, 응답 개체의 status는 왜 0일까?</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://huns.me/development/2297' target='_blank'>CORS 실패 시, 응답 개체의 status는 왜 0일까?</a></p>
+<hr />
+<h4>미리보기</h4>
+<p> …  &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김훈민(김코딩)'>김훈민(김코딩) 님 글 더 보기</a></li>
+<li>name : 김훈민(김코딩)</li>
+<li>blog : <a href='http://huns.me/' target='_blank'>http://huns.me/</a></li>
+<li>rss : <a href='http://huns.me/feed' target='_blank'>http://huns.me/feed</a></li>
+<li>description : Web</li>
+<li>slideshare : <a href='https://www.slideshare.net/jeokrang' target='_blank'>https://www.slideshare.net/jeokrang</a></li>
+<li>github : <a href='https://github.com/CoderK' target='_blank'>https://github.com/CoderK</a></li>
+<li>facebook : <a href='https://www.facebook.com/jeokrang' target='_blank'>https://www.facebook.com/jeokrang</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/huns-me-cors-%ec%8b%a4%ed%8c%a8-%ec%8b%9c-%ec%9d%91%eb%8b%b5-%ea%b0%9c%ec%b2%b4%ec%9d%98-status%eb%8a%94-%ec%99%9c-0%ec%9d%bc%ea%b9%8c/">[Huns.me] CORS 실패 시, 응답 개체의 status는 왜 0일까?</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[steve kim] 5월11일 &#8211; 회로이론</title>
+		<link>http://devblog.selfhow.com/2019/05/11/steve-kim-5%ec%9b%9411%ec%9d%bc-%ed%9a%8c%eb%a1%9c%ec%9d%b4%eb%a1%a0/</link>
+		<pubDate>Sat, 11 May 2019 05:17:37 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김희서]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67014</guid>
+		<description><![CDATA[<p>원문 링크 5월11일 &#8211; 회로이론 미리보기 #회로이론 &#8211; 7장 #에너지저장소자 #인덕터 #커패시터#전자회로 1 과제 &#8230; 개발자 정보 김희서 님 글 더 보기 name : 김희서 blog : https://blog.naver.com/khy960117 rss : https://rss.blog.naver.com/khy960117.xml facebook : https://www.facebook.com/gmltjdlek</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/steve-kim-5%ec%9b%9411%ec%9d%bc-%ed%9a%8c%eb%a1%9c%ec%9d%b4%eb%a1%a0/">[steve kim] 5월11일 &#8211; 회로이론</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.naver.com/khy960117/221534924876' target='_blank'>5월11일 &#8211; 회로이론</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>#회로이론 &#8211; 7장 #에너지저장소자 #인덕터 #커패시터#전자회로 1 과제 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김희서'>김희서 님 글 더 보기</a></li>
+<li>name : 김희서</li>
+<li>blog : <a href='https://blog.naver.com/khy960117' target='_blank'>https://blog.naver.com/khy960117</a></li>
+<li>rss : <a href='https://rss.blog.naver.com/khy960117.xml' target='_blank'>https://rss.blog.naver.com/khy960117.xml</a></li>
+<li>facebook : <a href='https://www.facebook.com/gmltjdlek' target='_blank'>https://www.facebook.com/gmltjdlek</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/steve-kim-5%ec%9b%9411%ec%9d%bc-%ed%9a%8c%eb%a1%9c%ec%9d%b4%eb%a1%a0/">[steve kim] 5월11일 &#8211; 회로이론</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[블라인드 렌더러] 슈퍼캣 CTO + 디지털 노마드 끼로님과의 1:1</title>
+		<link>http://devblog.selfhow.com/2019/05/11/%eb%b8%94%eb%9d%bc%ec%9d%b8%eb%93%9c-%eb%a0%8c%eb%8d%94%eb%9f%ac-%ec%8a%88%ed%8d%bc%ec%ba%a3-cto-%eb%94%94%ec%a7%80%ed%84%b8-%eb%85%b8%eb%a7%88%eb%93%9c-%eb%81%bc%eb%a1%9c%eb%8b%98%ea%b3%bc/</link>
+		<pubDate>Sat, 11 May 2019 04:17:00 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김포프]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66998</guid>
+		<description><![CDATA[<p>원문 링크 슈퍼캣 CTO + 디지털 노마드 끼로님과의 1:1 미리보기 &#8211; 네&#8230; 그 넥슨에서 엄청난 투자를 받아 화제가 되었던 슈퍼캣의 CTO 분이십니다. &#8211; 대화하다가 갑자기 회사의 구인광고가 나갈 수도 있단 제보를 받았습니다. &#8230; 개발자 정보 김포프 님 글 더 보기 name : 김포프 blog : http://kblog.popekim.com/ rss : http://feeds.feedburner.com/kblog-blindrenderer?format=xml twitter : https://twitter.com/blindrendererkr facebook : https://www.facebook.com/profile.php?id=100001300259016 &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%eb%b8%94%eb%9d%bc%ec%9d%b8%eb%93%9c-%eb%a0%8c%eb%8d%94%eb%9f%ac-%ec%8a%88%ed%8d%bc%ec%ba%a3-cto-%eb%94%94%ec%a7%80%ed%84%b8-%eb%85%b8%eb%a7%88%eb%93%9c-%eb%81%bc%eb%a1%9c%eb%8b%98%ea%b3%bc/">[블라인드 렌더러] 슈퍼캣 CTO + 디지털 노마드 끼로님과의 1:1</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='http://feedproxy.google.com/~r/kblog-blindrenderer/~3/sWwL3bel9so/cto-11.html' target='_blank'>슈퍼캣 CTO + 디지털 노마드 끼로님과의 1:1</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>&#8211; 네&#8230; 그 넥슨에서 엄청난 투자를 받아 화제가 되었던 슈퍼캣의 CTO 분이십니다. &#8211; 대화하다가 갑자기 회사의 구인광고가 나갈 수도 있단 제보를 받았습니다.</p>
+<p> &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김포프'>김포프 님 글 더 보기</a></li>
+<li>name : 김포프</li>
+<li>blog : <a href='http://kblog.popekim.com/' target='_blank'>http://kblog.popekim.com/</a></li>
+<li>rss : <a href='http://feeds.feedburner.com/kblog-blindrenderer?format=xml' target='_blank'>http://feeds.feedburner.com/kblog-blindrenderer?format=xml</a></li>
+<li>twitter : <a href='https://twitter.com/blindrendererkr' target='_blank'>https://twitter.com/blindrendererkr</a></li>
+<li>facebook : <a href='https://www.facebook.com/profile.php?id=100001300259016' target='_blank'>https://www.facebook.com/profile.php?id=100001300259016</a></li>
+<li>googleplus : <a href='https://plus.google.com/+%EA%B9%80%ED%8F%AC%ED%94%84' target='_blank'>https://plus.google.com/+%EA%B9%80%ED%8F%AC%ED%94%84</a></li>
+<li>youtube : <a href='https://www.youtube.com/channel/UC63J0Q5huHSlbNT3KxvAaHQ' target='_blank'>https://www.youtube.com/channel/UC63J0Q5huHSlbNT3KxvAaHQ</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%eb%b8%94%eb%9d%bc%ec%9d%b8%eb%93%9c-%eb%a0%8c%eb%8d%94%eb%9f%ac-%ec%8a%88%ed%8d%bc%ec%ba%a3-cto-%eb%94%94%ec%a7%80%ed%84%b8-%eb%85%b8%eb%a7%88%eb%93%9c-%eb%81%bc%eb%a1%9c%eb%8b%98%ea%b3%bc/">[블라인드 렌더러] 슈퍼캣 CTO + 디지털 노마드 끼로님과의 1:1</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Jins&#8217; Dev Inside] 자바스크립트 호이스팅(Hoisting)</title>
+		<link>http://devblog.selfhow.com/2019/05/11/jins-dev-inside-%ec%9e%90%eb%b0%94%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8-%ed%98%b8%ec%9d%b4%ec%8a%a4%ed%8c%85hoisting/</link>
+		<pubDate>Sat, 11 May 2019 03:26:15 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-박진성]]></category>
+		<category><![CDATA[Back-end]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67006</guid>
+		<description><![CDATA[<p>원문 링크 자바스크립트 호이스팅(Hoisting) 미리보기   Javascript 의 기본적인 내용이자 Scope 와 관련된 중요한 개념이다.   Javascript 는 많은 프로그래밍 언어와 다르게 Block-level Scope 가 아닌 Function-level Scope 를 따른다. Block- &#8230; 개발자 정보 박진성 님 글 더 보기 name : 박진성 blog : http://jins-dev.tistory.com/ rss : http://jins-dev.tistory.com/rss description : Back-end linkedin : https://www.linkedin.com/in/jinsung-park-6b459370/</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/jins-dev-inside-%ec%9e%90%eb%b0%94%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8-%ed%98%b8%ec%9d%b4%ec%8a%a4%ed%8c%85hoisting/">[Jins&#8217; Dev Inside] 자바스크립트 호이스팅(Hoisting)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://jins-dev.tistory.com/entry/%EC%9E%90%EB%B0%94%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8-%ED%98%B8%EC%9D%B4%EC%8A%A4%ED%8C%85Hoisting' target='_blank'>자바스크립트 호이스팅(Hoisting)</a></p>
+<hr />
+<h4>미리보기</h4>
+<p> <br />
+Javascript 의 기본적인 내용이자 Scope 와 관련된 중요한 개념이다.<br />
+ <br />
+Javascript 는 많은 프로그래밍 언어와 다르게 Block-level Scope 가 아닌 Function-level Scope 를 따른다.<br />
+Block- &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-박진성'>박진성 님 글 더 보기</a></li>
+<li>name : 박진성</li>
+<li>blog : <a href='http://jins-dev.tistory.com/' target='_blank'>http://jins-dev.tistory.com/</a></li>
+<li>rss : <a href='http://jins-dev.tistory.com/rss' target='_blank'>http://jins-dev.tistory.com/rss</a></li>
+<li>description : Back-end</li>
+<li>linkedin : <a href='https://www.linkedin.com/in/jinsung-park-6b459370/' target='_blank'>https://www.linkedin.com/in/jinsung-park-6b459370/</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/jins-dev-inside-%ec%9e%90%eb%b0%94%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8-%ed%98%b8%ec%9d%b4%ec%8a%a4%ed%8c%85hoisting/">[Jins&#8217; Dev Inside] 자바스크립트 호이스팅(Hoisting)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Jins&#8217; Dev Inside] 자바스크립트의 Closure 에 대한 이해</title>
+		<link>http://devblog.selfhow.com/2019/05/11/jins-dev-inside-%ec%9e%90%eb%b0%94%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8%ec%9d%98-closure-%ec%97%90-%eb%8c%80%ed%95%9c-%ec%9d%b4%ed%95%b4/</link>
+		<pubDate>Sat, 11 May 2019 02:52:53 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-박진성]]></category>
+		<category><![CDATA[Back-end]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67004</guid>
+		<description><![CDATA[<p>원문 링크 자바스크립트의 Closure 에 대한 이해 미리보기   Javascript 의 클로저는 보통 Scope 와 같이 기술되는 특징적인 개념이다. 그 이유는 Closure 라는 개념이 Javascript 의 특징적인 Nested Scope 개념을 이용하기 때문이다.   다음 예제를 확인해보자.   &#8230; 개발자 정보 박진성 님 글 더 보기 name : 박진성 blog : http://jins-dev.tistory.com/ rss : http://jins-dev.tistory.com/rss description &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/jins-dev-inside-%ec%9e%90%eb%b0%94%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8%ec%9d%98-closure-%ec%97%90-%eb%8c%80%ed%95%9c-%ec%9d%b4%ed%95%b4/">[Jins&#8217; Dev Inside] 자바스크립트의 Closure 에 대한 이해</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://jins-dev.tistory.com/entry/%EC%9E%90%EB%B0%94%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8%EC%9D%98-Closure-%EC%97%90-%EB%8C%80%ED%95%9C-%EC%9D%B4%ED%95%B4' target='_blank'>자바스크립트의 Closure 에 대한 이해</a></p>
+<hr />
+<h4>미리보기</h4>
+<p> <br />
+Javascript 의 클로저는 보통 Scope 와 같이 기술되는 특징적인 개념이다.<br />
+그 이유는 Closure 라는 개념이 Javascript 의 특징적인 Nested Scope 개념을 이용하기 때문이다.<br />
+ <br />
+다음 예제를 확인해보자.<br />
+ </p>
+<p> &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-박진성'>박진성 님 글 더 보기</a></li>
+<li>name : 박진성</li>
+<li>blog : <a href='http://jins-dev.tistory.com/' target='_blank'>http://jins-dev.tistory.com/</a></li>
+<li>rss : <a href='http://jins-dev.tistory.com/rss' target='_blank'>http://jins-dev.tistory.com/rss</a></li>
+<li>description : Back-end</li>
+<li>linkedin : <a href='https://www.linkedin.com/in/jinsung-park-6b459370/' target='_blank'>https://www.linkedin.com/in/jinsung-park-6b459370/</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/jins-dev-inside-%ec%9e%90%eb%b0%94%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8%ec%9d%98-closure-%ec%97%90-%eb%8c%80%ed%95%9c-%ec%9d%b4%ed%95%b4/">[Jins&#8217; Dev Inside] 자바스크립트의 Closure 에 대한 이해</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[steve kim] 5월11일</title>
+		<link>http://devblog.selfhow.com/2019/05/11/steve-kim-5%ec%9b%9411%ec%9d%bc/</link>
+		<pubDate>Sat, 11 May 2019 02:38:26 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김희서]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67012</guid>
+		<description><![CDATA[<p>원문 링크 5월11일 미리보기 Peebles의 확률 랜덤변수 및 랜덤 신호 원리 작가 Peebles 출판 McGraw-HillEducation 발매 2015.11.27 중간고사 이후 그동안 수업한 내용 복습. &#8230; 개발자 정보 김희서 님 글 더 보기 name : 김희서 blog : https://blog.naver.com/khy960117 rss : https://rss.blog.naver.com/khy960117.xml facebook : https://www.facebook.com/gmltjdlek</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/steve-kim-5%ec%9b%9411%ec%9d%bc/">[steve kim] 5월11일</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.naver.com/khy960117/221534839875' target='_blank'>5월11일</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>Peebles의 확률 랜덤변수 및 랜덤 신호 원리 작가 Peebles 출판 McGraw-HillEducation 발매 2015.11.27 중간고사 이후 그동안 수업한 내용 복습. &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김희서'>김희서 님 글 더 보기</a></li>
+<li>name : 김희서</li>
+<li>blog : <a href='https://blog.naver.com/khy960117' target='_blank'>https://blog.naver.com/khy960117</a></li>
+<li>rss : <a href='https://rss.blog.naver.com/khy960117.xml' target='_blank'>https://rss.blog.naver.com/khy960117.xml</a></li>
+<li>facebook : <a href='https://www.facebook.com/gmltjdlek' target='_blank'>https://www.facebook.com/gmltjdlek</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/steve-kim-5%ec%9b%9411%ec%9d%bc/">[steve kim] 5월11일</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Jins&#8217; Dev Inside] 자바스크립트의 Scope 에 대한 이해</title>
+		<link>http://devblog.selfhow.com/2019/05/11/jins-dev-inside-%ec%9e%90%eb%b0%94%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8%ec%9d%98-scope-%ec%97%90-%eb%8c%80%ed%95%9c-%ec%9d%b4%ed%95%b4/</link>
+		<pubDate>Sat, 11 May 2019 02:03:18 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-박진성]]></category>
+		<category><![CDATA[Back-end]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67002</guid>
+		<description><![CDATA[<p>원문 링크 자바스크립트의 Scope 에 대한 이해 미리보기   다른 언어들과 마찬가지로 Javascript 역시 Scope 를 갖고 있으며, 이를 기본적으로 이해하는 것이 아주 중요하다.   Javascript 의 Scope 에는 다음 2가지가 있다.   (1) Local scope 지역 스코프를 말하 &#8230; 개발자 정보 박진성 님 글 더 보기 name : 박진성 blog : http://jins-dev.tistory.com/ rss : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/jins-dev-inside-%ec%9e%90%eb%b0%94%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8%ec%9d%98-scope-%ec%97%90-%eb%8c%80%ed%95%9c-%ec%9d%b4%ed%95%b4/">[Jins&#8217; Dev Inside] 자바스크립트의 Scope 에 대한 이해</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://jins-dev.tistory.com/entry/%EC%9E%90%EB%B0%94%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8%EC%9D%98-Scope%EC%97%90-%EB%8C%80%ED%95%9C-%EC%9D%B4%ED%95%B4' target='_blank'>자바스크립트의 Scope 에 대한 이해</a></p>
+<hr />
+<h4>미리보기</h4>
+<p> <br />
+다른 언어들과 마찬가지로 Javascript 역시 Scope 를 갖고 있으며, 이를 기본적으로 이해하는 것이 아주 중요하다.<br />
+ <br />
+Javascript 의 Scope 에는 다음 2가지가 있다.<br />
+ <br />
+(1) Local scope<br />
+지역 스코프를 말하 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-박진성'>박진성 님 글 더 보기</a></li>
+<li>name : 박진성</li>
+<li>blog : <a href='http://jins-dev.tistory.com/' target='_blank'>http://jins-dev.tistory.com/</a></li>
+<li>rss : <a href='http://jins-dev.tistory.com/rss' target='_blank'>http://jins-dev.tistory.com/rss</a></li>
+<li>description : Back-end</li>
+<li>linkedin : <a href='https://www.linkedin.com/in/jinsung-park-6b459370/' target='_blank'>https://www.linkedin.com/in/jinsung-park-6b459370/</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/jins-dev-inside-%ec%9e%90%eb%b0%94%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8%ec%9d%98-scope-%ec%97%90-%eb%8c%80%ed%95%9c-%ec%9d%b4%ed%95%b4/">[Jins&#8217; Dev Inside] 자바스크립트의 Scope 에 대한 이해</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Stories by Harry The Great on Medium] Gradle에서 Dependency Conflict 해결하기</title>
+		<link>http://devblog.selfhow.com/2019/05/11/stories-by-harry-the-great-on-medium-gradle%ec%97%90%ec%84%9c-dependency-conflict-%ed%95%b4%ea%b2%b0%ed%95%98%ea%b8%b0/</link>
+		<pubDate>Fri, 10 May 2019 23:49:51 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[Android, AWS]]></category>
+		<category><![CDATA[author-한동수]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66996</guid>
+		<description><![CDATA[<p>원문 링크 Gradle에서 Dependency Conflict 해결하기 미리보기 의외로 처음 안드로이드 개발을 하게되면 마주하는 가장 짜증내는 문제가 의존성끼리의 충돌입니다. 그리고 생각보다 관련한 글이 많이 없기에 작성하게되었습니다. 일반적으로 그래들에서의 의존성끼리 충돌은 서로 동일한 라이브러리를 사용하고있지만 서로 다른 버 &#8230; 개발자 정보 한동수 님 글 더 보기 name : 한동수 blog : https://medium.com/@herryhan2435 rss : https://medium.com/feed/@herryhan2435 description : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/stories-by-harry-the-great-on-medium-gradle%ec%97%90%ec%84%9c-dependency-conflict-%ed%95%b4%ea%b2%b0%ed%95%98%ea%b8%b0/">[Stories by Harry The Great on Medium] Gradle에서 Dependency Conflict 해결하기</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://medium.com/harrythegreat/gradle%EC%97%90%EC%84%9C-dependency-conflict-%ED%95%B4%EA%B2%B0%ED%95%98%EA%B8%B0-57dbba3a3231?source=rss-8fcd041d697e------2' target='_blank'>Gradle에서 Dependency Conflict 해결하기</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+의외로 처음 안드로이드 개발을 하게되면 마주하는 가장 짜증내는 문제가 의존성끼리의 충돌입니다. 그리고 생각보다 관련한 글이 많이 없기에 작성하게되었습니다. 일반적으로 그래들에서의 의존성끼리 충돌은 서로 동일한 라이브러리를 사용하고있지만 서로 다른 버 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-한동수'>한동수 님 글 더 보기</a></li>
+<li>name : 한동수</li>
+<li>blog : <a href='https://medium.com/@herryhan2435' target='_blank'>https://medium.com/@herryhan2435</a></li>
+<li>rss : <a href='https://medium.com/feed/@herryhan2435' target='_blank'>https://medium.com/feed/@herryhan2435</a></li>
+<li>description : Android, AWS</li>
+<li>github : <a href='https://github.com/harryhan24' target='_blank'>https://github.com/harryhan24</a></li>
+<li>facebook : <a href='https://www.facebook.com/herryhan2435' target='_blank'>https://www.facebook.com/herryhan2435</a></li>
+<li>instagram : <a href='https://www.instagram.com/harryhan2435/' target='_blank'>https://www.instagram.com/harryhan2435/</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/stories-by-harry-the-great-on-medium-gradle%ec%97%90%ec%84%9c-dependency-conflict-%ed%95%b4%ea%b2%b0%ed%95%98%ea%b8%b0/">[Stories by Harry The Great on Medium] Gradle에서 Dependency Conflict 해결하기</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[IT 프리랜서 이야기] 신규 시스템 도입에 관한 생각</title>
+		<link>http://devblog.selfhow.com/2019/05/11/it-%ed%94%84%eb%a6%ac%eb%9e%9c%ec%84%9c-%ec%9d%b4%ec%95%bc%ea%b8%b0-%ec%8b%a0%ea%b7%9c-%ec%8b%9c%ec%8a%a4%ed%85%9c-%eb%8f%84%ec%9e%85%ec%97%90-%ea%b4%80%ed%95%9c-%ec%83%9d%ea%b0%81/</link>
+		<pubDate>Fri, 10 May 2019 22:32:28 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-한고 (10년코더)]]></category>
+		<category><![CDATA[프리랜서]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66992</guid>
+		<description><![CDATA[<p>원문 링크 신규 시스템 도입에 관한 생각 미리보기 시대는 발전하고, 개발자들은 여전히 게으릅니다. 똑같은 작업을 두 번 반복하느니, 반복을 최소화하는 프로그램을 작성하는게 개발자의 본능이라고 생각해요. 그래서 개발자들은 가능하면 모든 걸 자동화하려고 생각하지요. 예를 들면 FTP로 배포를 하던 시 &#8230; 개발자 정보 한고 (10년코더) 님 글 더 보기 name : 한고 (10년코더) blog : https://10yearscoder.tistory.com/ rss &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/it-%ed%94%84%eb%a6%ac%eb%9e%9c%ec%84%9c-%ec%9d%b4%ec%95%bc%ea%b8%b0-%ec%8b%a0%ea%b7%9c-%ec%8b%9c%ec%8a%a4%ed%85%9c-%eb%8f%84%ec%9e%85%ec%97%90-%ea%b4%80%ed%95%9c-%ec%83%9d%ea%b0%81/">[IT 프리랜서 이야기] 신규 시스템 도입에 관한 생각</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://10yearscoder.tistory.com/entry/%EC%8B%A0%EA%B7%9C-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EB%8F%84%EC%9E%85%EC%97%90-%EA%B4%80%ED%95%9C-%EC%83%9D%EA%B0%81' target='_blank'>신규 시스템 도입에 관한 생각</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+시대는 발전하고, 개발자들은 여전히 게으릅니다.<br />
+똑같은 작업을 두 번 반복하느니, 반복을 최소화하는 프로그램을 작성하는게 개발자의 본능이라고 생각해요.<br />
+그래서 개발자들은 가능하면 모든 걸 자동화하려고 생각하지요.<br />
+예를 들면</p>
+<p>FTP로 배포를 하던 시 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-한고 (10년코더)'>한고 (10년코더) 님 글 더 보기</a></li>
+<li>name : 한고 (10년코더)</li>
+<li>blog : <a href='https://10yearscoder.tistory.com/' target='_blank'>https://10yearscoder.tistory.com/</a></li>
+<li>rss : <a href='https://10yearscoder.tistory.com/rss' target='_blank'>https://10yearscoder.tistory.com/rss</a></li>
+<li>description : 프리랜서</li>
+<li>github : <a href='https://github.com/tenyearscoder' target='_blank'>https://github.com/tenyearscoder</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/it-%ed%94%84%eb%a6%ac%eb%9e%9c%ec%84%9c-%ec%9d%b4%ec%95%bc%ea%b8%b0-%ec%8b%a0%ea%b7%9c-%ec%8b%9c%ec%8a%a4%ed%85%9c-%eb%8f%84%ec%9e%85%ec%97%90-%ea%b4%80%ed%95%9c-%ec%83%9d%ea%b0%81/">[IT 프리랜서 이야기] 신규 시스템 도입에 관한 생각</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[동글동글 라이프] [ 아이와 가볼만 한 곳 ] 덕평공룡수목원 &#8211; 아이와 함께 꼭 가보시길 바라며 쓰는 포스팅</title>
+		<link>http://devblog.selfhow.com/2019/05/11/%eb%8f%99%ea%b8%80%eb%8f%99%ea%b8%80-%eb%9d%bc%ec%9d%b4%ed%94%84-%ec%95%84%ec%9d%b4%ec%99%80-%ea%b0%80%eb%b3%bc%eb%a7%8c-%ed%95%9c-%ea%b3%b3-%eb%8d%95%ed%8f%89%ea%b3%b5%eb%a3%a1%ec%88%98/</link>
+		<pubDate>Fri, 10 May 2019 15:12:38 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-이광헌]]></category>
+		<category><![CDATA[Perl]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66948</guid>
+		<description><![CDATA[<p>원문 링크 [ 아이와 가볼만 한 곳 ] 덕평공룡수목원 &#8211; 아이와 함께 꼭 가보시길 바라며 쓰는 포스팅 미리보기 안녕하세요, 동글엄마예요^^ 제가 오후에 출근하는 워킹맘인지라 오전에는 동글이랑 요새 많이 놀러다니고 있는데요 그저께 다녀온 곳이   바로바로   &#8221; 덕평공룡수목원 &#8221; 입니다!     제가 거의 다와서 길을 잘못들어가지고 초콤 헤맸지만 잘 &#8230; 개발자 정보 이광헌 님 &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%eb%8f%99%ea%b8%80%eb%8f%99%ea%b8%80-%eb%9d%bc%ec%9d%b4%ed%94%84-%ec%95%84%ec%9d%b4%ec%99%80-%ea%b0%80%eb%b3%bc%eb%a7%8c-%ed%95%9c-%ea%b3%b3-%eb%8d%95%ed%8f%89%ea%b3%b5%eb%a3%a1%ec%88%98/">[동글동글 라이프] [ 아이와 가볼만 한 곳 ] 덕평공룡수목원 &#8211; 아이와 함께 꼭 가보시길 바라며 쓰는 포스팅</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://honeyperl.tistory.com/461' target='_blank'>[ 아이와 가볼만 한 곳 ] 덕평공룡수목원 &#8211; 아이와 함께 꼭 가보시길 바라며 쓰는 포스팅</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>안녕하세요, 동글엄마예요^^<br />
+제가 오후에 출근하는 워킹맘인지라<br />
+오전에는 동글이랑 요새<br />
+많이 놀러다니고 있는데요<br />
+그저께 다녀온 곳이<br />
+ <br />
+바로바로<br />
+ <br />
+&#8221; 덕평공룡수목원 &#8221;<br />
+입니다!<br />
+ </p>
+<p> <br />
+제가 거의 다와서 길을 잘못들어가지고<br />
+초콤 헤맸지만<br />
+잘 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-이광헌'>이광헌 님 글 더 보기</a></li>
+<li>name : 이광헌</li>
+<li>blog : <a href='http://honeyperl.tistory.com/' target='_blank'>http://honeyperl.tistory.com/</a></li>
+<li>rss : <a href='http://honeyperl.tistory.com/rss' target='_blank'>http://honeyperl.tistory.com/rss</a></li>
+<li>description : Perl</li>
+<li>linkedin : <a href='https://www.linkedin.com/in/h0ney/' target='_blank'>https://www.linkedin.com/in/h0ney/</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%eb%8f%99%ea%b8%80%eb%8f%99%ea%b8%80-%eb%9d%bc%ec%9d%b4%ed%94%84-%ec%95%84%ec%9d%b4%ec%99%80-%ea%b0%80%eb%b3%bc%eb%a7%8c-%ed%95%9c-%ea%b3%b3-%eb%8d%95%ed%8f%89%ea%b3%b5%eb%a3%a1%ec%88%98/">[동글동글 라이프] [ 아이와 가볼만 한 곳 ] 덕평공룡수목원 &#8211; 아이와 함께 꼭 가보시길 바라며 쓰는 포스팅</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[컴맹 : 진화의 시작] Google I/O Cloud Hero</title>
+		<link>http://devblog.selfhow.com/2019/05/11/%ec%bb%b4%eb%a7%b9-%ec%a7%84%ed%99%94%ec%9d%98-%ec%8b%9c%ec%9e%91-google-i-o-cloud-hero/</link>
+		<pubDate>Fri, 10 May 2019 14:47:31 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-백재연]]></category>
+		<category><![CDATA[Cloud]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66994</guid>
+		<description><![CDATA[<p>원문 링크 Google I/O Cloud Hero 미리보기 4월에 Next&#8217;19 Cloud Hero를 놓쳐서 아쉬워하던차에 5월에 진행된 I/O에도 Cloud Hero 게임이 오픈되었다. 뒤늦게 알아차려서 7일은 넘어갔지만 모든 날짜에 진행되는 게임 내용은 같다. 쉽게 이야기하자면 점수가 각 날자별로 다르게 &#8230; 개발자 정보 백재연 님 글 더 보기 name : 백재연 blog : http://jybaek.tistory.com/ rss : http://jybaek.tistory.com/rss description : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ec%bb%b4%eb%a7%b9-%ec%a7%84%ed%99%94%ec%9d%98-%ec%8b%9c%ec%9e%91-google-i-o-cloud-hero/">[컴맹 : 진화의 시작] Google I/O Cloud Hero</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://jybaek.tistory.com/792' target='_blank'>Google I/O Cloud Hero</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+4월에 Next&#8217;19 Cloud Hero를 놓쳐서 아쉬워하던차에 5월에 진행된 I/O에도 Cloud Hero 게임이 오픈되었다. 뒤늦게 알아차려서 7일은 넘어갔지만 모든 날짜에 진행되는 게임 내용은 같다. 쉽게 이야기하자면 점수가 각 날자별로 다르게 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-백재연'>백재연 님 글 더 보기</a></li>
+<li>name : 백재연</li>
+<li>blog : <a href='http://jybaek.tistory.com/' target='_blank'>http://jybaek.tistory.com/</a></li>
+<li>rss : <a href='http://jybaek.tistory.com/rss' target='_blank'>http://jybaek.tistory.com/rss</a></li>
+<li>description : Cloud</li>
+<li>github : <a href='https://github.com/jybaek' target='_blank'>https://github.com/jybaek</a></li>
+<li>facebook : <a href='https://www.facebook.com/WeGuardia' target='_blank'>https://www.facebook.com/WeGuardia</a></li>
+<li>stackoverflow : <a href='https://stackoverflow.com/users/4599185/jaeyeon-baek' target='_blank'>https://stackoverflow.com/users/4599185/jaeyeon-baek</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ec%bb%b4%eb%a7%b9-%ec%a7%84%ed%99%94%ec%9d%98-%ec%8b%9c%ec%9e%91-google-i-o-cloud-hero/">[컴맹 : 진화의 시작] Google I/O Cloud Hero</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[조대협의 블로그] SRE #2-SRE는 어떻게 일하는가?</title>
+		<link>http://devblog.selfhow.com/2019/05/11/%ec%a1%b0%eb%8c%80%ed%98%91%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-sre-2-sre%eb%8a%94-%ec%96%b4%eb%96%bb%ea%b2%8c-%ec%9d%bc%ed%95%98%eb%8a%94%ea%b0%80/</link>
+		<pubDate>Fri, 10 May 2019 14:42:24 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-조병욱(조대협)]]></category>
+		<category><![CDATA[Java]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66990</guid>
+		<description><![CDATA[<p>원문 링크 SRE #2-SRE는 어떻게 일하는가? 미리보기 SRE는 어떻게 일하는가? 조대협 (http://bcho.tistory.com) 이글은 앞의 글 &#8220;SRE/DEOPS의 개념과 SRE는 무엇을 하는가?&#8221; (https://bcho.tistory.com/1325) 와 연결된 글입니다. How SRE doe &#8230; 개발자 정보 조병욱(조대협) 님 글 더 보기 name : 조병욱(조대협) blog : http://bcho.tistory.com/ rss : http://bcho.tistory.com/rss description : Java slideshare : https://www.slideshare.net/Byungwook facebook : https://www.facebook.com/terry.cho.7</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ec%a1%b0%eb%8c%80%ed%98%91%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-sre-2-sre%eb%8a%94-%ec%96%b4%eb%96%bb%ea%b2%8c-%ec%9d%bc%ed%95%98%eb%8a%94%ea%b0%80/">[조대협의 블로그] SRE #2-SRE는 어떻게 일하는가?</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://bcho.tistory.com/1327' target='_blank'>SRE #2-SRE는 어떻게 일하는가?</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>SRE는 어떻게 일하는가? 조대협 (http://bcho.tistory.com) 이글은 앞의 글 &#8220;SRE/DEOPS의 개념과 SRE는 무엇을 하는가?&#8221; (https://bcho.tistory.com/1325) 와 연결된 글입니다. How SRE doe &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-조병욱(조대협)'>조병욱(조대협) 님 글 더 보기</a></li>
+<li>name : 조병욱(조대협)</li>
+<li>blog : <a href='http://bcho.tistory.com/' target='_blank'>http://bcho.tistory.com/</a></li>
+<li>rss : <a href='http://bcho.tistory.com/rss' target='_blank'>http://bcho.tistory.com/rss</a></li>
+<li>description : Java</li>
+<li>slideshare : <a href='https://www.slideshare.net/Byungwook' target='_blank'>https://www.slideshare.net/Byungwook</a></li>
+<li>facebook : <a href='https://www.facebook.com/terry.cho.7' target='_blank'>https://www.facebook.com/terry.cho.7</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ec%a1%b0%eb%8c%80%ed%98%91%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-sre-2-sre%eb%8a%94-%ec%96%b4%eb%96%bb%ea%b2%8c-%ec%9d%bc%ed%95%98%eb%8a%94%ea%b0%80/">[조대협의 블로그] SRE #2-SRE는 어떻게 일하는가?</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[조대협의 블로그] AutoEncoder vs Variant AutoEncoder</title>
+		<link>http://devblog.selfhow.com/2019/05/11/%ec%a1%b0%eb%8c%80%ed%98%91%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-autoencoder-vs-variant-autoencoder/</link>
+		<pubDate>Fri, 10 May 2019 13:30:00 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-조병욱(조대협)]]></category>
+		<category><![CDATA[Java]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66988</guid>
+		<description><![CDATA[<p>원문 링크 AutoEncoder vs Variant AutoEncoder 미리보기 AutoEncoder vs Variant AutoEncoder 조대협 (http://bcho.tistory.com) Abnormal AutoEncoder는 입력값을 기반으로 여기서 특징을 뽑아내고, 뽑아낸 특징으로 다시 원본을 재생하는 네트워크이다. &#8230; 개발자 정보 조병욱(조대협) 님 글 더 보기 name : 조병욱(조대협) blog : http://bcho.tistory.com/ rss : http://bcho.tistory.com/rss description : Java slideshare : https://www.slideshare.net/Byungwook facebook : https://www.facebook.com/terry.cho.7</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ec%a1%b0%eb%8c%80%ed%98%91%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-autoencoder-vs-variant-autoencoder/">[조대협의 블로그] AutoEncoder vs Variant AutoEncoder</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://bcho.tistory.com/1326' target='_blank'>AutoEncoder vs Variant AutoEncoder</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>AutoEncoder vs Variant AutoEncoder 조대협 (http://bcho.tistory.com) Abnormal AutoEncoder는 입력값을 기반으로 여기서 특징을 뽑아내고, 뽑아낸 특징으로 다시 원본을 재생하는 네트워크이다.  &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-조병욱(조대협)'>조병욱(조대협) 님 글 더 보기</a></li>
+<li>name : 조병욱(조대협)</li>
+<li>blog : <a href='http://bcho.tistory.com/' target='_blank'>http://bcho.tistory.com/</a></li>
+<li>rss : <a href='http://bcho.tistory.com/rss' target='_blank'>http://bcho.tistory.com/rss</a></li>
+<li>description : Java</li>
+<li>slideshare : <a href='https://www.slideshare.net/Byungwook' target='_blank'>https://www.slideshare.net/Byungwook</a></li>
+<li>facebook : <a href='https://www.facebook.com/terry.cho.7' target='_blank'>https://www.facebook.com/terry.cho.7</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ec%a1%b0%eb%8c%80%ed%98%91%ec%9d%98-%eb%b8%94%eb%a1%9c%ea%b7%b8-autoencoder-vs-variant-autoencoder/">[조대협의 블로그] AutoEncoder vs Variant AutoEncoder</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Seungdols Company] What’s new in JavaScript (Google I/O ’19) 정리</title>
+		<link>http://devblog.selfhow.com/2019/05/11/seungdols-company-whats-new-in-javascript-google-i-o-19-%ec%a0%95%eb%a6%ac/</link>
+		<pubDate>Fri, 10 May 2019 12:14:54 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-최승호]]></category>
+		<category><![CDATA[Back-end]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66950</guid>
+		<description><![CDATA[<p>원문 링크 What’s new in JavaScript (Google I/O ’19) 정리 미리보기 numeric separators BigInt class fields String#matchAll Array#{flat, flatMap} Object.fromEntries globalThis more Intl.* APIs top-level await &#8230; 개발자 정보 최승호 님 글 더 보기 name : 최승호 blog : https://seungdols.tistory.com/ rss : https://seungdols.tistory.com/rss description : Back-end slideshare : https://www.slideshare.net/seunghochoi4 twitter : https://twitter.com/seungdols github : https://github.com/seungdols &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/seungdols-company-whats-new-in-javascript-google-i-o-19-%ec%a0%95%eb%a6%ac/">[Seungdols Company] What’s new in JavaScript (Google I/O ’19) 정리</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://seungdols.tistory.com/799' target='_blank'>What’s new in JavaScript (Google I/O ’19) 정리</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>numeric separators BigInt class fields String#matchAll Array#{flat, flatMap} Object.fromEntries globalThis more Intl.* APIs top-level await  &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-최승호'>최승호 님 글 더 보기</a></li>
+<li>name : 최승호</li>
+<li>blog : <a href='https://seungdols.tistory.com/' target='_blank'>https://seungdols.tistory.com/</a></li>
+<li>rss : <a href='https://seungdols.tistory.com/rss' target='_blank'>https://seungdols.tistory.com/rss</a></li>
+<li>description : Back-end</li>
+<li>slideshare : <a href='https://www.slideshare.net/seunghochoi4' target='_blank'>https://www.slideshare.net/seunghochoi4</a></li>
+<li>twitter : <a href='https://twitter.com/seungdols' target='_blank'>https://twitter.com/seungdols</a></li>
+<li>github : <a href='https://github.com/seungdols' target='_blank'>https://github.com/seungdols</a></li>
+<li>rocketpunch : <a href='https://www.rocketpunch.com/@seungdols0822' target='_blank'>https://www.rocketpunch.com/@seungdols0822</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/seungdols-company-whats-new-in-javascript-google-i-o-19-%ec%a0%95%eb%a6%ac/">[Seungdols Company] What’s new in JavaScript (Google I/O ’19) 정리</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Nalee와 함께 떠나는 IT이야기] Octavia Amphora Instance</title>
+		<link>http://devblog.selfhow.com/2019/05/11/nalee%ec%99%80-%ed%95%a8%ea%bb%98-%eb%96%a0%eb%82%98%eb%8a%94-it%ec%9d%b4%ec%95%bc%ea%b8%b0-octavia-amphora-instance/</link>
+		<pubDate>Fri, 10 May 2019 08:59:06 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-장현정]]></category>
+		<category><![CDATA[OpenStack]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=67335</guid>
+		<description><![CDATA[<p>원문 링크 Octavia Amphora Instance 미리보기 오늘은 지난 포스팅에 이어 이번에는 Amphora 인스턴스를 한번 파헤쳐볼까 합니다. 지난 포스팅에서 보았던 Amphora 인스턴스에 대한 아키텍처를 혹시 기억하시나요? 지난 포스팅에서 저는 Octavia가 뭔지? 그리고, Octavia를 이용하여 &#8230; 개발자 정보 장현정 님 글 더 보기 name : 장현정 blog : http://naleejang.tistory.com/ rss : http://naleejang.tistory.com/rss description : OpenStack twitter : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/nalee%ec%99%80-%ed%95%a8%ea%bb%98-%eb%96%a0%eb%82%98%eb%8a%94-it%ec%9d%b4%ec%95%bc%ea%b8%b0-octavia-amphora-instance/">[Nalee와 함께 떠나는 IT이야기] Octavia Amphora Instance</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://naleejang.tistory.com/213' target='_blank'>Octavia Amphora Instance</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+오늘은 지난 포스팅에 이어 이번에는 Amphora 인스턴스를 한번 파헤쳐볼까 합니다. 지난 포스팅에서 보았던 Amphora 인스턴스에 대한 아키텍처를 혹시 기억하시나요? 지난 포스팅에서 저는 Octavia가 뭔지? 그리고, Octavia를 이용하여  &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-장현정'>장현정 님 글 더 보기</a></li>
+<li>name : 장현정</li>
+<li>blog : <a href='http://naleejang.tistory.com/' target='_blank'>http://naleejang.tistory.com/</a></li>
+<li>rss : <a href='http://naleejang.tistory.com/rss' target='_blank'>http://naleejang.tistory.com/rss</a></li>
+<li>description : OpenStack</li>
+<li>twitter : <a href='https://twitter.com/jhj49' target='_blank'>https://twitter.com/jhj49</a></li>
+<li>facebook : <a href='https://www.facebook.com/naleejang' target='_blank'>https://www.facebook.com/naleejang</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/nalee%ec%99%80-%ed%95%a8%ea%bb%98-%eb%96%a0%eb%82%98%eb%8a%94-it%ec%9d%b4%ec%95%bc%ea%b8%b0-octavia-amphora-instance/">[Nalee와 함께 떠나는 IT이야기] Octavia Amphora Instance</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[공부하는 블로그] Vue.js의 새롭게 개선된 prop.sync</title>
+		<link>http://devblog.selfhow.com/2019/05/11/%ea%b3%b5%eb%b6%80%ed%95%98%eb%8a%94-%eb%b8%94%eb%a1%9c%ea%b7%b8-vue-js%ec%9d%98-%ec%83%88%eb%a1%ad%ea%b2%8c-%ea%b0%9c%ec%84%a0%eb%90%9c-prop-sync/</link>
+		<pubDate>Fri, 10 May 2019 07:59:41 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김윤섭]]></category>
+		<category><![CDATA[Front-end]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66942</guid>
+		<description><![CDATA[<p>원문 링크 Vue.js의 새롭게 개선된 prop.sync 미리보기 해당 포스트는 여기 를 번역한 것입니다. 오타나 번역이 이상한 곳이 있으면 말씀해주세요 (_ _) Vue 2.3에서는 이전에 제거 된 .sync 수정자가 새로운 방식으로 다시 도입되었습니다. 이 포스트는 props를 하위 컴포넌트로 전달하고 &#8230; 개발자 정보 김윤섭 님 글 더 보기 name : 김윤섭 blog : http://devtimothy.tistory.com/ rss : http://devtimothy.tistory.com/rss &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ea%b3%b5%eb%b6%80%ed%95%98%eb%8a%94-%eb%b8%94%eb%a1%9c%ea%b7%b8-vue-js%ec%9d%98-%ec%83%88%eb%a1%ad%ea%b2%8c-%ea%b0%9c%ec%84%a0%eb%90%9c-prop-sync/">[공부하는 블로그] Vue.js의 새롭게 개선된 prop.sync</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://devtimothy.tistory.com/135' target='_blank'>Vue.js의 새롭게 개선된 prop.sync</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>해당 포스트는 여기 를 번역한 것입니다. 오타나 번역이 이상한 곳이 있으면 말씀해주세요 (_ _)</p>
+<p>Vue 2.3에서는 이전에 제거 된 .sync 수정자가 새로운 방식으로 다시 도입되었습니다.<br />
+이 포스트는 props를 하위 컴포넌트로 전달하고 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김윤섭'>김윤섭 님 글 더 보기</a></li>
+<li>name : 김윤섭</li>
+<li>blog : <a href='http://devtimothy.tistory.com/' target='_blank'>http://devtimothy.tistory.com/</a></li>
+<li>rss : <a href='http://devtimothy.tistory.com/rss' target='_blank'>http://devtimothy.tistory.com/rss</a></li>
+<li>description : Front-end</li>
+<li>facebook : <a href='https://www.facebook.com/yunseop.kim.5' target='_blank'>https://www.facebook.com/yunseop.kim.5</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ea%b3%b5%eb%b6%80%ed%95%98%eb%8a%94-%eb%b8%94%eb%a1%9c%ea%b7%b8-vue-js%ec%9d%98-%ec%83%88%eb%a1%ad%ea%b2%8c-%ea%b0%9c%ec%84%a0%eb%90%9c-prop-sync/">[공부하는 블로그] Vue.js의 새롭게 개선된 prop.sync</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[Milhouse&#8217;s Blog] [코딩인터뷰 완전분석] 1.5 하나 빼기</title>
+		<link>http://devblog.selfhow.com/2019/05/11/milhouses-blog-%ec%bd%94%eb%94%a9%ec%9d%b8%ed%84%b0%eb%b7%b0-%ec%99%84%ec%a0%84%eb%b6%84%ec%84%9d-1-5-%ed%95%98%eb%82%98-%eb%b9%bc%ea%b8%b0/</link>
+		<pubDate>Fri, 10 May 2019 07:30:36 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김지용]]></category>
+		<category><![CDATA[Java]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66944</guid>
+		<description><![CDATA[<p>원문 링크 [코딩인터뷰 완전분석] 1.5 하나 빼기 미리보기 1.5 하나 빼기 문자열을 편집하는 방법에는 세 가지 종류가 있다. 문자 삽입, 문자 삭제, 문자 교체, 문자열 두 개가 주어졌을 때, 문자열을 같게 만들기 위한 편집 횟수가 1회 이내인지 확인하는 함수를 작성하라. unordered_set 을 &#8230; 개발자 정보 김지용 님 글 더 보기 name : 김지용 blog : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/milhouses-blog-%ec%bd%94%eb%94%a9%ec%9d%b8%ed%84%b0%eb%b7%b0-%ec%99%84%ec%a0%84%eb%b6%84%ec%84%9d-1-5-%ed%95%98%eb%82%98-%eb%b9%bc%ea%b8%b0/">[Milhouse&#8217;s Blog] [코딩인터뷰 완전분석] 1.5 하나 빼기</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://milhouse93.tistory.com/81' target='_blank'>[코딩인터뷰 완전분석] 1.5 하나 빼기</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+1.5 하나 빼기<br />
+문자열을 편집하는 방법에는 세 가지 종류가 있다. 문자 삽입, 문자 삭제, 문자 교체, 문자열 두 개가 주어졌을 때, 문자열을 같게 만들기 위한 편집 횟수가 1회 이내인지 확인하는 함수를 작성하라.</p>
+<p>unordered_set 을  &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김지용'>김지용 님 글 더 보기</a></li>
+<li>name : 김지용</li>
+<li>blog : <a href='http://milhouse93.tistory.com/' target='_blank'>http://milhouse93.tistory.com/</a></li>
+<li>rss : <a href='http://milhouse93.tistory.com/rss' target='_blank'>http://milhouse93.tistory.com/rss</a></li>
+<li>description : Java</li>
+<li>slideshare : <a href='https://www.slideshare.net/JiYong-Kim' target='_blank'>https://www.slideshare.net/JiYong-Kim</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/milhouses-blog-%ec%bd%94%eb%94%a9%ec%9d%b8%ed%84%b0%eb%b7%b0-%ec%99%84%ec%a0%84%eb%b6%84%ec%84%9d-1-5-%ed%95%98%eb%82%98-%eb%b9%bc%ea%b8%b0/">[Milhouse&#8217;s Blog] [코딩인터뷰 완전분석] 1.5 하나 빼기</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[텐서 플로우 블로그 (Tensor ≈ Blog)] Scikit-Learn 0.21.0 Release</title>
+		<link>http://devblog.selfhow.com/2019/05/11/%ed%85%90%ec%84%9c-%ed%94%8c%eb%a1%9c%ec%9a%b0-%eb%b8%94%eb%a1%9c%ea%b7%b8-tensor-%e2%89%88-blog-scikit-learn-0-21-0-release/</link>
+		<pubDate>Fri, 10 May 2019 06:45:00 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-박해선]]></category>
+		<category><![CDATA[TensorFlow]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66946</guid>
+		<description><![CDATA[<p>원문 링크 Scikit-Learn 0.21.0 Release 미리보기 사이킷런 0.21 버전이 릴리스 되었습니다! RC 버전에서 언급되었던 히스토그램 기반 부스팅 알고리즘인 HistGradientBoostingClassifier, OPTICS 클러스터링 알고리즘, 누락된 값을 예측하여 채울 때 사용할 수 있는 Itera &#8230; 개발자 정보 박해선 님 글 더 보기 name : 박해선 blog : https://tensorflow.blog/ rss : https://tensorflow.blog/feed/ description : TensorFlow github : https://github.com/rickiepark linkedin : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ed%85%90%ec%84%9c-%ed%94%8c%eb%a1%9c%ec%9a%b0-%eb%b8%94%eb%a1%9c%ea%b7%b8-tensor-%e2%89%88-blog-scikit-learn-0-21-0-release/">[텐서 플로우 블로그 (Tensor ≈ Blog)] Scikit-Learn 0.21.0 Release</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://tensorflow.blog/2019/05/10/scikit-learn-0-21-0-release/' target='_blank'>Scikit-Learn 0.21.0 Release</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>사이킷런 0.21 버전이 릴리스 되었습니다! RC 버전에서 언급되었던 히스토그램 기반 부스팅 알고리즘인 HistGradientBoostingClassifier, OPTICS 클러스터링 알고리즘, 누락된 값을 예측하여 채울 때 사용할 수 있는 Itera &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-박해선'>박해선 님 글 더 보기</a></li>
+<li>name : 박해선</li>
+<li>blog : <a href='https://tensorflow.blog/' target='_blank'>https://tensorflow.blog/</a></li>
+<li>rss : <a href='https://tensorflow.blog/feed/' target='_blank'>https://tensorflow.blog/feed/</a></li>
+<li>description : TensorFlow</li>
+<li>github : <a href='https://github.com/rickiepark' target='_blank'>https://github.com/rickiepark</a></li>
+<li>linkedin : <a href='https://www.linkedin.com/in/rickypark/' target='_blank'>https://www.linkedin.com/in/rickypark/</a></li>
+<li>facebook : <a href='https://www.facebook.com/haesunrpark' target='_blank'>https://www.facebook.com/haesunrpark</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ed%85%90%ec%84%9c-%ed%94%8c%eb%a1%9c%ec%9a%b0-%eb%b8%94%eb%a1%9c%ea%b7%b8-tensor-%e2%89%88-blog-scikit-learn-0-21-0-release/">[텐서 플로우 블로그 (Tensor ≈ Blog)] Scikit-Learn 0.21.0 Release</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[[ 프로페셔널 프로그래머 ]] [ 차가운 열정(?) ]</title>
+		<link>http://devblog.selfhow.com/2019/05/11/%ed%94%84%eb%a1%9c%ed%8e%98%ec%85%94%eb%84%90-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%a8%b8-%ec%b0%a8%ea%b0%80%ec%9a%b4-%ec%97%b4%ec%a0%95/</link>
+		<pubDate>Fri, 10 May 2019 06:37:30 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-권수호]]></category>
+		<category><![CDATA[C]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66940</guid>
+		<description><![CDATA[<p>원문 링크 [ 차가운 열정(?) ] 미리보기 어떤 일을 하게될 때 자신의 감정을 숨기고 냉정을 유지하는 것은 어려운 일이다. 사람은 누구나 감정을 가지고 있으며, 어느 선을 넘어버리면 그대로 폭발하는 것은 어쩔 수 없다. 물론 가족의 생계를 책임지는 사람이라면 쉽게 감정을 표현하는 것이 어렵다는 &#8230; 개발자 정보 권수호 님 글 더 보기 name : 권수호 blog &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ed%94%84%eb%a1%9c%ed%8e%98%ec%85%94%eb%84%90-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%a8%b8-%ec%b0%a8%ea%b0%80%ec%9a%b4-%ec%97%b4%ec%a0%95/">[[ 프로페셔널 프로그래머 ]] [ 차가운 열정(?) ]</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='http://blog.naver.com/knix008/221534232601' target='_blank'>[ 차가운 열정(?) ]</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>어떤 일을 하게될 때 자신의 감정을 숨기고 냉정을 유지하는 것은 어려운 일이다. 사람은 누구나 감정을 가지고 있으며, 어느 선을 넘어버리면 그대로 폭발하는 것은 어쩔 수 없다. 물론 가족의 생계를 책임지는 사람이라면 쉽게 감정을 표현하는 것이 어렵다는 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-권수호'>권수호 님 글 더 보기</a></li>
+<li>name : 권수호</li>
+<li>blog : <a href='http://blog.naver.com/PostList.nhn?blogId=knix008' target='_blank'>http://blog.naver.com/PostList.nhn?blogId=knix008</a></li>
+<li>rss : <a href='http://blog.rss.naver.com/knix008.xml' target='_blank'>http://blog.rss.naver.com/knix008.xml</a></li>
+<li>description : C</li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ed%94%84%eb%a1%9c%ed%8e%98%ec%85%94%eb%84%90-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%98%eb%a8%b8-%ec%b0%a8%ea%b0%80%ec%9a%b4-%ec%97%b4%ec%a0%95/">[[ 프로페셔널 프로그래머 ]] [ 차가운 열정(?) ]</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[원영&#8217;s] Android Q 부터 비 SDK 인터페이스 제한 하는 이유와 비 SDK 인터페이스 제한 확인하는 방법</title>
+		<link>http://devblog.selfhow.com/2019/05/11/%ec%9b%90%ec%98%81s-android-q-%eb%b6%80%ed%84%b0-%eb%b9%84-sdk-%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4-%ec%a0%9c%ed%95%9c-%ed%95%98%eb%8a%94-%ec%9d%b4%ec%9c%a0%ec%99%80-%eb%b9%84-sdk/</link>
+		<pubDate>Fri, 10 May 2019 06:10:13 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-최원영]]></category>
+		<category><![CDATA[Big Data, DevOps]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66930</guid>
+		<description><![CDATA[<p>원문 링크 Android Q 부터 비 SDK 인터페이스 제한 하는 이유와 비 SDK 인터페이스 제한 확인하는 방법 미리보기 android Q targetSdkVerison부터 공개된 SDK API만 사용가능하다.  이에 따라 android Q를 targetSdkVersion으로 하는 application은 공식 SDK인터페이스가 아닌 기능에는 접근하지 못하도록 제한한다 &#8230; 개발자 정보 최원영 님 글 더 보기 name : 최원영 blog : https://blog.voidmainvoid.net/ rss : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ec%9b%90%ec%98%81s-android-q-%eb%b6%80%ed%84%b0-%eb%b9%84-sdk-%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4-%ec%a0%9c%ed%95%9c-%ed%95%98%eb%8a%94-%ec%9d%b4%ec%9c%a0%ec%99%80-%eb%b9%84-sdk/">[원영&#8217;s] Android Q 부터 비 SDK 인터페이스 제한 하는 이유와 비 SDK 인터페이스 제한 확인하는 방법</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.voidmainvoid.net/216' target='_blank'>Android Q 부터 비 SDK 인터페이스 제한 하는 이유와 비 SDK 인터페이스 제한 확인하는 방법</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>android Q targetSdkVerison부터 공개된 SDK API만 사용가능하다. <br />
+이에 따라 android Q를 targetSdkVersion으로 하는 application은 공식 SDK인터페이스가 아닌 기능에는 접근하지 못하도록 제한한다 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-최원영'>최원영 님 글 더 보기</a></li>
+<li>name : 최원영</li>
+<li>blog : <a href='https://blog.voidmainvoid.net/' target='_blank'>https://blog.voidmainvoid.net/</a></li>
+<li>rss : <a href='https://blog.voidmainvoid.net/rss' target='_blank'>https://blog.voidmainvoid.net/rss</a></li>
+<li>description : Big Data, DevOps</li>
+<li>github : <a href='https://github.com/AndersonChoi' target='_blank'>https://github.com/AndersonChoi</a></li>
+<li>linkedin : <a href='https://www.linkedin.com/in/won-young-choi-189960b7/' target='_blank'>https://www.linkedin.com/in/won-young-choi-189960b7/</a></li>
+<li>home : <a href='https://andersonchoi.github.io/' target='_blank'>https://andersonchoi.github.io/</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/11/%ec%9b%90%ec%98%81s-android-q-%eb%b6%80%ed%84%b0-%eb%b9%84-sdk-%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4-%ec%a0%9c%ed%95%9c-%ed%95%98%eb%8a%94-%ec%9d%b4%ec%9c%a0%ec%99%80-%eb%b9%84-sdk/">[원영&#8217;s] Android Q 부터 비 SDK 인터페이스 제한 하는 이유와 비 SDK 인터페이스 제한 확인하는 방법</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[steve kim] 프로젝트 제출</title>
+		<link>http://devblog.selfhow.com/2019/05/10/steve-kim-%ed%94%84%eb%a1%9c%ec%a0%9d%ed%8a%b8-%ec%a0%9c%ec%b6%9c/</link>
+		<pubDate>Fri, 10 May 2019 04:58:42 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-김희서]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66934</guid>
+		<description><![CDATA[<p>원문 링크 프로젝트 제출 미리보기 결과값은 어느정도 나왔고, 추가사항만 쓰면 될 듯 합니다.추가구현은 레벨 차이에 의한 결과값과 고찰 사항 입니다.#매트랩 #matlab#FIR #IIR #filter I&#8217;ve completed the Matlab project today. I fini &#8230; 개발자 정보 김희서 님 글 더 보기 name : 김희서 blog : https://blog.naver.com/khy960117 rss : https://rss.blog.naver.com/khy960117.xml facebook : https://www.facebook.com/gmltjdlek</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/10/steve-kim-%ed%94%84%eb%a1%9c%ec%a0%9d%ed%8a%b8-%ec%a0%9c%ec%b6%9c/">[steve kim] 프로젝트 제출</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.naver.com/khy960117/221534144682' target='_blank'>프로젝트 제출</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>결과값은 어느정도 나왔고, 추가사항만 쓰면 될 듯 합니다.추가구현은 레벨 차이에 의한 결과값과 고찰 사항 입니다.#매트랩 #matlab#FIR #IIR #filter I&#8217;ve completed the Matlab project today. I fini &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-김희서'>김희서 님 글 더 보기</a></li>
+<li>name : 김희서</li>
+<li>blog : <a href='https://blog.naver.com/khy960117' target='_blank'>https://blog.naver.com/khy960117</a></li>
+<li>rss : <a href='https://rss.blog.naver.com/khy960117.xml' target='_blank'>https://rss.blog.naver.com/khy960117.xml</a></li>
+<li>facebook : <a href='https://www.facebook.com/gmltjdlek' target='_blank'>https://www.facebook.com/gmltjdlek</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/10/steve-kim-%ed%94%84%eb%a1%9c%ec%a0%9d%ed%8a%b8-%ec%a0%9c%ec%b6%9c/">[steve kim] 프로젝트 제출</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[배수한의 일기장 블로그] 배수한 저를 소개합니다!</title>
+		<link>http://devblog.selfhow.com/2019/05/10/%eb%b0%b0%ec%88%98%ed%95%9c%ec%9d%98-%ec%9d%bc%ea%b8%b0%ec%9e%a5-%eb%b8%94%eb%a1%9c%ea%b7%b8-%eb%b0%b0%ec%88%98%ed%95%9c-%ec%a0%80%eb%a5%bc-%ec%86%8c%ea%b0%9c%ed%95%a9%eb%8b%88%eb%8b%a4/</link>
+		<pubDate>Fri, 10 May 2019 04:09:54 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-배수한]]></category>
+		<category><![CDATA[고등학생 개발]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66928</guid>
+		<description><![CDATA[<p>원문 링크 배수한 저를 소개합니다! 미리보기 &#8230; 개발자 정보 배수한 님 글 더 보기 name : 배수한 blog : https://blog.naver.com/soohan530/ rss : https://rss.blog.naver.com/soohan530.xml description : 고등학생 개발 github : https://github.com/SoohanBae</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/10/%eb%b0%b0%ec%88%98%ed%95%9c%ec%9d%98-%ec%9d%bc%ea%b8%b0%ec%9e%a5-%eb%b8%94%eb%a1%9c%ea%b7%b8-%eb%b0%b0%ec%88%98%ed%95%9c-%ec%a0%80%eb%a5%bc-%ec%86%8c%ea%b0%9c%ed%95%a9%eb%8b%88%eb%8b%a4/">[배수한의 일기장 블로그] 배수한 저를 소개합니다!</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://blog.naver.com/soohan530/221534105867' target='_blank'>배수한 저를 소개합니다!</a></p>
+<hr />
+<h4>미리보기</h4>
+<p> &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-배수한'>배수한 님 글 더 보기</a></li>
+<li>name : 배수한</li>
+<li>blog : <a href='https://blog.naver.com/soohan530/' target='_blank'>https://blog.naver.com/soohan530/</a></li>
+<li>rss : <a href='https://rss.blog.naver.com/soohan530.xml' target='_blank'>https://rss.blog.naver.com/soohan530.xml</a></li>
+<li>description : 고등학생 개발</li>
+<li>github : <a href='https://github.com/SoohanBae' target='_blank'>https://github.com/SoohanBae</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/10/%eb%b0%b0%ec%88%98%ed%95%9c%ec%9d%98-%ec%9d%bc%ea%b8%b0%ec%9e%a5-%eb%b8%94%eb%a1%9c%ea%b7%b8-%eb%b0%b0%ec%88%98%ed%95%9c-%ec%a0%80%eb%a5%bc-%ec%86%8c%ea%b0%9c%ed%95%a9%eb%8b%88%eb%8b%a4/">[배수한의 일기장 블로그] 배수한 저를 소개합니다!</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[개발하는 곰] [번역] 쉬운 도구는 디버깅하기 쉬운 도구다.</title>
+		<link>http://devblog.selfhow.com/2019/05/10/%ea%b0%9c%eb%b0%9c%ed%95%98%eb%8a%94-%ea%b3%b0-%eb%b2%88%ec%97%ad-%ec%89%ac%ec%9a%b4-%eb%8f%84%ea%b5%ac%eb%8a%94-%eb%94%94%eb%b2%84%ea%b9%85%ed%95%98%ea%b8%b0-%ec%89%ac%ec%9a%b4-%eb%8f%84%ea%b5%ac/</link>
+		<pubDate>Fri, 10 May 2019 04:00:38 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-이준형]]></category>
+		<category><![CDATA[Node.js, AWS]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66922</guid>
+		<description><![CDATA[<p>원문 링크 [번역] 쉬운 도구는 디버깅하기 쉬운 도구다. 미리보기 이 글은 Martin Tournoij의 글 Easy means easy to debug를 번역한 글입니다. 다수의 의역이 포함되어 있으며, 원문을 읽고 싶으신 분들은 Easy means easy to debug을 참조하시기 바랍니다. 또한 이 문서는 &#8230; 개발자 정보 이준형 님 글 더 보기 name : 이준형 blog : https://gompro.postype.com/ rss : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/10/%ea%b0%9c%eb%b0%9c%ed%95%98%eb%8a%94-%ea%b3%b0-%eb%b2%88%ec%97%ad-%ec%89%ac%ec%9a%b4-%eb%8f%84%ea%b5%ac%eb%8a%94-%eb%94%94%eb%b2%84%ea%b9%85%ed%95%98%ea%b8%b0-%ec%89%ac%ec%9a%b4-%eb%8f%84%ea%b5%ac/">[개발하는 곰] [번역] 쉬운 도구는 디버깅하기 쉬운 도구다.</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='https://gompro.postype.com/post/3787808' target='_blank'>[번역] 쉬운 도구는 디버깅하기 쉬운 도구다.</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>
+이 글은 Martin Tournoij의 글 Easy means easy to debug를 번역한 글입니다. 다수의 의역이 포함되어 있으며, 원문을 읽고 싶으신 분들은 Easy means easy to debug을 참조하시기 바랍니다. 또한 이 문서는 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-이준형'>이준형 님 글 더 보기</a></li>
+<li>name : 이준형</li>
+<li>blog : <a href='https://gompro.postype.com/' target='_blank'>https://gompro.postype.com/</a></li>
+<li>rss : <a href='https://gompro.postype.com/rss/' target='_blank'>https://gompro.postype.com/rss/</a></li>
+<li>description : Node.js, AWS</li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/10/%ea%b0%9c%eb%b0%9c%ed%95%98%eb%8a%94-%ea%b3%b0-%eb%b2%88%ec%97%ad-%ec%89%ac%ec%9a%b4-%eb%8f%84%ea%b5%ac%eb%8a%94-%eb%94%94%eb%b2%84%ea%b9%85%ed%95%98%ea%b8%b0-%ec%89%ac%ec%9a%b4-%eb%8f%84%ea%b5%ac/">[개발하는 곰] [번역] 쉬운 도구는 디버깅하기 쉬운 도구다.</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[The Dream of Super Surplus Power] CMake 템플릿 프로젝트</title>
+		<link>http://devblog.selfhow.com/2019/05/10/the-dream-of-super-surplus-power-cmake-%ed%85%9c%ed%94%8c%eb%a6%bf-%ed%94%84%eb%a1%9c%ec%a0%9d%ed%8a%b8/</link>
+		<pubDate>Fri, 10 May 2019 02:56:35 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-이상주]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66932</guid>
+		<description><![CDATA[<p>원문 링크 CMake 템플릿 프로젝트 미리보기 요즘은 Visual Studio에서도 CMake로 프로젝트를 만들다 보니 하나 있어야 하지 않을까 계속 생각만 하다 만들었다. Clion에서는 정말 필요한 것만 써서 간단히 해도 되는데 Visual&#8230; 관련글이 없어요. &#8230; 개발자 정보 이상주 님 글 더 보기 name : 이상주 blog : http://surpreem.com/ rss : https://surpreem.com/feed/ twitter : https://twitter.com/spreem</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/10/the-dream-of-super-surplus-power-cmake-%ed%85%9c%ed%94%8c%eb%a6%bf-%ed%94%84%eb%a1%9c%ec%a0%9d%ed%8a%b8/">[The Dream of Super Surplus Power] CMake 템플릿 프로젝트</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='http://feedproxy.google.com/~r/surpreem/~3/mCJmfDf0z7g/' target='_blank'>CMake 템플릿 프로젝트</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>요즘은 Visual Studio에서도 CMake로 프로젝트를 만들다 보니 하나 있어야 하지 않을까 계속 생각만 하다 만들었다. Clion에서는 정말 필요한 것만 써서 간단히 해도 되는데 Visual&#8230;</p>
+<p>관련글이 없어요.</p>
+<p> &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-이상주'>이상주 님 글 더 보기</a></li>
+<li>name : 이상주</li>
+<li>blog : <a href='http://surpreem.com/' target='_blank'>http://surpreem.com/</a></li>
+<li>rss : <a href='https://surpreem.com/feed/' target='_blank'>https://surpreem.com/feed/</a></li>
+<li>twitter : <a href='https://twitter.com/spreem' target='_blank'>https://twitter.com/spreem</a></li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/10/the-dream-of-super-surplus-power-cmake-%ed%85%9c%ed%94%8c%eb%a6%bf-%ed%94%84%eb%a1%9c%ec%a0%9d%ed%8a%b8/">[The Dream of Super Surplus Power] CMake 템플릿 프로젝트</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+		<item>
+		<title>[청년 고득녕 (2014~)] 2019년 어버이날 기념 양가 부모님 투어 (1부)</title>
+		<link>http://devblog.selfhow.com/2019/05/10/%ec%b2%ad%eb%85%84-%ea%b3%a0%eb%93%9d%eb%85%95-2014-2019%eb%85%84-%ec%96%b4%eb%b2%84%ec%9d%b4%eb%82%a0-%ea%b8%b0%eb%85%90-%ec%96%91%ea%b0%80-%eb%b6%80%eb%aa%a8%eb%8b%98-%ed%88%ac%ec%96%b4-1/</link>
+		<pubDate>Fri, 10 May 2019 02:42:01 +0000</pubDate>
+		<dc:creator><![CDATA[devblog]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+		<category><![CDATA[author-고득녕]]></category>
+		<category><![CDATA[네트워크]]></category>
+
+		<guid isPermaLink="false">http://devblog.selfhow.com/?p=66938</guid>
+		<description><![CDATA[<p>원문 링크 2019년 어버이날 기념 양가 부모님 투어 (1부) 미리보기 2019년 어버이날 기념으로 3박 4일 양가 부모님(서울 노원구, 경상도 진주) 투어를 하기로 하였다. &#8211; 1박 2일 ( 서울 노원구) &#8211; 2박 3일 (경상도 진주)그래서 오래간만에 일상 포스팅을 하고자 한다. ㅋㅋㅋㅋ(일상 포스팅을 안 하다 보니 둘 &#8230; 개발자 정보 고득녕 님 글 더 보기 name : &#8230;</p>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/10/%ec%b2%ad%eb%85%84-%ea%b3%a0%eb%93%9d%eb%85%95-2014-2019%eb%85%84-%ec%96%b4%eb%b2%84%ec%9d%b4%eb%82%a0-%ea%b8%b0%eb%85%90-%ec%96%91%ea%b0%80-%eb%b6%80%eb%aa%a8%eb%8b%98-%ed%88%ac%ec%96%b4-1/">[청년 고득녕 (2014~)] 2019년 어버이날 기념 양가 부모님 투어 (1부)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></description>
+				<content:encoded><![CDATA[<h4>원문 링크</h4>
+<p><a href='http://blog.naver.com/nackji80/221534039222' target='_blank'>2019년 어버이날 기념 양가 부모님 투어 (1부)</a></p>
+<hr />
+<h4>미리보기</h4>
+<p>2019년 어버이날 기념으로 3박 4일 양가 부모님(서울 노원구, 경상도 진주) 투어를 하기로 하였다. &#8211; 1박 2일 ( 서울 노원구) &#8211; 2박 3일 (경상도 진주)그래서 오래간만에 일상 포스팅을 하고자 한다. ㅋㅋㅋㅋ(일상 포스팅을 안 하다 보니 둘 &#8230;</p>
+<hr />
+<h4>개발자 정보</h4>
+<ul>
+<li><a href='/tag/author-고득녕'>고득녕 님 글 더 보기</a></li>
+<li>name : 고득녕</li>
+<li>blog : <a href='http://blog.naver.com/nackji80/' target='_blank'>http://blog.naver.com/nackji80/</a></li>
+<li>rss : <a href='http://blog.rss.naver.com/nackji80.xml' target='_blank'>http://blog.rss.naver.com/nackji80.xml</a></li>
+<li>description : 네트워크</li>
+</ul>
+<p>The post <a rel="nofollow" href="http://devblog.selfhow.com/2019/05/10/%ec%b2%ad%eb%85%84-%ea%b3%a0%eb%93%9d%eb%85%95-2014-2019%eb%85%84-%ec%96%b4%eb%b2%84%ec%9d%b4%eb%82%a0-%ea%b8%b0%eb%85%90-%ec%96%91%ea%b0%80-%eb%b6%80%eb%aa%a8%eb%8b%98-%ed%88%ac%ec%96%b4-1/">[청년 고득녕 (2014~)] 2019년 어버이날 기념 양가 부모님 투어 (1부)</a> appeared first on <a rel="nofollow" href="http://devblog.selfhow.com">DEVBLOG - 개발자 메타블로그</a>.</p>
+]]></content:encoded>
+			</item>
+	</channel>
 </rss>

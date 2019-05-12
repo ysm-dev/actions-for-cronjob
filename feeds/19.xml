@@ -1,601 +1,395 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	
+xmlns:georss="http://www.georss.org/georss" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
+>
+
 <channel>
-<title>강디너의 개발 일지</title>
-<link>https://kdinner.tistory.com/</link>
-<description>주니어 개발자의 개발 일지</description>
-<language>ko</language>
-<pubDate>Sun, 12 May 2019 17:41:38 +0900</pubDate>
-<generator>TISTORY</generator>
-<managingEditor>강디너</managingEditor>
-<item>
-<title>Vscode 플러그인 리팩토링(2) - 피드백 반영</title>
-<link>https://kdinner.tistory.com/47</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: &quot;ca-pub-3165271838523554&quot;,
-          enable_page_level_ads: true
-     });
-&lt;/script&gt;&lt;/div&gt;&lt;p&gt;페이스북 생활코딩 그룹에 리팩토링 정리한 글을올렸는데 피드백이 들어왔다 !&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;피드백이 들어올줄 생각치도 못했는데 이렇게 남겨주신 &lt;b&gt;'서재원'&lt;/b&gt;님께 감사드립니다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/Cn7aa/btqu1bZ6llI/YfhOk2mGwFyzvEU3HW54kk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/Cn7aa/btqu1bZ6llI/YfhOk2mGwFyzvEU3HW54kk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FCn7aa%2Fbtqu1bZ6llI%2FYfhOk2mGwFyzvEU3HW54kk%2Fimg.png' data-filename=&quot;123.PNG&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;1. 변수의 스코프를 최대한 작게&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;2. js는 카멜케이스 + 상수는 상수 케이스 사용&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;- 보통 언더바 표기법 ex) somting_todo&amp;nbsp; 으로 네이망을 했었다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;3. tailing comma 를 사용&lt;/p&gt;
-&lt;p&gt;무슨 용어인지 몰라서 검색&lt;/p&gt;
-&lt;p&gt;Object를 선언할 때 뒤에 , 를 붙이는 것&lt;/p&gt;
-&lt;p&gt;&amp;nbsp; &amp;nbsp; ex) 'Time' : getNowTIme(),&amp;nbsp; &amp;nbsp; &amp;lt;-&lt;/p&gt;
-&lt;pre id=&quot;code_1557133271660&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;await successRef.push({
-                        'Source': languageResult.langCode,
-                        'Text': text,
-                        'Translation': translateResult.message.result.translatedText,
-                        'Time': getNowTime(),
-                });&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&amp;nbsp;- 이거는 페북 댓글에도 논의가 있었고 구글 검색에서도 사용하는게 좋다!, 좋나? 라는 말이 많아서 사용 안함&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;4. 함수이름 동사나 형용사 적용&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;5. any 사용 없애기&lt;/p&gt;
-&lt;p&gt;이때 내가 무지해서 에러나는 type은 모두 any로 했었는데 리팩토링할 때 캐치를 못했다.&lt;/p&gt;
-&lt;pre id=&quot;code_1557138036936&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;await editor!.edit((edited: TextEditorEdit) =&amp;gt; 
-                    edited.replace(selectionRange, String(translateResult.message.result.translatedText)));&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;위의 코드도 원래 edited: any 였는데 object, array 를 넣어도 오류였다.&lt;/p&gt;
-&lt;p&gt;console.log로 edited의 타입을 찍었을 때는 object여서 object겠거니 했지만..&lt;/p&gt;
-&lt;p&gt;vscode에서 지원하는 edit함수의 인자가 TextEditorEdit 란걸 문서에서 확인하고 넣었더니 정상적으로 실행되었다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;6. let 변수를 const 로 변경&lt;/p&gt;
-&lt;p&gt;language 이외에 const로 변경할 수 있는건 다 변경&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;7. 변수 target 을 language 뒤로 미루고 재대입 피하는 방법&lt;/p&gt;
-&lt;pre id=&quot;code_1557136318658&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;let target = 'en';
-            try{
-                const language = await fetch(`https://openapi.naver.com/v1/papago/detectLangs`,{
-                                            method: 'POST',
-                                            headers: papagoHeader,
-                                            body: `query=${text}`});
-                const languageResult = await language.json();
+	<title>greennuri</title>
+	<atom:link href="http://blog.greennuri.info/?feed=rss2" rel="self" type="application/rss+xml" />
+	<link>http://blog.greennuri.info</link>
+	<description>다른 워드프레스 사이트</description>
+	<lastBuildDate>Sat, 29 Sep 2018 12:42:34 +0000</lastBuildDate>
+	<language>ko-KR</language>
+	<sy:updatePeriod>hourly</sy:updatePeriod>
+	<sy:updateFrequency>1</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=4.9.10</generator>
+<site xmlns="com-wordpress:feed-additions:1">138211151</site>	<item>
+		<title>맥 mojave jpype 설치 오류 해결</title>
+		<link>http://blog.greennuri.info/?p=190</link>
+		<pubDate>Sat, 29 Sep 2018 12:37:25 +0000</pubDate>
+		<dc:creator><![CDATA[greennuri]]></dc:creator>
+				<category><![CDATA[python]]></category>
+		<category><![CDATA[자연어처리]]></category>
+		<category><![CDATA[jpype]]></category>
+		<category><![CDATA[libc++]]></category>
+		<category><![CDATA[libstdc++]]></category>
+		<category><![CDATA[mecab-python3]]></category>
+		<category><![CDATA[mojave]]></category>
+		<category><![CDATA[xcode]]></category>
 
-                if(languageResult.langCode === 'en') target = 'ko';
-                
-                const translate = await fetch(`https://openapi.naver.com/v1/papago/n2mt`, {
-                                            method: 'POST',
-                                            headers: translationHeaders,
-                                            body: `source=${languageResult.langCode}&amp;amp;target=${target}&amp;amp;text=${text}`});&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;target은 네이버 번역기 API 를 사용할 때 원하는 언어를 설정하는 부분이다.&lt;/p&gt;
-&lt;p&gt;ex) en = 영어, ko = 한글&lt;/p&gt;
-&lt;p&gt;초기에는 en으로써 모든언어가 들어오면 영어로 번역하기 위해서 설정했으며&lt;/p&gt;
-&lt;p&gt;만약 언어감지한 결과값이 en 이면 한글로 번역하기 위해서 저렇게 코드를 만들었었다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;8. await 와 then 혼용&lt;/p&gt;
-&lt;p&gt;아래와 같이 나눴다.&lt;/p&gt;
-&lt;pre id=&quot;code_1557137887257&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;		const language = await fetch(`https://openapi.naver.com/v1/papago/detectLangs`,{
-                                            method: 'POST',
-                                            headers: papagoHeader,
-                                            body: `query=${text}`});
-                const languageResult = await language.json();
+		<guid isPermaLink="false">http://blog.greennuri.info/?p=190</guid>
+		<description><![CDATA[맥 새 OS mojave에서 더 정확히 이야기 하면 XCode10을 쓰는 환경에서 python 패키지중 gcc를 통해 컴파일 하는 패키지가 잘 설치 되지 않습니다. 이유는 다음과 같습니다 Building with libstdc++ was deprecated with Xcode 8 and is not supported in Xcode 10 when targeting iOS. xcode10에서는 libstdc++을 더이상 지원하지 않습니다. 해결 책은 libstdc++이 아니라 libc++을 이용해서 컴파일하게 [&#8230;]]]></description>
+				<content:encoded><![CDATA[<p>맥 새 OS mojave에서</p>
+<p>더 정확히 이야기 하면 XCode10을 쓰는 환경에서 python 패키지중 gcc를 통해 컴파일 하는 패키지가 잘 설치 되지 않습니다.</p>
+<p>이유는 다음과 같습니다</p>
+<div class="text_exposed_show">
+<p>Building with libstdc++ was deprecated with Xcode 8 and is not supported in Xcode 10 when targeting iOS.</p>
+<p>xcode10에서는 libstdc++을 더이상 지원하지 않습니다.</p>
+<p>해결 책은 libstdc++이 아니라 libc++을 이용해서 컴파일하게 명령을 내리면 됩니다.</p>
+<p>저 같은 jpype1을 설치 하면서 삽질을 했는데요 ^^</p>
+<p>기존에 jpype1설치는 &#8220;pip install jpype1&#8243;으로 하면 되는데</p>
+<p>mojave에서는 다음과 같이 하면 됩니다 .</p>
+<p>&#8216;CFLAGS=&#8221;-stdlib=libc++&#8221; pip install jpype1&#8217;</p>
+</div>
+<p>&nbsp;</p>
+<p>지금까지 위 사항에 영향을 받는 패키지는 jpype, mecab-python3 두개가 확인 됐네요</p>
+<p>&nbsp;</p>
+]]></content:encoded>
+		<post-id xmlns="com-wordpress:feed-additions:1">190</post-id>	</item>
+		<item>
+		<title>jupyter server 보안 설정하기</title>
+		<link>http://blog.greennuri.info/?p=182</link>
+		<pubDate>Tue, 22 May 2018 15:21:02 +0000</pubDate>
+		<dc:creator><![CDATA[greennuri]]></dc:creator>
+				<category><![CDATA[python]]></category>
+		<category><![CDATA[jupyter]]></category>
+		<category><![CDATA[notebook]]></category>
 
-                if(languageResult.langCode === 'en') target = 'ko';
-                
-                const translate = await fetch(`https://openapi.naver.com/v1/papago/n2mt`, {
-                                            method: 'POST',
-                                            headers: translationHeaders,
-                                            body: `source=${languageResult.langCode}&amp;amp;target=${target}&amp;amp;text=${text}`});
-                const translateResult = await translate.json();&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;9. '==' 대신 '===' 사용&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;10. 코드 재사용성을 최대한 살리는 방향으로 리팩토링 진행&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;피드백을 받았다고해서 피드백대로 수정하지 않고, 한번 더 생각하고, 이렇게 리팩토링하는 것이 괜찮은가 고민하면서 리팩토링을 진행했다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;다시한번 피드백 감사합니다.&lt;/p&gt;</description>
-<category>삽질</category>
-<category>감사합니다</category>
-<category>리팩토링</category>
-<category>피드백</category>
-<author>강디너</author>
-<guid>https://kdinner.tistory.com/47</guid>
-<comments>https://kdinner.tistory.com/47#entry47comment</comments>
-<pubDate>Mon, 06 May 2019 19:26:34 +0900</pubDate>
-</item>
-<item>
-<title>Vscode 플러그인 리팩토링 - async &amp; await</title>
-<link>https://kdinner.tistory.com/46</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: &quot;ca-pub-3165271838523554&quot;,
-          enable_page_level_ads: true
-     });
-&lt;/script&gt;&lt;/div&gt;&lt;p style=&quot;font-size: 1.25em;&quot;&gt;&lt;b&gt;리팩토링 목표&lt;/b&gt;&lt;/p&gt;
-&lt;p style=&quot;font-size: 1.25em;&quot;&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;1. 비동기 함수 정리&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;2. 쓸모없는 코드 삭제&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;3. 나중에 다시 봐도 바로 이해가 될 정도로 코드 정리&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;4. async &amp;amp; await 익숙해지기&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;현재 사용하고 있는 API는 2가지 입니다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;- 파파고 언어 감지 API&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;- 네이버 번역 API&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;pre id=&quot;code_1556988567159&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;       
-  // 함수 시작
-        papago(text).then(
-              function(data: any){
-                translationText(editor, data.langCode);
-            }
-        );
-        
- 	var data = new FormData();
-        data.append(&quot;json&quot;, JSON.stringify({'query' : text}));
+		<guid isPermaLink="false">http://blog.greennuri.info/?p=182</guid>
+		<description><![CDATA[jupyter Notebook 서버를 올렸는 아무나 접근하게 하고 싶지 않을때 다음과 같이 설정한다. jupyter notebook --generate-config 위 코드를 실행 시키면 /home/jupyter/.jupyter/jupyter_notebook_config.py 파일이 생긴다. 위 파일에서 아래와 같은 항목을 아래와 같이 설정한다. c.NotebookApp.ip = '0.0.0.0' 위 코드는 외부 접속이 가능하게 허용하는 설정 c.NotebookApp.port = 8888 위 코드는 접속 포트 설정, 방화벽이나 기타 이유로 바꿔야 할시 위 값을 [&#8230;]]]></description>
+				<content:encoded><![CDATA[<p>jupyter Notebook 서버를 올렸는 아무나 접근하게 하고 싶지 않을때 다음과 같이 설정한다.</p>
+<p><code>jupyter notebook --generate-config</code><br />
+위 코드를 실행 시키면<br />
+<code>/home/jupyter/.jupyter/jupyter_notebook_config.py</code> 파일이 생긴다. <br />
+위 파일에서 아래와 같은 항목을 아래와 같이 설정한다.</p>
+<p><code>c.NotebookApp.ip = '0.0.0.0'</code><br />
+위 코드는 외부 접속이 가능하게 허용하는 설정</p>
+<p><code>c.NotebookApp.port = 8888</code><br />
+위 코드는 접속 포트 설정, 방화벽이나 기타 이유로 바꿔야 할시 위 값을 바꾸면 됨.</p>
+<p><code>c.NotebookApp.open_browser = False</code><br />
+위 코드는 주피터를 실행할때 브라우저를 열지 않게 하는 설정<br />
+<code>c.NotebookApp.notebook_dir = "/path/to/ipython"</code><br />
+위 코드는 주피터 작업 디렉토리를 설정<br />
+<code>c.NotebookApp.password = u'password'</code><br />
+위 코드는 주피터 접속시 암호를 입력받게 하는 설정, 당연히 설정된 암호와 맞아야 ^^</p>
+<p><code>c.NotebookApp.keyfile = '/home/jupyter/.ssh/mykey.key'</code><br />
+<code>c.NotebookApp.certfile = '/home/jupyter/.ssh/mycert.pem'</code><br />
+위 두개 코드는 ssl 설정에서 나온 암호파일로 이 설정이 셋팅 되면<br />
+http://ip:8888이 아니고 https://ip:8888로 접속해야 한다.</p>
+<p>openssl로 암호화 설정은 다음과 같이 수행<br />
+<code>$openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout mykey.key -out mycert.pem</code></p>
+<p>위 명령을 배쉬 쉘에서 실행하면 365일 동안 쓸수 있는 인증서 생성</p>
+]]></content:encoded>
+		<post-id xmlns="com-wordpress:feed-additions:1">182</post-id>	</item>
+		<item>
+		<title>jupyter ubuntu linux daemon으로 설정하기</title>
+		<link>http://blog.greennuri.info/?p=178</link>
+		<pubDate>Mon, 21 May 2018 01:50:12 +0000</pubDate>
+		<dc:creator><![CDATA[greennuri]]></dc:creator>
+				<category><![CDATA[python]]></category>
+		<category><![CDATA[시스템설정]]></category>
+		<category><![CDATA[jupyter]]></category>
+		<category><![CDATA[notebook]]></category>
 
+		<guid isPermaLink="false">http://blog.greennuri.info/?p=178</guid>
+		<description><![CDATA[ubuntu에서 jupyter daemon으로 설정하기 다음과 같은 방식으로 서비스 설정 파일을 작성한다. 위치 : /etc/systemd/system/ 파일명 : ipython-notebook.service 내용 Unit type=simple PIDFile=/var/run/ipython-notebook.pid ExecStart=/usr/bin/ipython notebook &#8211;no-brower User=ipynb Group=ipynb WorkingDirectory=/home/ipynb/notebooks Install WantedBy=multi-user.target 위의 설정 파일에서는 서비스를 돌리는 계정과 그룹을 ipynb로 정의 하고 있다. 그러므로 계정을 추가 해야 한다 useradd ipynb su &#8211; ipynb cd $IPYNB HOME ipynb로 계정 [&#8230;]]]></description>
+				<content:encoded><![CDATA[<p>ubuntu에서 jupyter daemon으로 설정하기</p>
+<p>다음과 같은 방식으로 서비스 설정 파일을 작성한다.</p>
+<p>위치 : /etc/systemd/system/<br />
+파일명 : ipython-notebook.service</p>
+<p>내용</p>
+<ul>
+<li>Unit </li>
+<li>type=simple</li>
+<li>PIDFile=/var/run/ipython-notebook.pid</li>
+<li>ExecStart=/usr/bin/ipython notebook &#8211;no-brower</li>
+<li>User=ipynb </li>
+<li>Group=ipynb</li>
+<li>WorkingDirectory=/home/ipynb/notebooks</li>
+<li>Install </li>
+<li>WantedBy=multi-user.target</li>
+</ul>
+<p>위의 설정 파일에서는 서비스를 돌리는 계정과 그룹을 ipynb로 정의 하고 있다. 그러므로 계정을 추가 해야 한다</p>
+<ul>
+<li>useradd ipynb </li>
+<li>su &#8211; ipynb<br />
+<code>cd $IPYNB HOME ipynb</code>로 계정 전환후 <code>ipython</code> 홈 디렉토리로 이동한다. <br />
+<code>systemctl daemon-reload</code> <br />
+<code>systemctl enable ipython-notebook</code><br />
+<code>systemctl start ipython-notebook</code></li>
+</ul>
+<p>위와 같이 설정하면 동작하는데 다음과 같은 오류가 발생할수 있다.<br />
+<code>OSError: [Errno 13] Permission denied: '/run/user/1000/jupyter'</code> </p>
+<p>외와 같은 오류가 발생시 <code>XDG_RUNTIME_DIR</code> 값을 설정해재 하면 처리 됨. 관련 <a href="https://github.com/jupyter/notebook/issues/1318">깃허브 이슈</a></p>
+<p>그외에 다른 <a href="https://gist.github.com/whophil/5a2eab328d2f8c16bb31c9ceaf23164f">링크</a> 공유</p>
+]]></content:encoded>
+		<post-id xmlns="com-wordpress:feed-additions:1">178</post-id>	</item>
+		<item>
+		<title>jupyter에서 암호 설정하기</title>
+		<link>http://blog.greennuri.info/?p=176</link>
+		<pubDate>Sun, 20 May 2018 05:39:40 +0000</pubDate>
+		<dc:creator><![CDATA[greennuri]]></dc:creator>
+				<category><![CDATA[python]]></category>
+		<category><![CDATA[jupyter]]></category>
 
-// papago API
-        function papago(text: any){
-            return new Promise( function(resolve, reject){
-                const naver_header = {
-                    'Content-Type' : 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'X-Naver-Client-Id' : '---------------',
-                    'X-Naver-Client-Secret' : '----------'
-                };
-                console.log('언어입니다 : ', text);
-                
-                let language = fetch(`https://openapi.naver.com/v1/papago/detectLangs`, {
-                    method : 'POST',
-                    headers: naver_header,
-                    body : `query=${text}`
-                }).then( res=&amp;gt; res.json());
-                resolve(language);
-            });
-        }
-   
-   
-   function translationText(editor: any, langCode: any) {
-            let source = langCode;
-            let target = 'en';
-            let query = text;
+		<guid isPermaLink="false">http://blog.greennuri.info/?p=176</guid>
+		<description><![CDATA[출처 : http://jupyter-notebook.readthedocs.io/en/stable/public_server.html jupyter notebook을 서버로 운영하다 보면 주피터를 실행시키면 token을 입력해야지 웹 브라우저에서 접근이 허용가능하게 되어 있다. 아무나 접속하지 못하게 하기위한 방법인데, 이게 좀 길고 프로세스를 다시 뛰울때 마다 바뀌기 때문에 가끔은 햇깔리기도 하다. 그래서 고정된 암호를 설정하는 방법을 찾아 보니 다음과 같은 방법이 있다. 주피터 설정은 jupyter_notebook_config.py파일을 편집 하면 된다. 이 파일의 위치는 [&#8230;]]]></description>
+				<content:encoded><![CDATA[<p>출처 :<br />
+ http://jupyter-notebook.readthedocs.io/en/stable/public_server.html</p>
+<p>jupyter notebook을 서버로 운영하다 보면 주피터를 실행시키면 token을 입력해야지 웹 브라우저에서 접근이 허용가능하게 되어 있다.</p>
+<p>아무나 접속하지 못하게 하기위한 방법인데, 이게 좀 길고 프로세스를 다시 뛰울때 마다 바뀌기 때문에 가끔은 햇깔리기도 하다.<br />
+ 그래서 고정된 암호를 설정하는 방법을 찾아 보니 다음과 같은 방법이 있다.</p>
+<p>주피터 설정은 <code>jupyter_notebook_config.py</code>파일을 편집 하면 된다.<br />
+ 이 파일의 위치는 $HOME&#46;jupyter\jupyter_notebook_config.py 이다.<br />
+이 파일이 없을 경우 아래와 같이 입력 하면 작성된다.<br />
+&#8216;jupyter noteook generate-config&#8217;</p>
+<p>간단히 암호를 설정하려면 다음과 같이 입력 하면 된다.</p>
+<p>&#8216;$ jupyter notebook password<br />
+Enter password:  ****<br />
+Verify password: ****<br />
+[NotebookPasswordApp] Wrote hashed password to /Users/you/.jupyter/jupyter_notebook_config.json&#8217;</p>
+<p>위와 같이 jupyter notebook password를 입력하면 암호를 입력받고 그 암호를 암호화시켜서 jupyter_notebook_config.json으로 저장 된다.</p>
+]]></content:encoded>
+		<post-id xmlns="com-wordpress:feed-additions:1">176</post-id>	</item>
+		<item>
+		<title>pyspark dataframe 관련함수 1</title>
+		<link>http://blog.greennuri.info/?p=169</link>
+		<pubDate>Sat, 12 May 2018 17:07:06 +0000</pubDate>
+		<dc:creator><![CDATA[greennuri]]></dc:creator>
+				<category><![CDATA[pyspark]]></category>
+		<category><![CDATA[dataframe]]></category>
 
-            const translation_headers = {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                'X-Naver-Client-Id': '----------------------',
-                'X-Naver-Client-Secret': '-----'
-            };
-            if (langCode == 'en') {
-                source = 'en';
-                target = 'ko';
-            }
+		<guid isPermaLink="false">http://blog.greennuri.info/?p=169</guid>
+		<description><![CDATA[rdd -> dafaFrame 변환 dataframe df = spark.createDataFrame(rdd,columns) columns : array of string ie rdd에 두개의 컬럼이있다고 치고 dataFrame df = spark.createFataFrame(rdd,["key","value"]) 기존 데이터 프레임 컬럼에 기존 컬럼 데이터로 새로운 컬럼 더하기 df = df.withcolumn(new_column_name, function &#124; column) ie. 기존 데이터 그대로 새로운 컬럼에 할당 df = df.withcolumn("new_column", df["value"]) ie. 기존 데이터에 &#8220;test&#8221; 문자열을 더해서 [&#8230;]]]></description>
+				<content:encoded><![CDATA[<ol>
+<li>
+<p>rdd -> dafaFrame 변환<br />
+dataframe df = spark.createDataFrame(rdd,columns)<br />
+columns : array of string<br />
+ie<br />
+rdd에 두개의 컬럼이있다고 치고<br />
+<code>dataFrame df = spark.createFataFrame(rdd,["key","value"])</code></p>
+</li>
+<li>
+<p>기존 데이터 프레임 컬럼에 기존 컬럼 데이터로 새로운 컬럼 더하기<br />
+<code>df = df.withcolumn(new_column_name, function | column)</code><br />
+ie. 기존 데이터 그대로 새로운 컬럼에 할당<br />
+<code>df = df.withcolumn("new_column", df["value"])</code><br />
+ie. 기존 데이터에 &#8220;test&#8221; 문자열을 더해서 할당 하기<br />
+<code>df = df.withColumn("new_column", df["value"]+"test")</code><br />
+ie. 기존의 데이터에 사용자 정의 함수 결과를 새로운 컬럼으로 추가 하기<br />
+<code>from pyspark.sql.functions import udf</code><br />
+<code>from pyspark.sql.types import *</code><br />
+<code>    def plus_text(str):<code><br />
+<code>return str + "_test"</code><br />
+<code>udf1 = udf(plus_text, StringType())</code><br />
+<code>df = df.withColumn("col1", udf1("content"))</code></p>
+</li>
+</ol>
+]]></content:encoded>
+		<post-id xmlns="com-wordpress:feed-additions:1">169</post-id>	</item>
+		<item>
+		<title>pyspark와 zeppelin 연동하기</title>
+		<link>http://blog.greennuri.info/?p=166</link>
+		<pubDate>Mon, 07 May 2018 04:05:48 +0000</pubDate>
+		<dc:creator><![CDATA[greennuri]]></dc:creator>
+				<category><![CDATA[python]]></category>
+		<category><![CDATA[spark]]></category>
+		<category><![CDATA[zeppelin]]></category>
 
-            query = encodeURI(query);
-            return fetch(
-                `https://openapi.naver.com/v1/papago/n2mt`, {
-                    method: 'POST',
-                    headers: translation_headers,
-                    body: `source=${source}&amp;amp;target=${target}&amp;amp;text=${query}`
-                }).then(
-                    (res: Response) =&amp;gt; {
-                        console.log('res-----', res);
-                        if (res.status == 200) {
-                            console.log('성공');
-                            return res.json();
-                        }
-                    }
-                ).then(resJson =&amp;gt; {
-                    console.log('result', resJson);
-                    var data = resJson.message.result;
-                    successRef.push({
-                        'Source': source,
-                        'Text': text,
-                        'Translation': data.translatedText,
-                        'Time': time
-                    });
-                    editor.edit((edit: any) =&amp;gt; edit.replace(selection_range, String(data.translatedText)));
-                })
-                .catch((error: Error) =&amp;gt; {
-                    console.log('실패', error);
-                    errorRef.push({
-                        'Text': text,
-                        'Source': source,
-                        'Time': time
-                    });
-                });
-        }&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p style=&quot;font-size: 1.12em;&quot;&gt;&lt;b&gt;기존 코드의 문제점&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;사용하지 않는 코드가 그대로 남아있다.&lt;/p&gt;
-&lt;p&gt;코드 흐름이 완전 이상해서 알아보기 힘들다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;함수 papago 를 먼저 수정해보자.&lt;/p&gt;
-&lt;p&gt;쓸모없는 promise를 없애고 await로 흐름을 정리했다.&lt;/p&gt;
-&lt;p&gt;아래 코드만 보아도 언어감지 -&amp;gt; 언어번역은 알 수 있게 되었다.&lt;/p&gt;
-&lt;pre id=&quot;code_1557056041464&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;        // papago 언어감지 API
-        async function papago(text: any) {
-            console.log('언어 감지할 Text', text);
-            const papago_header = {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                'X-Naver-Client-Id': 'gBQ1QI8_eElsuFeCu8TC',
-                'X-Naver-Client-Secret': 'UPHmuQo2zi'
-            };
-            try{
-                let language = await fetch(`https://openapi.naver.com/v1/papago/detectLangs`,{
-                                                method: 'POST',
-                                                headers: papago_header,
-                                                body: `query=${text}`})
-                                                .then(res =&amp;gt; res.json());
-                let translate = await translationText(editor, language.langCode);
-            }catch(err){
-                errorRef.push({
-                    'Error': err,
-                    'Time': time
-                });
-                vswindow.showInformationMessage(err);
-            }
-        }
-        papago(text);&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;translationText 함수를 보니 매우 지저분해 보이고 papago 함수에 넣어서 await로 순차적으로 진행하면 될 것 같습니다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;최종 코드&lt;/p&gt;
-&lt;pre id=&quot;code_1556990681501&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;	const papago_header = {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'X-Naver-Client-Id': '------------',
-            'X-Naver-Client-Secret': '-'
-        };
-	const translation_headers = {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'X-Naver-Client-Id': '----------',
-            'X-Naver-Client-Secret': '---'
-        };
+		<guid isPermaLink="false">http://blog.greennuri.info/?p=166</guid>
+		<description><![CDATA[분산 처리 플랫폼 중 하나인 스파크(spark)를 제플린(apache zeppelin, 웹 개발 플랫폼 아님)) 연동 시키기 위한 삽질을 정리 제플린을 기준으로 스파크 설정 현재 제플린은 https://zeppelin.apache.org/download.html 홈페이지에서 다운 받을수 있으며 버젼은 0.7.3(2018.5.7일 현재)이며 이 버젼은 스카프 2.1, 2.2까지 지원한다. 스파크는 https://spark.apache.org/downloads.html 링크에서 다운 받을수 있으며 최신 버젼은 2.3.0까지 나와 있지만, 제플린과 연동을 위해서는 2.1.0을 추천(2.2버젼도 지원 된다고 [&#8230;]]]></description>
+				<content:encoded><![CDATA[<p>분산 처리 플랫폼 중 하나인 스파크(spark)를 제플린(apache zeppelin, 웹 개발 플랫폼 아님)) 연동 시키기 위한 삽질을 정리</p>
+<p>제플린을 기준으로 스파크 설정</p>
+<p>현재 제플린은 https://zeppelin.apache.org/download.html 홈페이지에서 다운 받을수 있으며 버젼은 0.7.3(2018.5.7일 현재)이며<br />
+이 버젼은 스카프 2.1, 2.2까지 지원한다.</p>
+<p>스파크는 https://spark.apache.org/downloads.html 링크에서 다운 받을수 있으며 최신 버젼은 2.3.0까지 나와 있지만, 제플린과 연동을 위해서는 2.1.0을 추천(2.2버젼도 지원 된다고 하지만 좀 애매해서 한 버젼 낮은걸 사용)</p>
+<p>그리고 spark 2.1.0 버젼은 python 3.6 버젼에서 호환성 문제(오류가 생김&#8230; 오류 생기니깐 호환이 안 맞는거 맞지 않을까&#8230;)</p>
+<p>그래서 spark 2.1.0 설정에서 PYTHON_PATH에 python 3.5 버젼 python 파일을 설정해야 함.</p>
+<p>아래 링크에서는 spark 2.1.0에서 python 3.6에서 사용하기 위한 픽스를 설명</p>
+<p>http://www.blog.howechen.com/fix-compatibility-of-apache-spark-2-1-0-with-python-3-6/</p>
+<p>그냥 아나콘다에서 python3.5 환경 추가 시켜서 PYTHON_PATH에 할당하고 사용함..</p>
+<p>귀차니즘&#8230; ^^</p>
+]]></content:encoded>
+		<post-id xmlns="com-wordpress:feed-additions:1">166</post-id>	</item>
+		<item>
+		<title>마크다운 테스트~</title>
+		<link>http://blog.greennuri.info/?p=129</link>
+		<pubDate>Tue, 17 Apr 2018 15:53:02 +0000</pubDate>
+		<dc:creator><![CDATA[greennuri]]></dc:creator>
+				<category><![CDATA[잡담]]></category>
 
+		<guid isPermaLink="false">http://blog.greennuri.info/?p=129</guid>
+		<description><![CDATA[Markdown test writing with Markdown is quick and easy. And reading Markdown is just as nice! It&#8217;s just plain text. No need to use the mouse.]]></description>
+				<content:encoded><![CDATA[<p><em>Markdown test</em><br />
+writing with <a href="1">Markdown</a> is <em>quick and easy</em>. And reading Markdown is just as nice!</p>
+<ul>
+<li>It&#8217;s just plain text.</li>
+<li>No need to use the mouse.</li>
+<li></li>
+</ul>
+]]></content:encoded>
+		<post-id xmlns="com-wordpress:feed-additions:1">129</post-id>	</item>
+		<item>
+		<title>강화학습 #2</title>
+		<link>http://blog.greennuri.info/?p=123</link>
+		<pubDate>Tue, 17 Apr 2018 15:24:04 +0000</pubDate>
+		<dc:creator><![CDATA[greennuri]]></dc:creator>
+				<category><![CDATA[강화학습]]></category>
+		<category><![CDATA[미분류]]></category>
 
-// papago 언어감지 API
-        async function translator(text: any) {
-            console.log('언어 감지할 Text', text);
+		<guid isPermaLink="false">http://blog.greennuri.info/?p=123</guid>
+		<description><![CDATA[강화학습 #2 MDP(Markov Decision Process) MDP는 이전 포스트에서 상태, 행동, 보상, 정책으로 구성 되어 있다고 적었는데 더 정확히 말하면 MDP는 [상태, 행동, 보상, 상태변환확률, 감가율]로 구성 되어 있습니다. 개별 요소에 대해 더 정확히 풀이 하면 다음과 같습니다. 이해를 간단히 하기 위해서 그리드 월드(격자로 표현 가능한 세상)를 중심으로 표현 합니다. *상태 그리드 월드에서 상태는 에이전트가 위치한 [&#8230;]]]></description>
+				<content:encoded><![CDATA[<p>강화학습 #2</p>
+<p>MDP(Markov Decision Process)</p>
+<p>MDP는 이전 포스트에서 상태, 행동, 보상, 정책으로 구성 되어 있다고 적었는데</p>
+<p>더 정확히 말하면 MDP는 [상태, 행동, 보상, 상태변환확률, 감가율]로 구성 되어 있습니다.</p>
+<p>개별 요소에 대해 더 정확히 풀이 하면 다음과 같습니다.</p>
+<p>이해를 간단히 하기 위해서 그리드 월드(격자로 표현 가능한 세상)를 중심으로 표현 합니다.</p>
+<p>*상태</p>
+<ul>
+<li>그리드 월드에서 상태는 에이전트가 위치한 좌표를 의미 합니다.</li>
+<li>5*5 격자 그리드 월드 일 경우 나올수 있는 경우의 수는 25가지가 됩니다.</li>
+<li>&#92;(S = &#123;(1,1),(1,2),(1,3),,,(5,5)&#125;&#92;)이 됩니다.
+<li>
+<li>그리고 어떤 특정 시간 &#92;(t&#92;)에 상태값을 표현 하는 것은 &#92;(S_t&#92;) 로 표현하고, 이 값이 &#92;((1,3)&#92;)일때 다음과 같이 표현 됩니다.</li>
+<li/>&#92;(S_t = (1,3)&#92;)</li>
+<li>어떤 상태 t에서의 상태 &#92;(S_t&#92;)는 정해져 있지 않습니다. 때에 따라서 &#92;(t=1&#92;) 일 때 &#92;(S_t = (1,3)&#92;)일 수도 있고, &#92;(S_t=(4,2)&#92;)일 수도 있습니다. 이러한 것을 확률 변수라고 합니다.
+</li>
+<li>&#92;(S_t=s&#92;) 이 식은 &#8220;시간 &#92;(t&#92;)에서 상태 &#92;(S_t&#92;)가 어떤 상태 &#92;(s&#92;)다를 표현 </li>
+</ul>
+<ul>
+<li>행동 </li>
+<li>에이전트가 상태 &#40;S&#41;일 때 할수 있는 행동의 집합은 &#40;A&#41;</li>
+<li>행동 집합 &#40;A&#41;의 한 원소는 &#40;a&#41;로 표현.</li>
+<li>어떤 특정 시간 &#40;t&#41;에서 하나의 행동은 &#40;A_t=a&#41;로 표현</li>
+<li>&#40;A_t&#41;는 어떤 특정 시간&#40;t&#41;에서 선택할 행동, 어떤 행동을 할 것인지를 정의한것이 아니기 때문에 전체집합&#40;A&#41;으로 표현</li>
+<li>그리드 월드에서의 행동은 다음고 같다 </li>
+<li>&#40;A = {up,down,left,right}&#41;</li>
+<li></li>
+</ul>
+]]></content:encoded>
+		<post-id xmlns="com-wordpress:feed-additions:1">123</post-id>	</item>
+		<item>
+		<title>강화학습 #1</title>
+		<link>http://blog.greennuri.info/?p=119</link>
+		<pubDate>Tue, 17 Apr 2018 14:51:51 +0000</pubDate>
+		<dc:creator><![CDATA[greennuri]]></dc:creator>
+				<category><![CDATA[강화학습]]></category>
+		<category><![CDATA[HMM]]></category>
+		<category><![CDATA[MDP]]></category>
+		<category><![CDATA[MP]]></category>
+		<category><![CDATA[POMDP]]></category>
 
-            let target = 'en';
-            try{
-                let language = await fetch(`https://openapi.naver.com/v1/papago/detectLangs`,{
-                                            method: 'POST',
-                                            headers: papago_header,
-                                            body: `query=${text}`})
-                                            .then(res =&amp;gt; res.json());
+		<guid isPermaLink="false">http://blog.greennuri.info/?p=119</guid>
+		<description><![CDATA[기계학습 지도학습(Supervised Learning) : 주어진 데이터와 정답이 있어서 데이터를 통해서 정답을 판별하는 패턴을 학습 분류기(Classification), 회귀분석(Regression) 비지도 학습 (unsupervised Learning): 주어진 데이터를 개별적인 기준으로 비슷한것 끼리 묶는것. Cluster, Topic Modelling 강화학습(Reinforcement Learning) : 보상(Reward)을 통해 학습 하는 일련의 과정 어떠한 환경에서 에이전트(즉 컴퓨터)가 어떤 행위를 통해 목표를 구행해 가면서 그 과정에서 보상을 받고 그 보상(보상이 [&#8230;]]]></description>
+				<content:encoded><![CDATA[<p>기계학습</p>
+<ul>
+<li>지도학습(Supervised Learning) : 주어진 데이터와 정답이 있어서 데이터를 통해서 정답을 판별하는 패턴을 학습
+<ul>
+<li>분류기(Classification), 회귀분석(Regression)</li>
+</ul>
+</li>
+<li>비지도 학습 (unsupervised Learning): 주어진 데이터를 개별적인 기준으로 비슷한것 끼리 묶는것.
+<ul>
+<li>Cluster, Topic Modelling </li>
+</ul>
+</li>
+<li>강화학습(Reinforcement Learning) : 보상(Reward)을 통해 학습 하는 일련의 과정
+<ul>
+<li>어떠한 환경에서 에이전트(즉 컴퓨터)가 어떤 행위를 통해 목표를 구행해 가면서 그 과정에서 보상을 받고 그 보상(보상이 긍정적인 것만 있는것은 아님, 때론 부정적 보상도 받음)을 통해 학습을 이루어 나감.<br />
+흔히 강화학습에 대한 슬라이드 보면 스키너의 행동 심리학 실험(스키너 상자)을 주로 예를 든다.<br />
+내용은 실험실에서 쥐에게 어떤 특정 버튼을 누르면 쥐가 좋아하는 먹이를 주게 하여 그 버튼을 계속 누르게 하는 보상을 통해 행동을 강화(Reinforcement)하는 실험을 이야기 한다.<br />
+해당 내용 링크(스키너 상자)[https://www.youtube.com/watch?v=R4iK1rZKu4I]</li>
+</ul>
+<p>아래 그림은 강화학습을 간략히 표현한 그림. </p>
+ 강화학습
+<p>강화 학습은 어떠한 환경과 에이전트(컴퓨터)가 주어지고 에이전트가 어떤 상태에서 다음 상태로 가기 위한 어떤 행동을 수행하면, 그 결과로 보상을 받으면서 계속 자신의 상태와 행동을 계속 수행해서 목적한바를 수행 하는 과정을 의미. 강화학습은 이 과정을 모사하여 학습을 하고, 재현하는 것을 의미</p>
+</li>
+</ul>
+<p>강화학습은 어떤 문제를 푸는 과정을 모사하고 학습</p>
+<p>이를 위해서 문제가 정의 되어야 하는데 이 문제는 순차적 행동 결정 문제이어야만 가능.</p>
+<p>순차적 행동 결정 문제는 어떤 행동을 행하는데 있어 순서가 있고 지금 할수 있는 행동이 이전에 영향을 받는것을 의미.</p>
+<p>간단히 말해서 동전을 100번 던져서 앞 뒤가 나올 확률은 순차적 행동 문제가 아님, 왜 냐면 동전을 10번째 던지나, 20번째 던지나 나오는 확률값은 똑같기 때문이다.</p>
+<p>순차적 행동의 예제는 유명한 알파고나, 아케이드 게임처음 이전 혹은 지금의 행동이 다음의 내 행동에 영향을 주는 경우를 의미</p>
+<p>이러한 순차적 행동을 풀기 위해서 마코프 의사결정 과정(Markov Decision Process)을 통해 문제를 수학적으로 정의 한다.</p>
+<p>마코프 의사 결정과정은 마코프 과정(Markov Process)의 한 분류로서, 마코프 과정은 시간축에 따라서 상태가 변하는 것을 확률 개념으로 추론하여 시간의 변화에 따른 상태의 변화를 확률적으로 표현한다.</p>
+<p>마코프 과정</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>상태 관측 가능</th>
+<th>상태 관측 불가</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>상태 변화가 자동적(No Agent)</td>
+<td>Markov Model</td>
+<td>Hidden Markov Model</td>
+</tr>
+<tr>
+<td>상태가 행동에 의해 바뀜(Single Agent)</td>
+<td>Markov Decision Process</td>
+<td>Partially Observable Markov Decision Process</td>
+</tr>
+</tbody>
+</table>
+<pre><code><div id="attachment_121" style="width: 310px" class="wp-caption alignnone"><img data-attachment-id="121" data-permalink="http://blog.greennuri.info/?attachment_id=121" data-orig-file="https://i1.wp.com/blog.greennuri.info/wp-content/uploads/2018/04/main-qimg-b059b262a8032e0c40346aa0f40a5678.png?fit=602%2C256" data-orig-size="602,256" data-comments-opened="0" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="main-qimg-b059b262a8032e0c40346aa0f40a5678" data-image-description="" data-medium-file="https://i1.wp.com/blog.greennuri.info/wp-content/uploads/2018/04/main-qimg-b059b262a8032e0c40346aa0f40a5678.png?fit=300%2C128" data-large-file="https://i1.wp.com/blog.greennuri.info/wp-content/uploads/2018/04/main-qimg-b059b262a8032e0c40346aa0f40a5678.png?fit=602%2C256" src="https://i1.wp.com/blog.greennuri.info/wp-content/uploads/2018/04/main-qimg-b059b262a8032e0c40346aa0f40a5678.png?resize=300%2C128" alt="" width="300" height="128" class="size-medium wp-image-121" srcset="https://i1.wp.com/blog.greennuri.info/wp-content/uploads/2018/04/main-qimg-b059b262a8032e0c40346aa0f40a5678.png?resize=300%2C128 300w, https://i1.wp.com/blog.greennuri.info/wp-content/uploads/2018/04/main-qimg-b059b262a8032e0c40346aa0f40a5678.png?w=602 602w" sizes="(max-width: 300px) 100vw, 300px" data-recalc-dims="1" /><p class="wp-caption-text">kind of markov processes</p></div>
+</code></pre>
+<p>위에서 보듯이 마코프 과정은 상태 변화가 자동적으로 이루어지고 모든 상태가 관측 가능하면 마코프 모델로, 상태가 숨겨지면 은닉 마코프모델로 모델링한다.</p>
+<p>상태 변화가 자동적, 행동에 의해 바뀜의 차이는 상태와 상태 사이에 행동이라는 과정이 있냐 없느냐의 차이이다 .</p>
+<p>강화학습은 마코프 의사결정 모델을 통해서 상태와 상태의 변화에 행동이 포함이 된다.</p>
+<p>강화학습에서는 에이전트(컴퓨터)와 환경사이의 상호작용으로 학습을 수행한다.</p>
+<p>강화학습을 마코프 의사결정 모델을 통해 처리 하기 위해서는 다음과 같은 값들이 필요로 하다.</p>
+<p>에이전트가 움직일수 있는 환경이 그리드 월드라고 가정하면 다음과 같이 설명 할 수 있다.</p>
+<p>그리드 월드 : 정사각형 좌표위에서 한칸씩 움직여서 원하는 위치로 옮길수 있는 환경</p>
+<ol>
+<li>상태
+<ol>
+<li>에이전트의 상태 값.  에이전트가 현재 그리드 월드 위에서 어디에 있는지 나타내는 좌표값</li>
+</ol>
+</li>
+<li>행동
+<ol>
+<li>상태에서 할수 있는 행동의 집합,  그리드 월드에서 상하좌우로 움직일수 행동을 결정 할수 있으므로, 행동은 상하좌우가 된다.  </li>
+<li>에이전트가 행동을 취하면 환경은 상태를 변경시키고, 보상을 주게 된다. </li>
+</ol>
+</li>
+<li>보상
+<ol>
+<li>그리드 월드에서 어떤 행동을 선택 했을때, 그 행동에 대한 보상,&#8217;</li>
+<li>보상은 꼭 긍정적이지만은 않다 경우에 따라서는 부정적인 보상을 받기도 한다. </li>
+<li>보상은 상태 변화에 대한 보상이 아니라, 행동에 대한 보상&#8217;</li>
+</ol>
+</li>
+<li>정책
+<ol>
+<li>어떤 상태에서 어떤 행동을 취할것인가에 대해 결정 하는 과정을 정책이라고 한다. </li>
+</ol>
+</li>
+</ol>
+<p>좀더 엄밀히 말하면 이외에 여러가지 다른 변수를 포함하여 순차적 행동 문제를 모델링 한다.</p>
+]]></content:encoded>
+		<post-id xmlns="com-wordpress:feed-additions:1">119</post-id>	</item>
+		<item>
+		<title>GAN 관련 컨텐츠</title>
+		<link>http://blog.greennuri.info/?p=110</link>
+		<pubDate>Fri, 23 Feb 2018 05:04:28 +0000</pubDate>
+		<dc:creator><![CDATA[greennuri]]></dc:creator>
+				<category><![CDATA[기계학습]]></category>
 
-                if(language.langCode == 'en') target = 'ko';
-                
-                let translate = await fetch(`https://openapi.naver.com/v1/papago/n2mt`, {
-                                            method: 'POST',
-                                            headers: translation_headers,
-                                            body: `source=${language.langCode}&amp;amp;target=${target}&amp;amp;text=${text}`})
-                                            .then(res=&amp;gt; res.json());
-                
-                await editor!.edit((edit: any) =&amp;gt; edit.replace(selection_range, String(translate.message.result.translatedText)));
-                await successRef.push({
-                        'Source': language.langCode,
-                        'Text': text,
-                        'Translation': translate.message.result.translatedText,
-                        'Time': time
-                });
-            }catch(err){
-                errorRef.push({
-                    'Text': text,
-                    'Error': err,
-                    'Time': time
-                });
-                vswindow.showInformationMessage(err);
-            }
-        }
-        translator(text);&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;변경 사항&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;1. async &amp;amp; await 사용함으로써 한눈에 흐름이 보임&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;2. 변수 이름 변경&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;- naver_header 를 papago_header로 변경 -&amp;gt; papago 언어 감지 헤더, naver 번역기 헤더 2개라 확실하게 하기 위함&lt;/p&gt;
-&lt;p&gt;3. 만들고 사용하지 않는 코드 삭제&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;코드 흐름이 언어 감지 -&amp;gt; 언어 번역 -&amp;gt; vscode에 결과 표시 -&amp;gt; 데이터 저장이 눈에 보입니다.&lt;/p&gt;
-&lt;p&gt;코드 라인도 엄청 줄어든 것을 확인했습니다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;</description>
-<category>삽질</category>
-<category>async</category>
-<category>await</category>
-<category>promise</category>
-<author>강디너</author>
-<guid>https://kdinner.tistory.com/46</guid>
-<comments>https://kdinner.tistory.com/46#entry46comment</comments>
-<pubDate>Fri, 03 May 2019 13:38:11 +0900</pubDate>
-</item>
-<item>
-<title>React - props 와 state를 이용한 데이터 전달</title>
-<link>https://kdinner.tistory.com/45</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: &quot;ca-pub-3165271838523554&quot;,
-          enable_page_level_ads: true
-     });
-&lt;/script&gt;&lt;/div&gt;&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bgwjkp/btquWM6ozFJ/8PvsfdWKRBr87ubITjiVGK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bgwjkp/btquWM6ozFJ/8PvsfdWKRBr87ubITjiVGK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fbgwjkp%2FbtquWM6ozFJ%2F8PvsfdWKRBr87ubITjiVGK%2Fimg.png' data-filename=&quot;11.PNG&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;A 컴포넌트에서 B 컴포넌트로 데이터를 전달해보겠습니다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;Root 컴포넌트입니다.&lt;/p&gt;
-&lt;p&gt;user_id 를 A 컴포넌트에서 받는 작업을 먼저 해줍니다.&lt;/p&gt;
-&lt;pre id=&quot;code_1556630330563&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;state = {
-	user_id: ''
-}
-
-getData = (data) =&amp;gt;{
-    this.setState({user_id: data});
-}
-
-render(){
-	return(
-    	&amp;lt;componentA fromParent={this.getData} &amp;gt;&amp;lt;/componentA&amp;gt;
-    )
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;A컴포넌트 입니다.&lt;/p&gt;
-&lt;p&gt;아래와 같이 해주면 testFunction이 실행될 때 Root의 user_id는 test 로 값이 바뀝니다.&lt;/p&gt;
-&lt;pre id=&quot;code_1556630628028&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;testFunction = () =&amp;gt;{
-	this.props.fromParent('test');
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;B 컴포넌트로 보낼려면 Root 컴포넌트를 수정해야합니다.&lt;/p&gt;
-&lt;p&gt;componentB 로 user_id를 보냅니다.&lt;/p&gt;
-&lt;pre id=&quot;code_1556632496224&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;state = {
-	user_id: ''
-}
-
-getData = (data) =&amp;gt;{
-    this.setState({user_id: data});
-}
-
-render(){
-	return(
-    	&amp;lt;componentA fromParent={this.getData} &amp;gt;&amp;lt;/componentA&amp;gt;
-        &amp;lt;componentB id={this.state.user_id}&amp;gt;&amp;lt;/componentB&amp;gt;
-    )
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;B컴포넌트 입니다.&lt;/p&gt;
-&lt;p&gt;&lt;span&gt;componentWillReceiveProps 를 이용해서 props 를 받으면 실행되게 하는 React Lifecycle 입니다.&lt;/span&gt;&lt;/p&gt;
-&lt;pre id=&quot;code_1556636027701&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;componentWillReceiveProps(nextProps){
-	// nextProps.id = 'test';
-	console.log(nextProps);
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;</description>
-<category>props</category>
-<category>react</category>
-<category>state</category>
-<category>전달</category>
-<author>강디너</author>
-<guid>https://kdinner.tistory.com/45</guid>
-<comments>https://kdinner.tistory.com/45#entry45comment</comments>
-<pubDate>Tue, 30 Apr 2019 23:56:15 +0900</pubDate>
-</item>
-<item>
-<title>프로젝트_v10 AWS에 작업물 업로드 + Nginx 연동</title>
-<link>https://kdinner.tistory.com/44</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: &quot;ca-pub-3165271838523554&quot;,
-          enable_page_level_ads: true
-     });
-&lt;/script&gt;&lt;/div&gt;&lt;p&gt;&lt;b&gt;준비물&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;Front-end 파일 (빌드된것)&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;Back-end 파일&lt;/p&gt;
-&lt;p&gt;AWS Nginx 까지 띄운 것&lt;/p&gt;
-&lt;p&gt;Putty (원격접속)&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;환경&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;Window 10&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;1. Front-end Build&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/Xg6bH/btqufcqRcIB/y7qkgZIeNCtKVKPQsZrox1/img.png' data-lightbox='lightbox' data-alt='npm run build'&gt;&lt;img src='https://k.kakaocdn.net/dn/Xg6bH/btqufcqRcIB/y7qkgZIeNCtKVKPQsZrox1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FXg6bH%2FbtqufcqRcIB%2Fy7qkgZIeNCtKVKPQsZrox1%2Fimg.png' data-filename=&quot;1.PNG&quot;&gt;&lt;/span&gt;&lt;figcaption&gt;npm run build&lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;빌드가 끝난 후 dist 폴더가 만들어졌는지 확인해주세요&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;2. 압축도 해줍니다.&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/GpJyP/btqudt7Xewz/9Jgt5PuhXKJ6bOMIZyKECk/img.png' data-lightbox='lightbox' data-alt='이쁘게 압축'&gt;&lt;img src='https://k.kakaocdn.net/dn/GpJyP/btqudt7Xewz/9Jgt5PuhXKJ6bOMIZyKECk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FGpJyP%2Fbtqudt7Xewz%2F9Jgt5PuhXKJ6bOMIZyKECk%2Fimg.png' data-filename=&quot;4.PNG&quot;&gt;&lt;/span&gt;&lt;figcaption&gt;이쁘게 압축&lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;3. 자신의 EC2 에 파일을 전송합니다.&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cOIofL/btqubBsjAsV/oKrZGuHSUqHVavK6G2JGX1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cOIofL/btqubBsjAsV/oKrZGuHSUqHVavK6G2JGX1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcOIofL%2FbtqubBsjAsV%2FoKrZGuHSUqHVavK6G2JGX1%2Fimg.png' data-filename=&quot;2.PNG&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&lt;span&gt;pscp -i C:\&lt;/span&gt;&lt;b&gt;&lt;span&gt;path&lt;/span&gt;&lt;/b&gt;&lt;span&gt;\my-key-pair.ppk C:\&lt;/span&gt;&lt;b&gt;&lt;span&gt;path&lt;/span&gt;&lt;/b&gt;&lt;span&gt;\Sample_file.txt ec2-user@&lt;/span&gt;public_dns&lt;span&gt;:/home/ec2-user/Sample_file.txt&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;span&gt;참조 : &lt;a href=&quot;https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/putty.html&quot;&gt;https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/putty.html&lt;/a&gt;&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;4. 확인하기 !&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cmYWOU/btqugrgMdXO/GPZfluJgnM0lc30rJfeQs1/img.png' data-lightbox='lightbox' data-alt='제 EC2 에 잘 들어가있습니다.'&gt;&lt;img src='https://k.kakaocdn.net/dn/cmYWOU/btqugrgMdXO/GPZfluJgnM0lc30rJfeQs1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcmYWOU%2FbtqugrgMdXO%2FGPZfluJgnM0lc30rJfeQs1%2Fimg.png' data-filename=&quot;3.PNG&quot;&gt;&lt;/span&gt;&lt;figcaption&gt;제 EC2 에 잘 들어가있습니다.&lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;5. 압축 해제&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;unzip vue-project.zip&lt;/p&gt;
-&lt;p&gt;(사진은 생략)&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;6. Nginx 설정 바꾸기&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/dCmz1E/btqugrgQdvi/spDoih9UgVM4bp7tqkgeNk/img.png' data-lightbox='lightbox' data-alt='nginx 설정 경로'&gt;&lt;img src='https://k.kakaocdn.net/dn/dCmz1E/btqugrgQdvi/spDoih9UgVM4bp7tqkgeNk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FdCmz1E%2FbtqugrgQdvi%2FspDoih9UgVM4bp7tqkgeNk%2Fimg.png' data-filename=&quot;5.PNG&quot;&gt;&lt;/span&gt;&lt;figcaption&gt;nginx 설정 경로&lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;sudo vi nginx.conf 를 해줘야 수정이 됩니다.&lt;/p&gt;
-&lt;p&gt;/home/ec2-user/dist&amp;lt;- 요 경로를 넣으셔야합니다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/RC7MQ/btquc3hsbAU/sFUwSHlJ70HDXsTHgNydB1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/RC7MQ/btquc3hsbAU/sFUwSHlJ70HDXsTHgNydB1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FRC7MQ%2Fbtquc3hsbAU%2FsFUwSHlJ70HDXsTHgNydB1%2Fimg.png' data-filename=&quot;7.PNG&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;완료 후 restart 를 해줍니다.&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/HrvyZ/btqugrOH82h/Ey6qCEvzTxF50tKpK9K6PK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/HrvyZ/btqugrOH82h/Ey6qCEvzTxF50tKpK9K6PK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FHrvyZ%2FbtqugrOH82h%2FEy6qCEvzTxF50tKpK9K6PK%2Fimg.png' data-filename=&quot;8.PNG&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;b&gt;7. 완성&lt;/b&gt;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bnGCl5/btqudTrR9p3/BoW2H4yMdSpqtY3DQHrvOk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bnGCl5/btqudTrR9p3/BoW2H4yMdSpqtY3DQHrvOk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbnGCl5%2FbtqudTrR9p3%2FBoW2H4yMdSpqtY3DQHrvOk%2Fimg.png' data-filename=&quot;9.PNG&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;</description>
-<category>토이프로젝트</category>
-<category>AWS</category>
-<category>nginx 설정</category>
-<category>ngix</category>
-<category>vue</category>
-<category>연동</category>
-<author>강디너</author>
-<guid>https://kdinner.tistory.com/44</guid>
-<comments>https://kdinner.tistory.com/44#entry44comment</comments>
-<pubDate>Mon, 08 Apr 2019 14:58:05 +0900</pubDate>
-</item>
-<item>
-<title>포트폴리오 리뉴얼 하기</title>
-<link>https://kdinner.tistory.com/43</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: &quot;ca-pub-3165271838523554&quot;,
-          enable_page_level_ads: true
-     });
-&lt;/script&gt;&lt;/div&gt;&lt;p&gt;현재 포트폴리오는 페이지를 나눴는데, 원 페이지로 변환 할 예정 + 업데이트&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;1. 기본적인 프로필&lt;/p&gt;
-&lt;p&gt;2. 스킬&lt;/p&gt;
-&lt;p&gt;3. 개인 활동&lt;/p&gt;
-&lt;p&gt;&lt;s&gt;4. 발표&lt;/s&gt;&lt;/p&gt;
-&lt;p&gt;5. 경력&lt;/p&gt;
-&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;6. 팀 프로젝트&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;완성 !!&lt;/p&gt;
-&lt;p&gt;&lt;a href=&quot;https://dinnerkang.github.io/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://dinnerkang.github.io/&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;</description>
-<category>기획</category>
-<author>강디너</author>
-<guid>https://kdinner.tistory.com/43</guid>
-<comments>https://kdinner.tistory.com/43#entry43comment</comments>
-<pubDate>Thu, 28 Mar 2019 00:20:43 +0900</pubDate>
-</item>
-<item>
-<title>채용 과제 정리_v5</title>
-<link>https://kdinner.tistory.com/41</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: &quot;ca-pub-3165271838523554&quot;,
-          enable_page_level_ads: true
-     });
-&lt;/script&gt;&lt;/div&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;3. 사용 라이브러리 + 기술&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;Back-end&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;1. express.js 를 이용한 REST API&amp;nbsp;&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;REST 란 REpresentational State Transfer&lt;/p&gt;&lt;p&gt;웹 표준 기반 이카텍처이며 HTTP 프로토콜 사용&lt;/p&gt;&lt;p&gt;REST 아키텍처를 기반으로 하는 웹 서비스를 RESTful 웹 서비스라고 함&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;REST의 특징&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;- URI 로 지정한 리소스에 대한 조작을 통일되고 한정적인 인터페이스로 수행하는 아키텍처 스타일&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;- 세션이나 쿠키등을 별도로 관리하지 않기 때문에 API 서버는 요청만 들어오는 메시지로만 처리&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;- HTTP 기존 웹 표준 그대로 사용&lt;/p&gt;&lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;URL 과 URI 의 차이점&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;- URI 는 인터넷에 있는 자원을 나타내는 유일한 주소&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;- URL 은 인터넷 상의 자원 위치&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;Courier New&amp;quot;, malgun; font-size: 12px; background-color: rgb(245, 249, 232);&quot;&gt;http://endic.naver.com/endic.nhn?docid=1232950&amp;nbsp;&lt;/span&gt;&lt;br style=&quot;margin: 0px; padding: 0px; border: none; line-height: 1.5; font-family: &amp;quot;Courier New&amp;quot;, malgun; font-size: 12px; background-color: rgb(245, 249, 232);&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;Courier New&amp;quot;, malgun; font-size: 12px; background-color: rgb(245, 249, 232);&quot;&gt;http://endic.naver.com/endic.nhn?docid=1232690&amp;nbsp;&lt;/span&gt;&lt;br style=&quot;margin: 0px; padding: 0px; border: none; line-height: 1.5; font-family: &amp;quot;Courier New&amp;quot;, malgun; font-size: 12px; background-color: rgb(245, 249, 232);&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;Courier New&amp;quot;, malgun; font-size: 12px; background-color: rgb(245, 249, 232);&quot;&gt;위 두 주소는 같은 URL이고 다른 URI라고 할 수 있다.&lt;/span&gt;&lt;br style=&quot;margin: 0px; padding: 0px; border: none; line-height: 1.5; font-family: &amp;quot;Courier New&amp;quot;, malgun; font-size: 12px; background-color: rgb(245, 249, 232);&quot;&gt;&lt;br style=&quot;margin: 0px; padding: 0px; border: none; line-height: 1.5; font-family: &amp;quot;Courier New&amp;quot;, malgun; font-size: 12px; background-color: rgb(245, 249, 232);&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;Courier New&amp;quot;, malgun; font-size: 12px; background-color: rgb(245, 249, 232);&quot;&gt;출처:&amp;nbsp;&lt;/span&gt;&lt;a href=&quot;https://lambdaexp.tistory.com/39&quot; style=&quot;margin: 0px; padding: 0px; border: none; line-height: 1.5; font-family: &amp;quot;Courier New&amp;quot;, malgun; font-size: 12px; background-color: rgb(245, 249, 232);&quot;&gt;https://lambdaexp.tistory.com/39&lt;/a&gt;&lt;span style=&quot;font-family: &amp;quot;Courier New&amp;quot;, malgun; font-size: 12px; background-color: rgb(245, 249, 232);&quot;&gt;&amp;nbsp;[프로그래머 인생길..]&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;2. body-parser&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;클라이언트의 POST request data 의 body로부터 파라미터를 편리하게 추출 !&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;출처&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://medium.com/@flsqja12_33844/1%EB%B6%84-%ED%8C%A8%ED%82%A4%EC%A7%80-%EC%86%8C%EA%B0%9C-body-parser%EB%A5%BC-%EC%86%8C%EA%B0%9C%ED%95%A9%EB%8B%88%EB%8B%A4-%ED%95%98%EC%A7%80%EB%A7%8C-body-parser%EB%A5%BC-%EC%93%B0%EC%A7%80-%EB%A7%88%EC%84%B8%EC%9A%94-bc3cbe0b2fd&quot;&gt;https://medium.com/@flsqja12_33844/1%EB%B6%84-%ED%8C%A8%ED%82%A4%EC%A7%80-%EC%86%8C%EA%B0%9C-body-parser%EB%A5%BC-%EC%86%8C%EA%B0%9C%ED%95%A9%EB%8B%88%EB%8B%A4-%ED%95%98%EC%A7%80%EB%A7%8C-body-parser%EB%A5%BC-%EC%93%B0%EC%A7%80-%EB%A7%88%EC%84%B8%EC%9A%94-bc3cbe0b2fd&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;3. cors&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;CORS 란 Cross Origin Resource Sharing 의 약자로 현재 도메인과 다른 도메인으로 리소스가 요청될 경우를 말함.&lt;/p&gt;&lt;p&gt;보안 상의 이유로 브라우저는 CORS 를 제한한다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;express 에서 CORS 를 허용하려면 헤더에&lt;/p&gt;&lt;p&gt;Access-Control-Allow-Origin 을 * 해주거나&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;cors 미들웨어를 적용하는 것&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;4. moment&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;날짜관련 작업을 위한 자바스크립트 라이브러리다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;최초 생성일, 수정일 을 다루기 위해서 사용한 라이브러리다.&lt;/p&gt;&lt;p&gt;원하는 포멧으로 바꾸기 위해서 사용했다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 11pt;&quot;&gt;5. mysql&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;아직 실무에서, 연습하면서 mysql 밖에 사용하지 않았었다. mssql 도 사용했었지만 같이 일하는 분이 쿼리 짜는걸 도와줬었다.&lt;/p&gt;&lt;p&gt;nosql 을 다루기에 내 능력 부족과 시간부족으로 사용하지 않았다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;nosql 의 장점&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;- key - value 형식을 지원&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp;- 확장성이 뛰어나다&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp;(무슨말인지 모르겠다...)&lt;/p&gt;</description>
-<category>삽질</category>
-<category>bodyparser</category>
-<category>CORS</category>
-<category>express</category>
-<category>Moment</category>
-<category>REST API</category>
-<author>강디너</author>
-<guid>https://kdinner.tistory.com/41</guid>
-<comments>https://kdinner.tistory.com/41#entry41comment</comments>
-<pubDate>Sun, 24 Mar 2019 17:56:21 +0900</pubDate>
-</item>
-<item>
-<title>채용 과제 정리_v4</title>
-<link>https://kdinner.tistory.com/40</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: &quot;ca-pub-3165271838523554&quot;,
-          enable_page_level_ads: true
-     });
-&lt;/script&gt;&lt;/div&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;3. 사용 라이브러리 + 기술&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;Front-end&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;b&gt;1. vue&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;vue 3.x 버전이 나왔는데 가이드도 아직 많이 부족하고, &lt;b&gt;정보가 많이 부족했다.&lt;/b&gt;&lt;/p&gt;&lt;p&gt;그래서 익숙한 vue 2.x &amp;nbsp;버전을 이용해서 구성했다.&lt;/p&gt;&lt;p&gt;CDN은 사용하지 않았다.&lt;/p&gt;&lt;p&gt;그 이유는 만약 이 프로젝트가 인터넷이 안되는 곳에 들어가게 된다면 오류가 나기 때문이다.&lt;/p&gt;&lt;p&gt;폰트도 다운로드 받았다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;2.&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;axios&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 10pt;&quot;&gt;vue 하면 axios 가 생각이 난다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;angular 프로젝트를 할 때 rxjs 를 사용한 적이 있었는데,&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;옵저버에 대한 개념이 많이 부족했고 응용이 부족했었다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;하지만 axios 를 쓰면서 너~~무 편했다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;나중에 크로스브라우져&amp;nbsp;테스트할 때 axios 가 안되서 놀란건 안비밀 (IE가 항상 문제야 ㅠ)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;h2 id=&quot;vue와-ajax-요청&quot; style=&quot;font-family: IropkeBatangM, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; line-height: 1.25; margin-top: 1.2em; margin-bottom: 0.5em; font-size: 1.5rem; color: rgb(51, 51, 51);&quot;&gt;vue와 ajax 요청&lt;/h2&gt;&lt;h4 id=&quot;왜-vue-resource를-사용하지-않나요&quot; style=&quot;font-family: IropkeBatangM, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; line-height: 1.25; margin-top: 1.2em; margin-bottom: 0.5em; font-size: 18px; color: rgb(51, 51, 51);&quot;&gt;&lt;p style=&quot;margin-bottom: 1rem; color: rgb(0, 0, 0); line-height: 1.8; word-break: keep-all; font-weight: lighter; transform: rotate(-1e-10deg); font-family: -apple-system, system-ui, &amp;quot;Segoe UI&amp;quot;, Roboto, Oxygen-Sans, Ubuntu, Cantarell, &amp;quot;Helvetica Neue&amp;quot;, sans-serif;&quot;&gt;vue에서 ajax 요청을 하는 방법은 여러가지가 있습니다. 순수 자바스크립트, jQuery를 사용하여 작업할 수도 있고,&amp;nbsp;&lt;a href=&quot;https://github.com/pagekit/vue-resource&quot; style=&quot;color: rgb(65, 184, 131);&quot;&gt;vue-resource&lt;/a&gt;와&amp;nbsp;&lt;a href=&quot;https://github.com/mzabriskie/axios&quot; style=&quot;color: rgb(65, 184, 131);&quot;&gt;axios&lt;/a&gt;도 있습니다. 이번에는 axios를 사용하는 방법을 소개 합니다.&lt;/p&gt;&lt;/h4&gt;&lt;h4 id=&quot;왜-vue-resource를-사용하지-않나요&quot; style=&quot;font-family: IropkeBatangM, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; line-height: 1.25; margin-top: 1.2em; margin-bottom: 0.5em; font-size: 18px; color: rgb(51, 51, 51);&quot;&gt;왜 vue-resource를 사용하지 않나요?&lt;/h4&gt;&lt;h4 style=&quot;font-family: IropkeBatangM, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; line-height: 1.25; margin-top: 1.2em; margin-bottom: 0.5em; font-size: 18px; color: rgb(51, 51, 51);&quot;&gt;&lt;p style=&quot;margin-bottom: 1rem; color: rgb(0, 0, 0); line-height: 1.8; word-break: keep-all; font-weight: lighter; transform: rotate(-1e-10deg); font-family: -apple-system, system-ui, &amp;quot;Segoe UI&amp;quot;, Roboto, Oxygen-Sans, Ubuntu, Cantarell, &amp;quot;Helvetica Neue&amp;quot;, sans-serif;&quot;&gt;vue-resource는 현재(2017년 1월) github에서 3600여개의 스타를 받은 성공적인 프로젝트 입니다. vue와 함께 잘 작동합니다. 하지만, 2016년 9월 이후 업데이트가 되지 않고 있습니다. 해결되지 않은 이슈가 무려 100여개가 넘습니다. 그리고 결정적으로 vue의 Evan You는 자신의 Medium에서 공식적으로 추천하는 프로젝트가 아니라고 말합니다. 자세한 내용은&amp;nbsp;&lt;a href=&quot;https://medium.com/the-vue-point/retiring-vue-resource-871a82880af4#.re69qas2z&quot; style=&quot;color: rgb(65, 184, 131);&quot;&gt;이 글&lt;/a&gt;을 확인하세요.&lt;/p&gt;&lt;/h4&gt;&lt;h4 id=&quot;axios를-사용하세요&quot; style=&quot;font-family: IropkeBatangM, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; line-height: 1.25; margin-top: 1.2em; margin-bottom: 0.5em; font-size: 18px; color: rgb(51, 51, 51);&quot;&gt;axios를 사용하세요&lt;/h4&gt;&lt;h4 style=&quot;font-family: IropkeBatangM, &amp;quot;Helvetica Neue&amp;quot;, Helvetica, sans-serif; line-height: 1.25; margin-top: 1.2em; margin-bottom: 0.5em; font-size: 18px; color: rgb(51, 51, 51);&quot;&gt;&lt;p style=&quot;margin-bottom: 1rem; color: rgb(0, 0, 0); line-height: 1.8; word-break: keep-all; font-weight: lighter; transform: rotate(-1e-10deg); font-family: -apple-system, system-ui, &amp;quot;Segoe UI&amp;quot;, Roboto, Oxygen-Sans, Ubuntu, Cantarell, &amp;quot;Helvetica Neue&amp;quot;, sans-serif;&quot;&gt;axios는 현재 가장 성공적인 HTTP 클라이언트 라이브러리 중 하나입니다. 아직 1.x 버전이 릴리즈 되지 않았지만 스타가 1만개가 넘을 정도로 인기가 좋습니다. 특별히 언급할만한 부분은 요청 취소와 TypeScript를 사용할 수 있는 것 입니다. 이 글에서는 기본적인 vue와 axios의 사용 방법을 알아봅니다.&amp;nbsp;&lt;a href=&quot;https://github.com/mzabriskie/axios&quot; style=&quot;color: rgb(65, 184, 131);&quot;&gt;axios의 github 프로젝트&lt;/a&gt;를 살펴보시면 더 많은 내용을 익힐 수 있을 것입니다.&lt;/p&gt;&lt;/h4&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;출처 :&amp;nbsp;http://vuejs.kr/update/2017/01/04/http-request-with-axios/&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;-------------------&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;vue 입문 당시 봤던 글이다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;이 글에서 axios 를 추천해서 시작하게되었다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;사용법이 매우 간편하고 내가 사용하는데 문제가 전혀 없었다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;vue + rxjs 글들도 보였는데, rxjs 를 내가 잘 쓰고있는지, 이상하게 쓰는지 고민한 적이 많았다. (그래서 제외)&lt;/p&gt;&lt;p&gt;vue + fetch 도 봤다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: auto; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;Axios&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;1. 사용하기 좀 더 편리하다. -&amp;gt; 개인적인 생각으로는 사용법이 살짝 다르지만, 전체적으로 비슷한데, axios 가 좀 더 사용자가 인지하기 쉽게? 사용하기 쉽게? 만들려고 노력한 흔적이 보인다.(는 아래 코드를 통해서 확인)&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;2. fetch 에는 존재하지 않는 기능이 좀 더 많다.&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;3. Promise based&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: auto; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;Fetch&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;1. 라이브러리를 import 하지 않아도 사용할 수 있다.&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;2. React Native 의 경우에 업데이트가 잦기 때문에, 라이브러리(예를들면, axios 같은 것들..)이 이 업데이트를 쫓아오지 못하는 경우가 생기는데, Fetch 는 이걸 걱정할 필요 없이 사용 가능&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;3. Promise based&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;4. Request Aborting 에 대해서 표준적인 방법을 제공해 주지 못함.&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;5. 네트워크 에러가 발생했을 때, 계속 기다려야됨 -&amp;gt; response timeout API 제공이 안됨.&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;6. 지원하지 않는 브라우저가 있다.&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;7. Error handling 관련해서 문제가 좀 있다.&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 4em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;- Catch 에 걸렸을 때, 이후 .then( ~~~ )을 실행한다.&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 4em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;- axios 의 경우엔 .then(~~~)을 실행하지 않고, console 창에 해당 에러로그를 보여준다.&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: auto; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;결론&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;1. 둘다 쓰는데 무리 없고, 잘 동작 하나, axios 는 주로 react, fetch 는 react native 에 사용한다.(React-native 의 빠른 업데이트 때문에 ..Quora 에 답변 다신 어떤분 개인 의견)&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;2. 전체적으로 이 둘은 비슷하나, axios 가 조금 더 장점이 많다. 동시에 fetch 의 단점도 꽤나 존재한다.&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;3. fetch 가 좀더 가볍고 axios 가 상대적으로 좀 더 무거운 느낌(제공하는 기능이 더 많다.)&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p data-darkreader-inline-color=&quot;&quot; style=&quot;margin-right: auto; margin-bottom: 16px; margin-left: 2em; padding-right: 0px; padding-left: 0px; font-size: 16px; line-height: 28px; color: rgb(36, 41, 46); box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; --darkreader-inline-color:#c8c2b6; padding-top: 0px !important; padding-bottom: 0px !important;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;b&gt;4. 요청 취소를 위해선 fetch 가 아닌 axios 등의 다른 라이브러리 사용이 필요하다.&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;출처 :&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;font-size: 10pt; color: rgb(34, 34, 34); font-family: &amp;quot;Spoqa Han Sans&amp;quot;, sans-serif;&quot;&gt;[React / React Naive TIPS] axios 와 fetch 어떤 것을 사용할까?&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px;&quot;&gt;https://hoorooroob.tistory.com/entry/React-React-Naive-TIPS-axios-%EC%99%80-fetch-%EC%96%B4%EB%96%A4-%EA%B2%83%EC%9D%84-%EC%82%AC%EC%9A%A9%ED%95%A0%EA%B9%8C&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 10pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 10pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;b&gt;3. vuex&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size:10pt;&quot;&gt;angular 프로젝트를 할 때 상태관리라는 개념을 몰랐다. flux 아키텍쳐도 몰랐으니깐...&lt;/span&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size:10pt;&quot;&gt;하지만 프로젝트가 점점 커지면서 데이터를 편하게 관리하고 싶어서 service 하나에 데이터를 두고 주고 받았었다.(혼자 체득한게 자랑스러움)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;vue 프로젝트를 진행하면서 flux 아키텍쳐도 알고 vuex 도 알게되었다.&lt;/p&gt;&lt;p&gt;매우 편안 ~~&lt;/p&gt;&lt;p&gt;매우 큰 프로젝트를 안해서 vuex 를 많이 쓸 일이 없었지만, 난 이것도 쓸줄 알아요 ! 를 보여주고 싶었다.&lt;/p&gt;&lt;p&gt;하지만 너무 적게 쓰고 응용을 많이 안한 것 같아서 마이너스가 될 것 같다.&lt;/p&gt;&lt;p&gt;오히려 이벤트 버스를 많이 써서... 만약 질문을 하면 어떻게 대처할 지 생각해봐야겠다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;이벤트 버스를 너무 남발하면 코드 보기가 매우 힘들고 찾기도 힘들다.&lt;/p&gt;&lt;p&gt;그래서 방안으로 주석을 달아서 목적지를 적어놨었다. (양심에 찔려서)&lt;/p&gt;&lt;p&gt;최소한으로 쓰고 싶었지만.. 이벤트 버스 너무 편했다. 너무.. 편해서 vuex 보다 이벤트 버스를 더 썼다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;상태 관리를 위해서 vuex 를 사용했지만 응용이 부족했다고 생각한다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;b&gt;4. scss&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;기본적인 css 를 사용하는게 중요하다고 생각하는 나지만 누구와 &lt;b&gt;'협업'&lt;/b&gt;할 지 모르기 때문에 기초는 알아야 한다고 생각했다.&lt;/p&gt;&lt;p&gt;요즘은 codepen 에서도 보통 sass, scss 로도 올리는 사람이 많아서 '&lt;b&gt;코드 보고 내가 만들 순 있을 정도로만 익혀야지'&lt;/b&gt; 하며 공부했다.&lt;/p&gt;&lt;h3 style=&quot;font-size: 1.4em; margin: 2em 0px 1em; padding-bottom: 0.5em; border-bottom: 1px solid rgb(235, 235, 235); color: rgb(52, 73, 94); font-family: Lato, &amp;quot;Nanum Barun Gothic&amp;quot;, 나눔바른고딕, sans-serif; letter-spacing: 0.2px;&quot;&gt;&lt;span id=&quot;sasswa-scssneun-caijeomeun-mweongayo&quot;&gt;Sass와 SCSS는 차이점은 뭔가요?&lt;/span&gt;&lt;a href=&quot;https://heropy.blog/2018/01/31/sass/#sasswa-scssneun-caijeomeun-mweongayo&quot; class=&quot;header-anchor&quot; style=&quot;color: rgb(34, 153, 221); cursor: pointer; word-break: break-all;&quot;&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p style=&quot;margin-right: 0px; margin-bottom: 30px; margin-left: 0px; word-spacing: 0.05em; line-height: 1.6em; color: rgb(52, 73, 94); font-family: Lato, &amp;quot;Nanum Barun Gothic&amp;quot;, 나눔바른고딕, sans-serif; font-size: 16px; letter-spacing: 0.2px;&quot;&gt;Sass(Syntactically Awesome Style Sheets)의 3버전에서 새롭게 등장한 SCSS는 CSS 구문과 완전히 호환되도록 새로운 구문을 도입해 만든 Sass의 모든 기능을 지원하는 CSS의 상위집합(Superset) 입니다.&lt;br /&gt;즉, SCSS는 CSS와 거의 같은 문법으로 Sass 기능을 지원한다는 말입니다.&lt;/p&gt;&lt;p style=&quot;margin-right: 0px; margin-bottom: 30px; margin-left: 0px; word-spacing: 0.05em; line-height: 1.6em; color: rgb(52, 73, 94); font-family: Lato, &amp;quot;Nanum Barun Gothic&amp;quot;, 나눔바른고딕, sans-serif; font-size: 16px; letter-spacing: 0.2px;&quot;&gt;더 쉽고 간단한 차이는&amp;nbsp;&lt;code style=&quot;font-family: &amp;quot;Roboto Mono&amp;quot;, Monaco, courier, monospace; font-size: 0.9em; font-weight: 700; background-color: rgb(248, 248, 248); color: rgb(233, 105, 0); padding: 3px 5px; margin: 0px 2px; border-radius: 2px; white-space: nowrap;&quot;&gt;{}&lt;/code&gt;(중괄호)와&amp;nbsp;&lt;code style=&quot;font-family: &amp;quot;Roboto Mono&amp;quot;, Monaco, courier, monospace; font-size: 0.9em; font-weight: 700; background-color: rgb(248, 248, 248); color: rgb(233, 105, 0); padding: 3px 5px; margin: 0px 2px; border-radius: 2px; white-space: nowrap;&quot;&gt;;&lt;/code&gt;(세미콜론)의 유무입니다.&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;나는 중괄호와 세미콜론이 있는게 더 보기 편하다고 생각해서 scss 를 사용했다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;--- 다음 v5 에 적겠습니다.&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;Back-end&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;1. express&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;2. body-parser&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;3. cors&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;4. moment&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;5. mysql&lt;/span&gt;&lt;/p&gt;</description>
-<category>삽질</category>
-<category>axios</category>
-<category>fetch</category>
-<category>sass</category>
-<category>scss</category>
-<category>vue</category>
-<category>vue-resource</category>
-<category>vuex</category>
-<author>강디너</author>
-<guid>https://kdinner.tistory.com/40</guid>
-<comments>https://kdinner.tistory.com/40#entry40comment</comments>
-<pubDate>Fri, 22 Mar 2019 12:11:58 +0900</pubDate>
-</item>
-<item>
-<title>채용 과제 정리_v3</title>
-<link>https://kdinner.tistory.com/39</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: &quot;ca-pub-3165271838523554&quot;,
-          enable_page_level_ads: true
-     });
-&lt;/script&gt;&lt;/div&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 14pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;2. 과제 기능&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;- SPA 형태로 동작해야하며 처음 페이지 로드와 새로고침을 할 때 외에는 전체 페이지 reload 는 없음&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;SPA 로 만들기 위해서 Vue.js 를 사용했다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;SPA 란 Single Page Application&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;단 한개의 페이지만 있는 어플리케이션이다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;최초 한 번 페이지 전체를 로딩한 후 데이터만 변경하여 사용할 수 있는 어플리케이션이다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;SPA 는 클라이언트 사이드 렌더링 방식&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;(1) 사용자의 행동에 따라 필요한 부분만 다시 읽어들이기 때문에 서버 측에서 렌더링 하여 전체 페이지를 읽어들이는 것보다 빠르다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;(2) 서버는 단지 JSON 파일만 보내주고 html 을 그리는 역할은 자바스크립트를 통해 클라이언트 측에서 수행&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;전통적인 웹은 대부분 서버 사이드 렌더링 방식&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;(1) 브라우저에 나타나는 형태 그대로를 HTML 로 만들어 제공, 브라우저는 HTML 표시&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;(2) 각각의 페이지&amp;nbsp; HTML 이 있다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;(3) 페이지를 로딩할 때마다 서버로부터 리소스를 전달받아 해석하고 화면에 렌더링&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;클라이언트 사이드 렌더링의 장 / 단점&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;장점&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp; - 트래픽 감소 (필요한것만 받아서)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp; - 새로고침이 발생하지 않는다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;단점&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp; &amp;nbsp;- 검색엔진최적화 (SEO 문제)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp; &amp;nbsp;- 초기 로딩 때 정보를 다 받기 때문에 첫 로딩이 느림&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;서버 사이드 렌더링의 장 / 단점&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;장점&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp; &amp;nbsp;- 검색엔진최적화 가능&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp; &amp;nbsp;- 초기 로딩속도가 빠름&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;단점&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp; &amp;nbsp;- 트래픽이 많다&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp; &amp;nbsp;- 페이지를 넘어갈 때마다 새로고침이 일어난다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;- Text 로만 이루어진 메모를 저장&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;MySQL TEXT() 로 저장&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;- 메모는 제목, 내용, 최종 수정일, 생성일 을 가짐&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;대략적으로 그려진 기획서에는 생성일이 없었다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;그래서 내가 최초 생성일을 추가하면서 사용자를 위한다는 걸 어필하려 했지만&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;문서를 잘 읽어보니 있었... 이런..&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;- 라벨로 메모들을 분류 할 수 있어야함&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;그룹 같은 ? 느낌의 라벨.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;라벨 테이블 하나 만들고 ~ 중복으로 라벨 이름 할 수 없도록 프론트에서 막아 두고 ~&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;- 메모를 추가 / 수정 / 삭제 할 수 있어야함&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;추가 수정 삭제 UI 짜면서 엄청 고생한....&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;수정, 삭제할 때에는 idx 로 삭제 안하고 이름만으로 삭제하려 했다가 보안오류 떠서... 기능을 수정한 기억이 있다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;- 하나의 메모는 여러 라벨을 지정 가능, 하나의 라벨어도 여러 메모 지정 가능&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;이 기능은... 못했다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;sql 에 json 으로도 넣어서 해보려했고, 어떻게 해야지 다대다 가 되는지 ...&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;이 기능을 붙잡고 가기에는 너무 촉박했고 못할 것 같아서&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 13.3333px; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;'보고라도 하자' 라는 생각에 문의사항에 메일을 보냈다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;답변으로 '&lt;/span&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;한 테이블이 아닌 별도의 테이블로 만들어서 저장하시면 되지 않을까&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;싶습니다&lt;/span&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;' 라고 답변을 해주셨다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;그래도 내 머리로 이해를 하지 못했고 끝내 기능을 추가하지 못했다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: Gulim, 굴림, sans-serif;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;이 문제를 해결하고 면접에 들어가야 어필을 할텐데.... 계속 생각해봐야겠다.&lt;/span&gt;&lt;br /&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;---------------------&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: Gulim, 굴림, sans-serif;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;다대다 라는 키워드를 생각해서 검색해서&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: Gulim, 굴림, sans-serif;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;font color=&quot;#222222&quot; face=&quot;Gulim, 굴림, sans-serif&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;연결테이블이라는 것을 깨닫고 알아보았다.&lt;/span&gt;&lt;/font&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;참조키 만 가지고 있으며&lt;/span&gt;&lt;/p&gt;&lt;p&gt;참조키&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;로는 라벨 테이블의 기본키, 메모 테이블의 기본키를 참조시켜서 만들면 된다는 것을 깨달았다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;그렇게 DB를 만들고...&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;라벨 클릭 -&amp;gt; 라벨 정보 요청 -&amp;gt; 백엔드에서 라벨 정보 보내주고, 동시에 참조키만있는 테이블에서 라벨 id로 찾아서 보내주기&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: Gulim, 굴림, sans-serif;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(34, 34, 34); font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;---------------------&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;- 라벨에 메모가 없으면 표시해야함&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;이건 사용자를 생각하면 당연히 해야할 기능&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;- 특정 라벨과 메모를 조회한 상태에서 새로고침 눌르면 기존 화면 보여줘야함&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;이 기능은 거의 하루전에 만든 기능으로&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;sessionstorage 를 이용해서 만들었다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;메모를 클릭하면 스토리지에 메모에 대한 정보를 저장해서 라벨, 메모를 보여주었다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;- 라벨과 메모의 조회 순서에 따라 페이지 뒤로가기를 통해 조회를 할 수 있어야함&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;sessionstorage + Vue 에서 router.onReady 를 이용해서 세션 스토리지에 저장된 히스토리를 이용해서 구현해보려 했으나&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;실패했다.. 지금 생각해보면 router 를 이용하는게 아닌 배열로 클릭한 메모들 정보를 가지고있다가&amp;nbsp;바로 뿌려주는 것으로 했어야 했다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;이건 면접 전에 한번더 도전해봐야겠다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;- 브라우저 호환성은 메이저 브라우저들의 최신-1 까지 커버함&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;Flex 속성을 이용해서 가로세로 가운데 정렬을 가끔 시키는데, IE 10 을 떠올려보고... 바로 사용할 생각을 안했다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;IE 는 메이저에서 빼주면.. 사용했겠지만... (크롬찬양) IE 를 추후에 버그 찾고, 수정하는데 시간을 쓰고 싶지 않아서 다른 방법으로 정렬했다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;지금 검색해보니 IE 10도 지원은 해준다 라고는 하는데 에러가 많은 것 같다.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:820px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9986FC3E5C9324A92B&quot; filemime=&quot;image/jpeg&quot; filename=&quot;스크린샷 2019-03-21 오후 2.43.51.png&quot; height=&quot;507&quot; width=&quot;820&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;https://caniuse.com&lt;/span&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;참고 자료&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;
-
-
-
-
-&lt;/span&gt;&lt;style type=&quot;text/css&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;
-p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; line-height: 38.4px; font: 30.0px 'Apple SD Gothic Neo'; color: #000000; -webkit-text-stroke: #000000}
-span.s1 {font: 30.0px Helvetica; font-kerning: none}
-span.s2 {font-kerning: none}
-&lt;/span&gt;&lt;/style&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;
-
-
-&lt;/span&gt;&lt;/p&gt;&lt;p class=&quot;p1&quot;&gt;&lt;span class=&quot;s1&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;[&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;주니어탈출기&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;] &lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;서버사이드렌더링&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;(SSR) &amp;amp; &lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;클라이언트사이드렌더링&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 10pt; font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;(CSR)&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;
-
-
-
-
-&lt;/span&gt;&lt;style type=&quot;text/css&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;
-p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-&lt;/span&gt;&lt;/style&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;
-
-
-&lt;/span&gt;&lt;/p&gt;&lt;p class=&quot;p1&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;맑은 고딕&amp;quot;, sans-serif;&quot;&gt;https://velog.io/@zansol/%ED%99%95%EC%9D%B8%ED%95%98%EA%B8%B0-%EC%84%9C%EB%B2%84%EC%82%AC%EC%9D%B4%EB%93%9C%EB%A0%8C%EB%8D%94%EB%A7%81SSR-%ED%81%B4%EB%9D%BC%EC%9D%B4%EC%96%B8%ED%8A%B8%EC%82%AC%EC%9D%B4%EB%93%9C%EB%A0%8C%EB%8D%94%EB%A7%81CSR&lt;/span&gt;&lt;/p&gt;&lt;br /&gt;&lt;p&gt;&lt;/p&gt;</description>
-<category>삽질</category>
-<category>과제</category>
-<category>다대다</category>
-<category>서버 사이드</category>
-<category>정리</category>
-<category>클라이언트 사이드</category>
-<author>강디너</author>
-<guid>https://kdinner.tistory.com/39</guid>
-<comments>https://kdinner.tistory.com/39#entry39comment</comments>
-<pubDate>Thu, 21 Mar 2019 15:39:45 +0900</pubDate>
-</item>
-<item>
-<title>채용 과제 정리_v2</title>
-<link>https://kdinner.tistory.com/38</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: &quot;ca-pub-3165271838523554&quot;,
-          enable_page_level_ads: true
-     });
-&lt;/script&gt;&lt;/div&gt;&lt;p style=&quot;text-align: left; clear: none; float: none;&quot;&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;1. 기획&lt;/span&gt;&lt;/b&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:715px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9944E74D5C91CC4A1D&quot; filemime=&quot;image/jpeg&quot; filename=&quot;스크린샷 2019-03-20 오후 2.14.11.png&quot; height=&quot;421&quot; width=&quot;715&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;위와 같이 기획하고 만들기 시작&lt;/p&gt;&lt;p style=&quot;text-align: left; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;clear: none; float: none; text-align: center;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:161px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99AF164D5C91CC4B0E&quot; filemime=&quot;image/jpeg&quot; filename=&quot;스크린샷 2019-03-20 오후 2.14.20.png&quot; height=&quot;163&quot; width=&quot;161&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;clear: none; float: none; text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;Vue.js를 선택한 이유&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;1. 7일 안에 웹앱을 만들어야 한다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;2. 가장 익숙하다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;3. 정보가 많다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;4. 배포까지 경험해봤다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;clear: both; float: left; text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;clear: both; float: left; text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;clear: both; float: left; text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;clear: none; float: none; text-align: center;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:247px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99B0EE4D5C91CC4B22&quot; filemime=&quot;image/jpeg&quot; filename=&quot;스크린샷 2019-03-20 오후 2.14.24.png&quot; height=&quot;156&quot; width=&quot;247&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;clear: none; float: none; text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;Node.js 를 선택한 이유&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;1. Javascript 를 써서 제일 편하다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;2. 백엔드도 할 수 있다는 것을 보여드리고 싶다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;3. 배포까지 경험해봤다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;4. Ruby 를 쓰면 좋겠다 ~ 라고 했지만 쓰기에 경험과 지식이 부족하고, 시간적 리스크가 컸다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;clear: none; float: none; text-align: center;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:212px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99C3914D5C91CC4B21&quot; filemime=&quot;image/jpeg&quot; filename=&quot;스크린샷 2019-03-20 오후 2.14.29.png&quot; height=&quot;303&quot; width=&quot;212&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;clear: none; float: none; text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;Docker + MySQL 을 선택한 이유&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;1. 7일 안에 웹앱을 만들고 백엔드 실력도 보여줘야 한다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;2. Docker 를 이용해서 MySQL 셋팅하는게 편하다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;3. 과제에 MongoDB 를 이용한 API 가 주어졌지만 내 힘으로 하고 싶었다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;4. 익숙하지 않은 NoSQL 을 하기에는 7일의 부담이 컸다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;5. 나중에 Docker Hub 를 이용해서 공유 하려고 했다.&lt;/span&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;font-size: 9pt;&quot;&gt;6. Docker 도 사용할 줄 안다고 어필 ! 하고 싶었다.&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
-<category>삽질</category>
-<category>과제</category>
-<category>정리</category>
-<author>강디너</author>
-<guid>https://kdinner.tistory.com/38</guid>
-<comments>https://kdinner.tistory.com/38#entry38comment</comments>
-<pubDate>Wed, 20 Mar 2019 19:00:00 +0900</pubDate>
-</item>
-<item>
-<title>채용 과제 정리v_1</title>
-<link>https://kdinner.tistory.com/37</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: &quot;ca-pub-3165271838523554&quot;,
-          enable_page_level_ads: true
-     });
-&lt;/script&gt;&lt;/div&gt;&lt;p&gt;채용 프로세스는 &lt;b&gt;서류 -&amp;gt; 과제 -&amp;gt; 팀면접 -&amp;gt; 임원면접&lt;/b&gt; 이었습니다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;추천을 받은것도 있지만, 다행히 서류는 인상깊게? 통과된 것 같았으며 과제를 받았습니다.&lt;/p&gt;&lt;p&gt;(추천인님께서 인사팀에 고맙다는 소리를 들었다고...)&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;과제는&lt;/span&gt;&lt;/b&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt; &lt;/span&gt;&lt;b&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;1주일안에 웹으로 메모장 만들기 !&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;프론트 + 백엔드가 포함된 과제를 받았습니다.&lt;/p&gt;&lt;p&gt;첨부 파일에&amp;nbsp;백엔드 소스가 있는 링크를 받았으나, 저는 사용하지 않았습니다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 12pt;&quot;&gt;이유&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;1. 지원한 분야가 프론트지만, 백엔드 실력(기초적이겠지만)을 &lt;b&gt;'나는 이정도는 할 수 있습니다'&lt;/b&gt; 라고 보여주고 싶었음&lt;/p&gt;&lt;p&gt;&amp;nbsp;- 프론트 + 백엔드를 내가 직접 만들기로 생각함&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;2. 1주일안에 프론트 + 백엔드를 만들어야함&lt;/p&gt;&lt;p&gt;&amp;nbsp;- 회사 끝나고 과제를 진행해야함&lt;/p&gt;&lt;p&gt;&amp;nbsp;- 최대한 빨리, 정확하게, 내가 원하는 기능을 만들어야함&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;위의 이유로 Vue + Node.js 를 이용해서 만들기로 결정 !&lt;/p&gt;&lt;p&gt;Docker 에 MySQL 을 구축해서 Docker Hub로 공유를 하고 회사에서도 테스트는 해보자(MAC 에서도 테스트는 해봐야지) !&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;백엔드 소스가 있는 링크는 MongoDB(NoSQL)로 되있었고, 제가 실전에서는 사용하지 않아서 선뜻 할 수 없었습니다.&lt;/p&gt;&lt;p&gt;제가 백엔드 구축하는 이유는 &lt;b&gt;'이정도는 할 수 있다'&lt;/b&gt;를 보여주고 싶었기 때문에 MySQL을 사용했습니다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;만약 시간이 더 주어지고, D사에서 원하는 인재상? 이&amp;nbsp;&lt;/p&gt;&lt;p&gt;새로운 것을 금방 습득하고, 적용하는 것을 좋아하는 인재상이었으면 적용해봤을 것입니다. 아마도... 들어가고 싶으니깐 죽어라 해야죠 !&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;----------------------&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;서류 보낼 때 기억나는 것이 한가지 있는데&lt;/p&gt;&lt;p&gt;D사의 서비스에서 중앙정렬이 잘못 된 것을 알고 있었고, 신경쓰여서&amp;nbsp;서류 보낼 때 이게 이상하다고 캡쳐해서 보냈었습니다.&lt;/p&gt;&lt;p&gt;얼마 후 고쳐져있더라구요... !&lt;/p&gt;&lt;p&gt;어필이 되었나 싶기도 하고..... ㅎㅎ&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;----------------------&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;이 글은 D사 과제를 하면서 어떤 생각으로, 어떻게&amp;nbsp;했나 한번 더 생각하기 위해서 적는 글 입니다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;다음편에는 만드는 과정, 후기? 부족한점 적겠습니다.&lt;/p&gt;</description>
-<category>삽질</category>
-<category>입사하고 싶...</category>
-<category>정리</category>
-<author>강디너</author>
-<guid>https://kdinner.tistory.com/37</guid>
-<comments>https://kdinner.tistory.com/37#entry37comment</comments>
-<pubDate>Wed, 20 Mar 2019 01:34:54 +0900</pubDate>
-</item>
-</channel>
+		<guid isPermaLink="false">http://blog.greennuri.info/?p=110</guid>
+		<description><![CDATA[]]></description>
+				<content:encoded><![CDATA[<p><iframe class='youtube-player' type='text/html' width='625' height='352' src='http://www.youtube.com/embed/odpjk7_tGY0?version=3&#038;rel=1&#038;fs=1&#038;autohide=2&#038;showsearch=0&#038;showinfo=1&#038;iv_load_policy=1&#038;wmode=transparent' allowfullscreen='true' style='border:0;'></iframe></p>
+]]></content:encoded>
+		<post-id xmlns="com-wordpress:feed-additions:1">110</post-id>	</item>
+	</channel>
 </rss>

@@ -1,961 +1,144 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="https://jeongukjae.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://jeongukjae.github.io/" rel="alternate" type="text/html" /><updated>2019-05-08T12:23:17+00:00</updated><id>https://jeongukjae.github.io/feed.xml</id><title type="html">Blog</title><subtitle>개발 관련 기록/내용을 정리합니다.</subtitle><entry><title type="html">🍃 Mongo DB Sharding</title><link href="https://jeongukjae.github.io/posts/mongodb-sharding/" rel="alternate" type="text/html" title="🍃 Mongo DB Sharding" /><published>2019-04-22T00:00:00+00:00</published><updated>2019-04-22T00:00:00+00:00</updated><id>https://jeongukjae.github.io/posts/mongodb%20sharding</id><content type="html" xml:base="https://jeongukjae.github.io/posts/mongodb-sharding/">&lt;p&gt;데이터베이스를 사용하면서 언제까지나 인스턴스 하나만을 사용할 수는 없다. 데이터베이스에 많은 부하가 몰린다면, 다른 대책이 필요하다. 두 가지 방법이 존재하는데, Vertical Scaling과 Horizontal Scaling이다. Vertical Scaling은 하나의 머신에 더 많은 RAM과 더 많은 코어 등을 추가하는 방법이다. Horizontal Scaling은 여러 대의 머신을 구성하는 방법이다.&lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>용일이의 개발/번역 블로그</title>
+    <description>저는 인디 게임 개발자입니다. 이 블로그는 프로그래밍 및 게임 개발과 관련된 글들을 쓰거나, 또는 좋은 해외 글들을 번역하려고 만든 블로그입니다.
+</description>
+    <link>http://yongil.net/</link>
+    <atom:link href="http://yongil.net/feed.xml" rel="self" type="application/rss+xml" />
+    <pubDate>Sun, 26 Apr 2015 07:46:13 +0000</pubDate>
+    <lastBuildDate>Sun, 26 Apr 2015 07:46:13 +0000</lastBuildDate>
+    <generator>Jekyll v2.4.0</generator>
+    
+      <item>
+        <title>유니티 에셋 폴더의 예약된 이름들</title>
+        <description>&lt;p&gt;원문: http://wiki.unity3d.com/index.php/Special_Folder_Names_in_your_Assets_Folder&lt;/p&gt;
 
-&lt;p&gt;데이터베이스를 구성하면서 horizontal scaling을 하는 대표적인 방법은 replica를 늘리는 것이다. mysql의 경우는 read replica를 여러대 생성하여 write는 master에서 실행하고 read 작업은 replicated된 노드에서 실행하여 부하를 분산시킨다.&lt;/p&gt;
+&lt;h1 id=&quot;section&quot;&gt;유니티 에셋 폴더의 예약된 이름들&lt;/h1&gt;
 
-&lt;p&gt;mongodb도 그러한 개념의 기능을 지원하는데, sharding이다. &lt;a href=&quot;https://docs.mongodb.com/manual/sharding/&quot;&gt;mongodb의 문서&lt;/a&gt;에서는 아래처럼 설명한다.&lt;/p&gt;
+&lt;p&gt;유니티에서 몇몇 폴더 이름은 특별한 속성을 가지고 있다.&lt;/p&gt;
 
-&lt;blockquote&gt;
-  &lt;p&gt;Sharding is a method for distributing data across multiple machines. MongoDB uses sharding to support deployments with very large data sets and high throughput operations.&lt;/p&gt;
-&lt;/blockquote&gt;
+&lt;h2 id=&quot;section-1&quot;&gt;숨겨진 폴더들&lt;/h2&gt;
 
-&lt;p&gt;시스템이 더 이상 부하를 견디지 못할 때, sharding을 통해 가용성을 늘려주고, 버틸 수 있는 throughput도 늘려주는 것이다.&lt;/p&gt;
+&lt;p&gt;점(.)으로 시작하는 폴더(예. “.UnitTests/”, “.svn/”)는 유니티에 의해 무시된다. 이 폴더에 들어 있는 어떠한 에셋도 임포트되지 않으면 어떠한 스크립트도 컴파일되지 않는다. 또한 프로젝트 뷰에서도 보이지 않는다.&lt;/p&gt;
 
-&lt;h2 id=&quot;sharded-cluster&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/reference/glossary/#term-sharded-cluster&quot;&gt;Sharded Cluster&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;standard-assets&quot;&gt;“Standard Assets”&lt;/h2&gt;
 
-&lt;p&gt;mongodb의 sharded cluster는 3가지 component로 구성된다. shard, mongos와 config server이다.&lt;/p&gt;
+&lt;p&gt;이곳에 위치한 스크립트들은 항상 가장 먼저 컴파일된다. 스크립트는 언어에 따라 Assembly-CSharp-firstpass, Assembly-UnityScript-firstpass, Assembly-Boo-firstpass 중의 하나로 출력된다.&lt;/p&gt;
 
-&lt;h3 id=&quot;shard&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/core/sharded-cluster-shards/&quot;&gt;Shard&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Standard Assets 폴더의 스크립트들은 다른 스크립트들보다 먼저 컴파일 된다. 그로므로 스크립트를 Standard Assets 폴더에 두는 것은 C# 스크립트가 .js 스크립트에 접근할 수 있게 하거나 또는 .js 스크립트가 C# 스크립트에 접근할 수 있게 하기를 위한 한 방법이다.&lt;/p&gt;
 
-&lt;p&gt;shard는 sharded cluster안에서 sharded data의 subset을 가진다. cluster의 shard들에 존재하는 데이터를 합하면 원본의 데이터가 된다. 그래서 하나의 shard에 대해서 query를 실행하면, 해당 shard안의 데이터에 대해서만 결과를 가져온다. cluster level에서 query를 실행하고 싶다면, mongos를 사용하자.&lt;/p&gt;
+&lt;h2 id=&quot;pro-standard-assets&quot;&gt;“Pro Standard Assets”&lt;/h2&gt;
 
-&lt;p&gt;shard는 고가용성을 위해 반드시 &lt;a href=&quot;https://docs.mongodb.com/manual/reference/glossary/#term-replica-set&quot;&gt;replica set&lt;/a&gt;으로 구성되어야 한다.&lt;/p&gt;
+&lt;p&gt;Standard Assets과 같지만 이곳의 파일들은 Pro 버전에서만 의미가 있다. 이는 여기에 있는 에셋들은 Render Texture나 Screen-space 효과 등과 같은 Pro-only 기능에서만 사용된다는 것을 의미한다.&lt;/p&gt;
 
-&lt;p&gt;하나의 데이터베이스 안에서 primary shard는 반드시 존재한다. primary shard는 shard되지 않은 모든 collection들을 저장한다. 다만, 이름에서 혼동이 올 수 있는데, primary shard는 replica set의 primary와 관계가 없다.&lt;/p&gt;
+&lt;p&gt;이 곳의 스크립트들은 먼저 컴파일되며, Pro Standard Assets 폴더 밖의 다른 스크립트(어떠한 언어라도)에서 접근이 가능하다.&lt;/p&gt;
 
-&lt;h3 id=&quot;mongos&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/core/sharded-cluster-query-router/&quot;&gt;mongos&lt;/a&gt;&lt;/h3&gt;
+&lt;h2 id=&quot;editor&quot;&gt;“Editor”&lt;/h2&gt;
 
-&lt;p&gt;mongodb는 각각의 shard에 대해 query를 분산시키기 위해 mongos라는 instance를 제공한다. mongos에 대한 역할에 대해서는 아래처럼 mongodb 문서가 설명한다.&lt;/p&gt;
+&lt;p&gt;Editor는 여러분이 작성한 스크립트가 유니티 에디터 스크립팅 API에 접근할 수 있도록 허가해주는 특별한 폴더 이름이다. 만약 여러분의 스크립트가 UnityEditor 네임스페이스의 클래스나 기능을 사용한다면, Editor라는 폴더 안에 위치해야 한다.&lt;/p&gt;
 
-&lt;blockquote&gt;
-  &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mongos&lt;/code&gt; provide the only interface to a sharded cluster from the perspective of applications. Applications never connect or communicate directly with the shards.&lt;/p&gt;
-&lt;/blockquote&gt;
+&lt;p&gt;Editor 폴더 안의 스크립트들을 게임 빌드에는 포함되지 않을 것이다. 오직 유니티 에디터에서만 사용된다. 프로젝트에 여러개의 Editor 폴더가 존재해도 된다.&lt;/p&gt;
 
-&lt;p&gt;적절한 shard로 route하기 위해서 config server로부터 metadata를 캐싱해두고 있다. 하지만, persistent state는 없다.&lt;/p&gt;
+&lt;p&gt;주의: 특수 폴더에 위치하지 않은 Editor 폴더는 프로젝트 어디에서 위치/포함 될 수 있다. 하지만 “Standard Assets”, “Pro Standard Assets”, “Plugins” 안에 위치할 경우, 이 폴더들의 직접적인 자식이어야 한다. 그렇지 않으면 정상적으로 처리되지 않는다. 예를 들어 “My Entension/Scripts/Editor”는 OK이다. 하지만 특수 폴더에 위치할 경우 반드시 ‘Standard Assets/Editor/MyExtension/Scripts”, 또는 “Pro Standard Assets/Editor/My Extension/Scripts”, 또는 “Plugins/Editor/My Extension/Scripts”이어야 한다.&lt;/p&gt;
 
-&lt;p&gt;query를 routing하는 방법에 대해서는 문서를 참고해보자.&lt;/p&gt;
+&lt;h2 id=&quot;plugins&quot;&gt;“Plugins”&lt;/h2&gt;
 
-&lt;h3 id=&quot;config-server&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/core/sharded-cluster-config-servers/&quot;&gt;config server&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;“Plugin” 폴더는 스크립트에서 접근하기를 원하는 네이티브 플러그인들이 위치하는 곳이다. 이것들은 자동으로 빌드에 포함될 것이다. 이 폴더는 어떠한 다른 폴더 안에 들어가 있으면 안된다( Assets 폴더 최상위에 위치해야 한다)&lt;/p&gt;
 
-&lt;p&gt;config server는 sharded cluster에 대한 metadata를 저장하는 서버이다. 모든 shard에 대해 어떤 chunk를 들고있는지의 정보를 가지고 있는데, 해당 metadata를 mongos에서 활용하여 query를 route한다.&lt;/p&gt;
+&lt;p&gt;Windows에서는 네이티브 플러그인들이 .dll 파일들로 존재한다. Mac OS X에서는 .bundle 파일들로 존재한다. Linux에서는 .so 파일들로 존재한다. Standard Assets 폴더와 같이 이 곳의 스크립트들은 먼저 컴파일되며, Plugins 폴더 밖의 스크립트(어떠한 언어라도)에서 접근이 가능하다.&lt;/p&gt;
 
-&lt;p&gt;또한 추가적으로 mongodb가 distributed lock을 관리하기 위해 config server를 사용한다고 하는데, 이는 잘 모르겠다..&lt;/p&gt;
+&lt;h3 id=&quot;pluginsx86&quot;&gt;“Plugins/x86”&lt;/h3&gt;
 
-&lt;p&gt;config server에 대해서도 replica set을 구성해야 할텐데, 이는 나중에 알아보자.&lt;/p&gt;
+&lt;p&gt;만약 32-bit나 유니버셜(32와 64 bit 모두) 플랫폼으로 빌드를 하고, 이 하위 폴더가 존재한다면, 이 폴더의 모든 네이티브 플러그인 파일들이 자동으로 빌드에 추가 될 것이다. 만약 이 폴더가 존재하지 않는다면, 유니티는 대신 부모인 Plugin 폴더에서 네이티브 플러그인들을 찾을 것이다.&lt;/p&gt;
 
-&lt;h3 id=&quot;보안&quot;&gt;보안&lt;/h3&gt;
+&lt;h3 id=&quot;pluginsx8664&quot;&gt;“Plugins/x86_64”&lt;/h3&gt;
 
-&lt;p&gt;sharded cluster는 보안을 위해서 &lt;a href=&quot;https://docs.mongodb.com/manual/core/security-internal-authentication/&quot;&gt;internal authentication&lt;/a&gt;을 사용할 수 있다. mongod에 각각 보안 설정을 넣어주어야 하는 점을 잊지 말자. 실제로 구성하기 위해서는 &lt;a href=&quot;https://docs.mongodb.com/manual/tutorial/deploy-sharded-cluster-with-keyfile-access-control/&quot;&gt;Deploy Sharded Clsuter wit Keyfile Access Control&lt;/a&gt;을 참고하자.&lt;/p&gt;
+&lt;p&gt;만약 64-bit이나 유니버셜(32와 64 bit 모두) 플랫폼으로 빌드를 하고, 이 하위 폴더가 존재한다면, 이 폴더의 모든 네이티브 플러그인 파일들이 자동으로 빌드에 추가 될 것이다.  만약 이 폴더가 존재하지 않는다면, 유니티는 대신 부모인 Plugin 폴더에서 네이티브 플러그인들을 찾을 것이다.&lt;/p&gt;
 
-&lt;h2 id=&quot;이를-통해-얻는-장점들&quot;&gt;이를 통해 얻는 장점들&lt;/h2&gt;
+&lt;p&gt;만약 유니버셜 빌드를 생성한다면, x86과 x86_64 하위 폴더를 모두 만드는 것을 권장한다. 그리고 32-bit와 64-bit 버전의 네이티브 플러그 인을 적절한 하위 폴더에 넣어 준다.&lt;/p&gt;
 
-&lt;p&gt;Read Write가 분산되어 잘 실행되는 것과 저장소를 확장할 수 있는 것은 당연하고, 제일 궁금한 것은 “고가용성이 보장되는가?”이다. 그에 대해 문서에 설명되어 있는데, 아래처럼 적혀있다.&lt;/p&gt;
+&lt;h3 id=&quot;pluginsandroid&quot;&gt;“Plugins/Android”&lt;/h3&gt;
 
-&lt;blockquote&gt;
-  &lt;p&gt;A sharded cluster can continue to perform partial read / write operations even if one or more shards are unavailable. While the subset of data on the unavailable shards cannot be accessed during the downtime, reads or writes directed at the available shards can still succeed.&lt;/p&gt;
-&lt;/blockquote&gt;
+&lt;p&gt;Java-based 플러기인에 사용될 안드로이드 프로젝트에 포함시키고 싶은 Java .jar 파일들을 이곳에 위치시킨다.  모든 .so 파일(Android NDK-based 플러그인들)도 역시 포함될 것이다. See http://docs.unity3d.com/Documentation/Manual/PluginsForAndroid.html&lt;/p&gt;
 
-&lt;p&gt;하나의 shard를 사용할 수 없을 때, 다른 shard에 대해서 여전히 query를 실행할 수 있다고 한다.&lt;/p&gt;
+&lt;h3 id=&quot;pluginsios&quot;&gt;“Plugins/iOS”&lt;/h3&gt;
 
-&lt;h2 id=&quot;실제로-구성해보기&quot;&gt;실제로 구성해보기&lt;/h2&gt;
+&lt;p&gt;생성된 Xcode 프로젝트에 어떠한 .a, .m, .mm, .c 또는 .cpp 파일들을 자동으로 (심볼릭 링크로써) 추가하는 제한적이고 간단한 벙법이다. See http://docs.unity3d.com/Documentation/Manual/PluginsForIOS.html&lt;/p&gt;
 
-&lt;p&gt;깔끔하게 구성을 해보기 위해 docker를 통해서 구성해보겠다. 일단 container 사이를 이어주기 위해 network부터 만들어주고, docker image부터 받아주자.&lt;/p&gt;
+&lt;p&gt;만약 Xcode 프로젝트에 자동으로 파일들을 추가하는 방법에 대해 더 많은 제어를 하고 싶다면, PostprocessBuildPlayer 기능을 사용해야 한다. 이렇게 하는 것은 파일들을 Plugins/iOS 폴더에 위치시키지 않아도 된다.  See http://docs.unity3d.com/Documentation/Manual/BuildPlayerPipeline.html&lt;/p&gt;
 
-&lt;div class=&quot;language-zsh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;❯ docker pull mongo
-Using default tag: latest
-latest: Pulling from library/mongo
-...
+&lt;h2 id=&quot;resources&quot;&gt;“Resources”&lt;/h2&gt;
 
-~
-❯ docker network create mongo
-0836403418d33db29b701e6911f641048d0a880720c88a6de4d3a9f3c4376bc5
+&lt;p&gt;Resources 폴더는 스크립트에서 일반적인 (그리고 권유하는) 직접 참조 (유니티 에디터에서 드래그&amp;amp;드롭하는 스크립트의 변수 등) 하는 대신 파일 경로나 이름으로 에셋들에 접근할 수 있게 해주는 특수 폴더이다.&lt;/p&gt;
 
-~
-❯ docker network &lt;span class=&quot;nb&quot;&gt;ls
-&lt;/span&gt;NETWORK ID          NAME                                DRIVER              SCOPE
-...
-...
-0836403418d3        mongo                               bridge              &lt;span class=&quot;nb&quot;&gt;local&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;이러한 이유로 사용할 때 주의 사항이 있다. Resources 폴더의 모든 에들은 비록 사용되지 않더라도 여러분의 빌드에 포함된다. 그 이유는 이 에셋들은 스크립트에 의해 사용되기 때문에 유니티는 리소스 기반의 에셋들이 사용되는지 사용되지 않는지 판단할 수 없기 때문이다.&lt;/p&gt;
 
-&lt;p&gt;그리고, container를 &lt;code class=&quot;highlighter-rouge&quot;&gt;mongo1&lt;/code&gt; ~ &lt;code class=&quot;highlighter-rouge&quot;&gt;mongo7&lt;/code&gt;까지 켜주자.&lt;/p&gt;
+&lt;p&gt;프로젝트에 여러개의 Resources 폴더를 가질 수 있다. 한 Resources 폴더의 어떠한 이름을 가지는 에셋을 넣어두고 또 다른 Resources 폴더에 같은 이름을 가지는 에셋을 넣어두는 것은 추천하지 않는다.&lt;/p&gt;
 
-&lt;div class=&quot;language-zsh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;❯ docker run &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--rm&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--net&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;mongo &lt;span class=&quot;nt&quot;&gt;--name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;mongo1 mongo bash
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;게임이 한번 빌드되고 나면 모든 Resources 폴더의 모든 에셋들이 에셋을 위한 아카이브로 패킹된다. 이는 기술적으로 최종 빌드에서는 더이상 Resources 폴더가 존재하지 않는 다는 것을 의미한다. 비록 여러분의 코드에서 이들을 마치 프로젝트에 존재하던 경로를 통해 접근하긴 하지만 말이다.&lt;/p&gt;
 
-&lt;h3 id=&quot;config-server-구성하기&quot;&gt;config server 구성하기&lt;/h3&gt;
+&lt;p&gt;에셋들이 MonoBehavior 스크립트의 변수로 접근될 경우, 이 에셋들은 MonoBehaviour 스크립트가 Instantiate될 때 (즉, 게임 오브젝트나 프리팹이 씬에 존재하게 될 때) 메모리에 한번에 로드 된다는 것을 주목하자. 만약 에셋이 너무 크고  이것이 메모리에 로딩될 때 여러분이 이에 대한 더 많은 제어를 하고 싶다면 이렇게 동작하기를 원치 않을 것이다.&lt;/p&gt;
 
-&lt;p&gt;우선, &lt;code class=&quot;highlighter-rouge&quot;&gt;mongo1&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;mongo2&lt;/code&gt;에서 config server부터 킨다. replica set으로 구성할 예정이니 &lt;code class=&quot;highlighter-rouge&quot;&gt;replSet&lt;/code&gt; 옵션을 지정해준다. 다른 container에서 접속할 예정이니 &lt;code class=&quot;highlighter-rouge&quot;&gt;--bind_ip 0.0.0.0&lt;/code&gt;을 설정해준다.&lt;/p&gt;
+&lt;p&gt;그럴 경우 큰 에셋들을 Resources 폴더에 넣고 Resources.Load를 통해 불러오는 것을 고려해보자. 에셋이 더 이상 사용되지 않을 경우에는 오브젝트에 대해 Object.Destory를 호출한 후 Resources.UnloadUnusedAsset를 호출함으로써 메모리를 해제할 수 있다.&lt;/p&gt;
 
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@bd14e1c615b0:/# mongod &lt;span class=&quot;nt&quot;&gt;--configsvr&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--replSet&lt;/span&gt; config-replica-set &lt;span class=&quot;nt&quot;&gt;--bind_ip&lt;/span&gt; 0.0.0.0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;h2 id=&quot;editor-default-resources&quot;&gt;“Editor Default Resources”&lt;/h2&gt;
 
-&lt;p&gt;위에서 설정한 &lt;code class=&quot;highlighter-rouge&quot;&gt;replSet&lt;/code&gt;의 이름대로 replicaset을 설정해준다.&lt;/p&gt;
+&lt;p&gt;이 폴더는 Resources 폴더와 유사하지만 에디터 스크립트들 에서만 의미를 가진다. 만약 에디터 플러그 인에 에셋들(예를 들어 아이콘, GUI 스킨 등)을 로드해야 하지만 빌드에는 포함되어야 하지 않다면 이 폴더를 사용해라 (이러한 파일들은 그냥 Resources 폴더에 넣는다면 빌드에도 포함된다는 것을 의미한다).&lt;/p&gt;
 
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@8b69f35de3b5:/# mongo mongo1:27019
-...
-...
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; rs.initiate&lt;span class=&quot;o&quot;&gt;({&lt;/span&gt;
-... _id: &lt;span class=&quot;s2&quot;&gt;&quot;config-replica-set&quot;&lt;/span&gt;,
-... configsvr: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;,
-... members: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
-...   &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;_id: 0, host: &lt;span class=&quot;s2&quot;&gt;&quot;mongo1:27019&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
-...   &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;_id: 1, host: &lt;span class=&quot;s2&quot;&gt;&quot;mongo2:27019&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-... &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
-... &lt;span class=&quot;o&quot;&gt;})&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;제대로 설정되었는지는 &lt;code class=&quot;highlighter-rouge&quot;&gt;rs.status()&lt;/code&gt;로 확인할 수 있다.&lt;/p&gt;
-
-&lt;h3 id=&quot;shard-구성하기&quot;&gt;shard 구성하기&lt;/h3&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mongo3&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;mongo4&lt;/code&gt;에서 shard server를 설정해준다. replica set으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;shard-replica-set&lt;/code&gt;을 설정해준다.&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@8b69f35de3b5:/# mongod &lt;span class=&quot;nt&quot;&gt;--shardsvr&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--replSet&lt;/span&gt; shard-replica-set &lt;span class=&quot;nt&quot;&gt;--bind_ip&lt;/span&gt; 0.0.0.0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;replicat set도 설정해주자&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@7d536b10b886:/# mongo mongo3:27018
-...
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; rs.initiate&lt;span class=&quot;o&quot;&gt;({&lt;/span&gt;
-... _id: &lt;span class=&quot;s2&quot;&gt;&quot;shard-replica-set&quot;&lt;/span&gt;,
-... members: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
-...   &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;_id: 0, host: &lt;span class=&quot;s2&quot;&gt;&quot;mongo3:27018&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
-...   &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;_id: 1, host: &lt;span class=&quot;s2&quot;&gt;&quot;mongo4:27018&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-... &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
-... &lt;span class=&quot;o&quot;&gt;})&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;mongos-구성하기&quot;&gt;mongos 구성하기&lt;/h3&gt;
-
-&lt;p&gt;mongos에서는 시작하면서 config server를 바로 연결해준다. &lt;code class=&quot;highlighter-rouge&quot;&gt;mongo5&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;mongo6&lt;/code&gt;에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;mongos&lt;/code&gt;를 켜주자.&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@7d536b10b886:/# mongos &lt;span class=&quot;nt&quot;&gt;--configdb&lt;/span&gt; config-replica-set/mongo1:27019,mongo2:27019 &lt;span class=&quot;nt&quot;&gt;--bind_ip&lt;/span&gt; 0.0.0.0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;config server를 연결했으니 &lt;code class=&quot;highlighter-rouge&quot;&gt;mongo7&lt;/code&gt;에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;mongo5&lt;/code&gt;에 접속해서 아래처럼 적어준다.&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@a5cadafbc76f:/# mongo mongo5:27017
-mongos&amp;gt; sh.addShard&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;shard-replica-set/mongo3:27018,mongo4:27018&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;s2&quot;&gt;&quot;shardAdded&quot;&lt;/span&gt; : &lt;span class=&quot;s2&quot;&gt;&quot;shard-replica-set&quot;&lt;/span&gt;,
-  &lt;span class=&quot;s2&quot;&gt;&quot;ok&quot;&lt;/span&gt; : 1,
-  &lt;span class=&quot;s2&quot;&gt;&quot;operationTime&quot;&lt;/span&gt; : Timestamp&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1555859895, 5&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;,
-  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$clusterTime&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&quot;clusterTime&quot;&lt;/span&gt; : Timestamp&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1555859895, 5&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;,
-    &lt;span class=&quot;s2&quot;&gt;&quot;signature&quot;&lt;/span&gt; : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;hash&quot;&lt;/span&gt; : BinData&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;0,&lt;span class=&quot;s2&quot;&gt;&quot;AAAAAAAAAAAAAAAAAAAAAAAAAAA=&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;,
-      &lt;span class=&quot;s2&quot;&gt;&quot;keyId&quot;&lt;/span&gt; : NumberLong&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;shard가 제대로 되었나 확인해보자&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mongos&amp;gt; db.stats&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;s2&quot;&gt;&quot;raw&quot;&lt;/span&gt; : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&quot;shard-replica-set/mongo3:27018,mongo4:27018&quot;&lt;/span&gt; : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;db&quot;&lt;/span&gt; : &lt;span class=&quot;s2&quot;&gt;&quot;test&quot;&lt;/span&gt;,
-      &lt;span class=&quot;s2&quot;&gt;&quot;collections&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;views&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;objects&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;avgObjSize&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;dataSize&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;storageSize&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;numExtents&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;indexes&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;indexSize&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;fileSize&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;fsUsedSize&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;fsTotalSize&quot;&lt;/span&gt; : 0,
-      &lt;span class=&quot;s2&quot;&gt;&quot;ok&quot;&lt;/span&gt; : 1
-    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
-  &lt;span class=&quot;s2&quot;&gt;&quot;objects&quot;&lt;/span&gt; : 0,
-  ...
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;replica set에 제대로 들어있다!! &lt;code class=&quot;highlighter-rouge&quot;&gt;mongo6&lt;/code&gt;에서도 접속해서 보니 잘 된다.&lt;/p&gt;
-
-&lt;h2 id=&quot;끝&quot;&gt;끝&lt;/h2&gt;
-
-&lt;p&gt;정말 간단하게 구성해보고 알아본 것이다. 실제로 사용해보고자 한다면 더 구성해야할 부분이 많다. 보안같은 부분에서 좀 더 엄격하게 설정해야 할 듯 싶다.&lt;/p&gt;</content><author><name></name></author><category term="db" /><summary type="html">데이터베이스를 사용하면서 언제까지나 인스턴스 하나만을 사용할 수는 없다. 데이터베이스에 많은 부하가 몰린다면, 다른 대책이 필요하다. 두 가지 방법이 존재하는데, Vertical Scaling과 Horizontal Scaling이다. Vertical Scaling은 하나의 머신에 더 많은 RAM과 더 많은 코어 등을 추가하는 방법이다. Horizontal Scaling은 여러 대의 머신을 구성하는 방법이다.</summary></entry><entry><title type="html">📕 CS224n Lecture 6 Language Models and RNNs</title><link href="https://jeongukjae.github.io/posts/cs224n-lecture-6-language-model-and-rnn/" rel="alternate" type="text/html" title="📕 CS224n Lecture 6 Language Models and RNNs" /><published>2019-04-21T00:00:00+00:00</published><updated>2019-04-21T00:00:00+00:00</updated><id>https://jeongukjae.github.io/posts/cs224n%20lecture%206%20language%20model%20and%20rnn</id><content type="html" xml:base="https://jeongukjae.github.io/posts/cs224n-lecture-6-language-model-and-rnn/">&lt;p&gt;CS224n 여섯번째 강의를 듣고 정리한 포스트!&lt;/p&gt;
-
-&lt;h2 id=&quot;language-modeling&quot;&gt;Language Modeling&lt;/h2&gt;
-
-&lt;p&gt;Language Modeling이란 이후에 어떤 단어가 나올지 예측하는 태스크이다. 조금 더 정확하게 말하자면, &lt;script type=&quot;math/tex&quot;&gt;x^{(1)}, ..., x^{(t)}&lt;/script&gt;의 단어가 주어지면, 다음 단어 &lt;script type=&quot;math/tex&quot;&gt;x^{(t+1)}&lt;/script&gt;의 확률 분포를 예측하는 태스크이다.&lt;/p&gt;
-
-&lt;h3 id=&quot;n-gram-language-model&quot;&gt;n-gram language model&lt;/h3&gt;
-
-&lt;p&gt;n-gram이란? a chunk of n consecutive words&lt;/p&gt;
-
-&lt;p&gt;ngram language model이란? collect statistics about how frequent different ngrams are, and use these to predict next word.&lt;/p&gt;
-
-&lt;p&gt;이게 무슨 말이냐면, 아래같은 식으로 처리한다는 말이다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
-\begin{align}P(x^{t+1}|x^t, ... , x ^{t-n+2}) &amp;= \frac {P(x^{t+1}, .., x^{t-n+2})} {P(x^t,...,x^{t-n+2})}\\
-&amp; \approx \frac {count(x^{t+1}, .., x^{t-n+2})} {count(x^{t}, .., x^{t-n+2})}
-\end{align} %]]&gt;&lt;/script&gt;
+&lt;p&gt;에디터 스크립트들은 MonoBehavior 스크립트가 아니기 때문에 에셋에 접근하는 일반적인 방법(즉, 인스펙터를 통한 드래그 &amp;amp; 드랍)을 사용할 수 없다.  “Editor Default Resources”는 이를 위한 편리한 방법이다.&lt;/p&gt;
 
-&lt;p&gt;근데 여기서 문제점이 몇가지 있다.&lt;/p&gt;
+&lt;p&gt;“Editor Default Resources”안에 위치한 에셋들에 접근하기 위해서는 EditorGUIUtility.Load를 사용해야 한다.&lt;/p&gt;
 
-&lt;ul&gt;
-  &lt;li&gt;N개의 단어 밖에 있는 단어들을 고려하지 못한다.&lt;/li&gt;
-  &lt;li&gt;sparsity problem
-    &lt;ul&gt;
-      &lt;li&gt;갯수가 0개면..?&lt;/li&gt;
-      &lt;li&gt;denominator도 0이면? -&amp;gt; N을 1 줄여서 다시 적용한다.&lt;/li&gt;
-      &lt;li&gt;나타나긴 나타나지만, 너무 조금 나타나서, 적절하다고 판단이 불가능할때&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;storage problem
-    &lt;ul&gt;
-      &lt;li&gt;corpus 안의 모든 갯수를 보존해야한다.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;Resources.Load와 달리 EditorGUIUtility.Load는 로드 하려고 하는 에셋의 파일 이름 확장자를 명시할 필요가 있다. 그러므로 “myPlugin/mySkin” 대신 “myPlugin/mySkin.guiskin”이어야 한다.&lt;/p&gt;
 
-&lt;p&gt;그래도 이 모델을 기반으로 text를 만들어보면 생각보다 grammatical하다. 근데, incoherent하다.&lt;/p&gt;
+&lt;p&gt;EditorGUIUtility.Load에 의해 사용된 메모리를 해제하기 위해서는 오브젝트에 대해 Object.Destroy를 호출한 후 EditorUtility.UnloadUnusedAssets를 호출하라.&lt;/p&gt;
 
-&lt;h3 id=&quot;neural-network-language-model&quot;&gt;Neural Network Language Model&lt;/h3&gt;
+&lt;p&gt;알고 있는 바로는 오직 하나의 “Editor Default Resources” 폴더만이 존재할 수 있으며, Assets 폴더 바로 아래에 위치해야 한다.&lt;/p&gt;
 
-&lt;p&gt;fixed window neural network를 사용해야하나?? -&amp;gt; 예측할 단어의 N개의 단어를 들고와서 임베딩 한 후 모델에 넣어서 다음 단어를 예측한다??&lt;/p&gt;
+&lt;h2 id=&quot;gizmos&quot;&gt;“Gizmos”&lt;/h2&gt;
 
-&lt;ul&gt;
-  &lt;li&gt;sparsity problem이 없다.&lt;/li&gt;
-  &lt;li&gt;모든 갯수를 보존할 필요가 없다.&lt;/li&gt;
-  &lt;li&gt;fixed window가 작다면?
-    &lt;ul&gt;
-      &lt;li&gt;large window를 쓴다면 어떤가? -&amp;gt; weight matrix가 너무 커진다.&lt;/li&gt;
-      &lt;li&gt;그래서 작게 유지한다면? -&amp;gt; 의미있는 context를 잃게 된다.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;symmetry하지 않다.
-    &lt;ul&gt;
-      &lt;li&gt;같은 단어가 다른 위치에 나타난다면, 다르게 처리된다.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;rnn&quot;&gt;RNN&lt;/h2&gt;
-
-&lt;figure&gt;
-  &lt;img src=&quot;/images/cs224n/6-1.png&quot; alt=&quot;&quot; class=&quot;&quot; /&gt;
-  &lt;figcaption&gt;이 한장으로 설명이 끝나는 듯하다&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;p&gt;core idea가 중요하다!!&lt;/p&gt;
-
-&lt;p&gt;그럼 RNN을 사용했을 때 중요한 점들은?&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;어떤 길이의 텍스트이던 계산 가능하다&lt;/li&gt;
-  &lt;li&gt;그 이전의 정보들을 활용할 수 있다.&lt;/li&gt;
-  &lt;li&gt;모델 사이즈가 고정되어 있다.&lt;/li&gt;
-  &lt;li&gt;symmetry하게 처리 가능하다.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;근데,&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;느리다.&lt;/li&gt;
-  &lt;li&gt;그 이전의 정보를 활용하기는 사실상 힘들다.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;training-rnn&quot;&gt;Training RNN&lt;/h3&gt;
-
-&lt;p&gt;큰 corpus안에서 &lt;script type=&quot;math/tex&quot;&gt;\hat y&lt;/script&gt;를 계속 연산해서 훈련한다. cross entropy를 사용한다고 한다. 근데 이게 너무 연산량이 많아서, SGD처럼 미니 배치같은 개념을 차용하는 것 같다.&lt;/p&gt;
-
-&lt;p&gt;어찌되었든 RNN을 통해 만들어낸 텍스트는 생각보다 잘 동작하지만, 기억하는 부분과 관련해서는 좀 모자라다. 자세한 것은 &lt;a href=&quot;https://medium.com/deep-writing/harry-potter-written-by-artificial-intelligence-8a9431803da6&quot;&gt;medium 글&lt;/a&gt;을 참고해보자.&lt;/p&gt;
-
-&lt;h3 id=&quot;evaluating&quot;&gt;Evaluating&lt;/h3&gt;
-
-&lt;p&gt;perplexity를 기준으로 평가한다. 값은 낮은 것이 좋다.&lt;/p&gt;</content><author><name></name></author><category term="nlp" /><category term="cs224n" /><category term="machine learning" /><summary type="html">CS224n 여섯번째 강의를 듣고 정리한 포스트!</summary></entry><entry><title type="html">📕 CS224n Lecture 5 Dependency Parsing</title><link href="https://jeongukjae.github.io/posts/cs224n-lecture-5-dependency-parsing/" rel="alternate" type="text/html" title="📕 CS224n Lecture 5 Dependency Parsing" /><published>2019-04-20T00:00:00+00:00</published><updated>2019-04-20T00:00:00+00:00</updated><id>https://jeongukjae.github.io/posts/cs224n%20lecture%205%20dependency%20parsing</id><content type="html" xml:base="https://jeongukjae.github.io/posts/cs224n-lecture-5-dependency-parsing/">&lt;p&gt;CS224n 다섯번째 강의를 듣고 정리한 포스트! Assignment 2가 끝났고, Assignment 3가 시작되었다.&lt;/p&gt;
-
-&lt;h2 id=&quot;syntactic-structure-consistuency-and-dependency&quot;&gt;Syntactic Structure: Consistuency and Dependency&lt;/h2&gt;
-
-&lt;p&gt;linguistic structure에는 두가지 관점이 있다.&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Consistuency ( = phrase structure grammar = context-free grammars (CFGs))&lt;/li&gt;
-  &lt;li&gt;Dependency&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;consistuency&quot;&gt;Consistuency&lt;/h3&gt;
-
-&lt;p&gt;이 방법은 word를 모아서 하나의 phrase가 되고, phrase가 모여 bigger phrase가 되는 것처럼 단어들의 구조를 본다. 품사등을 적극적으로 활용한다.&lt;/p&gt;
-
-&lt;figure&gt;
-  &lt;img src=&quot;/images/cs224n/5-1.png&quot; alt=&quot;&quot; class=&quot;&quot; /&gt;
-  &lt;figcaption&gt;phrase structure&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;h3 id=&quot;dependency&quot;&gt;Dependency&lt;/h3&gt;
-
-&lt;p&gt;Dependency structure는 단어들이 어디에 의존적인지를 기준으로 구조를 본다. 예를 들어 &lt;code class=&quot;highlighter-rouge&quot;&gt;Look in the large crate in the kitchen by the door&lt;/code&gt;에서 crate는 Look에 의존적이다.&lt;/p&gt;
-
-&lt;p&gt;단어 자체가 어느 문맥에 있느냐에 따라서 매우 모호해질 수 있다. 따라서 정확하게 해석하기 위해서 이러한 구조를 필요로 한다. 예를 들어 &lt;code class=&quot;highlighter-rouge&quot;&gt;San Jose cops kill man with knife&lt;/code&gt;는 경찰이 칼로 남자를 살해하였다는 말이 될 수도, 칼을 든 남자를 살해하였다는 말이 될 수도 있다.&lt;/p&gt;
-
-&lt;p&gt;추가적으로 더 살펴보고 싶으면 “Erkan et al. EMNLP 07, Fundel et al. 2007, etc.”를 살펴보자&lt;/p&gt;
-
-&lt;h2 id=&quot;dependency-grammar-and-treebanks&quot;&gt;Dependency Grammar and Treebanks&lt;/h2&gt;
-
-&lt;figure&gt;
-  &lt;img src=&quot;/images/cs224n/5-2.png&quot; alt=&quot;&quot; class=&quot;&quot; /&gt;
-  &lt;figcaption&gt;dependencies&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;p&gt;dependency는 tree representation을 이용한다.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;dependency는 binary asymmetric arrow로 나타낸다.&lt;/li&gt;
-  &lt;li&gt;이 arrow들은 보통 typed이며, 문법적인 관계이다.&lt;/li&gt;
-  &lt;li&gt;보통 fake ROOT를 추가한다.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;이런 dependency structure는 기원전 5세기부터 내려오는 아이디어이고, Constituency/context-free grammar는 상당히 최근의 20세기즈음부터 쓰이기 시작한 방법이다.&lt;/p&gt;
-
-&lt;p&gt;최근 중요한 툴로 사용되고 있는 Treebank에 대해서는 “Universal Dependencies: http://universaldependencies.org/ ; cf. Marcus et al. 1993, The Penn Treebank, Computational Linguistics”를 참고하자. Universal Dependencies에 들어가보면, 한국어에 대한 데이터도 존재한다. &lt;a href=&quot;https://github.com/UniversalDependencies/UD_Korean-Kaist&quot;&gt;KAIST Korean Universal Dependency Treebank&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Dependency Parsing은 몇가지 제한/preference가 존재한다. 지금은 “fake ROOT를 무조건 추가해야한다!” “순환하게 만들지 않는다.” 등이 있고, 더 고려할 것으로 “non-projective하게 만든다.” 정도가 있다. 여기서 projective한 것은 문장의 단어들이 순차적으로 놓여있을 때 dependency arrow가 다른 arrow를 교차하지 않는 것이다.&lt;/p&gt;
-
-&lt;p&gt;여튼 넘어가서 Dependency Parsing의 방법들은 아래같은 방법들이 있다.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Dynamic programming&lt;/li&gt;
-  &lt;li&gt;Graph algorithms&lt;/li&gt;
-  &lt;li&gt;Constraint Satisfaction&lt;/li&gt;
-  &lt;li&gt;“Transition-based parsing” or “deterministic dependency parsing”
-    &lt;ul&gt;
-      &lt;li&gt;Greedy한 방법과 ml classifier의 조합(MaltParser, Nivre et al. 2008)으로 좋은 성능을 보였다.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;transition-based-dependency-parsing&quot;&gt;Transition-based dependency parsing&lt;/h2&gt;
-
-&lt;p&gt;stack, buffer, dependency arcs로 구성되어 있다.&lt;/p&gt;
-
-&lt;figure&gt;
-  &lt;img src=&quot;/images/cs224n/5-3.png&quot; alt=&quot;&quot; class=&quot;&quot; /&gt;
-  &lt;figcaption&gt;transition-based dependency parsing&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;h2 id=&quot;neural-dependency-parsing&quot;&gt;Neural dependency parsing&lt;/h2&gt;
-
-&lt;p&gt;왜 NN Parser를 쓰나면, 속도가 너무 차이가 난다. (Chen and Manning 2014를 참고해보자) MaltParser가 초당 469개의 문장을 파싱하는데, NN 기반의 파서(C &amp;amp; M 2014)가 초당 654개의 문장을 파싱했다.&lt;/p&gt;</content><author><name></name></author><category term="nlp" /><category term="cs224n" /><category term="machine learning" /><summary type="html">CS224n 다섯번째 강의를 듣고 정리한 포스트! Assignment 2가 끝났고, Assignment 3가 시작되었다.</summary></entry><entry><title type="html">📗 Deep Learning Chapter 2 Linear Algebra</title><link href="https://jeongukjae.github.io/posts/Deep-Learning-Chapter-2-Linear-Algebra/" rel="alternate" type="text/html" title="📗 Deep Learning Chapter 2 Linear Algebra" /><published>2019-04-18T00:00:00+00:00</published><updated>2019-04-18T00:00:00+00:00</updated><id>https://jeongukjae.github.io/posts/Deep%20Learning%20Chapter%202%20Linear%20Algebra</id><content type="html" xml:base="https://jeongukjae.github.io/posts/Deep-Learning-Chapter-2-Linear-Algebra/">&lt;p&gt;Ian Goodfellow의 &lt;a href=&quot;http://www.deeplearningbook.org&quot;&gt;Deep Learning&lt;/a&gt; 책을 보기 시작했다. 해당 책에 대해 추천을 많이 받았고, 마침 출판사 이벤트로 참가해서 번역본도 운 좋게 집에 있었기 때문에 중요한 부분만 골라서 정리해본다!&lt;/p&gt;
-
-&lt;p&gt;책은 크게 3개의 Part로 나누어진다. Part 1은 4개의 장으로 되어 있고, Linear Algebra, Probability and Information Theory, Numerical Computation, Machine Learning Basics 순서로 되어 있다. 기본 수학 지식과 ML 개념들을 설명한다. 그래서 해당 장부터 정리해보기로 했다. 물론 아는 부분은 키워드만 적어두고 넘어간다.&lt;/p&gt;
-
-&lt;p&gt;일단 선형 대수에 익숙하면 안봐도 되는 챕터로 보이지만 수업에서 들었던 내용들을 간단하게 떠올릴 겸 읽어보기로 했다. 책을 읽는데 지장 없는 수준만 설명하기 때문에 더 공부하고 싶다면, &lt;em&gt;The Matrix Cookbook&lt;/em&gt; (Petersen &amp;amp; Pedersen, 2006)이나, Shilov 1997을 읽어보라고 한다.&lt;/p&gt;
-
-&lt;h2 id=&quot;scalars-vectors-matrices-and-tensors&quot;&gt;Scalars, Vectors, Matrices, and Tensors&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Scalars&lt;/li&gt;
-  &lt;li&gt;Vectors&lt;/li&gt;
-  &lt;li&gt;Matrices&lt;/li&gt;
-  &lt;li&gt;Tensors : an array of numbers arranged on a regular grid with a variable number of axes&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;broadcasting&quot;&gt;broadcasting&lt;/h3&gt;
-
-&lt;p&gt;머신러닝에서 덜 엄밀한 개념을 몇몇 사용하는데 그 중 하나가 broad casting이다. matrix와 vector를 더해서 다른 matrix가 나오는 연산이 broadcasting이고, 예를 들어 &lt;script type=&quot;math/tex&quot;&gt;\textbf C = \textbf A  + \textbf b&lt;/script&gt;를 &lt;script type=&quot;math/tex&quot;&gt;C_{i,j} = A_{i,j} + b_j&lt;/script&gt;처럼 연산하는 경우를 말한다. 이 연산은 &lt;script type=&quot;math/tex&quot;&gt;b&lt;/script&gt;를 굳이 복사해서 새 matrix를 만들지 않아도 되게 한다.&lt;/p&gt;
-
-&lt;h2 id=&quot;multiplying-matrices-and-vectors&quot;&gt;Multiplying Matrices and Vectors&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;standard product : &lt;script type=&quot;math/tex&quot;&gt;\textbf C = \textbf A \textbf B&lt;/script&gt;&lt;/li&gt;
-  &lt;li&gt;Hadamard product (element-wise product) : &lt;script type=&quot;math/tex&quot;&gt;\textbf C = \textbf A \odot \textbf B&lt;/script&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;a-system-of-linear-equation&quot;&gt;a system of linear equation&lt;/h3&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\textbf A \textbf x = \textbf b&lt;/script&gt;
-
-&lt;p&gt;where &lt;script type=&quot;math/tex&quot;&gt;\textbf A \in \mathbb R^{m \times n}&lt;/script&gt;, &lt;script type=&quot;math/tex&quot;&gt;\textbf b \in \mathbb R^m&lt;/script&gt; and &lt;script type=&quot;math/tex&quot;&gt;\textbf x \in \mathbb R^n&lt;/script&gt; (&lt;script type=&quot;math/tex&quot;&gt;x&lt;/script&gt; is unknown vector)&lt;/p&gt;
-
-&lt;h2 id=&quot;identity-and-inverse-matrices&quot;&gt;Identity and Inverse Matrices&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Identity matrices : &lt;script type=&quot;math/tex&quot;&gt;I_n \in \mathbb R^{n\times n}&lt;/script&gt;&lt;/li&gt;
-  &lt;li&gt;Invese Matrix of &lt;script type=&quot;math/tex&quot;&gt;\textbf A&lt;/script&gt; : &lt;script type=&quot;math/tex&quot;&gt;\textbf A ^{-1}&lt;/script&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;linear-dependence-and-span&quot;&gt;Linear Dependence and Span&lt;/h2&gt;
-
-&lt;p&gt;위에서 나온 a system of linear equation식이 아래와 같다.&lt;script type=&quot;math/tex&quot;&gt;\textbf A_{:,i}&lt;/script&gt;는 &lt;script type=&quot;math/tex&quot;&gt;\textbf A&lt;/script&gt;의 &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;번째 column.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\textbf A \textbf x = \sum_i x_i \textbf A_{:,i} = \textbf b&lt;/script&gt;
-
-&lt;p&gt;즉, &lt;script type=&quot;math/tex&quot;&gt;\textbf A&lt;/script&gt;의 column들의 linear combination으로 보는 것이다.&lt;/p&gt;
-
-&lt;p&gt;span은 주어진 벡터 집합에서 linear combination으로 얻을 수 있는 점의 집합이다. 따라서 &lt;script type=&quot;math/tex&quot;&gt;\textbf A \textbf x = \textbf b&lt;/script&gt;식을 행렬 &lt;script type=&quot;math/tex&quot;&gt;\textbf A&lt;/script&gt;의 column들의 span에 &lt;script type=&quot;math/tex&quot;&gt;\textbf b&lt;/script&gt;가 있는지의 문제로 접근할 수 있는데, 이 경우 해당 span을 column space라 한다.&lt;/p&gt;
-
-&lt;p&gt;linear independent는 주어진 벡터 집합에서 어느 한 벡터가 다른 벡터의 linear combination으로 표현할 수 없는 경우를 말한다. linear dependent는 그 반대.&lt;/p&gt;
-
-&lt;p&gt;square matrix이면서 &lt;script type=&quot;math/tex&quot;&gt;\textbf A&lt;/script&gt;의 column들이 linearly independent하면 singular matrix라 한다.&lt;/p&gt;
-
-&lt;h2 id=&quot;norm&quot;&gt;Norm&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;L^p&lt;/script&gt; Norm
-&lt;script type=&quot;math/tex&quot;&gt;||x||_p = (\sum_i |x_i|^p)^{\frac 1 p}&lt;/script&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;L^2&lt;/script&gt; Norm = Euclidean norm&lt;/li&gt;
-  &lt;li&gt;가끔 nonzero element의 갯수를 센 것을 &lt;script type=&quot;math/tex&quot;&gt;L^0&lt;/script&gt; norm이라 하는데, 이건 잘못된 용어. 그냥 &lt;script type=&quot;math/tex&quot;&gt;L^1&lt;/script&gt; norm으로 대체하자.&lt;/li&gt;
-  &lt;li&gt;max norm
-&lt;script type=&quot;math/tex&quot;&gt;||x||_\infty = \max_i |x_i|&lt;/script&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;special-kinds-of-matrices-and-vectors&quot;&gt;Special Kinds of Matrices and Vectors&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;diagonal matrix: main diagonal 빼고 다 0인 행렬
-    &lt;ul&gt;
-      &lt;li&gt;multiplication이 매우 효율적&lt;/li&gt;
-      &lt;li&gt;inverting도 매우 효율적&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;symmetric matrix: &lt;script type=&quot;math/tex&quot;&gt;\textbf A = \textbf A ^\intercal&lt;/script&gt;&lt;/li&gt;
-  &lt;li&gt;unit vector
-&lt;script type=&quot;math/tex&quot;&gt;||x||_2 = 1&lt;/script&gt;&lt;/li&gt;
-  &lt;li&gt;orthogonal vector: &lt;script type=&quot;math/tex&quot;&gt;\textbf x^\intercal \textbf y = 0&lt;/script&gt;&lt;/li&gt;
-  &lt;li&gt;orthogonal matrix: &lt;script type=&quot;math/tex&quot;&gt;\textbf A^\intercal \textbf A = \textbf A \textbf A^\intercal = \textbf I&lt;/script&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;eigen-decomposition&quot;&gt;eigen decomposition&lt;/h2&gt;
-
-&lt;p&gt;아래는 right eigen vector를 구하는 식인데, left는 굳이 별로 안쓴다고 한다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\textbf A \textbf v = \lambda \textbf v&lt;/script&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;eigen value: &lt;script type=&quot;math/tex&quot;&gt;\lambda&lt;/script&gt;&lt;/li&gt;
-  &lt;li&gt;eigen vector: &lt;script type=&quot;math/tex&quot;&gt;\textbf v&lt;/script&gt;&lt;/li&gt;
-  &lt;li&gt;eigendecompositoin: &lt;script type=&quot;math/tex&quot;&gt;\textbf A = \textbf V diag (\lambda) \textbf V ^{-1}&lt;/script&gt;
-    &lt;ul&gt;
-      &lt;li&gt;보통 eigen value의 벡터는 내림차순으로 정렬해서 작성한다고 함.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;임의의 real symmetric matrix는 최소한 하나의 eigen decomposition이 존재한다.&lt;/li&gt;
-  &lt;li&gt;eigen value의 부호에 따라 positive definite, positive semidefinite, negative definite, negative semidefinite로 부른다.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;singular-value-decomposition&quot;&gt;Singular Value Decomposition&lt;/h2&gt;
-
-&lt;p&gt;singular value와 singular vector로 decompose하는 것이다. square matrix가 아닐 때 eigen decomposition을 하지 못하니 쓴다고 한다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\textbf A = \textbf U \textbf D \textbf V^\intercal&lt;/script&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;\textbf U&lt;/script&gt;는 &lt;script type=&quot;math/tex&quot;&gt;m\times m&lt;/script&gt;이면서 orthogonal하고 그 column들이 left singular vectors이다. &lt;script type=&quot;math/tex&quot;&gt;\textbf D&lt;/script&gt;는 diagonal matrix이면서 &lt;script type=&quot;math/tex&quot;&gt;m \times n&lt;/script&gt;이며 main diagonal에 있는 element들이 singular values이다. &lt;script type=&quot;math/tex&quot;&gt;\textbf V&lt;/script&gt;는 &lt;script type=&quot;math/tex&quot;&gt;n \times n&lt;/script&gt;이면서 orthogonal하고 그 column들을 right singular vectors로 부른다.&lt;/p&gt;
-
-&lt;h2 id=&quot;the-moore-penrose-pseudoinverse&quot;&gt;The Moore-Penrose Pseudoinverse&lt;/h2&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\textbf A^{+} = \lim_{a \rightarrow 0} (\textbf  A^\intercal \textbf  A + \alpha \textbf I) ^ {-1} \textbf  A ^\intercal&lt;/script&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\textbf A^{+} = \textbf V \textbf D^+ \textbf U^\intercal&lt;/script&gt;
-
-&lt;p&gt;첫번째가 정의이고 실제로 구현할 때는 두번째식을 따른다고 한다. &lt;script type=&quot;math/tex&quot;&gt;\textbf D^+&lt;/script&gt;는 0이 아닌 element들에 역수를 취하고 transpose해서 얻은 행렬이다.&lt;/p&gt;
-
-&lt;h2 id=&quot;trace-operator&quot;&gt;Trace Operator&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;정의: &lt;script type=&quot;math/tex&quot;&gt;Tr(\textbf A) = \sum_i \textbf A_{i, j}&lt;/script&gt;&lt;/li&gt;
-  &lt;li&gt;성질: &lt;script type=&quot;math/tex&quot;&gt;Tr(\textbf A \textbf B \textbf C) = Tr(\textbf B \textbf C \textbf A) = ...&lt;/script&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;the-determinant&quot;&gt;The Determinant&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;그냥 &lt;script type=&quot;math/tex&quot;&gt;det (\textbf A)&lt;/script&gt;&lt;/li&gt;
-&lt;/ul&gt;</content><author><name></name></author><category term="machine learning" /><category term="책" /><category term="linear algebra" /><summary type="html">Ian Goodfellow의 Deep Learning 책을 보기 시작했다. 해당 책에 대해 추천을 많이 받았고, 마침 출판사 이벤트로 참가해서 번역본도 운 좋게 집에 있었기 때문에 중요한 부분만 골라서 정리해본다!</summary></entry><entry><title type="html">👨‍💻 CS224n assignments 1 &amp;amp; 2</title><link href="https://jeongukjae.github.io/posts/cs224n-assignments/" rel="alternate" type="text/html" title="👨‍💻 CS224n assignments 1 &amp; 2" /><published>2019-04-18T00:00:00+00:00</published><updated>2019-04-18T00:00:00+00:00</updated><id>https://jeongukjae.github.io/posts/cs224n%20assignments</id><content type="html" xml:base="https://jeongukjae.github.io/posts/cs224n-assignments/">&lt;p&gt;cs224n 스터디를 하면서 나오는 과제들도 같이 하기로 헀다. 그래서 1, 2주차 과제를 몰아서 해봤다. 과제를 하면서 내가 다시 봐야할 내용같은 것을 적어놓았다.&lt;/p&gt;
-
-&lt;h2 id=&quot;1주차-과제&quot;&gt;&lt;a href=&quot;https://github.com/jeongukjae/cs224n-assignments/blob/master/assignment%201/exploring_word_vectors.ipynb&quot;&gt;1주차 과제&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;Question 1에서 Word Vector를 간단하게 써보고, Question 2에서 gensim으로 간단하게 analogy등을 해보는 과제였다. 전체의 소스코드는 jupyter notebook으로 제공되었고, 비어있는 일부 소스코드를 채우거나, 결과를 보고 설명을 써내는 과제였다.&lt;/p&gt;
-
-&lt;h3 id=&quot;question-1&quot;&gt;Question 1&lt;/h3&gt;
-
-&lt;p&gt;간단하게 설명하자면, co occurance를 잰 뒤 truncated svd(PCA라고 생각하면 된다)와 matplotlib을 이용하여 몇몇 단어들을 하는 것이다.&lt;/p&gt;
-
-&lt;figure&gt;
-  &lt;img src=&quot;/images/cs224n/a1-1.png&quot; alt=&quot;&quot; class=&quot;&quot; /&gt;
-  &lt;figcaption&gt;cooccurance matrix&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;figure&gt;
-  &lt;img src=&quot;/images/cs224n/a1-2.png&quot; alt=&quot;&quot; class=&quot;&quot; /&gt;
-  &lt;figcaption&gt;Truncated SVD (Singular Value Decomposition)&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;p&gt;위의 내용과 아래의 내용을 참고하면 좋다고 한다.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://jakevdp.github.io/PythonDataScienceHandbook/02.05-computation-on-arrays-broadcasting.html&quot;&gt;Computation Broadcasting&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;결국 그 정보를 이용해서 plotting 하면 아래같은 결과가 나온다. 나라 이름들은 상당히 많이 모여있는 모습이다.&lt;/p&gt;
-
-&lt;figure&gt;
-  &lt;img src=&quot;/images/cs224n/a1-3.png&quot; alt=&quot;&quot; class=&quot;&quot; /&gt;
-  &lt;figcaption&gt;Result of question1 in a1&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;h3 id=&quot;question-2&quot;&gt;Question 2&lt;/h3&gt;
-
-&lt;p&gt;prediction-based word vectors에 관한 내용이다. 직접 구현해보는 내용은 아니고 사용해보는 내용이기 때문에 크게 볼 내용은 없고, 아래 논문만 살펴보면 될 것 같다.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf&quot;&gt;origin paper&lt;/a&gt; (무엇인가 했는데 negative sampling 논문)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;2주차-과제&quot;&gt;&lt;a href=&quot;https://github.com/jeongukjae/cs224n-assignments/tree/master/assignment%202/a2&quot;&gt;2주차 과제&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;이것도 Question이 두가지가 있는데, 첫번째는 word2vec에 필요한 수식을 구해보는 단계이고, 두번째는 그 수식을 바탕으로 코드를 작성하는 단계이다.&lt;/p&gt;
-
-&lt;h3 id=&quot;a2-question-1&quot;&gt;a2 Question 1&lt;/h3&gt;
-
-&lt;p&gt;Question 1은 이 &lt;a href=&quot;https://github.com/jeongukjae/cs224n-assignments/blob/master/assignment%202/a2.pdf&quot;&gt;pdf 파일&lt;/a&gt;을 보자. 알아두어야 할 식은 아래 정도이다. 이건 written 과제라 여기에 정리해놓는다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(O=o|C=c)= \frac {\exp (u_o^\intercal v_c)} {\sum_{w\in Vocab} \exp (u_w^\intercal v_c)}&lt;/script&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;J_{naive-softmax}(v_c, o, U) = - \log P(O=o|C=c)&lt;/script&gt;
-
-&lt;h4 id=&quot;a&quot;&gt;a&lt;/h4&gt;
-
-&lt;p&gt;a는 naive-softmax loss가 cross entropy loss와 같아지는 이유를 적어라고 한다. 즉, 아래 식이 참인 이유를 말하라고 한다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;- \sum_{w \in Vocab} y_w \log \hat y_w = - \log \hat y_o&lt;/script&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;y&lt;/script&gt;는 실제 확률 분포이고, &lt;script type=&quot;math/tex&quot;&gt;\hat y&lt;/script&gt;는 모델에서 구한 확률 분포이다. 그렇다면, &lt;script type=&quot;math/tex&quot;&gt;y&lt;/script&gt;는 context word &lt;script type=&quot;math/tex&quot;&gt;o&lt;/script&gt;에 해당하는 element만 1인 one-hot vector이고, 위의 식이 참이 된다.&lt;/p&gt;
-
-&lt;h4 id=&quot;b-c&quot;&gt;b, c&lt;/h4&gt;
-
-&lt;p&gt;b는 naive softmax loss식을 &lt;script type=&quot;math/tex&quot;&gt;v_c&lt;/script&gt;에 대해 편미분 할 때!&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac {\partial J} {\partial v_c} = - u_o + \sum_{x \in Vocab} P(x|c) u_x&lt;/script&gt;
-
-&lt;p&gt;근데 위의 식이 실제 분포와 가중치가 있는 확률 분포의 차이값을 계산하는 것인데, &lt;script type=&quot;math/tex&quot;&gt;y&lt;/script&gt;가 outside word &lt;script type=&quot;math/tex&quot;&gt;o&lt;/script&gt;에 대해서만 1이니 결국 그냥 가중치가 있는 실제 분포와 계산한 확률 분포의 차이와 같다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac {\partial J} {\partial v_c} = U (\hat y - y)&lt;/script&gt;
-
-&lt;p&gt;c는 naive softmax loss식을 &lt;script type=&quot;math/tex&quot;&gt;u&lt;/script&gt;에 대해 편미분 할 때! 계산하면 &lt;script type=&quot;math/tex&quot;&gt;w = o&lt;/script&gt;인 경우는 아래처럼 나온다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac {\partial J } {\partial u_o} = (\hat y_o - y_o) v_c&lt;/script&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;(\hat y_o - y_o)&lt;/script&gt; 는 확률 분포의 element끼리 더하고 뺀거니까 스칼라값!&lt;/p&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;w \neq o&lt;/script&gt;인경우는 아래와 같다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac {\partial J } {\partial u_w} = \hat y_w v_c&lt;/script&gt;
-
-&lt;p&gt;근데, 이게 &lt;script type=&quot;math/tex&quot;&gt;y&lt;/script&gt;가 &lt;script type=&quot;math/tex&quot;&gt;o&lt;/script&gt;번째 element만 1인 one-hot vector이니 결국 전체 &lt;script type=&quot;math/tex&quot;&gt;U&lt;/script&gt;에 대해 편미분 하면 아래와 같아진다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac {\partial J} {\partial U} = (\hat y - y) v_c^\intercal&lt;/script&gt;
-
-&lt;h4 id=&quot;d&quot;&gt;d&lt;/h4&gt;
-
-&lt;p&gt;sigmoid 편미분. 이건 다른 곳에도 설명이 워낙 많으니…&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac {\partial \sigma} {\partial x} = \sigma (1 - \sigma)&lt;/script&gt;
-
-&lt;h4 id=&quot;e&quot;&gt;e&lt;/h4&gt;
-
-&lt;p&gt;이건 negative sample에 대한 loss의 편미분 식을 구하는 것인데, 일단 neg sample의 loss는 아래와 같다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;J_{neg-sample}(v_c, o, U) = - \log (\sigma (u_o^\intercal v_c)) - \sum_{k=1}^K \log (\sigma (-u_k^\intercal v_c))&lt;/script&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;K&lt;/script&gt;가 negative samples이고, &lt;script type=&quot;math/tex&quot;&gt;o&lt;/script&gt;는 neg sample에 안들어있다.&lt;/p&gt;
-
-&lt;p&gt;이 때 각각의 미분한 결과는 아래와 같다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac {\partial J} {\partial v_c} = - (1 - \sigma (u_o^\intercal v_c))u_o + \sum_{k = 1}^K (1 - \sigma(-u_k^\intercal v_c))u_k&lt;/script&gt;
-
-&lt;p&gt;이 경우 실제 코드로 구현할 때는 &lt;script type=&quot;math/tex&quot;&gt;U&lt;/script&gt;에서 &lt;script type=&quot;math/tex&quot;&gt;o&lt;/script&gt;번째를 제외하고 전부 -1을 곱해준 후 해당 matrix 전체에 대해 sigmoid를 연산해서 사용했다. 또 &lt;script type=&quot;math/tex&quot;&gt;o&lt;/script&gt;번째만 &lt;script type=&quot;math/tex&quot;&gt;- (1 - \sigma)&lt;/script&gt;이고 나머지는 &lt;script type=&quot;math/tex&quot;&gt;1- \sigma&lt;/script&gt;인점도 미리 전체에 대해 연산해서 사용했다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac {\partial J} {\partial u_o} = - (1 - \sigma (u_o^\intercal v_c))v_c&lt;/script&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac {\partial J} {\partial u_k} = \sum_{x=1}^K (1 - \sigma(-u_x^\intercal v_c))\frac {\partial u_x^\intercal v_c} {\partial u_k}&lt;/script&gt;
-
-&lt;p&gt;이게 위의 식처럼 작성한 이유는 neg sample에 여러번 들어갈 경우 그 수만큼 더해주어야 한다.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;p&gt;이게 근데 다 맞는지는 모르겠고 일단 풀어본거다. 아래 코드로 구현했을 때 잘 나왔으니 맞는 거겠지..?&lt;/p&gt;
-
-&lt;h3 id=&quot;a2-question-2&quot;&gt;a2 Question 2&lt;/h3&gt;
-
-&lt;p&gt;구현!!!은 그렇게까지 어렵진 않고, 수학수식을 그대로 옮겨야 하는데, 거기서 헷갈렸다. 그리고 마지막 결과를 뽑아내기까지의 시간이 오래걸린다. (numpy로 실제 학습을 시켜본다)&lt;/p&gt;
-
-&lt;p&gt;그렇게 얻은 결과는 아래정도이다.&lt;/p&gt;
-
-&lt;figure&gt;
-  &lt;img src=&quot;https://github.com/jeongukjae/cs224n-assignments/raw/master/assignment%202/a2/word_vectors.png&quot; alt=&quot;&quot; class=&quot;&quot; /&gt;
-  &lt;figcaption&gt;word vectors&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;p&gt;그렇게 결과가 잘 나온것같진 않다. 그냥저냥 뽑아본 것에 만족한다.&lt;/p&gt;</content><author><name></name></author><category term="nlp" /><category term="cs224n" /><category term="machine learning" /><category term="python" /><summary type="html">cs224n 스터디를 하면서 나오는 과제들도 같이 하기로 헀다. 그래서 1, 2주차 과제를 몰아서 해봤다. 과제를 하면서 내가 다시 봐야할 내용같은 것을 적어놓았다.</summary></entry><entry><title type="html">📕 CS224n Lecture 4 Backpropagation</title><link href="https://jeongukjae.github.io/posts/cs224n-lecture-4-back-propagation/" rel="alternate" type="text/html" title="📕 CS224n Lecture 4 Backpropagation" /><published>2019-04-13T00:00:00+00:00</published><updated>2019-04-13T00:00:00+00:00</updated><id>https://jeongukjae.github.io/posts/cs224n%20lecture%204%20back%20propagation</id><content type="html" xml:base="https://jeongukjae.github.io/posts/cs224n-lecture-4-back-propagation/">&lt;p&gt;CS224n 네번째 강의를 듣고 정리한 포스트!! 이번 강의는 다른 강의를 들으면서 많이 보았던 내용이고 많이 다를 것이 없다 생각하고 별 기대없이 들었다.&lt;/p&gt;
-
-&lt;h2 id=&quot;matrix-gradients-for-our-simple-neural-net-and-some-tips&quot;&gt;Matrix gradients for our simple neural net and some tips&lt;/h2&gt;
-
-&lt;p&gt;편미분 하는 식은 건너뛴다! 너무 여기저기 많이 나오기도 했고 개인적으로도 정리할 필요성을 못 느낀다.&lt;/p&gt;
-
-&lt;p&gt;다만, 이런저런 팁이 나왔는데 아래와 같다.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Tip 1: Carefully define your variables and keep track of their dimensionality!&lt;/li&gt;
-  &lt;li&gt;Tip 2: Chain rule!&lt;/li&gt;
-  &lt;li&gt;Tip 3: For the top softmax part of a model: First consider the derivative wrt &lt;script type=&quot;math/tex&quot;&gt;f_c&lt;/script&gt; when &lt;script type=&quot;math/tex&quot;&gt;c = y&lt;/script&gt; (the correct class), then consider derivative wrt &lt;script type=&quot;math/tex&quot;&gt;f_c&lt;/script&gt; when &lt;script type=&quot;math/tex&quot;&gt;c \neq y&lt;/script&gt; (all the incorrect classes)&lt;/li&gt;
-  &lt;li&gt;Tip 4: Work out element-wise partial derivatives if you’re getting confused by matrix calculus!&lt;/li&gt;
-  &lt;li&gt;Tip 5: Use Shape Convention. Note: The error message &lt;script type=&quot;math/tex&quot;&gt;\delta&lt;/script&gt; that arrives at a hidden layer has the same dimensionality as that hidden layer&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;여튼 쭉 건너뛰어서 word gradients를 window model에서 계산하는 부분까지 왔다. window를 사용하는 모델의 경우 &lt;script type=&quot;math/tex&quot;&gt;x&lt;/script&gt;의 gradient를 계산한 결과가 window 전체인데, 이는 word vector들을 단순히 연결한 것이므로 다시 나눠서 생각해준다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
-x_{window} = \pmatrix { x_{museums} &amp;&amp; x_{in} &amp;&amp; x_{Paris} &amp;&amp; x_{is} &amp;&amp; x_{amazing} } %]]&gt;&lt;/script&gt;
-
-&lt;h3 id=&quot;updating-word-gradients-in-window-model&quot;&gt;Updating word gradients in window model&lt;/h3&gt;
-
-&lt;p&gt;gradient를 가져외서 word vector를 업데이트할 때 주의해야하는 점이 있다. 잘 생각해보면 원래의 ML 접근법은 n차원에 데이터들이 공간에 존재할 때 decision boundary를 정하는 것이다. 하지만, word vector를 학습하는 것은 word vector 자체가 움직인다. 특정 batch에 대해 학습한다고 할 때, batch에 존재하지 않은 단어들은 움직이지 않지만, batch에 들어있는 단어들은 움직이게 된다.&lt;/p&gt;
-
-&lt;p&gt;그에 대한 비교적 좋은 해결책은 pre-trained word vector들을 사용하는 것이다. 대부분, 거의 모든 경우에 좋은 답이 될 수 있다고 한다. 만약 좋은 방대한 데이터셋을 가지고 있는 경우 pre trained 모델에 대해서 fine tuning을 해줘도 좋다고 한다. (다만, 작은 데이터셋인 경우 학습하는 것이 오히려 해가 될수도 있다고)&lt;/p&gt;
-
-&lt;h2 id=&quot;computation-graphs-and-backpropagation&quot;&gt;Computation graphs and backpropagation&lt;/h2&gt;
-
-&lt;p&gt;이제 graph로 설명하는 backprop 부분인데, 건너뛴다.&lt;/p&gt;
-
-&lt;h2 id=&quot;stuff-you-should-know&quot;&gt;Stuff you should know&lt;/h2&gt;
-
-&lt;p&gt;다양한, 좀 알아두면 좋을 것들에 대해서 설명하는데 아래와 같은 리스트를 알려준다.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Regularization: overfitting을 방지하는 기법&lt;/li&gt;
-  &lt;li&gt;Vecotrization: pythonic한 방법은 ML에서는 좀 많이.. 느릴 수 있다.&lt;/li&gt;
-  &lt;li&gt;non-linearity: activation function에 대해 설명을 했는데, sigmoid, tanh는 이제 특별한 상황에서만 사용한다고 한다. ReLU를 그냥 처음 시도해보는 것이 좋을 거라고..&lt;/li&gt;
-  &lt;li&gt;parameter initialization: weight를 처음 어떻게 초기화할지가 문제인데, 0은 쓰지말고(backprop 해야하니까) Xavier같은 것을 써주면 잘 된다고 한다.&lt;/li&gt;
-  &lt;li&gt;optimization: SGD, adargrad, RMSProp, Adam, SparseAdam같은 것들이 많이 나왔는데, SGD가 보통의 상황에 잘 동작한대요.&lt;/li&gt;
-  &lt;li&gt;Learning Rate: 적절한 lr를 정해주는 것이 좋은데, cyclic learning rates같은 신기한 방법도 있으니 잘 정합시다.&lt;/li&gt;
-&lt;/ul&gt;</content><author><name></name></author><category term="nlp" /><category term="cs224n" /><category term="machine learning" /><summary type="html">CS224n 네번째 강의를 듣고 정리한 포스트!! 이번 강의는 다른 강의를 들으면서 많이 보았던 내용이고 많이 다를 것이 없다 생각하고 별 기대없이 들었다.</summary></entry><entry><title type="html">📕 CS224n Lecture 3 Neural Network</title><link href="https://jeongukjae.github.io/posts/cs224n-lecture-3-neural-network/" rel="alternate" type="text/html" title="📕 CS224n Lecture 3 Neural Network" /><published>2019-04-09T00:00:00+00:00</published><updated>2019-04-09T00:00:00+00:00</updated><id>https://jeongukjae.github.io/posts/cs224n%20lecture%203%20neural%20network</id><content type="html" xml:base="https://jeongukjae.github.io/posts/cs224n-lecture-3-neural-network/">&lt;p&gt;CS224n 세번째 강의를 듣고 정리한 포스트!!&lt;/p&gt;
-
-&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
-
-&lt;p&gt;앞으로 진행할 강의:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;2주차: neural network (3, 4강)&lt;/li&gt;
-  &lt;li&gt;3주차: nlp (ex&amp;gt; dependency parsing) (5, 6강)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;HW2(gradient derivation of word2vec, implement word2vec with numpy)도 있다!&lt;/p&gt;
-
-&lt;h2 id=&quot;classification-review&quot;&gt;Classification Review&lt;/h2&gt;
-
-&lt;p&gt;classification에 대한 리뷰. 일단, &lt;script type=&quot;math/tex&quot;&gt;\{x_i, y_i\}_{i=1}^N&lt;/script&gt; 이 있다고 가정. (training set consisting of samples) &lt;script type=&quot;math/tex&quot;&gt;x_i&lt;/script&gt;는 input, &lt;script type=&quot;math/tex&quot;&gt;y_i&lt;/script&gt;는 label이다.&lt;/p&gt;
-
-&lt;p&gt;여기서 전통적인 ML, 통계학의 접근법은 softmax, logistic regression을 통해 decision boundary를 정하는 문제로 본다. 그래서 아래와 같은 x에 대한 식이 만들어진다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;p(y|x) = \frac {\exp {w_y x}} {\sum_{c=1}^C \exp w_c x}&lt;/script&gt;
-
-&lt;p&gt;이거를 &lt;script type=&quot;math/tex&quot;&gt;w_y x = f_y&lt;/script&gt;로 보고 표기도 가능하다. 그래서 softmax 식을 &lt;script type=&quot;math/tex&quot;&gt;softmax(f_y)&lt;/script&gt;라 표기하기도 한다.&lt;/p&gt;
-
-&lt;h3 id=&quot;cross-entropy-loss&quot;&gt;Cross Entropy Loss&lt;/h3&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;y&lt;/script&gt;의 prob을 maximize한다. (아래 식, negative log prob을 minimize한다)&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;- \log p(y|x)&lt;/script&gt;
-
-&lt;p&gt;cross entropy error는 &lt;script type=&quot;math/tex&quot;&gt;p&lt;/script&gt;가 실제 확률 분포이고, &lt;script type=&quot;math/tex&quot;&gt;q&lt;/script&gt;가 모델에서 계산한 확률 분포일 때, 아래 식과 같다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;H(p, q) = - \sum_{c=1}^C p(c) \log q(c)&lt;/script&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;p&lt;/script&gt;가 one-hot vector이면 (실제로 옳은 label은 보통 하나를 선정해놓으니?), q 하나만을 계산한다. 그리고 아래는 cross entropy를 전체 데이터셋에 대해 계산한 결과이다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;J(\theta) = \frac 1 N \sum_{i=1}^N - \log \frac {\exp f_{y_i}} {\sum_{c=1}^C \exp f_c }&lt;/script&gt;
-
-&lt;h2 id=&quot;neural-net-classifier&quot;&gt;Neural Net Classifier&lt;/h2&gt;
-
-&lt;p&gt;softmax는 decision boundary만 제공하는데, softmax만 사용하기에는 효과적이지 않다. 그래서 neural net을 같이 쓴다. NLP에서의 classification은 word vector를 학습하면서 classification에 필요한 weight까지 학습한다. (보통은 weight만 학습)&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\nabla_\theta J (\theta) = \pmatrix {\nabla W_1 \\ ... \\ \nabla W_d \\ \nabla x_{first word} \\ ... \\ \nabla x_{last word}} \in \mathbb R ^{Cd + Vd}&lt;/script&gt;
-
-&lt;p&gt;중간에는 아는 내용이라 건너뜀. (일반적인 neural net 설명)&lt;/p&gt;
-
-&lt;p&gt;non linearity는 워낙 다들 강조하는 내용. 그 이유? 결국 식을 다 전개하면 하나의 층을 쌓은 것이 되므로, non linearity를 만들어주어야 한다.&lt;/p&gt;
-
-&lt;h2 id=&quot;ner-named-entity-recognition&quot;&gt;NER (Named Entity Recognition)&lt;/h2&gt;
-
-&lt;p&gt;NER은 텍스트에서 특정한 단어들을 찾고 분류하는 작업이다. 그래서 크게 두 단계로 나눌 수 있는데, 단어를 찾는 것이 1, 그를 분류하는 것이 2이다. 근데 NER을 수행하다보면 문제점이 있다. 예를 들어 future school이라는 단어가 있을 떄, 학교의 이름이 Future School인지, 아니면 정말 미래의 학교인지를 나타내는지 문맥을 모르면 알 수 없기 때문에 너무 모호하다는 문제점이 있다. 즉, context에 의존적이다.&lt;/p&gt;
-
-&lt;figure&gt;
-  &lt;img src=&quot;/images/cs224n/3-1.png&quot; alt=&quot;&quot; class=&quot;&quot; /&gt;
-  &lt;figcaption&gt;NER&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;h2 id=&quot;binary-word-window-classification&quot;&gt;Binary Word Window Classification&lt;/h2&gt;
-
-&lt;p&gt;context에서 모호함이 생기니, context window와 함께 단어를 분류하자는 것이 메인이 되는 아이디어이다.&lt;/p&gt;
-
-&lt;figure&gt;
-  &lt;img src=&quot;/images/cs224n/3-2.png&quot; alt=&quot;&quot; class=&quot;&quot; /&gt;
-  &lt;figcaption&gt;word classification&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;p&gt;이에 대한 자세한 내용은 Collobert &amp;amp; Weston (2008, 2011)를 찾아보자.&lt;/p&gt;</content><author><name></name></author><category term="nlp" /><category term="cs224n" /><category term="machine learning" /><summary type="html">CS224n 세번째 강의를 듣고 정리한 포스트!!</summary></entry><entry><title type="html">📃 GloVe 논문 정리해보기</title><link href="https://jeongukjae.github.io/posts/GloVe/" rel="alternate" type="text/html" title="📃 GloVe 논문 정리해보기" /><published>2019-04-08T00:00:00+00:00</published><updated>2019-04-08T00:00:00+00:00</updated><id>https://jeongukjae.github.io/posts/GloVe</id><content type="html" xml:base="https://jeongukjae.github.io/posts/GloVe/">&lt;p&gt;이 논문은 cs224n 강의 2강에서 suggested readings로 추천된 논문이다. 스탠포드에서 작성한 논문이고, 영미권에서 베이스로 활용이 많이 된다고 해서 따로 정리를 해보기로 헀다! 사실 이번 포스트는 내가 다시 보기 위해 간단하게 정리하는 것이라 설명이 부족하다.&lt;/p&gt;
-
-&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
-
-&lt;p&gt;word vector를 학습하는 방법에는 두가지 방법이 있다. 하나는 global matrix factorization methods이고, 다른 하나는 local context window methods이다. 전자에는 LSA 같은 것이 해당되고, 후자에는 skipgram같은 것이 해당된다. LSA와 같은 모델들은 통계학적 정보들을 효율적으로 극대화시키는 대신 analogy task에는 형편없다. skipgram과 같은 모델들은 그에 비해 analogy에는 특화되어 있으나, 통계적인 정보들을 제대로 수집하기가 힘들다.&lt;/p&gt;
-
-&lt;p&gt;그래서 이 논문에서 weighted least squares model을 소개하는데 global word-word co-occurance counts를 훈련한 모델이고, 통게적인 정보도 잘 활용하게 만들었다고 한다. &lt;sup id=&quot;fnref:glove&quot;&gt;&lt;a href=&quot;#fn:glove&quot; class=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;the-glove-model&quot;&gt;The GloVe Model&lt;/h2&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;X_{ij}&lt;/script&gt;가 기본 단위인 word-word co-occurance count를 &lt;script type=&quot;math/tex&quot;&gt;X&lt;/script&gt;라고 한다. 그리고 &lt;script type=&quot;math/tex&quot;&gt;X_i = \sum_k X_{ik}&lt;/script&gt;라 한다. context word &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;에서 word &lt;script type=&quot;math/tex&quot;&gt;j&lt;/script&gt;가 나타날 확률은&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;P_{ij} = P(j|i) = \frac {X_{ij}} {X_i}&lt;/script&gt;
-
-&lt;p&gt;이다. 여기서 각각의 단어가 나타날 확률의 비율을 GloVe에서 활용하게 되는데 세 단어 &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;, &lt;script type=&quot;math/tex&quot;&gt;j&lt;/script&gt;, &lt;script type=&quot;math/tex&quot;&gt;k&lt;/script&gt;에 대해 아래처럼 적을 수 있다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;F(w_i, w_j, \tilde {w}_k ) = \frac {P_{ik}} {P_{jk}}&lt;/script&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;\tilde{w}&lt;/script&gt;는 context word vector인데, word2vec이 &lt;script type=&quot;math/tex&quot;&gt;u&lt;/script&gt;, &lt;script type=&quot;math/tex&quot;&gt;v&lt;/script&gt; 벡터를 나누어쓰는 것과 비슷하게 생각하면 될듯 싶다. 자 위의 식에서 &lt;script type=&quot;math/tex&quot;&gt;F&lt;/script&gt;가 두 단어의 차이에 의존적이니 이렇게 바꾸고,&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;F(w_i - w_j, \tilde {w}_k ) = \frac {P_{ik}} {P_{jk}}&lt;/script&gt;
-
-&lt;p&gt;또 인자는 벡터인데 반환하는 것은 스칼라값이니 이렇게 바꾸자&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;F((w_i - w_j)^\intercal \tilde {w}_k ) = \frac {P_{ik}} {P_{jk}}&lt;/script&gt;
-
-&lt;p&gt;근데 여기서 알아야 할 점이, word-word co-occurance matrix &lt;script type=&quot;math/tex&quot;&gt;X&lt;/script&gt;랑, word &lt;script type=&quot;math/tex&quot;&gt;w&lt;/script&gt;, context word &lt;script type=&quot;math/tex&quot;&gt;\tilde{w}&lt;/script&gt;랑 구분이 모호하다. 그래서 &lt;script type=&quot;math/tex&quot;&gt;X&lt;/script&gt;를 symmetric하게, &lt;script type=&quot;math/tex&quot;&gt;w&lt;/script&gt;는 &lt;script type=&quot;math/tex&quot;&gt;\tilde{w}&lt;/script&gt;와 바꿔쓸 수 있게 해야한다. 그러기 위해서 &lt;script type=&quot;math/tex&quot;&gt;F&lt;/script&gt;가 group &lt;script type=&quot;math/tex&quot;&gt;(\mathbb{R}, +)&lt;/script&gt;와 &lt;script type=&quot;math/tex&quot;&gt;(\mathbb{R}, \times)&lt;/script&gt;에 대해 homomorphism함을 필요로 한다. &lt;sup id=&quot;fnref:homomorphism&quot;&gt;&lt;a href=&quot;#fn:homomorphism&quot; class=&quot;footnote&quot;&gt;2&lt;/a&gt;&lt;/sup&gt; 그러한 homomorphism을 보장받으면 이렇게 수정이 가능하다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;F((w_i - w_j)^\intercal \tilde {w}_k ) = F(w_i^\intercal \tilde {w}_k - w_j^\intercal \tilde {w}_k) = \frac {F(w_i^\intercal \tilde {w}_k)} {F(w_j^\intercal \tilde {w}_k)}&lt;/script&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;F&lt;/script&gt;는 마치 exp와 비슷하게 풀어지므로, 이런식으로 유도해보자. (맨 위의 식 참고)&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;w_i^\intercal \tilde {w}_k = \log P_{ik} = \log {X_{ik}} - \log {X_i}&lt;/script&gt;
-
-&lt;p&gt;근데 이게 &lt;script type=&quot;math/tex&quot;&gt;\log {X_i}&lt;/script&gt; 항이 &lt;script type=&quot;math/tex&quot;&gt;k&lt;/script&gt;$에 독립적이라 이런식으로 bias로 정리가능하다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;w_i^\intercal \tilde {w}_k + b_i + \tilde{b}_k = \log {X_{ik}}&lt;/script&gt;
-
-&lt;p&gt;근데 여기서 또 문제점이 &lt;script type=&quot;math/tex&quot;&gt;X&lt;/script&gt;가 0이 나올수 있다는 점..인데, 이걸 &lt;script type=&quot;math/tex&quot;&gt;\log (X_{ik}) \rightarrow \log (1 + X_{ik})&lt;/script&gt;와 같은 형식으로 &lt;script type=&quot;math/tex&quot;&gt;X&lt;/script&gt;의 sparsity를 유지하면서 divergence를 피한다고 한다. 자 여튼 여기서 cost function을 뽑아내는데, 그 식이 아래와 같다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;J = \sum_{i,j = 1}^V f(X_{ij}) ( w_i^\intercal \tilde{w}_j +b_i + \tilde{b}_j - \log {X_{ij}} )^2&lt;/script&gt;
-
-&lt;p&gt;이 식을 보면서 어느정도 떠오른 아이디어는 “&lt;script type=&quot;math/tex&quot;&gt;\log {X_{ij}}&lt;/script&gt;가 실제 co-occurance이고, &lt;script type=&quot;math/tex&quot;&gt;w_i^\intercal \tilde{w}_j +b_i + \tilde{b}_j&lt;/script&gt;는 word vector로부터 뽑아내는 예상 co-occurance니까 그 사이의 차이를 제곱한다음 각각 가중치를 주어 합하면 cost function인가?” 정도이다. 물론 혼자 생각한거라 정확한지는.. 모르겠다.&lt;/p&gt;
-
-&lt;h3 id=&quot;relationship-to-other-models&quot;&gt;Relationship to Other Models&lt;/h3&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;Q_{ij}&lt;/script&gt; 을 word &lt;script type=&quot;math/tex&quot;&gt;j&lt;/script&gt;가 context of word &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt;에 나타날 확률이라고 할 때, 다음 식과 같아진다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;Q_{ij} = \frac {\exp (w_i^\intercal \tilde w _j)} {\sum_{k=1}^V \exp(w_i^\intercal \tilde w _k)}&lt;/script&gt;
-
-&lt;p&gt;softmax인데, 그를 이용한 objective function은 다음과 같다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;J = - \sum_{i \in corpus \\ j \in context(i)} \log Q_{ij}&lt;/script&gt;
-
-&lt;p&gt;이를 co-occurance matrix &lt;script type=&quot;math/tex&quot;&gt;X&lt;/script&gt;를 미리 계산해서 이렇게 변형하면 훨씬 빨라진다. (&lt;script type=&quot;math/tex&quot;&gt;X&lt;/script&gt;의 75% ~ 90%가 0이니..)&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;J = - \sum_{i = 1}^V \sum_{j=1}^V X_{ij} \log Q_{ij}&lt;/script&gt;
-
-&lt;p&gt;여기서 앞의 식들을 이용해 이렇게 변형이 가능하다.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;J = - \sum_{i = 1}^V X_i \sum_{j=1}^V P_{ij} \log Q_{ij} = \sum_{i=1}^V  X_{i} H(P_i, Q_i)&lt;/script&gt;
-
-&lt;p&gt;여기서 &lt;script type=&quot;math/tex&quot;&gt;H(P_i, Q_i)&lt;/script&gt;는 Cross entropy이다. 근데, cross entropy는 distance를 측정하는 방법중 하나인데, 어떤 때에 weight를 너무 많이 준다고 한다. 그래서 이렇게 다른 거리를 쓰도록 바꿔주자.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\hat J = \sum_{i, j}^V  X_{i} (\hat P_{ij} - \hat Q_{ij}) ^2&lt;/script&gt;
-
-&lt;p&gt;여기서 &lt;script type=&quot;math/tex&quot;&gt;\hat P_{ij} = X_{ij}&lt;/script&gt;, &lt;script type=&quot;math/tex&quot;&gt;\hat Q_{ij} = \exp(w_i^\intercal \tilde {w}_j)&lt;/script&gt;처럼 unnormalize된 분포가 된다. 근데 이것도 문제가 있다. &lt;script type=&quot;math/tex&quot;&gt;X_{ij}&lt;/script&gt;는 보통 너무 큰 값을 취하게 되므로, squared error를 minimize해주자.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\hat J = \sum_{i, j}^V  X_{i} (\log \hat P_{ij} - \log \hat Q_{ij}) ^2 \\
-= \sum_{i, j}^V  X_{i} (w_i^\intercal \tilde {w}_j - \log X_{ij}) ^2\\
-= \sum_{i, j}^V  f(X_{ij}) (w_i^\intercal \tilde {w}_j - \log X_{ij}) ^2&lt;/script&gt;
-
-&lt;p&gt;자 근데 이건 결국 GloVe의 cost function과 같은 형태가 되었다.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;p&gt;그 뒤는 너무 어려워보여서 아직 못봤다 ㅠㅠ&lt;/p&gt;
-
-&lt;div class=&quot;footnotes&quot;&gt;
-  &lt;ol&gt;
-    &lt;li id=&quot;fn:glove&quot;&gt;
-      &lt;p&gt;&lt;a href=&quot;http://nlp.stanford.edu/projects/glove/&quot;&gt;http://nlp.stanford.edu/projects/glove/&lt;/a&gt; 여기에 소스코드가 올라가 있다. &lt;a href=&quot;#fnref:glove&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
-    &lt;/li&gt;
-    &lt;li id=&quot;fn:homomorphism&quot;&gt;
-      &lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Group_homomorphism&quot;&gt;https://en.wikipedia.org/wiki/Group_homomorphism&lt;/a&gt; 여기에 간략하게 잘 설명되어 있다. &lt;a href=&quot;#fnref:homomorphism&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
-    &lt;/li&gt;
-  &lt;/ol&gt;
-&lt;/div&gt;</content><author><name></name></author><category term="paper" /><category term="cs224n" /><category term="nlp" /><category term="machine learning" /><summary type="html">이 논문은 cs224n 강의 2강에서 suggested readings로 추천된 논문이다. 스탠포드에서 작성한 논문이고, 영미권에서 베이스로 활용이 많이 된다고 해서 따로 정리를 해보기로 헀다! 사실 이번 포스트는 내가 다시 보기 위해 간단하게 정리하는 것이라 설명이 부족하다.</summary></entry><entry><title type="html">🚀 jekyll 속도 올리기</title><link href="https://jeongukjae.github.io/posts/1jekyll-%EC%86%8D%EB%8F%84-%EC%98%AC%EB%A6%AC%EA%B8%B0/" rel="alternate" type="text/html" title="🚀 jekyll 속도 올리기" /><published>2019-04-07T00:00:00+00:00</published><updated>2019-04-07T00:00:00+00:00</updated><id>https://jeongukjae.github.io/posts/1jekyll-%EC%86%8D%EB%8F%84-%EC%98%AC%EB%A6%AC%EA%B8%B0</id><content type="html" xml:base="https://jeongukjae.github.io/posts/1jekyll-%EC%86%8D%EB%8F%84-%EC%98%AC%EB%A6%AC%EA%B8%B0/">&lt;p&gt;개인 블로그로 github pages와 jekyll을 사용하고 나서부터 로컬에서 jekyll을 돌리면서 포스트가 제대로 작성되었는지 푸쉬하기 전 매번 확인하고 있다. 보통 나는 포스트를 &lt;code class=&quot;highlighter-rouge&quot;&gt;_drafts&lt;/code&gt; 폴더에 우선 넣어놓고 작성하는 편이라, 드래프트까지 빌드하면서 확인하고 있었는데, 한번 저장하면 다시 빌드될때까지 너무 오래걸린다. (12인치 맥북에서 2초정도 걸린다) 그래서 이걸 어떻게 더 빠르게 만들 방법이 없을까 하면서 찾아보다가 아래처럼 로컬 테스트 단계의 속도를 올렸다. (푸쉬되고 난 후야.. 뭐 내 서버 아니니까..)&lt;/p&gt;
-
-&lt;h2 id=&quot;configyml-수정&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;config.yml&lt;/code&gt; 수정&lt;/h2&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;.git/&lt;/code&gt; 폴더의 경우 상당히 많은 파일들을 포함하는데 &lt;code class=&quot;highlighter-rouge&quot;&gt;tree .git&lt;/code&gt;을 해보니 아래처럼 나온다.&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;tree .git
-...
-...
-    ├── remotes
-    │   └── origin
-    │       └── master
-    └── tags
-
-267 directories, 799 files
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;약 800개의 파일과 270개의 폴더가 존재하는데, 이를 일일히 다 탐색하는 것은, 코어 M에서 돌아가는 핫 리로더에게는 너무 버거운 작업일테니 exclude에 다음처럼 추가시켜주었다.&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;exclude&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Gemfile&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Gemfile.lock&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;LICENSE&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;README.md&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;.vscode&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;.git&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;.gitignore&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;.DS_Store&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;좀 다른 필요없는 파일까지 다 합쳤다. 이렇게 하니까 &lt;code class=&quot;highlighter-rouge&quot;&gt;jekyll serve&lt;/code&gt;를 실행할 때 리로드 속도가 평균적으로 0.2초 정도..? 빨리진 느낌이다. (대략 2.0초에서 1.8초정도까지 줄었다)&lt;/p&gt;
-
-&lt;h2 id=&quot;렌더링-하는데-오래걸리는-파일-수정&quot;&gt;렌더링 하는데 오래걸리는 파일 수정&lt;/h2&gt;
-
-&lt;p&gt;jekyll 속도 이슈로 찾다보니 jekyll에서 프로파일링 옵션을 제공하는 것을 알게되었다. 다음처럼 실행하면 된다.&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Configuration file: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;github repo 경로!!&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;/jeongukjae.github.io/_config.yml
-            Source: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;github repo 경로!!&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;/jeongukjae.github.io
-       Destination: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;github repo 경로!!&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;/jeongukjae.github.io/_site
- Incremental build: disabled. Enable with &lt;span class=&quot;nt&quot;&gt;--incremental&lt;/span&gt;
-      Generating...
-       Jekyll Feed: Generating feed &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;posts
-
-Filename                                       | Count |   Bytes |  Time
-&lt;span class=&quot;nt&quot;&gt;-----------------------------------------------&lt;/span&gt;+-------+---------+------
-_layouts/default.html                          |    57 | 775.53K | 0.214
-_includes/meta.html                            |    57 |  54.90K | 0.093
-feed.xml                                       |     1 | 123.26K | 0.083
-sitemap.xml                                    |     1 |   8.51K | 0.062
-_includes/svg-icons.html                       |    57 |  20.87K | 0.052
-tags.html                                      |     1 |  33.85K | 0.049
-_layouts/post.html                             |    49 | 541.59K | 0.029
-_includes/analytics.html                       |    57 |   0.06K | 0.018
-_posts/2018/2018-11-13-CNN 공부.md              |     1 |   8.04K | 0.006
-index.html                                     |     1 |  10.08K | 0.006
-page2/index.html                               |     1 |  11.61K | 0.004
-about.md                                       |     1 |   0.83K | 0.004
-_includes/image.html                           |    12 |   4.28K | 0.004
-...
-...
-                    &lt;span class=&quot;k&quot;&gt;done in &lt;/span&gt;2.226 seconds.
- Auto-regeneration: disabled. Use &lt;span class=&quot;nt&quot;&gt;--watch&lt;/span&gt; to enable.
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;이렇게 쭉 나오는데, tags.html의 경우는 많이 줄인거다. 원래 0.150정도를 잡아먹고 있었다.. ㅠㅠ 모든 포스트를 태그 수 + 1만큼 순회하는데, liquid의 기능이 부족한건지 내가 못찾는건지 많이는 못줄이고 어떤 태그가 있는지 찾아오는 부분만 줄였다. 문서를 찾아보니 아래처럼 모든 태그를 중복제거하면서 정렬해서 이렇게 들고 올 수 있더라.&lt;/p&gt;
-
-&lt;div class=&quot;language-liquid highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{%&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;assign&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;all_tags&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;site&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;posts&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'tags'&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compact&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;uniq&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;sort&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;%}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;이렇게 사용하니까 약간.. 더 줄었다. 매 리로드마다 1.7 ~ 1.8초정도 걸린다. 근데 이게 그래도 많이 느리다.&lt;/p&gt;
-
-&lt;h2 id=&quot;incremental-serve&quot;&gt;incremental serve&lt;/h2&gt;
-
-&lt;p&gt;jekyll 문서에 &lt;a href=&quot;https://jekyllrb.com/docs/configuration/incremental-regeneration/&quot;&gt;incremental regeneration&lt;/a&gt;에 관한 문서가 있다. 아직 experimental feature이긴 하지만, 뭐 별 문제 없으면 개인용으로 사용할만 하다고 생각해서 적용해보았다. 적용해보니 live reload, drafts 빌드까지 합쳤을 때 0.7초까지 줄어든다.. ㅠㅠㅠㅠㅠ 뭐 1초 가까이 줄어든 셈이다.&lt;/p&gt;
-
-&lt;h2 id=&quot;limit-posts&quot;&gt;limit posts&lt;/h2&gt;
-
-&lt;p&gt;그리고 한개의 포스트만 빌드하도록 설정이 가능하다. 어차피 작성시에는 하나의 포스트만 보니까 설정하면 좋을 듯하다.&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;jekyll serve &lt;span class=&quot;nt&quot;&gt;--help&lt;/span&gt;
-...
-...
-        &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt;, &lt;span class=&quot;nt&quot;&gt;--source&lt;/span&gt; SOURCE  Custom &lt;span class=&quot;nb&quot;&gt;source &lt;/span&gt;directory
-            &lt;span class=&quot;nt&quot;&gt;--future&lt;/span&gt;       Publishes posts with a future date
-            &lt;span class=&quot;nt&quot;&gt;--limit_posts&lt;/span&gt; MAX_POSTS  Limits the number of posts to parse and publish
-        &lt;span class=&quot;nt&quot;&gt;-w&lt;/span&gt;, &lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;no-]watch   Watch &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;changes and rebuild
-...
-...
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;이렇게 중간에 &lt;code class=&quot;highlighter-rouge&quot;&gt;limit-posts&lt;/code&gt; 옵션이 있다. 1로 설정해서 사용하자! 이렇게 쓰니까 초기 로딩은 조금 느렸는데 (2초) 초기로딩까지 0.6초정도로 엄청 빨라졌다!! 게다가 라이브 라로드는 0.3초정도로 거의 수정사항을 바로 확인할 수 있게 빨라졌다.&lt;/p&gt;
-
-&lt;h2 id=&quot;그래서-이렇게-쓰는-중이다&quot;&gt;그래서 이렇게 쓰는 중이다&lt;/h2&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;jekyll serve &lt;span class=&quot;nt&quot;&gt;-lDI&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--limit-posts&lt;/span&gt; 1
-Configuration file: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;githug repo 링크입니다!!&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;/jeongukjae.github.io/_config.yml
-            Source: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;githug repo 링크입니다!!&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;/jeongukjae.github.io
-       Destination: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;githug repo 링크입니다!!&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;/jeongukjae.github.io/_site
- Incremental build: enabled
-      Generating...
-       Jekyll Feed: Generating feed &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;posts
-                    &lt;span class=&quot;k&quot;&gt;done in &lt;/span&gt;0.657 seconds.
- Auto-regeneration: enabled &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'{githug repo 링크입니다!!}/jeongukjae.github.io'&lt;/span&gt;
-LiveReload address: http://127.0.0.1:35729
-    Server address: http://127.0.0.1:4000/
-  Server running... press ctrl-c to stop.
-      Regenerating: 1 file&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; changed at 2019-04-07 14:25:31
-                    _posts/2019/2019-04-07-jekyll-속도-올리기.md
-       Jekyll Feed: Generating feed &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;posts
-                    ...done &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;0.363427 seconds.
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;저장하고 브라우저 올리면 리로드가 끝나 있을 정도이다. 대략 초기로딩도 2.5초정도에서 0.6 ~ 0.7초까지 줄었고, 라이브 리로드도 2초에서 0.3 ~ 0.4초까지 줄었다. 이제 앞으로 편하게 블로그 글 작성합시다 🤗&lt;/p&gt;</content><author><name></name></author><category term="jekyll" /><summary type="html">개인 블로그로 github pages와 jekyll을 사용하고 나서부터 로컬에서 jekyll을 돌리면서 포스트가 제대로 작성되었는지 푸쉬하기 전 매번 확인하고 있다. 보통 나는 포스트를 _drafts 폴더에 우선 넣어놓고 작성하는 편이라, 드래프트까지 빌드하면서 확인하고 있었는데, 한번 저장하면 다시 빌드될때까지 너무 오래걸린다. (12인치 맥북에서 2초정도 걸린다) 그래서 이걸 어떻게 더 빠르게 만들 방법이 없을까 하면서 찾아보다가 아래처럼 로컬 테스트 단계의 속도를 올렸다. (푸쉬되고 난 후야.. 뭐 내 서버 아니니까..)</summary></entry><entry><title type="html">📕 CS224n Lecture 2 Word Vectors and Word Senses</title><link href="https://jeongukjae.github.io/posts/2cs224n-lecture-2-word-vectors-and-word-senses/" rel="alternate" type="text/html" title="📕 CS224n Lecture 2 Word Vectors and Word Senses" /><published>2019-04-07T00:00:00+00:00</published><updated>2019-04-07T00:00:00+00:00</updated><id>https://jeongukjae.github.io/posts/2cs224n%20lecture%202%20word%20vectors%20and%20word%20senses</id><content type="html" xml:base="https://jeongukjae.github.io/posts/2cs224n-lecture-2-word-vectors-and-word-senses/">&lt;p&gt;CS224n 두번째 강의를 듣고 정리한 포스트!!&lt;/p&gt;
-
-&lt;h2 id=&quot;finish-looking-at-word-vectors-and-word2vec&quot;&gt;Finish Looking at Word Vectors and Word2Vec&lt;/h2&gt;
-
-&lt;p&gt;일단 강의를 시작하면서 지난번 강의때부터 이어서 word2vec와 word vector에 관한 내용을 마무리한다. review를 해보면 word2vec의 main idea는 주변의 단어(context)를 word vector를 통해 예측하거나 그 반대의 것을 예측하는 것이었다. (CBOW, Skip-gram) 한 단어당 두개의 벡터를 사용했고, &lt;script type=&quot;math/tex&quot;&gt;u&lt;/script&gt; (context), &lt;script type=&quot;math/tex&quot;&gt;\vec sv&lt;/script&gt; (center) 두개의 벡터를 dot product를 한 다음에 softmax를 취해 값들을 계산했다. 그리고 그 학습 과정을 통해 결과로 비슷한 단어를 비슷한 공간에 놓아놓았다. 이 과정이 cost function을 maximize하는 과정이었다.&lt;/p&gt;
-
-&lt;h2 id=&quot;optimization&quot;&gt;Optimization&lt;/h2&gt;
-
-&lt;p&gt;이제 Optimization에 대해 공부를 하는데, 자세한 부분을 가르치진 않으니 알아두라고 말한다. 자세한 optimization 과정은 CS229 (아마 머신 러닝 자체에 대한 강좌였던 걸로 기억한다)를 들어보면 배울 수 있다고.&lt;/p&gt;
-
-&lt;p&gt;어쨌든 gradient descent를 사용해서 &lt;script type=&quot;math/tex&quot;&gt;J(\theta)&lt;/script&gt;를 minimize 하는데, 그 과정에서 backprop을 사용한다. 업데이트 하는 방법은&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\theta_{new} = \theta_{old} - \alpha \nabla_{\theta} J(\theta)&lt;/script&gt;
-
-&lt;p&gt;의 식을 활용한다. 여기서 alpha는 step size로 그 learning rate를 가리키는 것 같다. 하지만 여기서 문제점은 모든 corpus에 대해 이 연산을 수행하기에는 너무 연산량이 많다. 그래서 SGD를 사용하는데, Stochastic Gradient Descent이다. sampling을 해서 Grdient Descent를 적용하는 방법으로 이러한 이점이 있다고 한다.&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;noise가 적다&lt;/li&gt;
-  &lt;li&gt;병렬화가 가능하다 -&amp;gt; 빠른 학습이 가능하다&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;하지만 SGD를 적용하면 word vector들이 매우 sparse해진다. (sampling을 했으니..?) 그럼 여기서 굳이 다 업데이트를 할 필요가 있나?라는 생각이 든다. 그래서 UV decomposition을 사용하라고 한다. 이건 제대로 이해를 못한 부분인 것 같다.&lt;/p&gt;
-
-&lt;p&gt;여튼 이제 word2vec를 구현할 때 왜 벡터를 두개나 쓰는지에 대해 설명을 해주는데, 그 이유는 그저 optimization이 쉬워지기 때문이라고 한다. 아마 이건 이론적인 이유보다 실험적인 이유가 아닐까 싶다. 학습이 끝나고 나서 평균을 취해준다고 한다.&lt;/p&gt;
-
-&lt;p&gt;그리고 다른 optim 방법은 training method 부분에서 negative sampling을 하는 방법도 있고 (논문을 읽어보았는데 더 자세히 봐야할 것 같다) naive softmax를 취하는 방법도 있다.&lt;/p&gt;
-
-&lt;p&gt;여기서 negative sampling에 대한 main idea는 true pair와 noise pair에 대해 binary logistic regression을 훈련한다는 것이다. NCE도 나오고 뭐 많이 나오던데, 따로 정리하자 ㅠㅠ&lt;/p&gt;
-
-&lt;h2 id=&quot;capture-co-occurance-counts-directly&quot;&gt;Capture co-occurance counts directly?&lt;/h2&gt;
-
-&lt;h3 id=&quot;count-base&quot;&gt;count base&lt;/h3&gt;
-
-&lt;p&gt;단어의 숫자를 기준으로 co-occurance를 판단하는데, 두가지 방식이 있다.&lt;/p&gt;
-
-&lt;p&gt;window size를 사용하는 경우: syntactix한 정보와 semantic한 정보를 받을 수 있고, high dimensionality한 이슈와 sparsity한 이슈가 있다. 그리고 robust하지 않다. 그래서 UV decomposition같은 것을 통해 low dimensionality vector로 바꾸어준다.&lt;/p&gt;
-
-&lt;p&gt;full document -&amp;gt; general topic에 관해 잡아내기 좋다. (Latent Semantic Analysis를 보자) 대충 이런 쪽으로는 LSA, HAL, COALS, Hellinger-PCA 등등이 있다.&lt;/p&gt;
-
-&lt;p&gt;어쨌든 count base는 빠르고, 효율적인 통계학 기반의 접근법이고, 다만 기능이 제한적이며 많은 갯수의 단어(the같은?)에 대해 취약하다.&lt;/p&gt;
-
-&lt;h3 id=&quot;direct-prediction&quot;&gt;direct prediction&lt;/h3&gt;
-
-&lt;p&gt;어쩄든 그래서 직접 prediction하는 것으로 넘어가자. 이건 skip-gram, cbow를 생각하면 된다. 성능이 매우 좋고 복잡한 패턴에 대해 매우 잘 알아차린다. 다만 corpus 사이즈가 매우 중요하고 효율적이지 않은 통계를 사용한다.&lt;/p&gt;
-
-&lt;h2 id=&quot;encodig-meaning-in-vector-differences&quot;&gt;Encodig Meaning in vector differences&lt;/h2&gt;
-
-&lt;p&gt;co-occurance를 분석해서 meaning component를 알아낸다. 근데 이건 그냥 EMNLP 2014, Penningtokn et al. 을 살펴보자.&lt;/p&gt;
-
-&lt;h2 id=&quot;evaluating&quot;&gt;Evaluating&lt;/h2&gt;
-
-&lt;p&gt;Intrinsic한 방법과 Extrinsic한 방법이 있는데, Intrinsic한 방법은 빠르고 clear하지 않다. 자세한 방법으로는 cos-distance를 활용해 analofy 테스트를 하거나 wordsim등을 활용한다. Extrinsic한 방법은 긴 시간이 걸리지만 정확하다.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;p&gt;추가로 한 단어가 여러가지 의미를 가지는 경우에 대해 분석한 논문이 있는데 이건 Huang et al. 2012을 살펴보자.&lt;/p&gt;</content><author><name></name></author><category term="nlp" /><category term="cs224n" /><category term="machine learning" /><summary type="html">CS224n 두번째 강의를 듣고 정리한 포스트!!</summary></entry></feed>
+&lt;p&gt;Gizmos.DrawIcon에 사용되는 모든 텍스쳐/아이콘들을 가지는 폴더. 이 폴더의 텍스쳐 에셋들은 이름으로 불려질 수 잇으며, 에디터에서 기즈모로써 화면에 그려진다.&lt;/p&gt;
+
+&lt;h2 id=&quot;webplayertemplates&quot;&gt;“WebPlayerTemplates”&lt;/h2&gt;
+
+&lt;p&gt;웹 빌드에 사용되는 디폴트 웹페이지를 교체하기 위해 사용된다. 여기에 위치하는 스크립트들은 전혀 컴파일 되지 않을 것이다. 이 폴더는 Assets 폴더의 최상위에 위치해야 한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;streamingassets&quot;&gt;“StreamingAssets”&lt;/h2&gt;
+
+&lt;p&gt;이곳에 위치한 파일들은 어떠한 변경도 없이 빌드 폴더에 복사된다(최종 빌드 파일에 포함되어야 하는 모바일과 웹빌드는 제외). 이들의 경로는 플랫폼 마다 다를 수 있으며 Application.streamingAssetsPath((http://docs.unity3d.com/Documentation/ScriptReference/Application-streamingAssetsPath.html))를 통해 접근할 수 있다. Also see http://docs.unity3d.com/Documentation/Manual/StreamingAssets.html&lt;/p&gt;
+
+</description>
+        <pubDate>Thu, 23 Apr 2015 12:09:41 +0000</pubDate>
+        <link>http://yongil.net/unity/2015/04/23/Unity-Special-Folder-Names-in-your-Assets-Folder.html</link>
+        <guid isPermaLink="true">http://yongil.net/unity/2015/04/23/Unity-Special-Folder-Names-in-your-Assets-Folder.html</guid>
+        
+        <category>yongil</category>
+        
+        
+        <category>unity</category>
+        
+      </item>
+    
+      <item>
+        <title>용일이의 개발/번역 블로그</title>
+        <description>&lt;p&gt;저는 인디 게임 개발자입니다. 이 블로그는 프로그래밍 및 게임 개발과 관련된 글들을 쓰거나, 또는 좋은 해외 글들을 번역하려고 만든 블로그입니다.&lt;/p&gt;
+
+&lt;p&gt;직접 쓰는 글들은 주로 게임을 개발하면서 겪는 에피소드나 기술적인 이슈들을 대해서 적어 볼까 합니다. 그리고 지금 개발 중인 게임에 대한 글들도 종종 공유하도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;번역은 제가 영어를 잘해서가 아니라 나중에 다시 볼 때 영어보다 한글로 읽는게 훨씬 편하기 때문에 다시 보겠다 싶은 글들이 있으면 저 혼자 번역해 놓곤 했습니다. 혼자 보기 아깝다는 생각이 들어 기왕 번역하는거 함께 공유하면 좋을 것 같아 한번 올려 볼려고 합니다.&lt;/p&gt;
+
+</description>
+        <pubDate>Thu, 05 Mar 2015 11:02:41 +0000</pubDate>
+        <link>http://yongil.net/etc/2015/03/05/first-post.html</link>
+        <guid isPermaLink="true">http://yongil.net/etc/2015/03/05/first-post.html</guid>
+        
+        <category>yongil</category>
+        
+        
+        <category>etc</category>
+        
+      </item>
+    
+  </channel>
+</rss>

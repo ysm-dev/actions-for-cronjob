@@ -1,1064 +1,178 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0">
   <channel>
-    <title>달이 차오른다</title>
-    <description>경험을 좋아하는 개발자
-</description>
-    <link>https://samslow.github.io/</link>
-    <atom:link href="https://samslow.github.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 19 Feb 2019 07:25:03 +0000</pubDate>
-    <lastBuildDate>Tue, 19 Feb 2019 07:25:03 +0000</lastBuildDate>
-    <generator>Jekyll v3.7.4</generator>
-    
-      <item>
-        <title>Rails 에서 JS와 CSS의 로딩은 어떻게 하나 </title>
-        <description>&lt;p&gt;Today I Learn의 Rails 시리즈로써 Asset pipeline에 대해 다룹니다.&lt;/p&gt;
-
-&lt;h2 id=&quot;asset-pipeline&quot;&gt;Asset pipeline&lt;/h2&gt;
-
-&lt;h3 id=&quot;rails-에서-js와-css의-로딩은-어떻게-하나&quot;&gt;Rails 에서 JS와 CSS의 로딩은 어떻게 하나&lt;/h3&gt;
-
-&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;link&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;stylesheet&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;type=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;text/css&quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;mycss.css&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;/head&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;assets(Javascript, css)는 기본적으로 위와같이 HTML 문서에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;Head&amp;gt;&lt;/code&gt; 안에서 호출된다.&lt;/p&gt;
-
-&lt;p&gt;이 방법은 보기에 직관적이라 어디있는지 바로 알 수 있는 장점이 있지만,&lt;/p&gt;
-
-&lt;p&gt;조금만 프로젝트가 커져 여러 js, css를 가져와야할때 코드의 길이가 길어져 관리가 힘들어지는 단점이 있다.&lt;/p&gt;
-
-&lt;p&gt;&lt;del&gt;한마디로 머리가 드럽게 큰 가분수형 인간이된다(?)&lt;/del&gt;&lt;/p&gt;
-
-&lt;p&gt;하지만 Rails의 경우 Assets 폴더를 별도로 관리하여 아래와 같이 단 두줄에 CSS와  JS를 가져온다.&lt;/p&gt;
-
-&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;&amp;lt;!-- views/layouts/application.html.erb --&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;title&amp;gt;&lt;/span&gt;my service&lt;span class=&quot;nt&quot;&gt;&amp;lt;/title&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;%=&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;csrf_meta_tags&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;%=&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;stylesheet_link_tag&lt;/span&gt;    &lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;application&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;',&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;media:&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'%&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;%=&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;javascript_include_tag&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;application&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'%&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;/head&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;위 코드를 부연설명 하자면 &lt;code class=&quot;highlighter-rouge&quot;&gt;app/assets&lt;/code&gt;에서 stylesheets 와 javscripts 폴더내의 &lt;code class=&quot;highlighter-rouge&quot;&gt;application&lt;/code&gt;이라는 &lt;code class=&quot;highlighter-rouge&quot;&gt;manifest&lt;/code&gt;파일을 호출하는것이다.&lt;/p&gt;
-
-&lt;p&gt;수십줄의 반복적인 CSS link 태그대신 잘 정돈된 &lt;code class=&quot;highlighter-rouge&quot;&gt;manifest&lt;/code&gt; 파일만 호출한다면 깔끔하게 정리된 수납함 하나만 가져오면 된다.&lt;/p&gt;
-
-&lt;p&gt;&lt;u&gt;이와같이 DRY하게 최소화 하는 과정을 **asset pipeline** 이라 한다.&lt;/u&gt;&lt;/p&gt;
-
-&lt;p&gt;레일즈에서는 기본적으로 asset pipeline으로 asset을 가져오며 이방법이 아닌 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;link&amp;gt;&lt;/code&gt; 태그로 사용하고 싶다면&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;config/application.rb&lt;/code&gt; 에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;config.assets.enabled&lt;/code&gt;를  &lt;code class=&quot;highlighter-rouge&quot;&gt;false&lt;/code&gt;로 추가해주면 된다.&lt;/p&gt;
-
-&lt;h3 id=&quot;그렇다면-manifest-파일은-무엇인가&quot;&gt;그렇다면 manifest 파일은 무엇인가?&lt;/h3&gt;
-
-&lt;p&gt;OS나 Android를 해 본 사람이면 쉽게 이해 할 수 있을텐데, 위에서도 한번 언급했지만 간단히말하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;잘 정돈된 수납함&lt;/code&gt; 으로 이해 할 수 있다.&lt;/p&gt;
-
-&lt;p&gt;양말을 정리하는 상황이라고 해보자.&lt;/p&gt;
-
-&lt;p&gt;수납함이 긴양말, 짧은 양말, 덧신 등으로 ‘잘’ 나누어져 있으면 여름이던 겨울이던 바로 제 위치에서 찾아 갈 수 있다.&lt;/p&gt;
-
-&lt;p&gt;이렇게 잘 찾아가도록 한꺼번에 관리하며 모아놓은 파일이 &lt;code class=&quot;highlighter-rouge&quot;&gt;manifest&lt;/code&gt;이다.&lt;/p&gt;
-
-&lt;p&gt;다양한 분야에서 자주 등장하는 용어이니 이번 기회에 알아가도록 하자.&lt;/p&gt;
-
-&lt;p&gt;위와같이 HTML 파일이 선언되었다면 이제 &lt;code class=&quot;highlighter-rouge&quot;&gt;app/assets/stylesheets&lt;/code&gt; 를 가보자&lt;/p&gt;
-
-&lt;div class=&quot;language-ruby highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;sr&quot;&gt;/*
- * This is a manifest file that'll be compiled into application.css, which will include all the files
- * listed below.
- *
- * Any CSS and SCSS file within this directory, lib/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;assets&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stylesheets&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;any&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;plugin&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'s
- * vendor/assets/stylesheets directory can be referenced here using a relative path.
- *
- * You'&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;re&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;free&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;add&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;application&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;wide&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;styles&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;this&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;they&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ll&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;appear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;at&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bottom&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt;
- &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;compiled&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;so&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;styles&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;you&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;add&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;here&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;take&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;precedence&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;over&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;styles&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;defined&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;any&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;other&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;CSS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;SCSS&lt;/span&gt;
- &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;files&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;this&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;directory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Styles&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;this&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;should&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;added&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;after&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;last&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;require_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;statement&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
- &lt;span class=&quot;nf&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;It&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;generally&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;better&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;per&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;style&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;scope&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
- &lt;span class=&quot;nf&quot;&gt;*&lt;/span&gt;
- &lt;span class=&quot;o&quot;&gt;*=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;require_tree&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
- &lt;span class=&quot;nf&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;require_self&lt;/span&gt;
- &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;처음 위의 파일을 접했을때 모두 주석처리 되어있길래 별로 중요하지 않은가보다라고 생각했지만 일부는 맞고 일부는 아니다.&lt;/p&gt;
-
-&lt;p&gt;위의 텍스트들은 해당 파일에 대한 주석 설명이 맞지만&lt;/p&gt;
-
-&lt;p&gt;코드 하단에 위치한 &lt;code class=&quot;highlighter-rouge&quot;&gt;*= require_tree . &lt;/code&gt; 처럼 표기되는 부분들은 주석이 아니라 위의 예시에서의 &lt;code class=&quot;highlighter-rouge&quot;&gt;양말들&lt;/code&gt; 이 되는 것이다.&lt;/p&gt;
-
-&lt;p&gt;양말을 하나 추가 할 때마다 &lt;code class=&quot;highlighter-rouge&quot;&gt;*= require socks.css&lt;/code&gt; 로 추가해 주면 전체 manifest에 반영이 되는 것이다.&lt;/p&gt;
-
-&lt;p&gt;이는 코드를 간결하게 보여지게 할 뿐만 아니라, 실제로 미리 컴파일하고 압축하는 과정을 통해 request를 최소화 하게 되어 서버에 부담도 덜게 된다.&lt;/p&gt;
-
-&lt;h3 id=&quot;directives&quot;&gt;Directives&lt;/h3&gt;
-
-&lt;p&gt;그럼 manifest에서 파일을 가져오는 다양한 방법에 대해 더 알아보자&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;*=&lt;/code&gt; 뒤에 오는 명령어(?) 들을 &lt;code class=&quot;highlighter-rouge&quot;&gt;Directives&lt;/code&gt; 라고 하는데 이는 코드를 더 짧고 간단하게 보이게 해 준다.&lt;/p&gt;
-
-&lt;p&gt;제일 많이 사용되는 것은 &lt;code class=&quot;highlighter-rouge&quot;&gt;require&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;require_tree&lt;/code&gt; 이다.&lt;/p&gt;
-
-&lt;p&gt;후자의 경우 경로를 설정 해 주면 해당 경로의 assets을 모두 가져오기 때문에 나열하지 않아도 되는 장점이 있지만&lt;/p&gt;
-
-&lt;p&gt;반대로 모두 가져오기 때문에폴더구조가 복잡 해 질 수 있다.&lt;/p&gt;
-
-&lt;p&gt;사실 이 모든것들을 더욱 최소화하기위해(최소화의 끝은 어디인가) &lt;code class=&quot;highlighter-rouge&quot;&gt;.css&lt;/code&gt; 대신 &lt;code class=&quot;highlighter-rouge&quot;&gt;.scss&lt;/code&gt; 의 &lt;code class=&quot;highlighter-rouge&quot;&gt;@import  &quot;00/0&quot;&lt;/code&gt; 를 사용한다고 한다.&lt;/p&gt;
-
-&lt;p&gt;다음에는 이에 대해서도 다뤄보겠다. 이번 포스트에서는 아래에 다른 Directives를 소개하며 마무리한다.&lt;/p&gt;
-
-&lt;p&gt;본인의 사용 용도에 맞게 다양한 directive를 사용하면 된다.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;require&lt;/strong&gt; &lt;strong&gt;&lt;em&gt;[path]&lt;/em&gt;&lt;/strong&gt; 는 경로상에 있는 asset 소스파일의 내용을 삽입해 준다. 동일한 소스파일을 여러번 require해도 컴파일시 한번만 포함&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;include&lt;/strong&gt; &lt;strong&gt;&lt;em&gt;[path]&lt;/em&gt;&lt;/strong&gt; 는 require와 같은 기능을 가지지만, 해당 소스파일이 이미 include 되었거나 require 되었더라도 소소파일의 내용을 삽입해 주게 된다.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;require_directory&lt;/strong&gt; &lt;strong&gt;&lt;em&gt;[path]&lt;/em&gt;&lt;/strong&gt; 는 경로로 지정된 디렉토리에 있는 동일한 포맷의 모든 소스파일을 require해 준다. 이 때 파일들은 알파벳순으로 require된다.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;require_tree&lt;/strong&gt; &lt;strong&gt;&lt;em&gt;[path]&lt;/em&gt;&lt;/strong&gt; 는 require_directory와 같은 기능을 가지지만, 경로로 지정된 디렉토리의 모든 하위디렉토리들에 있는 파일들까지 모두 require되도록 한다.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;require_self&lt;/strong&gt;는 모든 require 또는 include directives 전에서 사용하여 현재 소스파일의 내용을 삽입하도록 한다.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;depend_on&lt;/strong&gt; &lt;strong&gt;&lt;em&gt;[path]&lt;/em&gt;&lt;/strong&gt; 는 경로상의 소스파일의 내용을 포함하지 않은 채로 의존성만 선언한다. 다른 파일이 수정될 때 asset 캐시를 expire할 필요가 있을 때 유용하게 사용할 수 있다.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;stub&lt;/strong&gt; &lt;strong&gt;&lt;em&gt;[path]&lt;/em&gt;&lt;/strong&gt; 는 경로상의 소스파일을 제외하도록 해준다. 경로는 하나의 유효한 asset 이어야 하고 이미 포함되었거나 포함되지 않을 수 있다. 일단 해당 소스파일이 제외되면, 블랙리스트에 등록되어 추후 require 하더라도 불러올 수 없게 된다.&lt;/p&gt;
-
-&lt;p&gt;Directives와 Asset pipeline에 대한 더 자세한 정보는 https://rorlab.org/rblogs/152 를 참조하면 된다.&lt;/p&gt;
-</description>
-        <pubDate>Tue, 19 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://samslow.github.io/development/2019/02/19/%EB%A0%88%EC%9D%BC%EC%A6%88%EC%97%90%EC%84%9C-JS%EC%99%80-CSS-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0/</link>
-        <guid isPermaLink="true">https://samslow.github.io/development/2019/02/19/%EB%A0%88%EC%9D%BC%EC%A6%88%EC%97%90%EC%84%9C-JS%EC%99%80-CSS-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0/</guid>
-        
-        <category>rails</category>
-        
-        
-        <category>development</category>
-        
-      </item>
-    
-      <item>
-        <title>식품안전나라 크롤링 가이드</title>
-        <description>&lt;p&gt;API를 개떡같이 제공해줘서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Ruby on Rails&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;Nokogiri&lt;/code&gt;로 직접 크롤링하는 삽질을 쓰는 글&lt;/p&gt;
-
-&lt;h1 id=&quot;식품안전나라-크롤링&quot;&gt;식품안전나라 크롤링&lt;/h1&gt;
-
-&lt;p&gt;우리나라에서 식품정보를 얻을 수 있는 방법을 시도 해 본 개발자라면, &lt;a href=&quot;https://www.data.go.kr/&quot;&gt;공공데이터포털&lt;/a&gt;을 한번 쯤 들어 봤을 것이다.&lt;/p&gt;
-
-&lt;p&gt;사용 용도에 따라 음식의 이름만 사용하기도 하고, 레시피를 쓰기도 하지만 필자는 영양소 정보가 필요했다.&lt;/p&gt;
-
-&lt;p&gt;공공 API에서 제공해주는 정보는 &lt;code class=&quot;highlighter-rouge&quot;&gt;'탄수화물', '단백질', '지방'&lt;/code&gt; 외의 기본 영양소 9종을 제공해준다.&lt;/p&gt;
-
-&lt;p&gt;따라서 처음에 필자는 이 정보만을 사용했지만 팀원으로부터 &lt;code class=&quot;highlighter-rouge&quot;&gt;추가 영양소&lt;/code&gt; 가 있는 곳을 찾았다는 제보를 받았다.&lt;/p&gt;
-
-&lt;p&gt;하지만, 놀랍게도 그곳은 같은 DB를 사용하는 &lt;code class=&quot;highlighter-rouge&quot;&gt;식품안전나라&lt;/code&gt; 였고, 아직도 왜 이곳만 영양소 정보가 더 있는지는 모른다.&lt;/p&gt;
-
-&lt;p&gt;현재까지는 영양소정보를 34종까지 제공 해주는것을 봤다. (다른 음식엔 더 많은 영양소가 있을 수도 있다)&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20190211083747629.png&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;필자의 서비스는 이런 영양소 정보가 많을수록 자세한 통계정보를 제공 해 줄 수 있기 때문에 해당 DB를 가져오려고 했으나&lt;/p&gt;
-
-&lt;p&gt;어째서인지 API형태로는 기본 영양소 9종만 제공해주었고 위와같은 추가영양소는 상세페이지에서만 제공되었기 때문에&lt;/p&gt;
-
-&lt;p&gt;해당 페이지들을 모두 크롤링 하는것을 시도했다.&lt;/p&gt;
-
-&lt;p&gt;그 첫번째 시도로 크롤링 해야 할 URL을 분석했다.&lt;/p&gt;
-
-&lt;h3 id=&quot;url분석&quot;&gt;URL분석&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;간편검색 페이지&lt;/code&gt; URL 간소화
-    &lt;ul&gt;
-      &lt;li&gt;기존버전
-        &lt;ul&gt;
-          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;https://www.foodsafetykorea.go.kr/portal/healthyfoodlife/foodnutrient/simpleSearch.do?menu_no=&amp;amp;menu_grp=&amp;amp;code4=1&amp;amp;code2=&amp;amp;search_name=&amp;amp;page=245&lt;/code&gt;&lt;/li&gt;
-          &lt;li&gt;주소에 불필요한 키값이 너무 많고, 있다해도 실제 검색과는 독립적으로 존재하는 부분의 대한 정보이기에 아래와같이 간소화 할 수 있다.&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;간소화 버전
-        &lt;ul&gt;
-          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;https://www.foodsafetykorea.go.kr/portal/healthyfoodlife/foodnutrient/simpleSearch.do?&amp;amp;page=245&amp;amp;code4=1&lt;/code&gt;&lt;/li&gt;
-          &lt;li&gt;추가적으로 3개의 탭을 이동하는 변수는&lt;code class=&quot;highlighter-rouge&quot;&gt;code4=[1,2,3]&lt;/code&gt; 이다.&lt;/li&gt;
-          &lt;li&gt;전체 변수를 6개에서 2개로 줄일 수 있다.&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;음식 세부정보 페이지&lt;/code&gt; URL 간소화
-    &lt;ul&gt;
-      &lt;li&gt;기존 버전
-        &lt;ul&gt;
-          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;https://www.foodsafetykorea.go.kr/portal/healthyfoodlife/foodnutrient/searchDetail.do?menu_no=&amp;amp;menu_grp=MENU_NEW03&amp;amp;code4=1&amp;amp;code2=&amp;amp;search_name=&amp;amp;food_cd=100101000100000001&amp;amp;labor_cd=201&amp;amp;year2=2001&amp;amp;page=1&lt;/code&gt;&lt;/li&gt;
-          &lt;li&gt;세부정보 페이지는 변수가 하나만 잘못 전달해주어도 아예 결과가 뜨지 않기 때문에 더 세세하게 봐야한다.&lt;/li&gt;
-          &lt;li&gt;위의 &lt;code class=&quot;highlighter-rouge&quot;&gt;간편검색 페이지&lt;/code&gt; 와 마찬가지로 불필요한 변수를 제거한다.&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;간소화 버전
-        &lt;ul&gt;
-          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;https://www.foodsafetykorea.go.kr/portal/healthyfoodlife/foodnutrient/searchDetail.do?food_cd=100101000100000001&amp;amp;labor_cd=201&amp;amp;year2=2001&lt;/code&gt;&lt;/li&gt;
-          &lt;li&gt;필요없는 키를 제거하고 실제 필요한 키값은 &lt;code class=&quot;highlighter-rouge&quot;&gt;food_cd&lt;/code&gt;,&lt;code class=&quot;highlighter-rouge&quot;&gt;labor_cd&lt;/code&gt;,&lt;code class=&quot;highlighter-rouge&quot;&gt;year2&lt;/code&gt; 3가지&lt;/li&gt;
-          &lt;li&gt;전체 변수를 9에서 3개로 줄일 수 있다.&lt;/li&gt;
-          &lt;li&gt;이를 지금부터 &lt;code class=&quot;highlighter-rouge&quot;&gt;baseform&lt;/code&gt; 이라고 한다.&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;문제-정의&quot;&gt;문제 정의&lt;/h3&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;간편검색 페이지&lt;/code&gt;에서도 음식 별 최대 10가지 정보만을 제공 해주기 때문에  &lt;code class=&quot;highlighter-rouge&quot;&gt;음식 세부정보 페이지&lt;/code&gt; 를 크롤링해야한다.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;각 페이지의 데이터를 &lt;code class=&quot;highlighter-rouge&quot;&gt;간편검색 페이지&lt;/code&gt; 에서 가져와서 모든 페이지를 한번씩 들어가서 영양소를 크롤링한다.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;각 페이지의 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;a&amp;gt;&lt;/code&gt; 태그는 아래와같이 되어있다.&lt;/p&gt;
-
-    &lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20190211085007813.png&quot; /&gt;&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;간편검색-페이지의-a-태그들의-href-속성-크롤링&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;간편검색 페이지&lt;/code&gt;의 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;a&amp;gt;&lt;/code&gt; 태그들의 &lt;code class=&quot;highlighter-rouge&quot;&gt;href&lt;/code&gt; 속성 크롤링&lt;/h3&gt;
-
-&lt;h4 id=&quot;문제인식&quot;&gt;문제인식&lt;/h4&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;a href=&quot;javascript:goDetail('100106002100100002', '201', '2017');&quot;&amp;gt;&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;a&amp;gt;&lt;/code&gt; 태그의 &lt;code class=&quot;highlighter-rouge&quot;&gt;href&lt;/code&gt; 속성이 일반적인 링크가 아니라 js function으로 인자를 넘긴다.&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;baseForm&lt;/code&gt;을 모두 활용하지 않고 3가지 정보만을 js function으로 주고있다.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;시도-할-것&quot;&gt;시도 할 것&lt;/h4&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;해당 attr받아서 인자를 추출할 수 있다면 &lt;code class=&quot;highlighter-rouge&quot;&gt;음식 세부정보 페이지 URL&lt;/code&gt;  간소화폼에 넣을 수 있을 것 같다.&lt;/li&gt;
-  &lt;li&gt;인자추출은 &lt;code class=&quot;highlighter-rouge&quot;&gt;('')&lt;/code&gt; 을 기준으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;,&lt;/code&gt; 로 나누면 되지 않을까?&lt;/li&gt;
-  &lt;li&gt;시도!&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h4 id=&quot;시도과정&quot;&gt;시도과정&lt;/h4&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;
-    &lt;p&gt;아래는 Ruby on Rails 를 Nokogiri 를 사용하여 구현한 Controller 코드이다.&lt;/p&gt;
-
-    &lt;ul&gt;
-      &lt;li&gt;
-        &lt;div class=&quot;language-ruby highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;pull_cptfood&lt;/span&gt;
-    &lt;span class=&quot;nb&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'open-uri'&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;each&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tab&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;126&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;each&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;page&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
-        &lt;span class=&quot;vi&quot;&gt;@doc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Nokogiri&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;HTML&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;https://www.foodsafetykorea.go.kr/portal/healthyfoodlife/foodnutrient/simpleSearch.do?&amp;amp;page=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;page&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;amp;code4=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tab&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-        &lt;span class=&quot;vi&quot;&gt;@foods&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@doc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;css&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'#tab1 th &amp;gt; a'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;vi&quot;&gt;@foods&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;each&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
-          &lt;span class=&quot;n&quot;&gt;tit&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;strip&lt;/span&gt;
-          &lt;span class=&quot;n&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'href'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-          &lt;span class=&quot;vi&quot;&gt;@factors&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;split&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'(\''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;split&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;','&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/\d+/&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;
-               
-          &lt;span class=&quot;vi&quot;&gt;@food_cd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@factors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-          &lt;span class=&quot;vi&quot;&gt;@labor_cd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@factors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-          &lt;span class=&quot;vi&quot;&gt;@year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@factors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-               
-          &lt;span class=&quot;no&quot;&gt;Cptfood&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;tab: &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tab&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;page: &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;page&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;name: &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;food_cd: &lt;/span&gt;&lt;span class=&quot;vi&quot;&gt;@food_cd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;labor_cd: &lt;/span&gt;&lt;span class=&quot;vi&quot;&gt;@labor_cd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;year: &lt;/span&gt;&lt;span class=&quot;vi&quot;&gt;@year&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-      &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
-      &lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;모든탭 &amp;gt; 모든 페이지 &amp;gt; 모든 음식 정보( 키의 3요소 ) 저장 성공!&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h4 id=&quot;시도-결과&quot;&gt;시도 결과&lt;/h4&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;3개의 탭마다 최대 페이지수를 알아내 탭별로 크롤링 하였다. (위의 경우 1번째 탭은 126가지)&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;나머지 2개의 탭도 위의 코드와 동일하고 최대 페이지수만 달라짐&lt;/p&gt;
-
-    &lt;p&gt;크롤링 결과는 아래와 같다.&lt;/p&gt;
-
-    &lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20190211090850674.png&quot; /&gt;&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;참고godetail함수-구성&quot;&gt;(참고)goDetail함수 구성&lt;/h4&gt;
-
-&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;goDetail&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;food_cd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;labor_cd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;year2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-		&lt;span class=&quot;nx&quot;&gt;fn_addRequiredClassForId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'menu_no'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-		&lt;span class=&quot;nx&quot;&gt;fn_addRequiredClassForId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'menu_grp'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-		&lt;span class=&quot;nx&quot;&gt;fn_addRequiredClassForId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'code4'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-		&lt;span class=&quot;nx&quot;&gt;fn_addRequiredClassForId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'code2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-		&lt;span class=&quot;nx&quot;&gt;fn_addRequiredClassForId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'search_name'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-		&lt;span class=&quot;nx&quot;&gt;fn_addRequiredClassForId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'food_cd'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-		&lt;span class=&quot;nx&quot;&gt;fn_addRequiredClassForId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'labor_cd'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-		&lt;span class=&quot;nx&quot;&gt;fn_addRequiredClassForId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'year2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-		&lt;span class=&quot;nx&quot;&gt;fn_addRequiredClassForId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'page'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-		&lt;span class=&quot;nx&quot;&gt;fn_removeFormInputElementsForId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'baseForm'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-		&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'#food_cd'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;food_cd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-		&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'#labor_cd'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;labor_cd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-		&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'#year2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;year2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-		&lt;span class=&quot;c1&quot;&gt;//$('#search_name').val(encodeURI($('#search_name').val()));&lt;/span&gt;
-
-		&lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;baseForm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;target&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;_self&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-		&lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;baseForm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;method&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;get&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-		&lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;baseForm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;action&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;searchDetail.do?menu_grp=MENU_NEW03&amp;amp;menu_no=2805&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-		&lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;baseForm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;submit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;음식-세부정보-페이지-의-각-영양소-크롤링&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;음식 세부정보 페이지&lt;/code&gt; 의 각 영양소 크롤링&lt;/h3&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20190211091323857.png&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;페이지 구성은 위와 같다.&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;식품 안전 나라&lt;/code&gt; 의 정보는 어쩔땐 모든 영양소가 &lt;code class=&quot;highlighter-rouge&quot;&gt;N/A&lt;/code&gt;로 표기되어 있음에도 행이 존재하기도 하고&lt;/p&gt;
-
-&lt;p&gt;어쩔때는 정보가 없으면 행 자체가 없기도 하여 일관성이 없다. &lt;del&gt;역시 이럴땐 개발자가 고생해야지!&lt;/del&gt;&lt;/p&gt;
-
-&lt;p&gt;위의 이유로 여기서는 저장된 주소값 3요소를 가지고 세부 페이지에 들어가 이터레이터로 모든 행을 담아 DB에 저장하면 된다.&lt;/p&gt;
-
-&lt;div class=&quot;language-ruby highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;cptfoodInfo&lt;/span&gt;
-    &lt;span class=&quot;nb&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'open-uri'&lt;/span&gt;
-
-    &lt;span class=&quot;no&quot;&gt;Cptfood&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;each&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
-        &lt;span class=&quot;vi&quot;&gt;@doc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Nokogiri&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;HTML&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;https://www.foodsafetykorea.go.kr/portal/healthyfoodlife/foodnutrient/searchDetail.do?food_cd=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;food_cd&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;amp;labor_cd=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;labor_cd&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;amp;year2=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;year&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-
-        &lt;span class=&quot;vi&quot;&gt;@rows&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@doc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;css&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'article &amp;gt; table &amp;gt; tbody &amp;gt; tr'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;vi&quot;&gt;@rows&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;each&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
-            &lt;span class=&quot;vi&quot;&gt;@cols&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;search&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'td'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;no&quot;&gt;InfoCptfood&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-                &lt;span class=&quot;ss&quot;&gt;name: &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                &lt;span class=&quot;ss&quot;&gt;year: &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;year&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                &lt;span class=&quot;ss&quot;&gt;num: &lt;/span&gt;&lt;span class=&quot;vi&quot;&gt;@cols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                &lt;span class=&quot;ss&quot;&gt;fact_id: &lt;/span&gt;&lt;span class=&quot;vi&quot;&gt;@cols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                &lt;span class=&quot;ss&quot;&gt;short: &lt;/span&gt;&lt;span class=&quot;vi&quot;&gt;@cols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                &lt;span class=&quot;ss&quot;&gt;fact_name: &lt;/span&gt;&lt;span class=&quot;vi&quot;&gt;@cols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                &lt;span class=&quot;ss&quot;&gt;content: &lt;/span&gt;&lt;span class=&quot;vi&quot;&gt;@cols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;strip&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;to_f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                &lt;span class=&quot;ss&quot;&gt;unit: &lt;/span&gt;&lt;span class=&quot;vi&quot;&gt;@cols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;text&lt;/span&gt;
-                &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;위의 코드로 세부정보 페이지의 모든 영양소까지 크롤링이 가능하고 &lt;a href=&quot;https://samslow.me/development/2018/12/09/Dialog-Flow%EC%97%90-csv-%EB%84%A3%EA%B8%B0/&quot;&gt;CSV로 추출&lt;/a&gt;하여 필요한 곳에 전달해주면 된다.&lt;/p&gt;
-
-&lt;p&gt;다만, 여기서 사소한 문제가 있는데 가끔씩 &lt;code class=&quot;highlighter-rouge&quot;&gt;음식 세부정보 페이지&lt;/code&gt;  &lt;code class=&quot;highlighter-rouge&quot;&gt;음식이름&lt;/code&gt; 속에 &lt;code class=&quot;highlighter-rouge&quot;&gt;\n&lt;/code&gt; 심볼이 끼어들어가 있는 곳이 있어&lt;/p&gt;
-
-&lt;p&gt;CSV로 추출하게되면 말썽을 일으키는 데이터가 발견되는데 잊지말고 잘 처리하여 전달받는 사람이 정상적으로 데이터를 볼 수 있도록 하자.&lt;/p&gt;
-
-&lt;h3 id=&quot;후기&quot;&gt;후기&lt;/h3&gt;
-
-&lt;p&gt;이런식의 이중 구조 크롤링은 처음이라 잘 모르기도 하고, 사실 더 간단하게 할 수 있는 방법이 있을텐데&lt;/p&gt;
-
-&lt;p&gt;필자는 테이블을 2개를 만들어 따로따로 작업을 해주었다.&lt;/p&gt;
-
-&lt;p&gt;그래도 다른 누군가가 보기 편하도록 기능이 원자단위로 되니 유익한 글이 될것으로 본다.&lt;/p&gt;
-
-</description>
-        <pubDate>Mon, 11 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://samslow.github.io/diary/2019/02/11/%EC%8B%9D%ED%92%88%EC%95%88%EC%A0%84%EB%82%98%EB%9D%BC-%ED%81%AC%EB%A1%A4%EB%A7%81-%EA%B0%80%EC%9D%B4%EB%93%9C/</link>
-        <guid isPermaLink="true">https://samslow.github.io/diary/2019/02/11/%EC%8B%9D%ED%92%88%EC%95%88%EC%A0%84%EB%82%98%EB%9D%BC-%ED%81%AC%EB%A1%A4%EB%A7%81-%EA%B0%80%EC%9D%B4%EB%93%9C/</guid>
-        
-        <category>diary</category>
-        
-        
-        <category>diary</category>
-        
-      </item>
-    
-      <item>
-        <title>JS Integer Validation</title>
-        <description>&lt;p&gt;회사에서 Javascript로 입력을 받는 알고리즘을 짠 경험중 정수검사( Integer Validation )을 한 경험을 나눕니다.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;p&gt;자바스크립트에서 정수 검사를 평소에 어떻게 하는가?&lt;/p&gt;
-
-&lt;p&gt;사용하는 각자의 언어에서 제공해주는 함수를 사용 하는 방법도 있고 직접 정규표현식을 돌려서 맞추는 방법도 있을 것이다.&lt;/p&gt;
-
-&lt;p&gt;오늘은 이런 전반적인 부분에 대해 얻은 지식과 삽질기를 공유하고자 글을 써 보았다.&lt;/p&gt;
-
-&lt;p&gt;총 3가지의 시도를 해서 문제를 해결했으며 시도별 과정을 아래에 기술한다.&lt;/p&gt;
-
-&lt;h4 id=&quot;시도-1-df에서-action에-value를-dafult로-설정해본다&quot;&gt;시도 1. DF에서 action에 value를 dafult로 설정해본다.&lt;/h4&gt;
-
-&lt;p&gt;이미 앞의 글들을 몇개 읽고 온 독자들 이라면 현재 본인이 챗봇을 개발중인 플랫폼중 하나는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Dialogflow&lt;/code&gt;(이하 ‘DF’) 라는 것을 알 것이다.&lt;/p&gt;
-
-&lt;p&gt;시스템의 리소스를 최대한 적게 사용하기 위해 DF에서 처리 가능하면 해당 방향으로 진행하기에 이번에도 이와같이 진행 해 보았다.&lt;/p&gt;
-
-&lt;p&gt;DF에는 각 &lt;code class=&quot;highlighter-rouge&quot;&gt;Intent&lt;/code&gt;에는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Action and parameters&lt;/code&gt; 가 있는데&lt;/p&gt;
-
-&lt;p&gt;쉽게 설명하자면 프로그래밍에서 추상화 개념을 설명 할 때 &lt;code class=&quot;highlighter-rouge&quot;&gt;상자에 담아 보내준다&lt;/code&gt; 라는 개념을 자주 사용하는 것 처럼(&lt;del&gt;이해하는 사람만 이해하길 바란다&lt;/del&gt;)&lt;/p&gt;
-
-&lt;p&gt;해당 &lt;code class=&quot;highlighter-rouge&quot;&gt;intent&lt;/code&gt; 가 발동될때마다 발견된 인자들을 각 엔티티에 맞게 예쁘게 포장 해 주는 역할을 하는 기능이다.&lt;/p&gt;
-
-&lt;p&gt;​&lt;img src=&quot;https://www.dropbox.com/s/teennv2ybyaee4r/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202019-02-04%2002.05.36.png?raw=1&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;저 &lt;code class=&quot;highlighter-rouge&quot;&gt;action&lt;/code&gt; 의 활용 방법은 정말 다양한데, 일단 여기서는 해당 &lt;code class=&quot;highlighter-rouge&quot;&gt;intent&lt;/code&gt; 가 발동 될 때 마다 아래와 같이 값을 Default로 반환 해 주는 역할을 한다고 보면 된다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/z50ag196321k7v3/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202019-02-04%2002.08.18.png?raw=1&quot; style=&quot;height:500px&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;유저의 입력에대해서 숫자를 Catch해서 정수타입으로 바꿔주고 action은 내가 정한 String으로 잘 들어갔다.&lt;/p&gt;
-
-&lt;p&gt;이 방법은 해당 액션이 발동되면 정수가 들어오는 것이므로  &lt;code class=&quot;highlighter-rouge&quot;&gt;parseInt()&lt;/code&gt; 로 바로 받아 줄 수 있겠지만 조금만 더 생각해보면 숫자가 없는 일반 String 타입을 처리 해 줄 수 없다는 한계를 바로 느낄 수 있다.&lt;/p&gt;
-
-&lt;h4 id=&quot;시도-2-typeof-를-통해-number가-아닐때-if-else-사용&quot;&gt;시도 2. &lt;code class=&quot;highlighter-rouge&quot;&gt;typeof&lt;/code&gt; 를 통해 &lt;code class=&quot;highlighter-rouge&quot;&gt;number&lt;/code&gt;가 아닐때 &lt;code class=&quot;highlighter-rouge&quot;&gt;if-else&lt;/code&gt; 사용&lt;/h4&gt;
-
-&lt;p&gt;사실 이번 시도가 이 글을 쓴 이유기도 하다.&lt;/p&gt;
-
-&lt;p&gt;필자의 생각과 Javascript의 생각(?)이 달라서 안되는 이유를 찾아보았더니 의외였기 때문이다.&lt;/p&gt;
-
-&lt;p&gt;먼저 &lt;code class=&quot;highlighter-rouge&quot;&gt;시도1&lt;/code&gt;이 DF에서의 검사였다면, 이번시도는 Webhook이 걸릴 서버에서의 검사이다.(정확히는 회사 사내 플랫폼 서버지만)&lt;/p&gt;
-
-&lt;p&gt;이 방법마저 안 된다면 내가 구동중인 서버까지 값을 저장해서 가져와야하기에 여기까지가 마지노선이라고 생각하고 고민해보았다.&lt;/p&gt;
-
-&lt;p&gt;이번 시도는 앞선 시도와 다르게 코딩을 할 수 있기때문에 &lt;code class=&quot;highlighter-rouge&quot;&gt;if-else&lt;/code&gt; 를 사용하여 접근했다.&lt;/p&gt;
-
-&lt;p&gt;JS는 필요할때만 찾아서 쓰는 생존코딩으로 했기 때문에 어려웠던 부분이 아닐까 싶다.&lt;/p&gt;
-
-&lt;p&gt;문제의 핵심은 아래 코드와 같다.&lt;/p&gt;
-
-&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;_req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;parse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;params&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;_req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;queryResult&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;goal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;parseInt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Google Assistant JSON으로부터 Input&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;typeof&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;goal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'number'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;pof&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;pass&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;pof&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;fail&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// &quot;pass&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;여기서 필자가 겪은 문제가 무엇인지 바로 파악 할 수 있다면 아래는 더 안 읽어도 무관하다.&lt;/p&gt;
-
-&lt;p&gt;핵심은 조건문을 걸었지만 결과는 늘 pass가 나오는 문제다.&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;parseInt()&lt;/code&gt; 를 걸면 당연히 숫자가 있을 땐 타입이 &lt;code class=&quot;highlighter-rouge&quot;&gt;number&lt;/code&gt;여아 하고 이외엔 &lt;code class=&quot;highlighter-rouge&quot;&gt;NaN&lt;/code&gt;이라는 타입이니&lt;/p&gt;
-
-&lt;p&gt;당연히 else로 가야하는게 정상이라고 생각했다.&lt;/p&gt;
-
-&lt;p&gt;NaN을 Js에선 Null쯤으로 취급한다고 생각해서 난 오류인데&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/zl279q9ry4lkzqc/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202019-02-04%2002.39.29.png?raw=1&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;검색을 해도 &lt;code class=&quot;highlighter-rouge&quot;&gt;잘못된 입력&lt;/code&gt; 이라는 키워드만 봐도 Null과 굉장히 유사하다고 생각되고&lt;/p&gt;
-
-&lt;p&gt;약어를 살펴봐도 &lt;code class=&quot;highlighter-rouge&quot;&gt;Not A Number&lt;/code&gt;이기때문에 왜 if문으로 계속 들어가는가에 대한 의문을 가지게 되었다.&lt;/p&gt;
-
-&lt;p&gt;하지만, 글머리에서 서술 한 것처럼 JS의 생각은 나와 달랐고, 이건 JS가 설치 해 둔 함정에 빠진 느낌까지 들었다..&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.ytimg.com/vi/lTlObkX0paI/hqdefault.jpg&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;오류의 요점은 NaN이 &lt;code class=&quot;highlighter-rouge&quot;&gt;number&lt;/code&gt;로 인식되어서 실패한다는 것인데, NaN을 단순하게 &lt;code class=&quot;highlighter-rouge&quot;&gt;숫자가 아니다&lt;/code&gt; 라고 인식했기 때문이다.&lt;/p&gt;
-
-&lt;p&gt;그리고 NaN에 대해서 별도로 구글링을 해보니 JS에서는 NaN조차도 number에 한 종류로 취급되고 있었다.&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;NaN&lt;/code&gt; 은 unordered data type이고 숫자는 또 아니어서 아래의 결과가 나타난다.&lt;/p&gt;
-
-&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;// false&lt;/span&gt;
-&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;// false&lt;/span&gt;
-&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// false&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;isNaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// true&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Js가 정말 멋진 언어라고 생각이 들다가도 이럴때 보면 사람을 당황시키는 언어인것 같기도 하다.&lt;/p&gt;
-
-&lt;p&gt;NaN에 대해서 더 알고 싶으신 분들은 &lt;a href=&quot;https://javascriptrefined.io/nan-and-typeof-36cd6e2a4e43&quot;&gt;javascriptrefined 미디움&lt;/a&gt;에서 확인해 보시길 바란다.&lt;/p&gt;
-
-&lt;h4 id=&quot;시도-3--isnanvalue-을-통해-검사하기&quot;&gt;시도 3.  &lt;code class=&quot;highlighter-rouge&quot;&gt;isNaN(value)&lt;/code&gt; 을 통해 검사하기&lt;/h4&gt;
-
-&lt;p&gt;그럼, 이제 문제를 알았으니 최종장에 들어설 자격을 갖추었다.&lt;/p&gt;
-
-&lt;p&gt;이제는 number로 검사할 것이 아니라, parseInt의 반환형을 확인해 숫자가 들어올때와 아닐때를 구별 해 주면 됐다.&lt;/p&gt;
-
-&lt;p&gt;그 방법으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;isNaN()&lt;/code&gt; 함수를 사용 해 NaN일때는 fail로 가는것을 아래 코드에서 확인했다.&lt;/p&gt;
-
-&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;_req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;parse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;params&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;_req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;queryResult&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;parameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;goal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;parseInt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;_check&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;isNaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;goal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;_check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;pof&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;pass&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;pof&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;fail&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;다만, 여기서 추가적으로 알아가야할 것은 &lt;code class=&quot;highlighter-rouge&quot;&gt;isNaN()&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;Number.isNaN()&lt;/code&gt; 이 다르다는 것인데, &lt;a href=&quot;https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/isNaN&quot;&gt;MDN문서&lt;/a&gt;에서는 후자가 ES5부터 사용되는 규격이며, 더 엄격하게 검사하니 이를 사용할 것을 권한다.&lt;/p&gt;
-
-&lt;p&gt;아래 코드에서 다른 점을 확인 해보자&lt;/p&gt;
-
-&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;isNaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'123'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//false&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;isNaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'samslow'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//true&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;Number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;isNaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'samslow'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//false&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;충분히 이상하고 혼란스러운 케이스를 발견했는가? &lt;code class=&quot;highlighter-rouge&quot;&gt;Number.isNaN()&lt;/code&gt; 을 사용 해야 할 이유를 알겠다면 성공이다.&lt;/p&gt;
-
-&lt;p&gt;글을 다 쓰긴 했는데 기술적인 부분을 다루는 글이다보니 충분히 필자와 다른 의견도 있을 것이고 틀린 부분도 있을 텐데&lt;/p&gt;
-
-&lt;p&gt;댓글로 이런 부분에서자유롭게 의견을 주시고 가르쳐주시면 감사하겠습니다.&lt;/p&gt;
-
-&lt;p&gt;글이 도움이 되셨길 바라며 이만 줄이겠습니다.&lt;/p&gt;
-
-</description>
-        <pubDate>Mon, 04 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://samslow.github.io/development/2019/02/04/JS-Integer-Validation/</link>
-        <guid isPermaLink="true">https://samslow.github.io/development/2019/02/04/JS-Integer-Validation/</guid>
-        
-        <category>web</category>
-        
-        
-        <category>development</category>
-        
-      </item>
-    
-      <item>
-        <title>Jekyll Blog, PCDATA invalid Char value Error 해결 방법</title>
-        <description>&lt;p&gt;Jekyll 블로그 포스팅을 하다가 평소에는 문제가 없지만 rss 문서 즉, feed.xml 문서로 들어가면 나오는 PCDATA error를 해결하는 방법에 대한 글입니다.&lt;/p&gt;
-
-&lt;h1 id=&quot;jekyll-blog-pcdata-invalid-char-value-error-해결-방법&quot;&gt;Jekyll Blog, PCDATA invalid Char value Error 해결 방법&lt;/h1&gt;
-
-&lt;h2 id=&quot;에러의-시작&quot;&gt;에러의 시작&lt;/h2&gt;
-
-&lt;p&gt;일주일간의 노동을 마치고 주말에는 맘 편히 쉬면서 블로그를 할까 하여 글 소재를 찾고있었다.&lt;/p&gt;
-
-&lt;p&gt;그러다 우연히 &lt;a href=&quot;https://www.slideshare.net/zzsza/intro-102870757&quot;&gt;Slack Channel을 통한 개발자 블로그 구독 방법&lt;/a&gt;을 새로 알게 되었다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20190128093037359.png&quot; height=&quot;600px&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;사실, 초기에는 Rss의 필요성을 못 느껴서 블로그 사이드에 있는 링크를 아예 빼버렸었는데&lt;/p&gt;
-
-&lt;p&gt;첫문단의 링크 글을 통해 rss 구독의 필요성을 느끼게 되었고 내 사이트도 미래의 누군가를 위해 붙여놓기로 했다.&lt;/p&gt;
-
-&lt;p&gt;안에 들어가게되면 아래와 같이 일반 독자는 보기힘든 글이 나온다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20190128093620578.png&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;그러나, 해당 아이콘에 링크를 달아 붙이는것까진 잘 됐으나 제일 처음 들어가자마자 아래와 같은 에러가 뜨게 되는데&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/s2019-01-28 01.16.05.png&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;처음보는 유형의 에러라서 일단 개발자의 본능으로 구글링을 해보았지만&lt;/p&gt;
-
-&lt;p&gt;아래와같이 다른 곳에도 나는 에러로 내것과는 해결방법이 근본부터 다른 것 같았다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/s2019-01-28 01.16.34.png&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;원인-분석&quot;&gt;원인 분석&lt;/h2&gt;
-
-&lt;p&gt;몇번 삽질끝에 에러문장의 단어들을 자체분석 해 보기로 하였고 대분류는 &lt;code class=&quot;highlighter-rouge&quot;&gt;XML&lt;/code&gt;과 관련된 에러라는걸 알게되고&lt;/p&gt;
-
-&lt;p&gt;자세한 소분류로는 PCDATA 라는 것의 문제라는것을 알게되었다.&lt;/p&gt;
-
-&lt;p&gt;여기서 PCDATA란 Parsed Character DATA의 준말인데 자세한 설명은 &lt;a href=&quot;http://tcpschool.com/xml/xml_dtd_component&quot;&gt;링크&lt;/a&gt;의 아래 설명이 나와있다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/s2019-01-28 01.17.00.png&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;물론, 이를 처음보는 나로썬 이것조차 무슨 말인지 알 수 없었지만 여기서 알 수 있었던것은 &lt;code class=&quot;highlighter-rouge&quot;&gt;시작태그&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;종료태그&lt;/code&gt; 사이 위치한 &lt;code class=&quot;highlighter-rouge&quot;&gt;텍스트&lt;/code&gt;데이터 라는 것이었다.&lt;/p&gt;
-
-&lt;p&gt;여기서 이것은 보이지않는 &lt;code class=&quot;highlighter-rouge&quot;&gt;문장마감심볼&lt;/code&gt;의 문제라는 느낌이 왔다. 뭐 CR, LF 같은 줄바꿈 심볼들말이다.&lt;/p&gt;
-
-&lt;p&gt;에러메시지를 자세히 보니 138번째 줄에 140번대 컬럼이 문제가 있는 것과 더 아래에 어떤 파일이 문제있는지 알게 되었고&lt;/p&gt;
-
-&lt;p&gt;해당 파일 부분은 아래와 같았다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/s2019-01-28 01.16.16.png&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;겉보기엔 아무 문제 없으나 132줄 부터 148줄을 지우고 &lt;code class=&quot;highlighter-rouge&quot;&gt;feed.xml&lt;/code&gt; 을 빌드해보면 잘 나오는걸로 보아&lt;/p&gt;
-
-&lt;p&gt;원인을 찾는데엔 성공했다.&lt;/p&gt;
-
-&lt;h2 id=&quot;문제-해결&quot;&gt;문제 해결&lt;/h2&gt;
-
-&lt;p&gt;아마 본인의 에디터(Typora) 버그로 인해 들어가야할 심볼이 안들어간것 같은데 이것저것 지우고 돌려놓고 해봐도 정확히 문제가 되는 부분을 찾을 순 없었다.&lt;/p&gt;
-
-&lt;p&gt;그리하여, 저 부분만 다시 VSCODE로 타이핑 하는 방법을 사용했더니 정상적으로 나올 수 있게 되었다.&lt;/p&gt;
-
-&lt;p&gt;다행히 에러메시지에 정확하게 문제가 있는 부분이 표기가 되어서 XML 지식이 없어도 쉽게 문제를 해결 할 수 있었지만&lt;/p&gt;
-
-&lt;p&gt;관련된 게시글이 없어 다른 사람들의 삽질을 막기위해 글을 남기게 되었다.&lt;/p&gt;
-
-</description>
-        <pubDate>Mon, 28 Jan 2019 00:00:00 +0000</pubDate>
-        <link>https://samslow.github.io/etc/2019/01/28/Jekyll-Blog,-PCDATA-invalid-Char-value-Error-%ED%95%B4%EA%B2%B0-%EB%B0%A9%EB%B2%95/</link>
-        <guid isPermaLink="true">https://samslow.github.io/etc/2019/01/28/Jekyll-Blog,-PCDATA-invalid-Char-value-Error-%ED%95%B4%EA%B2%B0-%EB%B0%A9%EB%B2%95/</guid>
-        
-        <category>bugFix</category>
-        
-        
-        <category>etc</category>
-        
-      </item>
-    
-      <item>
-        <title>물들어올때 노 젓는 당근마켓 방문 후기</title>
-        <description>&lt;ul&gt;
-  &lt;li&gt;당근마켓을 방문하여 들은 이야기를 정리하고 기록을 남기기 위한 목적으로 주관적인 글&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn-images-1.medium.com/fit/t/1600/480/1*fTQOUpe09RAWcotdIl2G5w.jpeg&quot; alt=&quot;당근마켓 로고&quot; /&gt;&lt;/p&gt;
-
-&lt;h1 id=&quot;-당근마켓-오피스-가는-길&quot;&gt;🥕 당근마켓 오피스 가는 길&lt;/h1&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/KakaoTalk_Photo_2019-01-08-22-42-38-2.jpeg&quot; style=&quot;width:50%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;당근마켓 오피스는 서초역에서 3분정도 걸으면 있다.&lt;/p&gt;
-
-&lt;p&gt;지도를 켜고 따라가다 보면 익숙한 로고와 함께 당근마켓 위치가 보인다.&lt;/p&gt;
-
-&lt;p&gt;이 입간판(?)이 서 있는 곳 근처 문은 다른 곳으로 가는 문이어서 잠깐 혼란을 겪었지만&lt;/p&gt;
-
-&lt;p&gt;다행히 건물을 빙 둘러 다른 입구를 찾아서 들어갔다.&lt;/p&gt;
-
-&lt;p&gt;혹 다른 분들이 가신다면 헷갈리지 마시길!&lt;/p&gt;
-
-&lt;h1 id=&quot;-당근마켓-오피스-첫-인상&quot;&gt;🥕 당근마켓 오피스 첫 인상&lt;/h1&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/KakaoTalk_Photo_2019-01-08-22-42-38-1.jpeg&quot; style=&quot;width:50%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;엘레베이터를 내리면 바로 당근마켓로고가 크게 버티고 있다.&lt;/p&gt;
-
-&lt;p&gt;들어가자마자 채용 홈페이지에서 볼 수 있었던 공간이 있어서 굉장히 반가웠다.&lt;/p&gt;
-
-&lt;p&gt;사진으로 보던 것처럼 푸릇푸릇하고(?) 어찌 보면 분위기 좋은 카페에 와 있는 느낌이 들 정도로 순간 모각코를 하러 온 건지 착각 할 정도로 첫 인상이 좋았다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20190110221201880.png&quot; style=&quot;width:80%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;사진의 오른쪽에 보면 코카콜라 냉장고가 있는데 저기에서 웰컴드링크(?)로 원하는것을 꺼내 먹을 수 있게 해 주셔서 일하고 와서 정신이 살짝 혼미 해 져있는 나는 몬스터에너지를 골라 쭈욱 들이키며 회의실을 소개받으러 갔다.&lt;/p&gt;
-
-&lt;p&gt;한쪽 벽면엔 바닥에 깔면 내가 눕고도 남을 만큼의 거대한 모니터가 있었고 거기에는 &lt;code class=&quot;highlighter-rouge&quot;&gt;애플TV&lt;/code&gt;가 물려있었다.&lt;/p&gt;
-
-&lt;p&gt;10명정도가 둘러앉을 수 있는 책상에는 &lt;code class=&quot;highlighter-rouge&quot;&gt;맥북프로&lt;/code&gt;와 이번에 새로 나온 &lt;code class=&quot;highlighter-rouge&quot;&gt;아이패드 프로 3세대&lt;/code&gt;가 &lt;code class=&quot;highlighter-rouge&quot;&gt;애플펜슬 2세대&lt;/code&gt;와 함께 나란히 놓여 있었다.&lt;/p&gt;
-
-&lt;p&gt;회의실용으로 이렇게 완벽하고 이쁜 기기들이라니, 애플 생태계에 들어온지 몇달 안 된 내가 보기엔 최고의 회의실 첫 인상 이었다.&lt;/p&gt;
-
-&lt;p&gt;이후에 다시 이야기하겠지만, CTO님이 오셔서 화면으로 자료들을 보여주셨는데 그때 지나간 애플 TV 화면 보호기로 나오는 영상들이 너무 아름다웠다.&lt;/p&gt;
-
-&lt;p&gt;사실 CTO님의 이야기를 들으면서 감탄을 몇 번 했는데 그중 몇개는 TV의 영상을 보며 한 것이었다.. 너무 멋져서 저도 모르게..&lt;/p&gt;
-
-&lt;p&gt;쩍 벌어지는 입과 자꾸만 눈이 가는 공간들을 뒤로하고 다른곳을 둘러 보러 이동했다.&lt;/p&gt;
-
-&lt;p&gt;앞의 두 공간이 너무 강렬해서 이후의 탕비실이나 휴게실은 평범한 느낌&lt;/p&gt;
-
-&lt;p&gt;중간에 기계학습쪽 직원분이 탕비실을 들리시며 우리에게 먼저 말을 걸어주셔서 이런저런 이야기를 주고 받았다.&lt;/p&gt;
-
-&lt;p&gt;여러 지식을 말씀하시는게 보통 분은 아니시겠구나 생각하던 와중 내가 진행중인 네이버 NSML AI해커톤 관련 이야기가 나왔고, 알고보니 당근마켓에서 일하시는 개발자분들은 모두 네이버/카카오 출신 개발자였던 것.&lt;/p&gt;
-
-&lt;p&gt;그런 분들이 70억 규모의 VC를 받아 만든 당근마켓은 귀여운 이름과는 이질감이 들어 안 어울릴 정도로 대단한 분들이 많았다.&lt;/p&gt;
-
-&lt;p&gt;나와는 다른 개발자의 세계에 감탄하며 탕비실을 뒤로하고 직원들이 일하고 있는 사무실에 들렸다.&lt;/p&gt;
-
-&lt;p&gt;실제로 일을 하는 사무실 공간 각자의 책상은  &lt;code class=&quot;highlighter-rouge&quot;&gt;스탠딩 데스크&lt;/code&gt;로 전동으로 책상이 올라갔다 내려갔다 하는데 무지 심플하게 생겨선 그렇게 올라가는 줄 몰랐다.&lt;/p&gt;
-
-&lt;p&gt;회사 성장이 빨라서 이곳도 조만간 떠나실 예정이라고 들었다. 다음 이사 갈 곳은 얼마나 더 예쁠까. 기회되면 또 방문하고 싶다.&lt;/p&gt;
-
-&lt;h1 id=&quot;-회사-복지-및-워크스테이션&quot;&gt;🥕 회사 복지 및 워크스테이션&lt;/h1&gt;
-
-&lt;p&gt;회사의 전반적인 워크스테이션 장비들은 주로 애플계열로 되어있다. 위에서 이야기했듯 대부분 애플 제품이었다.&lt;/p&gt;
-
-&lt;p&gt;나는 그래서 애플 친화적인 기업이다 라고 판단했는데 CTO님이 말씀하시길&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;“우리는 좋은 것을 사용하려고 하는 편입니다. 애플보다 좋다고 느껴지는 것이 있으면 사용 할겁니다.”&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;라고 하셔서 괜스레 깨달음을 얻었다.&lt;/p&gt;
-
-&lt;p&gt;맞다.&lt;/p&gt;
-
-&lt;p&gt;내가 맥북을 쓰는 것은 애플이 좋아서가 아니라 맥북이 개발하기에 나에게 가장 잘 맞기 때문이었다.&lt;/p&gt;
-
-&lt;p&gt;당근마켓은 좋은 툴이 있다면 제안하고 함께 사용할 수 있도록 열려있는 곳이다.&lt;/p&gt;
-
-&lt;p&gt;또 맘에 들었던 복지중 하나는 매주 목요일을 원격근무하는 날로 정해서 한다고 하는데 무작정 좋은것은 아니고&lt;/p&gt;
-
-&lt;p&gt;어차피 출근하지 않더라도 자신의 자리에서 일하고 산출물을 내야되기 때문에&lt;/p&gt;
-
-&lt;p&gt;오히려 출근하는 것이 나을 수도 있다. 나라도 특별한 일이 있는 것이 아니라면 출근해서 일 하는 게 나을 듯!&lt;/p&gt;
-
-&lt;p&gt;개발 환경은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Ruby on Rails&lt;/code&gt; 와 &lt;code class=&quot;highlighter-rouge&quot;&gt;AWS&lt;/code&gt; 등을 포함해 빠른 개발을 할 수 있는 스타트업 중심의 스택으로 구성되어 있었다.&lt;/p&gt;
-
-&lt;p&gt;내가 당근 마켓에 끌린 것도 처음 시작한 개발 언어인 &lt;code class=&quot;highlighter-rouge&quot;&gt;Ruby on Rails&lt;/code&gt; 가 모집공고 상단에 있어서 관심 있게 보기 시작해서이다.&lt;/p&gt;
-
-&lt;p&gt;파도 파도 좋은 것들 투성인데 또 맘에 드는건 요새 핫한 markdown 문서 공유 툴인 &lt;code class=&quot;highlighter-rouge&quot;&gt;Notion&lt;/code&gt; 사용을 한다는 것이다.&lt;/p&gt;
-
-&lt;p&gt;나는 개인적으로 기존에 &lt;code class=&quot;highlighter-rouge&quot;&gt;Typora&lt;/code&gt;로  사용하고 있었는데 개발의 초기 단계라 문서가 많이 나오기도 하고 꼭 한번 써 보고 싶어서 내가 다니는 회사의 팀에서도 &lt;code class=&quot;highlighter-rouge&quot;&gt;Notion&lt;/code&gt;을 통한 문서 공유를 제안했는데 아무래도 보안에 걸리는 것이 있을 수도 있다 보니 아직은 논의를 하는 중이다.&lt;/p&gt;
-
-&lt;p&gt;전반적으로 정리하면 누구든 &lt;code class=&quot;highlighter-rouge&quot;&gt;원하는 것을 제안할 수 있는 환경&lt;/code&gt; 인 점이 맘에 드는 곳이었다.&lt;/p&gt;
-
-&lt;p&gt;어쩌면 당연하지만 이런 환경을 실현하기가 어려운 것이라 더 좋아 보였던 것 같다.&lt;/p&gt;
-
-&lt;p&gt;더 많은 정보 및 채용은 &lt;a href=&quot;https://dngn.kr/join-us&quot;&gt;공식채용공고&lt;/a&gt; 페이지에서 확인하길 바란다.&lt;/p&gt;
-
-&lt;h1 id=&quot;-cto와의-만남-&quot;&gt;🥕 CTO와의 만남 (?)&lt;/h1&gt;
-
-&lt;p&gt;회사 내의 문화 중 하나는 수평적인 문화를 위해 서로를 영어 이름으로 부르는데 CTO님의 닉네임은 Seapy다.&lt;/p&gt;
-
-&lt;p&gt;개인적으로 이런 발표를 기대했지만 바쁘신 분에게 요구하기가 죄송스러워 희망하기만 했는데 너무도 친절히 설명해 주셨다.&lt;/p&gt;
-
-&lt;p&gt;그리고 CTO 님이 입고 있었던 WWDC에 다녀오면 가져오셨다던 애플 조끼가 너무 멋졌다..&lt;/p&gt;
-
-&lt;p&gt;(여기서 다시한번 애플에 들어오긴 쉬웠지만 나가긴 어려우리라 생각도 들었다..)&lt;/p&gt;
-
-&lt;p&gt;설명을 잘 해 주셔서 말주변이 좋으신가 보다 생각했는데 알고 보니 유튜브/ 블로그 등의 SNS를 많이 하시고 또 글도 많이 쓰시는 분이셨다. 사실 여러 군데 찾아보니 안 하시는 SNS를 찾는 것이 빠를 정도로 많이 하고 계셨다.. 😂&lt;/p&gt;
-
-&lt;p&gt;이건 믿고 봐야 한다는 생각에 모두 구독··!&lt;/p&gt;
-
-&lt;p&gt;당근마켓 운영의 기본 원칙은 &lt;code class=&quot;highlighter-rouge&quot;&gt;투자금&lt;/code&gt; 이나 &lt;code class=&quot;highlighter-rouge&quot;&gt;광고 수입&lt;/code&gt; 들을 쟁여두지 않고 모두 다시 당근마켓을 알리고 광고하는데 태운다고 한다.&lt;/p&gt;
-
-&lt;p&gt;이는 글로벌 스트리밍 기업 &lt;code class=&quot;highlighter-rouge&quot;&gt;넷플릭스&lt;/code&gt;나 &lt;code class=&quot;highlighter-rouge&quot;&gt;실리콘 밸리&lt;/code&gt; 에서도 지켜지는 원칙이며 물 들어올 때 노를 저어야 하는 스타트업에 꼭 필요한 원칙이지 싶다.&lt;/p&gt;
-
-&lt;p&gt;아래에 들은 내용을 간단히 정리해보았다.&lt;/p&gt;
-
-&lt;h2 id=&quot;현재까지의-당근마켓&quot;&gt;현재까지의 당근마켓&lt;/h2&gt;
-
-&lt;p&gt;성장곡선을 이야기할 때 보통 기업은 가입자 수를 그래프화시켜서 이야기하며 투자를 쉽게 받을 목적으로 이 수치를 &lt;code class=&quot;highlighter-rouge&quot;&gt;누적가입자 수&lt;/code&gt;로 뻥튀기시키는데&lt;/p&gt;
-
-&lt;p&gt;당근마켓 같은 경우는 실제로 유입되어 활동하는 유저들만을 기반으로 하므로 더욱더 유의미한 자료였던 것 같다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://www.notion.so/image/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2F7b3f49a5-6ad2-4280-891c-82db67df3b42%2Fdaangn-3years-mau.png&quot; style=&quot;width:80%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;위 그래프는 공식 채용 사이트에 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;MAU&lt;/code&gt; 그래프이다.&lt;/p&gt;
-
-&lt;p&gt;중간에 한 번씩 떨어지는 구간에 대한 해석은 여러분이 직접 맞춰보는 것도 좋을 것 같다.&lt;/p&gt;
-
-&lt;p&gt;답을 알고 보면 그럴만한 이유가 있는 구간이지만 모를땐 안보이더라.&lt;/p&gt;
-
-&lt;p&gt;2016년에 그래프가 시작하여 2018년 10월까지 시간이 흐를수록 거의 수직에 가깝게 가팔라지고 있다.&lt;/p&gt;
-
-&lt;p&gt;2019년 지금까지도 그래프는 계속 상승 중이며 비슷하게 커졌던 기업인 &lt;code class=&quot;highlighter-rouge&quot;&gt;배달의 민족&lt;/code&gt; 의 아성을 위협할 만하지 않은가?&lt;/p&gt;
-
-&lt;h2 id=&quot;앞으로의-당근마켓&quot;&gt;앞으로의 당근마켓&lt;/h2&gt;
-
-&lt;p&gt;어떤 기업이든 현재 머물러 수익을 창출하려 한다면 반드시 주저앉게 되어있다.&lt;/p&gt;
-
-&lt;p&gt;끊임없이 새로운 기술들과 서비스들이 우후죽순으로 생겨나기 때문이다.&lt;/p&gt;
-
-&lt;p&gt;아마 당근마켓은 지역 서비스로서의 굳건한 입지를 다져나가지 않을까 싶다.&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;중고나라&lt;/code&gt;같은 서비스는 네이버 종속적인 점을 제하고 보더라도 크게 달라지는 점이 없다.&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;대체재&lt;/code&gt;가 없어서 쓸 수밖에 없는 서비스지 않은가? 이미 업자 잡기나 사기꾼 잡기도 손을 놓은 듯하고..&lt;/p&gt;
-
-&lt;h2 id=&quot;기타-등등&quot;&gt;기타 등등&lt;/h2&gt;
-
-&lt;p&gt;서비스를 운영하는 경험적으로 배운 점은 테스트 방법이었다.&lt;/p&gt;
-
-&lt;p&gt;테스트 라는 말이 적합한 지는 모르겠는데, 유저에게는 속도로 비추어지는 &lt;code class=&quot;highlighter-rouge&quot;&gt;비기능적인 요구&lt;/code&gt; 에 대한 업데이트를 배포 전에 일부 지역에서 테스트를 해 보는 방식에 대해 새로운 인사이트를 얻었다.&lt;/p&gt;
-
-&lt;p&gt;만약 로컬 테스트 후 문제없다고 판단되어 배포했다가 버그가 나면 큰일 이기에 이런 지역적인 테스트 방법이 유용하게 다가왔다. 이건 진짜 서비스를 운용해 보지 않으면 알 수 없는 것 😭&lt;/p&gt;
-
-&lt;p&gt;이외에도 당근마켓이 잘 돌아가도록 하는 여러 장치들에 대해서도 이야기했는데 블로그에 쓸 것은 아닌 것 같아서 여기까지.&lt;/p&gt;
-
-&lt;h1 id=&quot;-방문-후기&quot;&gt;🥕 방문 후기&lt;/h1&gt;
-
-&lt;p&gt;평소에도 장난처럼 커뮤니티 댓글을 보면 “혹시 누군가 시켜서 하는 거라면 다음에 당근을 흔들어 주세요!”라는 글에서부터&lt;/p&gt;
-
-&lt;p&gt;꽤 자연스럽게 우리 삶에 당근이라는 채소가 많이 등장하는 것 같다. (?)&lt;/p&gt;
-
-&lt;p&gt;물론 그 당근과 이 당근은 다르지만··그만큼 친숙하게 느껴졌던 회사였던 것 같다.&lt;/p&gt;
-
-&lt;p&gt;더불어서, 회사 방문을 통해 여러 이야기를 듣고 현업자분들에게 이야기를 들으니 내 손으로 할 수 있는 것들이 정말 많다는 것을 다시 한번 느끼게 되는 자극제가 되었다.&lt;/p&gt;
-
-&lt;p&gt;이렇게 블로그를 쓰는 것만 봐도 내가 얼마나 자극받았는지 알 수 있는 것 같다.&lt;/p&gt;
-
-&lt;p&gt;( 직장인이 퇴근하고 글을 쓰는 것은 정말 힘들다는 것을 깨달았다.)&lt;/p&gt;
-
-&lt;p&gt;전과를 하여 컴퓨터를 배운지 이제 2년이 되었는데 취업이라는 문을 두고 여러 생각과 정체가 오는 지금 더욱 열정을 불태울 수 있는 시간이었다.&lt;/p&gt;
-
-&lt;p&gt;취준생의 마음가짐으로 다녀온 것이라 더 재미있었을 수도··ㅎ&lt;/p&gt;
-
-&lt;p&gt;그리고 역시 애플이 짱이다.. 사무실에 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;애플숲&lt;/code&gt;은 나로 하여금 이곳이 아니더라도 맥북으로 모두가 생산성을 논하면서 일하는 회사를 상상하게 해주었다.&lt;/p&gt;
-
-&lt;p&gt;처음 배운 프로그래밍 언어였던 레일즈를 실무에서도 이렇게 잘 쓰인다는 것을 직접 보니 레일즈.. 죽지 않았다! 라는 마음도 들었고, 받아온 스티커 중에 Ruby를 들고 있는 토끼는 내 마음에 다시 한번 Ruby를 각인시켜 불태워 주었다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/KakaoTalk_Photo_2019-01-10-23-39-40.jpeg&quot; style=&quot;width: 70%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;조만간 당근마켓에서 &lt;a href=&quot;https://festa.io/events/183&quot;&gt;루비세미나&lt;/a&gt;를 여는데 이미 신청도 완료한 상태라 기대하는 중이다!&lt;/p&gt;
-
-&lt;p&gt;가서 또 반가운 얼굴들을 만나길&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/KakaoTalk_Photo_2019-01-10-22-37-19.jpeg&quot; style=&quot;width: 70%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;마지막으로, 초대해준 재호! 같이 가준 치오형, 채채 덕분에 기억에 남을 시간을 가질 수 있어서 감사하다.&lt;/p&gt;
-
-&lt;p&gt;다음에 또 기회가 돼서 이런 시간 자주 가지길·· 늘 선한 영향력 감사합니다.&lt;/p&gt;
-</description>
-        <pubDate>Thu, 10 Jan 2019 00:00:00 +0000</pubDate>
-        <link>https://samslow.github.io/diary/2019/01/10/%EB%AC%BC%EB%93%A4%EC%96%B4%EC%98%AC%EB%95%8C-%EB%85%B8-%EC%A0%93%EB%8A%94%EB%8B%B9%EA%B7%BC%EB%A7%88%EC%BC%93%EB%B0%A9%EB%AC%B8%ED%9B%84%EA%B8%B0/</link>
-        <guid isPermaLink="true">https://samslow.github.io/diary/2019/01/10/%EB%AC%BC%EB%93%A4%EC%96%B4%EC%98%AC%EB%95%8C-%EB%85%B8-%EC%A0%93%EB%8A%94%EB%8B%B9%EA%B7%BC%EB%A7%88%EC%BC%93%EB%B0%A9%EB%AC%B8%ED%9B%84%EA%B8%B0/</guid>
-        
-        <category>diary</category>
-        
-        
-        <category>diary</category>
-        
-      </item>
-    
-      <item>
-        <title>MacOs DialogFlow에 Csv 넣기</title>
-        <description>&lt;p&gt;GoogleAssistant를 사용하기위해 DialogFlow를 사용하며 겪은 문제중&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;csv import&lt;/code&gt; 에 관한 해결을 적은 글입니다.&lt;/p&gt;
-
-&lt;h1 id=&quot;macos-dialogflow-에-csv-넣기&quot;&gt;MacOS DialogFlow 에 csv 넣기&lt;/h1&gt;
-&lt;h2 id=&quot;크롤링까진-무난했다&quot;&gt;크롤링까진 무난했다&lt;/h2&gt;
-
-&lt;p&gt;공공데이터API에서 가져온 식품 DB를 Ruby on Rails로 가져오는 것 까진 좋았는데&lt;/p&gt;
-
-&lt;p&gt;Mac에서는 UTF Encoding의 문제로 DB로부터 csv파일을 추출하여 열면 한글이 와장창 깨지게 된다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20181209001235334.png&quot; alt=&quot;image-20181209001235334&quot; /&gt;&lt;/p&gt;
-
-&lt;center&gt;&quot;쎄뎅 대쩧?&quot;&lt;/center&gt;
-
-&lt;p&gt;Excel 내에서 Encoding을 변경하는 방법도 있을 수 있겠지만 어떻게 하는지 몰라서&lt;/p&gt;
-
-&lt;p&gt;Mac에서 csv파일을 열 때 한글 깨짐 오류는 아래의 방법으로 해결했다.&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;
-    &lt;p&gt;csv파일을 &lt;code class=&quot;highlighter-rouge&quot;&gt;텍스트 편집기&lt;/code&gt; 로 연다&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;cmd+shift+s를 눌러 다른 이름으로 저장&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-16&lt;/code&gt; 방식으로 인코딩설정을 한다.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;파일 이름을 &lt;code class=&quot;highlighter-rouge&quot;&gt;파일이름.csv&lt;/code&gt; 로 저장한다&lt;/p&gt;
-
-    &lt;p&gt;&lt;img src=&quot;/assets/post_img/screenshot12.10.02.png&quot; alt=&quot;스크린샷 2018-12-09 오전 12.10.02&quot; /&gt;&lt;/p&gt;
-
-    &lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20181209001421956.png&quot; alt=&quot;image-20181209001421956&quot; /&gt;&lt;/p&gt;
-
-    &lt;center&gt;다행히 정상적으로 출력된다!&lt;/center&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h2 id=&quot;끝날때까지-끝낸게-아니다&quot;&gt;끝날때까지 끝낸게 아니다.&lt;/h2&gt;
-
-&lt;p&gt;이 데이터를 그대로 DialogFlow에 Upload Entity로 import하게되면 대충 아래와 같은 문구를 접하게 된다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/스크린샷 2018-12-09 오전 12.16.34.png&quot; alt=&quot;image-20181209001704947&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;그래서 조금더 짱구를 굴려서 Entity를 추가하고 오른쪽 위 &lt;code class=&quot;highlighter-rouge&quot;&gt;···&lt;/code&gt;버튼을 눌러 &lt;code class=&quot;highlighter-rouge&quot;&gt;Switch to raw mode&lt;/code&gt; 에서 데이터를 긁어서 넣어보는 시도를 해보았다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/스크린샷%202018-12-09%20오전%2012.18.21.png&quot; alt=&quot;스크린샷 2018-12-09 오전 12.18.21&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;이번에는 &lt;code class=&quot;highlighter-rouge&quot;&gt;CSV format&lt;/code&gt; 이 안 맞다는 아래와 같은 오류가 뜬다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20181209002016894.png&quot; alt=&quot;image-20181209002016894&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;도대체 그 포맷이 뭘까 생각하여 단순하게 대충 만든 Entity를 csv로 추출하여 보니 &lt;code class=&quot;highlighter-rouge&quot;&gt;&quot; A &quot;,&quot; B &quot; &lt;/code&gt; 의 구조를 가져야만 했다.&lt;/p&gt;
-
-&lt;p&gt;그리고 추가적으로 한 Row는 하나의 Entity이다.&lt;/p&gt;
-
-&lt;p&gt;오류 메세지 진짜 엄청 많네&lt;/p&gt;
-
-&lt;p&gt;내 데이터의 문제는&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;모든 Row가 &lt;code class=&quot;highlighter-rouge&quot;&gt;&quot;&quot;&lt;/code&gt; 로 둘러싸여 있지 않다.&lt;/li&gt;
-  &lt;li&gt;쉼표 뒤에 데이터가 없다 ( 공란으로 Download는 가능하지만 올리는건 안됨 ^^ )&lt;/li&gt;
-  &lt;li&gt;아래 경고메시지에 무방비하다; 괄호의 사용 금지&lt;code class=&quot;highlighter-rouge&quot;&gt;(), {}, [], &amp;lt;&amp;gt;&lt;/code&gt;
- &lt;img src=&quot;/assets/post_img/스크린샷%202018-12-09%20오전%2012.24.47.png&quot; alt=&quot;스크린샷 2018-12-09 오전 12.24.47&quot; /&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;그래서 데이터 전처리를 위해 새롭게 코드를 짜게된다.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;16extract_name_full_foods_converted.csv&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'r'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encoding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;utf16&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;errors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'ignore'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;converted_name_foods.csv&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'w'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;read&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;splitlines&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;13531&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# 더블쿼트가 없다면 추가!&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;
-	
-	&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;, &quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# 콤마와 데이터 복사 붙이기&lt;/span&gt;
-	&lt;span class=&quot;c&quot;&gt;#괄호를 공백 혹은 제거하기&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;replace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'('&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;' '&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;replace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;')'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;replace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&amp;gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;' '&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;replace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&amp;lt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;이 모든것을 하고나면 데이터는 예쁘게 나오게 된다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/post_img/image-20181209003431221.png&quot; alt=&quot;image-20181209003431221&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;저대로 예쁘게 긁어서 Raw mode에 넣어주면 끗!&lt;/p&gt;
-</description>
-        <pubDate>Sun, 09 Dec 2018 00:00:00 +0000</pubDate>
-        <link>https://samslow.github.io/development/2018/12/09/Dialog-Flow%EC%97%90-csv-%EB%84%A3%EA%B8%B0/</link>
-        <guid isPermaLink="true">https://samslow.github.io/development/2018/12/09/Dialog-Flow%EC%97%90-csv-%EB%84%A3%EA%B8%B0/</guid>
-        
-        <category>python</category>
-        
-        
-        <category>development</category>
-        
-      </item>
-    
-      <item>
-        <title>개발자의 두가지 커리어</title>
-        <description>&lt;p&gt;이 글은 2019년 졸업 예정자의 커리어에 대한 고민을 담고 있습니다.&lt;/p&gt;
-
-&lt;p&gt;깃헙 첫 글이기도 하고 스스로 고민이 담긴 글이라 두서가 없을 수 있는 점 양해 부탁 드립니다.&lt;/p&gt;
-
-&lt;p&gt;일단은 일기 형식으로 시작 해 보고자 반말로 작성&lt;/p&gt;
-
-&lt;h1 id=&quot;개발자-두가지-길-중-어디로-가야-하는가&quot;&gt;개발자, 두가지 길 중 어디로 가야 하는가&lt;/h1&gt;
-
-&lt;h2 id=&quot;음-이길로-가면-되겠군&quot;&gt;음 이길로 가면 되겠군&lt;/h2&gt;
-
-&lt;p&gt;2018년 10월 아는 형에게 같이 교육 스타트업을 시작하며 강사를 해보지 않겠냐는 전화를 받게 된다. 이미 멀캠에서 보조강사로 약 2달간 한번 합을 맞춰 본 형님의 연락이었고, 늘 개발자로서 배울것도 많고 인간적으로도 참 멋있는 사람이라는 생각했기에 흔쾌히 수락했다. 살짝 갈등 된 것은&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;서울이면 좋지만 &lt;em&gt;‘대전’&lt;/em&gt;을 가게 될 수도 있다는 것
-    &lt;ul&gt;
-      &lt;li&gt;눈 딱 감고 &lt;strong&gt;시간과 정신의 방&lt;/strong&gt;에서 수련을 쌓고 나오는 손오공의 마음으로 가기로 마음 먹었다.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;상반기에 &lt;code class=&quot;highlighter-rouge&quot;&gt;자격증&lt;/code&gt;이나 &lt;code class=&quot;highlighter-rouge&quot;&gt;영어성적&lt;/code&gt; ,&lt;code class=&quot;highlighter-rouge&quot;&gt;공채&lt;/code&gt; 등에 지원하기 어렵다는 점
-    &lt;ul&gt;
-      &lt;li&gt;중요한 시기에 커리어 스토리텔링이 개발자가 아닌 강사의 길이 될 수도 있다.&lt;/li&gt;
-      &lt;li&gt;결론은, 뭘 하던 내가 하기 나름이고 개발자로서 이 경험을 어떻게 표현하냐에 따라 달린 문제라고 판단&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://pds54.cafe.daum.net/image/4/cafe/2008/06/15/13/47/48549ee534900&quot; alt=&quot;시간과 정신의 방&quot; /&gt;&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;강사 일은 나에게 개발자의 내실을 다져 줄 시간과 정신의 방 이라 생각했다.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;11월이 되자 슬슬 강의안과 일정표를 받아 가르칠 것에 대해 스스로 공부 시작. Python Django를 가르치면 됐고, Ruby on Rails 기반 지식으로 공부를 시작했다. 기존 보조강사에서 주강사로 승격(?)되었지만 그만큼 할일도 많아지고 한 반을 책임져야한다는 부담의 무게는 애써 괜찮은 척 해도 늘 마음 한켠을 차지했고 그만큼 성장 할 수 있을 거라는 기대감이 들었다.&lt;/p&gt;
-
-&lt;p&gt;그리고 이때까지는 이것만 길이라고 생각했다.&lt;/p&gt;
-
-&lt;h2 id=&quot;이-길도-있었잖아&quot;&gt;이 길도 있었잖아?&lt;/h2&gt;
-
-&lt;p&gt;그러던 어느 금요일, 홍대에서 친구와 만나 놀기로 한 날이었다. 약속시간 1시간 30분 전쯤 나가야 겠다고 생각하곤 2시간 전에 자리에서 일어나는데 문득 친구의 전화가 온다.&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;친구: 너 바로 우리 회사로 와라&lt;/p&gt;
-
-  &lt;p&gt;나: 갑자기?&lt;/p&gt;
-
-  &lt;p&gt;친구: 누가 널 모셔가고 싶대. 빨리와&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;지맴대로 하는 친구답게 앞뒤 다 짤라먹고 하는 그 말에 &lt;strong&gt;허풍은 있을 지 언정 없는 말을 하지는 않는 친구&lt;/strong&gt;이기에 어차피 갈거 조금만 더 가면 되기에 뭔소리를 하는지 들어나 봐야겠다고 생각하고 예상보다 30분 일찍 집을 나섰다.(진짜 저 말이 다였음)&lt;/p&gt;
-
-&lt;p&gt;알고보니 친구 회사의 이제 막 시작 한 사내벤처팀의 PM에게 나를 추천 한 것이었다. 이유는 이 팀에서 활용할 플랫폼이 &lt;code class=&quot;highlighter-rouge&quot;&gt;Chatbot&lt;/code&gt; 이었고, 내가 그걸 다뤄본게 생각 나서 추천 했다는 것. 그리고, 마침 그날이 친구를 만나러 가는 날. 당시 미팅에서 PM의 열정과 야망이 내 맘을 뒤흔들었고 나는 마치 이 일을 위해 오늘을 살아온 사람마냥 이 스타트업에 꽂히게 된다.&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;사실 이날 &lt;code class=&quot;highlighter-rouge&quot;&gt;강사&lt;/code&gt;를 제안한 형과의 미팅이 먼저 있었고 부득이하게 취소되어 올 수 있었던 것이었다.&lt;/p&gt;
-
-  &lt;p&gt;그래서 이게 더 운명처럼 다가왔었을런지도.. 역시 사람 일은 당장 하루 앞도 내다 볼 수 없다.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;다만 여기에도 조그마할수도 클 수도 있는 걱정거리가 2개가 있는데&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;선임 개발자&lt;/code&gt; 없이 나 혼자 개발해야 한다는 것.
-    &lt;ul&gt;
-      &lt;li&gt;팀원이 나까지 총 3명인데, 배움에 있어서 &lt;em&gt;알려 줄 수 있는 사람의 부재&lt;/em&gt;는 큰 것 같으면서도 또 결국 &lt;em&gt;공부는 혼자 하는 것&lt;/em&gt; 이라는 생각들이 충돌했다.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Round 1&lt;/code&gt;이 1월 말까지 인 점.
-    &lt;ul&gt;
-      &lt;li&gt;사실 1월 말에 프로젝트가 지속 가능성을 인정 받지 못하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;Round2&lt;/code&gt; 를 갈 수 없게 되고 해변의 모래성처럼, 하룻밤의 꿈처럼 모든게 흩어져 버릴 수도 있다.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h2 id=&quot;어느-길이-내-목적지로-향하는-길일까&quot;&gt;어느 길이 내 목적지로 향하는 길일까&lt;/h2&gt;
-
-&lt;h3 id=&quot;강사-vs-스타트업&quot;&gt;강사 vs 스타트업&lt;/h3&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th style=&quot;text-align: left&quot;&gt;강사의 커리어&lt;/th&gt;
-      &lt;th&gt;스타트업 개발자의 커리어&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td style=&quot;text-align: left&quot;&gt;대전으로 가며, 숙소가 제공된다.&lt;/td&gt;
-      &lt;td&gt;강서구로 가게되며, 부대비용이 다수 발생.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td style=&quot;text-align: left&quot;&gt;선임 개발자가 있다.&lt;/td&gt;
-      &lt;td&gt;혼자 스스로 뚝배기 깨지면서 공부해야 한다.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td style=&quot;text-align: left&quot;&gt;내가 미숙하게 아는것을 더 깊이 공부할 수 있다.&lt;br /&gt;그리고 가르친다.&lt;/td&gt;
-      &lt;td&gt;모든것을 실전으로 경험하여 익숙 해 질 수 있다.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td style=&quot;text-align: left&quot;&gt;내년 상반기(19.01~19.05)까지 일하게 된다.&lt;/td&gt;
-      &lt;td&gt;사내 벤처이기 때문에 단기 성과가 있어야 &lt;br /&gt;투자가 이어지면서 프로젝트를 이어 나갈 수 있다&lt;br /&gt;1월 31일이 Round 1&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p&gt;두개로 나눴지만 사실, 목표는 명확하다. 어쨋던 개발자가 되는 것.&lt;/p&gt;
-
-&lt;p&gt;고민의 초점을 단순하게 &lt;code class=&quot;highlighter-rouge&quot;&gt;자기성장&lt;/code&gt; 에 놓고 처음에는 당연히 &lt;strong&gt;강사&lt;/strong&gt;를 선택했지만, 조금더 고민을 해 본 결과 내가 해본 것을 조금 더 깊게 가르치는 것보다, &lt;strong&gt;스타트업&lt;/strong&gt; 에서 혼자 박살나게 깨지면 &lt;code class=&quot;highlighter-rouge&quot;&gt;그게 바로 참공부&lt;/code&gt;가 아닌가 싶어 결론적으로 &lt;strong&gt;스타트업의 길을 선택&lt;/strong&gt; 했다. 물론 이 과정에서 스타트업 PM이 정말 날 설득 해 주었다.&lt;/p&gt;
-
-&lt;h2 id=&quot;아모른직다&quot;&gt;아모른직다&lt;/h2&gt;
-
-&lt;p&gt;두개의 길을 놓고 하나의 길을 선택했지만, 선택 한 후에도 영 후련하지가 않다. 하지만 확실한 것은 두 길 모두 나에게는 엄청난 기회이고 내가 욕심이 많기에 이렇게 고민도 많이 한다는 것.
-강사는 다음에 기회가 되면 꼭 다시 하는걸로 이야기를 하고 스타트업 사무실로 출근하는데 이곳에도 산넘어 산이 있었으니..&lt;/p&gt;
-
-&lt;p&gt;다음 글에 이어서 써야지&lt;/p&gt;
-
-</description>
-        <pubDate>Fri, 23 Nov 2018 00:00:00 +0000</pubDate>
-        <link>https://samslow.github.io/diary/2018/11/23/%EB%91%90%EA%B0%80%EC%A7%80-%EC%BB%A4%EB%A6%AC%EC%96%B4/</link>
-        <guid isPermaLink="true">https://samslow.github.io/diary/2018/11/23/%EB%91%90%EA%B0%80%EC%A7%80-%EC%BB%A4%EB%A6%AC%EC%96%B4/</guid>
-        
-        <category>diary</category>
-        
-        
-        <category>diary</category>
-        
-      </item>
-    
+    <title>서한교</title>
+    <link>https://brunch.co.kr/@@24xs</link>
+    <description>Web과 App의 UX/UI를 디자인합니다. 디자인과 사람에 대한 글을 씁니다. 느낀 것을 공유하고 공유받음으로써 주고받는 사람 모두 성장한다고 믿습니다.</description>
+    <language>ko</language>
+    <pubDate>Sun, 12 May 2019 08:57:10 GMT</pubDate>
+    <generator>Kakao Brunch</generator>
+    <image>
+      <title>Web과 App의 UX/UI를 디자인합니다. 디자인과 사람에 대한 글을 씁니다. 느낀 것을 공유하고 공유받음으로써 주고받는 사람 모두 성장한다고 믿습니다.</title>
+      <url>https://img1.daumcdn.net/thumb/C100x100/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2Ff-Y1f545LaVWfEHpBjzx2YjZpw0.jpg</url>
+      <link>https://brunch.co.kr/@@24xs</link>
+      <width>100</width>
+      <height>100</height>
+    </image>
+    <item>
+      <title>일이 재밌다고 느껴진 순간. (Feat. 스키)</title>
+      <link>https://brunch.co.kr/@@24xs/353</link>
+      <description>눈은 보는 것이지 즐기는 것이 아니었는데 언제부턴가 매년 스키장에서 스키를 즐기고 있다. 슬로프를 올라가며 멍 때리다 문득 스키가 왜 재밌어졌을까 생각해보니 멈추는 법을 익히고 나서 재밌어졌더라. 원하는 만큼 미끄러지다가 멈추고, 또 원하는 만큼 미끄러지다가 멈추고, 이게 조절되는 순간 스키에 컨트롤당하던 내 무거운 몸뚱이는 스키를 자유자재로 컨트롤하게 되&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FhkpRvf7P-Mgh3mxLliH1CIQQkA4.jpg" width="500" /&gt;</description>
+      <pubDate>Wed, 06 Mar 2019 14:36:14 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/353</guid>
+    </item>
+    <item>
+      <title>신입을 빠르게 벗어나는 방법</title>
+      <link>https://brunch.co.kr/@@24xs/351</link>
+      <description>운전을 하다 보면 초보운전 마크가 심심치 않게 보인다. 초보운전 스티커를 보면 &amp;quot;내가 무슨 짓을 할지 나도 몰라! &amp;quot;라고 말을 하는 것 같기도 해서 주변에 있는 차들을 긴장시키곤 한다.&amp;nbsp;당사자는 스티커를 붙였으니까 봐주겠지 하는 생각과 함께 스티커에 의지하게 된다. 하지만 실수를 해도 결과는 똑같다. 초보라고 클락션을 살살 누르거나 봐주지 않는다. 그저 똑&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2F7qKWcFdOw4YqOw4hZ_4ZTYz7FDE.jpg" width="500" /&gt;</description>
+      <pubDate>Tue, 05 Mar 2019 09:43:14 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/351</guid>
+    </item>
+    <item>
+      <title>나를 바꾼 칭찬 한마디</title>
+      <link>https://brunch.co.kr/@@24xs/328</link>
+      <description>발표를 아주 잘하네  대학교 3학년, 편집디자인 시간에 과제로 진행할 주제를 발표하고 있었다. 당시에 창업에 꽂힌&amp;nbsp;나는 &amp;quot;사장님 프로젝트&amp;quot;라는 타이틀로 책을 쓰겠다는 내용을 열심히 전달했다. 발표가 끝나고 교수님은 피드백과 함께 &amp;quot;발표를 아주 잘하네&amp;quot;라는 칭찬을 해주셨다. 당시에 피드백은 전부 잊어버릴 정도로 &amp;quot;내가 발표를 잘한다니&amp;quot;라는 생각만 머릿속에서 &lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2F6Ijn_QXZNMlh8PJ4uOYYllK03ag.png" width="500" /&gt;</description>
+      <pubDate>Mon, 04 Mar 2019 12:20:36 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/328</guid>
+    </item>
+    <item>
+      <title>신입이 나아갈 방향을 잡는 방법 - Feat. 채용공고</title>
+      <link>https://brunch.co.kr/@@24xs/348</link>
+      <description>패스트 캠퍼스 UI유치원에서 스케치 강의를 하고 있다. 학생분이 가끔 메일로 질문을 주실 때가 있는데, 할게 너무 많아서 뭐부터 해야 할지, 목표 설정을 어떻게 해야 할지에 대한 질문을 주셔서 개인적으로 도움이 됐던 경험을 공유하려고 한다 : )   회사에 처음 들어와서 요구한 역할은 개발 빼고 모두 다 할 수 있는 디자이너가 되라는 것이었다. 당황스러웠지&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FBiRadVfk0Kkbb-HouUoalnWF_lM.png" width="500" /&gt;</description>
+      <pubDate>Sun, 03 Mar 2019 13:28:14 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/348</guid>
+    </item>
+    <item>
+      <title>늦어도 화내지 않는 이유</title>
+      <link>https://brunch.co.kr/@@24xs/349</link>
+      <description>종종 아니 거의 모든 만남에서 지각은 문제를 일으키곤 한다. 어느 모임에서 늦으면 &amp;quot;코리안 타임입니다&amp;quot; 와 같은 농담도 들린다. 10대에는 별 생각이 없었지만 20대에 진입하고 나서는 연인, 친구, 동료 관계에서 늦는 것에 대해 많은 생각을 하게 됐다. 약속에 늦으면 서운함과 짜증이 서로 손잡고 앞다투어 몰려왔고, 늦은 상대방에게 서운함, 짜증을 분출하게 &lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FFpysoBm32ZV7FV_EQJAWkikrnj8.jpg" width="500" /&gt;</description>
+      <pubDate>Sat, 02 Mar 2019 12:47:56 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/349</guid>
+    </item>
+    <item>
+      <title>이기적으로 성장하는 방법</title>
+      <link>https://brunch.co.kr/@@24xs/347</link>
+      <description>일을 잘하는 것과 못하는 것의 차이점은 본인의 문제점을 아는지 모르는지에 따라 나뉜다. 본인의 문제점을 모르는 사람은 더 이상 성장할 수 없기 때문에 시간이 지날수록 못할 수밖에 없고, 본인의 문제점을 파악하고 고치려는 사람은 성장해서 잘할 수밖에 없다. 내가 일하는 방식을 되돌아봤을 때 문제가 없다면 성과와 보상, 평판이 자연스럽게 따라오고 있을 것이기 &lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FHIdYvwVBUAnuIEPoh7hXv0i4jfE.jpg" width="500" /&gt;</description>
+      <pubDate>Sat, 02 Mar 2019 05:05:58 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/347</guid>
+    </item>
+    <item>
+      <title>공부가 재밌다니 - 너무 놀래서 쓰는 과거 회상과 현재 상태</title>
+      <link>https://brunch.co.kr/@@24xs/346</link>
+      <description>나는 과거 전형적인 공부에 흥미를 못 느끼는 학생이었다. 이제 와서 왜 흥미를 못 느꼈는지 생각해보는 게 무슨 의미가 있겠느냐만 지금은 공부를 매일매일 즐겁게 하고 있기 때문에 늦깎이 학생 느낌으로 과거를 되돌아보려고 한다.  첫 번째 이유는 공부를 해야 할 이유를 알지 못했다. 예를 들어 의식의 흐름은 이런 식이다. 공부를 왜 해야 하지? &amp;rarr; 좋은 대학을&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FHNzUUa1vaaof77Y6qPLS4viGRHE.png" width="500" /&gt;</description>
+      <pubDate>Thu, 28 Feb 2019 07:13:03 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/346</guid>
+    </item>
+    <item>
+      <title>2018 한국 디자인 툴  설문조사 결과공유 - 2018 Design Tools Survey</title>
+      <link>https://brunch.co.kr/@@24xs/299</link>
+      <description>안녕하세요! 2018년 5월에 단순한 호기심으로 시작했던 설문조사 결과 공유합니다.&amp;nbsp;참여해주신 100분&amp;nbsp;감사합니다!&amp;nbsp;이 설문조사는 uxtools라는 곳에서 진행한 ux tool&amp;nbsp;설문조사를 참고했습니다. 설문에 나오는 디자인 툴은 UX Design과 연관된 툴을 말합니다.  (최종 업데이트 날짜 2019.01.02)        1. 어디서 일하고 계신가요?&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FGq-PeuteXb2WamvvOK_jLvZaKtk.jpg" width="500" /&gt;</description>
+      <pubDate>Sat, 15 Dec 2018 11:32:08 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/299</guid>
+    </item>
+    <item>
+      <title>2년간 스타트업에서 디자인하며  배운 12가지</title>
+      <link>https://brunch.co.kr/@@24xs/274</link>
+      <description>1. 어떤 서비스를 보고 함부로 디자인 못했다고 욕하지 말자. 이전에는 별로인 서비스를 보면 서슴없이 &amp;quot;왜 이렇게밖에 못했지?&amp;quot;라는 생각을 했지만, 이제는 별로인 서비스를 보면 &amp;quot;다 사정이 있었겠지&amp;quot;라는 생각이 먼저 든다. 못하고 싶은 사람은 없다. 그 서비스의 디자이너도 충분한 시간과 디자인 결정 권한이 있으면 충분히 더 잘할 수 있었을 것이다. 디자인에&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2F4wGwipioGvWrQzjYTY4jcs5tr40.jpg" width="500" /&gt;</description>
+      <pubDate>Sat, 08 Sep 2018 16:11:23 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/274</guid>
+    </item>
+    <item>
+      <title>Spotify의 유저 리서치 방식</title>
+      <link>https://brunch.co.kr/@@24xs/254</link>
+      <description>스타트업 얼라이언스에서 주관한 테헤란로 런치 클럽 - 실무자 관점에서 본 Spotify의 유저 리서치 방식 이라는 행사에 다녀왔다. 스얼 런치 클럽은 원래 스타트업 얼라이언스 &amp;amp;스페이스에서 진행되는데 이번 행사는 참여인원이 많아서 네이버 D2 팩토리에서 진행됐다고 한다. (역시 스포티파이인가..) 스포티파이에서 User Researcher라는 직군이 어떤 &lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FmZ_c6UbWws04liFt0u0wH1N14zo.jpeg" width="500" /&gt;</description>
+      <pubDate>Fri, 20 Jul 2018 00:52:50 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/254</guid>
+    </item>
+    <item>
+      <title>베트남 그랩(Grab) 후기</title>
+      <link>https://brunch.co.kr/@@24xs/227</link>
+      <description>이전에 베트남을 방문하고 12년 만에 베트남 여행을 다녀왔다. 여행 계획을 세우기 위해서 검색하던 중 가장 눈에 들어온 건 우버와 그랩이었는데, 그 이유는 12년 전 베트남에서 당했던 택시 바가지 때문이다. (살면서 그렇게 빨리 올라가는 미터기는 처음 봤다.)&amp;nbsp;베트남에 도착해서 설레는 마음으로 우버를 켰는데 스크린에는 &amp;quot;사용 불가&amp;quot;라는 메시지가 보였다. 검&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2Fj2whe3NJumloWSWPEfNBW2i4mhw.png" width="500" /&gt;</description>
+      <pubDate>Thu, 12 Jul 2018 11:56:34 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/227</guid>
+    </item>
+    <item>
+      <title>'Airbnb Cereal' 리드 디자이너 인터뷰</title>
+      <link>https://brunch.co.kr/@@24xs/239</link>
+      <description>Airbnb에서 발표한 브랜드 폰트인 'Cereal'에 대한 Airbnb의&amp;nbsp;두 리드 디자이너 Derek Chan&amp;nbsp;(Creative Lead, Marketing) Karri Saarinen&amp;nbsp;(Design Lead, Design Language Systems) 의 인터뷰입니다.      Airbnb는 새로운 폰트를 왜 만들었나요?  Derek Chan :&amp;nbsp;Ai&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FrSiFdpB4vhuNJgkvAIMxYIaUx78.png" width="500" /&gt;</description>
+      <pubDate>Sat, 26 May 2018 14:34:55 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/239</guid>
+    </item>
+    <item>
+      <title>10000개 이상의 UI화면을 설계하며 얻은 것들</title>
+      <link>https://brunch.co.kr/@@24xs/229</link>
+      <description>1. 우선순위를 정하세요. 모든 기본 요구사항을 충족시키는 것이 가장 중요합니다.&amp;nbsp;그러고 나서 일러스트레이션과 애니메이션 같은 멋진 것들을 진행하세요. 아직 바퀴도 없는데 자동차 시트를 무슨 색으로 할지 걱정하지 마세요.    2. 아무도 애니메이션을 신경 쓰지 않습니다. 모두에게 미안하지만, 사실입니다. 제가 애니메이션을 잘 못하기 때문에&amp;nbsp;악의를 갖고 말&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2F1qSCbtgLOGCc49ZbXOMm0-HKGRQ.jpg" width="500" /&gt;</description>
+      <pubDate>Thu, 03 May 2018 15:40:49 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/229</guid>
+    </item>
+    <item>
+      <title>스타트업 디자이너 2017년 회고</title>
+      <link>https://brunch.co.kr/@@24xs/197</link>
+      <description>작년(2016) 상반기 까지만 해도 다시는 디자인 안 한다는 굳건한 생각과 함께 코딩 부트캠프에서 코딩을 공부했다. 아주 힘들고 즐거운 상반기 코딩 학습을 마치고 바로 디자인 포트폴리오를 만들기 시작했다. 역시 사람은 직접 경험해야 깨닫나 보다. 그리고 감사하게도 16년 말, 정확히 11월 14일 디자이너로&amp;nbsp;첫 출근을 하게 된다. 그래서 1년간 나는 무얼&amp;nbsp;&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2F-b6k4MC0nbeEYbtyRpWoSmmZPYw.png" width="500" /&gt;</description>
+      <pubDate>Sun, 31 Dec 2017 09:43:26 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/197</guid>
+    </item>
+    <item>
+      <title>D.Talks 3화 : 그래픽 디자이너 익명 인터뷰</title>
+      <link>https://brunch.co.kr/@@24xs/190</link>
+      <description>안녕하세요. 디자이너들의 이야기&amp;nbsp;'디톡스 - D.Talks'입니다. '디톡스 - 익명 인터뷰'는 주변에 있는 디자이너들의 솔직한 이야기를 듣고 알리고자 시작한 프로젝트입니다.  이번 3화는 에이전시에서 일하고 있는 그래픽 디자이너분이 인터뷰에 참여해주셨습니다. 그럼 시작합니다~!     Q1. 안녕하세요! 자기소개 부탁드립니다. 안녕하세요. 그래픽 디자인을&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FGWV2e_2KFZmd2XXBV7ooI8ufc8w.png" width="500" /&gt;</description>
+      <pubDate>Sun, 17 Dec 2017 09:18:03 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/190</guid>
+    </item>
+    <item>
+      <title>스케치 Export 파일 형식 알아보기 - Raster Graphics &amp;amp; Vector&amp;nbsp;Graphics</title>
+      <link>https://brunch.co.kr/@@24xs/187</link>
+      <description>스케치의 Export 기능을 보면 PNG, JPG, TIFF, WEBP, PDF, EPS, SVG 이렇게 총 7가지의 포맷을 지원합니다. 이 포맷에 대해서 한번 알아보겠습니다.  회색 라인&amp;nbsp;위에 있는 것은 Raster Graphics,&amp;nbsp;아래에 위치한 것은 Vector Graphics라고 부릅니다.&amp;nbsp;자세한 설명은 아래에 있습니다.   들어가기 전 용어설명 :&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2F_By6945aHiOjUyfKU8nizqodM_c.jpg" width="500" /&gt;</description>
+      <pubDate>Tue, 12 Dec 2017 12:09:26 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/187</guid>
+    </item>
+    <item>
+      <title>D.Talks 2화 : 에이전시 3년차 익명의 디자이너</title>
+      <link>https://brunch.co.kr/@@24xs/189</link>
+      <description>안녕하세요. 디자이너들의 이야기 '디톡스 - D.Talks'&amp;nbsp;입니다. 이번 2화 인터뷰는 익명 인터뷰입니다. 디톡스 - 익명 인터뷰는 주변에 있는 디자이너들의 솔직한 이야기를 듣고 알리고자 시작된 프로젝트입니다. 시작은 '문제 알기'입니다. '문제'라는 것은 주관적이어서 누군가에게는 문제일 수도, 혹은 아닐 수도 있습니다. 다만 주변에서 문제라고 판단될 만&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FAQfFIL3LzUXTTZZ7b3TuxYVeJ2o.png" width="500" /&gt;</description>
+      <pubDate>Sun, 03 Dec 2017 11:21:23 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/189</guid>
+    </item>
+    <item>
+      <title>페이스북과 왓츠앱의 디자인 작업방식 - 미디엄 글 번역</title>
+      <link>https://brunch.co.kr/@@24xs/176</link>
+      <description>사람마다 일하는 스타일이 다르듯이 회사마다 일하는 스타일이 다릅니다. &amp;quot;들어보니까 이렇게 일하는게 좋다더라&amp;quot; 하면서 따라하는 것 보다는 회사의 비젼에 대해서 고민하고, 이에 어울리는 스타일을 찾는게 중요하다고 생각합니다. 이 글은 Facebook과 WhatsApp에서 어떻게 일하는지에 대한 글입니다.내용을 개인적으로 재해석하여 의역한 부분이 많습니다. 참고&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FGkN1d3E3J2wKGrpTr8cIntG_3h4.png" width="500" /&gt;</description>
+      <pubDate>Sun, 22 Oct 2017 06:07:53 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/176</guid>
+    </item>
+    <item>
+      <title>iOS 디자인 가이드라인 번역 - iPhone X</title>
+      <link>https://brunch.co.kr/@@24xs/168</link>
+      <description>이 글은&amp;nbsp;iOS Human Interface Guidelines를&amp;nbsp;학습하기 위해 번역한 것이며, 개인적인 이해를 돕기 위한 의역이 포함되어 있습니다.&amp;nbsp;잘못된 부분은 댓글 남겨주시면 감사하겠습니다. :)     iPhone X는 이전보다 풍부하고 다양한 콘텐츠를 잘 전달할 수 있는 큰 고해상도 디스플레이를 갖고 있습니다.     Screen Size 세로인 &lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FsdZSLrmUkaq7-CKeGvv1TqB5sBk.png" width="500" /&gt;</description>
+      <pubDate>Sat, 16 Sep 2017 04:35:16 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/168</guid>
+    </item>
+    <item>
+      <title>디자이너와 개발자의 갭을 줄이는 방법</title>
+      <link>https://brunch.co.kr/@@24xs/167</link>
+      <description>디자이너와 개발자 사이의 충돌은 단순한 충돌이 아니라, 주어진 조건 속에서 문제를 해결하는 두 가지 방법 사이의 충돌입니다. 디자이너와 개발자 사이에 무슨 일이 일어나고 있는지 이해하려면 우리는 먼저 각자의 목표가 무엇이고, 어떻게 생각하고, 어떻게 다르고, 언제 비슷한지를 살펴봐야 합니다.  디자이너의 목표는 심미성, 접근성, 유용성, 마케팅, 브랜딩 등&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2F24xs%2Fimage%2FvZB76mYCQ_HDSnidyRzgq_s7TAc.jpg" width="500" /&gt;</description>
+      <pubDate>Thu, 07 Sep 2017 02:29:05 GMT</pubDate>
+      <author>서한교</author>
+      <guid>https://brunch.co.kr/@@24xs/167</guid>
+    </item>
   </channel>
 </rss>
