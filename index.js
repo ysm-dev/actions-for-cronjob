@@ -23,7 +23,7 @@ const dbFileURL = 'https://raw.githubusercontent.com/sarojaba/awesome-devblog/ma
     _.map(user => user.rss),
     _.map((rss, i) => {
       if (rss.includes('medium.com')) {
-        sh.exec(`wget -O feeds/${i}.xml ${rss}`, { async: true, silent: true })
+        sh.exec(`wget -O feeds/${i}.xml ${rss}`, { async: false, silent: true })
       } else {
         sh.exec(`wget -O feeds/${i}.xml ${rss}`, { async: true, silent: true })
       }
