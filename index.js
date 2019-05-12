@@ -21,17 +21,12 @@ const dbFileURL = 'https://raw.githubusercontent.com/sarojaba/awesome-devblog/ma
     _.filter(user => user.rss),
     _.tap(feeds => _.log(`RSS length : ${feeds.length}`)),
     _.map(user => user.rss),
-    _.map((rss, i) => {
-      if (rss.includes('medium.com')) {
-        sh.exec(`wget -O feeds/${i}.xml ${rss}`, { async: false, silent: true })
-      } else {
-        sh.exec(`wget -O feeds/${i}.xml ${rss}`, { async: true, silent: true })
-      }
-    }),
+    arr => ['http://devblog.selfhow.com/feed/', ...arr],
+    _.map((rss, i) => sh.exec(`wget -O feeds/${i}.xml ${rss}`, { async: !rss.includes('medium.com'), silent: true })),
     _.tap(() => _.log(`Finish Download all feeds.`)),
     _.tap(() => {
       sh.exec(`git add .`)
-      sh.exec(`git config --global user.email "support+actions@github.com"`)
+      sh.exec(`git config --global user.email "octocat@github.com"`)
       sh.exec(`git commit -m "Auto Deploy By Github Actions"`)
       sh.exec(`git push https://${process.env.GH_PAT}@github.com/ysm0622/actions-for-cronjob.git HEAD:master`)
     }),
