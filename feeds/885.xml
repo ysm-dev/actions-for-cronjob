@@ -1429,42 +1429,4 @@ volumes:
   
   &lt;/a&gt;
     &lt;/p&gt;
-&lt;p&gt;전통적인 9-5, 주 40 시간 근무를 해야 생계를 유지할 수 있다는 편견을 버리고 자신만의 소규모 비즈니스를 정착시키면 1) 하루에 4 시간만 일하고도 2) 충분한 수입을 이룰 수 있다는 이야기. 1 과 2 가 동시에 성립할 수 있냐하면 1) 소규모 비즈니스라고 하면 해야할 일이 많아 보이지만, 생각보다 저렴한 가격으로 아웃소싱 할 수 있는 부분이 많아서 생각보다 시간이 크게 들지 않고, 2) 소득을 미국에서 얻고 소비를 물가가 저렴한 곳에서 하면 생각보다 1, 2 의 양립이 어렵지 않다고 저자는 주장한다.&lt;/p&gt;
-&lt;p&gt;시장이 거대한 미국에서 비즈니스를 하니까 1)에서 주장하는 것처럼 틈새를 노려서도 충분한 수입을 얻을 수 있는 것이 아닐까 싶어서 다소 공감은 되지 않았지만, 9-5 로 회사를 다녀서는 일을 2 배로 빨리 해도 2 배의 일이 할당될 뿐이라는 대목에는 공감이 갔다. 반면 작게라도 자기 사업을 한다면 더 의욕적으로 일을 빨리 끝낼 수 있고, 남은 시간은 자기 발전에 쓰거나 더 많은 수입을 위해 쓸 수 있다. 결국 회사에 다니는 것은 내 시간을 Flat Rate 로 파는 것과 같은 일이니까.&lt;/p&gt;
-&lt;p&gt;그렇다면 개인이 들어갈 수 있는 이런 틈새 시장은 어떻게 찾을까? 저자는 자신 주변에 수요를 잘 찾아보라고 권한다. 예를 들면 암벽 등반을 즐기는 요가 강사는 암벽 등반 동호인을 위한 요가 비디오를 촬영하고, 투자은행에서 근무하는 애널리스트는 해당 분야로 커리어를 계획하기 위한 세미나를 진행하는 식이다. 이 과정에서 콘텐츠 이전에 잠재 고객이 누구인가를 먼저 생각해야한다는 부분에서는 약간 스타트업 강연(?) 같은 느낌도 받았다.&lt;/p&gt;
-&lt;p&gt;아마 전통적인 형태의 정규직이 점점 사라지면서 적어도 민간 영역에 있는 사람들은 좋던 싫던 이런 형태로 자기 일을 찾아가야 할 것이다. 개발자라면 월급을 받고 회사에서 코드를 짜는 것 이외에도 강연, 저술 혹은 창업 등으로 자신의 업을 찾을 수 있지 않을까? (이미 많은 분들이 그런 식으로 일하고 계시기도 하고)&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;&lt;a href=&quot;https://ridibooks.com/v2/Detail?id=2855000005&quot;&gt;리디북스 링크&lt;/a&gt;&lt;/p&gt;</content:encoded></item><item><title><![CDATA[AWS ElasticSearch Service에 있던 데이터를 로컬 ES로 백업하기 + 한글 형태소 분석기 붙이기]]></title><link>https://blog.hyeungshikjung.com/docker-compose-elasticsearch/</link><guid isPermaLink="false">https://blog.hyeungshikjung.com/docker-compose-elasticsearch/</guid><pubDate>Thu, 21 Sep 2017 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;상황: 과제할 때 쓰던 AWS ElasticSearch Service 가 요금이 많이 나와서 데이터를 백업하고자 한다. 그런데 혹시 나중에 코드를 돌려야할 수 있으니 연구실에 노는 컴퓨터에 ES 를 깔아서 옮기고 싶다. 블로그 포스팅들이 많은데 은근히 최근 문서가 없으니 내가 한 번 적어보자.&lt;/p&gt;
-&lt;h3&gt;도커 이미지 찾아보기&lt;/h3&gt;
-&lt;p&gt;공식 사이트에 친절하게 시작할 도커 이미지와 &lt;a href=&quot;https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run-prod-mode&quot;&gt;설명&lt;/a&gt;이 나와있다. 여기에 필요에 따라 몇 줄을 바꾼다. 바꾼 사항은&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;램을 컨테이너 2 기가 / JVM 1 기가로 늘림 (이 컴퓨터는 램이 32 기가다) -&gt; environment 의 &lt;code class=&quot;language-text&quot;&gt;ES_JAVA_OPTS&lt;/code&gt; 랑 &lt;code class=&quot;language-text&quot;&gt;mem_limit&lt;/code&gt;을 수정&lt;/li&gt;
-&lt;li&gt;볼륨을 도커가 설치된 폴더 대신 하드디스크로 (SSD 는 소중하니까) -&gt; volumes&lt;/li&gt;
-&lt;li&gt;키바나 이미지를 붙임세가지 였다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;div class=&quot;gatsby-highlight&quot;&gt;
-      &lt;pre class=&quot;language-yml&quot;&gt;&lt;code class=&quot;language-yml&quot;&gt;version: &amp;#39;2&amp;#39;
-services:
-  elasticsearch1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.1
-    container_name: elasticsearch1
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - &amp;quot;ES_JAVA_OPTS=-Xms1g -Xmx1g&amp;quot;
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    mem_limit: 2g
-    volumes:
-      - esdata1:/usr/share/elasticsearch/data
-    ports:
-      - 9200:9200
-    networks:
-      - esnet
-  elasticsearch2:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.1
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=t
+&lt;p&gt;전통적인 9-5, 주 40 시간 근무를 해야 생계를 유지할 수 있다는 편견을 버리고 자신만의 소규모 비즈니스를 정착시키면 1) 하루에 4 시간만 일하고도 2) 충분한 수입을 이룰 수 있다는 이야기. 1 과 2 가 
