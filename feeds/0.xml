@@ -1,0 +1,688 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>밥풀(Bob-Full)의 개발자 일상</title>
+<link>https://bob-full.tistory.com/</link>
+<description>카카오 신입개발자 Bob입니다</description>
+<language>ko</language>
+<pubDate>Sun, 12 May 2019 14:49:25 +0900</pubDate>
+<generator>TISTORY</generator>
+<managingEditor>밥풀(Bob Full)</managingEditor>
+<image>
+<title>밥풀(Bob-Full)의 개발자 일상</title>
+<url>https://tistory2.daumcdn.net/tistory/2981987/attach/eb480b4d00354dd8b6a386b4d3270a09</url>
+<link>https://bob-full.tistory.com</link>
+<description>카카오 신입개발자 Bob입니다</description>
+</image>
+<item>
+<title>젠킨스  파이프라인 ( Jenkin pipeline ) - 병렬로 Job 실행하기</title>
+<link>https://bob-full.tistory.com/10</link>
+<description>&lt;p&gt;&lt;figure class='imageblock floatLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/sQbuY/btqu5xBrrCz/IVlKL9YBm19uhU2DlKLkK1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/sQbuY/btqu5xBrrCz/IVlKL9YBm19uhU2DlKLkK1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FsQbuY%2Fbtqu5xBrrCz%2FIVlKL9YBm19uhU2DlKLkK1%2Fimg.png' width=&quot;129&quot; height=&quot;175&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h1&gt;&amp;nbsp;&lt;/h1&gt;
+&lt;h1&gt;&amp;nbsp;&lt;/h1&gt;
+&lt;h1&gt;&lt;b&gt;Jenkins Pipeline&lt;/b&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;b&gt;Jenkins Pipeline Flugin&lt;/b&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;연속적인 이벤트 혹은, Job의 그룹을 실행시킬 수 있는 젠킨스 플러그인&lt;/li&gt;
+&lt;li&gt;파이프 라인의 통합 및 구현을 지원&lt;/li&gt;
+&lt;li&gt;Pipeline 전용 DSL을 통해, '코드'로서 기능을 정의 및 생성 가능&lt;/li&gt;
+&lt;li&gt;Jenkinsfile을 통해 작업 생성&lt;/li&gt;
+&lt;li&gt;시각화 된, 빌드 화면으로 로그 실시간 로그 확인 가능&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://jenkins.io/doc/book/pipeline&quot;&gt;https://jenkins.io/doc/book/pipeline&lt;/a&gt;&amp;nbsp;- 파이프라인 문서&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;b&gt;작성 방법&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Jenkinsfile 작성법 3가지&lt;/b&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;b&gt;Job&amp;nbsp;&lt;/b&gt;구성에서, 직접&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;b&gt;Jenkinsfile&lt;/b&gt;을 작성&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;SCM을 이용해서 Jenkinsfile&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;을 작성하는 법 -&amp;nbsp;&lt;b&gt;github&lt;/b&gt;에 관리 후 젠킨스에서 실행&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;Blueocean&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;플러그인으로 UI를 통해&amp;nbsp;&lt;b&gt;Jenkinsfile&amp;nbsp;&lt;/b&gt;작성 -&amp;nbsp;&amp;nbsp;&lt;b&gt;github&lt;/b&gt;에 관리&amp;nbsp;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr style=&quot;border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1px solid #cccccc; color: #172b4d; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;&quot; /&gt;
+&lt;h1&gt;&lt;b&gt;작성 예시&lt;/b&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;b&gt;Jenkinsfile 예시&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Jenkinsfile의 작성 방법은&amp;nbsp;&lt;a href=&quot;https://jenkins.io/doc/book/pipeline/syntax/&quot;&gt;https://jenkins.io/doc/book/pipeline/syntax/&lt;/a&gt;&amp;nbsp;에서 참고하였습니다.&lt;/b&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;b&gt;작성 방법은 2가지가 있습니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;Declarative Pipeline&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;: 보다 쉽게 작성 할 수 있게, 커스텀 되어 있음. Groovy-syntax기반 -&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;b&gt;Groovy 문법을 잘 몰라도 작성 가능&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;Scripted Pipeline&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;: Groovy기반, Declarative보다 효과적으로 많은 기능을 포함하여 작성 가능. 하지만 작성 난이도가 높음 -&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;b&gt;Groovy 문법을 잘 알아야 함&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;2가지 문법을 번갈아 사용 가능 - 동시에는 X&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;b&gt;&amp;nbsp;&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;예시&lt;/b&gt;&lt;/p&gt;
+&lt;h4&gt;&lt;b&gt;Declarative&amp;nbsp;&lt;/b&gt;&lt;/h4&gt;
+&lt;pre id=&quot;code_1557304453715&quot; class=&quot;prettyprint linenums xquery&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;pipeline {
+    agent none
+    stages{
+        stage('Parallel Test') {
+            parallel { 
+                stage('Build-test-1') {
+                    steps{ build 'Build-test-1' }
+                }
+                stage('Build-test-2') {
+                    steps{ build 'Build-test-2' }
+                }
+                stage('Build-test-3') {
+                    steps{ build 'Build-test-3' }
+                }
+            }
+        }
+        stage('Build-test-4') {
+            steps{
+                build 'Build-test-4'
+            }
+        }
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;b&gt;1 :&amp;nbsp;Declarative 시작 - pipeline&amp;nbsp;///&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;Scripted - node&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;2 : Backgroud로 돌아가는 agent를 정해줘야 함, 해당 파이프라인은 다른 job을 실행 하는 것이기 때문에, agent 불필요&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;&lt;b&gt;5 :&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;stage들을 병렬로 실행&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;7 : Build-test-1 이라는 이름의 job을 빌드&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;&lt;b&gt;17 : Parallel Test가 끝난 후, 다음 stage&lt;/b&gt;&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;&lt;b&gt;Scripted&amp;nbsp;&lt;/b&gt;&lt;/h4&gt;
+&lt;pre id=&quot;code_1557304478639&quot; class=&quot;prettyprint linenums xquery&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;node {
+  stage('Parallel-test') {
+      parallel 'Build-test-1' : {
+          build job : 'Build-test-1'
+      } , 'Build-test-2' : {
+          build job : 'Build-test-2'
+      } , 'Build-test-3' : {
+          build job : 'Build-test-3'
+      }
+  }
+  stage('Build-test-4') {
+     build job : 'Build-test-4'
+  }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;b&gt;1 : Scripted 시작&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;3 : parallel 밑으로, 이어서 build 1 2 3&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;11 : 전 stage가 끝이나야 동작&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;u&gt;&lt;b&gt;&amp;rarr; 해당 Jenkinsfile로 Pipleine을 동작할 경우, Build-test-1 ~ 3이 병렬로 실행 된 후, 모든 빌드가 끝나면 Build-test-4가 빌드&lt;/b&gt;&lt;/u&gt;&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;&lt;u&gt;&amp;rarr; 두 가지, 방법 모두 같은 결과&lt;/u&gt;&lt;/b&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;b&gt;&lt;u&gt;이렇게, 두 개를 혼용하여 작성도 가능(같은 결과)&lt;/u&gt;&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre id=&quot;code_1557304504007&quot; class=&quot;prettyprint linenums xquery&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;node {
+  stage('Parallel-test') {
+      parallel 'Build-test-1' : {
+          build job : 'Build-test-1'
+      } , 'Build-test-2' : {
+          build job : 'Build-test-2'
+      } , 'Build-test-3' : {
+          build job : 'Build-test-3'
+      }
+  }
+}
+pipeline {
+    agent none 
+    stages {
+        stage('Build-test-4') {
+            steps {
+                build 'Build-test-4'
+            }
+        }
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;hr style=&quot;border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1px solid #cccccc; color: #172b4d; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;&quot; /&gt;
+&lt;h3&gt;&lt;b&gt;Job&amp;nbsp;&lt;/b&gt;&lt;span&gt;구성에서, 직접&amp;nbsp;&lt;/span&gt;&lt;b&gt;Jenkinsfile&amp;nbsp;&lt;/b&gt;&lt;span&gt;을 작성&lt;/span&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bJ96Xa/btqu5ePA7NU/oNfY2YQ8xej2m0KUMVwWW0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bJ96Xa/btqu5ePA7NU/oNfY2YQ8xej2m0KUMVwWW0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbJ96Xa%2Fbtqu5ePA7NU%2FoNfY2YQ8xej2m0KUMVwWW0%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&amp;nbsp;New item - pipeline 생성&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cBuxDD/btqu3rhOG9M/0AlgSaYXgPkV6R8MvzSeB1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cBuxDD/btqu3rhOG9M/0AlgSaYXgPkV6R8MvzSeB1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcBuxDD%2Fbtqu3rhOG9M%2F0AlgSaYXgPkV6R8MvzSeB1%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Pipeline 탭 클릭,&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;b&gt;Definition - Pipeline script&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;선택 후, 다음과 같이 작성하면 됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/9aO6b/btqu3ATbfcp/U6hF5o0WG8u0lrhCIbwKJ0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/9aO6b/btqu3ATbfcp/U6hF5o0WG8u0lrhCIbwKJ0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2F9aO6b%2Fbtqu3ATbfcp%2FU6hF5o0WG8u0lrhCIbwKJ0%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;빌드 결과&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr style=&quot;border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1px solid #cccccc; color: #172b4d; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;&quot; /&gt;
+&lt;h3&gt;&lt;b&gt;SCM을 이용해서 Jenkinsfile&lt;/b&gt;&lt;span&gt;을 작성&lt;/span&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/UITA1/btqu5xVFso5/mBU8kdPVIsJm4XRtRky080/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/UITA1/btqu5xVFso5/mBU8kdPVIsJm4XRtRky080/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FUITA1%2Fbtqu5xVFso5%2FmBU8kdPVIsJm4XRtRky080%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;span&gt;Pipeline 탭 클릭,&amp;nbsp; Definition - Pipeline script from SCM&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span&gt;Git 선택 후, Repostory, Branch를 선택 후, Git저장소에 있는, Jenkinsfile 위치를 Script Path에 넣어주면 됨&lt;/span&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cxM4df/btqu621wqGt/Ti43SuTSCltkg5CsqBMTuK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cxM4df/btqu621wqGt/Ti43SuTSCltkg5CsqBMTuK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcxM4df%2Fbtqu621wqGt%2FTi43SuTSCltkg5CsqBMTuK%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;span&gt;빌드 결과&lt;/span&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr style=&quot;border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1px solid #cccccc; color: #172b4d; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;&quot; /&gt;
+&lt;h3&gt;&lt;b&gt;Blueocean&lt;/b&gt;&lt;span&gt;&amp;nbsp;플러그인으로 UI를 통해&amp;nbsp;&lt;/span&gt;&lt;b&gt;Jenkinsfile&amp;nbsp;&lt;/b&gt;&lt;span&gt;작성&lt;/span&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;추가적으로 Blueocean - pipeline 플러그인 설치가 필요합니다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/c1Xes1/btqu54yYq7R/jxgGMb2jRpiUoa2dvdJHQ0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/c1Xes1/btqu54yYq7R/jxgGMb2jRpiUoa2dvdJHQ0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fc1Xes1%2Fbtqu54yYq7R%2FjxgGMb2jRpiUoa2dvdJHQ0%2Fimg.png' width=&quot;306&quot; height=&quot;282&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Blue Ocean 열기&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/DBHPn/btqu2T6LqZH/p7DZKZXligkILyp9HTHu61/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/DBHPn/btqu2T6LqZH/p7DZKZXligkILyp9HTHu61/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FDBHPn%2Fbtqu2T6LqZH%2Fp7DZKZXligkILyp9HTHu61%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;New Pipeline&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cKQzbc/btqu38a27o4/BBhLZwmn3peqitntOU4bJ0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cKQzbc/btqu38a27o4/BBhLZwmn3peqitntOU4bJ0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcKQzbc%2Fbtqu38a27o4%2FBBhLZwmn3peqitntOU4bJ0%2Fimg.png' width=&quot;483&quot; height=&quot;327&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Github 저장소 연결&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/b6cRqr/btqu3q4mhgT/dLkUgh2svZdWKmNHASvkcK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/b6cRqr/btqu3q4mhgT/dLkUgh2svZdWKmNHASvkcK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fb6cRqr%2Fbtqu3q4mhgT%2FdLkUgh2svZdWKmNHASvkcK%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;+ 버튼으로 stage 추가 가능, 오른쪽 Agent 선택 가능&lt;br /&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/dCH6p7/btqu61VRYHi/OXgqNbYQXaYM983lKaIKIk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/dCH6p7/btqu61VRYHi/OXgqNbYQXaYM983lKaIKIk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FdCH6p7%2Fbtqu61VRYHi%2FOXgqNbYQXaYM983lKaIKIk%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Build Job 추가&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/d1er8e/btqu5ehNzkU/OcG88UzN7ao5KdkfkhfR5k/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/d1er8e/btqu5ehNzkU/OcG88UzN7ao5KdkfkhfR5k/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fd1er8e%2Fbtqu5ehNzkU%2FOcG88UzN7ao5KdkfkhfR5k%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;위의 방식 대로 만들고 Save&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bH9T65/btqu6zZQoLR/V3eiFpPwk9xqSRtKV0JnSk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bH9T65/btqu6zZQoLR/V3eiFpPwk9xqSRtKV0JnSk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbH9T65%2Fbtqu6zZQoLR%2FV3eiFpPwk9xqSRtKV0JnSk%2Fimg.png' width=&quot;415&quot; height=&quot;364&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Github에 커밋 &amp;amp; 푸쉬&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bfVvzQ/btqu3AFCAWa/dl2obLKOL3bvNXt0YObkHk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bfVvzQ/btqu3AFCAWa/dl2obLKOL3bvNXt0YObkHk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbfVvzQ%2Fbtqu3AFCAWa%2Fdl2obLKOL3bvNXt0YObkHk%2Fimg.png' width=&quot;449&quot; height=&quot;507&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Push된 Jenkinsfile - 위의 예시와 동일&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/dVJeph/btqu6zS4Pej/bO5EKG5g78HHEpneo9llok/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/dVJeph/btqu6zS4Pej/bO5EKG5g78HHEpneo9llok/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FdVJeph%2Fbtqu6zS4Pej%2FbO5EKG5g78HHEpneo9llok%2Fimg.png' width=&quot;308&quot; height=&quot;172&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;빌드 결과&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;hr style=&quot;border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1px solid #cccccc; color: #172b4d; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;&quot; /&gt;
+&lt;p&gt;&lt;b&gt;[ 참고 ]&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://voidmainvoid.tistory.com/100&quot;&gt;https://voidmainvoid.tistory.com/100&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://blog.voidmainvoid.net/104&quot;&gt;https://blog.voidmainvoid.net/104&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/jenkinsci/pipeline-model-definition-plugin/wiki/getting-started&quot;&gt;https://github.com/jenkinsci/pipeline-model-definition-plugin/wiki/getting-started&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://stackoverflow.com/questions/53431587/how-to-run-two-jenkins-multi-phase-jobs-at-the-same-time&quot;&gt;https://stackoverflow.com/questions/53431587/how-to-run-two-jenkins-multi-phase-jobs-at-the-same-time&lt;/a&gt;&lt;/p&gt;</description>
+<category>SW개발</category>
+<category>Jenkin Parallel</category>
+<category>Jenkins</category>
+<category>Jenkinspipeline</category>
+<category>MultiJob</category>
+<category>Parallel</category>
+<category>Pipeline</category>
+<category>젠킨스</category>
+<category>젠킨스 병렬</category>
+<category>젠킨스파이프라인</category>
+<category>파이프라인</category>
+<author>사용자 밥풀(Bob Full)</author>
+<guid>https://bob-full.tistory.com/10</guid>
+<comments>https://bob-full.tistory.com/10#entry10comment</comments>
+<pubDate>Wed, 08 May 2019 17:41:31 +0900</pubDate>
+</item>
+<item>
+<title>Kotlin + Spring boot security + thymeleaf 로그인 구현(3)</title>
+<link>https://bob-full.tistory.com/9</link>
+<description>&lt;p&gt;&lt;a href=&quot;https://bob-full.tistory.com/7&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;2019/03/28 - [SW개발] - Kotlin + Spring boot security + thymeleaf 로그인 구현(1)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://bob-full.tistory.com/8&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;2019/04/01 - [SW개발] - Kotlin + Spring boot security + thymeleaf 로그인 구현(2)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bZV1fX/btqt7STO2Dd/3ueGEAnZUQS2QUPNDSUhp1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bZV1fX/btqt7STO2Dd/3ueGEAnZUQS2QUPNDSUhp1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbZV1fX%2Fbtqt7STO2Dd%2F3ueGEAnZUQS2QUPNDSUhp1%2Fimg.png' width=&quot;470&quot; height=&quot;370&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;이전 글까지, 따라왔다면 여기까지 만들어졌을겁니다.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;이번 글에서는 Spring Security를 통해, 이전 글에서 만든 Provider를 빈으로 등록하고, 이를 통해 인증을 처리하는 config를 구현하겠습니다&lt;/span&gt;&lt;/p&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
+&lt;h2&gt;1. WebSeurityConfigurerAdpater 구현&lt;/h2&gt;
+&lt;p&gt;이 인터페이스는, 스프링 시큐리티에서 가장 핵심 적인 역할을 합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;b&gt;AuthenticationManagerBuilder&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;:&amp;nbsp; AuthenticationProvider 설정&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;WebSecurity&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;: 전역 보안에 영향을 주는 구성 설정&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;HttpSecurity&lt;/b&gt;&lt;span&gt;&amp;nbsp;&lt;/span&gt;: 어떠한 URL 경로를 보호해야하는지에 대한 정의, 자신만의 인증 매커니즘 정의&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;위의 세가지를, configure에 저장함으로서, 보안을 설정할 수 있습니다.&lt;/p&gt;
+&lt;pre id=&quot;code_1554358406812&quot; class=&quot;prettyprint kotlin linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;@Configuration
+@EnableWebSecurity
+class SecurityConfig : WebSecurityConfigurerAdapter() {
+
+    @Autowired
+    fun provider() = MyAuthenticationProvider()
+
+
+    override fun configure(auth: AuthenticationManagerBuilder) {
+        auth.authenticationProvider(provider())
+    }
+
+    override fun configure(web: WebSecurity) {
+        web.ignoring().antMatchers(&quot;/resource/**&quot;, &quot;/static/**&quot;, &quot;/favicon.ico&quot;)
+    }
+
+    override fun configure(http: HttpSecurity) {
+        http.csrf().disable().httpBasic()
+        http.headers().frameOptions().disable()
+
+        http.authorizeRequests()
+                .antMatchers(&quot;/login&quot;).permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .formLogin()
+                .loginPage(&quot;/login&quot;).loginProcessingUrl(&quot;/auth&quot;)
+                .defaultSuccessUrl(&quot;/index&quot;, true)
+                .failureUrl(&quot;/login?error&quot;)
+                .and()
+                .logout()
+                .logoutSuccessUrl(&quot;/login?logout&quot;)
+                .deleteCookies(&quot;JSESSIONID&quot;)
+                .invalidateHttpSession(true)
+
+        http.sessionManagement().maximumSessions(1).maxSessionsPreventsLogin(true)
+    }
+
+
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;&lt;b&gt;1행 : @Cofiguration 어노테이션을 통해, configuration으로 등록합니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;2행 : WebSecurityConfigurerAdapter와 함께 사용되며, 스프링 시큐리티를 사용할 때 사용합니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;6행 : 이전에 만든 AuthenticationProvider를 빈으로 등록해줍니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;10행 : AuthenticationManageBuilder를 provider를 통해, 실질적 인증절차를 진행하게 해줍니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;14행 : 해당 접근에 대해, 무시를 해주는 코드를 넣습니다(전역)&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;18행 : csrf를 꺼줍니다 (Csrf를 사용할 때에는 필요 없는 코드입니다)&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;21행 : authorize에 관한 동작입니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;22행, 23행 : &quot;/login&quot;은 전체에게 공개, 이외에는 authentication을 통해 권한을 얻은 사람만 접근하게 합니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;25행 - 28행 : login에 관한 내용입니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;30행 - 33행 : logout에 관한 내용입니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;35행 : 세션 관리입니다. 현재 맥시멈을 1개로 두어, 동시로그인이 불가능하게 했습니다&amp;nbsp;&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h2&gt;2. login page, index page 구현&lt;/h2&gt;
+&lt;p&gt;Spring security는 기본 로그인 페이지를 지원하지만, 보통은 커스텀 로그인 페이지를 만들고자 할 것입니다. 저는 타임리프 템플릿 엔진을 통해 로그인페이지를 간단히 구현하겠습니다.&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/b0PYrw/btqt4yPmjgM/AKZuBgJRBcJns57XO9KFFK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/b0PYrw/btqt4yPmjgM/AKZuBgJRBcJns57XO9KFFK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fb0PYrw%2Fbtqt4yPmjgM%2FAKZuBgJRBcJns57XO9KFFK%2Fimg.png' width=&quot;407&quot; height=&quot;180&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;타임리프는 기본적으로 resource 밑에, templates에 html파일을 통해 구현할 수 있습니다&lt;/li&gt;
+&lt;li&gt;로그인 페이지인 login.html과 , 로그인에 성공했을 때 들어가는 index.html을 만들었습니다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;login.html&lt;/h4&gt;
+&lt;pre id=&quot;code_1554359332186&quot; class=&quot;prettyprint html xml linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;&amp;lt;!DOCTYPE html&amp;gt;
+&amp;lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xmlns:th=&quot;http://www.thymeleaf.org&quot;  xmlns:sec=&quot;http://www.thymeleaf.org/extras/spring-security&quot;&amp;gt;
+&amp;lt;head&amp;gt;
+    &amp;lt;title&amp;gt;Login page&amp;lt;/title&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body&amp;gt;
+    &amp;lt;script type=&quot;text/javascript&quot; sec:authorize=&quot;isAuthenticated()&quot;&amp;gt;
+        location.href = &quot;/index&quot;
+    &amp;lt;/script&amp;gt;
+
+    &amp;lt;h1&amp;gt;Login page&amp;lt;/h1&amp;gt;
+    &amp;lt;div th:if=&quot;${param.error}&quot;&amp;gt;
+        계정과 비밀번호 확인
+    &amp;lt;/div&amp;gt;
+    &amp;lt;div th:if=&quot;${param.logout}&quot;&amp;gt;
+        로그아웃
+    &amp;lt;/div&amp;gt;
+
+    &amp;lt;form th:action=&quot;@{/auth}&quot; method=&quot;post&quot;&amp;gt;
+        &amp;lt;input type=&quot;text&quot; id=&quot;username&quot; name=&quot;username&quot; autofocus=&quot;autofocus&quot; placeholder=&quot;id&quot;/&amp;gt; &amp;lt;br /&amp;gt;
+        &amp;lt;input type=&quot;password&quot; id=&quot;password&quot; name=&quot;password&quot; placeholder=&quot;pw&quot;/&amp;gt; &amp;lt;br /&amp;gt;
+        &amp;lt;input type=&quot;submit&quot; value=&quot;Log in&quot; /&amp;gt;
+    &amp;lt;/form&amp;gt;
+
+
+    &amp;lt;h3&amp;gt;Admin : admin/123 &amp;lt;/h3&amp;gt;
+    &amp;lt;h3&amp;gt;User : user/456 &amp;lt;/h3&amp;gt;
+    &amp;lt;script src=&quot;//code.jquery.com/jquery-2.2.4.min.js&quot;&amp;gt;&amp;lt;/script&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li style=&quot;text-align: justify;&quot;&gt;&lt;b&gt;2행 : 타임리프 엔진을 사용한다는 것을 명시합니다 - sec의 경우 1번글에서 보이는 spring security5용을 따로 의존성 추가를 해줘야합니다 (스프링 부트 기본 설정에서 빠짐)&lt;/b&gt;&lt;/li&gt;
+&lt;li style=&quot;text-align: justify;&quot;&gt;&lt;b&gt;7행 - 9행 : isAutenticated() - 현재 인증이 완료된 상태이면 login페이지가 아닌 index페이지로 연결&lt;/b&gt;&lt;/li&gt;
+&lt;li style=&quot;text-align: justify;&quot;&gt;&lt;b&gt;12행, 15행 : 각각 get으로 파라미터가 error, logout이 들어오면 아래의 내용을 출력해줍니다&lt;/b&gt;&lt;/li&gt;
+&lt;li style=&quot;text-align: justify;&quot;&gt;&lt;b&gt;19행 : authentication을 진행할 url ( 위에 configure(httpsecurity)에 지정해준 loginProcessingUrl과 동일해야 합니다)&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Index.html&lt;/h3&gt;
+&lt;pre id=&quot;code_1554359657124&quot; class=&quot;prettyprint html xml linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;&amp;lt;!DOCTYPE html&amp;gt;
+&amp;lt;html xmlns:sec=&quot;http://www.thymeleaf.org/extras/spring-security&quot; &amp;gt;
+&amp;lt;head&amp;gt;
+    &amp;lt;meta charset=&quot;UTF-8&quot;&amp;gt;
+    &amp;lt;title&amp;gt;Example&amp;lt;/title&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body&amp;gt;
+    &amp;lt;span sec:authorize=&quot;hasRole('ROLE_ADMIN')&quot;&amp;gt;
+        &amp;lt;button&amp;gt;
+            &amp;lt;a href=&quot;/logout&quot;&amp;gt;&amp;lt;h2&amp;gt;ADMIN Logout&amp;lt;/h2&amp;gt;&amp;lt;/a&amp;gt;
+        &amp;lt;/button&amp;gt;
+    &amp;lt;/span&amp;gt;
+    &amp;lt;span sec:authorize=&quot;hasRole('ROLE_USER')&quot;&amp;gt;
+        &amp;lt;button&amp;gt;
+            &amp;lt;a href=&quot;/logout&quot;&amp;gt;&amp;lt;h2&amp;gt;USER Logout&amp;lt;/h2&amp;gt;&amp;lt;/a&amp;gt;
+        &amp;lt;/button&amp;gt;
+    &amp;lt;/span&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;8행, 13행 : sec:auhtorize=&quot;hasRole('~~')&quot; : ~~라는 권한을 가질 경우, 동작하게 하는 함수입니다&lt;/li&gt;
+&lt;li&gt;10행, 14행 : &quot;/logout&quot; - httpsecurity에 정해놓은, logout url로 가게 해줍니다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h2&gt;3. WebMvcConfigurer 구현&lt;/h2&gt;
+&lt;p&gt;index페이지와, login페이지를 연결해줄 Configuerer를 구현합니다&lt;/p&gt;
+&lt;pre id=&quot;code_1554359919853&quot; class=&quot;prettyprint kotlin linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;@Configuration
+class MvcConfig : WebMvcConfigurer{
+    override fun addViewControllers(registry: ViewControllerRegistry) {
+        registry.addViewController(&quot;/login&quot;).setViewName(&quot;/login&quot;)
+        registry.addViewController(&quot;/index&quot;).setViewName(&quot;/index&quot;)
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;&lt;b&gt;기본적으로 resource/templates 가 기본으로 설정돼 있습니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;3행 : ViewControllerRegistry에 /login url(controller)에, login.html(view)를 등록해줍니다&amp;nbsp;&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;4행 : 3행과 마찬가지로 index를 등록합니다&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cnQ0p2/btqt4yaQ7OA/76V5DU5kea00AjcmTrP0zk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cnQ0p2/btqt4yaQ7OA/76V5DU5kea00AjcmTrP0zk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcnQ0p2%2Fbtqt4yaQ7OA%2F76V5DU5kea00AjcmTrP0zk%2Fimg.png' width=&quot;365&quot; height=&quot;367&quot;&gt;&lt;/span&gt;&lt;figcaption&gt;&lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;여기까지 따라오셨다면 기본적인 로그인 구현은 끝이났습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
+&lt;h2&gt;4. 실행 결과&lt;/h2&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/pYfag/btqt7SGoTbZ/V5vk1OTbxbfpjIZktewdB0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/pYfag/btqt7SGoTbZ/V5vk1OTbxbfpjIZktewdB0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FpYfag%2Fbtqt7SGoTbZ%2FV5vk1OTbxbfpjIZktewdB0%2Fimg.png' width=&quot;384&quot; height=&quot;361&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;스프링 부트를 실행 시켜준 뒤, localhost:8080(기본호스트)로 연결해준 화면입니다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/oSJ4Z/btqt3IY3wOh/KhaWHaZXH8eJR9kT8KldY0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/oSJ4Z/btqt3IY3wOh/KhaWHaZXH8eJR9kT8KldY0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FoSJ4Z%2Fbtqt3IY3wOh%2FKhaWHaZXH8eJR9kT8KldY0%2Fimg.png' width=&quot;374&quot; height=&quot;149&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;admin, 123으로 Login했을 때의 화면입니다. role이 ROLE_ADMIN이기 때문에, ADMIN_Logout버튼이 나옵니다.&lt;/li&gt;
+&lt;li&gt;Logout을 누르면 다시 loginpage로 돌아갑니다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/FU25V/btqt3IdGpyZ/ecUwafjJxdMVLvKOI8Web1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/FU25V/btqt3IdGpyZ/ecUwafjJxdMVLvKOI8Web1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FFU25V%2Fbtqt3IdGpyZ%2FecUwafjJxdMVLvKOI8Web1%2Fimg.png' width=&quot;344&quot; height=&quot;276&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot;&gt;
+&lt;li&gt;로그아웃을 했기 때문에, logout파라미터가 붙었기 때문에, 로그아웃을 출력해줬습니다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bT9sf6/btqt8KVqcu3/B7IklqOlRId72gQ3wb2nUK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bT9sf6/btqt8KVqcu3/B7IklqOlRId72gQ3wb2nUK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbT9sf6%2Fbtqt8KVqcu3%2FB7IklqOlRId72gQ3wb2nUK%2Fimg.png' width=&quot;291&quot; height=&quot;122&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;user로 로그인을 했을 때의 페이지입니다.&amp;nbsp;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
+&lt;p&gt;지금까지 Spring Security를 이용하여, 간단한 로그인 페이지를 구현해보았습니다.&lt;/p&gt;
+&lt;p&gt;궁금한 점이 있다면 댓글 달아주세요&lt;/p&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/bobfull/spring-kotlin-security-study&quot;&gt;https://github.com/bobfull/spring-kotlin-security-study&lt;/a&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;예제 코드가 있는 github 주소입니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;figure id=&quot;og_1554360592661&quot; contenteditable=&quot;false&quot; data-ke-type=&quot;opengraph&quot;&gt;&lt;a href=&quot;https://github.com/bobfull/spring-kotlin-security-study&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot; data-original-url=&quot;https://github.com/bobfull/spring-kotlin-security-study&quot;&gt;
+&lt;div class=&quot;og-image&quot; style=&quot;background-image: url('https://scrap.kakaocdn.net/dn/d0FFV5/hyABQ2d19P/BCc8nGDMY9wOm6eZJEcPP0/img.png?width=420&amp;amp;height=420&amp;amp;face=0_0_420_420');&quot;&gt;&amp;nbsp;&lt;/div&gt;
+&lt;div class=&quot;og-text&quot;&gt;
+&lt;p class=&quot;og-title&quot;&gt;bobfull/spring-kotlin-security-study&lt;/p&gt;
+&lt;p class=&quot;og-desc&quot;&gt;Contribute to bobfull/spring-kotlin-security-study development by creating an account on GitHub.&lt;/p&gt;
+&lt;p class=&quot;og-host&quot;&gt;github.com&lt;/p&gt;
+&lt;/div&gt;
+&lt;/a&gt;&lt;/figure&gt;</description>
+<category>SW개발</category>
+<category>kotlin</category>
+<category>Spring</category>
+<category>springboot</category>
+<category>SpringFramework</category>
+<category>springsecurity</category>
+<category>Thymeleaf</category>
+<category>스프링</category>
+<category>스프링부트</category>
+<category>스프링시큐리티</category>
+<category>코틀린</category>
+<author>사용자 밥풀(Bob Full)</author>
+<guid>https://bob-full.tistory.com/9</guid>
+<comments>https://bob-full.tistory.com/9#entry9comment</comments>
+<pubDate>Thu, 04 Apr 2019 15:50:43 +0900</pubDate>
+</item>
+<item>
+<title>Kotlin + Spring boot security + thymeleaf 로그인 구현(2)</title>
+<link>https://bob-full.tistory.com/8</link>
+<description>&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/btD50x/btqt0sOqgyE/7vvADLdIXbXEAWda0PBCZ0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/btD50x/btqt0sOqgyE/7vvADLdIXbXEAWda0PBCZ0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbtD50x%2Fbtqt0sOqgyE%2F7vvADLdIXbXEAWda0PBCZ0%2Fimg.png' width=&quot;263&quot; height=&quot;336&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://bob-full.tistory.com/7&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;2019/03/28 - [SW개발] - Kotlin + Spring boot security + thymeleaf 로그인 구현(1)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;프로젝트가 무사히 생성 됐다면, 위 화면처럼 됐을겁니다.&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;간단한 로그인 구현은 이렇게 만들어진 프로젝트에서 해보겠습니다.&lt;/p&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
+&lt;h2&gt;1. UserDeatails 인터페이스 구현&lt;/h2&gt;
+&lt;p&gt;Security에서 사용할 UserDetails객체를 구현합니다. 이는 사용자의 정보를 담아주는 역할을 합니다.&lt;/p&gt;
+&lt;pre id=&quot;code_1554096210096&quot; class=&quot;prettyprint kotlin linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;class MyUserDetail(val id : String, val pw : String, val role : String) : UserDetails {
+    override fun getAuthorities(): MutableCollection&amp;lt;out GrantedAuthority&amp;gt; {
+        val authorities = ArrayList&amp;lt;GrantedAuthority&amp;gt;()
+        authorities.add(SimpleGrantedAuthority(role))
+        return authorities
+    }
+
+    override fun getPassword() = pw
+    
+    override fun getUsername() = id
+
+    override fun isCredentialsNonExpired() = true
+
+    override fun isEnabled() = true
+
+    override fun isAccountNonExpired() = true
+
+    override fun isAccountNonLocked() = true
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;&lt;b&gt;1 행 : 객체가 가지게 되는, 데이터입니다 - 예시에서는 id, pw, role(역할)&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;2행 : 객체가 가지게 되는, 권한(authorites)을 반환합니다 - 예시에서는, role의 값을 역할로 반환해줍니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;8행. 9행 : 각각 패스워드와 아이디를 반환합니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;나머지 : 이 객체가 유효한지에 대한 정보를 반환합니다&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h2&gt;2. AuthenticationProvider 인터페이스 구현&lt;/h2&gt;
+&lt;p&gt;Security에서, 내가 받을 UserDetails의 정보를 바탕으로, authenticate를 직접 수행해 줄, provider입니다. 이 인터페이스를 구현함으로서 Security는 Authentication을 할 수 있습니다.&lt;/p&gt;
+&lt;pre id=&quot;code_1554096520369&quot; class=&quot;prettyprint kotlin linenums&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;@Service
+class MyAuthenticationProvider : AuthenticationProvider {
+    companion object {
+        val idAndPw = mapOf(&quot;admin&quot; to &quot;123&quot;, &quot;user&quot; to &quot;456&quot;)
+        val idAndRole = mapOf(&quot;admin&quot; to &quot;ROLE_ADMIN&quot;, &quot;user&quot; to &quot;ROLE_USER&quot;)
+    }
+
+
+    override fun authenticate(authentication: Authentication): Authentication {
+        val authToken = authentication as UsernamePasswordAuthenticationToken
+
+        return when (idAndPw[authToken.principal.toString()] == authToken.credentials.toString()) {
+            false -&amp;gt; {
+
+                throw BadCredentialsException(&quot;Id &amp;amp; Password are Not Matched&quot;)
+            }
+            true -&amp;gt; {
+                val userDetail = MyUserDetail(authToken.principal.toString(), authToken.credentials.toString(), idAndRole[authToken.principal.toString()]!!)
+                UsernamePasswordAuthenticationToken(userDetail, userDetail.pw, userDetail.authorities)
+            }
+        }
+    }
+
+    override fun supports(authentication: Class&amp;lt;*&amp;gt;?): Boolean = true
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;&lt;b&gt;1행 : Provider를 @Service 어노테이션을 통해, 빈 등록을 해줍니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;3~6행 : 실제로는 데이터베이스 등에 있는 값으로, 로그인을 해야합니다. 하지만 편의상 예시로 만든 프로젝트이기 때문에 직접 코드로에 값을 넣어주었습니다. admin(id) / 123(pw) / ROLE_ADMIN (role)&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;9행 : 실제로 authenticate를 해주는 method를 오버라이드 하였습니다 - authentication객체는, 후에 html를 통해, 받아오는 id, pw가 담긴 객체입니다.&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;10행 : authentication의 객체로, Username과 Password가 담긴 UsernamepasswordAuthenticationToken을 만들어줍니다&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;13~22행 : id와 pw가 일치하면, role과함께 userdeail이 담긴 token을 반환해줍니다. 일치하지않으면 BadCredentialsException을 발생시킵니다.&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;24행 : 넘어온 authentication 객체가 유효한지 반환하는 method입니다.&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
+&lt;p&gt;여기까지, Authentication을 하기 위한, Userdetail과 Provider에 관한 구현입니다.&lt;/p&gt;</description>
+<category>SW개발</category>
+<category>kotlin</category>
+<category>Spring</category>
+<category>springboot</category>
+<category>SpringFramework</category>
+<category>Thymeleaf</category>
+<category>스프링</category>
+<category>스프링부트</category>
+<category>스프링시큐리티</category>
+<category>코틀린</category>
+<category>타임리프</category>
+<author>사용자 밥풀(Bob Full)</author>
+<guid>https://bob-full.tistory.com/8</guid>
+<comments>https://bob-full.tistory.com/8#entry8comment</comments>
+<pubDate>Mon, 01 Apr 2019 14:36:21 +0900</pubDate>
+</item>
+<item>
+<title>Kotlin + Spring boot security + thymeleaf 로그인 구현(1)</title>
+<link>https://bob-full.tistory.com/7</link>
+<description>&lt;p&gt;IDE는 intellij를 사용하도록 하겠습니다&lt;/p&gt;
+&lt;h2&gt;1. 프로젝트 생성&lt;/h2&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/LfkJb/btqtWZrkvp1/Qjer2tvKADtODr3Dachlb0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/LfkJb/btqtWZrkvp1/Qjer2tvKADtODr3Dachlb0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FLfkJb%2FbtqtWZrkvp1%2FQjer2tvKADtODr3Dachlb0%2Fimg.png' width=&quot;497&quot; height=&quot;317&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;&amp;nbsp; 스프링 이니셜라이저를 이용하여, 부트 프로젝트를 생성합니다 - Comunity 버전은 &lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;http://start.spring.io&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;start.spring.io&lt;/a&gt;&lt;/span&gt;에서 생성할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/sMpw3/btqtUjydJvf/NPG5koSDJmE3x0wKlgKo01/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/sMpw3/btqtUjydJvf/NPG5koSDJmE3x0wKlgKo01/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FsMpw3%2FbtqtUjydJvf%2FNPG5koSDJmE3x0wKlgKo01%2Fimg.png' width=&quot;487&quot; height=&quot;274&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;코틀린 프로젝트로 생성합니다. jdk버전은 8을 기준으로 하겠습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/Ao0JN/btqtWIQS4Zp/NCH16U7nHLW9bjMu4YJx1k/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/Ao0JN/btqtWIQS4Zp/NCH16U7nHLW9bjMu4YJx1k/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FAo0JN%2FbtqtWIQS4Zp%2FNCH16U7nHLW9bjMu4YJx1k%2Fimg.png' width=&quot;291&quot; height=&quot;194&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: square;&quot; data-ke-list-type=&quot;square&quot;&gt;
+&lt;li&gt;필요한 디펜던시는 3가지입니다. Web을 통해, mvc세팅, thymeleaf 템플릿 엔진, 그리고 가장 중요한 Security를 추가해줍니다.&lt;/li&gt;
+&lt;li&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; -&amp;gt; &lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://github.com/ihoneymon/spring-boot-orm-learn/blob/master/THYMELEAF_TEMPLATE_ENGINE.md&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;thymeleaf란?&lt;/a&gt;&lt;/span&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre id=&quot;code_1553759728618&quot; class=&quot;prettyprint xml&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;&amp;lt;dependency&amp;gt;
+    &amp;lt;groupId&amp;gt;org.thymeleaf.extras&amp;lt;/groupId&amp;gt;
+    &amp;lt;artifactId&amp;gt;thymeleaf-extras-springsecurity5&amp;lt;/artifactId&amp;gt;
+&amp;lt;/dependency&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;마지막으로 이런식으로 생성된 프로젝트의 pom.xml 에, thymeleaf + security 관련 디펜던시를 추가해줍니다.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/biaG2P/btqtT6lz98T/6MmEfVduXPdIFGLl84aauk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/biaG2P/btqtT6lz98T/6MmEfVduXPdIFGLl84aauk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbiaG2P%2FbtqtT6lz98T%2F6MmEfVduXPdIFGLl84aauk%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;* 모두 완료하셨다면, 프로젝트가 생성됐을 겁니다.&lt;/p&gt;</description>
+<category>SW개발</category>
+<category>kotlin</category>
+<category>Spring</category>
+<category>springsecurity</category>
+<category>Thymeleaf</category>
+<category>스프링</category>
+<category>스프링부트</category>
+<category>스프링부트시큐리티</category>
+<category>스프링시큐리티</category>
+<category>코틀린</category>
+<category>타임리프</category>
+<author>사용자 밥풀(Bob Full)</author>
+<guid>https://bob-full.tistory.com/7</guid>
+<comments>https://bob-full.tistory.com/7#entry7comment</comments>
+<pubDate>Thu, 28 Mar 2019 16:58:52 +0900</pubDate>
+</item>
+<item>
+<title>Spring Boot Security</title>
+<link>https://bob-full.tistory.com/6</link>
+<description>&lt;p style=&quot;position: absolute;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p style=&quot;font-size: 1.25em;&quot;&gt;&lt;b&gt;웹 보안의 3요소&lt;/b&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Principal - &lt;span&gt;사용자&lt;/span&gt; : &lt;span&gt;현재&lt;/span&gt; &lt;span&gt;서비스에&lt;/span&gt; &lt;span&gt;접근하기&lt;/span&gt; &lt;span&gt;위한&lt;/span&gt; &lt;span&gt;주체&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;Authentication - &lt;span&gt;인증&lt;/span&gt; : &lt;span&gt;사용자를&lt;/span&gt; &lt;span&gt;확인하는&lt;/span&gt; &lt;span&gt;과정&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;Authorization - &lt;span&gt;인가&lt;/span&gt; : &lt;span&gt;확인&lt;/span&gt; &lt;span&gt;된&lt;/span&gt; &lt;span&gt;사용자에&lt;/span&gt; &lt;span&gt;대한&lt;/span&gt; &lt;span&gt;권한&lt;/span&gt; &lt;span&gt;검사&lt;/span&gt; &lt;span&gt;및&lt;/span&gt; &lt;span&gt;부여&lt;/span&gt;&lt;br /&gt;&amp;rarr; Spring boot Security&lt;span&gt;는&lt;/span&gt; &lt;span&gt;이&lt;/span&gt; 3&lt;span&gt;가지를&lt;/span&gt; &lt;span&gt;쉽게&lt;/span&gt; &lt;span&gt;사용가능하며&lt;/span&gt;, &lt;span&gt;확장성&lt;/span&gt; &lt;span&gt;또한&lt;/span&gt; &lt;span&gt;매우&lt;/span&gt; &lt;span&gt;높음&lt;/span&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p style=&quot;font-size: 1.25em;&quot;&gt;&lt;b&gt;Spring&amp;nbsp; Security&amp;nbsp;&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/uHDgk/btqtUAsVVEk/8DNbsz5jQAxDBDTpBPK8sk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/uHDgk/btqtUAsVVEk/8DNbsz5jQAxDBDTpBPK8sk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FuHDgk%2FbtqtUAsVVEk%2F8DNbsz5jQAxDBDTpBPK8sk%2Fimg.png' width=&quot;195&quot; height=&quot;181&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;span&gt;Spring Framework&lt;/span&gt;를&lt;span&gt; &lt;/span&gt;기반으로&lt;span&gt;, &lt;/span&gt;포괄적인&lt;span&gt; &lt;/span&gt;보안시스템을&lt;span&gt; &lt;/span&gt;제공하는&lt;span&gt; &lt;/span&gt;오픈&lt;span&gt; &lt;/span&gt;플랫폼&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;Spring boot starter&lt;/b&gt;&lt;span&gt;에&lt;/span&gt; &lt;span&gt;포함시켜&lt;/span&gt; &lt;span&gt;작업할&lt;/span&gt; &lt;span&gt;수&lt;/span&gt; &lt;span&gt;있음&lt;/span&gt;&lt;br /&gt;&amp;rarr;&amp;nbsp;&amp;nbsp;&lt;b&gt;@EnableWebSecurity &lt;span&gt;어노테이션과&lt;/span&gt;, WebSeucrityConfigureAdapter &lt;span&gt;인터페이스를&lt;/span&gt; &lt;span&gt;통해&lt;/span&gt; &lt;span&gt;간단히&lt;/span&gt; &lt;span&gt;구현&lt;/span&gt; &lt;span&gt;가능&lt;/span&gt;&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;참고할만한&lt;span&gt; &lt;/span&gt;자료&lt;/li&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;span&gt;&lt;span&gt;&lt;/span&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://spring.io/projects/spring-security&quot;&gt;https://spring.io/projects/spring-security&lt;/a&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&quot;color: #000000;&quot;&gt;&amp;nbsp;- 스프링 시큐리티 기술문서&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://sjh836.tistory.com/165&quot;&gt;https://sjh836.tistory.com/165&lt;/a&gt;&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://okky.kr/article/382738&quot;&gt;https://okky.kr/article/382738&lt;/a&gt;&amp;nbsp;-&amp;nbsp;&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://tramyu.github.io/java/spring/spring-security/&quot;&gt;https://tramyu.github.io/java/spring/spring-security/&lt;/a&gt;&amp;nbsp;&lt;span style=&quot;color: #000000;&quot;&gt;- 스프링 시큐리티의 간략한 구조&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/ul&gt;
+&lt;p style=&quot;font-size: 1.25em;&quot;&gt;&lt;b&gt;Spring boot Security&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/dzq0OD/btqtT6eOrZm/apuTh5ktGPHCRckWRGjkqk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/dzq0OD/btqtT6eOrZm/apuTh5ktGPHCRckWRGjkqk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fdzq0OD%2FbtqtT6eOrZm%2FapuTh5ktGPHCRckWRGjkqk%2Fimg.png' width=&quot;232&quot; height=&quot;116&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Spring Security&lt;span&gt;에&lt;/span&gt; &lt;span&gt;스타터를&lt;/span&gt; &lt;span&gt;제공해&lt;/span&gt;, &lt;span&gt;더&lt;/span&gt; &lt;span&gt;빠른&lt;/span&gt; &lt;span&gt;설정을&lt;/span&gt; &lt;span&gt;지원하는&lt;/span&gt; &lt;span&gt;프로젝트&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span&gt;Principal + Authentication을 통해 Authorization을 쉽게 가능&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span&gt;전통적인&lt;/span&gt; &lt;span&gt;인증방식&lt;/span&gt;(principe + credential), &lt;span&gt;이중&lt;/span&gt; &lt;span&gt;인증방식&lt;/span&gt;,&amp;nbsp; OAuth2 &lt;span&gt;인증방식&lt;/span&gt; &lt;span&gt;모두&lt;/span&gt; &lt;span&gt;지원&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;참고할만한&lt;span&gt; &lt;/span&gt;자료&lt;/li&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;span&gt;&lt;span&gt;&lt;/span&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://gs.saro.me/dev?tn=480&quot;&gt;https://gs.saro.me/dev?tn=480&lt;/a&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&amp;nbsp;&lt;span style=&quot;color: #000000;&quot;&gt;- Spring boot Security 예제&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span style=&quot;color: #1b9ae6;&quot;&gt;&lt;a style=&quot;color: #1b9ae6;&quot; href=&quot;https://syaku.tistory.com/373&quot;&gt;https://syaku.tistory.com/373&lt;/a&gt;&amp;nbsp;&lt;span style=&quot;color: #000000;&quot;&gt;- 스프링 부트 시큐리티 설정과 사용자 인증&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;b&gt;&lt;span&gt;[Maven 의존성 추가로 사용가능]&lt;/span&gt;&lt;/b&gt;&lt;/h4&gt;
+&lt;pre id=&quot;code_1553758578064&quot; class=&quot;prettyprint linenums xml&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;&amp;lt;dependency&amp;gt;
+ &amp;lt;groupId&amp;gt;org.springframework.boot&amp;lt;/groupId&amp;gt;
+ &amp;lt;artifactId&amp;gt;spring-boot-starter-security&amp;lt;/artifactId&amp;gt;
+&amp;lt;/dependency&amp;gt; &lt;/code&gt;&lt;/pre&gt;</description>
+<category>SW개발</category>
+<category>보안</category>
+<category>스프링</category>
+<category>스프링부트</category>
+<category>스프링부트시큐리티</category>
+<category>스프링시큐리티</category>
+<category>시큐리티</category>
+<author>사용자 밥풀(Bob Full)</author>
+<guid>https://bob-full.tistory.com/6</guid>
+<comments>https://bob-full.tistory.com/6#entry6comment</comments>
+<pubDate>Thu, 28 Mar 2019 16:00:10 +0900</pubDate>
+</item>
+<item>
+<title>해피뉴이어 무지 후기</title>
+<link>https://bob-full.tistory.com/5</link>
+<description>&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;2019년 한정판 무지 구매했습니당.&amp;nbsp;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;2019년 황금돼지 해에 맞춰, 돼지 옷을 입은 무지에요.&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:400px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/991946335C683DA229&quot; filemime=&quot;image/jpeg&quot; filename=&quot;1.jpg&quot; height=&quot;500&quot; width=&quot;400&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;사실 일반 무지 인형에, 돼지 꼬까옷을 입을 인형입니다.&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:400px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/990D3B375C683DE11E&quot; filemime=&quot;image/jpeg&quot; filename=&quot;2.jpg&quot; height=&quot;500&quot; width=&quot;400&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;돼지 꼬까 옷을 벗기면, 순백의 하얀 무지 &amp;gt;&amp;lt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:400px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99E632345C683DFF1D&quot; filemime=&quot;image/jpeg&quot; filename=&quot;3.jpg&quot; height=&quot;500&quot; width=&quot;400&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;실은 그냥 무지가 아니라, 리틀 무지입니다.&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;귀엽네요... 한정판이에요..&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>일상</category>
+<category>2019년</category>
+<category>리틀무지</category>
+<category>무지</category>
+<category>카카오</category>
+<category>카카오 무지</category>
+<category>카카오프렌즈</category>
+<category>카카오후기</category>
+<category>프렌즈샵</category>
+<category>한정판</category>
+<category>해피뉴이어리미티드무지</category>
+<category>황금돼지</category>
+<author>사용자 밥풀(Bob Full)</author>
+<guid>https://bob-full.tistory.com/5</guid>
+<comments>https://bob-full.tistory.com/5#entry5comment</comments>
+<pubDate>Sun, 17 Feb 2019 01:46:36 +0900</pubDate>
+</item>
+<item>
+<title>감귤 라이언 미니인형 &amp; 키링 후기</title>
+<link>https://bob-full.tistory.com/4</link>
+<description>&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;제주도에서 사온 감귤라이언 미니인형과 키링입니다. &lt;b&gt;사실 귤보다 곶감같아요&lt;/b&gt;. &lt;strike&gt;곶감라이언~&lt;/strike&gt;&lt;/p&gt;&lt;p style=&quot;clear: none; float: none; text-align: center;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:320px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/993B42405C617A5815&quot; filemime=&quot;image/jpeg&quot; filename=&quot;KakaoTalk_20190211_222949547.jpg&quot; height=&quot;426&quot; width=&quot;320&quot;/&gt;&lt;/span&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:320px;text-align: center;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99E663395C617B7714&quot; filemime=&quot;image/jpeg&quot; filename=&quot;KakaoTalk_20190211_224036107.jpg&quot; height=&quot;426&quot; style=&quot;text-align: center;&quot; width=&quot;320&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;&lt;br /&gt;&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;RYAN 라이언 - 위트의 아이콘, 믿음직 스러운 조언자 라이언&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;덩치가 크고 표정이 무뚝뚝하지만, 여리고 섬세한 소녀감성을 지닌 반전 매력의 소유자&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;둥둥섬의 왕위 계승자였으나, 자유로운 삶을 동경해 탈출!&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;지금은 카카오프렌즈에서 든든한 조언자 역할을 하며 색다른 즐거움을 선사하고 있다.&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:320px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/992D1B405C617A5916&quot; filemime=&quot;image/jpeg&quot; filename=&quot;KakaoTalk_20190211_222950150.jpg&quot; height=&quot;426&quot; width=&quot;320&quot;/&gt;&lt;/span&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:320px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/995170405C617A5914&quot; filemime=&quot;image/jpeg&quot; filename=&quot;KakaoTalk_20190211_222950568.jpg&quot; height=&quot;426&quot; width=&quot;320&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:400px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/998475335C617C2209&quot; filemime=&quot;image/jpeg&quot; filename=&quot;KakaoTalk_20190211_224035564.jpg&quot; height=&quot;533&quot; style=&quot;&quot; width=&quot;400&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;b&gt;마지막 사진은, 미니인형 귀에 달린 라이언 키링&lt;/b&gt;&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>일상</category>
+<category>감귤라이언</category>
+<category>곶감라이언</category>
+<category>라이언</category>
+<category>라이언 후기</category>
+<category>제주 카카오</category>
+<category>제주라이언</category>
+<category>카카오</category>
+<category>카카오 프렌즈 샵</category>
+<category>카카오프렌즈</category>
+<author>사용자 밥풀(Bob Full)</author>
+<guid>https://bob-full.tistory.com/4</guid>
+<comments>https://bob-full.tistory.com/4#entry4comment</comments>
+<pubDate>Mon, 11 Feb 2019 22:45:32 +0900</pubDate>
+</item>
+<item>
+<title>2018년 하반기 취업준비 후기(Kakao 최종 합격)</title>
+<link>https://bob-full.tistory.com/3</link>
+<description>&lt;div style=&quot;TEXT-ALIGN: left&quot;&gt;안녕하세요.&lt;br /&gt;&lt;br /&gt;2018년 하반기 취업준비 후기입니다. &lt;br /&gt;직무 - Sw개발&lt;br /&gt;&lt;br /&gt;&lt;b&gt;&lt;big&gt;1) 서류전형&lt;/big&gt;&lt;/b&gt;&lt;br /&gt;자기소개서는 방학 때, 상반기에 학교 다니면서 방향을 잡았고, 단기 인턴을 하면서 조금씩 적어나가기 시작했어요. &lt;br /&gt;&lt;br /&gt;처음으로 서류전형에 도전하는만큼, 많은 합격을 바라진 않았지만, 우수수 쓰는대로 다 떨어지고.. 포기할 때 쯤 Cns 합격 소식을 들었을 땐 정말 기뻤어요.&lt;br /&gt;&lt;br /&gt;&lt;span style=&quot;COLOR: #5369be&quot;&gt;&lt;b&gt;&lt;span style=&quot;COLOR: #5369be&quot;&gt;&lt;b&gt;서류 합격 : Lg cns&lt;/b&gt;&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;br /&gt;&lt;span style=&quot;COLOR: #759931&quot;&gt;&lt;span style=&quot;COLOR: #dea214&quot;&gt;&lt;span style=&quot;COLOR: #5369be&quot;&gt;&lt;b&gt;&lt;span style=&quot;COLOR: #759931&quot;&gt;서류 무승부 : 삼성전자(다수 합격)&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;br /&gt;&lt;span style=&quot;COLOR: #de5214&quot;&gt;&lt;b&gt;&lt;span style=&quot;COLOR: #de5214&quot;&gt;&lt;span style=&quot;COLOR: #5369be&quot;&gt;&lt;span style=&quot;COLOR: #de5214&quot;&gt;&lt;b&gt;서류 불합격 : 현대모비스, SK 하이닉스, Lg 전자, Kt, SK C&amp;amp;C, 현대오트론... 등등 다수&lt;/b&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/b&gt;&lt;/span&gt;&lt;br /&gt;&lt;b&gt;--------------&lt;/b&gt;&lt;b&gt;------------&lt;/b&gt;&lt;br /&gt;&lt;br /&gt;&lt;big&gt;&lt;b&gt;2) 인적성&lt;/b&gt;&lt;/big&gt;&lt;big&gt;&lt;b&gt;, 코딩테스트&lt;/b&gt;&lt;/big&gt;&lt;br /&gt;보다시피, 서류는 우수수 떨어져서.. LG CNS와 삼성전자에 기회가 생겼어요&lt;br /&gt;--------------------&lt;br /&gt;&lt;b&gt;LG CNS 인적성 후기&lt;/b&gt;&lt;br /&gt;&lt;b&gt;직무&lt;/b&gt; - 1지망 IoT / 2지망 SW개발&lt;br /&gt;&lt;br /&gt;&lt;b&gt;준비)&lt;/b&gt; &lt;big&gt;&lt;small&gt;CNS 월요일에 결과를 얻고, 바로 토요일에 시험이었어요. 중간에 졸업발표까지 겹쳐서 힘들었어요. 시중에 있는 LG 인적성 문제집 2개를 사서 5일동안 풀었어요.&lt;/small&gt;&lt;/big&gt;&lt;big&gt;&lt;small&gt; &lt;/small&gt;&lt;/big&gt;&lt;br /&gt;&lt;br /&gt;&lt;b&gt;시&lt;/b&gt;&lt;b&gt;험) &lt;/b&gt;CNS는 기존 LG공통 인적성과 함께, ITQ라는 과목을 보게 됐어요. 그로 인해 시간은 시험을 오후 내내 보게 됐어요. 중간에 에너지바도 나눠줬는데, 이거 아니었으면 배고파서 죽을뻔 했네요..&lt;br /&gt;난이도는, 진짜 어려웠어요. 6교시 도형추리(?)는 15문제 중 6문제 정도 밖에 못풀었거든요... 그래도 걱정이었던 ITQ는 고등학고 수학수준이어서 쉽게 봤어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과)&lt;/b&gt;&lt;b&gt; 합격&lt;/b&gt;&lt;br /&gt;진짜 망했다고, 생각해서 사실 합격할거란 생각도 하지 못했어요. 체감상 ITQ가 중요했던 것 같고, 내가 어려운건 남들도 어렵다는걸 깨달을 수 있었어요&lt;br /&gt;&lt;br /&gt;----------------------&lt;br /&gt;&lt;br /&gt;&lt;b&gt;삼성전자 SW역량테스트 후기&lt;/b&gt;&lt;br /&gt;생활가전 sw개발&lt;br /&gt;&lt;b&gt;준비)&lt;/b&gt; 삼성 Sw익스퍼트 아카데미 라는 사이트에서 준비했어요. 역량모의문제 + BFS DFS 시뮬레이션 위주로 준비하면, 왠만큼 합격할 수 있을 것이라 생각했습니다.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;시험)&lt;/b&gt; 오후에 시험을 봤어요. 1번은 백준에서 나무재테크란 문제로 찾을 수 있고, 2번은 아기상어라는 문제로 찾아 볼 수 있어요. 2번은 bfs를 이용해서 40분만에 풀었는데.. 1번이 남은시간 안에 도저히 안풀리더라구요... 그래서 2번만 풀고 제출하고 나왔습니다.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과)&lt;/b&gt; &lt;b&gt;합격&lt;/b&gt;&lt;b&gt; (2지망 직무로 합격 - SW개발)&lt;/b&gt;&lt;br /&gt;다들 보통 1문제가 컷이라고 했고, 저 또한 합격 통보를 받게 됐습니다. &lt;br /&gt;&lt;br /&gt;----------------------&lt;br /&gt;&lt;br /&gt;&lt;b&gt;카카오 코딩테스트 후기 - 1차&lt;/b&gt;&lt;br /&gt;- 개발자 블라인드 전형&lt;br /&gt;&lt;b&gt;준비) &lt;/b&gt;준비는, 주로 종만북이라고 불리는 &lt;u&gt;알고리즘 문제해결전략&lt;/u&gt; 이라는 책 위주로 1년 간 꾸준리 공부했어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;시험)&lt;/b&gt; 1차는 온라인으로 진행됐고,&amp;nbsp; 2017년 보다는 좀 어렵다는 느낌이었어요. 커트라인은 공개 되지 않아서 모르지만, 작년과 비슷한 것 같았어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과) 합격&lt;/b&gt;&lt;br /&gt;7문제 중에, 과반수 이상을 풀었고 합격했습니다.&lt;br /&gt;&lt;br /&gt;-----------------------&lt;br /&gt;&lt;br /&gt;&lt;b&gt;카카오 코딩테스트 후기 - 2차&lt;/b&gt;&lt;br /&gt;&lt;b&gt;준비)&lt;/b&gt; 1차에 합격하면, 카카오에서 키워드를 줍니다. 이 키워드를 바탕으로, 약 2주 간 열심히 공부했어요. 중간에 추석도 껴있어서 집중하기가 좀 힘들었어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;시험)&lt;/b&gt; 2차 시험은, 오프라인으로 치뤄졌습니다. 대기시간까지 총 6시간 진행 된 만큼, 먹을 게 많았어요(호두과자랑 과자 등등). 시험 방식이 살짝 평소와 달랐던게 힘들었고, 금방 적응하지 못해서 시험 막바지에나 답을 제출 할 수 있었어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과) 합격&lt;/b&gt;&lt;br /&gt;겨우겨우 제출했고, 중간순위도 매우 낮았던 걸로 기억해서 반은 포기하고 있었는데 붙었어요. &lt;br /&gt;&lt;br /&gt;&lt;b&gt;-------------------------&lt;/b&gt;&lt;br /&gt;&lt;br /&gt;&lt;big&gt;&lt;b&gt;3) 면접 후기 &lt;/b&gt;&lt;/big&gt;&lt;br /&gt;면접은 총 LG CNS 1차, 카카오 1,2차를 세 번을 봤습니다. 삼성전자는 LG CNS 부트캠프 일정과 겹쳐서 가지 않았어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;면접 준비) &lt;/b&gt;학부 생활 중에 했던 프로젝트를 정리했어요. 그런 경험들에서 힘든 점, 좋았던 점, 창의적인 경험 들을 상반기부터 계속 생각하고 뽑아냈습니다. 이를 바탕으로 스터디도 진행했어요.&lt;br /&gt;-----------------&lt;br /&gt;&lt;b&gt;LG CNS 1차 면접)&lt;/b&gt; 실무진 면접이었어요. 평범한 다대다면접이었고, 간단한 전공 지식과 자기소개서 기반의 질문들이 이어졌어요. &lt;br /&gt;저는 인적성 결과에서 2지망 직무로 바꼈기 때문에, 자소서 기반 질문에서 큰 질문을 못 받았고, 평소 생각들을 자주 물으셨습니다.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과) 합격&lt;/b&gt;&lt;br /&gt;합격 후에 부트캠프라는 전형을 참가하게 됐습니다.&lt;br /&gt;------------------&lt;br /&gt;&lt;br /&gt;&lt;b&gt;카카오 1차 면접) &lt;/b&gt;면접은 토론인터뷰랑 기술인터뷰였어요. 각 면접이 긴 시간 동안, 전공지식과 더불어 대화 방식을 봤습니다. 면접자들을 되게 챙겨준다는 느낌이 많이 들어서 되게 좋았어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과) 합격&lt;/b&gt;&lt;br /&gt;분위기가 너무 좋아서? 오히려 떨어질 것 같아 걱정했지만 붙었어요. &lt;br /&gt;&lt;br /&gt;-----------------&lt;br /&gt;&lt;b&gt;카카오 최종면접)&lt;/b&gt;&lt;b&gt; &lt;/b&gt;일반적인 다대다 면접이었습니다. 왜 카카오인지, 왜 개발자인지 등의 기본적인 질문들은 되게 심층적으로 물으셨습니다. 저를 모두 보여주고 온 면접이었어요.&lt;br /&gt;&lt;br /&gt;&lt;b&gt;결과) 최종합격&lt;/b&gt;&lt;br /&gt;최종합격 당시에, Lg cns 부트캠프 진행 중이여서, 중도 퇴소를 하고 바로 집으로 가서 자랑했어요..ㅎㅎ&lt;br /&gt;
+&lt;p style=&quot;FLOAT: none; TEXT-ALIGN: center; CLEAR: none&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:225px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99E83A3C5BEFF0CB37&quot; filemime=&quot;image/jpeg&quot; filename=&quot;제목 없음.png&quot; height=&quot;309&quot; width=&quot;225&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;FLOAT: none; TEXT-ALIGN: center; CLEAR: none&quot;&gt; 입사 축하 선물&lt;/p&gt;
+&lt;p style=&quot;TEXT-ALIGN: left&quot;&gt;&amp;nbsp;&lt;/p&gt;합격 선물과 함께... 길다면 길고, 짧다면 짧았던 취업 준비가 끝나고 카카오 입사 OT를 기다리고 있습니다!!&lt;br /&gt;&lt;br /&gt;궁금한게 있으신 분들은 댓글 달아주시면 성심성의껏 알려드릴게요!!&lt;br /&gt;&lt;/div&gt;</description>
+<category>SW개발</category>
+<category>LG CNS</category>
+<category>SW개발</category>
+<category>개발자 면접</category>
+<category>면접</category>
+<category>면접 준비</category>
+<category>면접 후기</category>
+<category>시작</category>
+<category>인적성</category>
+<category>인적성 후기</category>
+<category>취업</category>
+<category>취업 준비</category>
+<category>카카오</category>
+<category>카카오 면접</category>
+<category>카카오 블라인드</category>
+<category>카카오 블라인드 후기</category>
+<category>코딩테스트</category>
+<category>코테</category>
+<category>코테 후기</category>
+<category>프로그래머</category>
+<author>사용자 밥풀(Bob Full)</author>
+<guid>https://bob-full.tistory.com/3</guid>
+<comments>https://bob-full.tistory.com/3#entry3comment</comments>
+<pubDate>Sat, 17 Nov 2018 17:44:28 +0900</pubDate>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,2787 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="https://pkgonan.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://pkgonan.github.io/" rel="alternate" type="text/html" /><updated>2019-04-29T09:34:54+00:00</updated><id>https://pkgonan.github.io/feed.xml</id><title type="html">기록은 기억을 지배한다</title><subtitle>경험과 기억을 공유하다</subtitle><author><name>[]</name></author><entry><title type="html">AWS Aurora DB Migration</title><link href="https://pkgonan.github.io/2019/04/aurora-db-migration" rel="alternate" type="text/html" title="AWS Aurora DB Migration" /><published>2019-04-06T00:00:00+00:00</published><updated>2019-04-06T00:00:00+00:00</updated><id>https://pkgonan.github.io/2019/04/aurora-db-migration</id><content type="html" xml:base="https://pkgonan.github.io/2019/04/aurora-db-migration">&lt;h2 id=&quot;목적&quot;&gt;목적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;AWS Aurora DB로 Migration 하기&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;배경&quot;&gt;배경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;전체 시스템 구조를 MSA 환경으로 전환&lt;/li&gt;
+  &lt;li&gt;이에 따라 담당하고 있는 서비스의 Production DB 분리 필요&lt;/li&gt;
+  &lt;li&gt;MariaDB 10.0.x -&amp;gt; AWS Aurora DB로 Migration 진행&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;db-migration-전략&quot;&gt;DB Migration 전략&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;replication 전략 - 서비스 점검 시간 매우 짧다&lt;/li&gt;
+  &lt;li&gt;xtrabackup 전략 - 물리적 백업으로 데이터를 통째로 복사&lt;/li&gt;
+  &lt;li&gt;mysqldump 전략 - 논리적 백업, 데이터 사이즈에 비례해서 서비스 점검 시간 증가&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;db-migration-전략의-적합성-분석&quot;&gt;DB Migration 전략의 적합성 분석&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;서비스 점검 시간이 매우 짧다는 점에서 Replication 전략이 가장 좋은 선택&lt;/li&gt;
+  &lt;li&gt;하지만.. MariaDB -&amp;gt; RDS Aurora로 데이터 동기화 과정에서 5.7의 경우 Master db를 찾지 못하는 버그&lt;/li&gt;
+  &lt;li&gt;따라서, Replication 방식을 사용할 경우 Aurora 5.7로 다이렉트 이관이 불가 Aurora 5.6으로만 이관 가능&lt;/li&gt;
+  &lt;li&gt;이왕 Migration 하는 김에.. Aurora 5.6을 쓰긴 싫고 Aurora 5.7을 쓰고 싶다&lt;/li&gt;
+  &lt;li&gt;Aurora 5.7을 쓰고 싶으면 점검 시간이 긴 나머지 방식을 선택해야 한다.&lt;/li&gt;
+  &lt;li&gt;따라서 다음 타자인 xtrabackup을 고려하였지만 알수없는 문제 발생으로 실패&lt;/li&gt;
+  &lt;li&gt;남은 방법은 mysqldump 인데 점검 시간이 매우 길어 진다..&lt;/li&gt;
+  &lt;li&gt;Replication 전략으로 Aurora 5.6으로 갈 것인가, mysqldump로 하루 점검 걸고 갈 것인가 그것이 문제로다.&lt;/li&gt;
+  &lt;li&gt;어떻게 할 것인가 ?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;db-migration-전략의-확정&quot;&gt;DB Migration 전략의 확정&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;여러 고민을 하던 중 Replication을 통해 Aurora 5.7로 Migration 할 수 있는 좋은 아이디어가 떠올랐다.&lt;/li&gt;
+  &lt;li&gt;핵심은, &lt;code class=&quot;highlighter-rouge&quot;&gt;중간에 Aurora 5.6을 두어 돌다리를 만드는 것이다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;위 전략을 활용하면 Replication 방식을 사용하여 Maria -&amp;gt; Aurora 5.7로 Migration이 가능하다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;db-migration-아이디어&quot;&gt;DB Migration 아이디어&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;기존 Maria DB → Aurora 5.6 → Aurora 5.7&lt;/li&gt;
+  &lt;li&gt;-&amp;gt; 는 Replication을 의미한다.&lt;/li&gt;
+  &lt;li&gt;서비스 점검 전 위 순서로 Replication을 걸어 놓는다.&lt;/li&gt;
+  &lt;li&gt;서비스 점검 후 모든 서버에서 기존 MariaDB 참조를 끊고 Aurora 5.7을 바라보도록 배포한다.&lt;/li&gt;
+  &lt;li&gt;Replication이 종료 된 것을 확인 후 아래 작업을 진행한다.&lt;/li&gt;
+  &lt;li&gt;MariaDB -&amp;gt; Aurora 5.6 Replication을 끊는다.&lt;/li&gt;
+  &lt;li&gt;Aurora 5.6 -&amp;gt; Aurora 5.7 Replication을 끊는다.&lt;/li&gt;
+  &lt;li&gt;Aurora 5.6을 삭제한다.&lt;/li&gt;
+  &lt;li&gt;이제, Aurora 5.7을 신나게 쓰면 된다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;db-migration-아이디어-이미지-설명&quot;&gt;DB Migration 아이디어 이미지 설명&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;img src=&quot;/assets/images/post/AWS_Aurora_DB_Migration_Strategy.png&quot; alt=&quot;AWS Aurora DB Migration Strategy&quot; /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;마치며&quot;&gt;마치며&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;이가 없으면 잇몸으로…&lt;/li&gt;
+  &lt;li&gt;사실.. 서비스 점검을 하루동안 걸 수 는 없었기에 Replication 방식으로 Aurora 5.6으로 가는 걸 확정했었다.&lt;/li&gt;
+  &lt;li&gt;이후에 다행히 &lt;code class=&quot;highlighter-rouge&quot;&gt;돌다리&lt;/code&gt;라는 좋은 아이디어가 떠올라서 Aurora 5.7로 Migration 할 수 있었다.&lt;/li&gt;
+  &lt;li&gt;작은 아이디어 하나가 큰 도움이 되었던 것 같다.&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="AWS" /><category term="Aurora" /><category term="DB" /><category term="Migration" /><summary type="html">목적 AWS Aurora DB로 Migration 하기</summary></entry><entry><title type="html">Java JVM Heap Space Out Of Memory Error Trouble-Shooting</title><link href="https://pkgonan.github.io/2019/03/java-jvm-heap-space-out-of-memory-error-troubleshooting" rel="alternate" type="text/html" title="Java JVM Heap Space Out Of Memory Error Trouble-Shooting" /><published>2019-03-03T00:00:00+00:00</published><updated>2019-03-03T00:00:00+00:00</updated><id>https://pkgonan.github.io/2019/03/java-jvm-heap-space-out-of-memory-error-troubleshooting</id><content type="html" xml:base="https://pkgonan.github.io/2019/03/java-jvm-heap-space-out-of-memory-error-troubleshooting">&lt;h2 id=&quot;목적&quot;&gt;목적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Java JVM Heap Space Out of memory Error 발생 시 원인 파악 및 문제 해결&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;배경&quot;&gt;배경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;운영중인 Dev 서버에서 Out Of Memory Error 가 발생하게 되었습니다.&lt;/li&gt;
+  &lt;li&gt;이에 따라 서버에서는 다수의 500에러가 발생하고 있었습니다.&lt;/li&gt;
+  &lt;li&gt;어떤 이유로 OOM이 발생했는지 그 원인을 파악하고 이를 통해 문제를 해결하고자 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;원인-파악을-위한-준비&quot;&gt;원인 파악을 위한 준비&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Heap Dump&lt;/li&gt;
+  &lt;li&gt;Heap Dump Analyzer&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;heap-dump에-관하여&quot;&gt;Heap Dump에 관하여&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;OOM 발생시 원인 파악을 위해 당시 Heap의 상태를 보여주는 Heap Dump 파일을 추출해야 합니다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;이를 위해 Java Application 실행시 아래의 옵션을 추가하여 실행해야 합니다.&lt;/li&gt;
+  &lt;li&gt;-XX:+HeapDumpOnOutOfMemoryError&lt;/li&gt;
+  &lt;li&gt;-XX:HeapDumpPath=/var/log&lt;/li&gt;
+  &lt;li&gt;예) java -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/log -jar Application.jar&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;heap-dump-analyzer에-관하여&quot;&gt;Heap Dump Analyzer에 관하여&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Heap Dump 분석을 위한 여러가지 제품이 있습니다.&lt;/li&gt;
+  &lt;li&gt;이번 Post에서는 Eclipse의 &lt;a href=&quot;https://www.eclipse.org/mat/&quot;&gt;MAT&lt;/a&gt;를 활용합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;분석&quot;&gt;분석&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Heap Dump Analyzer를 통해 추출한 Heap Dump를 분석합니다.&lt;/li&gt;
+  &lt;li&gt;OOM을 발생시킨 용의자를 찾기 위해 Leak Suspects 기능을 활용합니다.&lt;/li&gt;
+  &lt;li&gt;전체 Heap에서 가장 큰 사용률을 보인 두 그룹이 용의 선상에 오른 것을 확인할 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;용의 선상에 오른 두 그룹에 대해 자세히 살펴보도록 하겠습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;img src=&quot;/assets/images/post/OOM_Leak_Suspects.png&quot; alt=&quot;예시&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;img src=&quot;/assets/images/post/OOM_Leak_Suspects_Detail.png&quot; alt=&quot;예시&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;Suspect 1의 경우 &lt;code class=&quot;highlighter-rouge&quot;&gt;ResultSet 즉, DB에서 조회한 데이터를 메모리에 올리는 과정에서 전체 메모리의 41%를 사용한 것을 확인할 수 있습니다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;DB에서 조회한 결과가 전체 메모리의 41%를 차지한다니 뭔가 수상합니다...&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;따라서, 해당 시간에 어떠한 요청이 인입되었는지 파악하기 위해 Access Log를 분석하였습니다.&lt;/li&gt;
+  &lt;li&gt;그 결과로, API 호출시 Query Parameter의 값이 비어 있는(Empty Space) 값으로 전송되었다는 것을 확인하게 되었습니다.&lt;/li&gt;
+  &lt;li&gt;해당 API는 Query Parameter로 들어온 값으로 DB에 일치하는 N개의 데이터를 조회하게 되는데 이때, 빈 값이 전달될 경우 약 2천만 건의 데이터가 조회되고 있었습니다.&lt;/li&gt;
+  &lt;li&gt;이에 따라 빈값이 전달되면서 2천만 건의 데이터를 메모리에 한번에 올리면서 OOM이 발생하게 된 것이었습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;해결&quot;&gt;해결&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;OOM의 근본적인 원인은 API 호출시 Query Parameter 값에 대한 Validation이 정상적으로 동작하지 않은 문제였습니다.&lt;/li&gt;
+  &lt;li&gt;따라서 Query Parameter에 대해 Validation이 정상적으로 동작하도록 수정하여 문제를 해결하게 되었습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;마치며&quot;&gt;마치며&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Heap Dump는 OOM 발생 시 문제의 원인을 파악할 수 있는 중요한 데이터입니다.&lt;/li&gt;
+  &lt;li&gt;빠른 원인 파악은 빠른 문제 해결의 열쇠가 될 것입니다.&lt;/li&gt;
+  &lt;li&gt;장애 발생시 사후 대응을 위해 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/log 옵션은 반드시 넣는게 좋습니다.&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="Java" /><category term="JVM" /><category term="Trouble-Shooting" /><summary type="html">목적 Java JVM Heap Space Out of memory Error 발생 시 원인 파악 및 문제 해결</summary></entry><entry><title type="html">Local Cache 와 Invalidation Message Propagation 전략을 활용하여 API 성능 튜닝 후 Trouble Shooting</title><link href="https://pkgonan.github.io/2019/03/hazelcast-hibernate-second-level-cache-troubleshooting" rel="alternate" type="text/html" title="Local Cache 와 Invalidation Message Propagation 전략을 활용하여 API 성능 튜닝 후 Trouble Shooting" /><published>2019-03-01T00:00:00+00:00</published><updated>2019-03-01T00:00:00+00:00</updated><id>https://pkgonan.github.io/2019/03/hazelcast-hibernate-second-level-cache-troubleshooting</id><content type="html" xml:base="https://pkgonan.github.io/2019/03/hazelcast-hibernate-second-level-cache-troubleshooting">&lt;h2 id=&quot;목적&quot;&gt;목적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://pkgonan.github.io/2018/10/hazelcast-hibernate-second-level-cache&quot;&gt;Local Cache 와 Invalidation Message Propagation 전략을 활용하여 API 성능 튜닝&lt;/a&gt; 이후 발생했던 Eventual Consistency로 인한 데이터 불일치 이슈의 해결.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;배경&quot;&gt;배경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://pkgonan.github.io/2018/10/hazelcast-hibernate-second-level-cache&quot;&gt;이전 글&lt;/a&gt;에서, API 성능을 극대화 하기 위해 Local Cache 전략을 사용하였습니다.&lt;/li&gt;
+  &lt;li&gt;Local Cache의 단점은, Entity의 상태가 변경 되었을 때 변경 사항을 다른 인스턴스가 모른다는게 가장 큰 단점입니다.&lt;/li&gt;
+  &lt;li&gt;따라서, 이러한 단점을 극복하고 장점인 성능을 취하기 위해 Hazelcast가 제공하는 Cache Invalidation Message를 다른 인스턴스에 Propagation하는 전략을 사용하게 되었습니다.&lt;/li&gt;
+  &lt;li&gt;그런데 만약, &lt;code class=&quot;highlighter-rouge&quot;&gt;Cache Invalidation Message가 전파되기도 전에 다른 수정 요청이 인입된다면 어떤 문제가 발생할까요 ?&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Local Cache간의 동시성 문제로 인해 의도하지 않는 결과가 발생할 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;N대의 서버를 기준으로 Cache Invalidation Message가 전파되는 방식은 아래와 같습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_Local_Map_Invalidation.png&quot; alt=&quot;예시&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;아래의 이미지를 기준으로 예를 들어 동시성 문제를 설명해보겠습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_Local_Cache_Eviction_Propagation_Strategy.png&quot; alt=&quot;예시&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;DB Table에는 1,2,3이 들어 있는 Set이 저장되어 있으며, 2대의 서버에는 각각 이를 Cache 하고 있습니다.&lt;/li&gt;
+  &lt;li&gt;먼저, 좌측 서버에 Entity에서 2,3을 제거한 값을 저장하라는 요청 인입됩니다.&lt;/li&gt;
+  &lt;li&gt;좌측 서버는 캐시 사용 중, 따라서 캐시된 Entity를 가져오며, Entity에서 2,3을 제거한 결과를 DB 저장합니다.&lt;/li&gt;
+  &lt;li&gt;그리고, 데이터가 변경되었다는 이벤트를 우측 서버에 Publish 합니다.&lt;/li&gt;
+  &lt;li&gt;이벤트가 우측 서버에 도착하기 전에, 우측 서버에 Entity에서 4,5를 추가한 값을 저장하라는 요청이 인입됩니다.&lt;/li&gt;
+  &lt;li&gt;우측 서버는 캐시 사용 중, 따라서 캐시된 Entity를 가져오며, Entity에서 4,5를 추가한 결과를 DB 저장합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;그런데 이때, 우측 서버는 아직 데이터가 변경되었다는 이벤트를 받지 못한 상황입니다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;따라서, 캐시를 깨지 않은 상황이기에 캐시된 Entity를 가져오게 되면 2,3이 제거되지 않은 1,2,3을 가져오게 됩니다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;따라서, 4,5를 추가하여 DB에 저장하게 되면 DB에는 1,2,3,4,5가 저장되게 됩니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;기대했던 결과는 1,4,5가 DB에 저장되기를 바랬는데, 의도와 다르게 실제로는 1,2,3,4,5가 DB에 저장되어버립니다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;이러한 Local Cache 간의 동시성 문제를 어떤 방식을 사용하여 해결하였는지 공유합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;이슈의-핵심을-정리하면-&quot;&gt;이슈의 핵심을 정리하면 ?&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;해당 Post에서 해결하려는 부분은 중복 Request간의 동시성 이슈가 아닙니다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;N대의 인스턴스에 각각 존재하는 Local Cache 간의 Invalidation Message Propagation Timing으로 인한 동시성 이슈를 해결하는게 목적입니다.&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;환경&quot;&gt;환경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;JAVA 8&lt;/li&gt;
+  &lt;li&gt;Spring Boot 2.x&lt;/li&gt;
+  &lt;li&gt;Spring Data JPA 2.x&lt;/li&gt;
+  &lt;li&gt;Hibernate 5.2.x&lt;/li&gt;
+  &lt;li&gt;QueryDSL 4.2.x&lt;/li&gt;
+  &lt;li&gt;Hazelcast 3.11.x&lt;/li&gt;
+  &lt;li&gt;hazelcast-hibernate52 1.3.x&lt;/li&gt;
+  &lt;li&gt;AWS Elastic Beanstalk&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;해결-방안&quot;&gt;해결 방안&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Cache Concurrency Strategy&lt;/li&gt;
+  &lt;li&gt;Query Hint를 통한 Cache Ignore&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;해결-방안과-관련된-중요한-키워드&quot;&gt;해결 방안과 관련된 중요한 키워드&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Local Cache&lt;/li&gt;
+  &lt;li&gt;Cache Invalidation Message Propagation&lt;/li&gt;
+  &lt;li&gt;IMDG&lt;/li&gt;
+  &lt;li&gt;Lock&lt;/li&gt;
+  &lt;li&gt;Cache Concurrency Strategy&lt;/li&gt;
+  &lt;li&gt;Strong Consistency&lt;/li&gt;
+  &lt;li&gt;Eventual Consistency&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;해결-방안의-분석&quot;&gt;해결 방안의 분석&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Cache Concurrency Strategy 변경
+    &lt;ul&gt;
+      &lt;li&gt;Hibernate와 연동하여 Hazelcast를 사용중입니다.&lt;/li&gt;
+      &lt;li&gt;따라서, hazelcast-hibernate 오픈 소스의 구현체를 분석 대상으로 잡았습니다.&lt;/li&gt;
+      &lt;li&gt;Local Cache로 hazelcast-hibernate를 사용할 경우 Cache 구현체로 LocalRegionCache.java를 사용합니다.&lt;/li&gt;
+      &lt;li&gt;Local Cache를 사용중이기에 LocalRegionCache.java에서 lock &amp;amp; unlock 구현을 살펴보았습니다.&lt;/li&gt;
+      &lt;li&gt;Hibernate에서 제공하는 Cache Concurrency Strategy (NONE, READ_ONLY, NONSTRICT_READ_WRITE, READ_WRITE, TRANSACTIONAL)&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;결론은, hazelcast-hibernate Local Cache 구현체에는 Concurrency 전략 별 lock이 구현되어 있지 않았습니다.&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;따라서 Local Cache에서 Cache Concurrency Strategy 변경을 통해 동시성 이슈를 해결하는 것은 불가능하였습니다.&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;구현이 되어 있어도, READ_WRITE 전략의 경우 Lock이 해제될까지 읽을 수 없기에 대용량 트래픽 환경에서는 성능 저하 및 장애가 발생할 수 있습니다.&lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;따라서, Cache Concurrency Strategy 전략은 적절하지 않다고 판단하였습니다.&lt;/code&gt;&lt;/p&gt;
+
+        &lt;p&gt;LocalRegionCache.java&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; @Override
+ public SoftLock tryLock(final Object key, final Object version) {
+     ExpiryMarker marker;
+     String markerId = nextMarkerId();
+     while (true) {
+         final Expirable original = cache.get(key);
+         long timeout = nextTimestamp() + CacheEnvironment.getDefaultCacheTimeoutInMillis();
+         if (original == null) {
+             marker = new ExpiryMarker(version, timeout, markerId);
+             if (cache.putIfAbsent(key, marker) == null) {
+                 break;
+             }
+         } else {
+             marker = original.markForExpiration(timeout, markerId);
+             if (cache.replace(key, original, marker)) {
+                 break;
+             }
+         }
+     }
+     return new MarkerWrapper(marker);
+ }
+    
+ @Override
+ public void unlock(final Object key, final SoftLock lock) {
+     while (true) {
+         final Expirable original = cache.get(key);
+         if (original != null) {
+             if (!(lock instanceof MarkerWrapper)) {
+                 break;
+             }
+             final ExpiryMarker unwrappedMarker = ((MarkerWrapper) lock).getMarker();
+             if (original.matches(unwrappedMarker)) {
+                 final Expirable revised = ((ExpiryMarker) original).expire(nextTimestamp());
+                 if (cache.replace(key, original, revised)) {
+                     break;
+                 }
+             } else if (original.getValue() != null) {
+                 if (cache.remove(key, original)) {
+                     break;
+                 }
+             } else {
+                 break;
+             }
+         } else {
+             break;
+         }
+     }
+     maybeNotifyTopic(key, null, null);
+ }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;번외, IDMG에서의 Cache Concurrent Strategy 변경으로 동시성 이슈 해결
+    &lt;ul&gt;
+      &lt;li&gt;N개의 Instance가 JVM을 공유하는 IDMG로 사용할 경우 Cache Concurrency Strategy 별 동시성 컨트롤이 될까?&lt;/li&gt;
+      &lt;li&gt;Local Cache가 아닌 IMDG로 쓸 경우 hazelcast-hibernate에서는 IMapRegionCache.java를 Cache 구현체로 사용합니다.&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;결론은, Cache Concurrent Strategy 별 lock을 차등적으로 적용하여 구현하고 있었습니다.&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;따라서, IMDG에서는 Cache Concurrent Strategy 변경으로 동시성 이슈 해결이 가능합니다. 하지만 Lock으로 인해 성능이 좋지 않습니다.&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;Key를 기준으로, Partition ID를 구해서 어떤 인스턴스에 요청을 보내 Lock/Unlock을 할지 정하고 해당 인스턴스에 요청을 보내도록 구현되어있었습니다.&lt;/li&gt;
+      &lt;li&gt;Cache Concurrent Strategy는 다른 클래스에서 공통적으로 구현되어 있으며 핵심은 tryLock, unlock에서 실제 lock, unlock을 구현하는지 여부입니다.&lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;IMDG에서도 대용량 트래픽 환경일 경우에는 Cache Concurrency Strategy를 READ_WRITE로 설정할 경우 Lock으로 인해 성능 저하 및 장애 가능성이 있습니다.&lt;/p&gt;
+
+        &lt;p&gt;IMapRegionCache.java&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; @Override
+ public SoftLock tryLock(final Object key, final Object version) {
+     long timeout = nextTimestamp(hazelcastInstance) + lockTimeout;
+     final ExpiryMarker marker = (ExpiryMarker) map.executeOnKey(key,
+             new LockEntryProcessor(nextMarkerId(), timeout, version));
+     return new MarkerWrapper(marker);
+ }
+    
+ @Override
+ public void unlock(final Object key, final SoftLock lock) {
+     if (lock instanceof MarkerWrapper) {
+         final ExpiryMarker unwrappedMarker = ((MarkerWrapper) lock).getMarker();
+         map.executeOnKey(key, new UnlockEntryProcessor(unwrappedMarker, nextMarkerId(),
+                 nextTimestamp(hazelcastInstance)));
+     }
+ }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Query Hint를 통한 Cache Ignore 기법
+    &lt;ul&gt;
+      &lt;li&gt;Hibernate Second Level Cache 사용시 기본적으로 캐시를 사용하여 데이터를 가져오고 없으면 DB에 접근하여 가져오게 됩니다.&lt;/li&gt;
+      &lt;li&gt;Query Hint를 사용하게 되면, 데이터를 Cache에서 참조할지, DB에서 참조해서 가져올지를 선택할 수 있습니다.&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;애초에 Local Cache + Invalidation Message Propagation 전략을 선택했다는 점에서 Strong Consistency가 아닌 Eventual Consistency를 제공하는 것을 의미합니다.&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;대부분의 트래픽이 &lt;code class=&quot;highlighter-rouge&quot;&gt;조회&lt;/code&gt;이기에 Eventual Consistency는 문제 되지 않기 때문이죠.&lt;/li&gt;
+      &lt;li&gt;하지만, &lt;code class=&quot;highlighter-rouge&quot;&gt;변경&lt;/code&gt; 요청이 빠르게 여러번 들어올 경우에는 Eventual Consistency는 취약합니다.&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;따라서, 변경 API에 대해서는 Query Hint를 통해 Cache를 사용하지 않고 DB를 직접 바라보도록 메소드를 제공하여 이를 해결할 수 있었습니다.&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;이러한 방식은 Lock을 걸지 않기에 대용량 트래픽 환경에서 성능 저하 및 Lock으로 인한 장애가 발생하지 않습니다.&lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;아래는 Spring-Data-Jpa 환경에서 구현한 소스코드 예시입니다.&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  @Repository
+  public interface TestRepository extends JpaRepository&amp;lt;Test, Long&amp;gt;, TestCustomRepository {
+        
+  }
+        
+        
+        
+  interface TestCustomRepository {
+        
+      Optional&amp;lt;Test&amp;gt; findByIdIgnoreCache(long id);
+  }
+        
+        
+        
+  class TestRepositoryImpl implements TestCustomRepository {
+        
+      @Autowired
+      private EntityManager entityManager;
+        
+      @Autowired
+      private TestRepository testRepository;
+        
+        
+      /**
+       * findAllById Second Level Cache Ignore 적용
+       * 데이터를 가져올 때는 DB 참조
+       * 데이터를 가져온 후에는 Cache Update
+       **/
+      @Override
+      public Optional&amp;lt;Test&amp;gt; findByIdIgnoreCache(long id) {
+          Map&amp;lt;String, Object&amp;gt; properties = Maps.newHashMap();
+          properties.put(&quot;javax.persistence.cache.retrieveMode&quot;, CacheRetrieveMode.BYPASS);
+          properties.put(&quot;javax.persistence.cache.storeMode&quot;, CacheStoreMode.REFRESH);
+        
+          return Optional.ofNullable(entityManager.find(Test.class, id, properties));
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;결론&quot;&gt;결론&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Cache Concurrency Strategy는 &lt;code class=&quot;highlighter-rouge&quot;&gt;부적합&lt;/code&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Local Cache 구현체(&lt;a href=&quot;https://github.com/hazelcast/hazelcast-hibernate5&quot;&gt;hazelcast-hibernate&lt;/a&gt;)에서는 Cache Concurrency Strategy 별 Lock이 구현되어 있지 않음&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Query Hint를 통한 Cache Ignore는 &lt;code class=&quot;highlighter-rouge&quot;&gt;적합&lt;/code&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Cache가 아닌 원본 데이터인 DB를 참조하여 Local Cache와 Local Cache 간의 동시성 이슈 해결(정확하게는 회피)&lt;/li&gt;
+      &lt;li&gt;Lock을 사용하지 않아 대용량 트래픽 환경에서 성능 저하 없음&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;마치며&quot;&gt;마치며&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Redis 같은 Write Endpoint가 한 곳인 Cache는 Cache Invalidation Propagation Timing에 대해서는 크게 고려하지 않아도 된다.&lt;/li&gt;
+  &lt;li&gt;위와 같은 Local Cache + Cache Invalidation Propagation 전략을 사용할 경우에는 Eventual Consistency에 대해 반드시 고려해야 할 것이다.&lt;/li&gt;
+  &lt;li&gt;Strong Consistency &amp;amp; Eventual Consistency에 대해 다시 한번 생각해보는 좋은 계기가 된것 같다.&lt;/li&gt;
+  &lt;li&gt;그리고 분산 환경에서의 동시성 전략에 대해서도 고민해보는 좋은 시간이 되었던 것 같다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;관련-post&quot;&gt;관련 Post&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.springcamp.io/2019/&quot;&gt;2019 Spring Camp 발표&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/pkgonan/spring-camp/tree/master/2019&quot;&gt;2019 Spring Camp 발표 자료&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://pkgonan.github.io/2018/10/hazelcast-hibernate-second-level-cache&quot;&gt;Local Cache 와 Invalidation Message Propagation 전략을 활용하여 API 성능 튜닝&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="Java" /><category term="AWS" /><category term="Beanstalk" /><category term="Hazelcast" /><category term="Hibernate" /><category term="Second-Level-Cache" /><category term="Tuning" /><category term="Local-Cache" /><category term="Invalidation" /><category term="Trouble-Shooting" /><summary type="html">목적 Local Cache 와 Invalidation Message Propagation 전략을 활용하여 API 성능 튜닝 이후 발생했던 Eventual Consistency로 인한 데이터 불일치 이슈의 해결.</summary></entry><entry><title type="html">AWS Aurora DB Cluster &amp;amp; Instance Parameter 튜닝</title><link href="https://pkgonan.github.io/2019/01/aws-aurora-db-parameter-tuning" rel="alternate" type="text/html" title="AWS Aurora DB Cluster &amp; Instance Parameter 튜닝" /><published>2019-01-26T00:00:00+00:00</published><updated>2019-01-26T00:00:00+00:00</updated><id>https://pkgonan.github.io/2019/01/aws-aurora-db-parameter-tuning</id><content type="html" xml:base="https://pkgonan.github.io/2019/01/aws-aurora-db-parameter-tuning">&lt;h2 id=&quot;목적&quot;&gt;목적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;AWS Aurora DB Cluster &amp;amp; Instance Parameter Tuning&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;배경&quot;&gt;배경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;전체 시스템 구조를 MSA 환경으로 전환&lt;/li&gt;
+  &lt;li&gt;이에 따라 담당하고 있는 쿠폰 서비스의 Production DB 분리 필요&lt;/li&gt;
+  &lt;li&gt;이를 위해 AWS Aurora DB로 Migration&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;환경&quot;&gt;환경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;AWS Aurora Mysql 5.7.12&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;aws-aurora-mysql-cluster-parameter&quot;&gt;AWS Aurora Mysql Cluster Parameter&lt;/h2&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Variable&lt;/th&gt;
+      &lt;th&gt;Reference Document&lt;/th&gt;
+      &lt;th&gt;Default&lt;/th&gt;
+      &lt;th&gt;Override&lt;/th&gt;
+      &lt;th&gt;비고&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;binlog_format&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/replication-options-binary-log.html#sysvar_binlog_format&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;MIXED&lt;/td&gt;
+      &lt;td&gt;ROW&lt;/td&gt;
+      &lt;td&gt;innodb_autoinc_lock_mode 2 를 위해 ROW로 지정 필요 (Statement 는 위험성 존재), mysql 5.7.7 부터 ROW가 default&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;innodb_autoinc_lock_mode&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/innodb-auto-increment-handling.html&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;2&lt;/td&gt;
+      &lt;td&gt;Simple Insert는 성능 변화가 없다. 몇줄이 Insert 될지 미리 알 수 없는 Bulk Insert 문에서 성능이 개선된다. &lt;a href=&quot;https://www.percona.com/blog/2017/07/26/what-is-innodb_autoinc_lock_mode-and-why-should-i-care/&quot;&gt;what-is-innodb_autoinc_lock_mode-and-why-should-i-care&lt;/a&gt; PK Autoincrement시 1,2,3,4,5가 아닌 1,2,5,6,8 처럼 건너 뛰며 증가할 수 있어 PK 값의 증가 속도가 가속화된다. 따라서, PK의 Type을 int -&amp;gt; bigint에 대한 고려가 필요하다. binlog_format을 ROW로 지정해야 안전하다. &lt;a href=&quot;https://www.letmecompile.com/mysql-innodb-auto-increment-성능-최적화/&quot;&gt;MySQL – InnoDB Auto Increment 성능 최적화&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;innodb_sync_array_size&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_sync_array_size&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;768&lt;/td&gt;
+      &lt;td&gt;Increasing the value is recommended for workloads that frequently produce a large number of waiting threads, typically greater than 768.&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;innodb_sync_spin_loops&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_sync_spin_loops&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;30&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;http://small-dbtalk.blogspot.com/2016/06/&quot;&gt;MySQL CPU Saturation Analysis&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;character_set_client&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_character_set_client&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;utf8&lt;/td&gt;
+      &lt;td&gt;utf8mb4&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;character_set_connection&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_character_set_connection&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;utf8&lt;/td&gt;
+      &lt;td&gt;utf8mb4&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;character_set_database&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_character_set_database&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;latin1&lt;/td&gt;
+      &lt;td&gt;utf8mb4&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;character_set_filesystem&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_character_set_filesystem&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;binary&lt;/td&gt;
+      &lt;td&gt;utf8mb4&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;character_set_results&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_character_set_results&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;utf8&lt;/td&gt;
+      &lt;td&gt;utf8mb4&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;character_set_server&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_character_set_server&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;latin1&lt;/td&gt;
+      &lt;td&gt;utf8mb4&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;collation_connection&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_collation_connection&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;utf8mb4_unicode_ci&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;collation_server&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_collation_server&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;latin1_swedish_ci&lt;/td&gt;
+      &lt;td&gt;utf8mb4_unicode_ci&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;lc_time_names&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_lc_time_names&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;ko_KR&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;time_zone&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_time_zone&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;Asia/Seoul&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&quot;aws-aurora-mysql-instance-parameter&quot;&gt;AWS Aurora Mysql Instance Parameter&lt;/h2&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Variable&lt;/th&gt;
+      &lt;th&gt;Reference Document&lt;/th&gt;
+      &lt;th&gt;Default&lt;/th&gt;
+      &lt;th&gt;Override&lt;/th&gt;
+      &lt;th&gt;비고&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;innodb_adaptive_hash_index&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_adaptive_hash_index&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;default 설정 유지, default ON, 자주 사용하는 PK 접근에 대해 O(logN) -&amp;gt; O(1)로 접근하여 성능 향상, Drop Table시 Hash 메모리 정리 작업으로 인해 쿼리 처리량이 떨어져 장애 발생 가능, 따라서 트래픽이 적은 시간에 Drop Table 수행 필요. &lt;a href=&quot;http://tech.kakao.com/2016/04/07/innodb-adaptive-hash-index/&quot;&gt;kakao-adaptive-hash-index&lt;/a&gt; &lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/innodb-adaptive-hash.html&quot;&gt;innodb-adaptive-hash&lt;/a&gt; &lt;a href=&quot;http://small-dbtalk.blogspot.com/2015/11/mysql-57-mutex.html&quot;&gt;mysql-57-mutex&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;innodb_adaptive_hash_index_parts&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_adaptive_hash_index_parts&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;8&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;default 설정 유지&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;innodb_adaptive_flushing&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_adaptive_flushing&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;default 설정 유지&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;innodb_adaptive_max_sleep_delay&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_adaptive_max_sleep_delay&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;150000&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;default 설정 유지&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;query_cache_type&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_type&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;The query cache is deprecated as of MySQL 5.7.20, and is removed in MySQL 8.0. Deprecation includes &lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_type&quot;&gt;query_cache_type.&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;query_cache_size&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_size&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;{DBInstanceClassMemory/24}&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;The query cache is deprecated as of MySQL 5.7.20, and is removed in MySQL 8.0. Deprecation includes &lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_size&quot;&gt;query_cache_size.&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;query_cache_limit&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_limit&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;1048576&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;변경 없음(=Aurora MySQL 5.7 default) The query cache is deprecated as of MySQL 5.7.20, and is removed in MySQL 8.0. Deprecation includes &lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_limit&quot;&gt;query_cache_limit.&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;query_cache_min_res_unit&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_min_res_unit&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;4096&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;변경 없음(=Aurora MySQL 5.7 default) The query cache is deprecated as of MySQL 5.7.20, and is removed in MySQL 8.0. Deprecation includes &lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_min_res_unit&quot;&gt;query_cache_min_res_unit.&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;query_cache_wlock_invalidate&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_wlock_invalidate&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;변경 없음(=Aurora MySQL 5.7 default) The query cache is deprecated as of MySQL 5.7.20, and is removed in MySQL 8.0. Deprecation includes &lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_wlock_invalidate&quot;&gt;query_cache_wlock_invalidate.&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;eq_range_index_dive_limit&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_eq_range_index_dive_limit&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;&amp;gt;= 5.7.4 : 200, &amp;lt;= 5.7.3 : 10&lt;/td&gt;
+      &lt;td&gt;200&lt;/td&gt;
+      &lt;td&gt;index statistics 대신 index dive를 더 활용하도록 200 설정 &lt;a href=&quot;http://small-dbtalk.blogspot.com/2016/02/mysql56-inval1-valn-index-range-scan.html&quot;&gt;index-range-scan&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;connect_timeout&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_connect_timeout&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;5&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;innodb_lock_wait_timeout&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_lock_wait_timeout&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;50&lt;/td&gt;
+      &lt;td&gt;5&lt;/td&gt;
+      &lt;td&gt;Innodb Record Lock에만 적용되며 Table Lock에는 적용되지 않음&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;lock_wait_timeout&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_lock_wait_timeout&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;31536000 (1year)&lt;/td&gt;
+      &lt;td&gt;3600 (1hour)&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;slow_query_log&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_slow_query_log&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;Slow Query Logging 여부&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;long_query_time&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_long_query_time&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;3&lt;/td&gt;
+      &lt;td&gt;해당 초를 지난 쿼리에 대해 Slow Query Logging을 한다&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;log_queries_not_using_indexes&lt;/td&gt;
+      &lt;td&gt;&lt;a href=&quot;https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_log_queries_not_using_indexes&quot;&gt;Reference Document&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt;인덱스를 타지 않는 쿼리 로깅 여부 - 필요한 경우 1로 설정한다&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</content><author><name></name></author><category term="AWS" /><category term="Aurora" /><category term="DB" /><category term="Tuning" /><summary type="html">목적 AWS Aurora DB Cluster &amp;amp; Instance Parameter Tuning</summary></entry><entry><title type="html">Hibernate setAutoCommit 최적화를 통한 성능 튜닝</title><link href="https://pkgonan.github.io/2019/01/hibrnate-autocommit-tuning" rel="alternate" type="text/html" title="Hibernate setAutoCommit 최적화를 통한 성능 튜닝" /><published>2019-01-01T01:00:00+00:00</published><updated>2019-01-01T01:00:00+00:00</updated><id>https://pkgonan.github.io/2019/01/hibrnate-autocommit-tuning</id><content type="html" xml:base="https://pkgonan.github.io/2019/01/hibrnate-autocommit-tuning">&lt;h2 id=&quot;목적&quot;&gt;목적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Hibernate setAutoCommit 최적화를 통한 성능 튜닝&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;배경&quot;&gt;배경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;야놀자 쿠폰 API 서버 개발을 담당하고 있으며, APM Pinpoint를 통해 Transaction 전후로 setAutoCommit(false) &amp;amp; setAutoCommit(true) 쿼리를 반복 수행하는 것을 확인하였습니다.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/autocommit_thinking.png&quot; alt=&quot;setAutoCommit에 대한 고민&quot; /&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;분석 결과 각 setAutoCommit은 평균적으로 1~3ms가 소요되고 있었습니다.&lt;/li&gt;
+  &lt;li&gt;1개의 Transaction일 경우 setAutoCommit은 2번 호출되며, 수행 시간은 2~6ms가 소요됩니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;N개의 Nested Transaction일 경우 2N번 호출되어, 즉, 2N~6N ms가 소요&lt;/code&gt;됩니다.
+    &lt;ul&gt;
+      &lt;li&gt;아래는 Nested Transaction인해 setAutoCommit이 2 * N 번 발생한 실제 케이스입니다.&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/autocommit_2N.png&quot; alt=&quot;Nested Transaction에서 autoCommit 2 * N번 수행 케이스&quot; /&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;3개의 Nested Transaction을 예로 들면, 비지니스 수행 시간이 아닌, setAutoCommit 작업에만 6~36ms 소요될 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;캐시를 타서 총 6ms의 응답이 걸렸는데, setAutoCommit을 수행하는데 4ms가 걸린 어이없는 경우&lt;/code&gt;도 있습니다.
+    &lt;ul&gt;
+      &lt;li&gt;아래가 그 실제 케이스입니다.&lt;/li&gt;
+      &lt;li&gt;아래의 경우에는 setAutoCommit을 최적화하면 2ms 의 응답이 가능하게 됩니다.&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/autocommit_slow.png&quot; alt=&quot;Nested Transaction에서 autoCommit 2 * N번 수행 케이스&quot; /&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;setAutoCommit은 &lt;code class=&quot;highlighter-rouge&quot;&gt;DB에 실제로 쿼리를 수행하기에 초당 수천건의 트랜잭션이 발생하면, DB에 부하를 줄 수 있고 API 응답시간도 느려지게 됩니다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;따라서, setAutoCommit을 최적화하여 성능을 개선하고자 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;환경&quot;&gt;환경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;JAVA 8&lt;/li&gt;
+  &lt;li&gt;Spring Boot 2.x&lt;/li&gt;
+  &lt;li&gt;Spring Data JPA 2.x&lt;/li&gt;
+  &lt;li&gt;Hibernate 5.2.x&lt;/li&gt;
+  &lt;li&gt;QueryDSL 4.2.x&lt;/li&gt;
+  &lt;li&gt;Hazelcast 3.11.x&lt;/li&gt;
+  &lt;li&gt;MariaDB 10.0.x (InnoDB-5.6.x)&lt;/li&gt;
+  &lt;li&gt;AWS Elastic Beanstalk&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;튜닝의-핵심을-짚고-넘어가자&quot;&gt;튜닝의 핵심을 짚고 넘어가자&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Transaction 실행 및 종료시, setAutoCommit() 실행이 필요. 이는 Connection을 통해 auto commit 여부 확인이 필요.&lt;/li&gt;
+  &lt;li&gt;Hibernate의 구현상, auto commit 상태를 체크하고, Connection의 autoCommit이 true일 경우 이를 꺼야하는 구현이 존재
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;https://vladmihalcea.com/why-you-should-always-use-hibernate-connection-provider_disables_autocommit-for-resource-local-jpa-transactions&quot;&gt;자바 챔피언 &amp;amp; 하이버네이트 커미터 아저씨가 쓴 문서&lt;/a&gt; 의 Delaying the resource-local connection acquisition 항목 참조&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;DBCP session level에 setAutoCommit=false를 설정하고, Hibernate 설정(hibernate.connection.provider_disables_autocommit)을 통한 hint로 Connection을 통한 auto commit 여부 확인을 skip&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;문제-분석&quot;&gt;문제 분석&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;AutoCommit 이란?
+    &lt;ul&gt;
+      &lt;li&gt;쿼리문이 수행됬을 때 TRUE 혹은 FALSE 여부 따라 변경사항을 DB에 즉시 반영 여부를 결정한다.&lt;/li&gt;
+      &lt;li&gt;Transaction으로 묶어서 작업을 수행할 경우 True로 되어 있으면 즉시 반영 된다.&lt;/li&gt;
+      &lt;li&gt;따라서, Hibernate에서는 트랜잭션 전 후로 setAutoCommit(false) → 쿼리 1 수행 → 쿼리 2 수행 → setAutoCommit(true) → Commit 또는 Rollback 를 수행하게된다.&lt;/li&gt;
+      &lt;li&gt;이를 통해 Transaction 작업 단위로 묶인, 작업의 일관성 및 정합성을 유지한다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;왜 setAutoCommit()을 자주 하면 비효율 적일까?
+    &lt;ul&gt;
+      &lt;li&gt;실제 DB에 쿼리를 날리게 되므로 비효율적이다.&lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;현재 MariaDB 커넥터를 쓰므로 MariaDbConnection.java 구현체의 setAutoCommit() 코드를 보자.&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &amp;lt; MariaDbConnection.java &amp;gt;
+        
+  /**
+    * Sets whether this connection is auto commited.
+    *
+    * @param autoCommit if it should be auto commited.
+    * @throws SQLException if something goes wrong talking to the server.
+    */
+   public void setAutoCommit(boolean autoCommit) throws SQLException {
+       if (autoCommit == getAutoCommit()) return;
+       
+       try (Statement stmt = createStatement()) {
+           stateFlag |= ConnectionState.STATE_AUTOCOMMIT;
+           stmt.executeUpdate(&quot;set autocommit=&quot; + ((autoCommit) ? &quot;1&quot; : &quot;0&quot;));
+       }
+   }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;그러면 어떻게 해야 setAutoCommit()을 하지 않을 수 있을까?
+    &lt;ul&gt;
+      &lt;li&gt;AbstractLogicalConnectionImplementor.java 및 구현체인 LogicalConnectionManagementImpl.java 참조
+        &lt;ul&gt;
+          &lt;li&gt;begin() 할때 doConnectionsFromProviderHaveAutoCommitDisabled를 호출하여 체크한다.&lt;/li&gt;
+          &lt;li&gt;이때 바로 하이버네이트의 (hibernate.connection.provider_disables_autocommit) 설정을 참조한다.&lt;/li&gt;
+          &lt;li&gt;만약 false로 반환되면, determineInitialAutoCommitMode()를 수행하면서 안에서 getAutoCommit()을 수행하여 현재 DB 커넥션의 autoCommit 설정을 확인한다.&lt;/li&gt;
+          &lt;li&gt;
+            &lt;p&gt;만약 true로 반환되면, 조건문의 앞단에서 실패하여 뒤에 determineInitialAutoCommitMode()를 수행하지 않으면서 getAutoCommit()을 하지 않는다.&lt;/p&gt;
+          &lt;/li&gt;
+          &lt;li&gt;그렇다면 getAutoCommit()을 하는 이유는 ?&lt;/li&gt;
+          &lt;li&gt;트랜잭션 시작할때 초기 AutoCommit 설정을 알기 위해서 한다.&lt;/li&gt;
+          &lt;li&gt;트랜잭션 시작할때 초기 AutoCommit 구해서 initiallyAutoCommit로 저장하고 있다가, 쿼리문 수행이 다 종료되면, 이후에 initiallyAutoCommit를 가져와서 원상복구한다.&lt;/li&gt;
+          &lt;li&gt;즉, hibernate.connection.provider_disables_autocommit=true을 하면 determineInitialAutoCommitMode()를 수행하지 않는다고 보면 된다.&lt;/li&gt;
+          &lt;li&gt;
+            &lt;p&gt;determineInitialAutoCommitMode()는 동적으로 현재 커넥션의 설정을 확인하는 getAutoCommit()를 수행하기에 성능 향상 포인트다.&lt;/p&gt;
+          &lt;/li&gt;
+          &lt;li&gt;또한, AbstractLogicalConnectionImplementor.java의 begin()을 보자.&lt;/li&gt;
+          &lt;li&gt;doConnectionsFromProviderHaveAutoCommitDisabled()를 호출하여 false이면 setAutoCommit()을 수행하게 되고 true면 수행하지 않는다.&lt;/li&gt;
+          &lt;li&gt;
+            &lt;p&gt;결과적으로, hibernate.connection.provider_disables_autocommit=true로 놓게 되면 setAutoCommit()과 getAutoCommit()을 최소화 할 수 있다.&lt;/p&gt;
+          &lt;/li&gt;
+          &lt;li&gt;hibernate.connection.provider_disables_autocommit=true로 놓게 되면, hibernate가 DBCP에서 설정한 autoCommit을 믿고 쓴다는 의미로 볼 수 있다.&lt;/li&gt;
+          &lt;li&gt;false로의 설정은 믿지 못한다는 의미로, 지속적으로 getAutoCommit()을 호출해서 현재 설정을 확인해서 다르면 setAutoCommit으로 설정을 바꾼다.&lt;/li&gt;
+          &lt;li&gt;
+            &lt;p&gt;필요 없는 상황인데 이를 반복하니 비효율적이다.&lt;/p&gt;
+          &lt;/li&gt;
+          &lt;li&gt;
+            &lt;p&gt;마지막으로, &lt;code class=&quot;highlighter-rouge&quot;&gt;DBCP autoCommit 설정을 true로 두게 되면 무조건 커밋이 되기에, DBCP의 autoCommit 설정은 반드시 false로 두어야 한다&lt;/code&gt;.&lt;/p&gt;
+
+            &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &amp;lt; LogicalConnectionManagementImpl.java&amp;gt;
+      @Override
+      public void begin() {
+          initiallyAutoCommit = !doConnectionsFromProviderHaveAutoCommitDisabled() &amp;amp;&amp;amp; determineInitialAutoCommitMode(
+                  getConnectionForTransactionManagement() );
+          super.begin();
+      }
+             
+             
+  &amp;lt; LogicalConnectionManagementImpl.java&amp;gt;
+      @Override
+      protected void afterCompletion() {
+          afterTransaction();
+             
+          resetConnection( initiallyAutoCommit );
+          initiallyAutoCommit = false;
+      }
+             
+             
+  &amp;lt; AbstractLogicalConnectionImplementor.java&amp;gt;
+      protected static boolean determineInitialAutoCommitMode(Connection providedConnection) {
+          try {
+              return providedConnection.getAutoCommit();
+          }
+          catch (SQLException e) {
+              log.debug( &quot;Unable to ascertain initial auto-commit state of provided connection; assuming auto-commit&quot; );
+              return true;
+          }
+      }
+             
+             
+  &amp;lt; AbstractLogicalConnectionImplementor.java&amp;gt;
+      @Override
+      public void begin() {
+          try {
+              if ( !doConnectionsFromProviderHaveAutoCommitDisabled() ) {
+                  log.trace( &quot;Preparing to begin transaction via JDBC Connection.setAutoCommit(false)&quot; );
+                  getConnectionForTransactionManagement().setAutoCommit( false );
+                  log.trace( &quot;Transaction begun via JDBC Connection.setAutoCommit(false)&quot; );
+              }
+              status = TransactionStatus.ACTIVE;
+          }
+          catch( SQLException e ) {
+              throw new TransactionException( &quot;JDBC begin transaction failed: &quot;, e );
+          }
+      }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;            &lt;/div&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;부가적으로 얻을 수 있는 성능 향상 효과
+    &lt;ul&gt;
+      &lt;li&gt;hibernate.connection.provider_disables_autocommit=true 설정으로 인해 얻을 수 있는 추가 효과&lt;/li&gt;
+      &lt;li&gt;기존에 동적으로 현재 커넥션의 autoCommit 설정을 확인하기 위해 determineInitialAutoCommitMode() 를 수행한다.&lt;/li&gt;
+      &lt;li&gt;이때, &lt;code class=&quot;highlighter-rouge&quot;&gt;getConnectionForTransactionManagement() 를 통해 실제 DB 커넥션을 가져오게 되는데 이를 나중으로 미루어 Throughput을 향상&lt;/code&gt;시킬 수 있다.
+        &lt;ul&gt;
+          &lt;li&gt;doConnectionsFromProviderHaveAutoCommitDisabled()을 통해 hibernate.connection.provider_disables_autocommit 설정을 체크한다.&lt;/li&gt;
+          &lt;li&gt;doConnectionsFromProviderHaveAutoCommitDisabled()가 false일 경우 determineInitialAutoCommitMode()를 수행하며 setAutoCommit을 수행한다.&lt;/li&gt;
+          &lt;li&gt;이때, getConnectionForTransactionManagement()을 수행하는데 setAutoCommit을 하려고 여기서 실제 DB 커넥션을 가져온다.&lt;/li&gt;
+          &lt;li&gt;
+            &lt;p&gt;따라서, hibernate.connection.provider_disables_autocommit을 true로 설정할 경우, 커넥션을 가져오는 것을 미룰 수 있어 Throughput을 향상 시킬 수 있다.&lt;/p&gt;
+
+            &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &amp;lt; LogicalConnectionManagementImpl.java&amp;gt;
+  @Override
+     public void begin() {
+         initiallyAutoCommit = !doConnectionsFromProviderHaveAutoCommitDisabled() &amp;amp;&amp;amp; determineInitialAutoCommitMode(
+                 getConnectionForTransactionManagement() );
+         super.begin();
+     }
+             
+             
+  &amp;lt; AbstractLogicalConnectionImplementor.java&amp;gt;
+             
+      protected static boolean determineInitialAutoCommitMode(Connection providedConnection) {
+          try {
+              return providedConnection.getAutoCommit();
+          }
+          catch (SQLException e) {
+              log.debug( &quot;Unable to ascertain initial auto-commit state of provided connection; assuming auto-commit&quot; );
+              return true;
+          }
+      } 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;            &lt;/div&gt;
+
+            &lt;h2 id=&quot;-&quot;&gt;-&lt;/h2&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;커넥션 가져오기를 미루고 난 후, 나중에 PreparedStatement 관련 수행시 connection()을 통해 실제 물리 커넥션을 가져오는 코드
+        &lt;ul&gt;
+          &lt;li&gt;
+            &lt;p&gt;PreparedStatement 수행 때로 DB 커넥션을 가져오는 시간을 미루어 Throughput을 향상 시킬 수 있다.&lt;/p&gt;
+
+            &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &amp;lt; StatementPreparerImpl.java &amp;gt;
+         
+  @Override
+      public PreparedStatement prepareQueryStatement(
+              String sql,
+              final boolean isCallable,
+              final ScrollMode scrollMode) {
+          if ( scrollMode != null &amp;amp;&amp;amp; !scrollMode.equals( ScrollMode.FORWARD_ONLY ) ) {
+              if ( ! settings().isScrollableResultSetsEnabled() ) {
+                  throw new AssertionFailure(&quot;scrollable result sets are not enabled&quot;);
+              }
+              final PreparedStatement ps = new QueryStatementPreparationTemplate( sql ) {
+                  public PreparedStatement doPrepare() throws SQLException {
+                          return isCallable
+                                  ? connection().prepareCall( sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY )
+                                  : connection().prepareStatement( sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY );
+                  }
+              }.prepareStatement();
+              jdbcCoordinator.registerLastQuery( ps );
+              return ps;
+          }
+          else {
+              final PreparedStatement ps = new QueryStatementPreparationTemplate( sql ) {
+                  public PreparedStatement doPrepare() throws SQLException {
+                          return isCallable
+                                  ? connection().prepareCall( sql )
+                                  : connection().prepareStatement( sql );
+                  }
+              }.prepareStatement();
+              jdbcCoordinator.registerLastQuery( ps );
+              return ps;
+          }
+      }   - -
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;            &lt;/div&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;DB 커넥션은 어떻게 가져오는가 ?
+        &lt;ul&gt;
+          &lt;li&gt;커넥션을 가져오는 요청을 하게되면 LogicalConnectionManagedImpl.java 구현체를 실행한다.
+            &lt;ul&gt;
+              &lt;li&gt;jdbcConnectionAccess.obtainConnection()을 하게 되면 실제 커넥션을 가져온다.&lt;/li&gt;
+              &lt;li&gt;내부적으로 NonContextualJdbcConnectionAccess.java을 참조하고 있으며 obtainConnection() 호출시 connectionProvider를 통해 커넥션을 가져온다.&lt;/li&gt;
+              &lt;li&gt;
+                &lt;p&gt;현재 커넥션 프로바이더가 HikariCP이기 때문에, HikariCP의 커넥션 풀에서 가져온다.&lt;/p&gt;
+
+                &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  private Connection acquireConnectionIfNeeded() {
+          if ( physicalConnection == null ) {
+              // todo : is this the right place for these observer calls?
+              observer.jdbcConnectionAcquisitionStart();
+              try {
+                  physicalConnection = jdbcConnectionAccess.obtainConnection();
+              }
+              catch (SQLException e) {
+                  throw sqlExceptionHelper.convert( e, &quot;Unable to acquire JDBC Connection&quot; );
+              }
+              finally {
+                  observer.jdbcConnectionAcquisitionEnd( physicalConnection );
+              }
+          }
+          return physicalConnection;
+      }   - -   -
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;                &lt;/div&gt;
+              &lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;
+            &lt;p&gt;위에서 jdbcConnectionAccess.obtainConnection()을 하게 되면 아래 소스를 참조한다.&lt;/p&gt;
+
+            &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &amp;lt; NonContextualJdbcConnectionAccess.java &amp;gt;
+        
+  @Override
+  public Connection obtainConnection() throws SQLException {
+      try {
+          listener.jdbcConnectionAcquisitionStart();
+          return connectionProvider.getConnection();
+      }
+      finally {
+          listener.jdbcConnectionAcquisitionEnd();
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;            &lt;/div&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+
+        &lt;h2 id=&quot;--1&quot;&gt;-&lt;/h2&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;ul&gt;
+          &lt;li&gt;현재 connectionProvider를 HikariCP를 쓰고 있기에, 위에서 connectionProvider.getConnection()를 호출하면 아래의 소스를 참조한다.
+            &lt;ul&gt;
+              &lt;li&gt;커넥션을 어떻게 가져오는지 살펴보자.&lt;/li&gt;
+              &lt;li&gt;
+                &lt;p&gt;만약, Hikari의 커넥션풀이 null이면 새로 생성하고, null아니면 하나 가져온다.&lt;/p&gt;
+
+                &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &amp;lt; HikariDataSource.java &amp;gt; 의 getConnection() 구현체
+                 
+                
+    @Override
+    public Connection getConnection() throws SQLException
+    {
+       if (isClosed()) {
+          throw new SQLException(&quot;HikariDataSource &quot; + this + &quot; has been closed.&quot;);
+       }
+                 
+       if (fastPathPool != null) {
+          return fastPathPool.getConnection();
+       }
+                 
+       // See http://en.wikipedia.org/wiki/Double-checked_locking#Usage_in_Java
+       HikariPool result = pool;
+       if (result == null) {
+          synchronized (this) {
+             result = pool;
+             if (result == null) {
+                validate();
+                LOGGER.info(&quot;{} - Starting...&quot;, getPoolName());
+                try {
+                   pool = result = new HikariPool(this);
+                   this.seal();
+                }
+                catch (PoolInitializationException pie) {
+                   if (pie.getCause() instanceof SQLException) {
+                      throw (SQLException) pie.getCause();
+                   }
+                   else {
+                      throw pie;
+                   }
+                }
+                LOGGER.info(&quot;{} - Start completed.&quot;, getPoolName());
+             }
+          }
+       }
+                 
+       return result.getConnection();
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;                &lt;/div&gt;
+              &lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;분석-결론&quot;&gt;분석 결론&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;hibernate.connection.provider_disables_autocommit 설정은 DBCP 설정의 autoCommit을 믿고 사용하는 설정이다.
+    &lt;ul&gt;
+      &lt;li&gt;즉, DBCP의 autoCommit 설정이 매우 중요하다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;만약 hibernate.connection.provider_disables_autocommit=true로 놓고 DBCP의 autoCommit을 true로 놓게되면?
+    &lt;ul&gt;
+      &lt;li&gt;DBCP가 커넥션을 생성하여 가지고 있으므로, 생성 시점부터 항상 autoCommit=true라 트랜잭션 안에 메소드가 수행하다 실패해도 롤백이 안된다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;따라서, &lt;code class=&quot;highlighter-rouge&quot;&gt;hibernate.connection.provider_disables_autocommit=true를 사용할거면 DBCP의 autoCommit을 false로 놓아서 트랜잭션 단위로 동작할 수 있도록 해야한다&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;필수 참고 문서
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;https://vladmihalcea.com/why-you-should-always-use-hibernate-connection-provider_disables_autocommit-for-resource-local-jpa-transactions&quot;&gt;자바 챔피언 &amp;amp; 하이버네이트 커미터 아저씨가 쓴 문서&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://docs.jboss.org/hibernate/orm/5.2/userguide/html_single/appendices/Configurations.html&quot;&gt;하이버네이트 공식 문서의 설정에 대한 설명 (hibernate.connection.provider_disables_autocommit 설명에 대해 참조)&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/spring-projects/spring-boot/issues/9261&quot;&gt;스프링 프로젝트에서 setAutoCommit과 hibernate.connection.provider_disables_autocommit에 대한 논의&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;적용-방법&quot;&gt;적용 방법&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;적용 후에는 반드시, Transaction Rollback &amp;amp; Commit 정상 작동을 확인해야 합니다.&lt;/li&gt;
+  &lt;li&gt;yml 기준 설정
+    &lt;ul&gt;
+      &lt;li&gt;DBCP의 auto-commit: false&lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;hibernate.connection.provider_disables_autocommit: true&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  spring:
+    datasource:
+      hikari:
+        auto-commit: false
+    jpa:
+      properties:
+        hibernate.connection.provider_disables_autocommit: true
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;적용-결과&quot;&gt;적용 결과&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;결과 요약
+    &lt;ul&gt;
+      &lt;li&gt;setAutoCommit 최적화로 &lt;code class=&quot;highlighter-rouge&quot;&gt;쿠폰 전체 API에 대해 평균적으로 43%의 성능 향상&lt;/code&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;API 별 분석
+    &lt;ul&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/autocommit_total_result_table.png&quot; alt=&quot;setAutoCommit 튜닝 전 후 종합 결과&quot; /&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;결과 이미지
+    &lt;ul&gt;
+      &lt;li&gt;setAutoCommit 최적화 전 후 쿠폰 전체 API Latency 변화
+        &lt;ul&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/autocommit_total_result.png&quot; alt=&quot;setAutoCommit 최적화 전 후 쿠폰 전체 API Latency 변화&quot; /&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;setAutoCommit 최적화 전 후 쿠폰 실시간 집계 API Latency 변화
+        &lt;ul&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/autocommit_realtime_coupon_count_api.png&quot; alt=&quot;setAutoCommit 최적화 전 후 쿠폰 실시간 집계 API Latency 변화&quot; /&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;setAutoCommit 최적화 전 후 사용자에게 지급된 쿠폰 조회 API Latency 변화
+        &lt;ul&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/autocommit_user_coupon_api.png&quot; alt=&quot;setAutoCommit 최적화 전 후 사용자에게 지급된 쿠폰 조회 API Latency 변화&quot; /&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;setAutoCommit 최적화 전 후 특정 숙소에서 제공 가능한 쿠폰 조회 API Latency 변화
+        &lt;ul&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/autocommit_offerable_coupon_by_place_api.png&quot; alt=&quot;setAutoCommit 최적화 전 후 특정 숙소에서 제공 가능한 쿠폰 조회 API Latency 변화&quot; /&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;setAutoCommit 최적화 전 후 리스트용 쿠폰 실시간 집계 API Latency 변화
+        &lt;ul&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/autocommit_realtime_coupon_for_list_count_api.png&quot; alt=&quot;setAutoCommit 최적화 전 후 리스트용 쿠폰 실시간 집계 API Latency 변화&quot; /&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;setAutoCommit 최적화 전 후 사용자의 쿠폰 보유 현황 조회 API Latency 변화
+        &lt;ul&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/autocommit_user_coupon_statistics_api.png&quot; alt=&quot;setAutoCommit 최적화 전 후 사용자의 쿠폰 보유 현황 조회 API Latency 변화&quot; /&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;마치며&quot;&gt;마치며&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Hibernate에서는 너무 많은 것들을 지원해주기에, 생각보다 최적화 되지 않은 부분들이 많다.&lt;/li&gt;
+  &lt;li&gt;당연하게도, 사용 빈도가 높은 작업일 경우 튜닝의 효과가 매우 크다.&lt;/li&gt;
+  &lt;li&gt;JDBC Driver 설정 튜닝이라던지.. 개선 전후의 TPS가 천단위로 차이가 날 때도 많다…&lt;/li&gt;
+  &lt;li&gt;결론은, 하나의 설정을 적용하더라도 내부 구현체를 열어보고 반드시 동작 방식을 분석하고 사용해야 할 것이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;관련-post&quot;&gt;관련 Post&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://in.relation.to/2019/01/07/hibernate-community-newsletter-2019-01&quot;&gt;해당 Hibernate 성능 튜닝 Post가 2019-01 Hibernate Community Newsletter에 소개되었습니다.&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="Java" /><category term="JPA" /><category term="Hibernate" /><category term="Tuning" /><summary type="html">목적 Hibernate setAutoCommit 최적화를 통한 성능 튜닝</summary></entry><entry><title type="html">JPA Composite Primary Key의 IN 쿼리 서술 방식 변경을 통한 DB Optimizer 인덱스 전략 튜닝</title><link href="https://pkgonan.github.io/2018/11/jpa-composite-key-in-query-tuning" rel="alternate" type="text/html" title="JPA Composite Primary Key의 IN 쿼리 서술 방식 변경을 통한 DB Optimizer 인덱스 전략 튜닝" /><published>2018-11-03T00:00:00+00:00</published><updated>2018-11-03T00:00:00+00:00</updated><id>https://pkgonan.github.io/2018/11/jpa-composite-key-in-query-tuning</id><content type="html" xml:base="https://pkgonan.github.io/2018/11/jpa-composite-key-in-query-tuning">&lt;h2 id=&quot;목적&quot;&gt;목적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;JPA Composite Primary Key의 IN 쿼리 서술 방식 변경을 통해 DB Optimizer의 인덱스 전략 튜닝&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;배경&quot;&gt;배경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;야놀자 쿠폰 API 서버 개발을 담당하고 있으며, 최근 API 서버의 P99 Latency가 급격하게 느려진 것을 확인하였습니다.&lt;/li&gt;
+  &lt;li&gt;APM Pinpoint에서 확인 결과, Composite Primary Key를 사용하는 특정 API의 쿼리 수행시간이 느려 진 것을 알게 되었습니다.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;분석 결과, JPA에서 Composite Primary Key를 통해 IN Query를 사용하게 될 경우 아래와 같은 쿼리가 발생하고 있었습니다.&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  SELECT * FROM A WHERE (A.a, A.b) IN ( (1,2), (3,4) );
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Explain으로 쿼리 수행 방식 조회 결과, FULL Scan 급으로 동작하고 있는 것을 파악하게 되었습니다.
+    &lt;ul&gt;
+      &lt;li&gt;Index Type=index
+        &lt;ul&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Range 보다 느리고 N개의 데이터 블럭을 스캔하기에 FULL Scan과 다름 없다.&lt;/code&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Rows=N개..(보안!)&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/JPA_Composite_Key_Query_Explain_Analysis_Result.png&quot; alt=&quot;Explain 결과&quot; /&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;IN Query 자체가, Optimizer가 최적화를 제대로 못하는 경우가 있다. (InnoDB 사용중)
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;a href=&quot;http://mysql.rjweb.org/doc.php/index_cookbook_mysql&quot;&gt;Mysql Index Cook Book&lt;/a&gt;&lt;/p&gt;
+
+        &lt;blockquote&gt;
+          &lt;p&gt;IN (1,99,3) is sometimes optimized as efficiently as “=”, but not always. Older versions of MySQL did not optimize it as well as newer versions. (5.6 is possibly the main turning point.)&lt;/p&gt;
+        &lt;/blockquote&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;따라서, JPA에서 IN Query를 서술 방식을 변경하여 인덱스를 정상적으로 타도록 개선하자.&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;AS-IS&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  SELECT * FROM A WHERE (A.a, A.b) IN ( (1,2), (3,4) );
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;TO-BE&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  SELECT * FROM A WHERE (A.a=1 AND A.b=2) OR (A.a=3 AND A.b=4);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;환경&quot;&gt;환경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;JAVA 8&lt;/li&gt;
+  &lt;li&gt;Spring Boot 2.x&lt;/li&gt;
+  &lt;li&gt;Spring Data JPA 2.x&lt;/li&gt;
+  &lt;li&gt;Hibernate 5.2.x&lt;/li&gt;
+  &lt;li&gt;QueryDSL 4.2.x&lt;/li&gt;
+  &lt;li&gt;Hazelcast 3.11.x&lt;/li&gt;
+  &lt;li&gt;MariaDB 10.0.x (InnoDB-5.6.x)&lt;/li&gt;
+  &lt;li&gt;AWS Elastic Beanstalk&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;문제-분석&quot;&gt;문제 분석&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;처음에는 Composite Primary Key의 순서로 인해 성능이 저하된 것으로 판단하였음. (Cardinality에 따른 적합한 순서)
+    &lt;ul&gt;
+      &lt;li&gt;하지만, 라이브 데이터를 그대로 받아 로컬 환경에서 Composite Primary Key 순서 변경 후 테스트 결과, 영향이 크지 않음.&lt;/li&gt;
+      &lt;li&gt;따라서, 근본적으로 다른 부분에 문제가 있음을 파악.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Optimizer의 index type 분석 결과 &lt;code class=&quot;highlighter-rouge&quot;&gt;index&lt;/code&gt;방식 확인.
+    &lt;ul&gt;
+      &lt;li&gt;전체 인덱스 블락을 스캔하기에 Index Type &lt;code class=&quot;highlighter-rouge&quot;&gt;ALL&lt;/code&gt; 즉 풀스캔과 유사.&lt;/li&gt;
+      &lt;li&gt;Range 쿼리보다 비효율적.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;쿼리 방식을 정확히 AND, =, OR 등으로 서술하게 변경하면 어떨까?
+    &lt;ul&gt;
+      &lt;li&gt;그 영향은, 오직 Composite Primary Key를 사용하는 Repository로만 한정하여 적용.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;테스트 결과 IN Query로 서술하지 않고, AND, =, OR 등으로 쿼리를 서술하면 인덱스를 정상적으로 타는 것을 확인.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;문제-분석-결론&quot;&gt;문제 분석 결론&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;JPA의 Composite Primary Key의 쿼리 서술 방식을 변경하자.&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;구현&quot;&gt;구현&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;구현 핵심
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;기존 JPA에서 제공하는 method를 override 하자.&lt;/code&gt;
+        &lt;ul&gt;
+          &lt;li&gt;현재 QueryDSL을 사용하고 있기에 아래 두개의 소스 코드에서 재정의할 메소드를 확인하자.
+            &lt;ul&gt;
+              &lt;li&gt;QuerydslJpaRepository.java&lt;/li&gt;
+              &lt;li&gt;SimpleJpaRepository.java&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;여러개의 Composite Primary Key로 조회할 경우 파라미터를 Iterable을 상속한 형태로 받을 것이다.
+        &lt;ul&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;A는 Entity 이름&lt;/code&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;A.ID는 해당 Entity의 Composite Primary Key&lt;/code&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;현재 QueryDSL을 사용하므로, 여러개의 조합 키를 AND와 OR로 묶는 작업은 &lt;code class=&quot;highlighter-rouge&quot;&gt;QueryDSL의 Predicate&lt;/code&gt;를 사용한다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;실제 구현
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;커스텀 Repository&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  interface ACustomRepository {
+      
+     List&amp;lt;A&amp;gt; findAllById(Iterable&amp;lt;A.Id&amp;gt; ids);
+      
+  }  -
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;커스텀 Repository의 구현체&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  class ARepositoryImpl implements ACustomRepository {
+         
+       @Autowired
+       private ARepository aRepository;
+        
+        
+       /**
+        * [AS-IS] SELECT * FROM A WHERE (a,b,c) in ( (1,2,3), (4,5,6) );
+        * [TO-BE] SELECT * FROM A WHERE a=1 and b=2 and c=3 or a=4 and b=5 and c=6 ;
+        */
+       @Override
+       public List&amp;lt;A&amp;gt; findAllById(Iterable&amp;lt;A.Id&amp;gt; ids) {
+           Predicate predicate = ASpecs.by(ids);
+           return aRepository.findAll(predicate);
+       }
+   }  -
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;QueryDSL을 활용한 Predicate 생성&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  public class ASpecs {
+ 
+        
+       /**
+        * @return 특정 metaId &amp;amp; placeNo 등록된 설정 조회
+        */
+       public static BooleanExpression by(long metaId, long placeNo) {
+           return metaIdIs(metaId)
+                   .and(placeNoIs(placeNo));
+       }
+        
+       /**
+        * @param ids
+        * @return 특정 A.Id로 등록된 설정 조회
+        */
+       public static Predicate by(Iterable&amp;lt;A.Id&amp;gt; ids) {
+           BooleanBuilder builder = new BooleanBuilder();
+        
+           for (A.Id id : ids) {
+               builder.or(by(id.getMetaId(), id.getPlaceNo()));
+           }
+        
+           return builder;
+       }
+   }  -
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;기존 Repository에서 findAllById() 재정의 및 커스텀 Repository extends 추가&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;   @Repository
+   public interface ARepository extends JpaRepository&amp;lt;A, A.Id&amp;gt;, QuerydslPredicateExecutor&amp;lt;A&amp;gt;, ACustomRepository {
+        
+       @Override
+       List&amp;lt;A&amp;gt; findAllById(Iterable&amp;lt;A.Id&amp;gt; ids);
+        
+   }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;결과&quot;&gt;결과&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;결과
+    &lt;ul&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/JPA_Composite_Key_Tunning_Total_Result.png&quot; alt=&quot;JPA Composite Primary Key의 IN 쿼리 서술 방식 변경을 통한 DB Optimizer의 인덱스 전략 튜닝 결과&quot; /&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;결과 이미지
+    &lt;ul&gt;
+      &lt;li&gt;쿼리 튜닝 전, Explain 결과&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/JPA_Composite_Key_Tunning_Before.png&quot; alt=&quot;쿼리 튜닝 전, Explain 결과&quot; /&gt;&lt;/li&gt;
+      &lt;li&gt;쿼리 튜닝 후, Explain 결과&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/JPA_Composite_Key_Tunning_After.png&quot; alt=&quot;쿼리 튜닝 후, Explain 결과&quot; /&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;마치며&quot;&gt;마치며&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;DB Optimizer는 생각과 다르게 동작&lt;/code&gt;하는 경우가 많다.. 항상 &lt;code class=&quot;highlighter-rouge&quot;&gt;Explain&lt;/code&gt; 생활화를..&lt;/li&gt;
+  &lt;li&gt;이번에도 APM 덕분에 문제 파악이 수월했다. APM 찬양  :)&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;O(N)&lt;/code&gt; 과 &lt;code class=&quot;highlighter-rouge&quot;&gt;O(logN)&lt;/code&gt;은 하늘과 땅 차이의 성능이니 &lt;code class=&quot;highlighter-rouge&quot;&gt;알고리즘에 민감하게 반응하고 대응&lt;/code&gt;해야 한다.&lt;/li&gt;
+  &lt;li&gt;FULL Scan 급으로 수 십 ms까지 튀던 쿼리가, 단 2ms 이내로 잡히는 걸 보면 더더욱 그렇다.&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="Java" /><category term="JPA" /><category term="Hibernate" /><category term="MariaDB" /><category term="DB" /><category term="Index" /><category term="Tuning" /><summary type="html">목적 JPA Composite Primary Key의 IN 쿼리 서술 방식 변경을 통해 DB Optimizer의 인덱스 전략 튜닝</summary></entry><entry><title type="html">Local Cache 와 Invalidation Message Propagation 전략을 활용하여 API 성능 튜닝하기</title><link href="https://pkgonan.github.io/2018/10/hazelcast-hibernate-second-level-cache" rel="alternate" type="text/html" title="Local Cache 와 Invalidation Message Propagation 전략을 활용하여 API 성능 튜닝하기" /><published>2018-10-28T00:00:00+00:00</published><updated>2018-10-28T00:00:00+00:00</updated><id>https://pkgonan.github.io/2018/10/hazelcast-hibernate-second-level-cache</id><content type="html" xml:base="https://pkgonan.github.io/2018/10/hazelcast-hibernate-second-level-cache">&lt;h2 id=&quot;목적&quot;&gt;목적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Local Cache 와 Invalidation Message Propagation 전략을 활용하여 API 성능 튜닝하기&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;배경&quot;&gt;배경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;야놀자 쿠폰 API 서버 개발을 담당하고 있으며, APM Newrelic을 통해 DB Query로 인한 Latency 지연이 전체 Latency의 50%정도를 차지한다는 것을 알게 되었습니다.&lt;/li&gt;
+  &lt;li&gt;따라서, &lt;code class=&quot;highlighter-rouge&quot;&gt;DB Query 조회를 제로에 가깝게 줄여 API 성능을 개선하고자 Cache를 적용&lt;/code&gt;하게 되었습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;img src=&quot;/assets/images/post/apm_status_rainbow_mochi.png&quot; alt=&quot;Latency의 절반이 DB Query&quot; /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;분석&quot;&gt;분석&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;현재 쿠폰 도메인의 Entity 사용 패턴을 분석해보았습니다.&lt;/li&gt;
+  &lt;li&gt;쿠폰의 메타 데이터 성격의 Entity는 조회가 99.9% 이상으로 압도적으로 많았습니다.&lt;/li&gt;
+  &lt;li&gt;이러한 쿠폰 메타 Entity를 전체 트래픽의 95%를 차지하는 상위 3개의 API에서 다수 호출하는 구조였습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;따라서, 캐시에 아주 적합한 성격의 Entity라고 판단되었습니다.&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;cache를-어떻게-적용할-것인가-&quot;&gt;Cache를 어떻게 적용할 것인가 ?&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;현재 Hibernate를 ORM으로 사용하고 있습니다.&lt;/li&gt;
+  &lt;li&gt;각 API Call 마다 Entity를 중복 조회하고 있었기에, 각 세션 내부에서만 Cache를 공유하는 First Level Cache는 Hit율이 낮은 편이었습니다.&lt;/li&gt;
+  &lt;li&gt;만약, 여러 세션에서 Cache를 공유하는 Second Level Cache를 적용할 경우 First Level Cache에서 Miss되는 조회들을 Hit 시킬 수 있게 됩니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;따라서, 현재 조회 패턴에서 Cache Hit율을 올리기 위해 Hibernate Second Level Cache를 적용하게 되었습니다.&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;local-cache-vs-remote-cache-어떤-것이-더-적합한-상황인가-&quot;&gt;Local Cache vs Remote Cache 어떤 것이 더 적합한 상황인가 ?&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;쿠폰 메타 Entity에 대해 1초에 수 천번의 극단적인 중복 조회가 이루어지는 상황이었습니다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;따라서, &lt;code class=&quot;highlighter-rouge&quot;&gt;성능 측면에서는 매번 Network를 타는 Remote Cache 보다 Local Cache가 가장 적합한 상황이었습니다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;하지만, Local Cache의 단점은 Entity의 상태가 변경 되었을 때 변경 사항을 다른 인스턴스가 알 수 없다는 것입니다.&lt;/li&gt;
+  &lt;li&gt;변경사항을 다른 인스턴스에게 알려주는 솔루션이 없다면 Remote Cache, 있다면 Local Cache 적용을 고려하였습니다.&lt;/li&gt;
+  &lt;li&gt;그리고 IMDG로 설계된 Cache 구현체에서 Entity의 상태가 변경되었을때 변경사항을 다른 인스턴스에게 전파하는 기능을 제공하는 것을 확인하게 되었습니다.&lt;/li&gt;
+  &lt;li&gt;이에 따라, &lt;code class=&quot;highlighter-rouge&quot;&gt;극단적인 중복 조회 패턴에서의 퍼포먼스를 위해 Local Cache 적용을 확정하게 되었습니다.&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;cache-concurrency-strategy은-어떤-전략이-적합한가-&quot;&gt;Cache Concurrency Strategy은 어떤 전략이 적합한가 ?&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;현재 Hibernate를 사용하고 있으며, Second Level Cache 적용을 위해 캐시 동시성 전략에 대한 고민이 필요하였습니다.&lt;/li&gt;
+  &lt;li&gt;Read/Update 비율이 Read가 압도적으로 높고, 동시 수정이 일어날 확률이 낮은 상황이었습니다.&lt;/li&gt;
+  &lt;li&gt;따라서, &lt;code class=&quot;highlighter-rouge&quot;&gt;Lock으로 인한 성능 저하가 없는 NONSTRICT_READ_WRITE 전략이 적합하였습니다.&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;cache-구현체의-선택&quot;&gt;Cache 구현체의 선택&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Invalidation Message Propagation 기능을 제공하는 Cache 구현체가 필요하였습니다.&lt;/li&gt;
+  &lt;li&gt;위와 같은 조건을 기준으로 Cache 구현체 별 적합성에 대해 분석을 해보았습니다. 성능에 대한 차이는 분석에서 제외하였습니다.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;table&gt;
+      &lt;thead&gt;
+        &lt;tr&gt;
+          &lt;th&gt;이름&lt;/th&gt;
+          &lt;th&gt;구분&lt;/th&gt;
+          &lt;th&gt;저장소&lt;/th&gt;
+          &lt;th&gt;적합여부&lt;/th&gt;
+          &lt;th&gt;판단사유&lt;/th&gt;
+        &lt;/tr&gt;
+      &lt;/thead&gt;
+      &lt;tbody&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Hazelcast&lt;/td&gt;
+          &lt;td&gt;IMDG&lt;/td&gt;
+          &lt;td&gt;In Memory&lt;/td&gt;
+          &lt;td&gt;O&lt;/td&gt;
+          &lt;td&gt;IMDG로 Invalidation Message Propagation 기능 제공&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Infinispan&lt;/td&gt;
+          &lt;td&gt;IMDG&lt;/td&gt;
+          &lt;td&gt;In Memory&lt;/td&gt;
+          &lt;td&gt;O&lt;/td&gt;
+          &lt;td&gt;상동&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Redis&lt;/td&gt;
+          &lt;td&gt;NON-IMDG&lt;/td&gt;
+          &lt;td&gt;In Memory&lt;/td&gt;
+          &lt;td&gt;X&lt;/td&gt;
+          &lt;td&gt;NON-IMDG로 Invalidation Message Propagation 기능 미제공&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Ehcache&lt;/td&gt;
+          &lt;td&gt;NON-IMDG&lt;/td&gt;
+          &lt;td&gt;In Memory&lt;/td&gt;
+          &lt;td&gt;X&lt;/td&gt;
+          &lt;td&gt;상동&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Ehcache + Terracotta&lt;/td&gt;
+          &lt;td&gt;NON-IMDG&lt;/td&gt;
+          &lt;td&gt;In Memory&lt;/td&gt;
+          &lt;td&gt;X&lt;/td&gt;
+          &lt;td&gt;Terracotta 서버 추가 구성으로 인한 부담&lt;/td&gt;
+        &lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/li&gt;
+  &lt;li&gt;위 분석을 통해 IMDG에서 분산 메세지 기능을 구현하고 있어, IMDG를 활용해야 한다는 것을 알게 되었습니다.&lt;/li&gt;
+  &lt;li&gt;하지만, &lt;code class=&quot;highlighter-rouge&quot;&gt;Infinispan같은 경우 9.4.9.Final Version 기준으로 Invalidation Mode에서 NONSTRICT_READ_WRITE 전략을 지원하지 않았습니다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;이에 따라, &lt;code class=&quot;highlighter-rouge&quot;&gt;NONSTRICT_READ_WRITE 전략을 지원하는 Hazelcast를 Local Cache 구현체로 선택하게 되었습니다.&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;그래서-local-cache--invalidation-message-propagation-전략은-언제-써야-적절한건데--and-조건&quot;&gt;그래서 Local Cache + Invalidation Message Propagation 전략은 언제 써야 적절한건데 ? (AND 조건)&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;특정 Entity에 대해 조회가 극단적으로 많을 경우&lt;/li&gt;
+  &lt;li&gt;극단적인 성능이 필요할 경우&lt;/li&gt;
+  &lt;li&gt;조회/수정 비율이 조회가 더 많을 경우 (쿠폰은 약 99.9%/0.1%)&lt;/li&gt;
+  &lt;li&gt;Eventual Consistency에도 이슈 없는 Entity 속성일 경우&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;환경&quot;&gt;환경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;JAVA 8&lt;/li&gt;
+  &lt;li&gt;Spring Boot 2.x&lt;/li&gt;
+  &lt;li&gt;Spring Data JPA 2.x&lt;/li&gt;
+  &lt;li&gt;Hibernate 5.2.x&lt;/li&gt;
+  &lt;li&gt;QueryDSL 4.2.x&lt;/li&gt;
+  &lt;li&gt;Hazelcast 3.11.x&lt;/li&gt;
+  &lt;li&gt;hazelcast-hibernate52 1.3.x&lt;/li&gt;
+  &lt;li&gt;AWS Elastic Beanstalk&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;자주-언급될-단어에-대해-파악해보자&quot;&gt;자주 언급될 단어에 대해 파악해보자&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Hazelcast란 무엇인가요?
+    &lt;ul&gt;
+      &lt;li&gt;Java 언어로 작성된 Cache 구현체의 한 종류, Multi Thread 기반이며 분산 캐시를 지원하는 오픈 소스&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://en.m.wikipedia.org/wiki/Hazelcast&quot;&gt;What is Hazelcast?&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Second Level Cache는 무엇인가요?
+    &lt;ul&gt;
+      &lt;li&gt;Hibernate에서 First Level Cache는 각 세션 내부에서만 Entity의 상태를 공유하는 캐시 방법 (Default : enable)&lt;/li&gt;
+      &lt;li&gt;Hibernate에서 Second Level Cache는 여러 세션에서 Entity의 상태를 공유하는 캐시 방법 (Default : disable)&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://stackoverflow.com/questions/2825436/what-is-second-level-cache-in-hibernate&quot;&gt;What is second level cache in hibernate?&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;hazelcast-기능&quot;&gt;Hazelcast 기능&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Hazelcast에서는 어떤 기능들을 제공하는지 살펴보겠습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_IMDG_Features.png&quot; alt=&quot;Hazelcast 기능&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;Operating Env를 통해 Linux, AWS, JVM 환경에서 실행 가능하다는 것을 알 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;Storage를 통해서는 기본적으로 On-Heap 즉 힙에 저장되는 방식을 사용한다는 것을 알 수 있었습니다. 추가적으로는 유료 사용자에게는 Off-Heap 방식을 제공하고 있습니다.&lt;/li&gt;
+  &lt;li&gt;API를 살펴본다면, Hibernate Second Level Cache, Set, Map, List, Queue, Topic 등 여러가지 API들을 제공하고 있다는 것을 확인할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;hazelcast-배포-방식&quot;&gt;Hazelcast 배포 방식&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;배포 방식은 두 가지를 제공합니다
+    &lt;ul&gt;
+      &lt;li&gt;Embedded Mode
+        &lt;ul&gt;
+          &lt;li&gt;Application 과 Hazelcast Node가 함께 같은 장비(JVM)에서 배포 및 실행&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Client-Server Mode
+        &lt;ul&gt;
+          &lt;li&gt;Hazelcast Node들만 실행하는 장비가 필요하며, Application 이 배포되는 장비가 추가적으로 필요.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_Deployment_Options.png&quot; alt=&quot;Hazelcast 배포 방식&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;Deployment Mode의 선택
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Embedded Mode는 각 Node 별 동일 JVM에서 실행되기에 개발자의 선택에 따라 데이터를 가져오는데 Network 비용이 들지 않을 수 있습니다&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Client-Server Mode는 데이터를 가져오려면 항상 Network 비용이 발생&lt;/code&gt;합니다.&lt;/li&gt;
+      &lt;li&gt;후자를 선택할 바에는, AWS Elastic Cache를 사용하는게 더 나을 것 같다는 판단.&lt;/li&gt;
+      &lt;li&gt;쿠폰 API에 Second Level Cache를 사용하기 위한 목적이므로 잦은 Entity 조회가 발생하게 될 것이다.&lt;/li&gt;
+      &lt;li&gt;따라서, 하나의 Entity를 가져오는데 2ms가 걸릴 경우, 5개의 Entity를 가져오는 비지니스 로직의 경우 10ms가 걸리게 될 것입니다.&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Network Latency를 0에 수렴할 목적으로 Embedded Mode를 선택&lt;/code&gt;.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;hazelcast-클러스터링&quot;&gt;Hazelcast 클러스터링&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;클러스터링이란 무엇일까요?
+    &lt;ul&gt;
+      &lt;li&gt;같은 것 끼리 묶는 것.&lt;/li&gt;
+      &lt;li&gt;여러 인스턴스들 중 같은 유형끼리 논리적으로 묶어 취급하는 것.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.hazelcast.org/docs/latest-development/manual/html/Setting_Up_Clusters/index.html&quot;&gt;Hazelcast에서 제공하는 클러스터링 방법&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Multicast discovery&lt;/li&gt;
+      &lt;li&gt;Discovery by TCP/IP&lt;/li&gt;
+      &lt;li&gt;AWS EC2 discovery by TCP/IP&lt;/li&gt;
+      &lt;li&gt;jclouds® for discovery&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;클러스터링 방법의 선택
+    &lt;ul&gt;
+      &lt;li&gt;현재 쿠폰 API는 AWS Beanstalk 환경에서 운영중이기에, AWS Discovery 방식을 선택하게 되었습니다.&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/hazelcast/hazelcast-aws&quot;&gt;hazelcast-aws&lt;/a&gt;의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Discovery SPI 기능을 활용하여 AWS Beanstalk 환경에서 여러대의 인스턴스를 클러스터링&lt;/code&gt;합니다.&lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;AWS에서 제공하는 API를 호출 하여 인스턴스의 메타 정보를 가져와 TCP 통신을 통해 클러스터링합니다.&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  com.hazelcast.aws.utility.MetadataUtil.java
+         
+         
+  /**
+   * Performs the HTTP request to retrieve AWS Instance Metadata from the given URI.
+   *
+   * @param uri              the full URI where a `GET` request will retrieve the metadata information, represented as JSON.
+   * @param timeoutInSeconds timeout for the AWS service call
+   * @param retries          number of retries in case the AWS request fails
+   * @return The content of the HTTP response, as a String. NOTE: This is NEVER null.
+   */
+  public static String retrieveMetadataFromURI(final String uri, final int timeoutInSeconds, int retries) {
+      return RetryUtils.retry(new Callable&amp;lt;String&amp;gt;() {
+          @Override
+          public String call() {
+              return retrieveMetadataFromURI(uri, timeoutInSeconds);
+          }
+      }, retries);
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;AWS Beanstlak 환경에서 Hazelcast Clustering 적용하기
+    &lt;ul&gt;
+      &lt;li&gt;반드시, &lt;code class=&quot;highlighter-rouge&quot;&gt;VPC Security Group의 인바운드 규칙의 TCP Port를 반드시 열어야&lt;/code&gt; 합니다.&lt;/li&gt;
+      &lt;li&gt;Default Port인 5701 부터 사용하려는 Port를 열어두어야 합니다.&lt;/li&gt;
+      &lt;li&gt;클러스터링이 정상적으로 되지 않으면 Cache Eviction 등의 기능들이 정상적으로 동작하지 않아, 꼭 확인해야 합니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;hazelcast-데이터-적재-방식&quot;&gt;Hazelcast 데이터 적재 방식&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Hazelcast 데이터 적재 방식은 ?
+    &lt;ul&gt;
+      &lt;li&gt;분산 처리 방식 (HazelcastCacheRegionFactory)
+        &lt;ul&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;데이터 Put &amp;amp; Get 시 Clustering 된 Instance에 분산하여 처리&lt;/code&gt;한다.&lt;/li&gt;
+          &lt;li&gt;장점으로는 여러대의 Instance에 중복된 데이터가 저장되지 않는다.&lt;/li&gt;
+          &lt;li&gt;단점으로는 데이터를 적재하고 가져올때 Network Time이 발생한다.&lt;/li&gt;
+          &lt;li&gt;당연하게도 Read / Update 비율이 Read 가 많아야지 Update가 많으면 비효율.&lt;/li&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Cache 데이터가 변경 되었을 때 Multicasting을 통해 타 인스턴스에 Invalidation 요청을 전달&lt;/code&gt;한다.&lt;/li&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_Distributed_Map_Put.png&quot; alt=&quot;Hazelcast 분산 처리 방식의 Put&quot; /&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_Distributed_Map_Get.png&quot; alt=&quot;Hazelcast 분산 처리 방식의 Get&quot; /&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Local 처리 방식 (HazelcastLocalCacheRegionFactory)
+        &lt;ul&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;데이터 Put &amp;amp; Get 시 Clustering 된 Instance에 각각 따로 적재 및 처리&lt;/code&gt;한다.&lt;/li&gt;
+          &lt;li&gt;장점으로는 Local에서 데이터를 가져오고 적재하기 때문에 Network Time이 발생하지 않아 빠르다.&lt;/li&gt;
+          &lt;li&gt;단점으로는 여러대의 Instance에 중복되는 데이터가 발생한다.&lt;/li&gt;
+          &lt;li&gt;당연하게도 Read / Update 비율이 Read 가 많아야지 Update가 많으면 비효율.&lt;/li&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Cache 데이터가 변경 되었을 때 Multicasting을 통해 타 인스턴스에 Invalidation 요청을 전달&lt;/code&gt;한다.&lt;/li&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_Local_Map_Invalidation.png&quot; alt=&quot;Hazelcast Local_Cache의 Invalidation&quot; /&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Coupon API의 Hazelcast Second Level Cache 데이터 적재 방식의 결정
+    &lt;ul&gt;
+      &lt;li&gt;데이터 적재 방식의 결정을 위해서 고려한 부분은 크게 두 가지 였습니다.&lt;/li&gt;
+      &lt;li&gt;성능 그리고 AWS Beanstalk 환경에서의 배포 이슈 여부
+        &lt;ul&gt;
+          &lt;li&gt;성능 측면
+            &lt;ul&gt;
+              &lt;li&gt;Second Level Cache를 통해 Entity 즉 Table 단위의 캐시를 하므로, 빈번한 캐시 조회가 예상되는 상황이었습니다.&lt;/li&gt;
+              &lt;li&gt;따라서, &lt;code class=&quot;highlighter-rouge&quot;&gt;극한의 성능을 위해서는 Network Time이 발생하지 않는 Local에서 처리하는 방식이 적합&lt;/code&gt;하였습니다.&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;배포 측면
+            &lt;ul&gt;
+              &lt;li&gt;Cache가 AWS Beanstalk에서 제공하는 Rolling Update &amp;amp; Blue Green Deploy로 인해 이슈가 발생하면 안됩니다.&lt;/li&gt;
+              &lt;li&gt;만약 분산하여 처리하는 방식을 선택하게 될 경우, 데이터가 분산되어 저장되게 되면서 해당 이슈가 발생하게 됩니다.&lt;/li&gt;
+              &lt;li&gt;예를 들면, Entity에 Colum을 새로 추가하거나 제거하고 새로 배포할 경우 발생 가능합니다.&lt;/li&gt;
+              &lt;li&gt;데이터를 분산하여 적재 후, Rolling Update로 Entity에 새로운 Colum을 추가한 후 해당 데이터를 요청해보면 아직 Update가 되지 않는 Instance에서 데이터를 가져오게 되어 정합성이 깨지게 됩니다.&lt;/li&gt;
+              &lt;li&gt;따라서, &lt;code class=&quot;highlighter-rouge&quot;&gt;배포시 발생할 수 있는 Serialization &amp;amp; Deserialization 이슈를 회피하기 위해서는 Local에서 처리하는 방식이 적합&lt;/code&gt;하였습니다.&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;성능과 배포에 대해 종합적으로 판단한 결과 Local에서 데이터를 적재하고 처리하는 방식이 쿠폰 API에서 더 적합하다는 결론&lt;/code&gt;을 내었습니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;hazelcast-분산-이벤트&quot;&gt;Hazelcast 분산 이벤트&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Hazelcast 분산 이벤트 사용처는 ?
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Cache 대상이 되는 데이터가 Update 될 경우, 상태가 변경이 되었다는 Event를 클러스터링 된 다른 인스턴스에 Propagation(Multicast) 하는데 사용&lt;/code&gt;됩니다.&lt;/li&gt;
+      &lt;li&gt;이벤트 리스너에서는, 이벤트 수신시 해당 캐시를 Eviction 할 것인지, 아니면 Update할 것인지 설정을 통해 선택 가능.&lt;/li&gt;
+      &lt;li&gt;컬럼이 추가 혹은 삭제될 경우 등등 여러가지 Serialization 이슈가 존재.&lt;/li&gt;
+      &lt;li&gt;따라서, 이벤트를 수신하면 해당 이벤트에 해당하는 Cache를 Eviction 할 것을 개인적으로 추천.&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_Distributed_Topic_Bus.png&quot; alt=&quot;Hazelcast Distributed Topic Bus&quot; /&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Distributed Event 전송 방식
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Pub / Sub 패턴&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;Clustering 된 Hazelcast Node들은 서로를 인식 하고 있습니다.&lt;/li&gt;
+      &lt;li&gt;각 Node들은 Publish하는 이벤트들의 Subscriber를 알고 있으며, 해당 Node의 IP 주소를 알고 있습니다. (처음 서버 실행시 클러스터링을 통해 인식)&lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;따라서, &lt;code class=&quot;highlighter-rouge&quot;&gt;특정 이벤트가 Publish 되면, 해당 이벤트를 Subscribe하고 있는 Node들을 가져와서 Loop를 돌며 데이터를 전송&lt;/code&gt;&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  com.hazelcast.spi.impl.eventservice.impl.EventServiceImpl.java
+         
+         
+  @Override
+     public void publishEvent(String serviceName, Collection&amp;lt;EventRegistration&amp;gt; registrations, Object event, int orderKey) {
+         Data eventData = null;
+         for (EventRegistration registration : registrations) {
+             if (!(registration instanceof Registration)) {
+                 throw new IllegalArgumentException();
+             }
+             if (isLocal(registration)) {
+                 executeLocal(serviceName, event, registration, orderKey);
+                 continue;
+             }
+         
+             if (eventData == null) {
+                 eventData = serializationService.toData(event);
+             }
+             EventEnvelope eventEnvelope = new EventEnvelope(registration.getId(), serviceName, eventData);
+             sendEvent(registration.getSubscriber(), eventEnvelope, orderKey);
+         }
+     }              
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Distributed Event 동기 &amp;amp; 비동기 전송
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;기본적으로 비동기 전송&lt;/code&gt;을 한다.&lt;/li&gt;
+      &lt;li&gt;기본적으로 Default 값인 &lt;code class=&quot;highlighter-rouge&quot;&gt;100,000 번째 요청마다 동기 전송을 수행&lt;/code&gt;한다. (10만, 20만, 30만… 째 마다)
+        &lt;ul&gt;
+          &lt;li&gt;EVENT_SYNC_FREQUENCY = 100000&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;데이터 전송 실패를 처리하는 방식
+        &lt;ul&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;전송 실패 처리 방식에서의 데이터 신뢰도와 성능은 반비례&lt;/code&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/Failure_Handling.png&quot; alt=&quot;Failure_Handling&quot; /&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Hazelcast에서 Local Cache + Invalidation Message Multicasting 방식에서는 Retry 정책을 사용&lt;/code&gt;
+            &lt;ul&gt;
+              &lt;li&gt;동기식 전송일 경우 재시도 회수 50&lt;/li&gt;
+              &lt;li&gt;
+                &lt;p&gt;비동기식 전송일 경우 재시도 회수 5&lt;/p&gt;
+
+                &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  com.hazelcast.spi.impl.eventservice.impl.EventServiceImpl.java
+                 
+                 
+  private void sendEvent(Address subscriber, EventEnvelope eventEnvelope, int orderKey) {
+      String serviceName = eventEnvelope.getServiceName();
+      EventServiceSegment segment = getSegment(serviceName, true);
+      boolean sync = segment.incrementPublish() % eventSyncFrequency == 0;
+                 
+      if (sync) {
+          SendEventOperation op = new SendEventOperation(eventEnvelope, orderKey);
+          Future f = nodeEngine.getOperationService()
+                  .createInvocationBuilder(serviceName, op, subscriber)
+                  .setTryCount(SEND_RETRY_COUNT).invoke();
+          try {
+              f.get(sendEventSyncTimeoutMillis, MILLISECONDS);
+          } catch (Exception e) {
+              syncDeliveryFailureCount.inc();
+              if (logger.isFinestEnabled()) {
+                  logger.finest(&quot;Sync event delivery failed. Event: &quot; + eventEnvelope, e);
+              }
+          }
+      } else {
+          Packet packet = new Packet(serializationService.toBytes(eventEnvelope), orderKey)
+                  .setPacketType(Packet.Type.EVENT);
+                 
+          if (!nodeEngine.getNode().getConnectionManager().transmit(packet, subscriber)) {
+              if (nodeEngine.isRunning()) {
+                  logFailure(&quot;Failed to send event packet to: %s, connection might not be alive.&quot;, subscriber);
+              }
+          }
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;                &lt;/div&gt;
+              &lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;분산 메세징을 통한 Cache Invalidation Message Propagation 방식의 신뢰성 분석
+    &lt;ul&gt;
+      &lt;li&gt;인스턴스간의 Cache Invalidation Message Propagation 도달 시간 차이로 인한 신뢰성 문제에 대하여
+        &lt;ul&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;당연하게도 미세한 시간 차이가 존재, 그 시간 사이에서는 Consistency를 보장 불가&lt;/code&gt;&lt;/li&gt;
+          &lt;li&gt;데이터 원본이 한곳에 저장되는 방식이라면 Consistency 보장 가능&lt;/li&gt;
+          &lt;li&gt;쿠폰에서는 데이터를 각자 Local에 저장하는 방식을 사용, 미세한 Consistency 이슈 존재&lt;/li&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;즉, 변경이 적은 데이터를 캐시해야 하며, 변경으로 인해 크리티컬한 이슈가 발생하지 않는 데이터를 적재해야 할 것&lt;/code&gt;&lt;/li&gt;
+          &lt;li&gt;쿠폰 API에서는 데이터가 변경되어도 그 영향이 적은 Entity들을 캐싱&lt;/li&gt;
+          &lt;li&gt;따라서, 쿠폰 API에서는 Propagation 시간 차이로 인한 Consistency 이슈 없음&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;네트워크 혹은 서버상의 이슈로 Cache Invalidation Message를 받지 못해 생길 수 있는 Consistency 문제에 대하여
+        &lt;ul&gt;
+          &lt;li&gt;네트워크 상의 통신 문제로 인한 문제
+            &lt;ul&gt;
+              &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;TCP 전송방식을 사용, 패킷 유실 등은 프로토콜에서 재처리&lt;/code&gt;, 이슈 없음&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;동작중인 서버가 OOM 등에 의해 정지한 경우
+            &lt;ul&gt;
+              &lt;li&gt;(OOM등에 대한 적절한 처리, 판단 후), &lt;code class=&quot;highlighter-rouge&quot;&gt;결론적으로 인스턴스가 재실행되기만 하면 된다 (캐시가 비워질 것이므로)&lt;/code&gt;, 이슈 없음&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;동작중인 서버에서 일시적으로 500에러 발생으로, 로드밸런서에서 해당 인스턴스를 제외했다가 다시 포함한 경우
+            &lt;ul&gt;
+              &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;로드밸런서를 통하지 않고, 인스턴스간에 직접 통신을 하므로 Cache Eviction은 정상적으로 이루어진다&lt;/code&gt;. 이슈 없음&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;동기 &amp;amp; 비동기 이벤트가 각각 최대 재시도 회수인 50회, 5회를 넘길 경우 ?
+            &lt;ul&gt;
+              &lt;li&gt;개인적으로 장애 상황으로 판단하였다.&lt;/li&gt;
+              &lt;li&gt;데이터 전송 실패를 처리하는 여러가지 방법 중, Retry를 사용하는데 몇번까지 재시도를 할 것인가는 정책상의 문제로 보인다.&lt;/li&gt;
+              &lt;li&gt;Server &amp;lt;-&amp;gt; Server 직접 TCP 통신, 인스턴스 CPU 사용률이 과도하여 못받는다던지, Thread를 할당받지 못한다던지.&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;hazelcast-적용&quot;&gt;Hazelcast 적용&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;캐시를 담을 Map 설정
+    &lt;ul&gt;
+      &lt;li&gt;Cache Map Size
+        &lt;ul&gt;
+          &lt;li&gt;각 Entity 별 차등을 두어 적용하였습니다.&lt;/li&gt;
+          &lt;li&gt;운영중인 서비스의 특성상 여름 성수기의 쿠폰 사용이 많은 편이라 여름 성수기 기준으로 설정을 하였습니다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Cache Eviction Strategy
+        &lt;ul&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;LRU&lt;/code&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Cache Eviction Interval
+        &lt;ul&gt;
+          &lt;li&gt;
+            &lt;p&gt;60초마다 Eviction을 담당하는 Thread가 Eviction 처리&lt;/p&gt;
+
+            &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  com.hazelcast.hibernate.local.CleanupService.java
+            
+  public final class CleanupService {
+            
+      private static final long FIXED_DELAY = 60;
+      private static final long FIXED_DELAY1 = 60;
+            
+      private final String name;
+      private final ScheduledExecutorService executor;
+            
+      public CleanupService(final String name) {
+          this.name = name;
+          executor = Executors.newSingleThreadScheduledExecutor(new CleanupThreadFactory());
+      }
+            
+      public void registerCache(final LocalRegionCache cache) {
+          executor.scheduleWithFixedDelay(new Runnable() {
+            
+              @Override
+              public void run() {
+                  cache.cleanup();
+              }
+          }, FIXED_DELAY, FIXED_DELAY1, TimeUnit.SECONDS);
+      }
+  }
+            
+            
+  com.hazelcast.hibernate.local.LocalRegionCache.java
+            
+  void cleanup() {
+          final int maxSize;
+          final long timeToLive;
+          if (config != null) {
+              maxSize = config.getMaxSizeConfig().getSize();
+              timeToLive = config.getTimeToLiveSeconds() * SEC_TO_MS;
+          } else {
+              maxSize = MAX_SIZE;
+              timeToLive = CacheEnvironment.getDefaultCacheTimeoutInMillis();
+          }
+            
+          boolean limitSize = maxSize &amp;gt; 0 &amp;amp;&amp;amp; maxSize != Integer.MAX_VALUE;
+          if (limitSize || timeToLive &amp;gt; 0) {
+              List&amp;lt;EvictionEntry&amp;gt; entries = searchEvictableEntries(timeToLive, limitSize);
+              final int diff = cache.size() - maxSize;
+              final int evictionRate = calculateEvictionRate(diff, maxSize);
+              if (evictionRate &amp;gt; 0 &amp;amp;&amp;amp; entries != null) {
+                  evictEntries(entries, evictionRate);
+              }
+          }
+      }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;            &lt;/div&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Cache Hit율 극대화 전략
+    &lt;ul&gt;
+      &lt;li&gt;배경
+        &lt;ul&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;기본적으로 Second Level Cache는 findById() Primary Key로 단건 조회일때만 Hit&lt;/code&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;findAllById() 등은 Hit가 되지 않음&lt;/code&gt; (Composite Key는 예외)&lt;/li&gt;
+          &lt;li&gt;쿠폰 API에서는 많은 쿼리들이 findAllById로 동작.&lt;/li&gt;
+          &lt;li&gt;따라서, &lt;code class=&quot;highlighter-rouge&quot;&gt;findAllById() 일때 Hit율을 높여 성능을 최적화하는게 핵심&lt;/code&gt;.&lt;/li&gt;
+          &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_Cache_Hit_Strategy.png&quot; alt=&quot;Cache_Hit_Strategy&quot; /&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;전략&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;List&amp;lt;Entity&amp;gt; 엔티티 결과들;
+List&amp;lt;Key&amp;gt; 존재하지 않는 Keys;
+       
+       
+For (Long id : ids)  {
+           
+    데이터가 Second Level Cache에 존재하는지 확인
+       
+    if (존재하면, findById() 로 조회하여 Cache Hit, 반환할 엔티티 결과들 List&amp;lt;Entity&amp;gt;에 담는다.)
+       
+    else (존재하지 않으면, 존재하지 않는 Key를 모으는 List&amp;lt;Key&amp;gt;에 Primary Key를 담는다.)
+       
+}
+       
+존재하지 않는 Key를 모으는 List&amp;lt;&amp;gt;가 비어있지 않으면, 해당 Key들로 findAllById() 하여 DB 조회하여 가져와 엔티티 결과들에 담는다.
+엔티티 결과들을 반환한다.
+      
+;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;전략의 구현&lt;/p&gt;
+
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  interface TestCouponCustomRepository {
+         
+      List&amp;lt;TestCoupon&amp;gt; findAllByCachedId(Iterable&amp;lt;Long&amp;gt; ids);
+         
+  }
+         
+         
+  class TestCouponRepositoryImpl implements TestCouponCustomRepository {
+         
+      @Autowired
+      private EntityManager entityManager;
+         
+      @Autowired
+      private TestCouponRepository testCouponRepository;
+         
+      /**
+       * findAllById Second Level Cache Hit 적용
+       * Second Level Cache에 존재하는 ID는 가져오고, 없는 ID들만 모아서 DB 조회
+       **/
+      @Override
+      public List&amp;lt;TestCoupon&amp;gt; findAllByCachedId(Iterable&amp;lt;Long&amp;gt; ids) {
+          List&amp;lt;TestCoupon&amp;gt; testCoupons = Lists.newArrayList();
+          List&amp;lt;Long&amp;gt; notExistIds = Lists.newArrayList();
+         
+          Cache secondLevelCache = entityManager.getEntityManagerFactory().getCache().unwrap(Cache.class);
+          for (Long id : ids) {
+              boolean existSecondLevelCache = secondLevelCache.contains(TestCoupon.class, id);
+         
+              if (existSecondLevelCache) {
+                  testCouponRepository.findById(id).ifPresent(testCoupons::add);
+              } else {
+                  notExistIds.add(id);
+              }
+          }
+         
+          if (!notExistIds.isEmpty()) {
+              testCoupons.addAll(testCouponRepository.findAllById(notExistIds));
+          }
+         
+          return testCoupons;
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;hazelcast-적용-결과&quot;&gt;Hazelcast 적용 결과&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;목표
+    &lt;ul&gt;
+      &lt;li&gt;Coupon API의 응답 속도 향상&lt;/li&gt;
+      &lt;li&gt;DB 트래픽 경감&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;결과
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Coupon API 100% 이상 성능 향상&lt;/code&gt;
+        &lt;ul&gt;
+          &lt;li&gt;리스트용 쿠폰 실시간 집계 API (&lt;code class=&quot;highlighter-rouge&quot;&gt;쿠폰 전체 트래픽의 약 20% 비중&lt;/code&gt;)
+            &lt;ul&gt;
+              &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;150% 성능 향상&lt;/code&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;쿠폰 실시간 집계 API  (&lt;code class=&quot;highlighter-rouge&quot;&gt;쿠폰 전체 트래픽의 약 27% 비중&lt;/code&gt;)
+            &lt;ul&gt;
+              &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;100% 성능 향상&lt;/code&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;예약시 사용가능한 쿠폰 조회 API (&lt;code class=&quot;highlighter-rouge&quot;&gt;쿠폰 전체 트래픽의 7% 비중&lt;/code&gt;)
+            &lt;ul&gt;
+              &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;71% 성능 향상&lt;/code&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;DB 트래픽 약 30% 경감&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;결과 이미지
+    &lt;ul&gt;
+      &lt;li&gt;Cache 적용 이후 전체 Latency 변화&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_total_latency.png&quot; alt=&quot;전체 레이턴시 변화&quot; /&gt;&lt;/li&gt;
+      &lt;li&gt;Cache 적용 이후 TOP 5 트래픽 API Transaction 시간 변화&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_top5_transaction_time.png&quot; alt=&quot;TOP5 API 트랜잭션 시간 변화&quot; /&gt;&lt;/li&gt;
+      &lt;li&gt;Cache 적용 이후 리스트용 쿠폰 실시간 집계 API 변화&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_list_api_latency.png&quot; alt=&quot;리스트용 API 레이턴시 변화&quot; /&gt;&lt;/li&gt;
+      &lt;li&gt;Cache 적용 이후 쿠폰 실시간 집계 API 변화&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_realtime_count_latency.png&quot; alt=&quot;실시간 집계 API 레이턴시 변화&quot; /&gt;&lt;/li&gt;
+      &lt;li&gt;Cache 적용 이후 예약시 사용가능한 쿠폰 조회 API 변화&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_reservation_coupon_latency.png&quot; alt=&quot;예약시 사용가능한 쿠폰 조회 API 레이턴시 변화&quot; /&gt;&lt;/li&gt;
+      &lt;li&gt;Cache 적용 이후 DB 트래픽 변화&lt;/li&gt;
+      &lt;li&gt;&lt;img src=&quot;/assets/images/post/Hazelcast_db_traffic.png&quot; alt=&quot;DB 트래픽 변화&quot; /&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;마치며&quot;&gt;마치며&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;캐시 적용 전후, APM에서 Latency 그래프가 극단적으로 깎여 나가는 것을 보면 쾌감이 상당합니다…&lt;/li&gt;
+  &lt;li&gt;성능 튜닝의 시작은 APM인 것 같습니다.&lt;/li&gt;
+  &lt;li&gt;어플리케이션의 어떤 부분이 성능에 영향을 미치는지 현 상황을 분석하기 위해서는 APM이 필요하며, 이를 통해 개선포인트를 찾을 수 있는 Insight를 얻을 수 있기 때문입니다.&lt;/li&gt;
+  &lt;li&gt;모든 것은 Trade Off, 분산 환경에서 Local Cache는 성능과 Strong Consistency를 함께 지킬 수 없습니다.&lt;/li&gt;
+  &lt;li&gt;사용하려는 서비스의 특징 그리고 읽기/쓰기의 비율이 읽기가 많은지, 데이터 수정으로 인해 크리티컬한 이슈가 발생하지 않는 데이터인지를 잘 고려하여 사용하면 극적인 퍼포먼스를 내는 좋은 솔루션이 될 수 있을 것 같습니다.&lt;/li&gt;
+  &lt;li&gt;Local Cache로 인한 성능 극대화와 Heap의 압박을 함께 고려하여 장점이 단점보다 클 경우에 사용할 것을 추천합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;관련-post&quot;&gt;관련 Post&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.springcamp.io/2019/&quot;&gt;2019 Spring Camp 발표&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/pkgonan/spring-camp/tree/master/2019&quot;&gt;2019 Spring Camp 발표 자료&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://pkgonan.github.io/2019/03/hazelcast-hibernate-second-level-cache-troubleshooting&quot;&gt;Local Cache 와 Invalidation Message Propagation 전략을 활용하여 API 성능 튜닝 후 Trouble Shooting&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="Java" /><category term="AWS" /><category term="Beanstalk" /><category term="Hazelcast" /><category term="Hibernate" /><category term="Second-Level-Cache" /><category term="Local-Cache" /><category term="Invalidation" /><category term="Tuning" /><summary type="html">목적 Local Cache 와 Invalidation Message Propagation 전략을 활용하여 API 성능 튜닝하기</summary></entry><entry><title type="html">InetAddress 클래스 사용으로 인한 성능 이슈, 나아가 AWS EC2 환경에서의 동작 방식 분석</title><link href="https://pkgonan.github.io/2018/06/InetAddress-getLocalHost" rel="alternate" type="text/html" title="InetAddress 클래스 사용으로 인한 성능 이슈, 나아가 AWS EC2 환경에서의 동작 방식 분석" /><published>2018-06-17T00:00:00+00:00</published><updated>2018-06-17T00:00:00+00:00</updated><id>https://pkgonan.github.io/2018/06/InetAddress-getLocalHost</id><content type="html" xml:base="https://pkgonan.github.io/2018/06/InetAddress-getLocalHost">&lt;h2 id=&quot;목적&quot;&gt;목적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;IP &amp;amp; 도메인 로깅을 위해 InetAddress.getLocalHost() 사용으로 발생할 수 있는 성능 이슈, 나아가 AWS EC2 환경에서의 동작 방식 분석&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;배경&quot;&gt;배경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;사내 타 프로덕트에서 라이브 중인 서버의 Latency가 급격하게 튀는 현상이 발생.&lt;/li&gt;
+  &lt;li&gt;모든 Request마다 InetAddress.getLocalHost()를 사용하여 IP 주소를 로깅하고 있었음.&lt;/li&gt;
+  &lt;li&gt;InetAddress.getLocalHost()를 사용하면 DNS 서버를 통해 IP 정보를 가져올텐데 부하가 크지 않을까?&lt;/li&gt;
+  &lt;li&gt;결론을 먼저 말한다면, API Call이 올때마다 InetAddress.getLocalHost()를 호출하게 되면 치명적인 성능 이슈를 초래한다.&lt;/li&gt;
+  &lt;li&gt;꼭 사용해야 한다면, 처음 서버 부팅시 static하게 정보를 받아 재 요청 없이 사용해야 할 것이다.&lt;/li&gt;
+  &lt;li&gt;이제, 내부적으로 어떻게 동작하는지 알아보자.&lt;/li&gt;
+  &lt;li&gt;나아가 AWS EC2 환경에서 InetAddress.getLocalHost()를 호출하면 어떤 흐름으로 동작하는지 분석해보자.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;분석&quot;&gt;분석&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Java Code
+    &lt;ul&gt;
+      &lt;li&gt;InetAddress.java&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Native Code
+    &lt;ul&gt;
+      &lt;li&gt;Inet4AddressImpl.c&lt;/li&gt;
+      &lt;li&gt;gethostbyname.c에서 gethostbyname_r() Method&lt;/li&gt;
+      &lt;li&gt;res_search() Method&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;inetaddressgetlocalhost-사용으로-발생할-수-있는-성능-이슈는-무엇인가&quot;&gt;InetAddress.getLocalHost() 사용으로 발생할 수 있는 성능 이슈는 무엇인가?&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;매 Request 마다 InetAddress.getLocalHost()를 사용한다면 현재 시스템에서 지정한 DNS 서버로 매번 요청을 보내게 된다.&lt;/li&gt;
+  &lt;li&gt;따라서, 응답 시간이 느려질 수 밖에 없다.&lt;/li&gt;
+  &lt;li&gt;또한, getLocalHost() 내부적으로 DNS 서버로부터 가져온 데이터를 5초간 캐싱하게 되는데 이때 Synchronized 블록을 사용하여 멀티 스레드 환경에서 병목현상이 발생하게 된다.&lt;/li&gt;
+  &lt;li&gt;즉, 5초간 캐싱을 하기에 5초마다 레이턴시가 튀는 현상이 반복될 것이며, 동기화 블럭 및 반복적인 DNS 서버 요청으로 인해 성능이 크게 악화 될 것이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;getlocalhost-내부는-어떻게-동작할까&quot;&gt;getLocalHost() 내부는 어떻게 동작할까?&lt;/h3&gt;
+
+&lt;h4 id=&quot;inetaddressjava-의-getlocalhost&quot;&gt;InetAddress.java 의 getLocalHost()&lt;/h4&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    public static InetAddress getLocalHost() throws UnknownHostException {
+
+        ...
+            String local = impl.getLocalHostName();
+
+            ...
+
+            InetAddress ret = null;
+            synchronized (cacheLock) {
+                long now = System.currentTimeMillis();
+                if (cachedLocalHost != null) {
+                    if ((now - cacheTime) &amp;lt; maxCacheTime) // Less than 5s old?
+                        ret = cachedLocalHost;
+                    else
+                        cachedLocalHost = null;
+                }
+
+                ...
+                if (ret == null) {
+                    InetAddress[] localAddrs;
+                    try {
+                        localAddrs = InetAddress.getAddressesFromNameService(local, null);
+                    } catch (UnknownHostException uhe) {
+                        ...
+                    }
+                    ...
+                }
+            }
+            ...
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;여기서 눈여겨 볼 부분은 세가지이다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;첫째, impl.getLocalHostName()  -  native Code&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;둘째, InetAddress.getAddressesFromNameService(local, null)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;셋째, maxCacheTime  -  현재 5초로 설정, 5초 이내는 DNS 서버에 요청 않고 캐시 사용&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;getLocalHostName() 그리고 getAddressesFromNameService(local, null)에 대해서 좀더 살펴 보도록 하자.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;첫째-native로-구현된-getlocalhostname-메소드를-분석해보자&quot;&gt;첫째, native로 구현된 getLocalHostName() 메소드를 분석해보자.&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;http://icedtea.classpath.org/~vanaltj/webrevs/tl/patch1/jdk/src/solaris/native/java/net/Inet4AddressImpl.c.html&quot;&gt;Inet4AddressImpl.c 구현체 참조&lt;/a&gt;&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; * Inet4AddressImpl
+ */
+  
+/*
+ * Class:     java_net_Inet4AddressImpl
+ * Method:    getLocalHostName
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL
+Java_java_net_Inet4AddressImpl_getLocalHostName(JNIEnv *env, jobject this) {
+    char hostname[MAXHOSTNAMELEN+1];
+  
+    hostname[0] = '\0';
+    if (JVM_GetHostName(hostname, MAXHOSTNAMELEN)) {
+        /* Something went wrong, maybe networking is not setup? */
+        strcpy(hostname, &quot;localhost&quot;);
+    } else {
+#ifdef __linux__
+        /* On Linux gethostname() says &quot;host.domain.sun.com&quot;.  On
+         * Solaris gethostname() says &quot;host&quot;, so extra work is needed.
+         */
+#else
+        /* Solaris doesn't want to give us a fully qualified domain name.
+         * We do a reverse lookup to try and get one.  This works
+         * if DNS occurs before NIS in /etc/resolv.conf, but fails
+         * if NIS comes first (it still gets only a partial name).
+         * We use thread-safe system calls.
+         */
+#endif /* __linux__ */
+        struct hostent res, res2, *hp;
+        char buf[HENT_BUF_SIZE];
+        char buf2[HENT_BUF_SIZE];
+        int h_error=0;
+  
+#ifdef __GLIBC__
+        gethostbyname_r(hostname, &amp;amp;res, buf, sizeof(buf), &amp;amp;hp, &amp;amp;h_error);
+#else
+        hp = gethostbyname_r(hostname, &amp;amp;res, buf, sizeof(buf), &amp;amp;h_error);
+#endif
+  
+        ... 생략
+          
+   }
+   return (*env)-&amp;gt;NewStringUTF(env, hostname);    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;여기서 핵심은 gethostbyname_r() 메소드이다. 해당 메소드를 까보자.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;http://web.mit.edu/ghudson/sipb/pthreads/net/gethostbyname.c&quot;&gt;gethostbyname_r() 메소드 구현체 참조&lt;/a&gt;&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;   struct hostent *gethostbyname_r(const char *hostname, struct hostent *result, char *buf, int bufsize, int *errval)
+   {
+    
+       ... 생략
+        
+       /* Do the search. */
+       n = res_search(hostname, C_IN, T_A, qbuf.buf, sizeof(qbuf));
+       if (n &amp;gt;= 0)
+           return _res_parse_answer(&amp;amp;qbuf, n, 0, result, buf, bufsize, errval);
+       else if (errno == ECONNREFUSED)
+           return file_find_name(hostname, result, buf, bufsize, errval);
+       else
+           return NULL;
+   }
+     
+     
+   static struct hostent *file_find_name(const char *name, struct hostent *result,
+   									  char *buf, int bufsize, int *errval)
+   {
+   	char **alias;
+   	FILE *fp = NULL;
+     
+   	pthread_mutex_lock(&amp;amp;host_iterate_lock);
+   	sethostent(0);
+   	while ((result = gethostent_r(result, buf, bufsize, errval)) != NULL) {
+   		/* Check the entry's name and aliases against the given name. */
+   		if (strcasecmp(result-&amp;gt;h_name, name) == 0)
+   			break;
+   		for (alias = result-&amp;gt;h_aliases; *alias; alias++) {
+   			if (strcasecmp(*alias, name) == 0)
+   				break;
+   		}
+   	}
+   	pthread_mutex_unlock(&amp;amp;host_iterate_lock);
+   	if (!result &amp;amp;&amp;amp; errno != ERANGE)
+   		*errval = HOST_NOT_FOUND;
+   	return result;
+   }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;여기서 핵심은 res_search() 메소드와 file_find_name() 메소드이다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;res_search()는 etc/resolv.conf에 등록된 DNS 서버에 ‘www.naver.com’고 같은 주소로 요청을 보내 응답을 받는 메소드이다. &lt;a href=&quot;https://linux.die.net/man/3/res_search&quot;&gt;res_search()가 하는 일&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;즉, DNS 서버에 요청을 보내 정보를 가져오는데 하나도 가져 오지 못할 경우 file_find_name()이 실행된다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;file_find_name()은 etc/hosts 에 저장된 로컬 호스트 테이블을 뒤지는 작업이다. 여기서 핵심은 gethostent_r() 메소드이다. &lt;a href=&quot;https://nxmnpg.lemoda.net/ko/3/gethostent&quot;&gt;file_find_name()가 하는 일&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;결론, 먼저 etc/resolv.conf에 등록된 DNS 서버를 찾아보고, 없으면 /etc/hosts에 등록된 로컬 호스트 테이블을 찾는다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;즉, 무조건 DNS 서버에 요청을 보내게 되어 매우 비효율 적이다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;둘째-inetaddressgetaddressesfromnameservicelocal-null를-분석해보자&quot;&gt;둘째, InetAddress.getAddressesFromNameService(local, null)를 분석해보자.&lt;/h4&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;private static InetAddress[] getAddressesFromNameService(String host, InetAddress reqAddr) throws UnknownHostException
+    {
+        InetAddress[] addresses = null;
+        boolean success = false;
+        UnknownHostException ex = null;
+
+        ... 생략
+        
+        if ((addresses = checkLookupTable(host)) == null) {
+            try {
+                ... 생략
+                
+                for (NameService nameService : nameServices) {
+                    try {
+                        ... 생략
+                        addresses = nameService.lookupAllHostAddr(host);
+                        success = true;
+                        break;
+                    } catch (UnknownHostException uhe) {
+                        ... 생략
+                    }
+                }
+
+                ... 생략
+                
+                // Cache the address.
+                cacheAddresses(host, addresses, success);
+
+                ... 생략
+
+            } finally {
+                updateLookupTable(host);
+            }
+        }
+        return addresses;
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;여기서 핵심은 native code로 구현된 nameService.lookupAllHostAddr(host) 메소드이다. 해당 메소드를 까보자.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;http://icedtea.classpath.org/~vanaltj/webrevs/tl/patch1/jdk/src/solaris/native/java/net/Inet4AddressImpl.c.html&quot;&gt;lookupAllHostAddr() 메소드 구현체 참조&lt;/a&gt;&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;   /*
+   * Find an internet address for a given hostname.  Note that this
+   * code only works for addresses of type INET. The translation
+   * of %d.%d.%d.%d to an address (int) occurs in java now, so the
+   * String &quot;host&quot; shouldn't *ever* be a %d.%d.%d.%d string
+   *
+   * Class:     java_net_Inet4AddressImpl
+   * Method:    lookupAllHostAddr
+   * Signature: (Ljava/lang/String;)[[B
+   */
+      
+   JNIEXPORT jobjectArray JNICALL
+   Java_java_net_Inet4AddressImpl_lookupAllHostAddr(JNIEnv *env, jobject this,
+                                                   jstring host) {
+       const char *hostname;
+       jobjectArray ret = 0;
+       struct hostent res, *hp = 0;
+       char buf[HENT_BUF_SIZE];
+     
+     
+       ... 생략
+     
+     
+       /* Try once, with our static buffer. */
+   #ifdef __GLIBC__
+       gethostbyname_r(hostname, &amp;amp;res, buf, sizeof(buf), &amp;amp;hp, &amp;amp;h_error);
+   #else
+       hp = gethostbyname_r(hostname, &amp;amp;res, buf, sizeof(buf), &amp;amp;h_error);
+   #endif
+     
+     
+       ... 생략
+
+   }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;여기서도 핵심은 위와 동일하게 getLocalHostName() 메소드이다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;즉 DNS 서버에 요청 후 응답으로 오는 값들이 호스트 주소, IP 주소 등 여러가지이기 때문에 동일하게 gethostbyname_r()를 재활용한다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;요약&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;InetAddress로 IP, 도메인 주소 등을 동적으로 계속해서 가져오는 것은 성능에 치명적이다.&lt;/li&gt;
+  &lt;li&gt;DNS 서버에서 가져온 데이터의 내부 캐시는 5초간만 동작한다.&lt;/li&gt;
+  &lt;li&gt;InetAddress.getLocalHost()를 수행하면 먼저 etc/resolv.conf에 등록된 DNS 서버에 요청을 보낸다.&lt;/li&gt;
+  &lt;li&gt;이후, 응답값이 없다면 etc/hosts에 저장된 로컬 호스트 테이블을 찾는다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;나아가-aws-ec2-인스턴스-환경에서-inetaddress를-사용한다면-어떻게-동작할까&quot;&gt;나아가 AWS EC2 인스턴스 환경에서 InetAddress를 사용한다면 어떻게 동작할까??&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;먼저 기본적인 동작은 위에서 설명한 것과 같다.&lt;/li&gt;
+  &lt;li&gt;DNS 서버에 요청, 그 결과가 없다면 로컬 호스트 테이블 참조로 동일하다.&lt;/li&gt;
+  &lt;li&gt;그렇다면 차이점은 무엇일까??&lt;/li&gt;
+  &lt;li&gt;첫째, etc/resolv.conf에 등록된 DNS 서버가 Amazon DNS인 AmazonProvidedDNS로 바뀐다.&lt;/li&gt;
+  &lt;li&gt;&lt;img src=&quot;/assets/images/post/InetAddress_resolv.conf.png&quot; alt=&quot;etc/resolv.conf에 자동으로 변경된 DNS 설정&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;둘째, etc/hosts에 자신의 private IP 주소가 등록된다.&lt;/li&gt;
+  &lt;li&gt;&lt;img src=&quot;/assets/images/post/InetAddress_hosts.png&quot; alt=&quot;etc/hosts에 자동으로 변경된 로컬 호스트 테이블 설정&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;즉, AWS EC2 환경에서 InetAddress를 사용하면 Amazon DNS 서버로 요청이 전송되게 된다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;이는 모두 AWS에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;DHCP 옵션 세트를 생성&lt;/code&gt;하고 이를 이용하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;VPC 환경을 생성&lt;/code&gt;하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;해당 VPC 환경으로 EC2 인스턴스를 생성&lt;/code&gt;해야 가능하다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.aws.amazon.com/ko_kr/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html#AmazonDNS&quot;&gt;DHCP OPTION 세트&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://holtstrom.com/michael/blog/post/401/Hostname-in-Amazon-Linux.html&quot;&gt;DHCP OPTION 세트에 관한 글&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;결론&quot;&gt;결론&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;InetAddress를 처음 프로그램이 부팅시 static하게 한번만 저장하여 사용하지 않고, 반복적으로 수행할 경우 성능에 치명적이다. 알고 쓰자.&lt;/li&gt;
+  &lt;li&gt;분석을 통해 성능에 안좋은건 알겠는데 왜? 어떻게 동작하길래 안좋은데? 라는 의문을 해소하게 되었다.&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="Java" /><category term="InetAddress" /><category term="getLocalHost" /><category term="AWS" /><category term="Beanstalk" /><category term="DNS" /><summary type="html">목적 IP &amp;amp; 도메인 로깅을 위해 InetAddress.getLocalHost() 사용으로 발생할 수 있는 성능 이슈, 나아가 AWS EC2 환경에서의 동작 방식 분석</summary></entry><entry><title type="html">HikariCP는 test-while-idle과 같은 커넥션 갱신 기능이 없을까?</title><link href="https://pkgonan.github.io/2018/04/HikariCP-test-while-idle" rel="alternate" type="text/html" title="HikariCP는 test-while-idle과 같은 커넥션 갱신 기능이 없을까?" /><published>2018-04-22T00:00:00+00:00</published><updated>2018-04-22T00:00:00+00:00</updated><id>https://pkgonan.github.io/2018/04/HikariCP-test-while-idle</id><content type="html" xml:base="https://pkgonan.github.io/2018/04/HikariCP-test-while-idle">&lt;h2 id=&quot;목적&quot;&gt;목적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;HikariCP에는 Tomcat DBCP의 test-while-idle과 같은 커넥션 갱신 기능이 없을까?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;배경&quot;&gt;배경&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Spring Boot 2.0을 기점으로 Default DBCP가 Tomcat DBCP -&amp;gt; HikariCP로 바뀌었다.&lt;/li&gt;
+  &lt;li&gt;HikariCP Gihub에서 눈을 씻고 찾아봐도 유휴 상태인 Connection을 갱신하는 기능이 기본 설정에 보이지 않는다.&lt;/li&gt;
+  &lt;li&gt;또한, Pool에 생존할 수 있는 기간인 max-lifetime 설정도 Database의 wait_timeout 설정보다 최소 30초 이상 짧게 줄 것을 권고한다.&lt;/li&gt;
+  &lt;li&gt;wait_timeout이 60초 일 경우, max-lifetime은 30초가 될텐데. 30초마다 몇 백개의 커넥션을 맺고 끊는 것을 반복한다면 DB 부하가 클 텐데?&lt;/li&gt;
+  &lt;li&gt;자, HikariCP가 어떻게 동작하는지 알아보자.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;분석&quot;&gt;분석&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;DBCP : HikariCP 3.1.0&lt;/li&gt;
+  &lt;li&gt;JDBC : MariaDB  2.2.3&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;hikaricp는-test-while-idle-설정이-있는가&quot;&gt;HikariCP는 test-while-idle 설정이 있는가?&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;있지만, 기본적으로 제공하지 않으며 추천하지 않는다.&lt;/li&gt;
+  &lt;li&gt;HikariCP는 기본적으로 test-while-idle처럼 특정 기간마다 반복적으로 커넥션을 갱신하는 방식이 아니다.&lt;/li&gt;
+  &lt;li&gt;그렇다면 Pool안에 있는 Connection 갱신은 어떻게?&lt;/li&gt;
+  &lt;li&gt;갱신을 하지 않는다. 커넥션 생성 시간이 HikariCP에 설정한 max-lifetime값에 도달하면 가차 없이 종료 된다.&lt;/li&gt;
+  &lt;li&gt;사실 &lt;a href=&quot;https://github.com/brettwooldridge/HikariCP/wiki/Dropwizard-HealthChecks&quot;&gt;Dropwizard-HealthChecks&lt;/a&gt;를 추가하면 커넥션 갱신을 할 수는 있지만 HikariCP 개발자가 커넥션 갱신 방식을 반대하므로 Dropwizard-HealthChecks를 사용하지 않는 것을 추천한다.&lt;/li&gt;
+  &lt;li&gt;HikariCP는 기본적으로 DBA가 설정한 wait_timeout을 존중하며, 그 설정을 위반하지 않는다.&lt;/li&gt;
+  &lt;li&gt;Database의 wait_timeout이 60초 일 경우로 예를 들어 보자.&lt;/li&gt;
+  &lt;li&gt;max-lifetime값은 네트워크 지연 등을 포함하여 2~3초간의 시간을 뺀 58초 정도로 설정, HikariCP의 ThreadLocal 내부에서 커넥션 유지 시간을 계산한다.&lt;/li&gt;
+  &lt;li&gt;Database와 의존 관계를 분리하였기에, 지속적으로 유효성을 체크하지 않아도 되며, 내부적으로 커넥션이 58초가 되었는지 계산하면 된다.&lt;/li&gt;
+  &lt;li&gt;따라서, 매번 Connection.isValid()를 호출하지 않아도 되며 유효성 체크를 건너 뛰며 성능 향상을 발휘할 수 있다.&lt;/li&gt;
+  &lt;li&gt;&lt;b&gt;결론적으로 말하자면, 개발자가 지정한, max-lifetime만큼 커넥션을 유지하고, 종료되면 새로 커넥션을 생성하는 사이클이 반복되는 방식이다.&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;hikaricp-개발자는-왜-test-while-idle을-반대할까&quot;&gt;HikariCP 개발자는 왜 test-while-idle을 반대할까?&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;https://github.com/brettwooldridge/HikariCP/issues/766&quot;&gt;커넥션 갱신 기능에 대한 질문 그리고 HikariCP 메인 개발자의 댓글 참조&lt;/a&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;HikariCP is opposed to idle connection testing.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;It generates unnecessary queries to the database, defeats the database configured idle timeouts, takes away control from the network infrastructure team, and does not remove the need for test on borrow.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;Having said that, it is generally not a great idea to keep individual database connections open for hours. Databases and drivers both track connections internally with sessions, and both have historically been sources of memory leaks. Allowing drivers and the database itself to release session-associated state periodically improves overall stability. HikariCP has a default maxLifetime of 30 minutes.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;The cost of replacing a retired connection, due to exceeding idle or lifetime limits, is typically measured in double-digit milliseconds. If a maxLifetime of 30 minutes is considered, and a pool of 20 connections, you are looking at 20 events, several tens of milliseconds each, occurring in a span of 30 minutes, in the background. Finding a measurable impact on the application would be challenging.&lt;/p&gt;
+    &lt;/blockquote&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;보기 쉽게 구글 번역기를 돌려본다면&lt;/p&gt;
+
+    &lt;p&gt;HikariCP는 유휴 연결 테스트에 반대합니다. 데이터베이스에 대한 불필요한 쿼리를 생성하고, 유휴 시간 제한이 구성된 데이터베이스를 무효화하고, 네트워크 인프라 팀의 통제를 제거하고, 차용시 테스트의 필요성을 제거하지 않습니다.&lt;/p&gt;
+
+    &lt;p&gt;일반적으로 개별 데이터베이스 연결을 몇 시간 동안 열어 두는 것은 좋은 생각이 아닙니다. 데이터베이스와 드라이버는 내부적으로 세션과 연결을 추적하며, 둘 다 역사적으로 메모리 누수의 원인이었습니다. 드라이버와 데이터베이스 자체가 주기적으로 세션 관련 상태를 해제하도록 허용하면 전반적인 안정성이 향상됩니다. HikariCP의 기본 maxLifetime은 30 분입니다.&lt;/p&gt;
+
+    &lt;p&gt;유휴 또는 수명 제한을 초과하여 폐기 된 연결을 교체하는 데 드는 비용은 일반적으로 두 자릿수 밀리 초 단위로 측정됩니다. 30 분의 maxLifetime이 고려되고 20 개의 연결 풀이 있으면 백그라운드에서 20 분의 이벤트가 30 분의 간격으로 각각 수십 밀리 초씩 발생합니다. 응용 프로그램에 측정 가능한 영향을 찾는 것은 어려울 것입니다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;hikaricp는-어떤-타이밍에-connection-validation-check를-수행할까&quot;&gt;HikariCP는 어떤 타이밍에 Connection Validation Check를 수행할까?&lt;/h3&gt;
+
+&lt;h4 id=&quot;첫째-커넥션을-db에서-새로-맺을-때&quot;&gt;첫째, &lt;code class=&quot;highlighter-rouge&quot;&gt;커넥션을 DB에서 새로 맺을 때&lt;/code&gt;&lt;/h4&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; PoolBase.java
+ 
+ /**
+ * Setup a connection initial state.
+ *
+ * @param connection a Connection
+ * @throws ConnectionSetupException thrown if any exception is encountered
+ */
+ private void setupConnection(final Connection connection) throws ConnectionSetupException
+ {
+   ... 생략
+   
+      checkDriverSupport(connection); -&amp;gt; Validation Check 수행
+   
+   ... 생략
+ }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;둘째-커넥션-풀에서-커넥션을-가져올때&quot;&gt;둘째, &lt;code class=&quot;highlighter-rouge&quot;&gt;커넥션 풀에서 커넥션을 가져올때&lt;/code&gt;&lt;/h4&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;HikariPool.java
+
+/**
+* Get a connection from the pool, or timeout after the specified number of milliseconds.
+*
+* @param hardTimeout the maximum time to wait for a connection from the pool
+* @return a java.sql.Connection instance
+* @throws SQLException thrown if a timeout occurs trying to obtain a connection
+*/
+public Connection getConnection(final long hardTimeout) throws SQLException
+{
+   ... 생략
+  
+        if (poolEntry.isMarkedEvicted() || (elapsedMillis(poolEntry.lastAccessed, now) &amp;gt; ALIVE_BYPASS_WINDOW_MS &amp;amp;&amp;amp; !isConnectionAlive(poolEntry.connection))) {
+      
+        }
+   ... 생략
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;셋째-dropwizard---connectivityhealthcheck를-사용할-경우&quot;&gt;셋째, &lt;code class=&quot;highlighter-rouge&quot;&gt;Dropwizard - ConnectivityHealthCheck를 사용할 경우&lt;/code&gt;&lt;/h4&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CodahaleHealthChecker.java
+
+/**
+ * Provides Dropwizard HealthChecks.  Two health checks are provided:
+ * &amp;lt;ul&amp;gt;
+ *   &amp;lt;li&amp;gt;ConnectivityCheck&amp;lt;/li&amp;gt;
+ *   &amp;lt;li&amp;gt;Connection99Percent&amp;lt;/li&amp;gt;
+ * &amp;lt;/ul&amp;gt;
+ * The ConnectivityCheck will use the &amp;lt;code&amp;gt;connectionTimeout&amp;lt;/code&amp;gt;, unless the health check property
+ * &amp;lt;code&amp;gt;connectivityCheckTimeoutMs&amp;lt;/code&amp;gt; is defined.  However, if either the &amp;lt;code&amp;gt;connectionTimeout&amp;lt;/code&amp;gt;
+ * or the &amp;lt;code&amp;gt;connectivityCheckTimeoutMs&amp;lt;/code&amp;gt; is 0 (infinite), a timeout of 10 seconds will be used.
+ * &amp;lt;p&amp;gt;
+ * The Connection99Percent health check will only be registered if the health check property
+ * &amp;lt;code&amp;gt;expected99thPercentileMs&amp;lt;/code&amp;gt; is defined and greater than 0.
+ *
+ * @author Brett Wooldridge
+ */
+public final class CodahaleHealthChecker
+{
+   private static class ConnectivityHealthCheck extends HealthCheck
+   {
+      ... 생략
+
+      /** {@inheritDoc} */
+      @Override
+      protected Result check() throws Exception
+      {
+         try (Connection connection = pool.getConnection(checkTimeoutMs)) {
+            return Result.healthy();
+         }
+         catch (SQLException e) {
+            return Result.unhealthy(e);
+         }
+      }
+   }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;connection-pool의-validation-check는-어떤-방식을-활용하여-수행될까&quot;&gt;Connection Pool의 Validation Check는 어떤 방식을 활용하여 수행될까?&lt;/h3&gt;
+
+&lt;h4 id=&quot;connectiontestquery관련하여-github-문서를-참고해보면&quot;&gt;connectionTestQuery관련하여 Github 문서를 참고해보면&lt;/h4&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;If your driver supports JDBC4 we strongly recommend not setting this property. 
+This is for &quot;legacy&quot; drivers that do not support the JDBC4 Connection.isValid() API. 
+This is the query that will be executed just before a connection is given to you from the pool to validate that the connection to the database is still alive.
+Again, try running the pool without this property, HikariCP will log an error if your driver is not JDBC4 compliant to let you know. Default: none 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;기존에는 ConnectionTestQuery = SELECT 1 과 같은 방식을 사용하였다.
+만약 사용하고 있는 JDBC 드라이버가 Connection.isValid() 메소드를 @Override 하여 구현했다면  ConnectionTestQuery 사용하지 않는 것을 추천한다.
+아래와 같이 HikariCP 내부적으로 JDBC 구현체의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Connection.isValid()&lt;/code&gt; 를 호출한다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    PoolBase.java
+  
+    boolean isConnectionAlive(final Connection connection)
+    {
+      ... 생략
+
+            if (isUseJdbc4Validation) {
+               return connection.isValid(validationSeconds);
+            }
+
+       .. 생략
+    }
+  
+    /**
+    * Execute isValid() or connection test query.
+    *
+    * @param connection a Connection to check
+    */
+    private void checkDriverSupport(final Connection connection) throws SQLException
+    {
+        ... 생략
+            if (isUseJdbc4Validation) {
+               connection.isValid(1);
+            }
+        ... 생략
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;hikaricp의-max-lifetime-그리고-database-wait_timeout-설정의-상관관계&quot;&gt;HikariCP의 &lt;code class=&quot;highlighter-rouge&quot;&gt;max-lifetime&lt;/code&gt; 그리고 Database &lt;code class=&quot;highlighter-rouge&quot;&gt;wait_timeout&lt;/code&gt; 설정의 상관관계&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;HikariCP는 네트워크 지연을 고려하여 max-lifetime를 wait_timeout 설정보다 2~3초 정도 짧게 줄 것을 권고한다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;wait_timeout이 60초라면, max-lifetime은 58초가 될 것이다.&lt;/li&gt;
+  &lt;li&gt;여러대의 서버를 가지는 프로덕션 환경에서 58초마다 수 많은 커넥션이 끊어지고 재 생성되는 작업이 반복될텐데 한번에 커넥션이 사라지면 크리티컬하게 작용하지 않을까?
+    &lt;ul&gt;
+      &lt;li&gt;동시에 한번에 여러개의 커넥션을 지우고 생성하는게 아니라 &lt;code class=&quot;highlighter-rouge&quot;&gt;2.5%의 시간 변화를 주어, 커넥션 생성 및 삭제 시간의 분포를 고르게하여 가용 커넥션 부족 이슈를 방지&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;현재 사용중인 커넥션은 즉시 종료되지 않기에, 시간이 흐름에 따라 생성 및 삭제 시간이 고르게 퍼지게 된다&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;negative attenuation 활용.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;2018-04-26-기준-hikaricp-공식-문서는-max-lifetime을-database의-wait-timeout-보다-최소-30초-이상-적게-줄-것을-권고하고-있지만-이는-잘못되었다&quot;&gt;2018-04-26 기준, &lt;code class=&quot;highlighter-rouge&quot;&gt;HikariCP 공식 문서는 max-lifetime을 Database의 wait-timeout 보다 최소 30초 이상 적게 줄 것을 권고하고 있지만 이는 잘못되었다.&lt;/code&gt;&lt;/h4&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;기존 문서&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This property controls the maximum lifetime of a connection in the pool.
+An in-use connection will never be retired, only when it is closed will it then be removed.
+On a connection-by-connection basis, minor negative attenuation is applied to avoid mass-extinction in the pool.
+We strongly recommend setting this value, and it should be at least 30 seconds less than any database or infrastructure imposed connection time limit.
+A value of 0 indicates no maximum lifetime (infinite lifetime), subject of course to the idleTimeout setting.
+Default: 1800000 (30 minutes)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;https://github.com/brettwooldridge/HikariCP/issues/709#issuecomment-384252344&quot;&gt;max-lifetime과 Database wait_timeout을 왜 30초 이상 짧게 권고하는지 질문&lt;/a&gt;하였고, HikariCP 개발자에게 답변 받음&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;질문
+&lt;img src=&quot;/assets/images/post/hikari_question.png&quot; alt=&quot;질문&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;질문 요약
+    &lt;ul&gt;
+      &lt;li&gt;Database wait_timeout이 60초인데, 당신은 30초의 여유를 줄 것을 추천하고 있다.&lt;/li&gt;
+      &lt;li&gt;maxLifeTime을 30초로 주면 30초마다 대량의 커넥션 종료로 인해 부하가 크지 않을까?&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;답변
+&lt;img src=&quot;/assets/images/post/hikari_answer.png&quot; alt=&quot;답변&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;질문2
+&lt;img src=&quot;/assets/images/post/hikari_question2.png&quot; alt=&quot;질문2&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;답변2
+&lt;img src=&quot;/assets/images/post/hikari_answer2.png&quot; alt=&quot;답변2&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;답변 요약
+    &lt;ul&gt;
+      &lt;li&gt;max_lifetime을 Database의 wait_timeout보다 30초 이상 짧게 주라는 것은 잘못 되었다. 공식 문서 업데이트를 진행하지 않은 것이다.&lt;/li&gt;
+      &lt;li&gt;HikariCP는 DBA를 존중하기 때문에 DBA가 설정한 wait_timeout을 지킨다.&lt;/li&gt;
+      &lt;li&gt;HikariCP는 커넥션 풀을 관리하기 위해 HouseKeeper라는 Thread가 30초마다 돌고 있다.&lt;/li&gt;
+      &lt;li&gt;HouseKeeper가 30초마다 돌며 커넥션을 종료하였기에, 이전 29.xx초까지의 커넥션들에 대해 유효성 체크가 누락될 수 있어서 30초의 여유를 준 것이다.&lt;/li&gt;
+      &lt;li&gt;현재 방식은, ThreadLocal에서 각각 타이머를 통해 max-lifetime에 도달했는지 체크를 하는 방식으로 변경되었다.&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;따라서, max-lifetime은 네트워크 통신 등을 감안해서 Database의 wait_timeout으로 부터 2~3초 정도 짧게 주면 된다.&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;커넥션이 사용중일 경우 즉시 종료를 하지 않기에 커넥션이 매우 바쁜 상황을 감안해서 여유있게 준다면 wait_timeout으로 부터 5초정도까지 짧게 주면 된다는 개발자의 추가 답변.&lt;/code&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;hikaricp-성능-향상-기법&quot;&gt;HikariCP 성능 향상 기법&lt;/h3&gt;
+
+&lt;h4 id=&quot;첫째-connection-recycle-기법&quot;&gt;첫째, &lt;code class=&quot;highlighter-rouge&quot;&gt;Connection recycle&lt;/code&gt; 기법&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;커넥션을 재활용하여 성능 개선&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  HikariPool.java
+  
+  /**
+  * Recycle PoolEntry (add back to the pool)
+  *
+  * @param poolEntry the PoolEntry to recycle
+  */
+  @Override
+  void recycle(final PoolEntry poolEntry)
+  {
+    metricsTracker.recordConnectionUsage(poolEntry);
+    connectionBag.requite(poolEntry);
+  }
+
+
+  PoolEntry.java
+
+  /**
+  * Release this entry back to the pool.
+  *
+  * @param lastAccessed last access time-stamp
+  */
+  void recycle(final long lastAccessed)
+  {
+    if (connection != null) {
+       this.lastAccessed = lastAccessed;
+       hikariPool.recycle(this);
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;둘째-일정-간격으로-database에-커넥션-생존-확인-요청을-보내지-않아-부하-감소&quot;&gt;둘째, &lt;code class=&quot;highlighter-rouge&quot;&gt;일정 간격으로 DataBase에 커넥션 생존 확인 요청을 보내지 않아 부하 감소&lt;/code&gt;&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;test-while-idle과 같이 지속적으로 생존 여부를 확인해야 할 필요가 없다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;1000ms 이내에 연결이 사용되었다면, Connection 유효성 체크를 무시한다&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;https://github.com/brettwooldridge/HikariCP/issues/311&quot;&gt;HikariCP 메인 개발자의 댓글 참조&lt;/a&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;Let’s discuss.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;Unless you’ve studied the internals of HikariCP you may not know it, but under load HikariCP mostly bypasses the connection validation check. If a connection has been used within the last 1000ms, HikariCP will bypass the validation check automatically in getConnection().&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;If connections are being used less frequently than that, it indicates one of two things:&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;The application is simply not that active in terms of transactions/sec, or
+The pool is sized too large for the application, such that connections frequently sit in the pool unused for more than 1000ms before being reused
+Having said that, with JDBC4 capable drivers, the cost of validation has largely dropped to sub-millisecond or single digit milliseconds. Wherever possible, validation queries should be avoided, allowing HikariCP to use Connection.isValid() instead.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;Lastly, if there truly are use-cases where speed is paramount (over reliability) and yet transaction rates are very low, there are several alternative pools such as C3P0 available. We tend to think that either those use-cases are extremely rare, or can be effectively dealt with through driver and pool settings in their current form.`&lt;/p&gt;
+    &lt;/blockquote&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;요약한다면.&lt;/p&gt;
+
+    &lt;p&gt;HikariCP는 대부분 연결 유효성 체크를 건너 뛴다.&lt;/p&gt;
+
+    &lt;p&gt;마지막 1000ms 이내에 연결이 사용 되었다면, HikariCP는 getConnection ()에서 유효성 검사를 자동으로 무시한다.&lt;/p&gt;
+
+    &lt;p&gt;유효성 검사를 일정 시간마다 따박따박 하는게 성능 측면에서 비효율적이라 건너 뛰는 것으로 보인다.&lt;/p&gt;
+
+    &lt;p&gt;SELECT 1과 같이 유효성 검사 쿼리를 직접 날리는 것보다 JDBC4를 지원한다면 Connection.isValid()가 호출되는게 성능 측면에서 더 효과적이다.&lt;/p&gt;
+
+    &lt;p&gt;JDBC 구현체마다 다르지만 쿼리를 날리지 않고 Ping을 날리는 등으로 성능을 개선한다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;결론&quot;&gt;결론&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;첫째, HikariCP가 test-while-idle이 없는 것은 커넥션을 계속 들고 있는 방식이 아니기 때문.&lt;/li&gt;
+  &lt;li&gt;둘째, 사실 억지로 한다면 &lt;a href=&quot;https://github.com/brettwooldridge/HikariCP/wiki/Dropwizard-HealthChecks&quot;&gt;Dropwizard-HealthChecks&lt;/a&gt;를 추가하여 test-while-idle를 쓸 수는 있다. 하지만 HikariCP 개발자가 반대하는 방식이기에 추천하지 않는다.&lt;/li&gt;
+  &lt;li&gt;셋째, 기본적으로 DBA가 설정한 wait_timeout을 존중하며, 그 설정을 위반하지 않는다.&lt;/li&gt;
+  &lt;li&gt;넷째, maxLifeTime 설정은, wait_timeout 보다 2~3초 짧게 주자. 좀더 여유있게 준다면 5초 정도 짧게 주면 된다.&lt;/li&gt;
+  &lt;li&gt;다섯째, maxLifeTime을 무제한으로 한다고 0으로 주게 될 경우, Dead Connection을 참조하는 문제가 발생할 수 있다.&lt;/li&gt;
+  &lt;li&gt;여섯째, 다량의 커넥션이 한번에 종료되며 발생할 수 있는, 가용 커넥션 부족 이슈에 대해 걱정하지 않아도 된다.&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="Java" /><category term="Spring-Boot" /><category term="HikariCP" /><category term="test-while-idle" /><category term="max-lifetime" /><summary type="html">목적 HikariCP에는 Tomcat DBCP의 test-while-idle과 같은 커넥션 갱신 기능이 없을까?</summary></entry><entry><title type="html">Spring JPA Custom AttributeConverter</title><link href="https://pkgonan.github.io/2018/03/Spring-Custom-AttributeConverter" rel="alternate" type="text/html" title="Spring JPA Custom AttributeConverter" /><published>2018-03-04T00:00:00+00:00</published><updated>2018-03-04T00:00:00+00:00</updated><id>https://pkgonan.github.io/2018/03/Spring-Custom-AttributeConverter</id><content type="html" xml:base="https://pkgonan.github.io/2018/03/Spring-Custom-AttributeConverter">&lt;h2 id=&quot;목적&quot;&gt;목적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;JPA Entity Attribute &amp;lt;-&amp;gt; Database Column 커스텀&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;상세&quot;&gt;상세&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;JPA를 사용하여 서버를 개발하다 보면 Database에 저장된 값을 Java 프로그램 내부에서 특정 형태로 변환하여 사용하고 싶을 때가 있다.&lt;/li&gt;
+  &lt;li&gt;예, Database에서 사용 가능한 요일을 1,2,3으로 표현하고 있지만 Java 프로그램 내부에서는 Enum Type으로 변경하여 MONDAY,TUESDAY,WEDNESDAY로 처리하고 싶을 경우.&lt;/li&gt;
+  &lt;li&gt;Database -&amp;gt; Entity&lt;/li&gt;
+  &lt;li&gt;Entity -&amp;gt; Database&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;인터페이스&quot;&gt;인터페이스&lt;/h2&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;k&quot;&gt;package&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;javax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;persistence&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  
+  &lt;span class=&quot;p&quot;&gt;/**&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;that&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;implements&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;this&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;can&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;used&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;convert&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entity&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;attribute&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;into&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;database&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;representation&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;back&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;again&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Note&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;that&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;types&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;may&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;same&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Java&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;param&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entity&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;attribute&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;param&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;database&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;since&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Java&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Persistence&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2.1&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;*/&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AttributeConverter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  	&lt;span class=&quot;p&quot;&gt;/**&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Converts&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stored&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entity&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;attribute&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;into&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;representation&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stored&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;database&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;param&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;attribute&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entity&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;attribute&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;converted&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;converted&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stored&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;database&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*/&lt;/span&gt;
+  	&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;convertToDatabaseColumn&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;attribute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  
+  	&lt;span class=&quot;p&quot;&gt;/**&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Converts&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stored&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;database&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;into&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stored&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entity&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;attribute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Note&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;that&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;it&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;responsibility&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;converter&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;writer&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;specify&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;correct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dbData&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;corresponding&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;by&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;JDBC&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;driver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;persistence&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;providers&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;are&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;expected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;such&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conversion&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;param&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dbData&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;database&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;column&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;converted&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;converted&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stored&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entity&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;attribute&lt;/span&gt;
+  	 &lt;span class=&quot;p&quot;&gt;*/&lt;/span&gt;
+  	&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;convertToEntityAttribute&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dbData&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;구현&quot;&gt;구현&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;AttributeConverter를 implements 후 convertToDatabaseColumn와 convertToEntityAttribute 메소드를 Override해서 사용한다.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;항상 적용되는 것을 원할 경우 @Converter(autoApply = true)를 사용한다.&lt;/p&gt;
+
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;@Slf4j
+@Converter(autoApply = true)
+public class PayTypeConverter implements AttributeConverter&amp;lt;PayType, String&amp;gt; {
+  
+    @Override
+    public String convertToDatabaseColumn(PayType payType) {
+  
+        if (isNull(payType)) {
+            return null;
+        }
+  
+        return payType.getCode();
+    }
+  
+    @Override
+    public PayType convertToEntityAttribute(String code) {
+  
+        if (isNull(code)) {
+            return null;
+        }
+  
+        try {
+            return PayType.fromCode(code);
+        } catch (IllegalArgumentException e) {
+            AttributeConvertException ace = new AttributeConvertException(e);
+            log.error(&quot;failure to convert cause unexpected code [{}]&quot;, code, ace);
+            throw ace;
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;활용&quot;&gt;활용&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;레거시 DB의 Column Type이 부적절(?) 할 경우, 서버 쪽에서 반드시 그것을 따를 필요가 없다고 생각한다.&lt;/li&gt;
+  &lt;li&gt;서버 내부에서는 Enum Type이나 특정 형태로 Attribute를 관리하고 DB에 입출력을 할때 String 혹은 Long 형태로 변환하면 좀더 가독성 있는 코드를 만들 수 있을 것으로 보인다.&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="Java" /><category term="Spring" /><category term="JPA" /><category term="AttributeConverter" /><summary type="html">목적 JPA Entity Attribute &amp;lt;-&amp;gt; Database Column 커스텀</summary></entry></feed>

@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>IT 메모장</title>
+<link>https://happyer16.tistory.com/</link>
+<description>IT와 관련된 정보들을 쉽게 풀어놓은 블로그입니다. 
+</description>
+<language>ko</language>
+<pubDate>Sun, 12 May 2019 15:15:33 +0900</pubDate>
+<generator>TISTORY</generator>
+<managingEditor>taehyun_kim</managingEditor>
+<image>
+<title>IT 메모장</title>
+<url>https://tistory2.daumcdn.net/tistory/2655308/attach/b06710d018054997a765b6e2542aab2d</url>
+<link>https://happyer16.tistory.com</link>
+<description>IT와 관련된 정보들을 쉽게 풀어놓은 블로그입니다. 
+</description>
+</image>
+<item>
+<title>스프링 5 - PushBuilder란</title>
+<link>https://happyer16.tistory.com/entry/%EC%8A%A4%ED%94%84%EB%A7%81-5-PushBuilder%EB%9E%80</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 휴대폰 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;6650317847&quot;
+     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Desktop --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;1944786072&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;p&gt;Servlet 4에서 추가된 PushBuilder를 Spring5부터 지원을 합니다. HTTP2 서버 푸시 기능에 대해 살펴보겠습니다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;기존 예제&lt;/h4&gt;
+&lt;p&gt;단순히 html 페이지에서 css, js를 로딩하는 예제이다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/BkdHn/btqu1cZlS6g/tDFKW3Pse77alaEPjsySkK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/BkdHn/btqu1cZlS6g/tDFKW3Pse77alaEPjsySkK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FBkdHn%2Fbtqu1cZlS6g%2FtDFKW3Pse77alaEPjsySkK%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/trMhP/btqu1BRTr3l/O2nLJHgT7ea4VOad111QyK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/trMhP/btqu1BRTr3l/O2nLJHgT7ea4VOad111QyK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FtrMhP%2Fbtqu1BRTr3l%2FO2nLJHgT7ea4VOad111QyK%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;첫 호출&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/ATDjz/btqu1a8hhON/UPC5Gm0FLJYV85LKosX7OK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/ATDjz/btqu1a8hhON/UPC5Gm0FLJYV85LKosX7OK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FATDjz%2Fbtqu1a8hhON%2FUPC5Gm0FLJYV85LKosX7OK%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;두번째 호출&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/IMonU/btqu1tNiKAC/6Q3pJHKHTwpWYWp64m3Gy1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/IMonU/btqu1tNiKAC/6Q3pJHKHTwpWYWp64m3Gy1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FIMonU%2Fbtqu1tNiKAC%2F6Q3pJHKHTwpWYWp64m3Gy1%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h4&gt;왜 로딩속도가 더 빨라졌을까?&lt;/h4&gt;
+&lt;p&gt;cache 때문? 하지만 Disable cache를 설정해놨기 떄문에 아니다.&lt;/p&gt;
+&lt;p&gt;두번째가 더 빠른 이유는 Servlet의 라이플사이클과 관련이 있다.&lt;/p&gt;
+&lt;p&gt;처음 호출할 때 Servlet을 초기화 하기 때문에 상대적으로 느린 것이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;HTTP2를 사용한 예제&lt;/h4&gt;
+&lt;p&gt;yml에 해당 코드를 추가해주자.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/479WI/btqu3qBGs0W/pBXLOyqqakyRky9zmhBKK0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/479WI/btqu3qBGs0W/pBXLOyqqakyRky9zmhBKK0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2F479WI%2Fbtqu3qBGs0W%2FpBXLOyqqakyRky9zmhBKK0%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;chrome 창을 보면 프로토콜이 h2로 바뀐것을 확인할 수 있다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/EkCEU/btqu13UWPrU/jb1k9GhojcshnxrzhzLv40/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/EkCEU/btqu13UWPrU/jb1k9GhojcshnxrzhzLv40/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FEkCEU%2Fbtqu13UWPrU%2Fjb1k9GhojcshnxrzhzLv40%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;서버 푸쉬는 index 페이지를 볼 때 이 리소스를 필요로 할거야 예상하고 미리 보내주는 기능이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/c04kUU/btqu3AKPdon/nMfj6GR4PmZ9fQdSNK7fRk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/c04kUU/btqu3AKPdon/nMfj6GR4PmZ9fQdSNK7fRk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fc04kUU%2Fbtqu3AKPdon%2FnMfj6GR4PmZ9fQdSNK7fRk%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;intiator를 보면 Push라고 나온다. index.html 요청이 끝나기전에 이미 다른 것들을 요청한다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bE5Mhb/btqu2Ipgw0l/4kIaiadkay3XpgE8XwQQ01/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bE5Mhb/btqu2Ipgw0l/4kIaiadkay3XpgE8XwQQ01/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbE5Mhb%2Fbtqu2Ipgw0l%2F4kIaiadkay3XpgE8XwQQ01%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;하지만!&lt;/p&gt;
+&lt;p&gt;컨트롤러에 하드코딩 되어 있는 것이 문제다. 코드가 완전 침투적이다.&lt;/p&gt;
+&lt;p&gt;리소스에 대해 완벽히 알아야 된다.&lt;/p&gt;
+&lt;h4&gt;Servlet Filter로 처리하기&lt;/h4&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/9qx3F/btqu1CwxdTo/kALhnrQXvLjCQPS8WyAPq0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/9qx3F/btqu1CwxdTo/kALhnrQXvLjCQPS8WyAPq0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2F9qx3F%2Fbtqu1CwxdTo%2FkALhnrQXvLjCQPS8WyAPq0%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;파싱비용 걱정??&lt;/p&gt;
+&lt;p&gt;push할때 cache관련 해드를 추가해서 처리하는 방법&lt;/p&gt;
+&lt;p&gt;응답이 클때 파싱비용이 들지만, 또 효율적인거 같은데...&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>Spring</category>
+<author>taehyun_kim</author>
+<guid>https://happyer16.tistory.com/243</guid>
+<comments>https://happyer16.tistory.com/entry/%EC%8A%A4%ED%94%84%EB%A7%81-5-PushBuilder%EB%9E%80#entry243comment</comments>
+<pubDate>Tue, 07 May 2019 09:56:46 +0900</pubDate>
+</item>
+<item>
+<title>개발자 성장 팁 - 다른 개발자 코드 보기</title>
+<link>https://happyer16.tistory.com/entry/%EA%B0%9C%EB%B0%9C%EC%9E%90-%EC%84%B1%EC%9E%A5-%ED%8C%81-%EB%8B%A4%EB%A5%B8-%EA%B0%9C%EB%B0%9C%EC%9E%90-%EC%BD%94%EB%93%9C-%EB%B3%B4%EA%B8%B0</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 휴대폰 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;6650317847&quot;
+     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Desktop --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;1944786072&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h4&gt;이유&lt;/h4&gt;
+&lt;h4&gt;1.&amp;nbsp;사고의&amp;nbsp;폭이&amp;nbsp;넓어진다.&lt;br /&gt;2.&amp;nbsp;경우에&amp;nbsp;따른&amp;nbsp;다양한&amp;nbsp;선택지가&amp;nbsp;생긴다&amp;nbsp;(&amp;nbsp;ex:&amp;nbsp;collection&amp;nbsp;loop도&amp;nbsp;방법이&amp;nbsp;많다&amp;nbsp;)&lt;br /&gt;3.&amp;nbsp;다양한&amp;nbsp;기능&amp;nbsp;학습&amp;nbsp;(&amp;nbsp;같은&amp;nbsp;framework를&amp;nbsp;써도&amp;nbsp;여러가지&amp;nbsp;방법이&amp;nbsp;있음&amp;nbsp;)&lt;br /&gt;&lt;br /&gt;방법&lt;br /&gt;1.&amp;nbsp;자신이&amp;nbsp;사용하는&amp;nbsp;framework의&amp;nbsp;예제코드를&amp;nbsp;보라&amp;nbsp;(&amp;nbsp;Spring&amp;nbsp;PetClinic&amp;nbsp;sample&amp;nbsp;앱&amp;nbsp;봐라&amp;nbsp;)&lt;br /&gt;2.&amp;nbsp;사내&amp;nbsp;코드리뷰&lt;br /&gt;&lt;br /&gt;-&amp;nbsp;결론&amp;nbsp;:&amp;nbsp;혼자&amp;nbsp;개발해서는&amp;nbsp;좋은&amp;nbsp;개발자가&amp;nbsp;될&amp;nbsp;수&amp;nbsp;없다&lt;/h4&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;출처 :&amp;nbsp;&lt;a href=&quot;https://www.youtube.com/watch?v=i3p0dQrIDNo&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://www.youtube.com/watch?v=i3p0dQrIDNo&lt;/a&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>좋은개발자</category>
+<author>taehyun_kim</author>
+<guid>https://happyer16.tistory.com/242</guid>
+<comments>https://happyer16.tistory.com/entry/%EA%B0%9C%EB%B0%9C%EC%9E%90-%EC%84%B1%EC%9E%A5-%ED%8C%81-%EB%8B%A4%EB%A5%B8-%EA%B0%9C%EB%B0%9C%EC%9E%90-%EC%BD%94%EB%93%9C-%EB%B3%B4%EA%B8%B0#entry242comment</comments>
+<pubDate>Thu, 02 May 2019 16:15:24 +0900</pubDate>
+</item>
+<item>
+<title>스프링 프록시 패턴 - Proxy Pattern</title>
+<link>https://happyer16.tistory.com/entry/%EC%8A%A4%ED%94%84%EB%A7%81-%ED%94%84%EB%A1%9D%EC%8B%9C-%ED%8C%A8%ED%84%B4-Proxy-Pattern</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 휴대폰 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;6650317847&quot;
+     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Desktop --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;1944786072&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;p&gt;Spring에서 나오는 개념 중 하나인 AOP를 공부하기 위해서는&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;Proxy Pattern을 앙아야 한다. 그래서 간단한 결제 예제를 공부하였다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;결제와 관련된 interface이다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bjWybZ/btquW31JJkj/b39aUywCZ76AsRats0Kk60/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bjWybZ/btquW31JJkj/b39aUywCZ76AsRats0Kk60/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbjWybZ%2FbtquW31JJkj%2Fb39aUywCZ76AsRats0Kk60%2Fimg.png' width=&quot;284&quot; height=&quot;125&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;1) 현금 결제 구현체&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bcf5QV/btquYquHOYl/ShrhJBowBBmc3efpkKkMGK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bcf5QV/btquYquHOYl/ShrhJBowBBmc3efpkKkMGK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fbcf5QV%2FbtquYquHOYl%2FShrhJBowBBmc3efpkKkMGK%2Fimg.png' width=&quot;491&quot; height=&quot;229&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/dXfqfh/btquWNLF01x/SPCaApnzO82gkQ1KzXO2fk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/dXfqfh/btquWNLF01x/SPCaApnzO82gkQ1KzXO2fk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FdXfqfh%2FbtquWNLF01x%2FSPCaApnzO82gkQ1KzXO2fk%2Fimg.png' width=&quot;450&quot; height=&quot;357&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;2) 현금 결제 구현체에 다가 성능 측정 코드를 추가하고 싶은 경우&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/HObMf/btquVyIbtPt/qLJSptB25QibZsWDDO7XB0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/HObMf/btquVyIbtPt/qLJSptB25QibZsWDDO7XB0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FHObMf%2FbtquVyIbtPt%2FqLJSptB25QibZsWDDO7XB0%2Fimg.png' width=&quot;414&quot; height=&quot;430&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;서비스를 사용하는 클라이언트&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/kJcRB/btquYqnW7H1/C023QPwdRrYKMktOeBZZ71/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/kJcRB/btquYqnW7H1/C023QPwdRrYKMktOeBZZ71/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FkJcRB%2FbtquYqnW7H1%2FC023QPwdRrYKMktOeBZZ71%2Fimg.png' width=&quot;396&quot; height=&quot;347&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;결제를 사용하는 클라이언트 측에서는 코드 변경이 일어나지 않는다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;단지 어떤 Payment를 사용할지만 알려주면 된다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cvhcez/btquVhNsfK5/RhJqX3e1YWE5wObm86ki3k/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cvhcez/btquVhNsfK5/RhJqX3e1YWE5wObm86ki3k/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fcvhcez%2FbtquVhNsfK5%2FRhJqX3e1YWE5wObm86ki3k%2Fimg.png' width=&quot;486&quot; height=&quot;295&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;위의 예제는 자바 코드로 작성한 Proxy pattern이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;Spring에서 제공해주는 AOP를 이용하여 다음과 같은 코드를 더욱 더 쉽게 작성할 수 있다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;다음 포스팅에 작성해서 올리겠습니다!&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;참고 :&amp;nbsp;&lt;a href=&quot;https://en.wikipedia.org/wiki/Proxy_pattern&quot;&gt;https://en.wikipedia.org/wiki/Proxy_pattern&lt;/a&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>Spring</category>
+<author>taehyun_kim</author>
+<guid>https://happyer16.tistory.com/241</guid>
+<comments>https://happyer16.tistory.com/entry/%EC%8A%A4%ED%94%84%EB%A7%81-%ED%94%84%EB%A1%9D%EC%8B%9C-%ED%8C%A8%ED%84%B4-Proxy-Pattern#entry241comment</comments>
+<pubDate>Thu, 02 May 2019 12:11:22 +0900</pubDate>
+</item>
+<item>
+<title>PSA에 관하여</title>
+<link>https://happyer16.tistory.com/entry/PSA%EC%97%90-%EA%B4%80%ED%95%98%EC%97%AC</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 휴대폰 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;6650317847&quot;
+     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Desktop --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;1944786072&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h4&gt;Portable Service Abastraction&lt;/h4&gt;
+&lt;p&gt;잘 만든 인터페이스 / 기술에 특화되어 있지 않은 코드를 얘기한다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;왜 좋은가?&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Service_abstraction&quot;&gt;https://en.wikipedia.org/wiki/Service_abstraction&lt;/a&gt;&lt;/p&gt;
+&lt;h4&gt;Example - Servlet 작성&lt;/h4&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;HttpServlet을 상속 받아서 doGet(), doPost() 함수 작성 &amp;amp; web.xml 설정 작성&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;@Controller - Spring Web MVC 추상화 계층 덕분에 편함&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;Spring Web MVC 추상화 계층&lt;/h4&gt;
+&lt;p&gt;@Controller, @GetMapping을 이용해서 사용&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p style=&quot;font-size: 1.12em;&quot;&gt;1) 편안하다 : HttpServlet을 몰라도 됨, Mapping 편하게 할 수 있음&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p style=&quot;font-size: 1.12em;&quot;&gt;2) 특정 기술에 독립적 : Tomcat 기반으로 실행이 됨&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;Spring 5부터는 webflux라는 기술이 도입되었다. Servlet 대신 Reactive로 컨트롤러를 작성할 수 있다. webflux는 tomcat대신 netty를 사용하고 있다.&lt;/p&gt;
+&lt;p&gt;( starter-web =&amp;gt; starter-webflux )&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;스프링의 Web MVC 추상화 계층 덕분에 기존 코드에 수정이 거의 없이&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;Netty로 전환이 가능하다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;스프링 트랜잭션 ( Spring Transaction )&lt;/h4&gt;
+&lt;p style=&quot;font-size: 1.12em;&quot;&gt;기존 JDBC 코드&lt;/p&gt;
+&lt;p&gt;row level 단으로 commit, rollback을 다 신경써줘야 함&lt;/p&gt;
+&lt;pre id=&quot;code_1556764251420&quot; class=&quot;java&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;try{
+  dbConnection = getDbConnection();
+
+  dbConnection.setAutoCommit(false);
+
+  // sql문들
+
+  dbConnection.commit();
+} catch(SqlException e){
+	dbConnection.rollback();
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p style=&quot;font-size: 1.12em;&quot;&gt;&lt;span&gt;@Transactional&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span&gt;위의 코드를 직접짜지 않아도 트랜잭션 처리가 가능하다.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;span&gt;JpaTransactionManager &amp;lt;-&amp;gt; DatasourceTransactionManager 특정 기술에 종속되지 않은 코드를 작성할 수 있다.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;span&gt;그 외에도 많은 Spring PSA가 있다.&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;span&gt;스프링캐시&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;span&gt;스프링 덕분에 이렇게 편안하게 사용을 하고 있다. 나의 코드도 기술에 종속적이지 않고, 확장성이 좋은 코드를 작성하도록 노력해야겠다ㅎㅎ&lt;/span&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>Spring</category>
+<author>taehyun_kim</author>
+<guid>https://happyer16.tistory.com/239</guid>
+<comments>https://happyer16.tistory.com/entry/PSA%EC%97%90-%EA%B4%80%ED%95%98%EC%97%AC#entry239comment</comments>
+<pubDate>Thu, 02 May 2019 11:35:38 +0900</pubDate>
+</item>
+<item>
+<title>Java8 람다(Lambda) 제대로 쓰기</title>
+<link>https://happyer16.tistory.com/entry/Java8-%EB%9E%8C%EB%8B%A4Lambda-%EC%A0%9C%EB%8C%80%EB%A1%9C-%EC%93%B0%EA%B8%B0</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 휴대폰 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;6650317847&quot;
+     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Desktop --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;1944786072&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h4&gt;람다 왜 알아야되나?&lt;/h4&gt;
+&lt;p&gt;Java8 이상 버전을 사용하더라도 람다를 몰라도 된다. 하지만 이는 좋은 장비를 사놓고 좋은 기능을 쓰지 않는 것과 비슷하다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;아래의 예제를 먼저 살펴보자.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;특정 조건을 만족하는 주문을 보여주는 프로그램이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;처음에는 특정 가격보다 비싼 주문을 보여달라고 했다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;하지만 고객이 이름으로도 조회를 해달라고 한다면?&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;계속 해당 코드에 메소드를 추가하고 수정해야 한다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bm2cfy/btquNFNmRIE/zBhKcJV2X3J0RzvybBPbE0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bm2cfy/btquNFNmRIE/zBhKcJV2X3J0RzvybBPbE0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fbm2cfy%2FbtquNFNmRIE%2FzBhKcJV2X3J0RzvybBPbE0%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h4&gt;동적 파라미터화&lt;/h4&gt;
+&lt;p&gt;말그대로 파라미터로 어떤 행위를 전달하는 것이다.&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;위의 예제에 적용해보면 특정 조건을 만족하는지에 대해 체크 해주는 행위를 파라미터로 넘기는 것이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;( 마치 전략 디자인 패턴과 같다. )&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;아까 작성한 함수를 조금 리팩토링 해보자.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;파라미터로 특정 조건을 체크해주는 행위를 받았다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cccK6M/btquPMLjtmO/PNlCpmkfzmcr3KDRAPCM11/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cccK6M/btquPMLjtmO/PNlCpmkfzmcr3KDRAPCM11/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcccK6M%2FbtquPMLjtmO%2FPNlCpmkfzmcr3KDRAPCM11%2Fimg.png' width=&quot;376&quot; height=&quot;136&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/9fW7t/btquMBkG6Mb/vrV9GhkAjY5bpElSUtDO70/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/9fW7t/btquMBkG6Mb/vrV9GhkAjY5bpElSUtDO70/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2F9fW7t%2FbtquMBkG6Mb%2FvrV9GhkAjY5bpElSUtDO70%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;그럼 아래와 같이 collect2Order() 함수는 수정을 하지 않아도 되고,&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;외부에서 조건을 체크해주는 행위를 파라미터로 넘겨주기만 하면 된다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;하지만, 이정도면 그냥 if문만 수정하는게 더 빠를거라는 생각이 든다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;왜냐하면, 조건은 n개로 늘어날텐데 매번 클래스를 생성할 수 없지 않는가....&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/t0xyK/btquMB50Azd/usaRk8x8DNL3bvyO7aBCTk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/t0xyK/btquMB50Azd/usaRk8x8DNL3bvyO7aBCTk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Ft0xyK%2FbtquMB50Azd%2FusaRk8x8DNL3bvyO7aBCTk%2Fimg.png' width=&quot;904&quot; height=&quot;200&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h4&gt;익명 클래스( anonymous class )&lt;/h4&gt;
+&lt;p&gt;별도의 클래스를 생성하지 않고 아래와 같이 코드를 작성할 수도 있지만,&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;코드가 장황해지고 가독성이 떨어진다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;이러한 문제를 해결하기 위해 드디어 람다 표현식이 등장한 것이다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/Pzqby/btquNE8NQwM/MfAmqw1O2SR2LS3yoTWcz1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/Pzqby/btquNE8NQwM/MfAmqw1O2SR2LS3yoTWcz1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FPzqby%2FbtquNE8NQwM%2FMfAmqw1O2SR2LS3yoTWcz1%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h4&gt;람다 ( lambda )&lt;/h4&gt;
+&lt;p&gt;아래의 코드와 같이 가독성이 상당히 좋아졌다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/xz7os/btquMCRpmFZ/bD1zYz3tBbJMjz4zKzRHq0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/xz7os/btquMCRpmFZ/bD1zYz3tBbJMjz4zKzRHq0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fxz7os%2FbtquMCRpmFZ%2FbD1zYz3tBbJMjz4zKzRHq0%2Fimg.png' width=&quot;770&quot; height=&quot;84&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;람다를 사용할 경우에는 반드시 함수형 인터페이스를 통해서 사용할 수 있다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;즉, 하나의 메소드만 지닌 인터페이스만 지원한다는 것이다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/8a7JP/btquNuef5Wg/mmYGo4MZo5d4LZK6H9HStK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/8a7JP/btquNuef5Wg/mmYGo4MZo5d4LZK6H9HStK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2F8a7JP%2FbtquNuef5Wg%2FmmYGo4MZo5d4LZK6H9HStK%2Fimg.png' width=&quot;301&quot; height=&quot;109&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;그런데 다른 개발자가 이 인터페이스가 람다로 쓰이는 줄 모르고 함수를 추가한다면?&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;그럼 컴파일 에러가 나게 된다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;그래서 함수형 인터페이스를 알려주기 위해 다음과 같은 어노테이션을 사용한다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/GIit8/btquNE11cPG/DORDK1Jlu42wqcReUzn9pK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/GIit8/btquNE11cPG/DORDK1Jlu42wqcReUzn9pK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FGIit8%2FbtquNE11cPG%2FDORDK1Jlu42wqcReUzn9pK%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>Java</category>
+<author>taehyun_kim</author>
+<guid>https://happyer16.tistory.com/238</guid>
+<comments>https://happyer16.tistory.com/entry/Java8-%EB%9E%8C%EB%8B%A4Lambda-%EC%A0%9C%EB%8C%80%EB%A1%9C-%EC%93%B0%EA%B8%B0#entry238comment</comments>
+<pubDate>Thu, 25 Apr 2019 11:12:05 +0900</pubDate>
+</item>
+<item>
+<title>디자인패턴7 - Proxy pattern(프록시 패턴)</title>
+<link>https://happyer16.tistory.com/entry/%EB%94%94%EC%9E%90%EC%9D%B8%ED%8C%A8%ED%84%B47-Proxy-pattern%ED%94%84%EB%A1%9D%EC%8B%9C-%ED%8C%A8%ED%84%B4</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 휴대폰 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;6650317847&quot;
+     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Desktop --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;1944786072&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h4&gt;Proxy 뜻?&lt;/h4&gt;
+&lt;p&gt;proxy를 번역을 해보면 대리인,대리(권)이라 나온다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;대리로 무언가를 해줘야 할 때 필요한 패턴인 것 같다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;즉, 비즈니스 코드에 트랜잭션, 로깅, 인가처리 등과 같은 부가기능을 적용해야 할 때 쓰는 패턴이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;Proxy 패턴 예제&lt;/h4&gt;
+&lt;p&gt;testService findAll() 이전과 이후에 어떤 기능을 적용하고 싶을 때 아래와 같이 코드를 작성하면 된다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock floatLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/b7RZzU/btquNvp34Mk/djq0AwFh7p7XRzveuFSRc0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/b7RZzU/btquNvp34Mk/djq0AwFh7p7XRzveuFSRc0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fb7RZzU%2FbtquNvp34Mk%2Fdjq0AwFh7p7XRzveuFSRc0%2Fimg.png' width=&quot;352&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bvjh38/btquL1JXQ8y/aFvMAUp8n2gmgIylcpQzQk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bvjh38/btquL1JXQ8y/aFvMAUp8n2gmgIylcpQzQk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fbvjh38%2FbtquL1JXQ8y%2FaFvMAUp8n2gmgIylcpQzQk%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bfoAgW/btquM9HBBaA/kZiOfdV8wkP2uIMhAOvaM0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bfoAgW/btquM9HBBaA/kZiOfdV8wkP2uIMhAOvaM0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbfoAgW%2FbtquM9HBBaA%2FkZiOfdV8wkP2uIMhAOvaM0%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;데코레이터 패턴과 유사하나,&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;데코레이터 패턴은 상속 없이 새로운 기능을 추가하기 위해 래핑하는 것이다.&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>Java</category>
+<author>taehyun_kim</author>
+<guid>https://happyer16.tistory.com/237</guid>
+<comments>https://happyer16.tistory.com/entry/%EB%94%94%EC%9E%90%EC%9D%B8%ED%8C%A8%ED%84%B47-Proxy-pattern%ED%94%84%EB%A1%9D%EC%8B%9C-%ED%8C%A8%ED%84%B4#entry237comment</comments>
+<pubDate>Wed, 24 Apr 2019 14:51:47 +0900</pubDate>
+</item>
+<item>
+<title>JPA 1차 캐시 - Database와 동기화가 되지 않은 데이터를 읽는 문제</title>
+<link>https://happyer16.tistory.com/entry/JPA-1%EC%B0%A8-%EC%BA%90%EC%8B%9C-Database%EC%99%80-%EB%8F%99%EA%B8%B0%ED%99%94%EA%B0%80-%EB%90%98%EC%A7%80-%EC%95%8A%EC%9D%80-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%A5%BC-%EC%9D%BD%EB%8A%94-%EB%AC%B8%EC%A0%9C</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 휴대폰 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;6650317847&quot;
+     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Desktop --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;1944786072&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h4&gt;문제&lt;/h4&gt;
+&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Data&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;Data`&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Data&lt;/p&gt;
+&lt;p&gt;Service 1 =&amp;gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; =&amp;gt; Data 수정&lt;/p&gt;
+&lt;p&gt;Service 2 =&amp;gt; Data 조회 ( 캐시에 남음 )&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; =&amp;gt; Data 조회하려 했지만 수정된 데이터가 아니라 캐시에 남은 Data를 조회함&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;수정된 Data가 검색되는게 아니라 JPA 1차캐시에 남아 있는 기존 Data를 Service 2에서 검색하는 문제였다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;스프링 마이크로서비스를 개발하면서 이런 일이 많을 것 같은데 어떠한 해결방법이 있을까?&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;해결방법&lt;/h4&gt;
+&lt;h4&gt;1. flush()&lt;/h4&gt;
+&lt;p&gt;Service2에서 Data를 조회하기 전에 flush()를 호출하여 Database와 1차 캐시를 동기화해주는 방법&lt;/p&gt;
+&lt;p&gt;하지만 성능상 이슈?&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>JPA</category>
+<author>taehyun_kim</author>
+<guid>https://happyer16.tistory.com/236</guid>
+<comments>https://happyer16.tistory.com/entry/JPA-1%EC%B0%A8-%EC%BA%90%EC%8B%9C-Database%EC%99%80-%EB%8F%99%EA%B8%B0%ED%99%94%EA%B0%80-%EB%90%98%EC%A7%80-%EC%95%8A%EC%9D%80-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%A5%BC-%EC%9D%BD%EB%8A%94-%EB%AC%B8%EC%A0%9C#entry236comment</comments>
+<pubDate>Tue, 23 Apr 2019 12:51:02 +0900</pubDate>
+</item>
+<item>
+<title>13장. 웹애플리케이션과 영속성 관리</title>
+<link>https://happyer16.tistory.com/entry/13%EC%9E%A5-%EC%9B%B9%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98%EA%B3%BC-%EC%98%81%EC%86%8D%EC%84%B1-%EA%B4%80%EB%A6%AC</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 휴대폰 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;6650317847&quot;
+     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Desktop --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;1944786072&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;p&gt;JPA를 이용하여 Spring 개발을 하다보면, LazyInitializationException 같은 예외를 겪어 봤을 것이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;나도 JPA의 내부동작방식을 이해하지 못하고 있었기에 어떤 문제인지 파악을 하지 못하였다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;그래서 13장. 웹 어플리케이션과 영속성 관리를 읽게 되었다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h3&gt;트랜잭션 범위의 영속성 컨텍스트 ( persistence context in transaction scope )&lt;/h3&gt;
+&lt;h4&gt;스프링 컨테이너의 기본 전략&lt;/h4&gt;
+&lt;p&gt;스프링 컨테이너는 트랜잭션 범위의 영속성 컨텍스트 전략을 기본으로 사용 한다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;즉, 트랜잭션이 시작될 때 영속성 컨텍스트를 생성하고&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;트랜잭션이 끝날 때 영속성 컨텍스트를 종료한다.&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;그리고 같은 트랜잭션 안에서는 항상 같은 영속성 컨텍스트에 접근한다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/2PR51/btquCjwXnBx/TSObiPlgrwFJk6eylWclo0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/2PR51/btquCjwXnBx/TSObiPlgrwFJk6eylWclo0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2F2PR51%2FbtquCjwXnBx%2FTSObiPlgrwFJk6eylWclo0%2Fimg.png' data-filename=&quot;1.PNG&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/JdM8R/btquDAqMR9D/bDDwEkkIg05CIetq21q800/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/JdM8R/btquDAqMR9D/bDDwEkkIg05CIetq21q800/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FJdM8R%2FbtquDAqMR9D%2FbDDwEkkIg05CIetq21q800%2Fimg.png' data-filename=&quot;2.PNG&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;@Transactional 어노테이션을 선언하면 트랜잭션이 시작된다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;1) 스프링 트랜잭션 AOP가 대상 method를 호출하기 직전에 트랜잭션 시작&lt;/p&gt;
+&lt;p&gt;2) 트랜잭션을 커밋하면, flush() 호출을 통해 변경된 내용 DB에 반영 -&amp;gt; 트랜잭션 커밋&lt;/p&gt;
+&lt;p&gt;3) 문제가 생기면, flush()를 호출하지 않음&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;위의 과정을 나타내주는 예제이다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/DKttw/btquA2JKiRz/pbGoIWiUwRazt88Mzz8tn0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/DKttw/btquA2JKiRz/pbGoIWiUwRazt88Mzz8tn0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FDKttw%2FbtquA2JKiRz%2FpbGoIWiUwRazt88Mzz8tn0%2Fimg.png' data-filename=&quot;3.PNG&quot; width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h3&gt;준영속 상태의 지연 로딩 ( lazy loading of detached state )&lt;/h3&gt;
+&lt;p&gt;컨트롤러 계층에서는 트랜잭션이 없기 때문에 준영속 상태이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;그래서 영속성 상태에서 가능한 기능을 사용할 수 없다&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;변경 감지 ( dirty checking )&lt;br /&gt;보통 presentation 계층에서 데이터를 수정하는 일이 없기 때문에 특별히 문제가 되지 않는다.&lt;/li&gt;
+&lt;li&gt;지연 로딩 ( lazy loading )&lt;br /&gt;아래와 같이 지연로딩으로 프록시 객체를 조회하면 org.hibernate.LazyInitializationException이 발생한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;그렇다면 Controller 단에서 지연로딩을 사용하기 위해서는 어떻게 해야 할까?&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/EtudN/btquC0Q2mov/9zEPE635f1jGKo1HFizUY1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/EtudN/btquC0Q2mov/9zEPE635f1jGKo1HFizUY1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FEtudN%2FbtquC0Q2mov%2F9zEPE635f1jGKo1HFizUY1%2Fimg.png' data-filename=&quot;5.PNG&quot; width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;1. 글로벌 패치 전략 수정&lt;/h4&gt;
+&lt;p&gt;즉시 모든 것을 로딩 하는 방법이다.&lt;/p&gt;
+&lt;p&gt;하지만 해당 방법은 2가지 문제점이 있다.&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;사용하지 않는 Entity까지 로딩한다.&lt;/li&gt;
+&lt;li&gt;N+1문제&lt;br /&gt;&lt;br /&gt;JPA를 사용하면서 가장 조심해야 하는 문제이다.&lt;br /&gt;JPQL을 사용하는 경우 다음과 같이 조회된다.&lt;br /&gt;select * from Order;&lt;br /&gt;select * from Member where id =?&lt;br /&gt;select * from Member where id =?&lt;br /&gt;.....&lt;br /&gt;&lt;br /&gt;SQL을 N+!회 호출하게 되어 성능상의 문제가 발생한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/b247Ff/btquChsrTvr/cgAb67Up6plIzuvySfw8nK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/b247Ff/btquChsrTvr/cgAb67Up6plIzuvySfw8nK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fb247Ff%2FbtquChsrTvr%2FcgAb67Up6plIzuvySfw8nK%2Fimg.png' data-filename=&quot;6.PNG&quot; width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h4&gt;2. JPQL 패치 조인&lt;/h4&gt;
+&lt;p&gt;위의 N+1문제를 해결 할 수 있는 방법이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;join fetch o.member&lt;/p&gt;
+&lt;p&gt;와 같이 fetch를 넣어주면 된다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;하지만 이 또한 문제가 있다.&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;프리젠테이션 계층이 알게 모르게 데이터 접근 계층을 침범함&lt;br /&gt;- findOrder(), findOrderWithMember().... 메소드 계속 생성해야 함&lt;br /&gt;- 다른 대안 : findOrder()에서 order, member를 함께 로딩하도록 수정&amp;nbsp;&lt;br /&gt;&amp;nbsp; &amp;nbsp;로딩 시간이 조금은 길어지겠지만 무분별한 최적화로 인한 의존관계 발생보다는 이게 낫다 ( 타협 )&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;3. 강제로 초기화&lt;/h4&gt;
+&lt;p&gt;영속성 컨텍스트가 살아있는 Service 단에서 강제로 초기화하여 반환을 하는 방법이다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/m9EAt/btquDAYFgmZ/BnodVQaKEKAISJSXkBKlP0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/m9EAt/btquDAYFgmZ/BnodVQaKEKAISJSXkBKlP0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fm9EAt%2FbtquDAYFgmZ%2FBnodVQaKEKAISJSXkBKlP0%2Fimg.png' data-filename=&quot;8.PNG&quot; width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;문제 1 : 프록시 초기화 코드가 서비스에 생김 ( 프리젠테이션 계층이 침범하는 상황 )&lt;/li&gt;
+&lt;li&gt;문제 2 : FACADE 계층을 추가한다고 해도 쓸데없는 코드(계층)이 생성 됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;이렇게 하면 문제가 해결 되는가?&lt;/h4&gt;
+&lt;p&gt;이 방법들은 억지로 해결하는 것이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;Controller ( 프리잰테이션 계층)을 개발하면서 Entity가 초기화 되어 있는지 아닌지 확인을 하지 않는다. 결국 실수를 하게 된다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;그리고 쓸데 없는 코드도 생기는 문제가 발생한다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;그렇다면 영속성 컨텍스트 ( persistence context )를 뷰까지 살아있게 열어두자. 이것이 OSIV이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>JPA</category>
+<author>taehyun_kim</author>
+<guid>https://happyer16.tistory.com/235</guid>
+<comments>https://happyer16.tistory.com/entry/13%EC%9E%A5-%EC%9B%B9%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98%EA%B3%BC-%EC%98%81%EC%86%8D%EC%84%B1-%EA%B4%80%EB%A6%AC#entry235comment</comments>
+<pubDate>Wed, 17 Apr 2019 15:48:13 +0900</pubDate>
+</item>
+<item>
+<title>Spring annotation - @Service,@Controller,@Component 차이</title>
+<link>https://happyer16.tistory.com/entry/Spring-annotation-ServiceControllerComponent-%EC%B0%A8%EC%9D%B4</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 휴대폰 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;6650317847&quot;
+     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Desktop --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;1944786072&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h4&gt;Spring Documentation&lt;/h4&gt;
+&lt;p&gt;Spring 문서를 보면 역할에 맞게 쓰라고 되어 있는데 무엇이 차이인지 정확히 모르겠다. 그래서 조금 더 자료를 찾아봤다.&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bpiV1F/btquzHydBKR/yb6QJY3SCFKsVhFveEJlRk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bpiV1F/btquzHydBKR/yb6QJY3SCFKsVhFveEJlRk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbpiV1F%2FbtquzHydBKR%2Fyb6QJY3SCFKsVhFveEJlRk%2Fimg.png' data-filename=&quot;13.PNG&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h4&gt;@Component&lt;/h4&gt;
+&lt;p&gt;Spring에서 관리되는 객체임을 표시하기 위해 사용하는 가장 기본적인 annotation이다. 즉, scan-auto-detection과 dependency injection을 사용하기 위해서 사용되는 가장 기본 어노테이션이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;@Controller&lt;/h4&gt;
+&lt;p&gt;Web MVC 코드에 사용되는 어노테이션이다. @RequestMapping 어노테이션을 해당 어노테이션 밑에서만 사용할 수 있다.&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;@Repository&lt;/h4&gt;
+&lt;p&gt;다 알고 있듯이 data repository를 나타내는 어노테이션이다. @Repository는 플랫폼 특정 exception을 잡아 Spring의 unchecked exception으로 뱉어내준다. (&amp;nbsp;&lt;span&gt;PersistenceExceptionTranslationPostProcessor )&lt;/span&gt;&lt;/p&gt;
+&lt;h4&gt;@Service&lt;/h4&gt;
+&lt;p&gt;비즈니스 로직이나 respository layer 호출하는 함수에 사용된다. 다른 어노테이션과 다르게 @Component에 추가된 기능은 없다. 하지만 나중에 Spring 측에서 추가적인 exception handling을 해줄 수도 있으니 비즈니스 로직에는 해당 어노테이션을 사용하자.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>Spring</category>
+<author>taehyun_kim</author>
+<guid>https://happyer16.tistory.com/234</guid>
+<comments>https://happyer16.tistory.com/entry/Spring-annotation-ServiceControllerComponent-%EC%B0%A8%EC%9D%B4#entry234comment</comments>
+<pubDate>Tue, 16 Apr 2019 12:13:56 +0900</pubDate>
+</item>
+<item>
+<title>Adyen 3D Secure 2 통합하기</title>
+<link>https://happyer16.tistory.com/entry/Adyen-3D-Secure-2-%ED%86%B5%ED%95%A9%ED%95%98%EA%B8%B0</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 휴대폰 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;6650317847&quot;
+     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Desktop --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;1944786072&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h3&gt;3D Secure 2 with your Classic integration&lt;/h3&gt;
+&lt;p&gt;API를 이용한 통합 방법이다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;/payments :&amp;nbsp;&lt;a href=&quot;https://docs.adyen.com/api-explorer/#/PaymentSetupAndVerificationService/v41/payments&quot;&gt;https://docs.adyen.com/api-explorer/#/PaymentSetupAndVerificationService/v41/payments&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bf3NKv/btqufc5DFmD/sj50MOpRVC7GE5uk3JSTg0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bf3NKv/btqufc5DFmD/sj50MOpRVC7GE5uk3JSTg0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fbf3NKv%2Fbtqufc5DFmD%2Fsj50MOpRVC7GE5uk3JSTg0%2Fimg.png' data-filename=&quot;3ds2-android.png&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;1. 인증 절차를 진행하기 위해서 3D Secure 2 Object가 담긴 Payment Request를 제출한다. ResultCode로 다음 절차 진행&lt;/p&gt;
+&lt;p&gt;2.&amp;nbsp;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Mobile --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7619430180046712&quot;
+     data-ad-slot=&quot;4163755307&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>결제 모듈</category>
+<author>taehyun_kim</author>
+<guid>https://happyer16.tistory.com/233</guid>
+<comments>https://happyer16.tistory.com/entry/Adyen-3D-Secure-2-%ED%86%B5%ED%95%A9%ED%95%98%EA%B8%B0#entry233comment</comments>
+<pubDate>Mon, 08 Apr 2019 16:09:55 +0900</pubDate>
+</item>
+</channel>
+</rss>

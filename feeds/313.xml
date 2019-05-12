@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>시뻘건 개발 도전기</title>
+<link>https://maeng-dev.tistory.com/</link>
+<description></description>
+<language>ko</language>
+<pubDate>Sun, 12 May 2019 14:36:47 +0900</pubDate>
+<generator>TISTORY</generator>
+<managingEditor>시뻘건볼때기</managingEditor>
+<item>
+<title>러스트 23 - Packages와 Crates, 그리고 Modules #1 : Packages와 Crates</title>
+<link>https://maeng-dev.tistory.com/27</link>
+<description>&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;앞 소개 게시글 &lt;a href=&quot;https://maeng-dev.tistory.com/26&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;&amp;lt;러스트&amp;nbsp;22 -&amp;nbsp;Packages와&amp;nbsp;Crates,&amp;nbsp;그리고&amp;nbsp;Modules&amp;gt;&lt;/a&gt;에서 언급했 듯이, Packages와 Crates는 라이브러리와 실행 파일을 만들어주는 녀석들이다.&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: square;&quot; data-ke-list-type=&quot;square&quot;&gt;
+&lt;li&gt;crate는 바이너리 혹은 라이브러리이다.&lt;/li&gt;
+&lt;li&gt;crate root는 crate를 빌드할 때 사용되는 소스 파일이다.&lt;/li&gt;
+&lt;li&gt;package는 Crates를 빌드하는 방법을 설명하는 Cargo.toml를 가지고 있다. package의 crate는 하나의 라이브러리가 될 수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;&lt;span style=&quot;color: #333333;&quot;&gt;(아직 감이 잘 오지 않는다...)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;우리가 처음 Cargo를 사용했을 때를 기억해보자... [&lt;span style=&quot;color: #333333;&quot;&gt;cargo new&lt;/span&gt;] command를 사용했었다. 그렇게 프로젝트를 생성을 했었다. 여기서 생각해야할 것은 생성된 프로젝트에 package가 생겼다는 것. 왜? Cargo가 Cargo.toml파일을 만들었기 때문.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;이상하게도 Cargo.toml 내용을 보면 src/main.rs에 대한 내용이 없다. run을 하게 되면 분명 main.rs가 실행 되는데 그 어디에도 main.rs에 대한 내용을 찾아볼 수 없다.&lt;/p&gt;
+&lt;p&gt;Cargo 규칙에 따르면 package의 Cargo.toml과 같은 디렉토리에 main.rs가 포함된 src가 있는 경우, Cargo는 이 package가 package 이름과 같은 이진 crate를 포함하고 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;src/main.rs가 crate root&lt;/b&gt;&lt;/span&gt;임을 알고 있다.&lt;/p&gt;
+&lt;p&gt;Cargo의 또 다른 규칙은 package 디렉토리에 src/lib.rs가 포함되어 있으면 package와 package 이름과 같은 라이브러리 crate가 포함되어 있고 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;src/lib.rs가 해당 crate root&lt;/b&gt;&lt;/span&gt;가 된다.&lt;/p&gt;
+&lt;p&gt;crate root파일은 Cargo에 의해 rustc에 전달되어 &lt;b&gt;라이브러리 혹은 바이너리&lt;/b&gt;(실행파일)을 빌드한다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;package는 0개 또는 1개의 라이브러리 crate와 원하는 만큼의 이진 crate를 포함할 수 있다. package는 &lt;b&gt;적어도 하나&lt;/b&gt;의 crate가 있어야 한다.&lt;/p&gt;</description>
+<category>RUST</category>
+<author>사용자 시뻘건볼때기</author>
+<guid>https://maeng-dev.tistory.com/27</guid>
+<comments>https://maeng-dev.tistory.com/27#entry27comment</comments>
+<pubDate>Sun, 21 Apr 2019 22:44:06 +0900</pubDate>
+</item>
+<item>
+<title>러스트 22 - Packages와 Crates, 그리고 Modules</title>
+<link>https://maeng-dev.tistory.com/26</link>
+<description>&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;러스트는 특수하게(?)도 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;&quot;모듈 시스템&quot;&lt;/b&gt;&lt;/span&gt;이라는 것을 제공하는데&amp;nbsp;scope와 관련된 많은 기능들을 말한다.&lt;/p&gt;
+&lt;p&gt;추가로 다음과 같은 모듈을 포함한다.&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: square;&quot; data-ke-list-type=&quot;square&quot;&gt;
+&lt;li&gt;&lt;span style=&quot;background-color: #ffcd00;&quot;&gt;&lt;b&gt;Packages&lt;/b&gt;&lt;/span&gt;는 빌드, 테스트, 공유할수 있도록 해주는 Cargo 기능이다.&lt;/li&gt;
+&lt;li&gt;&lt;span style=&quot;background-color: #ffcd00;&quot;&gt;&lt;b&gt;Crates&lt;/b&gt;&lt;/span&gt;는 라이브러리나 실행파일을 생성하는 모듈 트리다.&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;&lt;span style=&quot;background-color: #ffcd00;&quot;&gt;Modules&lt;/span&gt;&lt;/b&gt;는 scope와 privacy 정보(구조체, 함수, 모듈 등의 네이밍을 이야기하는 것 같다.)를 제어할 수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;이번 장이 끝나면 scope를 정의하고, 사용하며, export를 할 수 있다.&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;(기대 중..ㅎㅎㅎㅎ)&lt;/p&gt;</description>
+<category>RUST</category>
+<category>crates</category>
+<category>Module</category>
+<category>개발</category>
+<category>개발자</category>
+<category>라이브러리</category>
+<category>러스트</category>
+<category>모듈</category>
+<category>컴퓨터언어</category>
+<category>패키지</category>
+<category>프로그래머</category>
+<author>사용자 시뻘건볼때기</author>
+<guid>https://maeng-dev.tistory.com/26</guid>
+<comments>https://maeng-dev.tistory.com/26#entry26comment</comments>
+<pubDate>Sun, 21 Apr 2019 16:16:52 +0900</pubDate>
+</item>
+<item>
+<title>러스트 21 - 예외처리 #2 : Result&lt;T, E&gt;</title>
+<link>https://maeng-dev.tistory.com/25</link>
+<description>&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;panic! 매크로가 복구 불가능한 에러를 처리하기 위함이라면, 복구 가능한 에러 처리를 위한 녀석은 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;Result&amp;lt;T, E&amp;gt;&lt;/b&gt;&lt;/span&gt;가 있다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;pre id=&quot;code_1555223405796&quot; class=&quot;java&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;enum Result&amp;lt;T, E&amp;gt; {
+    Ok(T),
+    Err(E),
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;Result의 핵심!!!&lt;/span&gt;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;T와 E는 제네릭 타입 파라미터다.
+&lt;ul style=&quot;list-style-type: disc;&quot;&gt;
+&lt;li&gt;T는 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;성공&lt;/b&gt;&lt;/span&gt;한 후에 Ok variant 내에 반환될 값의 타입&lt;/li&gt;
+&lt;li&gt;E는 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;실패&lt;/b&gt;&lt;/span&gt;한 후에 Err variant 내에 반환될 에러 타입&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;파일을 가지고 오는 코드를 보자.&lt;/p&gt;
+&lt;pre id=&quot;code_1555224281243&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;use std::fs::File;
+
+fn main() {
+    let file = File::open(&quot;hello.txt&quot;);
+
+    if file.is_ok() {
+        println!(&quot;SUCCESS!!! : {:?} &quot;, file.ok());
+    } else {
+        println!(&quot;FAILE!!! : {:?}&quot;, file.err());
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cjZODe/btquz9GKt6M/HlpahodR5YtHR3UzPJ4kY0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cjZODe/btquz9GKt6M/HlpahodR5YtHR3UzPJ4kY0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcjZODe%2Fbtquz9GKt6M%2FHlpahodR5YtHR3UzPJ4kY0%2Fimg.png' data-filename=&quot;캡처1.PNG&quot; width=&quot;863&quot; height=&quot;34&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;파일이 없으면 다른 파일을 읽는 다거나, 각각의 로직을 다르게 태울 수 있다는 이야기가 된다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;에러를 맵핑시켜보자.&lt;/p&gt;
+&lt;pre id=&quot;code_1555224675539&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;use std::fs::File;
+use std::io::ErrorKind;
+
+fn main() {
+    let f = File::open(&quot;hello.txt&quot;);
+
+    let f = match f {
+        Ok(file) =&amp;gt; file,
+        Err(error) =&amp;gt; match error.kind() {
+            ErrorKind::NotFound =&amp;gt; match File::create(&quot;hello.txt&quot;) {
+                Ok(fc) =&amp;gt; fc,
+                Err(e) =&amp;gt; panic!(&quot;파일 생성에 실패 : {:?}&quot;, e),
+            },
+            other_error =&amp;gt; panic!(&quot;파일 로드 중에 문제 발생 : {:?}&quot;, other_error),
+        },
+    };
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;match를 사용하면 이러한 코드구현도 가능하다.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;File::open이&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;/span&gt;반환하는 값의 타입은 &lt;b&gt;io::Error&lt;/b&gt;이며 표준 라이브러리에서 제공하는 구조체다.&lt;/p&gt;
+&lt;p&gt;이 구조체에는 &lt;b&gt;io::ErrorKind&lt;/b&gt; 값을 얻기 위해 &lt;b&gt;kind&lt;/b&gt;라는 메소드가 있다.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;io::ErrorKind&lt;/b&gt;는&amp;nbsp;&lt;span style=&quot;color: #333333;&quot;&gt;표준 라이브러리에서 제공되며&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;/span&gt;&lt;span style=&quot;color: #333333;&quot;&gt;io 작업으로 인해 발생할 수 있는 다양한 종류의 에러를 표현하는 variant를 가진 &lt;b&gt;열거형&lt;/b&gt;이다. 상위 코드에서 사용하는 variant는 &lt;b&gt;io::ErrorKind::NotFound&lt;/b&gt;라는 녀석이다.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;&lt;b&gt;1. 에러가 났을 때 panic을 위한 unwrap, expect&lt;/b&gt;&lt;/h4&gt;
+&lt;p&gt;match는 충분히 사용 가능하지만, 의도를 정확하게 파악하기 어려울 수 있다.&lt;/p&gt;
+&lt;p&gt;result&amp;lt;T, E&amp;gt; 타입은 다양한 작업 수행을 위해 여러가지의 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;헬퍼 메소드&lt;/b&gt;&lt;/span&gt;가 정의되어 있다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p style=&quot;font-size: 1.25em;&quot;&gt;1. unwrap&lt;/p&gt;
+&lt;p&gt;match 표현식 처럼 구현되는 &lt;b&gt;숏컷 메소드&lt;/b&gt;라고 한다.&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;결과 값이 Ok variant인 경우 unwrap은 &lt;b&gt;Ok 내부의 값&lt;/b&gt;을 반환한다.&lt;/li&gt;
+&lt;li&gt;&lt;span style=&quot;color: #333333;&quot;&gt;결과 값이&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;/span&gt;Err variant인 경우 unwrap은 &lt;b&gt;panic! 매크로&lt;/b&gt;를 호출한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p style=&quot;font-size: 1.25em;&quot;&gt;2. expect&lt;/p&gt;
+&lt;p&gt;unwrap과 유사하지만, panic! 매크로의 에러 메시지를 개발자 맘대로 할 수 있도록 해준다.&lt;/p&gt;
+&lt;p&gt;이렇게...!!!&lt;/p&gt;
+&lt;pre id=&quot;code_1555226916417&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;use std::fs::File;
+
+fn main() {
+    let f = File::open(&quot;hello.txt&quot;).expect(&quot;파일 오픈 실패!!!&quot;);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;&lt;b&gt;2. 에러 전파&lt;/b&gt;&lt;/h4&gt;
+&lt;p&gt;구현이 실패 할 수도 있는(에러 발생) 함수를 작성할 때, 오류 처리를 해당 함수 내에서 할지, 혹은 호출한 녀석이 할지에 대한 고민은 누구나 했을 것이다.&amp;nbsp;&lt;/p&gt;
+&lt;pre id=&quot;code_1555227556537&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;use std::io;
+use std::io::Read;
+use std::fs::File;
+
+fn read_userName_from_file() -&amp;gt; Result&amp;lt;String, io::Error&amp;gt; {
+    let f = File::open(&quot;hello.txt&quot;);
+
+    let mut f = match f {
+        Ok(file) =&amp;gt; file,
+        Err(e) =&amp;gt; return Err(e),
+    };
+
+    let mut s = String::new();
+
+    match f.read_to_string(&amp;amp;mut s) {
+        Ok(_) =&amp;gt; Ok(s),
+        Err(e) =&amp;gt; Err(e),
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;read_userName_from_file의 리턴 값은 Result. Ok라면 String, Err라면 io::Error를 리턴할 것이다.&lt;/p&gt;
+&lt;p&gt;러스트는 에러 전파 패턴이 굉장히 흔하게 발생되기 때문에, 물음표 연산자(&quot;?&quot;)를 제공한다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;pre id=&quot;code_1555227788929&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;use std::io;
+use std::io::Read;
+use std::fs::File;
+
+fn read_userName_from_file() -&amp;gt; Result&amp;lt;String, io::Error&amp;gt; {
+    let mut f = File::open(&quot;hello.txt&quot;)?;
+    let mut s = String::new();
+    f.read_to_string(&amp;amp;mut s)?;
+    Ok(s)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;에러를 호출한 쪽으로 리턴하는 함수가 이렇게 간단해졌다.&lt;/p&gt;
+&lt;p&gt;Result 값 뒤에 ?는 이전 match 표현식과 같은 방식으로 동작 되도록 정의되어 있다. 만약 Result의 값이 Ok이면 Ok 내부의 값이 이 표현식에서 반환되고 프로그램은 계속 진행 될 것이다.&lt;/p&gt;
+&lt;p&gt;반대로, 값이 Err이면 오류 값이 리턴될 것이다.&lt;/p&gt;</description>
+<category>RUST</category>
+<author>사용자 시뻘건볼때기</author>
+<guid>https://maeng-dev.tistory.com/25</guid>
+<comments>https://maeng-dev.tistory.com/25#entry25comment</comments>
+<pubDate>Sun, 14 Apr 2019 16:47:57 +0900</pubDate>
+</item>
+<item>
+<title>러스트 20 - 예외처리 #1 : panic!</title>
+<link>https://maeng-dev.tistory.com/24</link>
+<description>&lt;p style=&quot;text-align: left;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;러스트의 에러는 크게 두 가지로 나눈다.&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;Recoverable Errors : 복구 가능한 에러&lt;/li&gt;
+&lt;li&gt;Unrecoverable Errors : 복구 불가능한 에러&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;복구 가능한 에러의 경우에는 사용자에게 문제를 이야기하고 해당 요청을 재시도 할 수 있도록 한다.&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;복구 불가능한 에러는 버그의 종류(?)로써, Index를 벗어난다거나, 0으로 나누려고 하는 경우 등과 같이 뻑(?)나는 경우를 이야기 한다.&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4 style=&quot;text-align: left;&quot;&gt;&lt;b&gt;1. panic!&lt;/b&gt;&lt;/h4&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;panic! 매크로가 실행되면, 프로그램은 &lt;span style=&quot;color: #f41a18;&quot;&gt;실패 메시지&lt;/span&gt;를 출력하고, &lt;b&gt;&lt;span style=&quot;color: #f41a18;&quot;&gt;스택 해제&lt;/span&gt;&lt;/b&gt;와 더불어, &lt;b&gt;&lt;span style=&quot;color: #f41a18;&quot;&gt;정리&lt;/span&gt;&lt;/b&gt;하고 &lt;span style=&quot;color: #f41a18;&quot;&gt;종료&lt;/span&gt;시킨다.&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;blockquote data-ke-style=&quot;box&quot;&gt;&lt;b&gt;panic! 응답으로 인한&amp;nbsp;중단&amp;nbsp;혹은&amp;nbsp;스택 해제&lt;br /&gt;&lt;br /&gt;&lt;/b&gt;panic! 매크로가 실행되면, 프로그래램은 unwinding(해제)을 시작한다.&lt;br /&gt;이것은 러스트가 panic!을 마주친 함수들로부터 &lt;span style=&quot;background-color: #ffcd00;&quot;&gt;&lt;b&gt;스택을 거꾸로 체크해가면서 데이터를 정리&lt;/b&gt;&lt;/span&gt;한다는 의미다.&lt;br /&gt;이 작업은 상당히 많은 일을 해야한다.&lt;br /&gt;만약, 이 많은 일이 부담스럽다면, 즉각 중단(abort)이 있는데, 데이터 제거 없이 프로그램을 종료하는 것을 말한다. 이렇게 종료된 프로그램이 사용하던 메모리는 OS가 정리해주어야 한다.&lt;br /&gt;&lt;br /&gt;만약 프로젝트 내의 결과 바이너리를 최소화 하고 싶다면, Cargo.toml을 수정하면 된다.&lt;br /&gt;&lt;span style=&quot;color: #f41a18;&quot;&gt;[profile]&lt;/span&gt; 부분에서 &lt;span style=&quot;color: #f41a18;&quot;&gt;panic = 'abort'&lt;/span&gt;를 추가하면 된다.&lt;/blockquote&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;panic!을 사용해 보자.&lt;/ul&gt;
+&lt;pre id=&quot;code_1555225295704&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;fn main() {
+    panic!(&quot;EXCUTION! : 예외처리!!!&quot;);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/c3IX3n/btquzGLydmm/IOVphqHKAiTozjN7cnkuHK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/c3IX3n/btquzGLydmm/IOVphqHKAiTozjN7cnkuHK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fc3IX3n%2FbtquzGLydmm%2FIOVphqHKAiTozjN7cnkuHK%2Fimg.png' data-filename=&quot;캡처.PNG&quot; width=&quot;858&quot; height=&quot;39&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;에러 메시지에도 친절하게 stack backtrace라고 나오면서, 스택이 정리되는 로깅도 주르륵 보인다.&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4 style=&quot;text-align: left;&quot;&gt;&lt;b&gt;2. Backtrace&lt;/b&gt;&lt;/h4&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;백트레이스를 알아보기 전에 panic!이 발생될 때 어떻게 되는지 먼저 알아보자.&lt;/p&gt;
+&lt;pre id=&quot;code_1555225640896&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;fn main() {
+    let v = vec![1, 2, 3];
+
+    v[99];
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;백터는 3가지의 element를 가지고 있지만, 100번째의 element에 접근하고 있다. 이 때, 러스트는 패닉을 일으킨다.&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;진정 러스트가 뱉는 메시지는 다음과 같다.&lt;/p&gt;
+&lt;blockquote data-ke-style=&quot;normal&quot;&gt;thread 'main' panicked at '&lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;index out of bounds: the len is 3 but the index is 99&lt;/b&gt;&lt;/span&gt;', libcore\slice\mod.rs:2448:10 stack backtrace:&lt;/blockquote&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;심지어 라이브러리 위치와 파일, 코드 라인까지, &quot;length가 3인데 99 index에 접근하고 있어서 index가 벗어났다.&quot; 라고 확실하고 친절하게 다 알려준다. (지금까지 이런 컴파일러는 없었다. 컴파일러인가 사람인가)&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;해당 위치로 가보면 panic!이 실행되는 코드일 것이다.&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;logging된 것을 잘 보면 RUST_BACKTRACE 환경 변수를 설정해서 에러의 원인을 정확하게 파악한 백트레이스를 얻을 수 있다고 알려준다. 백트레이스는 어떠한 지점에 도달하기 위해 호출된 모든 함수의 리스트를 말한다. (상위 내용에서 언급했 듯이, 스택을 거꾸로 올라가면서 체크한다는 이야기가 바로 이 부분...)&lt;/p&gt;
+&lt;p style=&quot;text-align: left;&quot;&gt;&amp;nbsp;&lt;/p&gt;</description>
+<category>RUST</category>
+<category>error</category>
+<category>exception</category>
+<category>Panic</category>
+<category>러스트</category>
+<category>백앤드</category>
+<category>에러</category>
+<category>예외</category>
+<category>예외처리</category>
+<category>코딩</category>
+<category>프로그래밍</category>
+<author>사용자 시뻘건볼때기</author>
+<guid>https://maeng-dev.tistory.com/24</guid>
+<comments>https://maeng-dev.tistory.com/24#entry24comment</comments>
+<pubDate>Sun, 14 Apr 2019 15:21:18 +0900</pubDate>
+</item>
+<item>
+<title>러스트 19 - Collections #2 : Hash Map</title>
+<link>https://maeng-dev.tistory.com/23</link>
+<description>&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;개인적으로 많은 Collection 중에 String 다음으로 가장 많이 사용했던 녀석이다.&lt;/p&gt;
+&lt;p&gt;HashMap&amp;lt;Key, Value&amp;gt; 형식을 가지고 있고 Key와 Value를 매핑시켜 관리하는 데이터 구조가 되겠다.&lt;/p&gt;
+&lt;p&gt;Key와 Value를 메모리 어디에 저장할지 결정하는 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;해쉬함수&lt;/b&gt;&lt;/span&gt;를 통해 동작한다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style2&quot; /&gt;
+&lt;pre id=&quot;code_1554035791404&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;use std::collections::HashMap;
+
+fn main() {
+    // HashMap 정의
+    let mut scores = HashMap::new();
+
+    // 값 삽입
+    scores.insert(String::from(&quot;BLUE&quot;), 1);
+    scores.insert(String::from(&quot;RED&quot;), 2);
+
+    // #1 전체 출력
+    println!(&quot;scores : {:?}&quot;, scores);
+
+    // #2 특정 값 출력
+    println!(&quot;===========================&quot;);
+    println!(&quot;BLUE : {:?}&quot;, scores.get(&quot;BLUE&quot;));
+    println!(&quot;RED : {:?}&quot;, scores.get(&quot;RED&quot;));
+
+    // #3 for문을 이용한 접근
+    println!(&quot;===========================&quot;);
+    for (key, value) in &amp;amp;scores {
+        println!(&quot;key : {}&quot;, key);
+        println!(&quot;value : {}&quot;, value);
+        println!();
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;여기서 기억해야 할 한 가지.&lt;/p&gt;
+&lt;p&gt;첫 줄에 use 구문이 있다는 것. 이것은 &quot;collections의 HashMap을 가져다 사용할꺼야~&quot;라는 뜻이다.&lt;/p&gt;
+&lt;p&gt;&quot;그런데 왜 String이나 직전 장에서 다루었던 벡터는 없을까?&quot;라는 의문이 들 지 모르겠다.&lt;/p&gt;
+&lt;p&gt;이 의문의 답은 다음과 같다.&lt;/p&gt;
+&lt;blockquote data-ke-style=&quot;normal&quot;&gt;HashMap은 사용 빈도가 적기 때문에 &lt;b&gt;Prelude&lt;/b&gt;에서 자동으로 가져오는 기능에 포함되어 있지 않다.&lt;/blockquote&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;(사실 어느 분야의 개발인지, 혹은 개발자 성향, 코드 보수 등에 따라서 어떠한 데이터 구조를 사용해야 하는지 사람마다 다를 수 없는데.. 굳이 좋은 기능에서 제외할 필요가 있을까 라는 생각도 문득 든다...)&lt;/p&gt;
+&lt;p&gt;이 뿐만 아니라, HashMap의 경우에는 표준 라이브러리로부터 지원도 다른 컬렉션에 비해 적은 편이다.&lt;span style=&quot;color: #f41a18;&quot;&gt;(매크로가 없다..)&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;Key와 Value는 각각 같은 타입의 값을 가져야 하며 마찬가지로 힙 영역에 데이터가 쌓인다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;HashMap정의에 대해 같은 코드를 소개한다.&lt;/p&gt;
+&lt;pre id=&quot;code_1554036632651&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;    let teams = vec![String::from(&quot;BLUE&quot;), String::from(&quot;RED&quot;)];
+    let initial_scores = vec![1, 2];
+
+    let scores: HashMap&amp;lt;_, _&amp;gt; = teams.iter().zip(initial_scores.iter()).collect();&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;벡터를 이용하여 HashMap을 정의하는 방법이다.&lt;/p&gt;
+&lt;p&gt;Key가 될 녀석을과 Value가 될 녀석을을 각각 벡터로 선언하고, Iterator를 사용하여 HashMap을 만든다.&lt;/p&gt;
+&lt;p&gt;zip(Iter&amp;lt;T&amp;gt;)의 경우 Key와 Value를 한 쌍이 되도록 벡터를 생성할 수 있다.&lt;/p&gt;
+&lt;p&gt;collect()의 경우, 벡터를 HashMap으로 변환할 수 있다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style2&quot; /&gt;
+&lt;p&gt;보통 HashMap은 DOS 공격에 저항하기 위해 암호화적으로 보안 이슈로 사용 된다.&lt;/p&gt;
+&lt;p&gt;이 것은 가장 빠른 해싱 알고리즘이 아니다. 따라서 만약 코드를 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;프로피일링&lt;/b&gt;&lt;/span&gt;하여 다른 해시를 지정하면 다른 함수로 전환이 가능하다.(&lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;Hasher&lt;/b&gt;&lt;/span&gt;)&lt;/p&gt;
+&lt;p&gt;Hasher는 &lt;b&gt;BuildHasher&lt;/b&gt; 특성을 구현한 타입을 이야기한다. &lt;b&gt;Hasher&lt;/b&gt;의 경우 만들 수는 있겠지만, &lt;a href=&quot;https://crates.io/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;&lt;u&gt;Crates&lt;/u&gt;&lt;/a&gt;에서 제공되고 있다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;※ 러스트에서 제공하는 표준 컬렉션 목록&lt;/b&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;BinaryHeap&lt;/li&gt;
+&lt;li&gt;Bound&lt;/li&gt;
+&lt;li&gt;BtreeMap&lt;/li&gt;
+&lt;li&gt;BtreeSet&lt;/li&gt;
+&lt;li&gt;HashMap&lt;/li&gt;
+&lt;li&gt;HashSet&lt;/li&gt;
+&lt;li&gt;LinkedList&lt;/li&gt;
+&lt;li&gt;VecDeque&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;</description>
+<category>RUST</category>
+<category>HashMap</category>
+<category>rust</category>
+<category>개발</category>
+<category>개발자</category>
+<category>데이터구조</category>
+<category>백앤드</category>
+<category>컬렉션</category>
+<category>코딩</category>
+<category>프로그래머</category>
+<category>해쉬맵</category>
+<author>사용자 시뻘건볼때기</author>
+<guid>https://maeng-dev.tistory.com/23</guid>
+<comments>https://maeng-dev.tistory.com/23#entry23comment</comments>
+<pubDate>Sun, 31 Mar 2019 22:05:21 +0900</pubDate>
+</item>
+<item>
+<title>러스트 18 - Collections #1 : Vector</title>
+<link>https://maeng-dev.tistory.com/22</link>
+<description>&lt;p&gt;언제나 그렇듯 대부분의 언어는 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;컬렉션&lt;/b&gt;&lt;/span&gt;이라 불리는 데이터 구조를 제공한다.&lt;/p&gt;
+&lt;p&gt;우리가 공부했던 &lt;a href=&quot;https://maeng-dev.tistory.com/9&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;&lt;u&gt;&amp;lt;변수와 타입 #2&amp;gt;&lt;/u&gt;&lt;/a&gt;튜플과 배열과는 다르게, &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;힙 영역에 저장&lt;/b&gt;&lt;/span&gt;된다.&lt;/p&gt;
+&lt;p&gt;즉, &lt;b&gt;Compile Time&lt;/b&gt;에 데이터 크기를 알 필요가 없다는 뜻이 되며, 크기 &lt;b&gt;확장&lt;/b&gt; 혹은 &lt;b&gt;축소&lt;/b&gt;가 가능하다는 이야기다.&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;(우리가 공부할 각 컬렉션의 성격이 조금씩 다르니, 적절하게 사용할 수 있는 능력을 기르는 것이 옳다고 생각된다.)&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;이번 장에서 다룰 컬렉션은 &lt;span style=&quot;background-color: #ffcd00;&quot;&gt;&lt;b&gt;Vector(벡터)&lt;/b&gt;&lt;/span&gt;다.&lt;/p&gt;
+&lt;ul style=&quot;list-style-type: disc;&quot; data-ke-list-type=&quot;disc&quot;&gt;
+&lt;li&gt;메모리상에서 이웃되도록 모든 값을 넣는 &lt;b&gt;단일 데이터 구조&lt;/b&gt;에 하나 이상의 값을 저장할 수 있도록 한다.&lt;/li&gt;
+&lt;li&gt;같은 타입의 값만을 저장 가능하다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style2&quot; /&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;벡터 정의 및 사용&lt;/p&gt;
+&lt;pre id=&quot;code_1554012795976&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;fn main() {
+    // vector 정의
+    let mut vector: Vec&amp;lt;i32&amp;gt; = Vec::new();
+
+    // vector에 값 삽입
+    vector.push(1);
+    vector.push(2);
+    vector.push(3);
+
+    // vector 출력
+    println!(&quot;vector : {:?}&quot;, vector);
+
+    // vector에서 값 제거
+    vector.pop();
+    println!(&quot;vector : {:?}&quot;, vector);
+
+    vector.pop();
+    println!(&quot;vector : {:?}&quot;, vector);
+
+    vector.pop();
+    println!(&quot;vector : {:?}&quot;, vector);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/nSjff/btqtZNZcHLz/59cy78DV5C2ofRtqAzmFG0/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/nSjff/btqtZNZcHLz/59cy78DV5C2ofRtqAzmFG0/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FnSjff%2FbtqtZNZcHLz%2F59cy78DV5C2ofRtqAzmFG0%2Fimg.png' data-filename=&quot;blob&quot; width=&quot;367&quot; height=&quot;69&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;처음 언급한 바와 같이, i32타입을 저장할 것이라는 타입 명시만 있을 뿐, 크기는 지정하지 않았다.&lt;/p&gt;
+&lt;p&gt;사실 코드를 더 줄일 수 있다.&lt;/p&gt;
+&lt;pre id=&quot;code_1554013410832&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;fn main() {
+    // vector 정의
+    let mut vector = vec![1, 2, 3];
+
+    // vector 출력
+    println!(&quot;vector : {:?}&quot;, vector);
+
+    // vector에서 값 제거
+    vector.pop();
+    println!(&quot;vector : {:?}&quot;, vector);
+
+    vector.pop();
+    println!(&quot;vector : {:?}&quot;, vector);
+
+    vector.pop();
+    println!(&quot;vector : {:?}&quot;, vector);
+
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;러스트는 편리함을 제공해주기 위해 매크로를 제공한다. 같은 역할을 하는 코드지만, 상당히 축소된 것을 볼 수 있다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style2&quot; /&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;이번엔 특정 값에 접근하는 방법 두 가지를 다뤄보자.&lt;/p&gt;
+&lt;pre id=&quot;code_1554014187486&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;fn main() {
+    // vector 정의
+    let vector = vec![1, 2, 3];
+
+    // vector 출력
+    println!(&quot;vector : {:?}&quot;, vector);
+
+    // vector 특정 값 접근 #1
+    let var1: &amp;amp;i32 = &amp;amp;vector[2];
+    // let var1: &amp;amp;i32 = &amp;amp;vector[100];               // Error 발생!!!
+    println!(&quot;var1 : {}&quot;, var1);
+
+    // vector 특정 값 접근 #2
+    let var2: Option&amp;lt;&amp;amp;i32&amp;gt; = vector.get(2);
+    // let var2: Option&amp;lt;&amp;amp;i32&amp;gt; = vector.get(100);    // None 반환
+    println!(&quot;var2 : {:?}&quot;, var2);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;[idx]를 이용한 방법(#1)&lt;/span&gt;과 &lt;span style=&quot;color: #333333;&quot;&gt;Vec.get(int idx)를 이용한 방법(#2)&lt;/span&gt;이 있다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;#1의 경우 out of index가 발생할 경우 error를 떨구기 때문에, 좋지 않은 접근 방법이라고 볼 수 있다.&lt;/p&gt;
+&lt;p&gt;#2의 경우 None이 리턴되어 &lt;span style=&quot;color: #333333;&quot;&gt;어떻게든&lt;span&gt;&amp;nbsp;&lt;/span&gt;&lt;/span&gt;비벼볼 수 있는 상황이 된다.&lt;/p&gt;
+&lt;p&gt;즉, 항상, index로 무언가 접근할 경우 &lt;b&gt;None&lt;/b&gt;을 적극적으로 활용하여 &lt;u&gt;&lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;ERROR발생을 최소화&lt;/b&gt;&lt;/span&gt;&lt;/u&gt; 하자!!!&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style2&quot; /&gt;
+&lt;p&gt;&lt;u&gt;&lt;a href=&quot;https://maeng-dev.tistory.com/17&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;&amp;lt;러스트 13 - 구조체 #1&amp;gt;&lt;/a&gt;&lt;/u&gt;에서 다루었던 Borrowing에 대해 기억이 나지 않아서 다시 공부하고 왔다... 왜냐하면 지금 다시 나올 예정이니까...ㅎㅎㅎㅎㅎ&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;프로그램이 유효한 레퍼런스를 가지고 있을 경우 borrow checker는 이 레퍼런스와 벡터 내용에 대한 다른 레퍼런스가 유효하도록 &lt;span style=&quot;color: #f41a18;&quot;&gt;&lt;b&gt;소유권 및 빌림 규칙을 시행&lt;/b&gt;&lt;/span&gt;한다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;상위 코드의 #1방법으로 접근 한 뒤, vector를 사용해보자.&lt;/p&gt;
+&lt;pre id=&quot;code_1554015101662&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;fn main() {
+    // vector 정의
+    let mut vector = vec![1, 2, 3];
+
+    // vector 출력
+    println!(&quot;vector : {:?}&quot;, vector);
+
+    // vector 특정 값 접근 #1
+    let var1: &amp;amp;i32 = &amp;amp;vector[2];
+    // let var1: &amp;amp;i32 = &amp;amp;vector[100];               // Error 발생!!!
+    println!(&quot;var1 : {}&quot;, var1);
+
+    vector.push(99);
+
+    // vector 특정 값 접근 #2
+    // let var2: Option&amp;lt;&amp;amp;i32&amp;gt; = vector.get(2);
+    // let var2: Option&amp;lt;&amp;amp;i32&amp;gt; = vector.get(100);    // None 반환
+    // println!(&quot;var2 : {:?}&quot;, var2);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/k4fIP/btqt0aGEF8L/XyK5LWJ1FgEaLZveqqKvfK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/k4fIP/btqt0aGEF8L/XyK5LWJ1FgEaLZveqqKvfK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fk4fIP%2Fbtqt0aGEF8L%2FXyK5LWJ1FgEaLZveqqKvfK%2Fimg.png' data-filename=&quot;캡처1.PNG&quot; width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;빌림을 다루는 장에서 이것저것 많은 것을 해보면 이 에러 메시지를 많이 보았을 것 같다.&lt;/p&gt;
+&lt;p&gt;이 메시지는 rust가 &quot;야 너 이거 빌려줘놓고 왜 사용하려고 해? 안돼. 쓰지마.&quot;라고 이야기 해주는 것.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style2&quot; /&gt;
+&lt;p&gt;for문을 이용한 벡터의 모든 값 접근.&lt;/p&gt;
+&lt;pre id=&quot;code_1554015462784&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;fn main() {
+    let mut vector = vec![1, 2, 3, 50, 100];
+
+    // 벡터의 값 일정하게 변경
+    for i in &amp;amp;mut vector {
+        *i *= 3;
+    }
+
+    // 각 값 출력 #1
+    println!(&quot;vector : {:?}&quot;, vector);
+
+    // 각 값 출력 #2
+    // for i in &amp;amp;vector {
+    //     println!(&quot;vector : {}&quot;, i);
+    // }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;(개인적으로 출력에 대해서는 #1이 내 입맛에 맞다.&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;#2의 경우,&amp;nbsp; 출력 만을 위해 for문이 들어가는 것이 맘에 들지 않는다. 만일, for문 안에서 값 변경이나 혹은 특정한 로직이 시행 된 후에 출력을 함께 하는 것이라면 #2가 맞지만, 출력만을 위해서 존재하는 것이라면 #1이 맞다고 본다.)&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style2&quot; /&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;구조체와 같은 데이터 구조와 달리, 같은 타입의 데이터만을 저장할 수 있는 벡터는 불편하게 느낄 수 있을지 모르겠다.&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;우리는 어렵게 다루었던 열거형을 이용하여 이 제약을 풀 수 있을지 모른다!&lt;/p&gt;
+&lt;pre id=&quot;code_1554016690334&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;    enum SpreadsheetCell {
+        Int(i32),
+        Float(f64),
+        Text(String),
+    }
+
+    let row = vec![
+        SpreadsheetCell::Int(3),
+        SpreadsheetCell::Text(String::from(&quot;blue&quot;)),
+        SpreadsheetCell::Float(10.12),
+    ];&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;정수와 실수, 문자열을 담을 수 있게 되었다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;이와 같이 러스트가 Compile Time에 벡터 내에 저장되는 타입을 알아야할 필요가 있기 때문에 각 요소를 저장하기 위해 힙 메모리 영역이 얼마나 필요한지 알 수 있다.&lt;/p&gt;
+&lt;p&gt;(코드에서 이 벡터가 어떤 유형을 담는지 명시적으로 알 수 있다는 이점도 있다.)&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;</description>
+<category>RUST</category>
+<category>Collection</category>
+<category>rust</category>
+<category>vector</category>
+<category>개발</category>
+<category>개발일지</category>
+<category>개발자</category>
+<category>메모리</category>
+<category>벡터</category>
+<category>컬렉션</category>
+<category>프로그래머</category>
+<author>사용자 시뻘건볼때기</author>
+<guid>https://maeng-dev.tistory.com/22</guid>
+<comments>https://maeng-dev.tistory.com/22#entry22comment</comments>
+<pubDate>Sun, 31 Mar 2019 16:22:36 +0900</pubDate>
+</item>
+<item>
+<title>러스트 17 - if let</title>
+<link>https://maeng-dev.tistory.com/21</link>
+<description>&lt;p&gt;이번 장에서는 코드를 보다 간결하게 제어하기 위한 &lt;span style=&quot;color: #b00800;&quot;&gt;&lt;b&gt;&lt;i&gt;&quot;&lt;span style=&quot;color: #f41a18;&quot;&gt;if let&quot;&lt;/span&gt;&lt;/i&gt;&lt;/b&gt;&lt;/span&gt;이라는 녀석을 알아본다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;if let 구문은 하나의 패턴과 일치하는 값을 처리하고 나머지는 무시할 수 있도록 해준다.&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;(간결한 이유 인가?라는 의문이 생긴다..)&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&quot;어떠한 옵션 값을 매칭 시켜, 그 값이 특정 값일 경우에만 코드를 실행시키고 싶다!&quot;라고 한다면 내 생각에는 두 가지의 방법이 있을 수 있다.&lt;/p&gt;
+&lt;p&gt;지금 부터 간결하고도 간편한 방법. if let을 소개한다.&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;다음 코드를 보자&lt;/p&gt;
+&lt;pre id=&quot;code_1553949837865&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;fn main() {
+    let var = 3;
+    let some_u8_value = Some(var);
+
+    // 첫 번째 방법
+    match some_u8_value {
+        Some(3) =&amp;gt; println!(&quot;three&quot;),
+        _ =&amp;gt; (),
+    }
+
+    // 두 번째 방법
+    if let Some(3) = some_u8_value {
+        println!(&quot;three&quot;);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;if let 구문은 표현식을 받는다. 작동 원리는 기본적으로 match와 동일하다.&lt;/p&gt;
+&lt;p style=&quot;font-size: 0.81em;&quot;&gt;&lt;span style=&quot;color: #333333;&quot;&gt;(만약 var의 값이 바뀐다면 output이 없을 것이다.)&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;표현식은 match에 주어지고 패턴은 첫 arm과 같다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;match가 실행하는 &lt;span style=&quot;color: #f41a18;&quot;&gt;철저한 checking&lt;/span&gt;은 실행되지 않는다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;단순하게 코드의 길이가 짧아져서 타이핑하는 횟수 혹은 시간이 줄어드는 것 보다, 표준 코드가 줄어드는 것이 큰 메리트 이지 않을까 싶다.&lt;/p&gt;
+&lt;p&gt;지금은 코드의 길이가 짧고 출력만 하고 있어서 크게 와 닿지는 않는다. 하지만 덩치가 커질 수록 첫 번째 방법 보다는 두 번째 방법을 선호하게 될 듯 싶다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;설마 했지만...&lt;span style=&quot;color: #f41a18;&quot;&gt;else&lt;/span&gt;문도 포함 시킬 수 있더라....?ㄷㄷ&lt;/p&gt;
+&lt;p&gt;if let else는 match문에서 &quot;_&quot;와 동일한 역할을 하지.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;다음 코드를 보자.&lt;/p&gt;
+&lt;pre id=&quot;code_1553951924008&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;    let mut count = 0;
+    // 첫 번째 방법
+    match coin {
+        Coin::Quarter(state) =&amp;gt; println!(&quot;State quarter from {:?}!&quot;, state),
+        _ =&amp;gt; count += 1,
+    }
+
+    // 두 번째 방법
+    if let Coin::Quarter(state) = coin {
+        println!(&quot;State quarter from {:?}!&quot;, state);
+    } else {
+        count += 1;
+    }&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;흔하게 사용하는 if의 syntax와 비슷하여 내심 다행이라고 생각이 된다...ㅎㅎㅎ&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;</description>
+<category>RUST</category>
+<category>Cargo</category>
+<category>if let</category>
+<category>rust</category>
+<category>개발자</category>
+<category>백앤드</category>
+<category>코딩</category>
+<category>흐름제어</category>
+<author>사용자 시뻘건볼때기</author>
+<guid>https://maeng-dev.tistory.com/21</guid>
+<comments>https://maeng-dev.tistory.com/21#entry21comment</comments>
+<pubDate>Sat, 30 Mar 2019 22:21:11 +0900</pubDate>
+</item>
+<item>
+<title>러스트 16 - 열거형 #2</title>
+<link>https://maeng-dev.tistory.com/20</link>
+<description>&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&quot;&lt;b&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;&lt;i&gt;match&lt;/i&gt;&lt;/span&gt;&lt;/b&gt;&quot;라고 하는 흐름 제어 연산자가 있다.&lt;/p&gt;&lt;p&gt;&lt;i&gt;match&lt;/i&gt; 표현식은 열거형과 함께 사용되는 경우, 열거형 &lt;i&gt;variants&lt;/i&gt;에 따라 다른 코드가 실행되며 해당 코드는 일치하는 값 내부의 데이터를 사용할 수 있다.&lt;/p&gt;&lt;p&gt;(쉽게 이해하면 마치 패턴 매칭...?)&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;txc-textbox&quot; style=&quot;border-style: solid; border-width: 1px; border-color: rgb(238, 238, 238); background-color: rgb(238, 238, 238); padding: 10px;&quot;&gt;&lt;p&gt;fn main() {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; enum Coin {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Penny,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Nickel,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Dime,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Quarter,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; fn value_in_cents(coin: Coin) -&amp;gt; u32 {&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(166, 166, 166);&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // match 표현식&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; match coin {&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(166, 166, 166);&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // arms&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(166, 166, 166);&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // {표현식} =&amp;gt; value&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Coin::Penny =&amp;gt; 1,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Coin::Nickel =&amp;gt; 5,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Coin::Dime =&amp;gt; 10,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Coin::Quarter =&amp;gt; 25,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;i&gt;match &lt;/i&gt;표현식의 예를 보면 &lt;i&gt;coin&lt;/i&gt;이라는 &lt;i&gt;match&lt;/i&gt;가 존재 하고 그 안에 &lt;i&gt;arms&lt;/i&gt;들이 나열되어 있으며 &lt;i&gt;arms&lt;/i&gt;의 포맷은 &quot;표현식 =&amp;gt; &lt;i&gt;value&lt;/i&gt;&quot;형태다.&lt;/p&gt;&lt;p&gt;이 표현식이 실행될 때, 결과 값을 각 &lt;i&gt;arms&lt;/i&gt;의 패턴과 &lt;b&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;순서대로 비교&lt;/span&gt;&lt;/b&gt;한다. 패턴이 값과 매치가 되면, 그 패턴과 연관되어 있는 코드가 실행된다. 반대로 매치가 안되면, 다음 &lt;i&gt;arm&lt;/i&gt;으로 계속 된다.&amp;nbsp;&lt;i&gt;arm&lt;/i&gt;의 개수는 필요한 만큼.(제한이 없는 것 같다.)&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;솔직히 아직 이해가 안된다. 각 arm들을 가지고 패턴을 매치 시킨다는 것은 알겠는데....&lt;/p&gt;&lt;p&gt;다음 코드를 보면 바로 알 수 있다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;txc-textbox&quot; style=&quot;border-style: solid; border-width: 1px; border-color: rgb(238, 238, 238); background-color: rgb(238, 238, 238); padding: 10px;&quot;&gt;&lt;p&gt;fn main() {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; enum Coin {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Penny,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Nickel,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Dime,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Quarter,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; fn value_in_cents(coin: Coin) -&amp;gt; u32 {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; match coin {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Coin::Penny =&amp;gt; {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; println!(&quot;penny&quot;);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; 1&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; },&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Coin::Nickel =&amp;gt; {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; println!(&quot;nickel&quot;);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; 2&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; },&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Coin::Dime =&amp;gt; {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; println!(&quot;dime&quot;);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; 3&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; },&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Coin::Quarter =&amp;gt; {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; println!(&quot;quarter&quot;);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; 4&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; },&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let penny = value_in_cents(Coin::Penny);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let nickel = value_in_cents(Coin::Nickel);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let dime = value_in_cents(Coin::Dime);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let quarter = value_in_cents(Coin::Quarter);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp;&amp;nbsp;println!(&quot;=====================================&quot;);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; println!(&quot;penny : {}&quot;, penny);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; println!(&quot;nickel : {}&quot;, nickel);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; println!(&quot;dime : {}&quot;, dime);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; println!(&quot;quarter : {}&quot;, quarter);&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:636px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99F62F375C9780DA28&quot; filemime=&quot;image/jpeg&quot; filename=&quot;캡처.PNG&quot; height=&quot;265&quot; style=&quot;&quot; width=&quot;636&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;변수에 값을 할당 했을 뿐인데 &lt;i&gt;match&lt;/i&gt;에 실행되도록 사용한 &lt;i&gt;println&lt;/i&gt;이 실행이 되었다.&lt;/p&gt;&lt;p&gt;즉, 표현식이 실행이 되면, 컴파일러는 &lt;i&gt;match&lt;/i&gt;에서 해당 표현식을 순차적으로 찾는다. 매칭이 되면 해당 &lt;i&gt;arm&lt;/i&gt;이 값을 리턴한다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;i&gt;Option&lt;/i&gt;도 사용해보자.&lt;/p&gt;&lt;div class=&quot;txc-textbox&quot; style=&quot;border-style: solid; border-width: 1px; border-color: rgb(238, 238, 238); background-color: rgb(238, 238, 238); padding: 10px;&quot;&gt;&lt;p&gt;fn main() {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; fn plus_one(x: Option&amp;lt;i32&amp;gt;) -&amp;gt; Option&amp;lt;i32&amp;gt; {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; match x {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; None =&amp;gt; None,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Some(i) =&amp;gt; Some(i + 1),&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let five = Some(5);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let six = plus_one(five);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let none = plus_one(None);&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; println!(&quot;five : {:?}&quot;, five);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; println!(&quot;six : {:?}&quot;, six);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; println!(&quot;none : {:?}&quot;, none);&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:579px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/992971375C97837B39&quot; filemime=&quot;image/jpeg&quot; filename=&quot;캡처1.PNG&quot; height=&quot;139&quot; style=&quot;&quot; width=&quot;579&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;</description>
+<category>RUST</category>
+<author>사용자 시뻘건볼때기</author>
+<guid>https://maeng-dev.tistory.com/20</guid>
+<comments>https://maeng-dev.tistory.com/20#entry20comment</comments>
+<pubDate>Sun, 24 Mar 2019 22:26:49 +0900</pubDate>
+</item>
+<item>
+<title>러스트 15 - 열거형 #1</title>
+<link>https://maeng-dev.tistory.com/19</link>
+<description>&lt;p&gt;&lt;i&gt;&lt;b&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;enum&lt;/span&gt;&lt;/b&gt;(Enumeration)&lt;/i&gt;은 예전에 &lt;i&gt;java&lt;/i&gt;를 공부할 때 처음 알게되었고 직접 개발할 때 사용해본 경험은 없다. 그 &lt;i&gt;enum&lt;/i&gt;이 &lt;i&gt;rust&lt;/i&gt;에도 있다는 것.&lt;/p&gt;&lt;p&gt;&quot;열거형&quot;이라고 부르는 &lt;i&gt;enum&lt;/i&gt;은 말 그대로 &quot;&lt;b&gt;값을 열거해서 유형을 &lt;i&gt;define&lt;/i&gt;한 것&lt;/b&gt;&quot;이다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;다음 코드를 보자.&lt;/p&gt;&lt;div class=&quot;txc-textbox&quot; style=&quot;border-style: solid; border-width: 1px; border-color: rgb(238, 238, 238); background-color: rgb(238, 238, 238); padding: 10px;&quot;&gt;&lt;p&gt;fn main() {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &lt;span style=&quot;color: rgb(116, 116, 116);&quot;&gt;// Family enum 정의&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; enum Family {&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(116, 116, 116);&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // variants #1&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Mother,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Father,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Brother,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Sister,&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(116, 116, 116);&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // variants #2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Mother(String),&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Father(String),&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Brother(String),&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Sister(String),&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(116, 116, 116);&quot;&gt;&amp;nbsp; &amp;nbsp; // 접근 #1&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let mother = Family::Mother;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let father = Family::Father;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(116, 116, 116);&quot;&gt;&amp;nbsp; &amp;nbsp; // 접근 #2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let mother = Family::Mother(String::from(&quot;Ray&quot;));&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let father = Family::Father(String::from(&quot;Marco&quot;));&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(116, 116, 116);&quot;&gt;&amp;nbsp; &amp;nbsp; // 접근 #3&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(116, 116, 116);&quot;&gt;&amp;nbsp; &amp;nbsp; //&amp;nbsp;let mother = Family::Mother(String::from(&quot;Ketty&quot;), String::from(&quot;Maeng&quot;));&lt;/span&gt;&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;열거되는 녀석들을&amp;nbsp;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;&quot;&lt;/span&gt;&lt;i&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;variant&lt;/span&gt;&lt;/i&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;&quot;&lt;/span&gt;라고 부른다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;구조체와 비교를 해보자.&lt;/p&gt;&lt;p&gt;1. 내가 알고 있는 &lt;i&gt;enum&lt;/i&gt;의 모습은 #1의 모습이다. 하지만 #2처럼 &lt;i&gt;rust&lt;/i&gt;에서는 &lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;&lt;b&gt;데이터를&amp;nbsp;정해줄 수 있다.&amp;nbsp;&lt;/b&gt;&lt;/span&gt;물론 #3처럼 두 가지 이상 까지도 가능하다.&lt;/p&gt;&lt;p&gt;2. 메소드 정의 및 사용이&amp;nbsp;가능하다.&lt;/p&gt;&lt;div class=&quot;txc-textbox&quot; style=&quot;border-style: solid; border-width: 1px; border-color: rgb(238, 238, 238); background-color: rgb(238, 238, 238); padding: 10px;&quot;&gt;&lt;p&gt;fn main() {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; enum Today {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Sleep, &lt;span style=&quot;color: rgb(116, 116, 116);&quot;&gt;// 유닛 variant&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Go_to { x: i32, y: i32 },&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Eat(String),&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &lt;span style=&quot;color: rgb(116, 116, 116);&quot;&gt;// String value를 갖는 variant&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Speak(i32, i32, i32), &lt;span style=&quot;color: rgb(116, 116, 116);&quot;&gt;// i32 value 3개를 닺는 variant&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; impl Today {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; fn print_(&amp;amp;self) {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; println!(&quot;Good LUCK!!!&quot;);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let today = Today::Eat(String::from(&quot;Pasta&quot;));&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; today.print_();&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;열겨형에는 타입이 또 있다....&amp;nbsp;(읭? 타입이 두개라고....? 맘에 안드는데....ㅠㅠ)&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;background-color: rgb(250, 237, 125);&quot;&gt;&quot;&lt;/span&gt;&lt;i&gt;&lt;span style=&quot;background-color: rgb(250, 237, 125);&quot;&gt;Option&lt;/span&gt;&lt;/i&gt;&lt;span style=&quot;background-color: rgb(250, 237, 125);&quot;&gt;&quot;&lt;/span&gt;&lt;/b&gt;이라는 타입의 열거형인데. 상당히 많이 사용되고 있는 녀석인 것 같다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;지금까지 공부하면서 가장 흔하디 흔한 &lt;b&gt;&lt;i&gt;null&lt;/i&gt; &lt;/b&gt;혹은 &lt;i&gt;&lt;b&gt;undefined &lt;/b&gt;&lt;/i&gt;녀석이 보이질 않는다..이미 등장 하기엔 너무나도 늦었다.&lt;/p&gt;&lt;p&gt;그렇다. &lt;b&gt;러스트는 없다.&lt;/b&gt; 좋은 점도 있지만 좋지 않은 점도 분명히 있을 것 같다...&lt;/p&gt;&lt;p&gt;그러나 이제 곧 공부할 &lt;i&gt;Option&lt;/i&gt;이라는 타입의 &lt;i&gt;enum&lt;/i&gt;은 &lt;b&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;값이 있을 수 있고 없을 수 있다.&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;분명 러스트에는 null값이 없다고......(짜증)&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;코드를 통해 알아보자..&lt;/p&gt;&lt;div class=&quot;txc-textbox&quot; style=&quot;border-style: solid; border-width: 1px; border-color: rgb(238, 238, 238); background-color: rgb(238, 238, 238); padding: 10px;&quot;&gt;&lt;p&gt;fn main() {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &lt;span style=&quot;color: rgb(166, 166, 166);&quot;&gt;// 표준 라이브러리&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; enum Option&amp;lt;T&amp;gt; {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Some(T),&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; None,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let not_null = Some(&quot;이 것은 값이 있습니다.&quot;);&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let null : Option&amp;lt;String&amp;gt; = None;&amp;nbsp; &amp;nbsp; &lt;span style=&quot;color: rgb(166, 166, 166);&quot;&gt;// error&lt;/span&gt;&lt;/p&gt;&lt;p&gt;}&lt;br /&gt;&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;자세히 알아보니 Option은 우리가 만들어서 사용하지 않는다.(표준 라이브러리에 포함됨)&lt;/p&gt;&lt;p&gt;완벽히 이해 하려면 시간이 걸릴 듯 싶다... 이게 왜 필요한지, 왜 많이 사용 되는지... &lt;i&gt;null&lt;/i&gt;이 없는데 값이 있는지 없는지 체크를 왜하지...?&lt;/p&gt;&lt;p&gt;무튼... &lt;i&gt;Option&lt;/i&gt;은 &lt;a href=&quot;https://doc.rust-lang.org/std/option/enum.Option.html&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;&lt;u&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;라이브러리 &lt;/span&gt;&lt;i&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;Docs&lt;/span&gt;&lt;/i&gt;&lt;/u&gt;&lt;/a&gt;&lt;i&gt;&lt;/i&gt;에 나와 있으니 참고 하면 될 것 같다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;i&gt;Option variants&lt;/i&gt;에 접근 하는 방법이 다르고 &amp;lt;T&amp;gt;라고 하는 새로운 녀석이 보인다. (&lt;i&gt;Generic Type&lt;/i&gt; 파라미터다.)&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;(우리가 변수를 선언할 때 보통 초기화(사람마다 다르고 때에 따라 다르지만, String일 경우 &quot;&quot; 혹은 null, int일 경우 0 등)를 하게 되는데 이 때 사용하는 녀석인가...??? 긁적긁적)&lt;/p&gt;&lt;p&gt;&lt;i&gt;Option&lt;/i&gt;의 &lt;i&gt;None&lt;/i&gt;이 &lt;b&gt;&lt;i&gt;null&lt;/i&gt;을 의미&lt;/b&gt; 하는 것 같은데...&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;i&gt;Rust Document&lt;/i&gt;에 의하면 다음과 같은 이유가 있다.&lt;/p&gt;&lt;div class=&quot;txc-textbox&quot; style=&quot;border-style: solid; border-width: 1px; border-color: rgb(238, 238, 238); background-color: rgb(238, 238, 238); padding: 10px;&quot;&gt;&lt;p&gt;&quot;Option&amp;lt;T&amp;gt;&quot; and &quot;T&quot; (where &quot;T&quot; can be any type) are different types, the compiler won’t let us use an &quot;Option&amp;lt;T&amp;gt;&quot; value as if it were definitely a valid value. For example, this code won’t compile because it’s trying to add an i8 to an &quot;Option&amp;lt;i8&amp;gt;&quot;:&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(166, 166, 166);&quot;&gt;// 직역&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&quot;Option&amp;lt;T&amp;gt;&quot; 와 &quot;T&quot; (&quot;T&quot;는 모든 타입이 될 수 있음)는 다른 타입이고, 컴파일러는 &quot;Option&amp;lt;T&amp;gt;&quot;값을 명확하게 유효한 값처럼 사용하지 못하도록 합니다. 예를 들면, 아래 코드는 &quot;Option&amp;lt;i8&amp;gt;&quot; 에 &quot;i8&quot; 을 더하려고 하기 때문에 컴파일되지 않을 것입니다.&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&quot;Option&amp;lt;T&amp;gt;와 &amp;lt;T&amp;gt;는 다르기 때문에 error다.&quot; 라는 이야기 인 것 같다.&lt;/p&gt;&lt;p&gt;전에 언급하였듯이, 컴파일러는 우리가 항상 유효한 값을 가지도록 보장해준다. 그 말은 즉슨 값을 사용하기 전에 &quot;값이 있는지 없는지 확인할 필요가 없다.&quot; 라는 것. 다만... Option&amp;lt;T&amp;gt;이 사용되고 있을 경우에만 확인이 되어야 한다. 따라서, &lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;&lt;b&gt;컴파일러&lt;/b&gt;&lt;/span&gt;는 값을 사용하기 전에 이러한 케이스를 &lt;b&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;처리해&lt;/span&gt;&lt;/b&gt; 줄 것이다.&lt;/p&gt;&lt;p&gt;값이 없을 수도 있는 변수가 있다면 반드시 명시적으로 Option&amp;lt;T&amp;gt;로 만들어 주자.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;blockquote class=&quot;tx-quote-tistory&quot;&gt;&lt;p&gt;이 것은 null을 너무 많이 사용하는 문제를 제한하고, &lt;b&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;러스트 코드의 안정성&lt;/span&gt;&lt;/b&gt;을 높여준다.&lt;br /&gt;&lt;/p&gt;&lt;/blockquote&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;러스트에서의 &lt;i&gt;enum&lt;/i&gt;은 구조체와 상당히 비교되는 건 사실이다. 어떤게 좋고 나쁘고를 따지지 않고 상황에 맞게 더 좋은 성능을 낼 수 있도록 사용하면 될 것 같다.&lt;/p&gt;&lt;p&gt;당연히 매 순간 &lt;i&gt;null&lt;/i&gt;값 주의하자...&lt;/p&gt;</description>
+<category>RUST</category>
+<author>사용자 시뻘건볼때기</author>
+<guid>https://maeng-dev.tistory.com/19</guid>
+<comments>https://maeng-dev.tistory.com/19#entry19comment</comments>
+<pubDate>Sun, 24 Mar 2019 01:21:44 +0900</pubDate>
+</item>
+<item>
+<title>러스트 14 - 구조체 #2 : 메소드</title>
+<link>https://maeng-dev.tistory.com/18</link>
+<description>&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;메소드(&lt;i&gt;Method&lt;/i&gt;)는 함수와 유사하게도 &quot;fn&quot; 키워드와 메소드 명으로 선언하게 되며, 파라미터와 반환되는 값을 가진다.&lt;/p&gt;&lt;p&gt;하지만! 메소드 라는 녀석은 &lt;b&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;구조체 컨텍스트&lt;/span&gt;&lt;/b&gt;(&lt;i&gt;Context&lt;/i&gt;)에 정의되는데, 첫 번째 파라미터는 항상 &quot;&lt;i&gt;&lt;b&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;self&lt;/span&gt;&lt;/b&gt;&lt;/i&gt;&quot;다. 이 새로운 녀석의 파라미터는 메소드가 호출되는&amp;nbsp;&lt;b&gt;&lt;span style=&quot;color: rgb(255, 0, 0);&quot;&gt;구조체의 인스턴스&lt;/span&gt;&lt;/b&gt;라고 생각하면 된다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;1. 메소드 정의&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;메소드를 정의해보자.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;txc-textbox&quot; style=&quot;border-style: solid; border-width: 1px; border-color: rgb(238, 238, 238); background-color: rgb(238, 238, 238); padding: 10px;&quot;&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(140, 140, 140);&quot;&gt;// 구조체 정의&lt;/span&gt;&lt;/p&gt;&lt;p&gt;struct Rectangle {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; length: u32,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; width: u32,&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(140, 140, 140);&quot;&gt;// 메소드 정의&lt;/span&gt;&lt;/p&gt;&lt;p&gt;impl Rectangle {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; fn area(&amp;amp;self) -&amp;gt; u32 {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; self.length * self.width&amp;nbsp; &amp;nbsp; &lt;span style=&quot;color: rgb(140, 140, 140);&quot;&gt;// 넓이 계산 : 가로 x 세로&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;fn main() {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let rect = Rectangle { length: 50, width: 30 };&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; println!(&quot;rect의 넓이는 {}입니다.&quot;, rect.area());&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:591px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99AC214E5C8503C02E&quot; filemime=&quot;image/jpeg&quot; filename=&quot;캡처4.PNG&quot; height=&quot;107&quot; width=&quot;591&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&quot;&lt;i&gt;Rectangle&lt;/i&gt;&quot; 컨텍스트 안에 함수를 정의하기 위해서는 &lt;i&gt;impl&lt;/i&gt;(&lt;i&gt;Implementation&lt;/i&gt;의 약자)를 사용한다. &lt;i&gt;impl &lt;/i&gt;블록 안에서 &lt;i&gt;area &lt;/i&gt;함수를 선언하게 되는데 위에서 언급한 바와 같이 &lt;i&gt;self&lt;/i&gt;가 등장했다. (뭔가 this 바인딩 같은 그런 느낌이 온다....ㅠㅠ)&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;모든 메소드 시그니처에서 &quot;&lt;i&gt;self&lt;/i&gt;&quot;를 반복하지 않아도 되고 조직화 관점에서 큰 이득을 가져다 주는 것이 메소드의 장점이라 할 수 있겠다.&lt;/p&gt;&lt;p&gt;만약 더 많은 함수를 넣고 싶다면 해당 메소드 안에 여러 종류의 함수를 추가하면 되겠다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;2. &lt;/span&gt;&lt;i&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;Associated &lt;/span&gt;&lt;/i&gt;&lt;span style=&quot;font-size: 14pt;&quot;&gt;함수&lt;/span&gt;&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;i&gt;impl &lt;/i&gt;블록의 또 다른 기능이 있다.&lt;/p&gt;&lt;p&gt;&lt;i&gt;self&lt;/i&gt;를 파라미터로 사용하지 않는 &lt;i&gt;impl&lt;/i&gt;블록 내에서 함수를 정의할 수 있다는 것. 이런 함수를 연관(&lt;i&gt;Associated&lt;/i&gt;)&amp;nbsp;함수라고 한다.&lt;/p&gt;&lt;p&gt;연관 함수는 주로 새로운 구조체의 &lt;span style=&quot;background-color: rgb(250, 237, 125);&quot;&gt;인스턴스를 반환해주는 생성자&lt;/span&gt;로 사용된다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;예를 들어 위 예제를 활용하여 연관 함수를 사용해 보는 코드이다.&lt;/p&gt;&lt;div class=&quot;txc-textbox&quot; style=&quot;border-style: solid; border-width: 1px; border-color: rgb(238, 238, 238); background-color: rgb(238, 238, 238); padding: 10px;&quot;&gt;&lt;p&gt;struct Rectangle {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; length: u32,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; width: u32,&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;impl Rectangle {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; fn area(&amp;amp;self) -&amp;gt; u32 {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; self.length * self.width&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; fn square(size: u32) -&amp;gt; Rectangle {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Rectangle {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; length: size,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; width: size,&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; }&lt;/p&gt;&lt;p&gt;}&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;fn main() {&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; let square = Rectangle::square(100);&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &amp;nbsp; println!(&quot;square 넓이 : {}&quot;, square.area());&lt;/p&gt;&lt;p&gt;}&lt;br /&gt;&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;hr&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;구조체 안에 어떠한 필드를 넣고 어떠한 메소드, 함수 등 넣고 빼고 지지고 볶고 개발자 마음대로 커스텀이 가능하다.&lt;br /&gt;&lt;/p&gt;&lt;p&gt;그 만큼 알아보기 쉽고, 특성에 따라 잘 나누어서 구조체를 활용하면 충분히 명확하고 좋은 코드를 짤 수 있을 것같다.&lt;/p&gt;</description>
+<category>RUST</category>
+<author>사용자 시뻘건볼때기</author>
+<guid>https://maeng-dev.tistory.com/18</guid>
+<comments>https://maeng-dev.tistory.com/18#entry18comment</comments>
+<pubDate>Sun, 10 Mar 2019 21:55:17 +0900</pubDate>
+</item>
+</channel>
+</rss>

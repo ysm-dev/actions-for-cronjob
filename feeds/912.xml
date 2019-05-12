@@ -1,0 +1,3773 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Posts on 조은우 개발 블로그</title>
+        <link>/posts/</link>
+        <description>Recent content in Posts on 조은우 개발 블로그</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>ko-kr</language>
+        <copyright>Jonnung</copyright>
+        <lastBuildDate>Sun, 14 Apr 2019 17:18:08 +0900</lastBuildDate>
+        <atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
+        
+        <item>
+            <title>챗봇 구축을 위한 Serverless 서비스, AWS Lex 개념과 구성 요소</title>
+            <link>/posts/2019-04-14-serverless-aws-lex-basic/</link>
+            <pubDate>Sun, 14 Apr 2019 17:18:08 +0900</pubDate>
+            
+            <guid>/posts/2019-04-14-serverless-aws-lex-basic/</guid>
+            <description>개인적인 학습 배경 이야기 서버리스(Serverless)는 일반적인 웹서버나 WAS(Web Application Server) 또는 Database 같은 백엔드를 구성할 때 직접 물리적인 서버 구축부터 설치, 운영까지 담당하지 않고, 클라우드 환경에서 제공하는 관리형 서비스를 이용하거나 함수(Function, 기능 로직) 단위로 실행할 수 있는 서비스형 환경을 의미한다.
+대표적인 예로 AWS Lambda는 FaaS(Function as a Service) 형태의 서버리스에 속하고, AWS S3 나 DynamoDB 도 서버리스라고 할 수 있다.
+개인적인 생각으로 서버리스는 변화가 빠른 시대에 사용자들의 여러가지 요구사항을 빠르게 반영하고, 새로운 시도할 때 모든 것을 A부터 Z까지 만들수 없기 때문이지 않을까 생각한다.</description>
+            <content type="html"><![CDATA[
+
+<h2 id="개인적인-학습-배경-이야기">개인적인 학습 배경 이야기</h2>
+
+<p><strong>서버리스(Serverless)</strong>는 일반적인 웹서버나 WAS(Web Application Server) 또는 Database 같은 백엔드를 구성할 때 직접 물리적인 서버 구축부터 설치, 운영까지 담당하지 않고, 클라우드 환경에서 제공하는 관리형 서비스를 이용하거나 함수(Function, 기능 로직) 단위로 실행할 수 있는 서비스형 환경을 의미한다.</p>
+
+<p>대표적인 예로 AWS Lambda는 FaaS(Function as a Service) 형태의 서버리스에 속하고, AWS S3 나 DynamoDB 도 서버리스라고 할 수 있다.</p>
+
+<p>개인적인 생각으로 서버리스는 변화가 빠른 시대에 사용자들의 여러가지 요구사항을 빠르게 반영하고, 새로운 시도할 때 모든 것을 A부터 Z까지 만들수 없기 때문이지 않을까 생각한다. 따라서 기본적인 개념과 활용 능력은 필수로 익혀두는게 좋지 되지 않을까 생각한다.</p>
+
+<p>현재 재직중인 회사는 초기부터 프라이빗 클라우드 환경에서 온프레미스 형태로 서비스를 운영하고 있었다. 하지만 얼마전부터 작은 비율로라도 클라우드 환경에 이중화를 진행하고 있다.
+그리고 최근 데이터 수집과 적재 업무를 진행 했었는데 AWS S3 → Glue → Athena를 이용해 간단한 데이터 처리 파이프라인을 구축 해보면서 클라우드 환경의 서버리스에 맛을 봤었다.</p>
+
+<p>그러던 중 페이스북을 통해 &ldquo;<em><a href="https://www.coursera.org/learn/aws-fundamentals-building-serverless-applications/home/info">AWS Fundamentals: Building Serverless Applications</a></em>&rdquo; 코세라 강좌를 알게 되면서 다양한 서버리스를 체험하고 학습할 수 있을 것 같아서 시작하게 되었다.</p>
+
+<hr />
+
+<blockquote>
+<p>이 포스트는 위에서 소개한 코세라 강좌의 1주차에 나오는 <strong>AWS Lex</strong>에 대한 개념과 주요 구성 요소에 대한 설명이다.</p>
+</blockquote>
+
+<h2 id="aws-lex">AWS Lex</h2>
+
+<p>챗봇이 사람의 질문(요청)에 응답하는 과정에는 3가지 과정이 반드시 필요하다.</p>
+
+<ol>
+<li>자동 음성 인식 (ASR: Automatic Speech Recognition)</li>
+<li>자연어 처리 (NLU: Natural-Language Understanding)</li>
+<li>텍스트를 음성으로 변환 (Text to Speech)</li>
+</ol>
+
+<p><strong>Lex</strong>는 쉽게 챗봇을 개발하기 위해 음성을 텍스트로 변환하는 자동 음성 인식(ASR)과 텍스트의 의도를 파악하는 자연어 처리(NLU)를 제공하는 관리형 서버리스이다.</p>
+
+<p>아쉽게도 아직까지는 4개 리전에서만 사용 가능하고, 언어는 <strong>영어</strong>만 지원한다.</p>
+
+<h2 id="구성-요소">구성 요소</h2>
+
+
+    <img src="/images/aws_lex_editor-4a94a434-442c-45b1-9d3f-6bc7cd2cc261.png"  class="center"  style="border-radius: 8px; box-shadow: 0px 0px 13px 2px rgba(0,0,0,0.3);"  />
+
+
+
+<ul>
+<li><strong>Intent</strong> : 봇을 통해 사용자가 얻고자 하는 정보 목적(의도)</li>
+<li><strong>Utterances</strong> : 봇에게 전달되는 사용자의 요청. Intent 중에 하나와 매칭된다.</li>
+<li><strong>Prompt</strong> : Utterance를 통해 얻은 정보가 부족하다면 사용자에게 다시 물어볼 수 있다.</li>
+<li><strong>Slot</strong> : Intent를 충족 시키기 위해 반드시 필요한 정보. 모든 슬롯의 대답을 받아야 Intent를 완전히 충족 시킬 수 있다.
+
+<ul>
+<li>Custom Slot type → Slot Resolution
+
+<ul>
+<li><code>Expand Values</code> 사용자로부터 전달받은 실제 값이 학습 데이터로 사용되고, 사용된 값으로 슬롯이 채워진다.</li>
+<li><code>Restrict to Slot values and Synonyms</code> 나열된 슬롯 값과 일치하는 사용자 데이터만 슬롯으로 사용된다. 동의어(synonyms)와 일치하는 경우에도 해당 슬롯으로 결정된다.</li>
+</ul></li>
+</ul></li>
+<li><strong>Fullfillment</strong> : Intent가 완전히 충족 되었을 때 수행되는 비지니스 로직</li>
+<li><strong>Version</strong> : bot, intent, slot은 각각 버전이 관리된다. 버전은 봇이 서비스될 환경(dev, beta, prod)에 따라 다르게 제공될 수 있다.</li>
+<li><strong>Build &amp; Publish</strong> : Intent를 저장하고 빌드해야 머신 러닝 모델이 준비된다.  Intent의 새 버전은 빌드 후 생성된다. 매번 Intent 마다 버전을 지정해서 봇을 배포할 필요없이 버전에 <strong>Alias</strong>를 지정해서 배포할 수 있다.(예: <code>prod</code>)</li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>젠킨스(Jenkins)에서 파이썬 가상환경(venv) 세팅 가이드 (feat. pyenv)</title>
+            <link>/python/2019/04/04/jenkins-pyenv-python-job/</link>
+            <pubDate>Thu, 04 Apr 2019 21:24:30 +0900</pubDate>
+            
+            <guid>/python/2019/04/04/jenkins-pyenv-python-job/</guid>
+            <description>젠킨스(Jenkins)에서 파이썬 스크립트를 실행할 때 아래와 같이 명령어를 실행하는 것이 보통이다.
+$ python run_script.py  이 때 실행되는 파이썬 환경은 해당 젠킨스 서버에 설치된 시스템(글로벌) 파이썬이 호출된다. (예: /usr/bin/python)
+프로젝트마다 의존하는 파이썬 패키지가 다르고, 드문 경우지만 파이썬 버전도 다를 수 있다.
+파이썬에서는 이런 상황을 위해서 Virtual Environment라는 가상 환경을 통해 패키지와 실행을 격리 시킬 수 있는 샌드박스를 제공한다.
+하지만 젠킨스에서 파이썬 가상환경을 설정하고, 스크립트를 실행하는 과정은 생각보다 쉽지 않다. 그리고 우리가 원하는 모든 기능을 만족 시키는 젠킨스 플러그인도 없다.</description>
+            <content type="html"><![CDATA[
+
+<p>젠킨스(Jenkins)에서 파이썬 스크립트를 실행할 때 아래와 같이 명령어를 실행하는 것이 보통이다.</p>
+
+<pre><code class="language-bash">$ python run_script.py
+</code></pre>
+
+<p>이 때 실행되는 파이썬 환경은 해당 젠킨스 서버에 설치된 시스템(글로벌) 파이썬이 호출된다. (예: /usr/bin/python)</p>
+
+<p>프로젝트마다 의존하는 파이썬 패키지가 다르고, 드문 경우지만 파이썬 버전도 다를 수 있다.<br />
+파이썬에서는 이런 상황을 위해서 <strong><a href="https://docs.python.org/ko/3.7/glossary.html#term-virtual-environment">Virtual Environment</a></strong>라는 가상 환경을 통해 패키지와 실행을 격리 시킬 수 있는 샌드박스를 제공한다.</p>
+
+<p>하지만 젠킨스에서 파이썬 가상환경을 설정하고, 스크립트를 실행하는 과정은 생각보다 쉽지 않다. 그리고 우리가 원하는 모든 기능을 만족 시키는 젠킨스 플러그인도 없다.</p>
+
+<p>이 포스트에서는 보통 virtualenv 또는 venv로 알려진 파이썬 가상환경을 이용해서 비교적 간단하게 젠킨스 Job 안에서 파이썬을 안전하게 실행 할 수 있는 방법을 설명한다.</p>
+
+<p><br></p>
+
+<h2 id="사전-준비">사전 준비</h2>
+
+<p>사실 아직까지 파이썬2를 사용하는 레거시 시스템이 없다면, 거의 대부분은 파이썬3 환경에서 작업이 이뤄질 것이다. 하지만 Ubuntu 16.04 경우 기본 설치된 파이썬 버전이 <code>Python3.5</code> 이기 때문에 <code>Python3.6</code>이나 <code>Python3.7</code>을 사용 하려면 새로 설치해야 한다.</p>
+
+<p>이 과정을 쉽게 해결하기 위해 <em><a href="https://github.com/pyenv/pyenv">pyenv</a></em> 라는 오픈소스를 활용한다.<br />
+그리고 젠킨스에서도 pyenv를 실행할 수 있도록 <a href="https://wiki.jenkins-ci.org/display/JENKINS/Pyenv+Plugin">pyenv 젠킨스 플러그인</a>을 설치해야 한다.</p>
+
+<p><br></p>
+
+<h2 id="젠킨스-작업-freestyle-project-만들기">젠킨스 작업(Freestyle project) 만들기</h2>
+
+<p>보통 많이 사용하는 <em>Freestyle project</em> 타입으로 새로운 작업(job)을 생성한다.</p>
+
+
+    <img src="/images/jenkins_new_freestyle_job.png"  alt="jenkins_new_freestyle_job"  class="center"  style="border-radius: 8px; box-shadow: 0px 0px 13px 2px rgba(0,0,0,0.3);"  />
+
+
+
+<p><br>
+젠킨스 pyenv 플러그인을 설치 했다면 &lsquo;<em>빌드 환경</em>&rsquo; 탭에서 아래와 같이 &lsquo;<em>pyenv build wrapper</em>&rsquo; 설정이 가능하다.<br />
+&lsquo;<em>Preinstall pip list</em>&rsquo; 항목에 설치하고 싶은 파이썬 패키지명을 명시할 수 있지만, 가급적 좀 더 관리가 쉽게 소스코드 프로젝트에 포함된 <code>requirements.txt</code>를 활용하는 것이 좋다.</p>
+
+
+    <img src="/images/jenkins_freestyle_job_build_environment.png"  alt="jenkins_freestyle_job_build_environment"  class="center"  style="border-radius: 8px; box-shadow: 0px 0px 13px 2px rgba(0,0,0,0.3);"  />
+
+
+
+<p><br>
+마지막으로 파이썬 가상환경(virtualenv)와 파이썬 패키지 설치를 하기 위한 Bash 구문과 명령어를 추가한다.</p>
+
+
+    <img src="/images/jenkins_freestyle_job_execute_shell.png"  alt="jenkins_freestyle_job_execute_shell"  class="center"  style="border-radius: 8px; box-shadow: 0px 0px 13px 2px rgba(0,0,0,0.3);"  />
+
+
+
+<p><br>
+<strong>(1) 파이썬 가상환경 셋업 및 패키지 설치</strong></p>
+
+<pre><code class="language-bash"># 파이썬 가상환경 셋업 및 패키지 설치
+if [ ! -d &quot;$WORKSPACE/venv&quot; ]; then
+  python -m venv venv;
+ 
+  if [ -f $WORKSPACE/requirements.txt ]; then
+    . $WORKSPACE/venv/bin/activate;
+    pip3 install -r requirements.txt;
+  fi
+fi
+</code></pre>
+
+<p>젠킨스 작업을 빌드할 때 실행되는 작업 경로는 <code>$WORKSPACE</code> 라는 환경변수에 저장된다.<br />
+이 경로에 소스코드도 함께 있기 때문에 이 경로를 기준으로 파이썬 가상환경을 셋업한다.</p>
+
+<p>python 3.3 빌트인 모듈로 추가된 <strong>venv</strong>를 사용해서 가상환경을 만든다.
+해당 프로젝트에 <code>requirements.txt</code> 파일이 있는 경우 <code>$ pip install</code> 을 실행한다.</p>
+
+<p><br>
+<strong>(2) 파이썬 가상환경 활성화 및 파이썬 모듈 경로 지정</strong></p>
+
+<pre><code class="language-bash"># 파이썬 가상환경 활성화
+. $WORKSPACE/venv/bin/activate;
+ 
+# 파이썬 시스템 모듈 경로 추가
+export PYTHONPATH=$WORKSPACE;
+ 
+# 파이썬 인터프리터 경로 지정
+export PYTHONBIN=`which python`;
+ 
+ 
+# 실행할 명령어를 입력하세요!
+# ex. $PYTHONBIN greeting.py --user=jonnung
+</code></pre>
+
+<p>전 단계에서 설치한 가상환경(venv)를 활성화하고, 파이썬이 <code>$WORKSPACE</code> 경로에 있는 모듈들을 찾을 수 있도록 <code>PYTHONPATH</code> 환경변수를 설정한다.<br />
+<code>PYTHONBIN</code> 환경변수는 현재 파이썬 가상환경에 설치된 파이썬 인터프리터 위치를 저장한 임시 환경변수 이다.</p>
+
+<p><br></p>
+
+<h2 id="꿀팁-추가">🍯 꿀팁 추가</h2>
+
+<p>위 과정이 적용된 템플릿용 프로젝트를 미리 만들어 두고 새로운 프로젝트를 시작할 때 복사해서(Copy from) 사용하면 정신 건강에 좋다. 😜</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>RabbitMQ 동작 이해하기</title>
+            <link>/rabbitmq/2019/02/06/about-amqp-implementtation-of-rabbitmq/</link>
+            <pubDate>Wed, 06 Feb 2019 17:17:00 +0900</pubDate>
+            
+            <guid>/rabbitmq/2019/02/06/about-amqp-implementtation-of-rabbitmq/</guid>
+            <description>RabbitMQ 동작 이해하기 비동기 작업 큐(예: Celery)를 사용하려면 중간 단계에 Broker 라고 부르는 메시지 큐가 항상 등장한다.
+메시지 큐에는 RabbitMQ, ActiveMQ, ZeroMQ, Kafaka 등이 대표적이다.
+이 포스트는 AMQP를 구현한 RabbitMQ 내부 구성과 동작 방식을 이해하기 위한 설명이다.
+
+🐰 RabbitMQ RabbitMQ 는 얼랭(Erlang)으로 AMQP 를 구현한 메시지 브로커 시스템이다.
+
+AMQP 클라이언트가 메시지 미들웨어 브로커와 통신할 수 있게 해주는 메세징 프로토콜이다. Broker Producers -&amp;gt; [Exchange -- Binding --&amp;gt; Queue] -&amp;gt; Consumers</description>
+            <content type="html"><![CDATA[
+
+<h2 id="rabbitmq-동작-이해하기">RabbitMQ 동작 이해하기</h2>
+
+<p>비동기 작업 큐(예: Celery)를 사용하려면 중간 단계에 Broker 라고 부르는 메시지 큐가 항상 등장한다.</p>
+
+<p>메시지 큐에는 RabbitMQ, ActiveMQ, ZeroMQ, Kafaka 등이 대표적이다.</p>
+
+<p>이 포스트는 AMQP를 구현한 RabbitMQ 내부 구성과 동작 방식을 이해하기 위한 설명이다.</p>
+
+<p><br></p>
+
+<h2 id="rabbitmq">🐰 RabbitMQ</h2>
+
+<p><a href="https://www.rabbitmq.com/">RabbitMQ</a> 는 얼랭(Erlang)으로 <a href="https://ko.wikipedia.org/wiki/AMQP">AMQP</a> 를 구현한 메시지 브로커 시스템이다.</p>
+
+<p><br></p>
+
+<h2 id="amqp">AMQP</h2>
+
+<p>클라이언트가 메시지 미들웨어 브로커와 통신할 수 있게 해주는 <strong>메세징 프로토콜</strong>이다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">                          Broker
+Producers -&gt; [Exchange -- Binding --&gt; Queue] -&gt; Consumers</code></pre></div></p>
+
+<p>메시지를 발행하는 <strong>Producer 에서 Broker 의 Exchange 로 메시지를 전달</strong>하면, <strong>Binding 이라는 규칙에 의해  연결된  Queue 로 메시지가 복사</strong>된다.</p>
+
+<p>메시지를 받아가는 <strong>Consumer 에서는 브로커의 Queue를 통해 메시지를 받아가서 처리한다.</strong></p>
+
+<p>AMQP 에는 네트워크에 문제가 있거나, 메시지를 처리하지 못하는 경우를 대비해 2가지 수신 확인 모델을 갖추고 있다.</p>
+
+<p>하나는 Consumer 는 메시지를 받으면 명시적으로 broker 에게 통지하고, 브로커는 이 알림을 받았을 때만 Queue 에서 메시지를 삭제한다. 다른 하나는 Broker 가 메시지를 전달하면 자동으로 삭제하는 방식이다.</p>
+
+<p><br></p>
+
+<h2 id="exchange-와-queue-를-연결하는-bindings">Exchange 와 Queue 를 연결하는 Bindings</h2>
+
+<p>모든 메시지는 Queue 로 직접 전달되지 않고, 반드시 <strong>Exchange 에서 먼저 받는다.</strong> 그리고 <strong>Exchange Type</strong> 과 <strong>Binding</strong> 규칙에 따라 적절한 <strong>Queue 로 전달된다.</strong> 아래와 같은 속성을 갖는다.</p>
+
+<ul>
+<li>Name : Exchange 이름</li>
+<li>Type : 메시지 전달 방식
+
+<ol>
+<li><strong>Direct Exchange</strong></li>
+<li><strong>Fanout Exchange</strong></li>
+<li><strong>Topic Exchange</strong></li>
+<li><strong>Headers Exchange</strong></li>
+</ol></li>
+<li>Durability : 브로커가 재시작 될 때 남아 있는지 여부(<code>durable</code>, <code>transient</code>)</li>
+<li>Auto-delete : 마지막 Queue 연결이 해제되면 삭제</li>
+</ul>
+
+<p><img src="/images/rabbitmq-exchange.png" alt="" /></p>
+
+<p><br></p>
+
+<h3 id="bindings">🔗Bindings</h3>
+
+<p>생성된 Exchange 에는 전달 받은 메시지를 원하는 Queue 로 전달하기 위해 Bindings 이라는 규칙을 정의할 수 있다.</p>
+
+<p>간단하게 목적지 Queue 이름만으로도 Binding 을 추가할 수 있고, 일부 Exchange type 에 따라 routing key 를 지정해서 메시지를 필터링 한 후 지정한 Queue 로 보내도록 정의할 수 있다.</p>
+
+<p><br></p>
+
+<h2 id="여러가지-exchange-type-알아보기">여러가지 Exchange Type 알아보기</h2>
+
+<h3 id="direct-exchange">•Direct Exchange</h3>
+
+<p>메시지에 포함된 <strong>routing key</strong> 를 기반으로 Queue 에 메시지를 전달한다.</p>
+
+<p>아래 그림에서 Exchange <code>X</code>는 2개의 Queue 와 연결되어 있는 것을 볼 수 있다.</p>
+
+<p>Q1은 <code>orange</code> 라는 <strong>binding key</strong> 로 연결되고, Q2는 <code>black</code>, <code>green</code> 2개의 binding key 로 연결된다.</p>
+
+<p><img src="https://www.rabbitmq.com/img/tutorials/direct-exchange.png" alt="" /></p>
+
+<p>Exchange <code>X</code>로 전달된 메시지의 routing key가  <code>orange</code> 인 경우 Q1으로 전달되고,  <code>black</code>, <code>green</code>인 경우 Q2로 전달된다. 그밖에 다른 메시지는 무시된다.</p>
+
+<p><em>Default Exchange</em> 는 이름이 없는 Direct Exchange 한 형태이다. Default Exchange 는 전달될 목적지 Queue 이름과 동일한 routing key 를 부여한다.</p>
+
+<p><br></p>
+
+<h3 id="fanout-exchange">•Fanout Exchange</h3>
+
+<p>routing key 관계없이 연결된 모든 Queue에 동일한 메시지를 전달한다.</p>
+
+<p><br></p>
+
+<h3 id="topic-exchange">•Topic Exchange</h3>
+
+<p>routing key 전체가 일치 하거나 일부 패턴과 일치하는 모든 Queue 로 메시지가 전달된다.</p>
+
+<p>여러 Consumer 에서 메시지 형태에 따라 선택적으로 수신 해야하는 경우와 같이 다양한 publish/subscribe 패턴 구현에 활용될 수 있다.</p>
+
+<p>Topic Exchange 에서 사용하는 binding key 는 점(.)으로 구분된 단어를 조합해서 정의한다.</p>
+
+<p><code>*</code> 와 <code>#</code>을 이용해 와일드 카드를 표현할 수 있으며, <code>*</code> 는 단어 하나 일치 <code>#</code> 는 0 또는 1개 이상의 단어 일치를 의미한다.</p>
+
+<p>다음과 같이 binding key 를 정의한 경우에 메시지의 routing key 가 <code>quick.orange.rabbit</code> 또는 <code>lazy.orange.elephant</code> 이면, Q1, Q2 둘 다 전달된다. <code>lazy.pink.rabbit</code> 는 binding key 2개와 일치 하더라도 1번만 전달된다.</p>
+
+<p><code>quick.brown.fox</code>, <code>quick.orange.male.rabbit</code> 는 일치하는 binding key 가 없기 때문에 무시된다.</p>
+
+<p><img src="https://www.rabbitmq.com/img/tutorials/python-five.png" alt="" /></p>
+
+<ul>
+<li><code>*.orange.*</code>  ← <code>quick.orange.rabbit</code>, <code>lazy.orange.elephant</code></li>
+<li><code>*.*.rabbit</code> ← <code>quick.orange.rabbit</code>, <code>lazy.pink.rabbit</code></li>
+<li><code>lazy.#</code> ← <code>lazy.orange.elephant</code>, <code>lazy.pink.rabbit</code></li>
+</ul>
+
+<p><br></p>
+
+<h3 id="headers-exchange">•Headers Exchange</h3>
+
+<p>메시지 헤더를 통해 binding key 만을 사용하는 것보다 더 다양한 속성을 사용할 수 있다.</p>
+
+<p>Header exchange를 사용하면 binding key는 무시되고, 헤더 값이 바인딩 시 지정된 값과 같은 경우에만 일치하는 것으로 간주한다.</p>
+
+<p><br></p>
+
+<h2 id="메시지를-보관하는-queue">메시지를 보관하는 Queue</h2>
+
+<p>Consumer 어플리케이션은 Queue 를 통해 메시지를 가져간다. Queue 는 반드시 미리 정의해야 사용할 수 있다.</p>
+
+<ul>
+<li>Name : queue 이름. <code>amq.</code> 로 시작하는 이름은 예약되어 사용할 수 없다.</li>
+<li>Durability : <code>durable</code> 은 브로커가 재시작 되어도 디스크에 저장되어 남아 있고, <code>transient</code> 으로 설정하면 브로커가 재시작 되면 사라진다. 단, Queue 에 저장되는 메시지는 내구성을 갖지 않는다.</li>
+<li>Auto delete : 마지막 Consumer 가 구독을 끝내는 경우 자동으로 삭제된다.</li>
+<li>Arguments : 메시지 TTL, Max Length 같은 추가 기능을 명시한다.</li>
+</ul>
+
+<p><img src="/images/rabbitmq-queue.png" alt="" /></p>
+
+<p><br></p>
+
+<h2 id="하나의-연결을-공유하는-channels">하나의 연결을 공유하는 Channels</h2>
+
+<p>Consumer 어플리케이션에서 Broker 로 많은 연결을 맺는 것은 바람직하지 않다.</p>
+
+<p>RabbitMQ는 <strong>Channel</strong> 이라는 개념을 통해 하나의 TCP 연결을 공유해서 사용할 수 있는 기능을 제공한다.</p>
+
+<p>하지만 멀티 스레드, 멀티 프로세스를 사용하는 작업에서는 각각 별도의 Channel 을 열고 사용하는 것이 바람직하다.</p>
+
+<p><br></p>
+
+<h2 id="환경-분리를-위한-virtual-hosts">환경 분리를 위한 Virtual Hosts</h2>
+
+<p>하나의 Broker 에서 운영 환경(ex. live, dev)에 따라 Users, Exchange, Queue 등을 각각 사용할 수 있는 Vhosts 컨셉을 갖고 있다.</p>
+
+<p>Vhosts 에 대한 좀 더 자세한 내용은 &lsquo;<a href="https://blog.jonnung.com/rabbitmq/2019/01/30/rabbitmq-installation-on-ubuntu/">Ubuntu 에서 RabbitMQ 설치하기</a>&rsquo; 를 참고하자.</p>
+
+<p><br></p>
+
+<h2 id="참고-자료">참고 자료</h2>
+
+<ul>
+<li><a href="https://www.rabbitmq.com/tutorials/amqp-concepts.html">https://www.rabbitmq.com/tutorials/amqp-concepts.html</a></li>
+<li><a href="https://www.rabbitmq.com/tutorials/tutorial-four-python.html">https://www.rabbitmq.com/tutorials/tutorial-four-python.html</a></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Ubuntu 에서 RabbitMQ 설치하기</title>
+            <link>/rabbitmq/2019/01/30/rabbitmq-installation-on-ubuntu/</link>
+            <pubDate>Wed, 30 Jan 2019 11:50:00 +0900</pubDate>
+            
+            <guid>/rabbitmq/2019/01/30/rabbitmq-installation-on-ubuntu/</guid>
+            <description>RabbitMQ 서버를 설치하는 가이드 이며, 공식 사이트를 바탕으로 Ubutu 16.04 환경에서 설치한다.
+Signing key 신뢰할 수 있는 최신 RabbitMQ 패키지를 설치하기 위해 repository에 signing key를 apt-key로 추가한다.
+$ apt-key adv --keyserver &amp;#34;hkps.pool.sks-keyservers.net&amp;#34; --recv-keys &amp;#34;0x6B73A36E6026DFCA&amp;#34; 
+Source List File RabbitMQ는 Erlang(얼랭)으로 개발 되었기 때문에 Erlang Package에 의존성을 갖는다.
+Erlang package와 RabbitMQ repository 위치를 /etc/apt/sources.list.d 폴더 하위에 저장한다.
+$ sudo tee /etc/apt/sources.list.d/bintray.rabbitmq.list &amp;lt;&amp;lt;EOF deb &amp;lt;https://dl.bintray.com/rabbitmq-erlang/debian&amp;gt; xenial erlang deb &amp;lt;https://dl.bintray.com/rabbitmq/debian&amp;gt; xenial main EOF</description>
+            <content type="html"><![CDATA[
+
+<p><strong>RabbitMQ</strong> 서버를 설치하는 가이드 이며, 공식 사이트를 바탕으로 Ubutu 16.04 환경에서 설치한다.</p>
+
+<h3 id="signing-key">Signing key</h3>
+
+<hr />
+
+<p>신뢰할 수 있는 최신 RabbitMQ 패키지를 설치하기 위해 repository에  signing key를 apt-key로 추가한다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ apt-key adv --keyserver <span style="color:#e6db74">&#34;hkps.pool.sks-keyservers.net&#34;</span> --recv-keys <span style="color:#e6db74">&#34;0x6B73A36E6026DFCA&#34;</span></code></pre></div>
+
+<p><br></p>
+
+<h3 id="source-list-file">Source List File</h3>
+
+<hr />
+
+<p>RabbitMQ는 Erlang(얼랭)으로 개발 되었기 때문에 Erlang Package에 의존성을 갖는다.<br />
+Erlang package와 RabbitMQ repository 위치를 <code>/etc/apt/sources.list.d</code> 폴더 하위에 저장한다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ sudo tee /etc/apt/sources.list.d/bintray.rabbitmq.list <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">deb &lt;https://dl.bintray.com/rabbitmq-erlang/debian&gt; xenial erlang
+</span><span style="color:#e6db74">deb &lt;https://dl.bintray.com/rabbitmq/debian&gt; xenial main
+</span><span style="color:#e6db74">EOF</span></code></pre></div>
+
+<p><br></p>
+
+<h3 id="erlang-packages-rabbitmq-server-설치하기">⭑ Erlang Packages, RabbitMQ Server 설치하기</h3>
+
+<hr />
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ sudo apt-get update
+$ sudo apt-get install rabbitmq-server</code></pre></div>
+
+<p><br></p>
+
+<h3 id="rabbitmq-server-시작">RabbitMQ Server 시작</h3>
+
+<hr />
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ service rabbitmq-server start</code></pre></div>
+
+<p><br></p>
+
+<h3 id="management-ui-플러그인-활성화">Management UI 플러그인 활성화</h3>
+
+<hr />
+
+<p>RabbitMQ는 Management 라는 UI 관리 도구를 제공한다.
+이 기능을 사용하기 위해서는 RabbitMQ Plugin을 활성화 시켜야 한다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ rabbitmq-plugins enable rabbitmq_management</code></pre></div>
+
+<p><br></p>
+
+<h3 id="management-ui-사용자-추가">Management UI 사용자 추가</h3>
+
+<hr />
+
+<p>Management UI를 사용하려면 로그인을 해야 하기 때문에 사용자를 추가해야 한다.</p>
+
+<p>기본적으로 guest(비번도 guest) 라는 사용자를 제공하지만 localhost에서만 접속할 수 있다는 제한이 있다.</p>
+
+<p>사용자를 추가한 후 <code>Tag</code>라는 것을 이용해서 Management 기능 사용에 대한 권한을 부여할 수 있다. Tag를 지정하지 않으면 Management를 사용할 수 없다.</p>
+
+<p>Tag 종류는 공식 가이드(<a href="https://www.rabbitmq.com/management.html#permissions">Management Plugin - Access and Permissions</a>)에서 더 확인 할 수 있고, 아래에서는 관리자(&lsquo;administrator&rsquo;) 권한을 사용했다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># 사용자 목록</span>
+$ rabbitmqctl list_users
+    
+<span style="color:#75715e"># 사용자 추가</span>
+$ rabbitmqctl add_user ewcho <span style="color:#e6db74">&#39;ewchorabbit&#39;</span>
+    
+<span style="color:#75715e"># 사용자 태그 추가</span>
+$ rabbitmqctl set_user_tags ewcho administrator</code></pre></div>
+
+<p><br></p>
+
+<h3 id="포트-설정">포트 설정</h3>
+
+<hr />
+
+<p>RabbitMQ는 클라이언트와 CLI Tool 연결을 위해 몇가지 포트를 사용한다.</p>
+
+<p>따라서 방화벽을 사용하고 있다면 아래 포트를 열어줘야 한다.</p>
+
+<ul>
+<li>4369 : <a href="http://erlang.org/doc/man/epmd.html">epmd</a>, 여러 rabbitmq 서버끼리 서로를 찾을 수 있는 네임 서버 역할을 하는 데몬에서 사용</li>
+<li>5672, 5671 : <a href="https://ko.wikipedia.org/wiki/AMQP">AMQP</a> 를 사용한 메시지 전달</li>
+<li>25672 : inter-node 와 CLI Tool 연결</li>
+<li>15672 : HTTP API, Management UI</li>
+</ul>
+
+<p><br></p>
+
+<h3 id="virtual-hosts">Virtual Hosts</h3>
+
+<hr />
+
+<p>RabbitMQ 는 connection, exchange, queue, binding, user, policy 들을 <strong>virtual hosts</strong> 를 통해 논리적인 그룹으로 분리해서 운영할 수 있다. Apache의 virtual hosts 와 Nginx의 server 블록과 유사한 개념이다.</p>
+
+<p>RabbitMQ 는 vhost 단위로 자원에 대한 권한을 갖는다. 따라서 사용자는 전체 권한을 갖을 수 없고 하나 이상의 vhost 단위로 권한을 부여 받는다.</p>
+
+<p>vhost 마다 이름이 지정되고, 클라이언트는 지정한 vhost 에 대한 연결을 맺는다. 이 연결을 통해 오직 해당 vhost의 exchange, queue, binding 만 접근할 수 있게 된다.</p>
+
+<p><br></p>
+
+<h3 id="vhost-만들기">vhost 만들기</h3>
+
+<hr />
+
+<p>CLI 또는 HTTP API를 통해 만들 수 있다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># CLI Tool 사용</span>
+$ rabbitmqctl add_vhost dev1</code></pre></div>
+
+<p><br></p>
+
+<h3 id="사용자에게-vhost-에-접근할-수-있도록-권한-주기">사용자에게 vhost 에 접근할 수 있도록 권한 주기</h3>
+
+<hr />
+
+<p>새로운 vhost는 기본 exchange가 설정되지만 다른 구성 요소나 사용자는 없는 상태이다.
+특정 사용자가 새로운 vhost 에 접속하기 위해서는 권한을 설정해야 한다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># set_permissions [-p vhost] user conf write read</span>
+$ rabbitmqctl set_permissions -p dev1 admin29cm <span style="color:#e6db74">&#34;.*&#34;</span> <span style="color:#e6db74">&#34;.*&#34;</span> <span style="color:#e6db74">&#34;.*&#34;</span></code></pre></div>
+
+<p><br></p>
+
+<h3 id="로그-관리">로그 관리</h3>
+
+<hr />
+
+<p>보통 <code>/var/log/rabbitmq</code> 경로에 로그가 남는다.</p>
+
+<p>그리고 로그 파일 로테이션을 위해 <code>logrotate</code> 를 사용해서 일주일 단위로 로테이션 되도록 설정된다. 이 설정은 <code>/etc/logrotate.d/rabbitmq-server</code> 에서 확인하고 변경할 수 있다.</p>
+
+<p><br></p>
+
+<h3 id="참고">참고</h3>
+
+<hr />
+
+<ul>
+<li><a href="https://www.rabbitmq.com/install-debian.html#package-dependencies">Installing on Debian and Ubuntu — RabbitMQ</a></li>
+<li><a href="https://www.rabbitmq.com/management.html">Management Plugin</a></li>
+<li><a href="https://www.rabbitmq.com/vhosts.html">Virtual Hosts</a></li>
+<li><a href="https://www.rabbitmq.com/rabbitmqctl.8.html">rabbitmqctl</a></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Django에서 pytest로 테스트하기 위한 기본기</title>
+            <link>/django/2018/12/30/pytest-django/</link>
+            <pubDate>Sat, 22 Dec 2018 11:37:00 +0900</pubDate>
+            
+            <guid>/django/2018/12/30/pytest-django/</guid>
+            <description>pytest-django 는 Django 프로젝트에서 pytest를 사용하기 위한 플러그인이다.
+pytest 와 pytest-django 는 Standard Django Test suite 와 Nose Test suite 호환 된다.
+단, 테스트 실행은 Django 의 manage.py test 를 사용하지 않고, pytest 명령어를 사용한다.
+manage.py를 사용하지 않는 이유는 unittest를 임포트해서 TestCase 클래스의 서브 클래스로 선언할 필요가 없고, 단순하게 테스트 함수만 작성하는 것만으로 테스트를 작성할 수 있기 때문이다. 그리고 Fixture 를 관리할 수 있는 편리함과 pytest 의 다양한 플러그인도 사용할 수 있다는 장점이 있다.</description>
+            <content type="html"><![CDATA[
+
+<p><strong>pytest-django</strong> 는 Django 프로젝트에서 <strong>pytest</strong>를 사용하기 위한 플러그인이다.<br />
+pytest 와 pytest-django 는 Standard Django Test suite 와  <a href="https://nose.readthedocs.io/en/latest/">Nose</a> Test suite 호환 된다.<br />
+단, 테스트 실행은 Django 의 <code>manage.py test</code> 를 사용하지 않고, <code>pytest</code> 명령어를 사용한다.<br />
+<code>manage.py</code>를 사용하지 않는 이유는 <code>unittest</code>를 임포트해서 <code>TestCase</code> 클래스의 서브 클래스로 선언할 필요가 없고, 단순하게 테스트 함수만 작성하는 것만으로 테스트를 작성할 수 있기 때문이다. 그리고 Fixture 를 관리할 수 있는 편리함과 pytest 의 다양한 플러그인도 사용할 수 있다는 장점이 있다.</p>
+
+<p><br></p>
+
+<h2 id="pytest-설치-및-설정하기">Pytest 설치 및 설정하기</h2>
+
+<hr />
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ pip install pytest-django</code></pre></div>
+
+<p>테스트를 실행할 때 Django 프로젝트의 설정을 사용하기 때문에 <code>pytest.ini</code> 파일에 아래와 같이 명시하거나 <code>--ds=your.settings</code> 또는 <code>DJANGO_SETTINGS_MODULE</code> 환경변수를 설정해야 한다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ini" data-lang="ini"><span style="color:#66d9ef">[pytest]</span>
+<span style="color:#a6e22e">DJANGO_SETTINGS_MODULE</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">yourproject.settings</span></code></pre></div></p>
+
+<p><br></p>
+
+<h2 id="python-path-관리">Python path 관리</h2>
+
+<hr />
+
+<p>pytest-django는 기본적으로 프로젝트의 manage.py 파일을 찾아보고, 그 디렉토리를 <a href="https://docs.python.org/3/library/sys.html#sys.path">python path</a>에 자동으로 추가한다.</p>
+
+<p><br></p>
+
+<h2 id="테스트-실행">테스트 실행</h2>
+
+<hr />
+
+<p><strong>pytest-django</strong> 는 <code>manage.py</code> 또는 <code>django-admin.py</code> 를 이용해 테스트를 실행하지 않고, 단독으로 <code>pytest</code> 명령어를 실행하는 방식을 사용한다.
+아래와 같이 실행 파라미터를 이용해 테스트를 실행할 대상 모듈과 디렉토리를 직접 지정할 수 있다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ pytest test_something.py a_directory</code></pre></div></p>
+
+<p><br></p>
+
+<h2 id="database-활용">Database 활용</h2>
+
+<hr />
+
+<p><strong>pytest-django</strong>는 테스트할 때 DB를 접근하는 것에 대해 보수적으로 다룬다. 따라서 기본적으로 테스트 과정에서 DB에 접근하려고 한다면 실패하게 될 것 이다.<br />
+테스트 하려는 대상에서 DB에 접근을 하려면, 반드시 정확하게 명시해야만 허용된다. (DB가 필요한 테스트를 최소화하는 것도 좋은 선택)</p>
+
+<p>테스트에서 DB 접근이 필요한 경우 pytset-django는 <a href="https://pytest.org/en/latest/mark.html">pytest mark</a>를 사용한다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pytest
+
+<span style="color:#a6e22e">@pytest.mark.django_db</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_my_user</span>():
+	me <span style="color:#f92672">=</span> User<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>get(username<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;me&#39;</span>)
+	<span style="color:#66d9ef">assert</span> me<span style="color:#f92672">.</span>is_superuser</code></pre></div></p>
+
+<p>클래스와 모듈 단위로 mark를 설정할 경우 모든 테스트에 적용할 수 있다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> pytest
+
+pytestmark <span style="color:#f92672">=</span> pytest<span style="color:#f92672">.</span>mark<span style="color:#f92672">.</span>django_db
+
+<span style="color:#a6e22e">@pytest.mark.django_db</span>
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">TestUsers</span>:
+    pytestmark <span style="color:#f92672">=</span> pytest<span style="color:#f92672">.</span>mark<span style="color:#f92672">.</span>django_db
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_my_user</span>(self):
+        me <span style="color:#f92672">=</span> User<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>get(username<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;me&#39;</span>)
+        <span style="color:#66d9ef">assert</span> me<span style="color:#f92672">.</span>is_superuser</code></pre></div></p>
+
+<p><br></p>
+
+<h4 id="트랜젝션">트랜젝션</h4>
+
+<p>Django 자체에 <code>TransactionTestCase</code> 클래스는 트랜젝션을 통해 격리된 상태에서 테스트를 수행하게 하고, 테스트를 마치면 DB 초기화 해준다. 하지만 이 상태에서 수행되는 테스트는 트랜젝션 중에 생성된 DB 데이터를 비우는 과정 때문에 매우 느리게 수행될 수 있다.</p>
+
+<p>이와 같은 기능을 사용하려면 django_db mark 에 <strong>Transaction=True</strong> 파라미터를 전달한다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#a6e22e">@pytest.mark.django_db</span>(transaction<span style="color:#f92672">=</span>True)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_spam</span>():
+    <span style="color:#66d9ef">pass</span></code></pre></div>
+
+<p><br></p>
+
+<h4 id="테스트-전용-database">테스트 전용 Database</h4>
+
+<p><code>--reuse-db</code> 은 데이터베이스를 재사용하기 위한 실행 옵션이고, <code>--create-db</code> 는 데이터베이스를 강제로 다시 생성하는 실행 옵션이다.</p>
+
+<p>처음 테스트를 실행할 때 <code>--reuse-db</code> 를 사용하면 새로운 테스트 전용 DB가 생성되는데 모든 테스트가 종료 되더라도 테스트 DB는 지워지지 않는다. 그리고 다음 테스트를 실행할 때 동일하게 <code>--reuse-db</code> 를 사용하면 이전 테스트DB를 다시 사용하게 된다.<br />
+이 옵션은 적은 테스트를 실행할 때나 DB 테이블이 많은 경우 유용한다.</p>
+
+<p><code>--reuse-db</code> 옵션을 기본 pytest.ini 옵션으로 지정하고, 테이블 스키마가 변경되었거나 했을때 <code>--create-db</code> 옵션을 사용하자.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ini" data-lang="ini"><span style="color:#66d9ef">[pytest]</span>
+<span style="color:#a6e22e">addopts</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">--reuse-db</span></code></pre></div></p>
+
+<p><code>--nomigrations</code> 를 사용할 경우  Django migrations 와 모든 모델 클래스 검사를 위한 DB 생성을 수행하지 않는다.</p>
+
+<p><br></p>
+
+<h2 id="django-helper">Django Helper</h2>
+
+<hr />
+
+<h4 id="marker">Marker</h4>
+
+<p><code>pytest.marker</code>를 이용해 테스트 함수나 클래스에 메타 데이터를 쉽게 설정할 수 있다.</p>
+
+<ul>
+<li><code>pytest.mark.django_db</code> : 테스트 함수에서 DB 사용이 필요하다는 것을 나타낸다. 모든 테스트는 각각의 DB 트랜젝션 안에서 수행되기 때문에 테스트가 종료되면 변경된 데이터도 함께 롤백된다.</li>
+<li><code>pytest.mark.urls</code> : Django 의 <code>URLCONF</code>을 직접 지정할 수 있다. (예: myapp.test_urls)</li>
+</ul>
+
+<p><br></p>
+
+<h4 id="fixture">Fixture</h4>
+
+<ul>
+<li><code>rf</code> : <a href="https://docs.djangoproject.com/en/dev/topics/testing/advanced/#django.test.RequestFactory"><code>django.test.RequestFactory</code></a>인스턴스</li>
+<li><code>client</code> : <a href="https://docs.djangoproject.com/en/dev/topics/testing/tools/#the-test-client"><code>django.test.Client</code></a> 인스턴스
+더 많은 Fixture는 공식 문서를 참고 <a href="https://pytest-django.readthedocs.io/en/latest/helpers.html#fixtures">Django helpers — pytest-django</a></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>분산 비동기 작업 처리를 위한 Celery 첫걸음</title>
+            <link>/python/2018/12/22/celery-distributed-task-queue/</link>
+            <pubDate>Sat, 22 Dec 2018 11:37:00 +0900</pubDate>
+            
+            <guid>/python/2018/12/22/celery-distributed-task-queue/</guid>
+            <description>뻔한 Celery 소개 Celery 는 분산 메시지 전달을 기반으로 동작하는 비동기 작업 큐(Asynchronous Task/Job Queue) 이다.
+비동기 작업과 분산 메시지 전달은 어떤 관계가 있을까?
+비동기 작업은 즉각적인 결과(응답)를 제공하기 어려운 작업을 수행할 때 활용 될 수 있다.
+예를 들어 대용량 작업을 동시에 처리하거나 사용자 요청(HTTP)에 무거운 연산이 포함되는 경우를 들 수 있다.
+보통 비동기 작업을 요청하고 나면, 즉시 응답을 받지 않아도 계속 다른 일을 수행할 수 있기 때문에 동시 작업이 가능하다.</description>
+            <content type="html"><![CDATA[
+
+<h2 id="뻔한-celery-소개">뻔한 Celery 소개</h2>
+
+<p><img src="/images/celery_logo.png" alt="celery-logo" /><br />
+<strong>Celery</strong> 는 분산 메시지 전달을 기반으로 동작하는 비동기 작업 큐(Asynchronous Task/Job Queue) 이다.<br />
+비동기 작업과 분산 메시지 전달은 어떤 관계가 있을까?</p>
+
+<p>비동기 작업은  즉각적인 결과(응답)를 제공하기 어려운 작업을 수행할 때 활용 될 수 있다.<br />
+예를 들어 대용량 작업을 동시에 처리하거나 사용자 요청(HTTP)에 무거운 연산이 포함되는 경우를 들 수 있다.<br />
+보통 비동기 작업을 요청하고 나면, 즉시 응답을 받지 않아도 계속 다른 일을 수행할 수 있기 때문에 동시 작업이 가능하다.<br />
+하지만 작업마다 소요되는 시간이 다르고, 실행 환경도 달라 중복 작업이 발생하지 않아야 하며 작업이 누락되지 않도록 하는 것도 매우 중요하다.</p>
+
+<p>이렇게 대기중인 <code>작업(Job)</code>을 관리하고, <code>작업자(Worker)</code>에서 제대로 전달되기 위해서는 중간 단계에서 관장하는 시스템이 필요하다.<br />
+이 때 등장하는 개념이 <code>브로커(Broker)</code>이다. 브로커는 작업 메세지를 전달받은 대기열(Queue)에 보관했다가 적절한 작업자(Worker)가 메세지를 가져가서 작업(Job)을 수행하게 된다.<br />
+이 과정에서 Celery는 메세지를 전달하는 역할(Publisher)과 메시지를 가져와 작업을 수행하는 역할(Worker)을 담당하게 된다.</p>
+
+<p>Celery는 파이썬으로 작성 되었으며, <strong>Django</strong>와도 잘 호환된다. 기존에 Django에서 사용하기 위한 별도의 라이브러리 형태(<a href="https://github.com/celery/django-celery">django-celery</a>)로 있었는데 Celery 3.1 부터 Celery를 설치하는 것만으로 Django에서 Celery를 사용할 수 있게 되었다.</p>
+
+<p><br></p>
+
+<h2 id="왜-celery를-생각했을까">왜 Celery를 생각했을까?</h2>
+
+<p>Django로 API 서버를 개발하고 운영하면서 사용자 요청에 포함될 필요가 없는 불필요한 과정이나 매우 무거운 쿼리 실행을 포함하는 경우가 있다.<br />
+예를 들어 <code>회원 가입 축하 이메일 발송</code>, <code>어드민 주문내역 엑셀 다운로드</code> 같은 기능이 해당된다.<br />
+이 API 에 포함된 외부 연동이나 무거운 작업들은 Celery Task로 정의해서 브로커(RabbitMQ)와 컨슈머(Celery Worker)를 이용해 비동기로 처리함으로써 사용자에게 가능한 빠른 응답 결과를 제공할 수 있을 것이다.</p>
+
+<p><br></p>
+
+<h2 id="celery-사용해보기">Celery 사용해보기</h2>
+
+<blockquote>
+<p>Celery 공식 사이트에서 제공하는 첫걸음 과정을 기준으로 실습하는 과정을 설명한다. (<a href="http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html">원문 보기</a>)</p>
+</blockquote>
+
+<h3 id="celery-환경-구성">🛠 Celery 환경 구성</h3>
+
+<hr />
+
+<h4 id="broker-선택하기">Broker 선택하기</h4>
+
+<p>Celery 는 메시지로 작업(Task)을 주고 받는 시스템이기 때문에 중간에 브로커(Broker) 역할을 하는 분리된 중계 시스템이 필요하다.<br />
+다양한 Broker 들과 호환 되지만 오랜 역사와 안정성을 자랑하는 <strong>RabbitMQ</strong>를 사용하기로 했다.</p>
+
+<p><a href="https://www.rabbitmq.com/">RabbitMQ</a>는 AMQP(Advanced message queuing protocol)을 지원하는 메시지 브로커이다.<br />
+(RabbitMQ에 대한 자세한 설명은 <a href="https://blog.jonnung.com/rabbitmq/2019/02/06/about-amqp-implementtation-of-rabbitmq/">RabbitMQ 동작 이해하기</a> 참고)</p>
+
+<p>아래 명령어는 로컬 개발환경에서 쉽고 빠르게 RabbitMQ 서버를 실행하기 위해 도커를 사용했다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ docker run --hostname my-rabbit <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    -p <span style="color:#ae81ff">5672</span>:5672 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    -p <span style="color:#ae81ff">8080</span>:15672 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    -e RABBITMQ_DEFAULT_USER<span style="color:#f92672">=</span>guest <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    -e RABBITMQ_DEFAULT_PASS<span style="color:#f92672">=</span>guest <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    --name some-rabbit <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    rabbitmq:3-management</code></pre></div>
+
+<p><br></p>
+
+<h4 id="celery-설치">Celery 설치</h4>
+
+<p>Celery 는 파이썬으로 작성된 패키지이다.
+먼저 파이썬 가상 환경을 준비하고, <code>celery</code>를 설치한다. 파이썬 가상 환경은 보통 Virtualenv 라고 많이 불려지는데 아래 명령어는 파이썬3 에 내장된 <code>venv</code> 모듈을 이용하는 방법을 사용했다.<br />
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ python3 -m venv venv
+$ source ./venv/bin/activate
+
+$ pip install celery</code></pre></div></p>
+
+<p><br></p>
+
+<h3 id="celery-worker-와-task-만들기">Celery Worker 와 Task 만들기</h3>
+
+<hr />
+
+<p>가장 먼저 할 일은 Celery 인스턴스를 정의하는 것이다.
+보통 이것을 <strong>Celery App</strong>이라고 부르며, Task를 만들고 Worker를 관리하는 등의 Celery가 수행하는 모든 것에 대한 시작점이 된다.</p>
+
+<p><code>Celery</code> Class의 첫번째 위치 인자로 모듈의 이름을 전달하고, <code>broker</code> 키워드 인자로 Broker 연결 정보를 넘긴다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e"># tasks.py</span>
+<span style="color:#f92672">from</span> celery <span style="color:#f92672">import</span> Celery
+
+app <span style="color:#f92672">=</span> Celery(<span style="color:#e6db74">&#39;tasks&#39;</span>, broker<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;pyamqp://guest:guest@localhost//&#39;</span>)</code></pre></div>
+<br>
+다음 간단한 Task 함수를 작성 해본다.<br />
+간단하게 연습하는 단계라서 같은 파이썬 모듈(tasks.py) 안에 Celery 인스턴스와 Task 함수를 함께 정의했다.<br />
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e"># tasks.py</span>
+
+<span style="color:#a6e22e">@app.task</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">add</span>(x, y):
+    <span style="color:#66d9ef">return</span> x <span style="color:#f92672">+</span> y</code></pre></div></p>
+
+<p><br></p>
+
+<h3 id="celery-woker-실행하기">Celery Woker 실행하기</h3>
+
+<p>Celery 를 설치하면 자동으로 <code>celery</code> 커맨드를 사용할 수 있게 된다. 그래서 Celery Worker 를 구동하기 위해 <code>$ celery worker</code> 같은 형태로 기본 커맨드를 구성하고,  <code>-A {모듈명}</code> 또는 <code>--app={모듈명}</code> 파라미터로 위에서 정의한 Celery 인스턴스가 포함된 파이썬 모듈을 지정한다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ celery -A tasks worker --loglevel<span style="color:#f92672">=</span>info</code></pre></div></p>
+
+<p><br></p>
+
+<h3 id="task-호출하기">Task 호출하기</h3>
+
+<p>Celery Task 도 결국 파이썬 함수이다. 보통 파이썬 함수를 호출할 때 <code>add()</code> 같이 하면 되지만, Celery Task 로써 호출하려면 <code>add.delay()</code> 같은 형태로 <code>delay()</code> 메소드를 호출한다. (이 메소드는 <code>apply_async()</code> 메소드의 축소 버전이다.)<br />
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> tasks <span style="color:#f92672">import</span> add
+add<span style="color:#f92672">.</span>delay(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>)</code></pre></div></p>
+
+<p>Task를 호출한 결과로  <code>AsyncResult</code> 인스턴스가 반환된다. 이 객체를 이용해서 Task가 완료 되었는지 결과값을 반환했는지 같은 상태를 확인할 수 있다.<br />
+기본적으로 Task 실행 결과값은 저장되지 않는다. 결과를 DB에 저장하거나 RPC 호출을 위해서는 <em>result backend</em> 설정을 추가해야 한다.</p>
+
+<p><br></p>
+
+<h3 id="작업-결과-보관하기-result-backend">작업 결과 보관하기 (Result Backend)</h3>
+
+<p>Celery는 Task 작업 결과를 저장하기 위한 여러가지 <em>result backend</em> 를 내장하고 있다.<br />
+(예: SQLAlchemy, Django, Memcached, Redis, RPC 등등)</p>
+
+<p><em>result backend</em> 를 지정하려면 <code>Celery</code> 인스턴스에  <code>backend</code> 키워드 인자를 추가한다.<br />
+ <code>rpc</code> 를 <em>result backend</em> 로 지정할 경우 작업 결과를 임시 AMQP 메시지로 다시 돌려보내는 방식으로 동작하고, 작업 결과로 반환된 <code>AsyncResult</code> 인스턴스를 유지할 수 있게 된다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">app <span style="color:#f92672">=</span> Celery(<span style="color:#e6db74">&#39;tasks&#39;</span>, backend<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;rpc://&#39;</span>, broker<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;pyamqp://&#39;</span>)</code></pre></div>
+<br></p>
+
+<p>Task의 완료 상태를 확인하기 위해 <code>ready()</code> 메소드를 사용한다.<br />
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">result <span style="color:#f92672">=</span> add<span style="color:#f92672">.</span>delay(<span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">4</span>)
+
+result<span style="color:#f92672">.</span>ready()
+<span style="color:#75715e"># True</span></code></pre></div>
+<br></p>
+
+<p><code>get()</code> 메소드로 완료된 작업의 결과값을 가져올 수 있다. 만약 호출하는 시점에 작업이 완료되지 않은 경우 완료될때까지 기다리게 된다. (보통 잘 사용하지 않는다고 한다)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">result<span style="color:#f92672">.</span>get()</code></pre></div></p>
+
+<p>Task 실행 중 예외가 발생한 경우 <code>get()</code> 메소드를 통해 예외가 전달될 수 있다. <code>propagate</code> 인자를 <code>False</code>로 전달할 경우에는 이 예외가 전달되지 않는다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">result<span style="color:#f92672">.</span>get(propagate<span style="color:#f92672">=</span>False)</code></pre></div>
+<br></p>
+
+<p>Task 함수에 <code>task(ignore_result=True)</code> 데코레이터를 적용하면 개별 Task 단위로 <em>result backend</em> 사용을 중지할 수 있다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#a6e22e">@app.task</span>(ignore_result<span style="color:#f92672">=</span>True)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">subtraction</span>(x, y):
+    <span style="color:#66d9ef">return</span> x <span style="color:#f92672">-</span> y</code></pre></div></p>
+
+<p><br></p>
+
+<h3 id="celery-설정을-분리해서-관리하기">Celery 설정을 분리해서 관리하기</h3>
+
+<p>Celery를 운영하는데 많은 설정이 필요하지 않지만, Broker 연결은 필수이며, <em>result backend</em> 는 선택 사항이다.<br />
+위 예제에서 기본 설정들을 Celery 인스턴스에 직접 전달했지만, 별도 전용 모듈(py)로 따로 정의하는 것이 하드 큰 프로젝트에서는 설정을 제어하기 더 수월하다.<br />
+더 많은 설정은 <a href="http://docs.celeryproject.org/en/latest/userguide/configuration.html#configuration">Configuration and defaults</a> 에서 확인할 수 있다.</p>
+
+<p>설정을 전용 모듈로 분리 했다면  <code>app.config_from_object()</code> 메소드를 이용해 설정 모듈을 Celery 인스턴스에 전달 할 수 있다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">app<span style="color:#f92672">.</span>config_from_object(<span style="color:#e6db74">&#39;celeryconfig&#39;</span>)</code></pre></div></p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e"># celeryconfig.py</span>
+
+broker_url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;pyamqp://&#39;</span>
+result_backend <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;rpc://&#39;</span>
+
+task_serializer <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;json&#39;</span>
+result_serializer <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;json&#39;</span>
+accept_content <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;json&#39;</span>]
+timezone <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Asia/Seoul&#39;</span>
+enable_utc <span style="color:#f92672">=</span> True
+
+<span style="color:#75715e"># 오작동 한 작업을 전용 대기열로 라우팅하는 설정</span>
+task_routes <span style="color:#f92672">=</span> {
+    <span style="color:#e6db74">&#39;tasks.add&#39;</span>: <span style="color:#e6db74">&#39;low-priority&#39;</span>
+}
+
+<span style="color:#75715e"># 작업 속도를 제한하는 설정</span>
+task_annotations <span style="color:#f92672">=</span> {
+    <span style="color:#e6db74">&#39;tasks.add&#39;</span>: {<span style="color:#e6db74">&#39;rate_limit&#39;</span>: <span style="color:#e6db74">&#39;10/m&#39;</span>
+}</code></pre></div>
+
+<p><br></p>
+
+<h2 id="참고-자료">참고 자료</h2>
+
+<ul>
+<li><a href="http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html">http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html</a></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>자바스크립트 테스트 프레임워크 간단 비교</title>
+            <link>/javascript/2018/11/15/tdd-javascript-testing-framework/</link>
+            <pubDate>Thu, 15 Nov 2018 11:39:54 +0900</pubDate>
+            
+            <guid>/javascript/2018/11/15/tdd-javascript-testing-framework/</guid>
+            <description>테스트 프레임워크 선택  Jest Delightful JavaScript Testing  페이스북에서 만들었다. (Jasmine 기반) 고통 없는(Painless), 즐거운(Delightful) 자바스크립트 테스트  고통 없는 테스트는 없다 자바스크립트 테스트는 어렵다 웹사이트를 테스트하는 것은 매우 어렵다 테스트 대상이 제한적이고, 구현이 복잡하며 느리고 들어가는 공수가 많다  적절한 전략과 올바른 도구를 조합하면, 거의 모든 범위를 테스트할 수 있다 Sinon.js 와 동일한 Assertion, Mocking, Spying 기능을 제공한다 테스트 커버리지 리포팅 툴인 Istanbul 을 내장하고 있다  Mocha  Jamine과 다르게 서드파티 Assertion, Mocking, Spying 도구를 사용한다 그만큼 유연하고, 확장성이 뛰어남  Jasmine  오랜 시간 사용자와 커뮤니티에 의해 생성된 방대한 자료 거의 모든 버전에서 Angular 지원    테스팅 도구가 제공하는 것들 (Jest 와 Sinon을 사용한 예제로 구성)</description>
+            <content type="html"><![CDATA[
+
+<h3 id="테스트-프레임워크-선택">테스트 프레임워크 선택</h3>
+
+<ul>
+<li><a href="https://jestjs.io/en/">Jest Delightful JavaScript Testing</a>
+
+<ul>
+<li>페이스북에서 만들었다. (Jasmine 기반)</li>
+<li>고통 없는(Painless), 즐거운(Delightful) 자바스크립트 테스트
+
+<ul>
+<li>고통 없는 테스트는 없다</li>
+<li>자바스크립트 테스트는 어렵다</li>
+<li>웹사이트를 테스트하는 것은 매우 어렵다</li>
+<li>테스트 대상이 제한적이고, 구현이 복잡하며 느리고 들어가는 공수가 많다</li>
+</ul></li>
+<li><strong>적절한 전략과 올바른 도구를 조합하면, 거의 모든 범위를 테스트할 수 있다</strong></li>
+<li>Sinon.js 와 동일한 Assertion, Mocking, Spying 기능을 제공한다</li>
+<li>테스트 커버리지 리포팅 툴인 Istanbul 을 내장하고 있다</li>
+</ul></li>
+<li><a href="https://mochajs.org/">Mocha</a>
+
+<ul>
+<li>Jamine과 다르게 서드파티 Assertion, Mocking, Spying 도구를 사용한다</li>
+<li>그만큼 유연하고, 확장성이 뛰어남</li>
+</ul></li>
+<li><a href="https://jasmine.github.io/">Jasmine</a>
+
+<ul>
+<li>오랜 시간 사용자와 커뮤니티에 의해 생성된 방대한 자료</li>
+<li>거의 모든 버전에서 Angular 지원
+<br /></li>
+</ul></li>
+</ul>
+
+<h3 id="테스팅-도구가-제공하는-것들">테스팅 도구가 제공하는 것들</h3>
+
+<p>(Jest 와 Sinon을 사용한 예제로 구성)</p>
+
+<ul>
+<li>Testing Structure
+
+<ul>
+<li>테스트 할 대상을 테스트할 수 있는 기초적인 구조를 만든다.</li>
+<li>보통 JS 테스트 구조들은 <em>BDD</em> 형태로 작성된 경우를 많이 볼 수 있다</li>
+</ul></li>
+</ul>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#75715e">// Jasmine 에서 제공하는 샘플 코드
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">describe</span>(<span style="color:#e6db74">&#34;A suite&#34;</span>, <span style="color:#66d9ef">function</span>() {
+  <span style="color:#a6e22e">it</span>(<span style="color:#e6db74">&#34;contains spec with an expectation&#34;</span>, <span style="color:#66d9ef">function</span>() {
+    <span style="color:#a6e22e">expect</span>(<span style="color:#66d9ef">true</span>).<span style="color:#a6e22e">toBe</span>(<span style="color:#66d9ef">true</span>);
+  });
+});
+</code></pre></div>
+
+<ul>
+<li>Assertion Function
+
+<ul>
+<li>테스트 대상이 반환하길 기대하는 값을 검사하는 함수이다</li>
+</ul></li>
+<li>Spies
+
+<ul>
+<li>얼마나 많이 호출 되었는지 같은 함수에 대한 정보를 제공한다</li>
+<li>특정 함수에 인자를 기록 해두고, 호출을 한 후 값을 반환하거나 예외를 발생 시킨다</li>
+<li>알 수 없는 함수의 스파이</li>
+</ul></li>
+</ul>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sinon</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;sinon&#39;</span>);
+
+<span style="color:#a6e22e">test</span>(<span style="color:#e6db74">&#39;인사 함수 호출 후 전달한 콜백이 호출된다&#39;</span>, () =&gt; {
+    <span style="color:#75715e">// arrange
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">callback</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">sinon</span>.<span style="color:#a6e22e">spy</span>();
+    <span style="color:#75715e">// act
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">sample</span>.<span style="color:#a6e22e">greeting</span>(<span style="color:#e6db74">&#39;world&#39;</span>, <span style="color:#a6e22e">callback</span>);
+    <span style="color:#75715e">// assert
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">expect</span>(<span style="color:#a6e22e">callback</span>.<span style="color:#a6e22e">called</span>).<span style="color:#a6e22e">toBeTruthy</span>();
+});
+</code></pre></div>
+
+<ul>
+<li>이미 존재하는 함수를 감싸는 스파이</li>
+</ul>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sinon</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;sinon&#39;</span>);
+
+<span style="color:#a6e22e">test</span>(<span style="color:#e6db74">&#39;인사 함수는 이름 저장 함수를 호출한다&#39;</span>, () =&gt; {
+      <span style="color:#75715e">// arrange
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">sinon</span>.<span style="color:#a6e22e">spy</span>(<span style="color:#a6e22e">sample</span>, <span style="color:#e6db74">&#39;saveName&#39;</span>);
+    <span style="color:#75715e">// act
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">sample</span>.<span style="color:#a6e22e">greeting</span>(<span style="color:#e6db74">&#39;jonnung&#39;</span>);
+    <span style="color:#75715e">// assert
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">expect</span>(<span style="color:#a6e22e">sample</span>.<span style="color:#a6e22e">saveName</span>.<span style="color:#a6e22e">called</span>);
+});
+</code></pre></div>
+
+<ul>
+<li>Stubbing or Bubbing
+
+<ul>
+<li>선택된 함수를 그 함수가 기대하는 특정 동작(이나 값을 반환)을 하도록 설정된 함수로 교체합니다</li>
+</ul></li>
+</ul>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">test</span>(<span style="color:#e6db74">&#39;인사 함수는 전달된 이름을 로깅하는 함수를 반드시 한번 호출한다&#39;</span>, () =&gt; {
+    <span style="color:#75715e">// arrange
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">sinon</span>.<span style="color:#a6e22e">spy</span>(<span style="color:#a6e22e">sample</span>, <span style="color:#e6db74">&#39;logging&#39;</span>);
+    <span style="color:#a6e22e">sinon</span>.<span style="color:#a6e22e">stub</span>(<span style="color:#a6e22e">console</span>, <span style="color:#e6db74">&#39;log&#39;</span>).<span style="color:#a6e22e">returns</span>(<span style="color:#66d9ef">true</span>);
+    <span style="color:#75715e">// act
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">sample</span>.<span style="color:#a6e22e">greeting</span>(<span style="color:#e6db74">&#39;Eunwoo&#39;</span>);
+    <span style="color:#75715e">// assert
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">expect</span>(<span style="color:#a6e22e">sample</span>.<span style="color:#a6e22e">logging</span>.<span style="color:#a6e22e">calledOnce</span>).<span style="color:#a6e22e">toBeTruthy</span>();
+});
+</code></pre></div>
+
+<ul>
+<li>Mock and Fake
+
+<ul>
+<li>테스트 하는 과정에서 특정 모듈이나 행동을 조작합니다</li>
+<li>참고 예제: <a href="https://sinonjs.org/releases/v7.1.1/fake-xhr-and-server/">Fake XHR and server - Sinon.JS</a></li>
+</ul></li>
+</ul>
+
+<h3 id="그-밖에-더-살펴볼-만한-테스팅-도구">그 밖에 더 살펴볼 만한 테스팅 도구</h3>
+
+<ul>
+<li><a href="https://github.com/jsdom/jsdom">jsdom</a>
+
+<ul>
+<li>자바스크립트로 WHATWG DOM과 HTML 표준을 구현해서 브라우저 환경을 흉내 낼 수 있다</li>
+</ul></li>
+<li><a href="https://github.com/istanbuljs/nyc">Istanbul</a>
+
+<ul>
+<li>유닛 테스트 커버리지 리포팅 툴</li>
+<li>구문, 라인, 브랜치, 함수 단위로 커버리지를 백분율로 제공</li>
+</ul></li>
+<li><a href="https://github.com/karma-runner/karma">karma</a>
+
+<ul>
+<li>브라우저 환경에서 테스트를 실행 해주는 실행기 역할</li>
+</ul></li>
+<li><a href="https://github.com/chaijs/chai">Chai</a>
+
+<ul>
+<li>BDD/TDD Assertion Library</li>
+</ul></li>
+<li><a href="https://github.com/sinonjs/sinon">Sinon.js</a>
+
+<ul>
+<li>독립적으로 Test Spy, Stub, Mock 을 제공하는 프레임워크</li>
+</ul></li>
+<li><a href="https://wallabyjs.com/">Wallaby</a>
+
+<ul>
+<li>IDE에 코드가 수정될 때마다 실시간으로 테스트 하고, 실패시 옆에 표시 해준다.</li>
+<li>유료지만 추천하는 사람이 많다고 함</li>
+</ul></li>
+</ul>
+
+<h3 id="참고한-원문">참고한 원문</h3>
+
+<ul>
+<li><a href="https://medium.com/welldone-software/an-overview-of-javascript-testing-in-2018-f68950900bc3">An Overview of JavaScript Testing in 2018 – Welldone Software – Medium</a></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Python3 Formatted String Literals (aka f-string)</title>
+            <link>/python/2018/10/02/python3-formatted-string-literals/</link>
+            <pubDate>Tue, 02 Oct 2018 11:39:54 +0900</pubDate>
+            
+            <guid>/python/2018/10/02/python3-formatted-string-literals/</guid>
+            <description>PEP 498 &amp;ndash; Literal String Interpolation | Python.org in Python 3.6 &amp;lsquo;f&amp;rsquo; 또는 &amp;lsquo;F&amp;rsquo; 를 앞에 붙인 문자열 리터럴 bar = &amp;#39;World&amp;#39; f&amp;#39;Hello {bar}&amp;#39; # &amp;#39;Hello World&amp;#39;
+ Formatted String Literals 또는 f-sting 이라고 부른다
+ 중괄호 {}로 감싸진 필드 안에 변수가 치환되며, 일반적인 파이썬 표현식도 실행된다. 심지어 Lambda 도 사용할 수 있다 bar = [&amp;#39;a&amp;#39;, &amp;#39;b&amp;#39;, &amp;#39;c&amp;#39;] # 파이썬 표현식 실행 f&amp;#39;{(&amp;#34;,&amp;#34;.join(bar))}&amp;#39; # &amp;#39;a,b,c&amp;#39; # Lambda 표현식 f&amp;#39;{(lambda x: x*2)(3)}&amp;#39; # &amp;#39;6&amp;#39;</description>
+            <content type="html"><![CDATA[<ul>
+<li><a href="https://www.python.org/dev/peps/pep-0498/">PEP 498 &ndash; Literal String Interpolation | Python.org</a> in Python 3.6</li>
+
+<li><p>&lsquo;f&rsquo; 또는 &lsquo;F&rsquo; 를 앞에 붙인 문자열 리터럴
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">bar <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;World&#39;</span>
+
+f<span style="color:#e6db74">&#39;Hello {bar}&#39;</span>
+<span style="color:#75715e"># &#39;Hello World&#39;</span></code></pre></div></p></li>
+
+<li><p><em>Formatted String Literals</em> 또는 <em>f-sting</em> 이라고 부른다</p></li>
+
+<li><p>중괄호 <code>{}</code>로 감싸진 필드 안에 변수가 치환되며, 일반적인 파이썬 표현식도 실행된다. 심지어 Lambda 도 사용할 수 있다
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">bar <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;a&#39;</span>, <span style="color:#e6db74">&#39;b&#39;</span>, <span style="color:#e6db74">&#39;c&#39;</span>]
+
+<span style="color:#75715e"># 파이썬 표현식 실행</span>
+f<span style="color:#e6db74">&#39;{(&#34;,&#34;.join(bar))}&#39;</span>
+<span style="color:#75715e"># &#39;a,b,c&#39;</span>
+
+<span style="color:#75715e"># Lambda 표현식</span>
+f<span style="color:#e6db74">&#39;{(lambda x: x*2)(3)}&#39;</span>
+
+<span style="color:#75715e"># &#39;6&#39;</span></code></pre></div></p></li>
+
+<li><p><em>triple-quoted</em> 을 통해 줄바꿈 문자열도 사용할 수 있다
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">f<span style="color:#e6db74">&#39;&#39;&#39;안녕하세요
+</span><span style="color:#e6db74">저는 조은우입니다.
+</span><span style="color:#e6db74">반갑습니다.&#39;&#39;&#39;</span>
+
+<span style="color:#75715e"># &#39;안녕하세요\n저는 조은우입니다.\n반갑습니다.&#39;</span></code></pre></div></p></li>
+
+<li><p><code>f-string</code> 표현식를 제외한 나머지는 보통 문자열이고, 이중 중괄호  <code>{{</code>, <code>}}</code>는 하나의 중괄호로 취급된다
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">bar <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Awesome Python&#39;</span>
+
+f<span style="color:#e6db74">&#39;{{ {bar} }}&#39;</span>
+<span style="color:#75715e"># &#39;{ Awesome Python }&#39;</span></code></pre></div></p></li>
+
+<li><p>문자열 부분에서는 <code>\n</code>  같은 이스케이프 된 문자들도 사용할 수 있지만,  <code>f-string</code> 표현식 안에서는 백슬래시를 사용할 수 없을 수도 있다
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">##### 잘못된 방법 #####</span>
+f<span style="color:#e6db74">&#39;{</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">quoted string</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">}&#39;</span>
+
+<span style="color:#75715e"># 에러 출력 결과</span>
+<span style="color:#75715e"># File &#34;&lt;stdin&gt;&#34;, line 1</span>
+<span style="color:#75715e"># SyntaxError: f-string expression part cannot include a backslash</span>
+
+<span style="color:#75715e">##### 올바른 방법 #####</span>
+<span style="color:#75715e"># 다른 타입의 quote를 사용한다</span>
+f<span style="color:#e6db74">&#39;{&#34;quoted string&#34;}&#39;</span>
+<span style="color:#75715e"># &#39;quoted string&#39;</span>
+
+<span style="color:#75715e"># quote 를 출력하기 위해서는 따로 변수에서 선언한 후 치환 필드에서 사용한다</span>
+bar <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">quoted string</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;</span>
+
+f<span style="color:#e6db74">&#39;{bar}&#39;</span>
+<span style="color:#75715e"># &#34;&#39;quoted string&#39;&#34;</span></code></pre></div></p></li>
+
+<li><p><code>f-string</code> 표현식 내 _conversion flag_와 <em>format specifier</em> 를 추가 할 수 있다.</p>
+
+<ul>
+<li><a href="https://www.python.org/dev/peps/pep-3101/?#explicit-conversion-flag">Conversion Flag</a>
+
+<ul>
+<li>!r - <code>repr()</code> 사용해서 변환</li>
+<li>!s - <code>str()</code> 사용해서 변환
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> datetime
+bar <span style="color:#f92672">=</span> datetime<span style="color:#f92672">.</span>datetime<span style="color:#f92672">.</span>now()
+
+str(bar)
+<span style="color:#75715e"># &#39;2018-10-02 1109.189744&#39;</span>
+
+f<span style="color:#e6db74">&#39;{bar}&#39;</span>
+<span style="color:#75715e"># &#39;2018-10-02 1109.189744&#39;</span>
+
+f<span style="color:#e6db74">&#39;{bar!s}&#39;</span>
+<span style="color:#75715e"># &#39;2018-10-02 1109.189744&#39;</span>
+
+repr(bar)
+<span style="color:#75715e"># &#39;datetime.datetime(2018, 10, 2, 11, 25, 9, 189744)&#39;</span>
+
+f<span style="color:#e6db74">&#39;{bar!r}&#39;</span>
+<span style="color:#75715e"># &#39;datetime.datetime(2018, 10, 2, 11, 25, 9, 189744)&#39;</span></code></pre></div></li>
+</ul></li>
+<li><a href="https://docs.python.org/3.6/library/string.html#format-specification-mini-language">Format Specifier</a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">bar <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>
+
+f<span style="color:#e6db74">&#39;{bar:10.2f}&#39;</span>
+<span style="color:#75715e"># &#39;      2.00&#39;</span>
+
+
+<span style="color:#f92672">import</span> datetime
+bar <span style="color:#f92672">=</span> datetime<span style="color:#f92672">.</span>datetime<span style="color:#f92672">.</span>now()
+
+f<span style="color:#e6db74">&#39;{bar: %Y-%m-</span><span style="color:#e6db74">%d</span><span style="color:#e6db74"> %H:%M:%S}&#39;</span>
+<span style="color:#75715e"># &#39; 2018-10-02 1109&#39;</span></code></pre></div></li>
+</ul></li>
+
+<li><p>Raw F-String 으로 선언하려면 &lsquo;fr&rsquo; 접두사를 붙인다
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">fr<span style="color:#e6db74">&#39;안녕하세요</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">저는 조은우입니다.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">반갑습니다.&#39;</span>
+<span style="color:#75715e"># &#39;안녕하세요\\n저는 조은우입니다.\\n반갑습니다.&#39;</span></code></pre></div></p></li>
+
+<li><p><em>f-string</em> 은 % 포맷팅과 <code>.format()</code> 메소드보다 빠르다</p></li>
+
+<li><p>참고 자료</p>
+
+<ul>
+<li><a href="https://www.python.org/dev/peps/pep-0498/">PEP 498 &ndash; Literal String Interpolation | Python.org</a></li>
+<li><a href="https://docs.python.org/3.6/reference/lexical_analysis.html">lexical_analysis | python.org</a></li>
+<li><a href="https://realpython.com/python-f-strings/">realpython.com | python-f-strings</a></li>
+<li><a href="https://cito.github.io/blog/f-strings/">https://cito.github.io/blog/f-strings/</a></li>
+</ul></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>젠킨스 Master/Slave 분산 빌드 환경 구축하기</title>
+            <link>/devops/2018/08/15/jenkins-distributed-builds/</link>
+            <pubDate>Wed, 15 Aug 2018 14:49:03 +0900</pubDate>
+            
+            <guid>/devops/2018/08/15/jenkins-distributed-builds/</guid>
+            <description>1. Master + (Slave) Agent  Jenkins 는 보통 모든 작업을 수행할 수 있는 단일 Master로 구성한다. 작업 부하를 분산하기 위해 Master + (Slave) Agent 구성도 가능하다. Master 는 프로젝트(작업)을 등록하고, 관리하기 위한 GUI와 API를 제공하고, Agent는 작업 실행만 담당하게 된다. Agent를 사용하는 이유에는 Master가 실행중이지 않은 다른 보안 환경에서 작업을 수행하거나 배포하기 위함도 있다.  
+2. Master/Agent 구성 방법 Master 에서 Agent 연결하기  먼저 Master가 Agent가 실행되고 있는 네트워크상에 접근할 수 있어야 한다.</description>
+            <content type="html"><![CDATA[
+
+<h3 id="1-master-slave-agent"><strong>1. Master + (Slave) Agent</strong></h3>
+
+<ul>
+<li>Jenkins 는 보통 모든 작업을 수행할 수 있는 단일 Master로 구성한다.</li>
+<li>작업 부하를 분산하기 위해 Master + (Slave) Agent 구성도 가능하다.</li>
+<li>Master 는 프로젝트(작업)을 등록하고, 관리하기 위한 GUI와 API를 제공하고, Agent는 작업 실행만 담당하게 된다.</li>
+<li>Agent를 사용하는 이유에는 Master가 실행중이지 않은 다른 보안 환경에서 작업을 수행하거나 배포하기 위함도 있다.</li>
+</ul>
+
+<p></br></p>
+
+<h3 id="2-master-agent-구성-방법"><strong>2. Master/Agent 구성 방법</strong></h3>
+
+<h4 id="master-에서-agent-연결하기">Master 에서 Agent 연결하기</h4>
+
+<ul>
+<li>먼저 Master가 Agent가 실행되고 있는 네트워크상에 접근할 수 있어야 한다.</li>
+<li>일반적으로 SSH를 통해 접근하는 방식을 많이 사용한다.</li>
+</ul>
+
+<h4 id="agent-에서-master-연결하기">Agent 에서 Master 연결하기</h4>
+
+<ul>
+<li>Master에서 Agent 가 있는 네트워크에 접근할 수 없는 경우  <code>JNLP</code> 라는 agent 구성을 사용할 수 있다.</li>
+<li>Agent가 방화벽 뒤에 있거나 Master가 접근할 수 없는 안전한 보안 환경에 배포해야 되는 경우에 유용하다.</li>
+</ul>
+
+<h4 id="agent-의-label-로-pipeline과-선택-빌드에서-활용">Agent 의 Label 로 Pipeline과 선택 빌드에서 활용</h4>
+
+<ul>
+<li>Agent 에 Label을 붙이면, 용도와 실행 환경을 명시적으로 구분할 수 있고, pipeline 이나 build 실행시 Label을 이용해서 지정한 Agent 로 작업을 실행 시킬 수 있다.</li>
+</ul>
+
+<p></br></p>
+
+<h3 id="3-agent-실행하는-방법"><strong>3. Agent 실행하는 방법</strong></h3>
+
+<h4 id="master-노드에서-agent로-원격-접속">Master 노드에서 Agent로 원격 접속</h4>
+
+<ol>
+<li>SSH
+
+<ul>
+<li>Master 에서 SSH를 이용해 Agent 노드로 접속 후 필요한 바이너리를 복사하고, Agent 실행과 중단 및 작업을 수행한다.</li>
+</ul></li>
+<li>Windows Agent
+
+<ul>
+<li>Windows 환경의 Agent 경우 Windows에 내장된 원격 관리 기능(<a href="https://ko.wikipedia.org/wiki/%EC%9C%88%EB%8F%84%EC%9A%B0_%EA%B4%80%EB%A6%AC_%EB%8F%84%EA%B5%AC">WMI</a> + <a href="https://ko.wikipedia.org/wiki/%EB%B6%84%EC%82%B0_%EC%BB%B4%ED%8F%AC%EB%84%8C%ED%8A%B8_%EC%98%A4%EB%B8%8C%EC%A0%9D%ED%8A%B8_%EB%AA%A8%EB%8D%B8">DCOM</a>) 을 사용해서 Windows Agent 노드를 원격 제어한다.</li>
+</ul></li>
+<li>스크립트 작성
+
+<ul>
+<li>Agent 를 연결해야 할 때마다 Master 에 작성해 둔 스크립트를 실행한다.</li>
+<li>스크립트에서는 원격으로 Agent를 연결하기 위한 다양한 도구를 사용할 수 있다.(예: SSH)</li>
+<li>스크립트를 통해 원격에 있는 <code>agent.jar</code>를 실행하고, 스크립트의 stdin/stdout 을 Agent의 stdin/stdout 과 연결해야 한다.</li>
+</ul></li>
+</ol>
+
+<h4 id="jnlp를-이용해-agent-실행">JNLP를 이용해 Agent 실행</h4>
+
+<blockquote>
+<p>Agent를 실행하기 전에 Jenkins Master 노드 [Jenkins 관리]에서 JNLP 로 TCP 통신을 위한 포트를 지정한다.<br />
+(<em>Jenkins -&gt; Global Security -&gt; TCP port for JNLP agents</em>)</p>
+</blockquote>
+
+<p><img src="/images/jenkins_distributed_builds_jnlp_settings.png" alt="jenkins_distributed_builds_jnlp_settings" /></p>
+
+<ol>
+<li>Browser
+
+<ul>
+<li>Agent 노드의 브라우저를 통해 Jenkins(Master)에 접속한 뒤 Agent 노드 설정 페이지에 접근해서 JNLP 실행을 위한 <code>Launch</code> 버튼을 클릭 후 다운로드 된 JNLP 파일을 실행</li>
+<li>이 방법은 Master 가 보안 환경의 Agent 로 접근할 수 없을 때 유용하다.</li>
+</ul></li>
+
+<li><p>Headless</p>
+
+<ul>
+<li>위 Browser 를 통해 실행하는 방식과 거의 유사하다.</li>
+<li>CLI 환경에서 데몬으로 Agent 를 JNLP 모드로 실행한다.</li>
+</ul>
+
+<pre><code>$ java -jar agent.jar -jnlpUrl http://yourserver:port/computer/agent-name/slave-agent.jnlp
+</code></pre></li>
+</ol>
+
+<p><img src="/images/jenkins_distributed_builds_slave01.png" alt="jenkins_distributed_builds_slave01" /></p>
+
+<p></br></p>
+
+<h3 id="참고">참고</h3>
+
+<ul>
+<li><a href="https://wiki.jenkins.io/display/JENKINS/Distributed+builds">Distributed builds</a></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>앵귤러 두걸음(Angular Two Steps)</title>
+            <link>/angular/2018/07/06/angular-two-steps/</link>
+            <pubDate>Fri, 06 Jul 2018 19:52:03 +0900</pubDate>
+            
+            <guid>/angular/2018/07/06/angular-two-steps/</guid>
+            <description>앵귤러 첫걸음 두걸음  이 글은 &amp;lsquo;앵귤러 첫걸음(저자: 조우진)&amp;rsquo; 책을 읽고, 초반 부분만 정리한 내용입니다.
+개인적으로 앵귤러로 개발하면서 굉장히 도움을 많이 받은 책입니다. 하지만 앵귤러를 처음 시작하는 분들께서는 살짝 어렵게 느껴질 수 있을것 같습니다.
+그래도 저는 이 책을 통해서 첫걸음보다는 두걸음 이상 걷게 되었다고 생각합니다.
+직접은 아니지만 이렇게라도 저자께 감사하다는 말씀 드리고 싶습니다.
+ 📖 일단 시작하기  타입스크립트
+ 타입은 언제 선언하는가? (철학) 필요한 지점에 타입 정보를 기술하자 타입스크립트를 사용한다고 해서 자바스크립트 코드의 모든 부분에 타입 정보를 일일이 추가할 필요는 없다 타입 선언 정보 타입스크립트는 자바스크립트 언어 명세에 없는 타입 정보를 타입 선언 파일(Typescript Declaration file) 형식으로 타입 정보만 추가로 내포 확장자는 d.</description>
+            <content type="html"><![CDATA[
+
+<h3 id="앵귤러-첫걸음-두걸음">앵귤러 <del>첫걸음</del> 두걸음</h3>
+
+<p><img src="/images/angular_first_step.jpg" alt="앵귤러첫걸음" /></p>
+
+<blockquote>
+<p>이 글은 &lsquo;<a href="http://www.hanbit.co.kr/store/books/look.php?p_code=B3348481708">앵귤러 첫걸음</a>(저자: 조우진)&rsquo; 책을 읽고, 초반 부분만 정리한 내용입니다.<br />
+개인적으로 앵귤러로 개발하면서 굉장히 도움을 많이 받은 책입니다. 하지만 앵귤러를 처음 시작하는 분들께서는 살짝 어렵게 느껴질 수 있을것 같습니다.<br />
+그래도 저는 이 책을 통해서 첫걸음보다는 두걸음 이상 걷게 되었다고 생각합니다.<br />
+직접은 아니지만 이렇게라도 저자께 감사하다는 말씀 드리고 싶습니다.</p>
+</blockquote>
+
+<h4 id="일단-시작하기">📖 일단 시작하기</h4>
+
+<ul>
+<li><p>타입스크립트</p>
+
+<ul>
+<li>타입은 언제 선언하는가? (철학)</li>
+<li>필요한 지점에 타입 정보를 기술하자</li>
+<li>타입스크립트를 사용한다고 해서 자바스크립트 코드의 모든 부분에 타입 정보를 일일이 추가할 필요는 없다</li>
+<li>타입 선언 정보</li>
+<li>타입스크립트는 자바스크립트 언어 명세에 없는 타입 정보를 타입 선언 파일(Typescript Declaration file) 형식으로 타입 정보만 추가로 내포</li>
+<li>확장자는 <code>d.ts</code></li>
+<li>타입스크립트의 타입 선언 정보는 기존의 자바스크립트 라이브러리를 사용하는데 반드시 필요한 파일</li>
+<li>타입 선언 정보가 없는 라이브러리를 사용할 때는 가능하면 타입 선언 정보를 받아야 한다.</li>
+<li>타입스크립트 2.0 에서는 NPM의 types 패키지에 주요 라이브러리의 타입 선언 정보를 모아서 등록하고 있다.</li>
+</ul></li>
+
+<li><p>앵귤러 설치
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ npm install @angular/cli -g</code></pre></div></p></li>
+
+<li><p>프로젝트 시작
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ ng new hello-angular</code></pre></div></p></li>
+</ul>
+
+<p></br></p>
+
+<h4 id="구조">📐 구조</h4>
+
+<h5 id="모듈">🔩 모듈</h5>
+
+<ul>
+<li>앵귤러 안에서 관련된 요소를 하나로 묶어 어플리케이션을 구성하는 단위</li>
+<li>모든 앵귤러 애플리케이션은 반드시 하나의 모듈을 가지며, 이 모듈을 <em>root module</em> 이라고 하며 관례상 <code>AppModule</code> 클래스로 정의한다.</li>
+<li><em>root module</em> 이 필요한 이유는 앵귤러는 모듈 단위로 애플리케이션의 코드를 인식하기 때문이며, 계층적으로 자식 모듈을 가질 수 있다.</li>
+<li>모듈은 포함된 컴포넌트들에 대해 완전한 컨텍스트를 제공하며, 다른 모듈에 있는 컴포넌트를 import 해서 사용할 수 있다.</li>
+<li>root 모듈에 포함된 root 컴포넌트는 bootstrap 하는 동안 로드 되지만, 자식 컴포넌트들은 router 와 template을 통해 로드 된다.</li>
+<li>컴포넌트, 서비스, 지시자, 파이프를 모듈에 선언하지 않고는 애플리케이션을 사용할 수 없다.</li>
+</ul>
+
+<h5 id="컴포넌트와-템플릿">🔩 컴포넌트와 템플릿</h5>
+
+<ul>
+<li>컴포넌트: 뷰에서 일어나는 모든 일을 관리
+
+<ul>
+<li>보통 컴포넌트 하나가 화면 전체를 담당하도록 만들지 않고, 기능이나 공통 관심사를 기준으로 화면 하나를 여러 컴포넌트로 나누어 구성</li>
+</ul></li>
+<li>템플릿: 뷰를 구성할 마크업을 포함한 앵귤러에서 제공하는 문법으로 화면을 구성</li>
+<li>@Component 데코레이터
+
+<ul>
+<li>클래스가 컴포넌트임을 알리는 표시이자 컴포넌트를 구성하는 정보(메타데이터)를 전달할 때 쓰는 통로</li>
+<li>메타데이터는 컴포넌트와 연결된 템플릿, 스타일(stylesheet) 정보 등을 정의</li>
+</ul></li>
+<li>컴포넌트 생명 주기
+
+<ul>
+<li><a href="https://angular.io/guide/lifecycle-hooks">https://angular.io/guide/lifecycle-hooks</a></li>
+<li>컴포넌트의 생애를 여러 시점으로 나누어 각 순간마다 고유한 이벤트를 정의하여 인터페이스로 정의</li>
+</ul></li>
+<li>데이터 바인딩
+
+<ul>
+<li>뷰와 컴포넌트에서 발생한 데이터의 변경 사항을 자동으로 일치시키는 데이터 바인딩 지원</li>
+<li>단방향 바인딩
+
+<ul>
+<li>삽입식: 템플릿에 <code>{{useName}}</code> 같은 마크업으로 값을 출력</li>
+<li>프로퍼티 바인딩: DOM이 소유한 property를 [ ]로 바인딩
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;button&#34;</span> <span style="color:#960050;background-color:#1e0010">[</span><span style="color:#a6e22e">disabled</span><span style="color:#960050;background-color:#1e0010">]=&#34;</span><span style="color:#a6e22e">langCode </span><span style="color:#f92672">=</span><span style="color:#e6db74">==</span> <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#a6e22e">ko</span><span style="color:#960050;background-color:#1e0010">&#39;&#34;</span>&gt;한국어&lt;/<span style="color:#f92672">button</span>&gt;
+&lt;<span style="color:#f92672">img</span> <span style="color:#960050;background-color:#1e0010">[</span><span style="color:#a6e22e">src</span><span style="color:#960050;background-color:#1e0010">]=&#39;</span><span style="color:#a6e22e">someImageUrl</span><span style="color:#960050;background-color:#1e0010">&#39;</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;128&#39;</span>&gt;
+&lt;<span style="color:#f92672">img</span> <span style="color:#960050;background-color:#1e0010">[</span><span style="color:#a6e22e">src</span><span style="color:#960050;background-color:#1e0010">]=&#39;{{</span><span style="color:#a6e22e">someImageUrl</span><span style="color:#960050;background-color:#1e0010">}}&#39;</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;128&#39;</span>&gt;</code></pre></div></li>
+<li>이벤트 바인딩: DOM의 이벤트 핸들러로 컴포넌트의 메서드를 사용할 수 있음. 이벤트 대상을 ( )로 선언한 후 핸들러로 사용할 메서드를 지정
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;button&#34;</span> <span style="color:#960050;background-color:#1e0010">(</span><span style="color:#a6e22e">click</span><span style="color:#960050;background-color:#1e0010">)=&#34;</span><span style="color:#a6e22e">setLangCode</span><span style="color:#960050;background-color:#1e0010">(&#39;</span><span style="color:#a6e22e">ko</span><span style="color:#960050;background-color:#1e0010">&#39;)&#34;</span>&gt;한국어&lt;/<span style="color:#f92672">button</span>&gt;
+&lt;<span style="color:#f92672">div</span> <span style="color:#960050;background-color:#1e0010">(</span><span style="color:#a6e22e">mousemove</span><span style="color:#960050;background-color:#1e0010">)=&#34;</span><span style="color:#a6e22e">printPosition</span><span style="color:#960050;background-color:#1e0010">($</span><span style="color:#a6e22e">event</span><span style="color:#960050;background-color:#1e0010">)&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text&#34;</span> <span style="color:#960050;background-color:#1e0010">(</span><span style="color:#a6e22e">keyup</span><span style="color:#960050;background-color:#1e0010">)=&#34;</span><span style="color:#a6e22e">myStr </span><span style="color:#f92672">=</span> <span style="color:#e6db74">$event.target.value&#34;</span> /&gt;</code></pre></div></li>
+<li>$event는 앵귤러에서 이벤트 발생 시 전달하는 표준 이벤트 객체</li>
+</ul></li>
+<li>양방향 바인딩: 바인딩할 요소의 속성에 <code>[(ngModel)]</code> 과 함께 바인딩할 대상을 선언
+
+<ul>
+<li><code>NgModel</code> 지시자를 사용하기 위해서는 <code>FormsModule</code> 을 Import
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text&#34;</span> <span style="color:#960050;background-color:#1e0010">[(</span><span style="color:#a6e22e">ngModel</span><span style="color:#960050;background-color:#1e0010">)]=&#34;</span><span style="color:#a6e22e">myData</span><span style="color:#960050;background-color:#1e0010">&#34;</span> /&gt;
+&lt;<span style="color:#f92672">select</span> <span style="color:#960050;background-color:#1e0010">[(</span><span style="color:#a6e22e">ngModel</span><span style="color:#960050;background-color:#1e0010">)]=&#34;</span><span style="color:#a6e22e">mySelection</span><span style="color:#960050;background-color:#1e0010">&#34;</span>&gt;
+  &lt;<span style="color:#f92672">option</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;A&#34;</span>&gt;A value&lt;/<span style="color:#f92672">option</span>&gt;
+&lt;/<span style="color:#f92672">select</span>&gt;</code></pre></div></li>
+<li>양방향 바인딩된 값이 변경되었을 때 실행되는 <code>ngModelChange</code> 이벤트를 이벤트 바인딩 방식으로 메서드를 지정할 수 있음</li>
+</ul></li>
+</ul></li>
+</ul>
+
+<h5 id="서비스">🔩 서비스</h5>
+
+<ul>
+<li>서비스는 애플리케이션의 순수한 비지니스 로직이나 값을 담는 클래스</li>
+<li>컴포넌트에서 비지니스 로직을 분리하기 위함
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">I18nSupportService</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;../i18n-support.service&#39;</span>;
+</code></pre></div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#a6e22e">construct</span>(<span style="color:#66d9ef">public</span> <span style="color:#a6e22e">i18nSupporter</span>: <span style="color:#66d9ef">I18nSupportService</span>) {}</code></pre></div></li>
+<li>컴포넌트와 달리 필수로 붙여하는 데코레이터가 없으나 <code>injectable</code> 이라는 데코레이터를 붙이는 것을 권장
+
+<ul>
+<li>앵귤러의 의존성 주입기는 <em>Injectable</em> 데코레이터 여부로 인스턴스를 생성할때 서비스 클래스의 생성자에 의존성을 주입해 줄 필요가 있는지 결정</li>
+<li><code>Inject</code> 는 주입할 대상의 정보를 선언할 때 사용</li>
+<li>보통 주입할 대상 타입이 클래스인 경우에는 앵귤러가 타입 정보를 추론하여 자동으로 추론하여 주입하기 때문에 <code>Inject</code> 를 붙일 필요가 없음
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">Injectable</span>, <span style="color:#a6e22e">Inject</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;@angular/core&#39;</span>;
+
+<span style="color:#66d9ef">@Injectable</span>()
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MySpecialLoggerService</span> {
+  <span style="color:#66d9ef">constructor</span>(<span style="color:#66d9ef">@Inject</span>(<span style="color:#e6db74">&#39;logLevel&#39;</span>) <span style="color:#a6e22e">logLevel</span>: <span style="color:#66d9ef">LogLevel</span>) {
+    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">logLevel</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">logLevel</span>;
+  }
+}</code></pre></div></li>
+</ul></li>
+<li>의존성 주입
+
+<ul>
+<li>서비스를 임포트한 후 생성자(constructor)의 인자로 서비스 클래스를 추가</li>
+<li>생성자의 매개 변수에 접근 제어자(public 또는 private)을 붙이면 클래스의 속성으로 선언됨</li>
+<li>예를 들어 앵귤러는 생성자의 매개 변수로 선언한 <code>I18nSupportService</code>를 <code>new I18nSupportService()</code> 자동 생성 해준다.</li>
+<li>의존성 주입기가 의존성을 주입해 주는 통로가 클래스의 매개 변수이다.</li>
+<li>컴포넌트 클래스에서 <code>I18nSupportService</code> 클래스(샘플)를 주입받기 위한 설정이 필요한데 의존성으로 주입할 것이라는 정보를 앵귤러 모듈에 선언한다.</li>
+<li><code>@NgModule</code> 데코레이터에 <code>providers</code> 값으로 배열에 담은 서비스 클래스들을 전달한다.</li>
+<li><strong>providers</strong>
+
+<ul>
+<li>의존성 주입기가 클래스를 생성할 때 참고하는 공급자 타입의 값을 배열로 전달
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#66d9ef">@NgModule</span>({
+  <span style="color:#a6e22e">declarations</span><span style="color:#f92672">:</span> [...],
+  <span style="color:#a6e22e">imports</span><span style="color:#f92672">:</span> [...],
+  <span style="color:#a6e22e">providers</span><span style="color:#f92672">:</span> [<span style="color:#a6e22e">MySpecialLoggerService</span>, {<span style="color:#a6e22e">provide</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;logLevel&#39;</span>, <span style="color:#a6e22e">useValue</span>: <span style="color:#66d9ef">Loglevel.INFO</span>}],
+  <span style="color:#a6e22e">bootstrap</span><span style="color:#f92672">:</span> [<span style="color:#a6e22e">AppComponent</span>]
+})</code></pre></div></li>
+</ul></li>
+</ul></li>
+</ul>
+
+<h5 id="지시자">🔩 지시자</h5>
+
+<ul>
+<li>앵귤러에서 의미하는 지시자는 &ldquo;DOM을 다루기 위한 모든것&rdquo;</li>
+<li>컴포넌트도 지시자를 상속받는 인터페이스
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">Component</span> <span style="color:#66d9ef">extends</span> <span style="color:#a6e22e">Directive</span></code></pre></div></li>
+<li>지시자는 템플릿을 동적으로 만들어주는 요소</li>
+<li>구조 지시자(Structural Directive): DOM의 구조를 동적으로 처리할 때 사용
+
+<ul>
+<li>DOM 트리에 불필요하게 요소를 추가하지 않으면서 구조 지시자를 사용하기 위하여 <em>ng-container</em> 를 사용할 수 있다.</li>
+</ul></li>
+<li>속성 지시자(Attribute Directive): DOM의 속성을 앵귤러 방식으로 관리할 때 사용</li>
+</ul>
+
+<h5 id="파이프">🔩 파이프</h5>
+
+<ul>
+<li>파이프는 템플릿에 데이터를 보여 줄 때 가공이 필요한 경우 사용</li>
+</ul>
+
+<p></br></p>
+
+<h4 id="테스트">🎯 테스트</h4>
+
+<ul>
+<li>앵귤러 CLI 덕분에 테스팅 환경을 구축할 필요가 없음</li>
+<li>카르마(karma) + 자스민(jasmine) + 앵귤러가 제공하는 테스팅 API</li>
+<li>앵귤러가 제공하는 테스팅 환경
+
+<ul>
+<li>TestBed: 앵귤러 안에서 코드가 동작할 수 있는 테스트 전용 실행 환경</li>
+<li>Fixture: 테스트를 위해 컴포넌트를 감싼 프록시와 같은 객체, 컴포넌트를 테스트할 때 이벤트의 실행 및 앵귤러의 실행 과정을 모의해 주는 기능</li>
+</ul></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Elasticsearch 검색( search) API 사용법과 Query DSL 요약 정리</title>
+            <link>/elasticsearch/2018/05/08/elasticsearch-search-api-query-dsl-summary/</link>
+            <pubDate>Tue, 08 May 2018 21:36:00 +0900</pubDate>
+            
+            <guid>/elasticsearch/2018/05/08/elasticsearch-search-api-query-dsl-summary/</guid>
+            <description>사전 지식  Elasticsearch는 검색을 위한 REST API를 제공한다. 검색은 인덱스(Index) 또는 타입(Type) 단위로 수행할 수 있다. 검색 결과는 JSON 형식으로 반환한다.   💻 터미널에서 curl을 이용해서 검색 요청 # 검색 요청 샘플 살펴보기 $ curl &amp;#39;http://127.0.0.1:9200/books/_search?q=title:awesome&amp;amp;pretty&amp;#39; ### 결과 { &amp;#34;took&amp;#34;: 5, # 검색에 소요된 시간(ms) &amp;#34;_shard&amp;#34;: { # 샤드 정보 &amp;#34;total&amp;#34;: 2, &amp;#34;successful&amp;#34;: 2, &amp;#34;failed&amp;#34;: 0 }, &amp;#34;hits&amp;#34;: { &amp;#34;total&amp;#34;: 1, # 결과 개수 &amp;#34;max_score&amp;#34;: 0.3708323, # 검색 결과 중 가장 높은 스코어 &amp;#34;hits&amp;#34;: {} # 검색 결과 상세 } } 1.</description>
+            <content type="html"><![CDATA[
+
+<h3 id="사전-지식">사전 지식</h3>
+
+<ul>
+<li>Elasticsearch는 검색을 위한 REST API를 제공한다.</li>
+<li>검색은 인덱스(Index) 또는 타입(Type) 단위로 수행할 수 있다.</li>
+<li>검색 결과는 JSON 형식으로 반환한다.
+<br />
+<br /></li>
+</ul>
+
+<h4 id="터미널에서-curl을-이용해서-검색-요청">💻 터미널에서 curl을 이용해서 검색 요청</h4>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># 검색 요청 샘플 살펴보기</span>
+$ curl <span style="color:#e6db74">&#39;http://127.0.0.1:9200/books/_search?q=title:awesome&amp;pretty&#39;</span></code></pre></div>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json"><span style="color:#960050;background-color:#1e0010">###</span> <span style="color:#960050;background-color:#1e0010">결과</span>
+{
+  <span style="color:#f92672">&#34;took&#34;</span>: <span style="color:#ae81ff">5</span>,  <span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">검색에</span> <span style="color:#960050;background-color:#1e0010">소요된</span> <span style="color:#960050;background-color:#1e0010">시간(ms)</span>
+  <span style="color:#f92672">&#34;_shard&#34;</span>: {  <span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">샤드</span> <span style="color:#960050;background-color:#1e0010">정보</span>
+    <span style="color:#f92672">&#34;total&#34;</span>: <span style="color:#ae81ff">2</span>,
+    <span style="color:#f92672">&#34;successful&#34;</span>: <span style="color:#ae81ff">2</span>,
+    <span style="color:#f92672">&#34;failed&#34;</span>: <span style="color:#ae81ff">0</span>
+  },
+  <span style="color:#f92672">&#34;hits&#34;</span>: {
+    <span style="color:#f92672">&#34;total&#34;</span>: <span style="color:#ae81ff">1</span>,  <span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">결과</span> <span style="color:#960050;background-color:#1e0010">개수</span>
+    <span style="color:#f92672">&#34;max_score&#34;</span>: <span style="color:#ae81ff">0.3708323</span>,  <span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">검색</span> <span style="color:#960050;background-color:#1e0010">결과</span> <span style="color:#960050;background-color:#1e0010">중</span> <span style="color:#960050;background-color:#1e0010">가장</span> <span style="color:#960050;background-color:#1e0010">높은</span> <span style="color:#960050;background-color:#1e0010">스코어</span>
+    <span style="color:#f92672">&#34;hits&#34;</span>: {}  <span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">검색</span> <span style="color:#960050;background-color:#1e0010">결과</span> <span style="color:#960050;background-color:#1e0010">상세</span>
+  }
+}</code></pre></div>
+
+<h3 id="1-querystring-으로-검색하기">1. Querystring 으로 검색하기</h3>
+
+<ul>
+<li><p>🔍 <em>GET</em> /_all/_search?q=title:awesome</p>
+
+<ul>
+<li>모든 인덱스에서 검색을 수행</li>
+<li><code>q</code>는 기본 검색 파라미터</li>
+<li><code>q</code>의 값으로 <code>검색필드:검색어</code>를 전달
+<br />
+<br /></li>
+</ul></li>
+
+<li><p>🔍 <em>GET</em> /_all/_search?q=title:awesome&amp;size=50</p>
+
+<ul>
+<li>검색된 결과 도큐먼트를 몇 개까지 표시할지 지정
+<br />
+<br /></li>
+</ul></li>
+
+<li><p>🔍 <em>GET</em> /books,videos/_search?q=title:awesome</p>
+
+<ul>
+<li>여러 <u>인덱스</u>를 동시에 검색</li>
+<li>검색할 대상 인덱스를 쉼표(,)로 구분
+<br />
+<br /></li>
+</ul></li>
+
+<li><p>🔍 <em>GET</em> /books/_search?q=title:awesome%20AND%20elastic</p>
+
+<ul>
+<li>여러 <u>검색어</u>를 동시에 검색</li>
+<li>검색어를 <code>AND</code> 또는 <code>OR</code>로 구분</li>
+<li>공백으로 구분하면 기본 <code>OR</code>로 취급, 공백은 <a href="https://en.wikipedia.org/wiki/Percent-encoding">URL Encode</a> 처리 필요 (%20)
+<br />
+<br /></li>
+</ul></li>
+
+<li><p>🔍 <em>GET</em> /books/_search?q=title:awesome&amp;_source=false</p>
+
+<ul>
+<li>검색 결과에서 도큐먼트 내용을 표시하지 않음</li>
+<li>hit 수와 score 등의 메타 정보만 출력
+<br />
+<br /></li>
+</ul></li>
+
+<li><p>🔍 <em>GET</em> /books/_search?q=title:awesome&amp;fields=title,author</p>
+
+<ul>
+<li>검색 결과에 표시할 필드를 지정
+<br />
+<br /></li>
+</ul></li>
+
+<li><p>🔍 <em>GET</em> /books/_search?q=author:jonnung&amp;sort=title:desc</p>
+
+<ul>
+<li>검색 결과를 <code>sort</code>로 지정한 필드를 기준으로 정렬</li>
+<li>주의할 점은 정렬 기준 필드에 포함된 단어들을 기준으로 오름차순/내림차순에 따라 가장 높은 순위를 가진 단어를 선택하고, 선택된 단어로 다시 도큐먼트를 정렬</li>
+<li>정렬 필드 전체를 기준으로 결과 도큐먼트를 정렬하고자 한다면 해당 필드가 _not<em>analyzed</em> 로 매핑 설정이 되어 있어야 함
+(즉 해당 필드의 값 전체가 하나의 Term이 된다. Term이 무엇이냐? 계속&hellip;)
+<br />
+<br /></li>
+</ul></li>
+</ul>
+
+<h3 id="2-querydsl로-검색하기">2. QueryDSL로 검색하기</h3>
+
+<h4 id="query-context-filter-context">Query context, Filter context</h4>
+
+<ul>
+<li><p>query context</p>
+
+<ul>
+<li>이 문서가 얼마나 잘 일치하는가?</li>
+<li>스코어 계산</li>
+<li>쿼리 어디서나 <code>query</code> 파라미터를 전달하는 경우
+<br />
+<br /></li>
+</ul></li>
+
+<li><p>filter context</p>
+
+<ul>
+<li>이 문서가 일치하는가? Yes or No</li>
+<li>스코어 계산 안함</li>
+<li>메모리에 캐싱됨</li>
+<li>쿼리 어디서나 <code>filter</code> 파라미터를 사용하는 경우</li>
+<li><code>bool</code> 쿼리 안에서 <code>filter</code>나 <code>must_not</code> 파라미터를 사용하는 경우</li>
+<li><code>constant_score</code> 쿼리나 <code>filter</code> 어그리게이션 안에서 <code>filter</code> 파라미터를 사용하는 경우
+<br />
+<br /></li>
+</ul></li>
+</ul>
+
+<h4 id="term-query">🔍 Term Query</h4>
+
+<h5 id="term">📝 term</h5>
+
+<p>형태소 분석이 적용된 컬럼의 값들은 형태소 분석기에 따라 토큰으로 분리되는데 이것을 <strong>텀(term)</strong> 이라 한다.<br />
+모든 대문자는 소문자로 변형되고, 중복된 단어는 삭제된다.<br />
+Term query는 주어진 질의문이 저장된 텀과 완전히 일치한 내용만 찾는다.<br />
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;term&#34;</span>: {
+      <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;awesome&#34;</span>
+    }
+  }
+}</code></pre></div>
+<br></p>
+
+<h5 id="terms">📝 terms</h5>
+
+<p>2개 이상의 term을 같이 검색하려면 terms 쿼리를 이용한다.<br />
+필드의 값은 항상 배열로 전달해야 한다.<br />
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;terms&#34;</span>: {
+      <span style="color:#f92672">&#34;title&#34;</span>: [<span style="color:#e6db74">&#34;awsome&#34;</span>, <span style="color:#e6db74">&#34;elastic&#34;</span>, <span style="color:#e6db74">&#34;jonnung&#34;</span>],
+      <span style="color:#f92672">&#34;minium_should_match&#34;</span>: <span style="color:#ae81ff">2</span>
+    }
+  }
+}</code></pre></div></p>
+
+<ul>
+<li><strong>minium_should_match</strong>: 몇 개 이상의 term과 일치해야 검색 결과에 시킬지 설정
+<br />
+<br /></li>
+</ul>
+
+<h5 id="prefix">📝 prefix</h5>
+
+<p><strong>term</strong> 쿼리와 마찬가지로 질의어에 형태소 분석이 적용되지 않기 때문에 정확한 term값으로 검색해야 한다.<br />
+주어진 질의어로 term의 접두어를 검색하므로 term의 일부만으로도 검색할 수 있다.<br />
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;prefix&#34;</span>: {
+      <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;awe&#34;</span>
+    }
+  }
+}</code></pre></div></p>
+
+<p><br></p>
+
+<h5 id="range">📝 range</h5>
+
+<p>주어진 범위에 해당하는 필드값이 있는 도큐먼트를 검색할 수 있다.</p>
+
+<ul>
+<li>gte(greater than or equal): 주어진 값보다 크거나 같다.</li>
+<li>ge(greater than): 주어진 값보다 크다.</li>
+<li>lte(less than or equal): 주어진 값보다 작거나 같다.</li>
+<li>lt(less than): 주어진 값보다 작다.</li>
+</ul>
+
+<p>비교할 수 있는 필드는 숫자 또는 날짜/시간 형식이어야 한다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;range&#34;</span>: {
+      <span style="color:#f92672">&#34;pages&#34;</span>: {<span style="color:#f92672">&#34;gte&#34;</span>: <span style="color:#ae81ff">50</span>, <span style="color:#f92672">&#34;lt&#34;</span>: <span style="color:#ae81ff">150</span>}
+    }
+  }
+}</code></pre></div></p>
+
+<hr />
+
+<h4 id="full-text-query">🔍 Full text Query</h4>
+
+<h5 id="match">📝 match</h5>
+
+<p>Term Query와 거의 동일하다. 색인된 term과 비교해서 일치하는 도큐먼트만 검색한다.<br />
+하지만 term query와 다른점은 주어진 질의문 자체를 형태소 분석을 거친 후 그 결과로 검색을 수행한다.<br />
+아래 질의문 결과는 이전 term의 예제와 동일한 결과가 나온다.<br />
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;match&#34;</span>: {
+      <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;Awesome&#34;</span>
+    }
+  }
+}</code></pre></div></p>
+
+<p>여러 검색어에 대한 조건식을 변경하려면 <code>operator</code>을 사용한다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;match&#34;</span>: {
+      <span style="color:#f92672">&#34;title&#34;</span>: {
+        <span style="color:#f92672">&#34;query&#34;</span>: <span style="color:#e6db74">&#34;Awesome Elastic&#34;</span>,
+        <span style="color:#f92672">&#34;operator&#34;</span>: <span style="color:#e6db74">&#34;and&#34;</span>  <span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">default</span> <span style="color:#960050;background-color:#1e0010">&#39;and&#39;</span>
+      }
+    }
+  }
+}</code></pre></div></p>
+
+<p><code>analyzer</code>를 지정해 검색 쿼리의 어떤 형태소 분석을 적용할지 결정할 수 있다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;match&#34;</span>: {
+      <span style="color:#f92672">&#34;title&#34;</span>: {
+        <span style="color:#f92672">&#34;query&#34;</span>: <span style="color:#e6db74">&#34;Awesome Elastic&#34;</span>,
+        <span style="color:#f92672">&#34;analyzer&#34;</span>: <span style="color:#e6db74">&#34;whitespace&#34;</span>
+      }
+    }
+  }
+}</code></pre></div></p>
+
+<p><br></p>
+
+<h5 id="match-phrase">📝 match_phrase</h5>
+
+<p>구문 전체와 일치하는 도큐먼트를 검색한다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;match_phrase&#34;</span>: {
+      <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;Awesome elasticsearch&#34;</span>
+    }
+  }
+}</code></pre></div></p>
+
+<p><br></p>
+
+<h5 id="match-phrase-prefix">📝 match_phrase_prefix</h5>
+
+<p><strong>match_phrase</strong>와 동일한 동작을 하지만 검색어의 마지막 term을 접두어로 일치하는 도큐먼트를 검색한다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;match_phrase_prefix&#34;</span>: {
+      <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;Awesome elasticsearch fe&#34;</span>
+    }
+  }
+}</code></pre></div></p>
+
+<p><br></p>
+
+<h5 id="multi-match">📝 multi_match</h5>
+
+<p><strong>match</strong> query를 여러 필드에 적용할 때 사용한다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;multi_match&#34;</span>: {
+      <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;Awesome Elastic&#34;</span>,
+      <span style="color:#f92672">&#34;fields&#34;</span>: [<span style="color:#e6db74">&#34;title&#34;</span>, <span style="color:#e6db74">&#34;contents&#34;</span>]
+    }
+  }
+}</code></pre></div></p>
+
+<p><br></p>
+
+<h5 id="query-string">📝 query_string</h5>
+
+<p>URI 검색에서 사용했던 형식의 질의문과 같은 방식으로 사용할 수 있는 쿼리.<br />
+질의문에 &lt;필드명&gt;: &lt;질의문&gt; 형식으로 필드를 지정할 수 있고 AND, OR 값을 이용해 조건문을 사용할 수 있다.<br />
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;query_string&#34;</span>: {
+      <span style="color:#f92672">&#34;query&#34;</span>: <span style="color:#e6db74">&#34;title:awesome&#34;</span>
+    }
+  }
+}</code></pre></div></p>
+
+<hr />
+
+<h4 id="bool-query">🔍 Bool Query</h4>
+
+<p>여러 쿼리를 boolean 조건으로 결합해서 도큐먼트를 검색한다.</p>
+
+<ul>
+<li><code>must</code> : 반드시 매칭되는 조건, score에 영향을 준다.</li>
+<li><code>filter</code> : <code>must</code>와 동일한 동작하지만, score에 영향을 주지 않는다.</li>
+<li><code>should</code> : bool 쿼리가 query context에 있고 <code>must</code> 또는 <code>filter</code> 절이 있다면, <code>should</code> 쿼리와 일치하는 결과가 없더라도 매치가 된다. bool 쿼리가 filter context 안에 있거나, <code>must</code> 또는 <code>filter</code> 중에 하나라도 있는 경우에만 매칭된다. <code>minimum_should_match</code> 이 값을 지정해서 컨트롤할 수 있다.</li>
+<li><code>must_not</code> : 이 쿼리와 매칭되지 않아야 한다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;query&#34;</span>: {
+    <span style="color:#f92672">&#34;bool&#34;</span>: {
+      <span style="color:#f92672">&#34;must&#34;</span>: {
+        <span style="color:#f92672">&#34;term&#34;</span>: {<span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;the&#34;</span>}
+      },
+      <span style="color:#f92672">&#34;must_not&#34;</span>: {
+        <span style="color:#f92672">&#34;term&#34;</span>: {<span style="color:#f92672">&#34;contents&#34;</span>: <span style="color:#e6db74">&#34;world&#34;</span>}
+      },
+      <span style="color:#f92672">&#34;should&#34;</span>: [
+        {<span style="color:#f92672">&#34;term&#34;</span>: {<span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;awesome&#34;</span>}},
+        {<span style="color:#f92672">&#34;term&#34;</span>: {<span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;elastic&#34;</span>}}
+      ]
+    }
+  }
+}</code></pre></div></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Fluentd란 무엇인가? 구조와 기능 살펴보기</title>
+            <link>/system/2018/04/06/fluentd-log-collector-part1/</link>
+            <pubDate>Fri, 06 Apr 2018 14:00:00 +0900</pubDate>
+            
+            <guid>/system/2018/04/06/fluentd-log-collector-part1/</guid>
+            <description>서버로 들어오는 요청이나 DB에서 실행되는 SQL, 각종 배치 스크립트가 실행되면서 남기는 로그들을 기본적인 파일 형태로만 남기고, 주기적으로 로테이팅 되기만 하고 버려지고 있었다.
+가끔 서비스에 문제가 생겼거나 디버깅 목적으로 로그를 찾아볼 때는 모든 서버를 돌아다니면서 find &amp;amp; grep 해야 하는 번거로움이 있었다. (또 그렇게 찾아서 나온 결과가 엄청 많을 때는 터미널을 가득 채웠기 때문에 거북목을 하고서 눈이 빠지라고 모니터를 쳐다봐야 하는 헬게이트가 열리기도 했다)
+이렇게 불편하고 활용도가 떨어지는 부분을 보완하기 위해 ELK 구성을 도입했고, 각 노드에서는 Logstash가 로그 파일을 Tail 해서 적절한 가공 후에 Elasticsearch로 적재하게 했다.</description>
+            <content type="html"><![CDATA[
+
+<p>서버로 들어오는 요청이나 DB에서 실행되는 SQL, 각종 배치 스크립트가 실행되면서 남기는 로그들을 기본적인 파일 형태로만 남기고, 주기적으로 로테이팅 되기만 하고 버려지고 있었다.</p>
+
+<p>가끔 서비스에 문제가 생겼거나 디버깅 목적으로 로그를 찾아볼 때는 모든 서버를 돌아다니면서 <em>find</em> &amp; <em>grep</em> 해야 하는 번거로움이 있었다. (또 그렇게 찾아서 나온 결과가 엄청 많을 때는 터미널을 가득 채웠기 때문에 거북목을 하고서 눈이 빠지라고 모니터를 쳐다봐야 하는 헬게이트가 열리기도 했다)</p>
+
+<p>이렇게 불편하고 활용도가 떨어지는 부분을 보완하기 위해 <a href="https://www.elastic.co/kr/elk-stack">ELK</a> 구성을 도입했고, 각 노드에서는 <a href="https://www.elastic.co/kr/products/logstash">Logstash</a>가 로그 파일을 Tail 해서 적절한 가공 후에 Elasticsearch로 적재하게 했다.
+하지만 어느 날 서비스 이용자가 몰리면서 서버가 갑자기 바빠지더니 덩달아 Logstash도 바빠졌다. 시스템 자원이 부족한 상황에서 Logstash가 잡아먹는 자원이 매우 아까운 상황이었다.</p>
+
+<p>힘들었던 고비를 넘기고 나니까 전체적인 로그 수집 프로세스를 재정비해야겠다는 생각이 들었다.
+현재 준비된 ELK 구성에서 가장 신속하게 개선할 수 있는 방향으로는 일단 로그 수집을 중앙화해서 수집 현황을 모니터링하고, 이슈 감지와 대응에 대한 비용을 줄인다. 그리고 각 서버에 배치된 Logstash를 보다 가벼운 대체품으로 교체하는 것으로 판단했다.</p>
+
+<p>Fluentd를 조사하면서 위와 같은 구성이 가능할 것이라 확신했고, 현재는 안정적인 구성을 마친 상태이다. 이 글을 시작으로 앞으로 이어지는 글은 이 프로젝트를 진행하면서 조사했던 내용과 삽질 그리고 노하우에 대한 소개가 될 것이다.</p>
+
+<p>먼저 Fluentd에 대해 알아보자!<br />
+&lsquo;<em>이런 개념이구나.. 이런 기능이 있구나..</em>&lsquo;하면서 가볍게 살펴보는 것을 추천한다.</p>
+
+<hr />
+
+<p><img src="https://raw.githubusercontent.com/fluent/fluentd-docs/master/public/logo/Fluentd_square.png" alt="fluentd-logo" /></p>
+
+<h3 id="fluentd-소개">Fluentd 소개</h3>
+
+<p><a href="https://www.fluentd.org/">Fluentd</a>는 로그(데이터) 수집기(collector)다. 보통 로그를 수집하는 데 사용하지만, 다양한 데이터 소스(HTTP, TCP 등)로부터 데이터를 받아올 수 있다.<br />
+ Fluentd로 전달된 데이터는 <strong>tag</strong>, <strong>time</strong>, <strong>record(JSON)</strong> 로 구성된 이벤트로 처리되며, 원하는 형태로 가공되어 다양한 목적지(Elasticsearch, S3, HDFS 등)로 전달될 수 있다.</p>
+
+<p>Fluentd는 C와 Ruby로 개발되었다. 더 적은 메모리를 사용해야 하는 환경에서는 Fluentd forwarder의 경량화 버전인 <a href="http://fluentbit.io/documentation/0.12/about/fluentd_and_fluentbit.html">Fluentd-Bit</a> 와 함께 사용할 수 있다.
+(최초 로그 수집 구조를 설계 할 때는 각 서버에 Fluent-Bit를 배치하려고 했었으나 HA 구성이 안 되는 이유로 모두 Fluentd로 구성했다. Fluent-Bit의 Load Balancing/Failover 기능에 대한 이슈는 <a href="https://github.com/fluent/fluent-bit/issues/203">여기</a>에서 확인할 수 있다)</p>
+
+<p>데이터 유실을 막기 위해 메모리와 파일 기반의 버퍼(Buffer) 시스템을 갖고 있으며, Failover 를 위한 HA(High Availability) 구성도 가능하다.</p>
+
+<p>이 글은 Fluentd v1.0을 기준으로 작성되었다.</p>
+
+<h3 id="fluentd가-내부에서-처리하는-데이터의-특징">Fluentd가 내부에서 처리하는 데이터의 특징</h3>
+
+<h4 id="이벤트-event">이벤트 | Event</h4>
+
+<p>Fluentd가 읽어들인 데이터는 <em>tag</em>, <em>time</em>, <em>record</em> 로 구성된 <strong>이벤트(Event)</strong> 로 처리된다.</p>
+
+<ul>
+<li>tag: 이벤트를 어디로 보낼지 결정하기 위한 구분값</li>
+<li>time: 이벤트가 발생한 시간</li>
+<li>record: 데이터 (JSON)</li>
+</ul>
+
+<p></br></p>
+
+<h4 id="태그-tag">태그 | Tag</h4>
+
+<p>Fluentd의 특징 중에 가장 핵심은 <strong>태그(Tag)</strong> 이다. 태그는 이벤트가 흘러가면서 적절한 Filter, Parser 그리고 Output 플러그인으로 이동할 수 있는 기준이 된다.</p>
+
+<p>아래 예시의 경우 <em>input_tail</em> 플러그인으로 전달된 이벤트에는 <strong>dev.sample</strong>라는 태그가 붙게 된다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf"># tag 사용 예시
+&lt;source&gt;
+  @type tail
+  tag dev.sample
+  path /var/log/sample.log
+&lt;/source&gt;
+
+&lt;match dev.sample&gt;
+  @type stdout
+&lt;match&gt;</code></pre></div></p>
+
+<p></br></p>
+
+<h3 id="fluentd를-어떻게-써야할까">Fluentd를 어떻게 써야할까?</h3>
+
+<p>먼저 Fluentd를 어떻게 쓸 수 있는지 알아보는 것이 이해에 도움이 될 것 같다.</p>
+
+<ul>
+<li>어플리케이션 로그를 한곳으로 모으기 (예: <a href="https://docs.fluentd.org/v1.0/articles/python">Python 로그</a>, <a href="https://docs.fluentd.org/v1.0/articles/php">PHP 로그</a>)</li>
+<li>서비스 로그 모니터링 (예: Elasticsearch와 Kibana)</li>
+<li>데이터 분석을 위한 hdfs로 적재하기</li>
+<li>AWS S3로 데이터 저장</li>
+<li>Stream 데이터 처리</li>
+</ul>
+
+<p><em>* 참고: <a href="https://docs.fluentd.org/v1.0/categories/logging-from-apps">공식 문서 - Use Cases</a></em></p>
+
+<p></br></p>
+
+<h3 id="fluentd-설정하기">Fluentd 설정하기</h3>
+
+<p>Fluentd는 원하는 기능들을 플러그인 방식으로 설정 파일에 추가함으로써 사용할 수 있다.<br />
+전체적인 동작 흐름은 Input -&gt; Filter -&gt; Buffer -&gt; Output 단계로 동작하며, 세부적으로 7개의 플러그인(Input, Parser, Filter, Fomatter, Storage, Buffer, Output)을 목적대로 자유롭게 활용할 수 있다.</p>
+
+<p>Fluentd를 설치하고, 작성한 설정 파일을 환경변수 <strong>FLUENT_CONF</strong>에 명시하거나 <strong>-c</strong> 실행 파라미터 에 전달하면 된다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># export FLUENT_CONF=&#34;/etc/fluent/fluent.conf&#34;</span>
+
+fluentd -c /etc/fluent/fluent.conf</code></pre></div></p>
+
+<p>(이 글에서는 fleuntd 설치 방법과 실행에 대한 자세한 내용은 다루지 않는다. 하지만 이어지는 다음 글에서는 docker로 구성한 fluentd 실행 환경과 플러그인 설치, 그리고 실행과 배포에 대한 내용을 다룰 예정이다.)</p>
+
+<p>설정 파일을 작성하기 위한 기본적인 문법은 공식 문서에서 가볍게 읽어보는 것을 추천한다. <a href="https://docs.fluentd.org/v1.0/articles/config-file">자세히 보기</a></p>
+
+<p></br></p>
+
+<h3 id="fluentd-플러그인-살펴보기">Fluentd 플러그인 살펴보기</h3>
+
+<p>fluentd로 할 수 있는 것들에 대해 알아보자.<br />
+이 글에서는 모든 플러그인을 다루진 않고, 필자가 로그 수집 프로세스를 구성하면서 사용했던 플러그인 위주로 설명한다.</p>
+
+<h4 id="input-플러그인">🔌 Input 플러그인</h4>
+
+<p>다양한 데이터 소스로부터 로그 데이터를 받거나 가져온다.</p>
+
+<blockquote>
+<p>in_tail</p>
+</blockquote>
+
+<p>대표적인 in_tail 플러그인은 파일을 <a href="https://ko.wikipedia.org/wiki/Tail">tail</a> 해서 데이터를 읽어 들인다.
+단 파일의 시작부터 읽지 않으며, 로테이팅 되어 새로운 파일이 생성된 경우에만 처음부터 읽게 된다.<br />
+그리고 해당 파일의 inode를 추적하기 때문에 <strong>pos_file</strong> 파라미터를 사용할 경우 fluentd가 재실행 되었을 때 파일의 마지막에 읽은 부분부터 다시 처리하게 된다.</p>
+
+<p>* 참고: <a href="https://docs.fluentd.org/v1.0/articles/in_tail">공식 문서 - in tail</a></p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;source&gt;
+  @type tail
+  path /var/log/nginx/access.log
+  pos_file /var/log/fluent/nginx-access.log.pos
+  tag nginx.access
+  &lt;parse&gt;
+    @type nginx
+  &lt;/parse&gt;
+&lt;/source&gt;</code></pre></div>
+
+<p></br></p>
+
+<blockquote>
+<p>in_forward</p>
+</blockquote>
+
+<p>forward라는 프로토콜을 사용해 TCP로 데이터를 수신할 수 있다. 보통 다른 Fluentd 노드로부터 데이터를 전달받기 위해 사용한다.<br />
+forward로 전달되는 데이터는 JSON이나 Messagepack 형식으로 되어 있다.
+fluentd 인스턴스를 <a href="https://www.fluentd.org/blog/fluentd-v0.14.15-has-been-released">멀티 프로세스</a>로 실행 했을때는 각각의 프로세스가 동일한 forward 포트를 공유하게 된다.</p>
+
+<p>* 참고: <a href="https://docs.fluentd.org/v1.0/articles/in_forward">공식 문서 - in_forward</a></p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;source&gt;
+  @type forward
+  port 24224
+  bind 0.0.0.0
+&lt;/source&gt;</code></pre></div>
+
+<hr />
+
+<h4 id="parser-플러그인">🔌 Parser 플러그인</h4>
+
+<p>전달 받은 데이터를 파싱하기 위해 &lt;parse&gt; 섹션을 정의해서 사용한다.<br />
+&lt;parse&gt; 섹션은 Input 플러그인(&lt;source&gt;), Output 플러그인(&lt;match&gt;), Filter 플러그인(&lt;filter&gt;) 안에서 정의하며, <strong>@type</strong> 파라미터로 사용할 Parser 플러그인 이름을 지정한다.<br />
+기본적으로 내장된 Parser 플러그인은 <em>regexp</em>, <em>apache2</em>, <em>nginx</em>, <em>syslog</em>, <em>csv</em>, <em>tsv</em>, <em>json</em>, <em>none</em> 등이 있다.</p>
+
+<p>* 참고: <a href="https://docs.fluentd.org/v1.0/articles/parse-section">공식 문서 - Config: Parse Section</a></p>
+
+<p></br></p>
+
+<blockquote>
+<p>parser_regexp</p>
+</blockquote>
+
+<p>정규표현식으로 데이터를 파싱할 수 있는 Parser이다.<br />
+정규표현식 패턴은 <strong>expression</strong> 파라미터에 명시하며, 반드시 최소 1개 이상의 <a href="https://www.regular-expressions.info/named.html"><u>캡쳐 그룹</u></a>과 <strong>time</strong> 캡쳐 그룹이 필요하다.<br />
+<strong>time</strong> 캡쳐 그룹의 키 이름은 <strong>time_key</strong> 파라미터로 변경할 수 있다.<br />
+시간과 관련된 추가 파라미터로는 시간 포맷을 지정할 수 있는 <strong>time_format</strong>과 타임존을 설정하는 <strong>timezone</strong> 파리미터가 있다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;parse&gt;
+  @type regexp
+  expression /^(?&lt;remote_addr&gt;[^ ]+) &#34;(?&lt;http_x_forwarded_for&gt;([^ ]+(, )?)+)&#34; (?&lt;http_x_client&gt;[^ ]+) \[(?&lt;timestamp&gt;(0?[1-9]|[12][0-9]|3[01])/[a-zA-Z]+/\d\d\d\d:(00|0[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9]):([0-9]|[0-5][0-9]) \+[0-9]+)\] &#34;(?&lt;request_method&gt;\S+) (?&lt;request_uri&gt;[^&#34;]+) (?&lt;server_protocol&gt;[^&#34;]+)&#34; (?&lt;status_code&gt;\d{3}) (?&lt;body_byte_sent&gt;\d+) &#34;(?&lt;http_referer&gt;[^&#34;]*)&#34; &#34;(?&lt;http_user_agent&gt;.+)&#34; (?&lt;request_time&gt;[^ ]+)$/
+  time_key timestamp
+  time_format %d/%b/%Y:%H:%M:%S %z
+  timezone +09:00
+&lt;/parse&gt;</code></pre></div>
+
+<p></br></p>
+
+<blockquote>
+<p>parser_none</p>
+</blockquote>
+
+<p>데이터를 행마다 새로운 필드 1개로 다시 담을 때 사용한다. 데이터를 필터/가공하지 않고, 다음 플러그인이나 다른 Fluentd 노드로 전달할 때 사용될 수 있다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;parse&gt;
+  @type none
+  message_key log  # JSON 형식의 &#34;log&#34; Key로 데이터가 담긴다
+&lt;/parse&gt;</code></pre></div>
+
+<hr />
+
+<h4 id="filter-플러그인">🔌 Filter 플러그인</h4>
+
+<ol>
+<li>특정 필드에 대해 필터링 조건을 적용</li>
+<li>새로운 필드를 추가</li>
+<li>필드의 삭제하거나 값을 숨김</li>
+</ol>
+
+<p></br></p>
+
+<blockquote>
+<p>filter_grep</p>
+</blockquote>
+
+<p>명시된 필드값에 정규표현식과 매칭되는 값만 필터링한다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;filter dev.postgresql.*&gt;
+  @type grep
+  &lt;regexp&gt;
+    key log
+    pattern ^statement: .+$
+  &lt;/regexp&gt;
+&lt;/filter&gt;</code></pre></div>
+
+<ul>
+<li><strong>key</strong>: &lt;regexp&gt; 섹션에서 정규표현식(pattern)을 적용할 필드명을 지정</li>
+<li><strong>pattern</strong>: 정규표현식</li>
+</ul>
+
+<p></br></p>
+
+<blockquote>
+<p>filter_parser</p>
+</blockquote>
+
+<p>이벤트 레코드를 파싱해서 파싱된 결과를 다시 이벤트에 적용한다. <em>filter_parser</em> 플러그인은 데이터를 파싱하기 위해 Parser 플러그인을 함께 사용한다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;filter dev.django-rest-api.*&gt;
+  @type parser
+  key_name log
+  reserve_data true
+  
+  &lt;parse&gt;
+    @type regexp
+    expression /^(?&lt;host&gt;[^ ]*) [^ ]* (?&lt;user&gt;[^ ]*) \[(?&lt;timestamp&gt;\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01]) (00|0[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9]):([0-9]|[0-5][0-9])(,[0-9]{3}))\] &#34;(?&lt;method&gt;\S+)(?: +(?&lt;path&gt;[^ ]*) +\S*)?&#34; (?&lt;code&gt;[^ ]*) (?&lt;size&gt;[^ ]*)$/
+    time_key timestamp
+    time_format %Y-%m-%d%H:%M:%S,%L
+    timezone +09:00
+  &lt;/parse&gt;
+&lt;/filter&gt;</code></pre></div>
+
+<ul>
+<li><strong>key_name</strong>: 파싱할 필드명 지정</li>
+<li><strong>reserse_data</strong>: 파싱한 결과의 원본 필드를 유지</li>
+</ul>
+
+<p></br></p>
+
+<blockquote>
+<p>filter_record_transformer</p>
+</blockquote>
+
+<p>이벤트 레코드에 새로운 컬럼을 추가하거나 수정, 삭제할때 사용하는 플러그인이다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;filter dev.django-rest-api.*&gt;
+  @type record_transformer
+  &lt;record&gt;
+    worker_name fluentd_multi
+    tag ${tag}
+    remove_keys sample
+  &lt;/record&gt;
+&lt;/filter&gt;</code></pre></div>
+
+<ul>
+<li>&lt;record&gt; 섹션 안에 &ldquo;NEW_FIELD: NEW_VALUE&rdquo; 형태로 새로 추가할 컬럼을 명시</li>
+<li><strong>remove_keys</strong> 파라미터에 배열 형태로 전달된 컬럼들을 삭제</li>
+</ul>
+
+<p></br></p>
+
+<h4 id="output-플러그인">🔌 Output 플러그인</h4>
+
+<p>Output 플러그인은 &lt;match&gt; 섹션에 정의하며, v1.0부터 Buffering과 Flushing에 대한 설정을 &lt;match&gt; 섹션안에 &lt;buffer&gt; 서브 섹션으로 정의한다.</p>
+
+<p>Buffering과 Flushing에 대해서는 3가지 모드를 제공한다.</p>
+
+<ol>
+<li><strong>Non-Buffered mode</strong>: 데이터를 buffer에 담지않고, 즉시 내보낸다.</li>
+<li><strong>Synchronous Buffered mode</strong>: <em>stage</em> 라는 buffer chunk에 담고, 이 chunk를 <em>queue</em> 에 쌓아서 처리한다.</li>
+<li><strong>Asynchronous Buffered mode</strong>: Synchronous buffered mode와 동일하게 <em>stage</em> 와 <em>queue</em> 가 있지만 동기 방식으로 chunk를 만들지 않는다.</li>
+</ol>
+
+<p>Output 플러그인은 buffer chunk에 key를 지정할 수 있으며, key와 동일한 이름을 갖는 이벤트를 분리해서 chunk에 담도록 설정할 수 있다.
+Buffer 설정에 대한 내용은 아래에서 자세히 다룬다.</p>
+
+<p><em>* 참고: <a href="https://docs.fluentd.org/v1.0/articles/parse-section">공식 문서 - Output Plugins</a></em></p>
+
+<p></br></p>
+
+<blockquote>
+<p>output_stdout</p>
+</blockquote>
+
+<p>이벤트를 표준출력(stdout)으로 내보낸다. Fluentd 설정을 만들기 초반에 디버깅용으로 자주 사용한다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;match **&gt;
+  @type stdout
+&lt;/match&gt;</code></pre></div></p>
+
+<p></br></p>
+
+<blockquote>
+<p>output_forward</p>
+</blockquote>
+
+<p>다른 Fluentd 노드로 이벤트를 전달할때 사용하며, 반드시 1개 이상의 &lt;server&gt; 섹션을 포함해야 한다.<br />
+이 플러그인은 Load-Balancing, Fail-Over, Replication 기능을 설정하기 위한 파라미터들을 포함하고 있다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;match **&gt;
+  @type forward
+
+  &lt;server&gt;
+    name another.fluentd1
+    host 127.0.0.1
+    port 24224
+    weight 60
+  &lt;/server&gt;
+  &lt;server&gt;
+    name another.fluentd2
+    host 127.0.0.1
+    port 24225
+    weight 40
+  &lt;/server&gt;
+&lt;/match&gt;</code></pre></div>
+
+<p></br>
+<strong>※ Load Balancing / Fail-over, Replication 파라미터 설정</strong></p>
+
+<ul>
+<li>Load balancing
+
+<ul>
+<li><strong>weight</strong>: &lt;server&gt; 섹션에서 로드 밸런싱 가중치 설정</li>
+</ul></li>
+<li>Failover
+
+<ul>
+<li><strong>send_timeout</strong>: 이벤트 전송시 타임아웃, 기본 60초</li>
+<li><strong>hard_timeout</strong>: 이벤트를 전달할 서버를 찾기 위한 고정 타임아웃, 기본 <code>send_timeout</code>과 동일</li>
+<li><strong>heartbeat_interval</strong>: heartbeat 간격, 기본 1초</li>
+<li><strong>phi_thresthold</strong>: 대상 서버 탐지 실패시 사용할 임계치. 이 값은 <code>heartbeat_interval</code> 보다 반드시 커야 한다.</li>
+</ul></li>
+<li>Replication
+
+<ul>
+<li>&lt;secondary&gt; 섹션: 모든 서버를 사용할 수 없을때 백업 설정</li>
+<li><a href="https://docs.fluentd.org/v1.0/articles/out_copy">Copy 플러그인</a>으로 이벤트를 복사해서 여러 다른 Output 으로 보낼 수 있다.</li>
+</ul></li>
+</ul>
+
+<p></br></p>
+
+<blockquote>
+<p>output_elasticsearch</p>
+</blockquote>
+
+<p>Elascticsearch로 이벤트 레코드를 전송한다. 레코드 전송은 Bulk 단위로 이뤄지기 때문에 최초 전달받은 이벤트가 즉시 ES로 전송되지 않는다.<br />
+<a href="https://github.com/uken/fluent-plugin-elasticsearch">output_elasticsearch</a> 플러그인은 fluentd에 기본으로 포함되어 있지 않기 때문에 추가 설치가 필요하다.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;match **&gt;
+  @type elasticsearch
+  hosts 127.0.0.1:9200,127.0.0.1:9201
+  index_name django-rest-api
+  type_name django-rest-api
+  include_timestamp true
+  time_key timestamp
+  include_tag_key true
+  tag_key fluentd_tag
+&lt;/match&gt;</code></pre></div>
+</br></p>
+
+<p><strong>※ ES, Index 관련 파라미터 설정</strong></p>
+
+<ul>
+<li><strong>hosts</strong>: ES 클러스터의 각 노드 IP와 Port를 콤마로 구분해서 지정</li>
+<li><strong>index_name</strong>: Index 이름
+
+<ul>
+<li><code>logstash_format</code> 파라미터를 <em>true</em> 로 설정하면 <code>index_namm</code> 파라미터는 무시되며, logstash 에서 사용하는 형태로 <em>logstash-2018.04.04</em> 형식으로 자동 부여된다.</li>
+<li>추가로 <code>logstash_prefix</code>, <code>logstash_prefix_separator</code>, <code>logstash_dateformat</code> 옵션을 지정하면 logstash 스타일 Index 이름 형식을 변경할 수 있다. (ex. #{logstash_prefix}-#{formated_date}) <a href="https://github.com/uken/fluent-plugin-elasticsearch#logstash_format">자세히 보기</a></li>
+</ul></li>
+<li><strong>type_name</strong>: <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/_basic_concepts.html#_type">Type</a> 이름, 이 값을 지정하지 않을 경우 기본값은 &lsquo;fluentd&rsquo;</li>
+<li><strong>include_timestamp</strong>: <code>logstash_format</code> 파라미터를 사용 했을때 추가되는 @timestamp 필드만 별도로 추가</li>
+<li><strong>time_key</strong>: 기본적으로 로그가 수집된 시간이 @timestamp 필드의 값이 되지만, 이 파라미터에 지정된 필드가 @timestamp 필드의 값으로 사용된다.</li>
+<li><strong>include_tag_key</strong>: Fluentd 태그를 포함 시킨다.</li>
+<li><strong>tag_key</strong>: Fluentd 태그를 저장할 필드 이름</li>
+</ul>
+
+<p></br></p>
+
+<p><strong>※ Index, Type 이름을 동적으로 생성하기</strong></p>
+
+<p>fluentd 태그명에 있는 문자열들을 조합해서 Index, Type 이름이 동적으로 생성되도록 할 수 있다.<br />
+이 기능을 사용하기 위해서는 플러그인 이름을 기존 <em>@type elasticsearch</em> 에서 <em>@type elasticsearch_dynamic</em> 으로 변경해야 한다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-conf" data-lang="conf">&lt;match dev.django-rest-api.*&gt;
+  @type elasticsearch_dynamic
+  hosts 127.0.0.1:9200,127.0.0.1:9201
+  index_name ${tag_parts[0]}-${tag_parts[1]}-${Time.at(time).getutc.strftime(@logstash_dateformat)}  # eg. dev-django-rest-api-2018.03.08
+  type_name ${tag_parts[1]}  # eg. django-rest-api
+&lt;/match&gt;</code></pre></div>
+
+<hr />
+
+<h4 id="buffer-플러그인">🔌 Buffer 플러그인</h4>
+
+<p>buffer 플러그인은 Output 플러그인에서 사용된다.
+buffer에는 <em>chunk</em> 들의 집합을 담고 있으며, 각 <em>chunk</em> 에는 이벤트들의 묶음이 저장된 하나의 <a href="https://ko.wikipedia.org/wiki/%EB%B0%94%EC%9D%B4%EB%84%88%EB%A6%AC_%EB%9D%BC%EC%A7%80_%EC%98%A4%EB%B8%8C%EC%A0%9D%ED%8A%B8">Blob</a> 파일이다.<br />
+이 <em>chunk</em> 가 가득차게 되었을때 다음 목적지로 전달된다.<br />
+buffer는 내부적으로는 이벤트가 담긴 *chunk*를 저장하는 &ldquo;<strong>stage</strong>&rdquo; 영역과 전달되기 전 대기하는 <em>chunk</em> 를 보관하는 &ldquo;<strong>queue</strong>&rdquo; 로 나뉜다.
+<img src="https://docs.fluentd.org/images/fluentd-v0.14-plugin-api-overview.png" alt="fluentd-buffer-overview" /></p>
+
+<p>※ chunk 전달 실패에 대한 재시도 파라미터</p>
+
+<p><em>chunk</em> 를 목적지로 전달할 수 없는 상황이 발생했을때 fluentd는 기본적으로 재시도 횟수를 배수로 증가 시킨다.</p>
+
+<ul>
+<li><strong>retry_wait</strong>: 최초 재시도를 하게 되는 시간</li>
+<li><strong>retry_exponential_backoff_base</strong>: 재시도 횟수를 배수로 증가 시키기 위한 기준값 N</li>
+<li><strong>retry_type</strong>: 기본값은 <code>exponential_backoff</code>, <code>periodic</code>으로 변경하면 주기적으로 재시도 하도록 할 수 있다.</li>
+<li><strong>retry_randomize</strong>: 재시도 간격은 기본적으로 랜돔한 값으로 정해진다.  이 파라미터를 <em>false</em> 로 설정할 경우 이 동작을 끌 수 있다.</li>
+<li><strong>retry_max_interval</strong>: 최대 재시도 기간</li>
+<li><strong>retry_max_times</strong> 와 <code>retry_timeout</code>이 초과하게 되면 <code>queue</code>에 있는 모든 chunk들은 제거된다.</li>
+<li><strong>retry_timeout</strong>: 재시도 시간 초과</li>
+<li><strong>retry_forever</strong>: 영원히 재시도</li>
+<li><strong>retry_secondary_threshold</strong>: Secondary로 재시도하기 위한 임계치, 이 비율을 넘게 되면 chunk는 secondary로 전달된다.</li>
+</ul>
+
+<p>위 파라미터들은 모두 기본값이 설정되어 있기 때문에 모두 설정할 필요는 없다. <a href="https://docs.fluentd.org/v1.0/articles/buffer-section#retries-parameters">자세히 보기</a></p>
+
+<h3 id="마치며">마치며</h3>
+
+<p>지금까지 살펴본 Fluentd의 개념과 기능들을 활용해 다음 글에서는 간단한 샘플 구성을 작성해보고, 직접 실행하는 가이드를 정리할 예정이다.</p>
+
+<h3 id="참고">참고</h3>
+
+<ul>
+<li>Fluentd 공식 사이트: <a href="https://www.fluentd.org/">Fluentd | Open Source Data Collector | Unified Logging Layer</a></li>
+<li>Fluentd 공식 문서: <a href="https://docs.fluentd.org/v1.0/articles/quickstart">Quickstart Guide | Fluentd</a></li>
+<li>도움 받았고, 함께 보면 좋은 글
+
+<ul>
+<li><a href="http://bcho.tistory.com/1115">조대협의 블로그 :: 분산 로그 &amp; 데이타 수집기 Fluentd</a></li>
+<li><a href="http://blog.seulgi.kim/2014/04/fluentd-pluggable-log-collector.html">슭의 개발 블로그: Fluentd - Pluggable log collector</a></li>
+<li><a href="https://www.slideshare.net/edsiper/fluent-bit-log-forwarding-at-scale?qid=e77a1d9a-b603-41f9-8e9f-7bf6dbf0c921&amp;v=&amp;b=&amp;from_search=3">Fluent Bit: Log Forwarding at Scale</a></li>
+</ul></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Guide to better Git - 좋은 커밋 메시지 작성하기 </title>
+            <link>/git/2018/01/02/guide-to-better-git-commit-message/</link>
+            <pubDate>Tue, 02 Jan 2018 03:14:17 +0900</pubDate>
+            
+            <guid>/git/2018/01/02/guide-to-better-git-commit-message/</guid>
+            <description>Guide to better Git Commit Message
+좋은 커밋 메시지를 작성해야 하는 이유?  커밋 로그 가독성 동료에 대한 배려  협업 코드 리뷰  오류 출처 찾기  커밋 로그 가독성  간결하고 일관성 있는 커밋 메시지는 가독성을 높여준다  제한된 어휘와 단순화된 언어를 사용한다  읽지 않아도 되는 불필요한 정보와 중복을 제거한다  꼭 읽어야 하는 내용만 기록한다   동료에 대한 배려  동료 개발자(미래의 나)와 변경사항에 대한 맥락 을 공유할 수 있는 최고의 수단은 잘 다듬어진 커밋 메시지 Pull Request(또는 Merge Request)를 리뷰할 때 코드 조각의 앞뒤 맥락 을 살피는 노력을 줄일 수 있다  오류 출처 찾기  오류 메시지에서 표시되는 파일명과 오류가 발생한 줄 번호를 활용해서 해당하는 부분의 마지막 커밋의 출처를 찾을 수 있다  django-rest-framework git:(65791d8) $ git blame MANIFEST.</description>
+            <content type="html"><![CDATA[
+
+<h1 id="guide-to-better-git">Guide to better Git</h1>
+
+<p><em>Commit Message</em></p>
+
+<h2 id="좋은-커밋-메시지를-작성해야-하는-이유">좋은 커밋 메시지를 작성해야 하는 이유?</h2>
+
+<ul>
+<li>커밋 로그 가독성</li>
+<li>동료에 대한 배려
+
+<ul>
+<li>협업</li>
+<li>코드 리뷰</li>
+</ul></li>
+<li>오류 출처 찾기</li>
+</ul>
+
+<h3 id="커밋-로그-가독성">커밋 로그 가독성</h3>
+
+<ul>
+<li>간결하고 일관성 있는 커밋 메시지는 가독성을 높여준다
+
+<ul>
+<li>제한된 어휘와 단순화된 언어를 사용한다</li>
+</ul></li>
+<li>읽지 않아도 되는 불필요한 정보와 중복을 제거한다
+
+<ul>
+<li>꼭 읽어야 하는 내용만 기록한다</li>
+</ul></li>
+</ul>
+
+<h3 id="동료에-대한-배려">동료에 대한 배려</h3>
+
+<ul>
+<li>동료 개발자(미래의 나)와 변경사항에 대한 <em>맥락</em> 을 공유할 수 있는 최고의 수단은 잘 다듬어진 커밋 메시지</li>
+<li>Pull Request(또는 Merge Request)를 리뷰할 때 코드 조각의 앞뒤 <em>맥락</em> 을 살피는 노력을 줄일 수 있다</li>
+</ul>
+
+<h3 id="오류-출처-찾기">오류 출처 찾기</h3>
+
+<ul>
+<li>오류 메시지에서 표시되는 파일명과 오류가 발생한 줄 번호를 활용해서 해당하는 부분의 마지막 커밋의 출처를 찾을 수 있다</li>
+</ul>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">django-rest-framework git:<span style="color:#f92672">(</span>65791d8<span style="color:#f92672">)</span> $ git blame MANIFEST.in
+
+04084c96 <span style="color:#f92672">(</span>Matthias Runge <span style="color:#ae81ff">2015</span>-05-05 <span style="color:#ae81ff">1306</span> +0200 <span style="color:#ae81ff">1</span><span style="color:#f92672">)</span> include README.md
+04084c96 <span style="color:#f92672">(</span>Matthias Runge <span style="color:#ae81ff">2015</span>-05-05 <span style="color:#ae81ff">1306</span> +0200 <span style="color:#ae81ff">2</span><span style="color:#f92672">)</span> include LICENSE.md
+65791d8c <span style="color:#f92672">(</span>Tom Christie <span style="color:#ae81ff">2017</span>-12-21 <span style="color:#ae81ff">1059</span> +0000 <span style="color:#ae81ff">3</span><span style="color:#f92672">)</span> recursive-include rest_framework/static *.js *.css *.png *.ico *.eot *.svg *.ttf *.woff *.woff2
+abef84fb <span style="color:#f92672">(</span>Ryan P Kilby <span style="color:#ae81ff">2017</span>-11-27 <span style="color:#ae81ff">0525</span> -0500 <span style="color:#ae81ff">4</span><span style="color:#f92672">)</span> recursive-include rest_framework/templates *.html schema.js
+37cfe903 <span style="color:#f92672">(</span>Matthias Runge <span style="color:#ae81ff">2017</span>-12-21 <span style="color:#ae81ff">1143</span> +0100 <span style="color:#ae81ff">5</span><span style="color:#f92672">)</span> recursice-include rest_framework/locale *.mo ff2fa7a8 <span style="color:#f92672">(</span>Benedek Kiss <span style="color:#ae81ff">2017</span>-08-29 <span style="color:#ae81ff">2200</span> +0200 <span style="color:#ae81ff">6</span><span style="color:#f92672">)</span> global-exclude __pycache__
+ff2fa7a8 <span style="color:#f92672">(</span>Benedek Kiss <span style="color:#ae81ff">2017</span>-08-29 <span style="color:#ae81ff">2200</span> +0200 <span style="color:#ae81ff">7</span><span style="color:#f92672">)</span> global-exclude *.py<span style="color:#f92672">[</span>co<span style="color:#f92672">]</span></code></pre></div>
+
+<h2 id="좋은-커밋-메시지-작성을-위한-약속">좋은 커밋 메시지 작성을 위한 약속</h2>
+
+<ol>
+<li>제목과 본문을 한 줄 띄워 분리한다</li>
+<li>제목은 가급적 50자로 제한하며, 최대 69자를 넘지 않는다</li>
+<li>제목은 명령조로 작성한다</li>
+<li>제목 끝에 마침표(.)는 찍지 않는다</li>
+<li>본문은 적당한 위치에서 개행을 한다</li>
+<li>본문은 <em>어떻게</em> 보다는 <em>무엇</em> 과 <em>왜</em> 를 설명한다 (코드는 보통 따로 설명될 필요가 없다)</li>
+</ol>
+
+<h2 id="tip-제목은-명령조로-작성한다">Tip. 제목은 명령조로 작성한다</h2>
+
+<ul>
+<li><p>좋은 제목</p>
+
+<ul>
+<li>가독성을 위해 서브시스템 X를 리팩토링한다 (Refactor subsystem X for readability)</li>
+<li>Getting Started 문서를 갱신한다 (Update getting started documentation)</li>
+<li>Deprecated된 메소드를 삭제한다 (Remove deprecated methods)</li>
+<li>버전 1.0.0으로 판올림한다 (Release version 1.0.0)</li>
+</ul></li>
+
+<li><p>나쁜 제목</p>
+
+<ul>
+<li>Y로 버그가 고쳐짐 (Fixed bug with Y)</li>
+<li>X의 동작 변화 (Changing behavior of X)</li>
+<li>망가진 것을 좀 더 고친 것들 (More fixes for broken stuff)</li>
+<li>좋은 새 API 메소드 (Sweet new API methods)</li>
+</ul></li>
+</ul>
+
+<h2 id="tip-적절한-제목인지-판단하는-규칙">Tip. 적절한 제목인지 판단하는 규칙</h2>
+
+<pre><code class="language-text">&quot;만약 이 커밋이 적용되면 이커밋은 {커밋 제목행을 여기에}”
+</code></pre>
+
+<ul>
+<li><em>만약 이 커밋이 적용되면 이 커밋은</em> <strong>가독성을 위해 서브시스템X를 리팩토링한다</strong></li>
+<li><em>만약 이 커밋이 적용되면 이 커밋은</em> <strong>Getting Started 문서를 갱신한다</strong></li>
+<li><em>만약 이 커밋이 적용되면 이 커밋은</em> <strong>Deprecated된 메소드를 삭제한다</strong></li>
+<li><em>만약 이 커밋이 적용되면 이 커밋은</em> <strong>버전 1.0.0으로 판올림한다</strong></li>
+</ul>
+
+<h2 id="좋은-커밋-메시지-샘플">좋은 커밋 메시지 샘플</h2>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ git commit -m <span style="color:#e6db74">&#34;가독성을 위해 회원가입 API 뷰셋 클래스를 리펙토링 한다&#34;</span></code></pre></div>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ git commit -m <span style="color:#e6db74">&#34;회원정보 수정 내역 API 뷰셋이 RetrieveViewSet 클래스를 상속하도록 수정한다
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">회원정보 수정 내역 조회 API URI를 설계를 /audit/user/{user_no} 형태로 변경한다.
+</span><span style="color:#e6db74">그리고 외부에 제공되지 않기 때문에 기본 퍼미션 클래스를 적용한다.
+</span><span style="color:#e6db74">&#34;</span></code></pre></div>
+
+<h2 id="29cm-개발팀-커밋-메시지-스타일">29CM 개발팀 커밋 메시지 스타일</h2>
+
+<ol>
+<li>제목 앞에 앱(Django or Angular) 이름을 적는다</li>
+<li>제목 앞 또는 끝에 이슈 트래킹 아이디를 적는다</li>
+</ol>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git commit -m <span style="color:#e6db74">&#34;audit: 회원정보 수정 내역 API 뷰셋이 RetrieveViewSet 클래스를 상속 하도록 수정한다 (#NEXT29CM-1858)&#34;</span></code></pre></div>
+
+<h2 id="참고">참고</h2>
+
+<ul>
+<li><a href="https://item4.github.io/2016-11-01/How-to-Write-a-Git-Commit-Message/">https://item4.github.io/2016-11-01/How-to-Write-a-Git-Commit-Message/</a></li>
+<li><a href="http://meetup.toast.com/posts/106">http://meetup.toast.com/posts/106</a></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>2017년 회고 </title>
+            <link>/etc/2017/12/31/review-2017/</link>
+            <pubDate>Sun, 31 Dec 2017 10:00:17 +0900</pubDate>
+            
+            <guid>/etc/2017/12/31/review-2017/</guid>
+            <description>2017년이 하루 남은 오후, 나도 처음으로 회고라는걸 적어보겠다고 카페에 와서 노트북을 폈다.
+일본, 대만 여행 후쿠오카는 2015년 12월 마지막 주에 다녀왔지만 거의 2016년 여행이나 다름없어서 포함했다.
+신혼여행 이후 사랑하는 아내와 처음 가는 해외 여행은 기대와 설렘만으로도 충분히 100점짜리 여행이었다.
+2박 3일이라는 짧은 일정에 뚜벅이를 너무 길게 해서 아내 무릎에 염증이 생기기도 했지만 그 외 모든 면에서 완벽한 여행이였다.
+그 후로 3개월 뒤인 3월에 대만 여행을 다녀왔다. 일정은 일본 여행때 얻은 교훈을 따라 3박 4일로 계획했고, 일본 여행때 부족했던 준비들을 보완해서 계획도 좀 더 꼼꼼하게 짰던 것 같다.</description>
+            <content type="html"><![CDATA[
+
+<p>2017년이 하루 남은 오후, 나도 처음으로 회고라는걸 적어보겠다고 카페에 와서 노트북을 폈다.</p>
+
+<h1 id="일본-대만-여행">일본, 대만 여행</h1>
+
+<p>후쿠오카는 2015년 12월 마지막 주에 다녀왔지만 거의 2016년 여행이나 다름없어서 포함했다.<br />
+신혼여행 이후 사랑하는 아내와 처음 가는 해외 여행은 기대와 설렘만으로도 충분히 100점짜리 여행이었다.<br />
+2박 3일이라는 짧은 일정에 뚜벅이를 너무 길게 해서 아내 무릎에 염증이 생기기도 했지만 그 외 모든 면에서 완벽한 여행이였다.</p>
+
+<p>그 후로 3개월 뒤인 3월에 대만 여행을 다녀왔다. 일정은 일본 여행때 얻은 교훈을 따라 3박 4일로 계획했고, 일본 여행때 부족했던 준비들을 보완해서 계획도 좀 더 꼼꼼하게 짰던 것 같다.</p>
+
+<p>해외 여행을 두번정도 다녀오니까 해외여행에 대해 두려움은 완전히 없어진 듯하다. 그리고 역시 여행은 다양한 경험과 생각들을 할 수 있고, 색다른 추억을 만들 수 있는 최고의 방법인 것 같다.</p>
+
+<p>7~8월에는 베스트 프렌드를 만나기 위해 뉴욕 여행도 기획 했지만 엄청난 가격의 항공권 가격 때문에 어쩔 수 없이 잠정 연기를 할 수밖에 없었다.</p>
+
+<h1 id="ps4">PS4</h1>
+
+<p>85D 개발자 친구들의 뽐뿌로 3개월 동안 용돈을 아껴서 모은 돈으로 PS4를 구매했다.<br />
+어렸을 때 했던 추억의 메탈기어솔리드를 다시 만났을때 그 흥분을 지금도 잊을 수 없다.<br />
+게임기 샀다고 매일 게임기 앞에서 살진 않았다.<br />
+항상 내가 해야 할 일들을 최우선으로 하면서 한가한 시간에만 온전히 게임을 즐겼다.<br />
+아내도 게임을 할 때는 별다른 말은 없다. 그만큼 내가 알아서 잘 한다는 의미겠지..</p>
+
+<h1 id="퇴사">퇴사</h1>
+
+<p>2년간 근무했던 회사를 퇴사했다.<br />
+퇴사하는 날에 처음 입사했던 날의 내 모습이 생각났다. 이 회사는 내 첫 번째 이직이었고, 새로운 서비스와 다양한 일을 해볼 수 있다는 기대감이 가득했고, 열심히 배워서 잘 할 수 있다는 자신감도 넘쳤다.<br />
+돌이켜보면 참 열심히 일은 했는데 욕심과 간절함은 없었던 것 같다. 내가 하고 싶은 일을 하기 위해서는 더 적극적일 필요가 있었다.<br />
+1년 정도는 묵묵히 주어진 일만 했는데 잠시 망설이는 사이에 기회를 놓치고 말았다.</p>
+
+<p>그 후 1년도 그전과 비슷하게 흘러갔다. 변화를 주고 싶어서 함께 하는 동료들과 이런저런 시도를 해봤었다.<br />
+jQuery 로 된 반복된 코드들을 줄여보고자 Javascript 함수 스코프를 활용해서 최대한 모듈화 하려고 했고, AngularJS로 다시 개발 해보려고 공부도 참 많이 했다.<br />
+PHP가 여기저기에서 많이 얻어맞고 다녀도 어짜피 우리는 PHP를 써야하니까 그럴거면 차라리 제대로 잘 써보자며 Modern 한 PHP가 되기 위해 했던 시도들.<br />
+당장 TDD는 어렵더라도 할 수 있는 부분부터 테스트 코드를 작성하려고 했고, 함께 일 할때 가장 중요한 것은 서로에 대한 배려라고 생각해서 이를 위한 첫 번째 과제는 깨끗한 코드라고 생각했다. 우리 파트에 새로 입사한 개발자 두 명과 클린코드 스터디를 하면서 의견을 주고받으면서 클린코드에 대한 자신만의 철학과 원칙을 가질 수 있었다.</p>
+
+<p>하지만 내가 능력이 부족했던 탓일까 내가 생각하는 좋은 방향으로 바꾸는 일은 생각보다 진전이 없었고, 그 과정에서 부딪히는 문제와 갈등들이 점점 자신감을 떨어뜨렸고 실망감만 늘어날 뿐이었다.</p>
+
+<p>이 당시에 나라는 사람을 생각해보면 참 애매한 사람이라는 생각이 들었다. 주변 사람보다 조금 더 열심히 하는 척만 하면서 더 잘하기를 바랐다. 그리고 주변 사람들에게 좋은 영향을 주는 것처럼 보였지만, 주변 사람들로부터 상처도 많이 받는다.</p>
+
+<h1 id="이직">이직</h1>
+
+<p>평소에 친분이 있던 분을 통해서 입사를 제안받았다. 지인의 추천을 통해 회사를 들어가게 어떤 면에서 조금 수월한 부분이 없지 않아 있다. 일차적으로 나를 대신 증명 해주는 사람이 있으니까 말이다. 하지만 함께 일 해본 적이 없는 이상 그 증명이 정확하다고 할 수 없다. 나 자신은 내가 증명해야 한다.</p>
+
+<p>내가 입사하던 7월은 회사에 정말 중요한 시기였다. 정차 없이 최고 속도로 달리고 있던 기차에 매달리듯 탑승했다.<br />
+당장 도움이 될 수 있는 일들부터 해나갔고, 개발 규모나 촉박한 일정에 비해 일손이 부족한 곳을 먼저 서포트했다.<br />
+출근하는 지하철 안에서 Typescript와 Angular를 처음 공부해서 그날 바로 코딩을 했다.<br />
+Python은 기본기는 나름 잘 되어 있다고 생각했고, Django 도 기본 사용법은 알고 있는 상태여서 API 개발도 큰 어려움은 없었다.<br />
+입사 후 두 달 동안 최선을 다해 달렸다. 이렇게 하드하게 일해 본 적이 없는 내게는 사실 신나는 경험이었다. 프로젝트가 성공적으로 끝났을 때 얻을 자유와 성취감을 떠올리며 동료들과 함께 달렸다.<br />
+하지만 우리는 목표한 일정에 원하는 결과물은 내놓을 수 없었다. 내가 생각하는 가장 큰 실패 원인은 우리는 우리를 너무 과대평가했기 때문이라고 생각한다.</p>
+
+<p>실패 후 며칠 동안은 정말 막 입사했을때 보다도 적응하기가 힘들었다. 회사 가면 뭘 해야 할지 몰랐다. 대체 우리는 어떻게 되는 걸까 하는 두려움과 함께 고생했던 다른 부서 사람들에게 기대했던 결과를 안겨주지 못한 미안함이 들었다.</p>
+
+<p>뭐라도 해야겠다고 싶어서 팀원 3명과 파이썬 도서 리뷰 스터디도 했다. 우선 정주행을 최우선 목표로 했고, 파이썬 기본기를 탄탄히 다져서 제대로 써보자는 취지로 시작했다. 예상보다 스터디 준비하는 데 많이 시간을 투자하게 되었고, 그 결과 얻는 것도 많았다.</p>
+
+<p>얼마 전부터 우리는 다시 달려야 하는 이유가 생겼다. 이번에는 반드시 종착역에 도착하리라 자신한다.</p>
+
+<h1 id="독서">독서</h1>
+
+<ul>
+<li>Modern PHP (100%)</li>
+<li>실전 프로젝트로 배우는 AngularJS (70%)</li>
+<li>TCP/IP 쉽게 더 쉽게 (100%, 2회)</li>
+<li>그림으로 공부하는 IT 인프라구조 (100%)</li>
+<li>Clean Code (80%)</li>
+<li>서버/인프라 엔지니어를 위한 DevOps(40%)</li>
+<li>팀을 위한 Git (50%, 3회)</li>
+<li>후니의 쉽게 쓴 시스코 네트워킹(10%, 2회)</li>
+<li>파이썬 코딩의 기술(100%)</li>
+<li>앵귤러 첫걸음(40%, 현재 진행중)</li>
+<li>투 스쿱 오브 장고 (30%, 현재 진행중)</li>
+</ul>
+
+<h1 id="2018년은-어떻게-살-것인가">2018년은 어떻게 살 것인가?</h1>
+
+<ul>
+<li><p>블로그<br />
+이 회고를 적으면서 느낀 건 역시 난 글을 잘 못 쓰는 것 같다. 그러니까 괜히 멋있는 척 하지 말고 많이 남겨보자!<br />
+얼마 전 85D 송년회 때 나온 아이디어로 매달 1개씩 블로그를 작성하고 메타블로그를 만들어서 모아서 공유하기로 했다.</p></li>
+
+<li><p>개인 프로젝트/서비스 만들기<br />
+이 목표는 매년 초에 계획했지만 결국 한 번도 완수하지 못했다. 결국 아이디어가 없다는 핑계 때문인데 일단은 개인 큐에 쌓아둔 것부터 클리어하려고 한다! 그러다 보면 좋은 아이디어가 떠오르겠지.<br />
+회사 일만 해서는 절대 나아갈 수 없다고 생각한다. 회사에서 얻을 수 있는 경험은 제한적일 수 밖에 없기 때문이다. 경험은 나 스스로 만들어갈 수밖에 없다.</p></li>
+
+<li><p>배드민턴 C조<br />
+솔직히 개발보다 배드민턴을 더 잘 할 수 있다는 자신감이 든다. 사실 근거없는 자신감이다.<br />
+하지만 올해는 나랑 잘 맞는 파트너와 남복 D조 우승과 아내와 함께 혼합 복식 출전이 목표다!</p></li>
+
+<li><p>독서<br />
+너무 개발 서적 위주로만 읽었던 것 같다.<br />
+올해는 매달 기술서적 1권, 그 밖에 역사/인문/소설 1권씩 읽어보자.</p></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>[네트워킹 기초 공부] IP Address</title>
+            <link>/network/2017/11/15/network-study-ip-address/</link>
+            <pubDate>Thu, 16 Nov 2017 06:00:17 +0900</pubDate>
+            
+            <guid>/network/2017/11/15/network-study-ip-address/</guid>
+            <description>1. 라우터에서의 IP 주소  라우터에는 이더넷 인터페이스와 시리얼 인터페이스를 갖고 있고, 각각 IP 주소를 할당한다.  이더넷 인터페이스: 내부 네트워크에 연결되는 포트 시리얼 인터페이스: 외부(인터넷) 네트워크에 연결되는 포트  라우터는 인터페이스별로 각각 IP 주소를 배정하지만, 스위치나 허브는 IP 주소를 장비별로 하나씩만 배정  스위치나 허브에 IP 주소를 배정하는 이유는 단지 관리 목적, IP 주소를 배정하지 않아도 통신 가능   2. IP 주소 체계  32자리 2진수로 구성 네트워크 부분(Network Part)과 호스트 부분(Host Part)로 구분  네트워크란?</description>
+            <content type="html"><![CDATA[
+
+<p><img src="https://static.pexels.com/photos/442150/pexels-photo-442150.jpeg" alt="network switch" /></p>
+
+<h2 id="1-라우터에서의-ip-주소">1. 라우터에서의 IP 주소</h2>
+
+<ul>
+<li>라우터에는 이더넷 인터페이스와 시리얼 인터페이스를 갖고 있고, 각각 IP 주소를 할당한다.
+
+<ul>
+<li>이더넷 인터페이스: 내부 네트워크에 연결되는 포트</li>
+<li>시리얼 인터페이스: 외부(인터넷) 네트워크에 연결되는 포트</li>
+</ul></li>
+<li>라우터는 인터페이스별로 각각 IP 주소를 배정하지만, 스위치나 허브는 IP 주소를 장비별로 하나씩만 배정
+
+<ul>
+<li>스위치나 허브에 IP 주소를 배정하는 이유는 단지 관리 목적, IP 주소를 배정하지 않아도 통신 가능</li>
+</ul></li>
+</ul>
+
+<h2 id="2-ip-주소-체계">2. IP 주소 체계</h2>
+
+<ul>
+<li>32자리 2진수로 구성</li>
+<li>네트워크 부분(Network Part)과 호스트 부분(Host Part)로 구분
+
+<ul>
+<li>네트워크란? 하나의 브로드캐스트 영역(Broadcast Domain)</li>
+<li>한 브로드캐스트 영역 안에 있는 PC들은 라우터 없이도 통신 가능</li>
+<li>라우터는 라우팅 할 때 IP 주소의 네트워크 부분만 참고</li>
+</ul></li>
+</ul>
+
+<h2 id="3-ip-클래스">3. IP 클래스</h2>
+
+<p>IP 주소를 네트워크 부분과 호스트 부분으로 나누는 규칙</p>
+
+<h3 id="3-1-클래스-a">3-1. 클래스 A</h3>
+
+<ul>
+<li>32개의 이진수 중 맨 앞쪽 하나가 항상 0으로 시작</li>
+<li>앞의 8비트(Octet)가 네트워크 부분</li>
+<li>첫번째 Octet 십진수(네트워크 번호)로 1 ~ 126 까지 사용 가능</li>
+<li><code>0.0.0.0</code> 과 <code>127.0.0.0 ~ 127.255.255.255</code> 는 제외 (약속)</li>
+<li>호스트 부분이 전부 0인 경우와 전부 1인 경우는 제외
+
+<ul>
+<li>예를 들어 <code>13.0.0.0</code> 은 네트워크 전체를 나타내고, <code>13.255.255.255</code>는 모든 호스트들에게 전송할 때 사용하는 브로드캐스트 주소를 의미</li>
+</ul></li>
+<li>한 네트워크 안에 배정할 수 있는 호스트 수는 16,777,214개</li>
+</ul>
+
+<h3 id="3-2-클래스-b">3-2. 클래스 B</h3>
+
+<ul>
+<li>맨 앞이 반드시 10(이진수)로 시작</li>
+<li>앞의 16비트(2 Octet)가 네트워크 부분</li>
+<li>네트워크 번호는 <code>128.0 ~ 191.255</code> 까지 사용 가능</li>
+<li>한 네트워크 안에 배정할 수 있는 호스트 수는 65,534개</li>
+</ul>
+
+<h3 id="3-3-클래스-c">3-3. 클래스 C</h3>
+
+<ul>
+<li>맨 앞이 110(이진수)로 시작</li>
+<li>앞의 24비트(3 Octet)가 네트워크 부분</li>
+<li>네트워크 번호는 <code>192.0.0 ~ 223.255.255</code> 까지 사용 가능</li>
+<li>한 네트워크 안에 배정할 수 있는 호스트 수는 254개</li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>[네트워킹 기초 공부] 네트워크 장비들 - 허브(Hub), 브릿지(Bridge), 스위치(Switch), 라우터(Router)</title>
+            <link>/network/2017/11/15/network-study-networking-equipments/</link>
+            <pubDate>Wed, 15 Nov 2017 06:00:17 +0900</pubDate>
+            
+            <guid>/network/2017/11/15/network-study-networking-equipments/</guid>
+            <description>허브 (Hub)  여러개의 포트를 갖고 있으며, 들어온 데이터를 그대로 재전송 하는 단순한 역할 UTP 케이블의 경우 최대 전송거리가 약 100미터, 멀리 떨어진 장비간의 통신을 전달할 수 있음 이더넷 허브는 CSMA/CD(Carrier Sense Multiple Access / Collision Detection) 을 적용 받기 때문에 하나의 콜리진 도메인(Collision Domain) 안에 있게 된다. 따라서 어느 한순간 한 PC만이 데이터를 전송할 수 있음 여러대의 허브를 서로 연결하면 콜리전 도메인이 더욱 커지게 된다. 콜리전 도메인을 나누어 줄 수 있는 장비로는 브릿지와 스위치가 있음  브릿지 (Bridge)  스위치가 나오기 전까지는 브릿지가 주로 사용됨 허브로 만들어진 콜리전 도메인 중간에서 다리 역할을 함 브릿지로 나누어진 콜리전 도메인(세그먼트)마다 속해 있는 PC들끼리는 각각 통신이 가능(물론 CSMA/CD도 적용) 브릿지(스위치) 세부 기능  Learning: 브릿지(스위치)로 전송된 통신 프레임의 맥(MAC) 어드레스를 맥 어드레스 테이블(브릿지 테이블)에 저장 Flooding: 맥 어드레스 테이블에 없는 주소라면 들어온 포트를 제외한 나머지를 모든 포트로 전송 Forwarding: 브릿지가 목적지 맥 어드레스를 자신의 맥 어드레스 테이블에 가지고 있고, 이 목적지가 출발지 맥 어드레이스와 다른 세그먼트에 있는 경우.</description>
+            <content type="html"><![CDATA[
+
+<p><img src="/images/network-cable-ethernet-computer.jpeg" alt="network equipment" /></p>
+
+<h2 id="허브-hub">허브 (Hub)</h2>
+
+<ul>
+<li>여러개의 포트를 갖고 있으며, 들어온 데이터를 그대로 재전송 하는 단순한 역할</li>
+<li>UTP 케이블의 경우 최대 전송거리가 약 100미터, 멀리 떨어진 장비간의 통신을 전달할 수 있음</li>
+<li>이더넷 허브는 <a href="https://ko.wikipedia.org/wiki/%EB%B0%98%EC%86%A1%ED%8C%8C_%EA%B0%90%EC%A7%80_%EB%8B%A4%EC%A4%91_%EC%A0%91%EC%86%8D_%EB%B0%8F_%EC%B6%A9%EB%8F%8C_%ED%83%90%EC%A7%80">CSMA/CD</a>(Carrier Sense Multiple Access / Collision Detection) 을 적용 받기 때문에 하나의 콜리진 도메인(Collision Domain) 안에 있게 된다. 따라서 어느 한순간 한 PC만이 데이터를 전송할 수 있음</li>
+<li>여러대의 허브를 서로 연결하면 콜리전 도메인이 더욱 커지게 된다. 콜리전 도메인을 나누어 줄 수 있는 장비로는 브릿지와 스위치가 있음</li>
+</ul>
+
+<h2 id="브릿지-bridge">브릿지 (Bridge)</h2>
+
+<ul>
+<li>스위치가 나오기 전까지는 브릿지가 주로 사용됨</li>
+<li>허브로 만들어진 콜리전 도메인 중간에서 다리 역할을 함</li>
+<li>브릿지로 나누어진 콜리전 도메인(세그먼트)마다 속해 있는 PC들끼리는 각각 통신이 가능(물론 CSMA/CD도 적용)</li>
+<li>브릿지(스위치) 세부 기능
+
+<ul>
+<li><em>Learning</em>: 브릿지(스위치)로 전송된 통신 프레임의 맥(MAC) 어드레스를 맥 어드레스 테이블(브릿지 테이블)에 저장</li>
+<li><em>Flooding</em>:  맥 어드레스 테이블에 없는 주소라면 들어온 포트를 제외한 나머지를 모든 포트로 전송</li>
+<li><em>Forwarding</em>: 브릿지가 목적지 맥 어드레스를 자신의 맥 어드레스 테이블에 가지고 있고, 이 목적지가 출발지 맥 어드레이스와 다른 세그먼트에 있는 경우. Flooding 과 다르게 오직 해당 포트로만 프레임을 전송</li>
+<li><em>Filtering</em>: 브릿지가 목적지 맥 어드레스를 알고 있고, 출발지와 목적지가 같은 세그먼트 상에 있다면 다른 세그먼트로 프레임을 전송하지 못하도록 막는 기능. <em>이 기능 덕분에 콜리전 도메인을 나눌 수 있음</em></li>
+<li><em>Aging</em>: 맥 어드레스 테이블에 저장하는 기간</li>
+</ul></li>
+</ul>
+
+<h2 id="스위치-switch">스위치 (Switch)</h2>
+
+<ul>
+<li>브릿지와 동일하게 데이터 링크 레이어(Data Link Layer)에 해당</li>
+<li>처리 방식이 하드웨어로 이루어지기 때문에 소프트웨어적으로 프레임을 처리하는 브릿지에 비해 빠름</li>
+<li>처리 절차를 미리 칩에 구워서 하드웨어 방식으로 만드는 <a href="https://ko.wikipedia.org/wiki/%EC%A3%BC%EB%AC%B8%ED%98%95_%EB%B0%98%EB%8F%84%EC%B2%B4">ASIC</a>(Application Specific Integrated Circuit) 방식</li>
+<li>스패닝 트리 알고리즘(Spanning Tree Algorithm)이 적용되어 루핑을 예방</li>
+</ul>
+
+<h2 id="라우터-router">라우터 (Router)</h2>
+
+<ul>
+<li>스위치보다&hellip;
+
+<ul>
+<li>고가의 장비</li>
+<li>처리하는 일이 많아 상대적으로 느림</li>
+<li>라우팅 프로토콜이나 네트워크 설정을 해야하는 등등 구성이 복잡함</li>
+</ul></li>
+<li>브로드캐스트 도메인을 나누기 위한 목적</li>
+<li>한 브로드캐스트 도메인 안에 있는 노드들은 라우터 없이도 통신이 가능</li>
+<li>IP 주소 중에 네트워크 부분만이 라우터가 라우팅을 할 때 참고</li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>PHP에서 세션(session)에 대한 주의할 점과 성능 개선 방법</title>
+            <link>/php/2016/12/17/php-session-start-inefficient/</link>
+            <pubDate>Sat, 17 Dec 2016 11:00:00 +0000</pubDate>
+            
+            <guid>/php/2016/12/17/php-session-start-inefficient/</guid>
+            <description>최근에 잘 모르고 있었던 레거시 코드 부분에서 심각한 성능 저하가 있는 것을 발견했다.
+Request 마다 사용자 인증을 확인하는 함수가 호출 되는데 20 라인도 안되는 그 함수에서 전체 비중에 50% 이상이 오버헤드가 발생하고 있었다. 라인수가 짧다고 심플하고 가볍다고는 볼 수 없지만, 사용한 변수나 호출하는 자식 함수명만 봤을때는 전혀 예상하지 못했던 부분이였다. 하지만 이름에서 풍기는 가벼움과 다르게 자식 함수들은 생각보다 무거운 작업을 하고 있었다.
+ $_SESSION 에 접속한 사용자 정보가 있는지 확인 (1)에서 확인한 사용자 ID로 추가 정보를 DB 에서 조회 후 전역변수에 저장 (2) 와 비슷하게 기타 설정값을 DB 에서 조회 후 같은 전역변수에 저장   일단 (2), (3) 을 제거하고 싶은 마음에 관련된 의존성 코드를 찾기 시작했다.</description>
+            <content type="html"><![CDATA[<p>최근에 잘 모르고 있었던 레거시 코드 부분에서 심각한 성능 저하가 있는 것을 발견했다.<br />
+Request 마다 사용자 인증을 확인하는 함수가 호출 되는데 20 라인도 안되는 그 함수에서 전체 비중에 50% 이상이 오버헤드가 발생하고 있었다.
+라인수가 짧다고 심플하고 가볍다고는 볼 수 없지만, 사용한 변수나 호출하는 자식 함수명만 봤을때는 전혀 예상하지 못했던 부분이였다.
+하지만 이름에서 풍기는 가벼움과 다르게 자식 함수들은 생각보다 무거운 작업을 하고 있었다.</p>
+
+<ol>
+<li>$_SESSION 에 접속한 사용자 정보가 있는지 확인</li>
+<li>(1)에서 확인한 사용자 ID로 추가 정보를 DB 에서 조회 후 전역변수에 저장</li>
+<li>(2) 와 비슷하게 기타 설정값을 DB 에서 조회 후 같은 전역변수에 저장
+<br /></li>
+</ol>
+
+<p>일단 (2), (3) 을 제거하고 싶은 마음에 관련된 의존성 코드를 찾기 시작했다.<br />
+그리고 포기했다. 저 전역변수는 너무나 많은 곳에서 사용되고 있었다. (이래서 전역변수를 사용하지 말라는 것이다!)<br />
+결국 나름 꼼수로 생각한 대안은 같은 사용자가 최초 수행한 (2), (3) 작업을 <code>$_SESSION</code> 에 캐시 하도록 했다.<br />
+하지만 이 또한 그렇게 나이스한 해결책은 아니였다는 것을 깨닫게 되는데는 오랜 시간이 걸리지 않았다.</p>
+
+<p>위와 같이 처리해도 큰 성능 개선은 없었다. 왜일까?<br />
+<a href="https://github.com/phacility/xhprof">xhprof</a> 로 프로파일링한 결과를 통해서 본 결과는 더욱 충격적이였는데 그 이유는 아직도 저 함수가 계속 느린 것이다.<br />
+그렇게 아직도 느렸던 녀석은 바로 <code>session_start();</code> 였다.<br />
+처음에는 xhprof 를 의심했다. 아니 그래도 페이스북에서 만들었다던 xphrof 가 나에게 거짓 정보를 줬을리가 없다는 생각이 다시 들었다!<br />
+그래서 나는 PHP 의 session 이 어떻게 동작하는지 찾아보게 되었고, 뜻밖에 결과에 또 놀라게 되었다.</p>
+
+<p>PHP는 기본적으로 세션을 파일로 다룬다. 그리고 <code>session_start()</code> 가 호출되면, 해당 파일에 동시 쓰기를 막기위해 LOCK을 잡게 된다.<br />
+따라서 Request 마다 사용자 정보를 가져오기만 위해 호출된 <code>session_start()</code> 가 성능 저하에 큰 부분을 차지했던 것이다.
+(만약 php.ini 설정에 <code>session.auto_start</code> 까지 <code>1</code> 로 되어 있었다면 Request 마다 자동으로 <code>session_start()</code>를 하는 꼴이 된다.)</p>
+
+<p>이 부분에 대한 해결책으로는 <code>session_start()</code> 이후에 <code>session_write_close()</code> 를 호출해서 세션에 쓰기 LOCK을 해제하는 것이다.<br />
+이렇게 한 이후에도 <code>$_SESSION</code> 전역변수에는 접근이 가능하기 때문에 세션에 저장된 값을 가져오는데 시간을 절약할 수 있게 된다.<br />
+추가로 더 좋은 성능을 내기 위해 세션이 저장되는 스토리지를 파일이 아닌 Sqlite 나 Memcached, Redis 를 사용하는 것도 좋다고 한다.</p>
+
+<p>PHP 처음 배울때 누구나 세션에 대해서 배우지만 이런 내용은 어디서도 알려주는 곳이 없던것 같다. 휴..</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Jenkins 프로젝트(jobs) 설정이 사라지는 오류 및 일단위 백업하기</title>
+            <link>/jenkins/2016/10/28/jenkins-jobs-backup/</link>
+            <pubDate>Fri, 28 Oct 2016 11:00:00 +0000</pubDate>
+            
+            <guid>/jenkins/2016/10/28/jenkins-jobs-backup/</guid>
+            <description>Jenkins 에서 실행되는 프로젝트(job)들은 ${JENKINS_HOME}/jobs 경로에 프로젝트 이름마다 디렉토리가 존재하며, 안에는 config.xml 과 빌드 히스토리 관련 파일들이 있다.
+만약 Jenkins를 다른 서버로 이전하게 된다면 jobs 디렉토리를 백업해서 이전할 서버로 복구하면 된다.
+최근에 Jenkins 를 재실행 한 후 일부 프로젝트들의 config.xml 이 삭제되는 이슈가 발생했다. OTL
+한참동안 원인 파악이 안되는 상태가 계속되자 수동 복구를 하기로 했고, 기존과 동일한 이름으로 &amp;ldquo;새로운 Item &amp;gt; Freestyle Project&amp;rdquo; 를 생성했다. 이렇게 하면 설정은 없지만 빌드 기록은 볼 수 있다.</description>
+            <content type="html"><![CDATA[<p>Jenkins 에서 실행되는 프로젝트(job)들은 <code>${JENKINS_HOME}/jobs</code> 경로에 프로젝트 이름마다 디렉토리가 존재하며, 안에는 <code>config.xml</code> 과 빌드 히스토리 관련 파일들이 있다.<br />
+만약 Jenkins를 다른 서버로 이전하게 된다면 jobs 디렉토리를 백업해서 이전할 서버로 복구하면 된다.</p>
+
+<p>최근에 Jenkins 를 재실행 한 후 일부 프로젝트들의 config.xml 이 삭제되는 이슈가 발생했다. OTL</p>
+
+<p>한참동안 원인 파악이 안되는 상태가 계속되자 수동 복구를 하기로 했고, 기존과 동일한 이름으로 <strong>&ldquo;새로운 Item &gt; Freestyle Project&rdquo;</strong> 를 생성했다. 이렇게 하면 설정은 없지만 빌드 기록은 볼 수 있다.<br />
+그리고 각 프로젝트(job) 별로 마지막 빌드 Output 에서 실행된 Command 를 확인한 후 이번에는 다른 이름으로 Freestyle Project 를 생성했다. ㅠㅠ</p>
+
+<p>이미 소는 잃었지만 다음부터는 좀 더 편리하고 빠르게 Jenkins 를 복구하기 위해 아래 명령어를 Jenkins에 새로운 프로젝트로 등록해서 매일 0시에 실행 되도록 했다.</p>
+
+<pre><code>/usr/bin/find &quot;/var/lib/jenkins/jobs&quot; -type f -name &quot;config.xml&quot; -exec python3 -c &quot;import os, sys, shutil, datetime; src=sys.argv[1]; src_arr=src.split('/'); dest_dir=os.path.join('/tmp/jenkins_jobs', datetime.datetime.now().strftime('%Y%m%d'), src_arr[5]); os.makedirs(dest_dir); shutil.copy(src, os.path.join(dest_dir, src_arr[6]))&quot; {} \;
+</code></pre>
+
+<p>그리고 회사 개발자 한분께서 <code>git</code> 으로 <code>config.xml</code> 을 관리하고 있다고 하셨다.<br />
+그때는 생각을 못했는데 듣고보니 <code>git</code> 으로 하는게 훨씬 심플하고, 사이즈도 적게 차지하는 백업 플랜 같다!!</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Hive UDF - ngrams</title>
+            <link>/hive/2016/10/27/hive-udf-ngrams/</link>
+            <pubDate>Thu, 27 Oct 2016 11:00:00 +0000</pubDate>
+            
+            <guid>/hive/2016/10/27/hive-udf-ngrams/</guid>
+            <description>N-gram 이란?  전체 문자열을 N개의 기준 단위만큼 절단해서 사용하는 방법 N개는 문자 단위가 될 수도 있고, 단어 단위가 될 수도 있다. 만들어진 N-gram 은 나오는 빈도를 분석하거나, 키워드를 뽑아내는 용도로도 사용될 수 있다. 예를들어 &amp;ldquo;hive&amp;rdquo; 에 대한 2-gram의 결과는 다음과 같다.  [&amp;quot;hi&amp;quot;, &amp;quot;iv&amp;quot;, &amp;quot;ve&amp;quot;]  ngrams(array, int N, int K, int pf)  당연히 N-gram 을 계산하기 위함 3개의 입력 파라미터 (Input)  첫번째, String 타입의 Array of Array 형태, 각 element 는 word (ex.</description>
+            <content type="html"><![CDATA[
+
+<h1 id="n-gram-이란">N-gram 이란?</h1>
+
+<ul>
+<li>전체 문자열을 N개의 기준 단위만큼 절단해서 사용하는 방법</li>
+<li>N개는 문자 단위가 될 수도 있고, 단어 단위가 될 수도 있다.</li>
+<li>만들어진 N-gram 은 나오는 빈도를 분석하거나, 키워드를 뽑아내는 용도로도 사용될 수 있다.</li>
+<li>예를들어 &ldquo;hive&rdquo; 에 대한 2-gram의 결과는 다음과 같다.</li>
+</ul>
+
+<pre><code>[&quot;hi&quot;, &quot;iv&quot;, &quot;ve&quot;]
+</code></pre>
+
+<h1 id="ngrams-array-array-int-n-int-k-int-pf">ngrams(array<array>, int N, int K, int pf)</h1>
+
+<ul>
+<li>당연히 N-gram 을 계산하기 위함</li>
+<li>3개의 입력 파라미터 (Input)
+
+<ul>
+<li>첫번째, String 타입의 Array of Array 형태, 각 element 는 word (ex. [[&ldquo;hadoop&rdquo;, &ldquo;hdfs&rdquo;, &ldquo;hive&rdquo;]]</li>
+<li>하나의 문장을 Array of Array 형태의 단어 단위로 분리하기 위해 <code>sentences()</code> 함수와 함께 쓰는 경우가 많다.</li>
+<li>두번째, N-gram 에서의 N 값</li>
+<li>세번째, 결과 값의 출력 개수(top-N)</li>
+</ul></li>
+<li>실행 결과 (Output)
+
+<ul>
+<li>2개의 속성을 가진 Struct 구조의 Array</li>
+<li>첫번째 속성 <code>ngram</code>, N-gram 값 자체</li>
+<li>두번째 속성 <code>estfrequency</code>, N-gram 의 각 값들이 몇번 나타났는지에 대한 count (빈도)</li>
+</ul></li>
+</ul>
+
+<h1 id="예제">예제</h1>
+
+<h2 id="예문">예문</h2>
+
+<pre><code>The Apache Hive data warehouse software facilitates reading, writing, and managing large datasets residing in distributed storage using SQL. Hive provides standard SQL functionality, including many of the later 2003 and 2011 features for analytics. Hive's SQL can also be extended with user code via user defined functions (UDFs), user defined aggregates (UDAFs), and user defined table functions (UDTFs).
+</code></pre>
+
+<h2 id="hive-sql">Hive SQL</h2>
+
+<pre><code>SELECT
+  ngrams(
+    sentences(&quot;The Apache Hive data warehouse software facilitates reading, writing, and managing large datasets residing in distributed storage using SQL. Hive provides standard SQL functionality, including many of the later 2003 and 2011 features for analytics. Hive's SQL can also be extended with user code via user defined functions (UDFs), user defined aggregates (UDAFs), and user defined table functions (UDTFs).&quot;),
+    2,
+    3
+);
+</code></pre>
+
+<h2 id="sql-설명">SQL 설명</h2>
+
+<p>주어진 문장을 <code>sentences()</code> 함수를 이용해 단어 단위로 분리된 Array 로 변환되어 <code>ngrams()</code> 함수의 첫번째 파라미터로 전달 됩니다.<br />
+단어로 구성된 Array 에 대해 두번째 파라미터 값을 N 으로 하여 N-gram 을 계산합니다.  (2-Gram)<br />
+세번째 파라미터의 값은 전체 결과중에 출력하고자 하는 Top - K 의 개수를 지정합니다. (Top 3)</p>
+
+<h2 id="결과">결과</h2>
+
+<pre><code>--------------------------------------------------------------------------------
+        VERTICES      STATUS  TOTAL  COMPLETED  RUNNING  PENDING  FAILED  KILLED
+--------------------------------------------------------------------------------
+Map 1 ..........   SUCCEEDED      1          1        0        0       0       0
+Reducer 2 ......   SUCCEEDED      1          1        0        0       0       0
+--------------------------------------------------------------------------------
+VERTICES: 02/02  [==========================&gt;&gt;] 100%  ELAPSED TIME: 9.88 s
+--------------------------------------------------------------------------------
+OK
+[{&quot;ngram&quot;:[&quot;user&quot;,&quot;defined&quot;],&quot;estfrequency&quot;:3.0},{&quot;ngram&quot;:[&quot;and&quot;,&quot;user&quot;],&quot;estfrequency&quot;:1.0},{&quot;ngram&quot;:[&quot;with&quot;,&quot;user&quot;],&quot;estfrequency&quot;:1.0}]
+Time taken: 10.326 seconds, Fetched: 1 row(s)
+</code></pre>
+
+<p>참고: <a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+UDF">https://cwiki.apache.org/confluence/display/Hive/LanguageManual+UDF</a></p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>DEVIEW2016 첫째날(DAY 1) 참석 후기 - Part1</title>
+            <link>/review/2016/10/25/deview2016-day1-review-part1/</link>
+            <pubDate>Tue, 25 Oct 2016 02:14:04 +0000</pubDate>
+            
+            <guid>/review/2016/10/25/deview2016-day1-review-part1/</guid>
+            <description>처음으로 개발자 컨퍼런스 후기를 남겨볼까 한다. (후기라기 보다 일기라고 해야할까)
+후기를 써봐야겠다는 생각을 하게된 이유를 들자면 최근 4년동안은 몇몇 개발자 컨퍼런스를 다녀봤었는데 굉장히 즐거웠고, 많은 영감과 아이디어를 받았던 기억이 있지만, 돌이켜보면 짤막한 단편 기억들이 엉켜있는 느낌이라 당시를 구체적으로 떠올리기가 어려웠다.
+그리고 또 한가지 이유는 지난 8월에 개최된 Pycon APAC 2016 에서 어느 여성 개발자의 후기를 읽어봤는데 현장의 분위기와 들은 세션의 메모나 생각들을 남겨놓으니 나중에 다시 보면 좋을 것 같다는 생각이 들었고, 나도 좀 더 가벼운 마음으로 여유를 가지고 행사에 참여 해봤으면 어땠을까 하는 아쉬움이 들었다.</description>
+            <content type="html"><![CDATA[<p>처음으로 개발자 컨퍼런스 후기를 남겨볼까 한다. (후기라기 보다 일기라고 해야할까)</p>
+
+<p>후기를 써봐야겠다는 생각을 하게된 이유를 들자면 최근 4년동안은 몇몇 개발자 컨퍼런스를 다녀봤었는데 굉장히 즐거웠고, 많은 영감과 아이디어를 받았던 기억이 있지만, 돌이켜보면 짤막한 단편 기억들이 엉켜있는 느낌이라 당시를 구체적으로 떠올리기가 어려웠다.</p>
+
+<p>그리고 또 한가지 이유는 지난 8월에 개최된 Pycon APAC 2016 에서 어느 여성 개발자의 후기를 읽어봤는데 현장의 분위기와 들은 세션의 메모나 생각들을 남겨놓으니 나중에 다시 보면 좋을 것 같다는 생각이 들었고, 나도 좀 더 가벼운 마음으로 여유를 가지고 행사에 참여 해봤으면 어땠을까 하는 아쉬움이 들었다.<br />
+(사실 난 이번 Pycon에 별로 큰 기대와 감흥이 없었다. 개인적인 생각으로 Pycon 2014 에 비해서 Pycon 2015 이 좀 부실했던 것 같다.)</p>
+
+<p>그럼 본격적으로 DEVIEW2016 의 첫째날 참석 후기를 남겨보겠다.</p>
+
+<p><img src="/images/deview2016/IMG_5982.jpg" alt="데뷰입구" /></p>
+
+<p>오전 9시 ~ 10시까지는 사전에 웹사이트를 통해 선착순으로 등록(이라 쓰고 광클이라 읽는다)한 사람들에 한해 본인 확인 후 에코백에 생존 아이템을 받게 된다.<br />
+(집에 에코백이 하나 늘어서 좋았고, 파란색이라 좋았다.)</p>
+
+<p><img src="/images/deview2016/IMG_5987.jpg" alt="생존아이템들" /></p>
+
+<p>여유있게 가서 오랜만에 맥모닝이나 먹으려고, 은근 기대하고 있었는데 9시 40분쯤 도착하니 시간이 애매했다.<br />
+(삼성역 맥도날드와 코엑스 그랜드블룸 홀까지 7 ~ 8분 정도 소요되는 것 같다.)</p>
+
+<p>결국 맥모닝은 포기하고, 키노트 전에 빠르게 회사 부스를 스캔했다.<br />
+그런데 다수의 사람들이 핫도그를 먹고 있는 모습이 보였다. 그동안 컨퍼런스 경험상 이건 어떤 갓회사가 자비를 배풀고 있는 것이다 라는 촉이 왔다.<br />
+역시 예상 적중!<br />
+공짜로 허기를 달랠 수 있게 해준것에 대한 보답으로 이 회사의 홍보 팜플렛을 정독 했다.</p>
+
+<p><img src="/images/deview2016/IMG_5984.jpg" alt="해먹남녀" /></p>
+
+<p>부스에 대해 몇가지 기억에 남는 특징을 적자면, 일단 부스별 공간이 좁은건지 사람이 많은건지 (둘다 해당될수도..) 2명이상이 앞에서 병풍치면 기웃기웃 거리는 것도 힘들었다.<br />
+그리고 마치 서점에 온것처럼 6개 정도의 출판사에 부스를 차리고 열심히 책을 팔고 있었다.</p>
+
+<p><img src="/images/deview2016/IMG_5985.jpg" alt="부스" /></p>
+
+<p>10시부터 진행된 키노트에는 먼저 약 5분가량 &lsquo;이해진&rsquo; 네이버 의장께서 인사말을 전했고, 그 뒤로 송창현 CTO 께서 네이버의 새로운 서비스와 기술력을 소개했다.</p>
+
+<p><img src="/images/deview2016/IMG_5986.jpg" alt="키노트 내부 모습" /></p>
+
+<p><img src="/images/deview2016/IMG_5989.jpg" alt="이해진 의장" /></p>
+
+<p><img src="/images/deview2016/IMG_5992.jpg" alt="송창현 CTO" /></p>
+
+<p><img src="/images/deview2016/IMG_5996.jpg" alt="Ambient intelligence" /></p>
+
+<p>키노트의 자세한 내용은 아래 기사(링크)에서 전체적으로 요약해서 잘 다루고 있다.<br />
+<a href="https://www.bloter.net/archives/266182">신기술과 ‘랑데뷰’…네이버가 공개한 3대 미래 기술</a></p>
+
+<p>특히 기억에 남는건 AMICA 라는 음성인식 서비스이다. 홍보용 영상에서는 두 남녀가 아침에 눈뜨면서부터 퇴근 후 서로 만나기까지 여러 디바이스를 통해 AMICA 서비스를 이용하면서 유용한 정보를 얻고, 편리한 생활을 누린다는 내용이다.<br />
+어찌보면 뻔하지만 평범한 회사원들의 삶을 통해서 AMICA가 만들고자 하는 세상을 잘 표현한 것 같다.</p>
+
+<p><Part1 끝></p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>DEVIEW2016 첫째날(DAY 1) 참석 후기 - Part2</title>
+            <link>/review/2016/10/25/deview2016-day1-review-part2/</link>
+            <pubDate>Tue, 25 Oct 2016 00:46:00 +0000</pubDate>
+            
+            <guid>/review/2016/10/25/deview2016-day1-review-part2/</guid>
+            <description>첫번째 세션 &amp;ldquo;Web payments API의 미래와 현재&amp;rdquo; 이 세션은 작년에 파이썬 스터디 모임에서 하면서 알게된 친구가 발표를 한다는 사실을 행사장 와서 알게 되었는데 엄청 반갑기도 했지만, 한편으로 대단하고 멋져보였다. 주제는 W3C Web Payments API 표준에 대한 소개와 샘플 코드를 보고, API 의 상세 스펙을 살펴보는 순서로 진행 되었다. 발표는 이해하기 쉽도록 작은 소주제로 잘 분리하면서 각각은 짜임새 있게 구성 되었다고 느꼈다.
+ 동기
+ 고객이 장바구니에서 이탈되는 비율 68%!! 모바일에서 장바구니에서 PC보다 이탈율이 66% 더 높음 이유는 form 을 입력하기 귀찮아서;; 컥 (키보드 화면 많이 차지함, 계정도 만들어야되고.</description>
+            <content type="html"><![CDATA[
+
+<h2 id="첫번째-세션-web-payments-api의-미래와-현재">첫번째 세션 &ldquo;Web payments API의 미래와 현재&rdquo;</h2>
+
+<p>이 세션은 작년에 파이썬 스터디 모임에서 하면서 알게된 친구가 발표를 한다는 사실을 행사장 와서 알게 되었는데 엄청 반갑기도 했지만, 한편으로 대단하고 멋져보였다.
+주제는 <a href="https://www.w3.org/Payments/WG/">W3C Web Payments API</a> 표준에 대한 소개와 샘플 코드를 보고, API 의 상세 스펙을 살펴보는 순서로 진행 되었다. 발표는 이해하기 쉽도록 작은 소주제로 잘 분리하면서 각각은 짜임새 있게 구성 되었다고 느꼈다.</p>
+
+<p><img src="/images/deview2016/IMG_6003.jpg" alt="Session-WebPaymentApi" />
+<img src="/images/deview2016/IMG_6009.jpg" alt="Session-WebPaymentApi-2" /></p>
+
+<ol>
+<li><p>동기</p>
+
+<ul>
+<li>고객이 장바구니에서 이탈되는 비율 68%!!</li>
+<li>모바일에서 장바구니에서 PC보다 이탈율이 66% 더 높음</li>
+<li>이유는 form 을 입력하기 귀찮아서;; 컥
+(키보드 화면 많이 차지함, 계정도 만들어야되고..)</li>
+</ul></li>
+
+<li><p>기본 신용카드 결제</p>
+
+<ul>
+<li>브라우저 지원 현황: 크롬(ready), 삼성인터넷(almost), 파폭, 오페라(곧), 사파리(나중에)</li>
+<li>목적 &ldquo;복잡한 폼을 없애고, 버튼 하나로 바꾸자!&rdquo;</li>
+<li>해외 쇼핑몰 사이트는 국내 사이트와 달리 상품 페이지에서 장바구니 또는 결제까지 모든 단계가 현재 페이지에서 처리되는 UI 가 일반적임(복잡함)</li>
+<li>이미 브라우저는 사용자의 주소나 신용카드 정보등을 저장하고 있기 때문에 이를 활용해서 다음번 결제부터는 더욱 빠르고 쉽게 진행할 수 있음 (상점 입장에서도 사용자 카드 정보를 별도 보관함으로써 발생할 수 있는 높은 보안 유지 비용을 절감할 수 있다.)</li>
+<li>상점(merchant)가 지원하는 결제수단(카드사)과 브라우저가 지원하는 결제수단의 교집합의 결과를 UI 에서 표시하고 사용자는 이중에 원하는 결제수단을 선택할 수 있다.</li>
+</ul></li>
+
+<li><p>Payment Apps (미래)</p>
+
+<ul>
+<li>사용자 디바이스에 설치된 payment app 목록을 보여준다.</li>
+<li>그 payment app UI로 이동해서 진행한다.</li>
+<li>브라우저에 등록된 payment app 목록과도 비교해서 가능한 결제수단의 교집합을 찾게 된다.</li>
+<li>payment app 등록?</li>
+<li>native payment apps (ios, 안드로이드, 타이젠 등)</li>
+<li>web-based payment apps (<a href="https://sampay.com">https://sampay.com</a>)</li>
+<li>Install <strong>Service Worker</strong> 방식을 이용해서 payment app 을 등록하고, 정보를 업데이트 할 수 있다.</li>
+<li>web page 변경없이 지원하는 payment app 을 추가할 수 있다.</li>
+</ul></li>
+
+<li><p>Service worker</p>
+
+<ul>
+<li>특정 이벤트를 수신하는 daemon</li>
+<li>document 와 별개의 생명 주기를 가지며, 브라우저가 종료되도 살이있다.</li>
+<li>제공하는 사이트에 의해 브라우저에 설치되고, 이벤트를 받은 브라우저에 의해서 필요에 따라 활성화 될 수 있다.</li>
+<li>적용 사례) 페이스북: 브라우저를 완전히 닫아도 페북 푸시가 온다.</li>
+<li>payment app이 곧 service worker 이다.</li>
+</ul></li>
+</ol>
+
+<p>참고:<br />
+<a href="http://www.slideshare.net/deview/121-web-payment-api">http://www.slideshare.net/deview/121-web-payment-api</a><br />
+<a href="http://techhtml.github.io/2015/09/">http://techhtml.github.io/2015/09/</a></p>
+
+<hr />
+
+<h2 id="두번째-세션-챗봇-개발을-위한-네이버-랩스-api">두번째 세션 &ldquo;챗봇 개발을 위한 네이버 랩스 api&rdquo;</h2>
+
+<p>원래 두번째 세션은 &ldquo;REST에서 GraphQL과 Relay로 갈아타기&rdquo; 를 들으려고 했었는데 키노트에서 들은 <strong>AMICA</strong> 에 대해서 더 알아보고 싶어서 계획을 변경했다.<br />
+GraphQL 관련 세션은 나중에 녹화 동영상 올라오면 꼭 봐야겠다.</p>
+
+<p><img src="/images/deview2016/IMG_6012.jpg" alt="AMICA" /></p>
+
+<ul>
+<li>AMICA
+
+<ul>
+<li>의식하지 못하는 상황에서 적시적소에 적절한 서비스를 제공하기 위함</li>
+</ul></li>
+<li>자연어를 이용한 인터페이스</li>
+<li>왜? 제한된 인터페이스 환경과 복잡한 UX</li>
+<li>메신저는 서비스 플랫폼이 되고 있다.</li>
+<li>자연어 처리가 필요하다. (당연히)</li>
+<li>자연어 처리 관련된 공부를 해야되는건가? 어렵다. 귀찮다.</li>
+<li>NLU API 동향:
+
+<ul>
+<li>구글이 새로 출시한 &lsquo;알로&rsquo;라는 메신저앱을 출시, 그리고 api.ai 라는 회사를 인수함</li>
+<li>페북은 wit.ai 회사 인수</li>
+<li>삼성에서도 siri 를 만들었다는 viv 라는 회사를 인수</li>
+</ul></li>
+<li>한국어 처리는?
+
+<ul>
+<li>위에 나온 회사들 모두 한국어 지원을 하지만 잘은 못함</li>
+<li>교착어 (조사, 어미, 어간에 따라 단어마다 의미가 달라질 수 있다.)</li>
+<li>형태소 분석이 중요하다.</li>
+</ul></li>
+<li>AMICA.ai 라는 NLU API 서비스(<sup>10</sup>&frasl;<sub>24</sub> 부터 베타 테스트 신청)
+
+<ul>
+<li>대화형 인터페이스를 만들 수 있는 엔진</li>
+<li>단어에 이름을 붙여주는 N(amed) E(ntity) R(ecognition)</li>
+<li>한국어를 잘 처리 하고자하여 한국어 먼저 시작했다.</li>
+<li>AMICA.ai 가 자연어 분석에 대한 처리를 대신한다.</li>
+<li>많은 개발자가 AMICA 를 써줬으면 하는 이유는 많은 디바이스들로 플랫폼을 확장하고자함</li>
+</ul></li>
+<li>AMICA Developer Console
+
+<ul>
+<li>25 개의 빌트인(Built-in) Entity(장소, 인명, 시간) 과 7개의 intent(yes, no, cancel) 지원</li>
+<li>모든걸 entity 들을 Built-in 할 수 없는 이유는 서비스 디펜던시 한 것들은 서비스 개발자들이 추가해야되는 것이 맞다.</li>
+</ul></li>
+<li>Dialogue management(DM)은 제공하지 않음
+
+<ul>
+<li>DM? 예를 들면 대화의 히스토리를 기반으로 변경된 정보를 처리하는 로직(이건 서비스 개발자의 몫)</li>
+<li>AMICA는 한문장의 대화만 처리한다. (향후 대화 히스토리를 처리할 수 있도록 개선될 것이다.)</li>
+</ul></li>
+</ul>
+
+<p>참고:<br />
+<a href="http://www.slideshare.net/deview/api-67563048">http://www.slideshare.net/deview/api-67563048</a></p>
+
+<p>세션을 듣고 바로 AMICA.ai API 베타를 신청했다.<br />
+최근에 와이프랑 챗봇 얘기 하면서 여러가지 아이디어를 생각 했었는데 자연어 처리 부분은 AMICA를 사용해서 좀 더 편하게 챗복을 개발할 수 있을 것 같다.</p>
+
+<hr />
+
+<h2 id="세번째-세션-apache-zeppelin과-오픈소스-비지니스">세번째 세션 &ldquo;Apache zeppelin과 오픈소스 비지니스&rdquo;</h2>
+
+<p>Zeppelin에 대해서는 이름만 들어봤었고, 이번에 처음 실체를 알게 되었는데 <a href="http://jupyter.org/">Jupyter</a> notebook 과 비슷한 개념의 툴 이였다.</p>
+
+<p><img src="/images/deview2016/IMG_6017.jpg" alt="ZEPPELIN-1" /></p>
+
+<ul>
+<li>사내 사이드 프로젝트로 시작됨</li>
+<li>인터렉티브한 분석이 가능한 소프트웨어(웹 기반 노트북)</li>
+<li>처음에는 주위 반응이 아예 없었음</li>
+<li>유명해지고 싶어서 생각해낸 방법이 spark 메일링 하다가 관련있을만한 질문이 나오면 제플린 추천해버림ㅋㅋㅋ</li>
+<li>스택오버플로에서도 답변으로 제플린 홍보를 많이 해봤으나 효과는 Spark 메일링이 훨씬 좋았음</li>
+<li>홍보 한달만에 제플린으로 서비스를 만드는 회사가 발생</li>
+<li>아파치 재단 프로젝트가 되기로 결심!
+
+<ul>
+<li>아파치 재단 프로젝트가 된다는건?</li>
+<li>소스코드 소유권, 트레이드마크, 브랜드, 커뮤니티를 모두 아파치 재단으로 이전하게 된다.</li>
+<li>아파치 재단에서 모토는? 좋은 커뮤니티를 만드는게 목표</li>
+</ul></li>
+<li>오픈소스?
+
+<ul>
+<li>소스코드만 공개? vs 소스코드와 의사결정이 공개</li>
+</ul></li>
+<li>아파치 프로젝트가 되기 전부터 모든 리뷰/토론을 온라인에서 하려고 노력</li>
+<li>제플린을 통해 어떤 비지니스를 만들고자 했냐면..
+
+<ul>
+<li>선순환 구조: 다양한 비지니스 허용 -&gt; 사용자 증가 -&gt; 시장 크기 증가</li>
+</ul></li>
+<li>다양한 프로젝트와 integration 할 수 있도록 노력했다.
+예) hive, 구글 빅쿼리, 스팍, R, Python 등등</li>
+<li>성공적인 오픈소스 프로젝트를 만들기 위해
+
+<ul>
+<li>프로젝트가 주는 가치</li>
+<li>열린 사용자/개발자 커뮤니티</li>
+<li>서드파티 프로젝트/비지니스와의 integration</li>
+</ul></li>
+<li>오픈소스로 비지니스를 하는 회사 =&gt; zeppelinX</li>
+<li>제플린은 현재 아파치 프로젝트 중 Github star 12위!
+<img src="/images/deview2016/IMG_6021.jpg" alt="ZEPPELIN-2" /><br />
+<img src="/images/deview2016/IMG_6022.jpg" alt="ZEPPELIN-3" /><br /></li>
+</ul>
+
+<p>참고:<br />
+<a href="http://www.slideshare.net/deview/api-67563048">http://www.slideshare.net/deview/api-67563048</a></p>
+
+<hr />
+
+<h2 id="네번째-세션-angular2-vs-react">네번째 세션 &ldquo;Angular2 vs React&rdquo;</h2>
+
+<p>6개월 전에 지인 몇분과 React 스터디를 했던적이 있고, 최근에 나온 Angular2도 학습해서 사용해 볼 계획이기 때문에 이 두가지 프레임워크에 대한 비교 발표는 오늘 진행되는 세션중에 가장 기대가 되는 세션이였다.<br />
+발표는 네이버 다니시는 개발자 두분이 만담(?)형식으로 진행 했는데 중간에 티격태격하는 모습이 재밌기도 했다. (사전에 연습을 많이 하신듯 하다.)<br />
+의외로 45분이라는 발표시간이 짧은지라 발표 속도가 좀 빠른편이긴 했다. 그래서 React 나 Angular2 둘중에 하나 정도는 잘 알거나 두가지 모두 적당한 개념과 특징 정도는 알고있는 상태여야 발표를 이해하는데 도움이 되겠구나 하는 생각이 들었다.</p>
+
+<p><img src="/images/deview2016/IMG_6026.jpg" alt="REACT-VS-ANGULAR2-1" /></p>
+
+<h3 id="컴포넌트">컴포넌트</h3>
+
+<ul>
+<li>Angular2 : CSS 캡슐화도 됨~!! react는 webpack 같은걸로 css 를 지역화 할 수는 있으나 번거로움더 정이 안가는건 JSX!!!</li>
+<li>React: syntax sugar, 구조와 기능(행위)을 함께 자연스럽게 표현하고자 하는 의도가 있다.</li>
+<li>Angular2: react 는 항상 루트 element가 하나여야한다. 그리고 표준 HTML에 벗어나는 것들을 왜 사용하는가? className 속성같은거&hellip;</li>
+<li>React &amp; Angular2: 이미 구조에 행위를 넣는순간 마크업은 순수하지 않게 된다. 이부분은 a2나 rt 모두 해결하지 못한 문제라고 할 수 있다.</li>
+</ul>
+
+<h3 id="데이터-동기화">데이터 동기화</h3>
+
+<ul>
+<li>뷰와 모델의 분리</li>
+<li>Angular2
+
+<ul>
+<li>컴포넌트당 상태를 확인할 수 있는 Change detector 가 생겼다. ㅋㅋ(react의 virtual DOM 이 동작하는 원리와 거~~의 유사해보임)</li>
+</ul></li>
+<li>dom 이 아닌 모델에 집중</li>
+</ul>
+
+<h3 id="결론">결론</h3>
+
+<ul>
+<li>프레임워크를 써야할지 말아야할지가 판단하는 것이 우선이다.</li>
+<li>Angular2
+
+<ul>
+<li>문제에 대한 솔루션을 제안하고 있다.</li>
+<li>구글이 만드다보니 웹표준을 지키려는 노력이 많다.</li>
+<li>어떤 트랜드의 흔들리지 않는 표준이 필요하다!</li>
+</ul></li>
+<li>React
+
+<ul>
+<li>선택은 개발자가 해야할 일</li>
+<li>처한 상황을 먼저 들여다보라</li>
+</ul></li>
+</ul>
+
+<p><img src="/images/deview2016/IMG_6027.jpg" alt="REACT-VS-ANGULAR2-1" /></p>
+
+<p>참고:<br />
+<a href="http://www.slideshare.net/deview/114angularvs-react">http://www.slideshare.net/deview/114angularvs-react</a></p>
+
+<hr />
+
+<h2 id="다섯번째-세션-clean-front-end-development">다섯번째 세션 &ldquo;Clean Front-end Development&rdquo;</h2>
+
+<p>이 세션은 정리한 내용이 많지 않아 간략하게 후기만 남긴다.<br />
+전체적인 내용의 핵심은 프론트엔드 개발에 대한 자신의 노하우를 중심으로 라이브러리나 프레임워크의 도움을 받지 않더라도 순수 javascript 또는 ES2015(아니면 그 미래)와 Babel 로 많은 것을 할 수 있다는 것에 대한 내용이였다.<br />
+전체적인 내용에 대부분 공감 하는 편이다. 특히 jQuery를 더이상 쓰지 않고도 순수 JS로 Dom Selector역할을 아주 편리하게 할 수 있다는 의견에는 나 또한 긍정적으로 생각해보게 되는 계기가 되었다.</p>
+
+<p>참고:<br />
+<a href="http://www.slideshare.net/deview/115-clean-fe-development">http://www.slideshare.net/deview/115-clean-fe-development</a></p>
+
+<hr />
+
+<h1 id="마치며">마치며</h1>
+
+<p>개인적으로 가장 기억에 남는 컨퍼런스는 한국에서는 최초로 열렸던 <a href="https://www.pycon.kr/2014/">Pycon2014</a> 였는데 그때도 별로 남겨둔 내용이 없는것이 아쉬웠다.<br />
+처음으로 컨퍼런스 참석 후기를 써보면서 느낀점은 하루동안 내가 보고 들은 것들을 글로 남기는데도 상당한 시간이 소요된다는 것과 들은 내용이 정확한지 다시 한번 확인 해보는 과정을 통해서 한번 듣고 잊혀질 수 있는 내용들을 좀 더 기억에 오래 남게 될 수 있게 되었다는 것이다.<br />
+그리고 또한 지금까지 살아왔던 수많은 날 중에 어쩌면 오늘 하루만큼은 좀 더 의미있는 하루가 아니였을까 하는 생각도 들었다.<br />
+앞으로 컨퍼런스를 참석이나 독서 후에는 짧게라도 후기를 남기는 습관을 만들어야겠다.</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Golang - nil 비교하기</title>
+            <link>/golang/2016/08/07/go-compare-nil/</link>
+            <pubDate>Sun, 07 Aug 2016 23:34:04 +0000</pubDate>
+            
+            <guid>/golang/2016/08/07/go-compare-nil/</guid>
+            <description>아래 코드를 실행하면 checkEggOneSet() 함수에서 파라미터 p 와 nil 을 비교할 때 에러가 발생한다.
+_compare_pointer_to_niltest.go|13| cannot convert nil to type Person
+package main import &amp;quot;fmt&amp;quot; type Age int type Person struct { age Age gender string } func checkEggOneSet(p Person) bool { if p != nil &amp;amp;&amp;amp; p.age &amp;gt;= 30 { return true } return false } func Example_compare_to_nil() { me := Person{age: 32, gender: &amp;quot;man&amp;quot;} if checkEggOneSet(me) { fmt.</description>
+            <content type="html"><![CDATA[
+
+<p>아래 코드를 실행하면 checkEggOneSet() 함수에서 파라미터 p 와 nil 을 비교할 때 에러가 발생한다.<br />
+_compare_pointer_to_nil<em>test.go|13| cannot convert nil to type Person</em></p>
+
+<pre><code>package main
+
+import &quot;fmt&quot;
+
+type Age int
+
+type Person struct {
+    age    Age
+    gender string
+}
+
+func checkEggOneSet(p Person) bool {
+    if p != nil &amp;&amp; p.age &gt;= 30 {
+        return true
+    }
+    return false
+}
+
+func Example_compare_to_nil() {
+    me := Person{age: 32, gender: &quot;man&quot;}
+    if checkEggOneSet(me) {
+        fmt.Println(&quot;계란 한판을 넘으셨군요.&quot;)
+    }
+
+    // Output:
+    // 계란 한판을 넘으셨군요.
+}
+</code></pre>
+
+<p>변수나 struct 의 인스턴스와 nil 은 서로 다른 타입이다. 따라서 비교 할 수 없는 것이 맞다.<br />
+하지만 pointer는 nil 값을 가질 수 있다.(혹은 nil 일 수 있다)</p>
+
+<p>따라서 checkEggOneSet 함수 선언과 호출시에 me 변수를 포인터로 전달할 수 있도록 해야한다.</p>
+
+<pre><code>func checkEggOneSet(p *Person) bool {
+     // ... 생략
+
+checkEggOneSet(&amp;me)
+</code></pre>
+
+<h2 id="참고">참고</h2>
+
+<ul>
+<li><a href="http://stackoverflow.com/questions/20240179/nil-detection-in-go(http://stackoverflow.com/questions/20240179/nil-detection-in-go">http://stackoverflow.com/questions/20240179/nil-detection-in-go(http://stackoverflow.com/questions/20240179/nil-detection-in-go</a>)</li>
+<li><a href="http://stackoverflow.com/questions/24465489/structs-cannot-be-nil-but-this-is-compiling(http://stackoverflow.com/questions/24465489/structs-cannot-be-nil-but-this-is-compiling">http://stackoverflow.com/questions/24465489/structs-cannot-be-nil-but-this-is-compiling(http://stackoverflow.com/questions/24465489/structs-cannot-be-nil-but-this-is-compiling</a>)</li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Golang - go install 과 go build 의 차이</title>
+            <link>/golang/2016/08/04/go_install_and_go_build/</link>
+            <pubDate>Thu, 04 Aug 2016 23:01:26 +0000</pubDate>
+            
+            <guid>/golang/2016/08/04/go_install_and_go_build/</guid>
+            <description>go install  main.go 은 Compile 되어 (OS 에 맞는) 실행 파일이 $GOBIN ($GOPATH/bin) 위치에 생성된다. 라이브러리 파일(non-main)일 경우 $GOPATH/pkg 디렉토리에 파일명.a 형태로 Complie 된 결과가 생성되며, 다음 Build 시 Cache로 사용되어 변경된 부분만 Complie 된다.  go build  main.go 을 Compile 하여 실행 가능한 파일을 현재 Build 명령을 실행한 디렉토리 위치에 생성한다.  참고 https://www.quora.com/What-is-the-difference-between-build-and-install-in-Go</description>
+            <content type="html"><![CDATA[
+
+<h1 id="go-install">go install</h1>
+
+<ul>
+<li>main.go 은 Compile 되어 (OS 에 맞는) 실행 파일이 <code>$GOBIN ($GOPATH/bin)</code> 위치에 생성된다.</li>
+<li>라이브러리 파일(non-main)일 경우 <code>$GOPATH/pkg</code> 디렉토리에 <em>파일명.a</em> 형태로 Complie 된 결과가 생성되며, 다음 Build 시 Cache로 사용되어 변경된 부분만 Complie 된다.</li>
+</ul>
+
+<h1 id="go-build">go build</h1>
+
+<ul>
+<li>main.go 을 Compile 하여 실행 가능한 파일을 현재 Build 명령을 실행한 디렉토리 위치에 생성한다.</li>
+</ul>
+
+<h2 id="참고">참고</h2>
+
+<p><a href="https://www.quora.com/What-is-the-difference-between-build-and-install-in-Go">https://www.quora.com/What-is-the-difference-between-build-and-install-in-Go</a></p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Redux 공식 사이트에서 학습한 내용 정리</title>
+            <link>/react/2016/07/11/react-redux/</link>
+            <pubDate>Mon, 11 Jul 2016 23:01:26 +0000</pubDate>
+            
+            <guid>/react/2016/07/11/react-redux/</guid>
+            <description>액션 : 무엇이 일어날지&amp;hellip;  애플리케이션에서 스토어로 보내는 데이터 묶음. 액션은 반드시 어떤 형태의 액션이 실행될지 나타내는 type 속성을 가져야 한다  액션 생성자: 액션을 만드는 함수  flux 에서는 액션 생성자가 액션을 전달해서 dispatcher 를 호출 하지만, redux 에서는 액션을 반환 액션은 어떤 일이 일어났는지는 알려주지만, 애플리케이션 상태를 어떻게 바꿔야 하는지는 알려주지 않는다  액션을 다루기 전에..  애플리케이션의 상태(데이터)가 어떤 모양이 될 지 설계해야 한다  리듀서 : 액션에 따라 상태를 수정  액션을 보냈을때 상태가 어떻게 변하는지 명시 이전 상태와 액션을 받아서 다음 상태를 반환하는 순수 함수 리듀서는 반드시 순수 해야만 한다.</description>
+            <content type="html"><![CDATA[
+
+<h2 id="액션-무엇이-일어날지">액션 : 무엇이 일어날지&hellip;</h2>
+
+<ul>
+<li>애플리케이션에서 스토어로 보내는 데이터 묶음.</li>
+<li>액션은 반드시 어떤 형태의 액션이 실행될지 나타내는 <code>type</code> 속성을 가져야 한다</li>
+</ul>
+
+<h2 id="액션-생성자-액션을-만드는-함수">액션 생성자: 액션을 만드는 함수</h2>
+
+<ul>
+<li>flux 에서는 액션 생성자가 액션을 전달해서 dispatcher 를 호출 하지만, redux 에서는 액션을 반환</li>
+<li>액션은 어떤 일이 일어났는지는 알려주지만, 애플리케이션 상태를 어떻게 바꿔야 하는지는 알려주지 않는다</li>
+</ul>
+
+<h2 id="액션을-다루기-전에">액션을 다루기 전에..</h2>
+
+<ul>
+<li>애플리케이션의 상태(데이터)가 어떤 모양이 될 지 설계해야 한다</li>
+</ul>
+
+<h2 id="리듀서-액션에-따라-상태를-수정">리듀서 : 액션에 따라 상태를 수정</h2>
+
+<ul>
+<li>액션을 보냈을때 상태가 어떻게 변하는지 명시</li>
+<li><U>이전 상태</U>와 <U>액션</U>을 받아서 다음 상태를 반환하는 순수 함수</li>
+<li>리듀서는 반드시 순수 해야만 한다.
+
+<ul>
+<li>인수를 변경하는 행위, 예기치 못한일, 사이드 이펙트, API 호출 같은거 하면 안된다</li>
+</ul></li>
+<li>인수가 주어지면 다음 상태를 계산해서 반환하기만! 하면 된다</li>
+</ul>
+
+<h2 id="스토어">스토어</h2>
+
+<ul>
+<li>액션과 리듀서를 가져온다</li>
+<li>어플리케이션에서 <U>단 하나의 스토어</U>만 가질 수 있다</li>
+</ul>
+
+<h2 id="react-와-연결">React 와 연결</h2>
+
+<ul>
+<li>react 바인딩을 위해서 추가 패키지 설치가 필요하다
+$ npm install &ndash;save react-redux</li>
+<li>최상위 컴포넌트만이 redux 에 바인딩 된다</li>
+<li>하위 컴포넌트들은 어디서 데이터가 오는지, 어떻게 바꾸는지 모른다</li>
+<li>1단계, 최상위 컴포넌트(App)을 react-redux 의 <code>&lt;Provider&gt;</code> 로 감싸면 컴포넌트에서 <strong>스토어 인스턴스</strong> 에 접근할 수 있게 된다</li>
+<li>2단계, redux 와 연결하고 싶은 컴포넌트(최상위 컴포넌트)를 react-redux <code>connect</code> 함수로 감싸준다<br />
+connect는 컴포넌트의 props로 <code>dispatch</code> 함수를 전달한다<br />
+connect의 유일한 인수는 selector 라고 부르는 함수인데, <U>전역 redux 스토어의 상태(state)</U>를 받아서 컴포넌트가 필요로 하는 props를 반환한다</li>
+</ul>
+
+<h2 id="참고-자료">참고 자료</h2>
+
+<ul>
+<li><a href="http://dobbit.github.io/redux/index.html">http://dobbit.github.io/redux/index.html</a></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>React 건드리기 1일차</title>
+            <link>/react/2016/04/14/react-touch-1/</link>
+            <pubDate>Thu, 14 Apr 2016 01:49:50 +0000</pubDate>
+            
+            <guid>/react/2016/04/14/react-touch-1/</guid>
+            <description>React, 일단 빠르게 이해하기  오직 View 만을 담당하는 javascript 라이브러리 (찔끔찔끔 조사할때마다 지겹게 봤던 내용)
+ View를 컴포넌트 단위로 구성하고, 이리저리 섞을 수도 있고, 재사용도 가능 React가 빠른 이유는 내부에서 Virtual DOM 이라는 것이 변경된 부분에 대해서만 실제 DOM을 다시 랜더링 하기 때문 JSX 는 React 개발의 편의성을 위한 문법 JSX 는 브라우저 해석되지 않기 때문에 변환하는 과정이 필요. Just in time 방식으로 JSXTrasformer 라이브러리가 있었으나 Babel 에 흡수 되면서 사라짐(그런데 Babel 에서도 사라진듯?</description>
+            <content type="html"><![CDATA[
+
+<h2 id="react-일단-빠르게-이해하기">React, 일단 빠르게 이해하기</h2>
+
+<ul>
+<li>오직 <strong>View</strong> 만을 담당하는 <strong>javascript</strong> 라이브러리 (찔끔찔끔 조사할때마다 지겹게 봤던 내용)<br /></li>
+<li>View를 컴포넌트 단위로 구성하고, 이리저리 섞을 수도 있고, 재사용도 가능</li>
+<li>React가 빠른 이유는 내부에서 <strong>Virtual DOM</strong> 이라는 것이 변경된 부분에 대해서만 실제 DOM을 다시 랜더링 하기 때문</li>
+<li><strong>JSX</strong> 는 React 개발의 편의성을 위한 문법</li>
+<li>JSX 는 브라우저 해석되지 않기 때문에 변환하는 과정이 필요. Just in time 방식으로 JSXTrasformer 라이브러리가 있었으나 <strong>Babel</strong> 에 흡수 되면서 사라짐(그런데 Babel 에서도 사라진듯?). 하지만 실제 Production 환경에서는 이 방식을 사용하는 것은 추천하지 않고, Babel 을 이용한 Pre compile 후 서비스 되는 것을 권장</li>
+<li>React 에는 <code>props</code> 와 <code>state</code> 라는 것이 있는데, <code>props</code> 는 읽기 전용 속성이고, <code>state</code> 는 변경될 수 있음<br /></li>
+<li>React 에서 데이터는 <em>한방향(One way)</em> 으로 흐른다</li>
+</ul>
+
+<h2 id="hello-world-해보기">Hello world 해보기</h2>
+
+<p><a href="https://facebook.github.io/react/docs/getting-started.html">https://facebook.github.io/react/docs/getting-started.html</a></p>
+
+<h2 id="참고-자료">참고 자료</h2>
+
+<ul>
+<li><a href="https://github.com/enaqx/awesome-react">https://github.com/enaqx/awesome-react</a></li>
+<li><a href="https://github.com/koistya/react-static-boilerplate">https://github.com/koistya/react-static-boilerplate</a></li>
+<li><a href="https://github.com/jarsbe/react-webpack-boilerplate">https://github.com/jarsbe/react-webpack-boilerplate</a></li>
+<li><a href="https://github.com/facebook/react/issues/5497">https://github.com/facebook/react/issues/5497</a></li>
+</ul>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Vagrant 실행시 공유 폴더가 마운트 되지 않는 오류</title>
+            <link>/vagrant/2016/02/19/vagrant_up_fail_to_mount_guest_directory/</link>
+            <pubDate>Fri, 19 Feb 2016 11:12:52 +0000</pubDate>
+            
+            <guid>/vagrant/2016/02/19/vagrant_up_fail_to_mount_guest_directory/</guid>
+            <description>어제까지 잘 되던 vagrant up 에서 공유 폴더를 마운트하지 못하는 오류가 발생 했다.
+검색을 해보니까 동일한 문제를 겪고 있는 사람들이 꽤 많았는데 Virtualbox 문제인 것 같기도 하고..
+정확히는 모르겠다.
+https://github.com/mitchellh/vagrant/issues/1657
+아무튼 위에 github issue (closed) 에서 vagrant-vbguest 라는 Vagrant 플러그인을 설치하면, guest 시스템에 Virtualbox Guest Additions 을 자동으로 설치해준다고 한다.
+사실 이것도 뭔지 모르겠지만 일단은 문제 해결이 우선이라 이 플러그인으로 마운트 문제는 해결 했다.</description>
+            <content type="html"><![CDATA[<p>어제까지 잘 되던 <code>vagrant up</code> 에서 공유 폴더를 마운트하지 못하는 오류가 발생 했다.<br />
+검색을 해보니까 동일한 문제를 겪고 있는 사람들이 꽤 많았는데 Virtualbox 문제인 것 같기도 하고..<br />
+정확히는 모르겠다.</p>
+
+<p><a href="https://github.com/mitchellh/vagrant/issues/1657">https://github.com/mitchellh/vagrant/issues/1657</a></p>
+
+<p><img src="/public/image/github_vagrant_issue_1657_comments.png" alt="vagrant_isssue_1657_screenshot" title="vagrant_isssue_1657_screenshot" /></p>
+
+<p>아무튼 위에 github issue (closed) 에서 <code>vagrant-vbguest</code> 라는 Vagrant 플러그인을 설치하면, guest 시스템에 Virtualbox Guest Additions 을 자동으로 설치해준다고 한다.<br />
+사실 이것도 뭔지 모르겠지만 일단은 문제 해결이 우선이라 이 플러그인으로 마운트 문제는 해결 했다.</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>통합 개발환경 구축을 위한 Vagrant와 프로비저닝 (1)</title>
+            <link>/vagrant/2016/02/17/vagrant_provisioning_1/</link>
+            <pubDate>Wed, 17 Feb 2016 02:05:09 +0000</pubDate>
+            
+            <guid>/vagrant/2016/02/17/vagrant_provisioning_1/</guid>
+            <description>Vagrant 를 이용해 개발자간의 로컬 개발환경 차이를 극복하는 통합 개발환경을 만드는 것이 목표이다.
+이런 고민은 Windows와 Mac 환경에서의 APM(Apache, PHP, MySQL) 세팅에서 비롯 되었는데 통합 개발환경 구축은 프로덕션 환경과 개발환경의 차이를 최소화해서 발생할 수 있는 위험요소를 최소화하는 것이 목적인 것이다.
+여기서 고민하게 된 것은 각각의 로컬환경에서 구동되는 Vagrant의 프로비저닝이다.
+shell 보다 Ansible 을 이용해서 Vagrant 가상 머신의 프로비저닝을 진행하는 것이 당연히 좋겠지만 Windows 환경에서는 불편한 부분이 있다. (Ansible은 1.7 버전부터 Windows 환경을 지원하게 되었다.</description>
+            <content type="html"><![CDATA[<p><strong>Vagrant</strong> 를 이용해 개발자간의 로컬 개발환경 차이를 극복하는 통합 개발환경을 만드는 것이 목표이다.</p>
+
+<p>이런 고민은 Windows와 Mac 환경에서의 <strong>APM(Apache, PHP, MySQL)</strong> 세팅에서 비롯 되었는데 통합 개발환경 구축은 프로덕션 환경과 개발환경의 차이를 최소화해서 발생할 수 있는 위험요소를 최소화하는 것이 목적인 것이다.</p>
+
+<p>여기서 고민하게 된 것은 각각의 로컬환경에서 구동되는 Vagrant의 프로비저닝이다.<br />
+shell 보다 <strong>Ansible</strong> 을 이용해서 Vagrant 가상 머신의 프로비저닝을 진행하는 것이 당연히 좋겠지만 Windows 환경에서는 불편한 부분이 있다. (Ansible은 1.7 버전부터 Windows 환경을 지원하게 되었다.)</p>
+
+<p>당연히 Windows 에서도 파이썬을 설치하고, pip를 이용해서 Ansible도 설치 할 수 있다. 하지만 Ansible은 SSH를 기반으로 각 서버에 접근하기 때문에 이것을 대신해서 <strong>Powershell</strong> 을 사용 해야하고, 추가적인 모듈들도 필요할 수 있다.(ex: winrm)</p>
+
+<p>위와 같이 하는 것은 어렵다기보다 2중으로 관리 해야한다는 측면에서 비효율적으로 느껴진다.</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Vagrant 에 ssh로 외부에서 접속하기</title>
+            <link>/vagrant/2016/02/16/vagrant_external_ssh/</link>
+            <pubDate>Tue, 16 Feb 2016 01:55:32 +0000</pubDate>
+            
+            <guid>/vagrant/2016/02/16/vagrant_external_ssh/</guid>
+            <description>Vagrant 로 실행한 VM 서버에 ssh key(pub)를 등록하더라도 ssh(vagrant ssh 아님)나 ansible로 접근할 수 없다.
+외부 머신에서 접속하기 위해서는 vagrant share 를 통해 발급 받은 {이름} 과 {비밀번호} 를 받을 수 있다. 그리고 vagrant connect --ssh {이름} 와 같이 외부에서 실행하게 되면 원격접속이 가능하다.
+*{이름}*은 Vagrant VM측에서 vagrant share를 실행하고 있는 동안만 유효하다.</description>
+            <content type="html"><![CDATA[<p>Vagrant 로 실행한 VM 서버에 ssh key(pub)를 등록하더라도 ssh(vagrant ssh 아님)나 ansible로 접근할 수 없다.</p>
+
+<p>외부 머신에서 접속하기 위해서는 <code>vagrant share</code> 를 통해 발급 받은 <em>{이름}</em> 과 <em>{비밀번호}</em> 를 받을 수 있다.
+그리고 <code>vagrant connect --ssh {이름}</code> 와 같이 외부에서 실행하게 되면 원격접속이 가능하다.</p>
+
+<p>*{이름}*은 Vagrant VM측에서 <code>vagrant share</code>를 실행하고 있는 동안만 유효하다.</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>파이썬 데코레이터(Python Decorator) 를 이해하고 잘 써보기</title>
+            <link>/python/2015/08/17/python-decorator/</link>
+            <pubDate>Mon, 17 Aug 2015 20:57:58 +0000</pubDate>
+            
+            <guid>/python/2015/08/17/python-decorator/</guid>
+            <description>파이썬 코드를 보다보면 간혹 정의된 함수 위에 @가 붙은 짧은 문장, 의미상으로는 함수명을 같기도한 것들이 있는 것을 본적이 많을 것이다.
+어떻게 보면 문서화를 위한 Docstring으로 보일 수도 있는데 이것은 사실 데코레이터(Decorator)라고 불리는 함수 표현이다.
+이름에서 예상할 수 있듯이 무엇인가 꾸며주는 역할을 할 것 같은데, 정말로 그렇다.
+데코레이터는 함수를 꾸며주는(?)는 함수이다. 좀 더 정확하게 말하자면 기존에 정의된 함수의 능력을 확장할 수 있게 해주는 함수이다.
+파이썬 함수의 특징 파이썬의 함수는 일급 객체(First class object)이다.</description>
+            <content type="html"><![CDATA[
+
+<p>파이썬 코드를 보다보면 간혹 정의된 함수 위에 <code>@</code>가 붙은 짧은 문장, 의미상으로는 함수명을 같기도한 것들이 있는 것을 본적이 많을
+것이다.</p>
+
+<p>어떻게 보면 문서화를 위한 <a href="https://en.wikipedia.org/wiki/Docstring">Docstring</a>으로 보일 수도 있는데 이것은 사실 <strong>데코레이터(Decorator)</strong>라고 불리는 함수 표현이다.</p>
+
+<p>이름에서 예상할 수 있듯이 무엇인가 꾸며주는 역할을 할 것 같은데, 정말로 그렇다.</p>
+
+<p>데코레이터는 함수를 꾸며주는(?)는 함수이다. 좀 더 정확하게 말하자면 기존에 정의된 함수의 능력을 확장할 수 있게 해주는 함수이다.</p>
+
+<h2 id="파이썬-함수의-특징">파이썬 함수의 특징</h2>
+
+<p>파이썬의 함수는 <a href="https://ko.wikipedia.org/wiki/%EC%9D%BC%EA%B8%89_%EA%B0%9D%EC%B2%B4">일급 객체(First class
+object)</a>이다.
+파이썬 함수의 특징은 다음과 같다.</p>
+
+<h4 id="1-변수에-할당할-수-있다">1. 변수에 할당할 수 있다.</h4>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">greet</span>(name):
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;Hello {}&#34;</span><span style="color:#f92672">.</span>format(name)
+
+greet_someone <span style="color:#f92672">=</span> greet
+greet_someone(<span style="color:#e6db74">&#34;Eunwoo&#34;</span>)</code></pre></div>
+
+<p>&gt; 실행결과</p>
+
+<pre><code>'Hello Eunwoo'
+</code></pre>
+
+<h4 id="2-다른-함수내에서-정의될-수-있다">2. 다른 함수내에서 정의될 수 있다.</h4>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">greeting</span>(name):
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">greet_message</span>():
+        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;Hello&#39;</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;{} {}&#34;</span><span style="color:#f92672">.</span>format(greet_message(), name)
+
+greeting(<span style="color:#e6db74">&#34;Eunwoo&#34;</span>)</code></pre></div>
+
+<p>&gt; 실행결과</p>
+
+<pre><code>'Hello Eunwoo'
+</code></pre>
+
+<h4 id="3-함수의-인자로-전달할-수-있다">3. 함수의 인자로 전달할 수 있다.</h4>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">change_name_greet</span>(func):
+    name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Narae&#34;</span>
+    <span style="color:#66d9ef">return</span> func(name)
+
+change_name_greet(greet)</code></pre></div>
+
+<p>&gt; 실행결과</p>
+
+<pre><code>'Hello Narae'
+</code></pre>
+
+<h4 id="4-함수의-반환값이-될-수-있다">4. 함수의 반환값이 될 수 있다.</h4>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">uppercase</span>(func):
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">wrapper</span>(name):
+        result <span style="color:#f92672">=</span> func(name)
+        <span style="color:#66d9ef">return</span> result<span style="color:#f92672">.</span>upper()
+    <span style="color:#66d9ef">return</span> wrapper
+
+new_greet <span style="color:#f92672">=</span> uppercase(greet)
+new_greet(<span style="color:#e6db74">&#34;eunwoo&#34;</span>)</code></pre></div>
+
+<p>&gt; 실행결과</p>
+
+<pre><code>'HELLO EUNWOO'
+</code></pre>
+
+<h2 id="데코레이터-decorator-언제-써야할까">데코레이터(Decorator)? 언제 써야할까?</h2>
+
+<ul>
+<li>기존 함수에 기능을 추가하고, 새로운 함수를 만드는 역할</li>
+<li>Python2.2에서 <code>@staticmethod</code>, <code>@classmethod</code> 로 소개됨</li>
+<li><a href="https://www.python.org/dev/peps/pep-0318">PEP 318</a></li>
+<li>어떤 동작을 함수의 전/후에 수행해야 하거나, 공통적으로 사용하는 코드를 쉽게 관리하기 위해 사용</li>
+</ul>
+
+<h2 id="데코레이터-문법-syntax">데코레이터 문법(Syntax)</h2>
+
+<p>데코레이터 표현법을 보기전에 먼저 데코레이터와 같은 역할을 하는 함수를 만들어보자.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Greet</span>(object):
+    current_user <span style="color:#f92672">=</span> None
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">set_name</span>(self, name):
+        <span style="color:#66d9ef">if</span> name <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;admin&#39;</span>:
+            self<span style="color:#f92672">.</span>current_user <span style="color:#f92672">=</span> name
+        <span style="color:#66d9ef">else</span>:
+            <span style="color:#66d9ef">raise</span> <span style="color:#a6e22e">Exception</span>(<span style="color:#e6db74">&#34;권한이 없네요&#34;</span>)
+
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_greeting</span>(self, name):
+        <span style="color:#66d9ef">if</span> name <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;admin&#39;</span>:
+            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;Hello {}&#34;</span><span style="color:#f92672">.</span>format(self<span style="color:#f92672">.</span>current_user)
+
+greet <span style="color:#f92672">=</span> Greet()
+greet<span style="color:#f92672">.</span>set_name(<span style="color:#e6db74">&#39;eunwoo&#39;</span>)</code></pre></div>
+
+<p>&gt; 실행결과</p>
+
+<pre><code>Exception                                 Traceback (most recent call last)
+
+&lt;ipython-input-34-04060cea2324&gt; in &lt;module&gt;()
+     12
+     13 greet = Greet()
+---&gt; 14 greet.set_name('eunwoo')
+
+
+&lt;ipython-input-34-04060cea2324&gt; in set_name(self, name)
+      5             self.current_user = name
+      6         else:
+----&gt; 7             raise Exception(&quot;권한이 없네요&quot;)
+      8
+      9     def get_greeting(self, name):
+
+
+Exception: 권한이 없네요
+</code></pre>
+
+<p>이 클래스의 메소드들은 전달받은 <code>name</code> 인자가 admin 일때만 수행하는 부분들을 갖고 있다.</p>
+
+<p>공통적으로 사용하는 부분을 따로 떼어낼 수 있을 것 같다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">is_admin</span>(user_name):
+    <span style="color:#66d9ef">if</span> user_name <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;admin&#39;</span>:
+        <span style="color:#66d9ef">raise</span> <span style="color:#a6e22e">Exception</span>(<span style="color:#e6db74">&#34;권한이 없다니까요&#34;</span>)
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Greet</span>(object):
+    current_user <span style="color:#f92672">=</span> None
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">set_name</span>(self, name):
+        is_admin(name)
+        self<span style="color:#f92672">.</span>current_user <span style="color:#f92672">=</span> name
+
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_greeting</span>(self, name):
+        is_admin(name)
+        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;Hello {}&#34;</span><span style="color:#f92672">.</span>format(self<span style="color:#f92672">.</span>current_user)
+
+greet <span style="color:#f92672">=</span> Greet()
+greet<span style="color:#f92672">.</span>set_name(<span style="color:#e6db74">&#39;admin&#39;</span>)
+greet<span style="color:#f92672">.</span>get_greeting(<span style="color:#e6db74">&#39;eunwoo&#39;</span>)</code></pre></div>
+
+<p>&gt; 실행결과</p>
+
+<pre><code>Exception                                 Traceback (most recent call last)
+
+&lt;ipython-input-35-3f79f20b3c05&gt; in &lt;module&gt;()
+     15 greet = Greet()
+     16 greet.set_name('admin')
+---&gt; 17 greet.get_greeting('eunwoo')
+
+
+&lt;ipython-input-35-3f79f20b3c05&gt; in get_greeting(self, name)
+     10
+     11     def get_greeting(self, name):
+---&gt; 12         is_admin(name)
+     13         return &quot;Hello {}&quot;.format(self.current_user)
+     14
+
+
+&lt;ipython-input-35-3f79f20b3c05&gt; in is_admin(user_name)
+      1 def is_admin(user_name):
+      2     if user_name != 'admin':
+----&gt; 3         raise Exception(&quot;권한이 없다니까요&quot;)
+      4
+      5 class Greet(object):
+
+
+Exception: 권한이 없다니까요
+</code></pre>
+
+<p>조금 더 좋아졌다. 하지만 데코레이터를 쓰면 더 좋은 코드가 될 수 있다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">is_admin</span>(func):
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">wrapper</span>(<span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs):
+        <span style="color:#e6db74">&#34;&#34;&#34;
+</span><span style="color:#e6db74">        decorate
+</span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+        <span style="color:#66d9ef">if</span> kwargs<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;username&#39;</span>) <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;admin&#39;</span>:
+            <span style="color:#66d9ef">raise</span> <span style="color:#a6e22e">Exception</span>(<span style="color:#e6db74">&#34;아 진짜 안된다니까 그러네..&#34;</span>)
+        <span style="color:#66d9ef">return</span> func(<span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs)
+    <span style="color:#66d9ef">return</span> wrapper
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Greet</span>(object):
+    current_user <span style="color:#f92672">=</span> None
+
+    <span style="color:#a6e22e">@is_admin</span>
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">set_name</span>(self, username):
+        self<span style="color:#f92672">.</span>current_user <span style="color:#f92672">=</span> username
+
+    <span style="color:#a6e22e">@is_admin</span>
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_greeting</span>(self, username):
+        <span style="color:#e6db74">&#34;&#34;&#34;
+</span><span style="color:#e6db74">        greeting
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">        :param username: 이름
+</span><span style="color:#e6db74">        :type username: string
+</span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;Hello {}&#34;</span><span style="color:#f92672">.</span>format(self<span style="color:#f92672">.</span>current_user)
+
+greet <span style="color:#f92672">=</span> Greet()
+greet<span style="color:#f92672">.</span>set_name(username<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;admin&#39;</span>)
+greet<span style="color:#f92672">.</span>get_greeting(username<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;admin&#39;</span>)</code></pre></div>
+
+<p>&gt; 실행결과</p>
+
+<pre><code>'Hello admin'
+</code></pre>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">    greet<span style="color:#f92672">.</span>get_greeting(username<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;eunwoo&#39;</span>)</code></pre></div>
+
+<p>&gt; 실행결과</p>
+
+<pre><code>Exception                                 Traceback (most recent call last)
+
+&lt;ipython-input-61-2aed1f705388&gt; in &lt;module&gt;()
+----&gt; 1 greet.get_greeting(username='eunwoo')
+
+
+&lt;ipython-input-60-f1529a570fbc&gt; in wrapper(*args, **kwargs)
+      5         &quot;&quot;&quot;
+      6         if kwargs.get('username') != 'admin':
+----&gt; 7             raise Exception(&quot;아 진짜 안된다니까 그러네..&quot;)
+      8         return func(*args, **kwargs)
+      9     return wrapper
+
+
+Exception: 아 진짜 안된다니까 그러네..
+</code></pre>
+
+<h2 id="메소드의-속성-유지하기">메소드의 속성 유지하기</h2>
+
+<p>위와 같이 데코레이터를 만들게 되면 원래 함수의 속성들이 사라지는 문제점이 발생한다.</p>
+
+<p>이것을 보완하기 위해 <code>functools</code> 모듈에는 데코레이터를 위한 데코레이터 <code>@wraps</code>가 있다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">greet<span style="color:#f92672">.</span>get_greeting<span style="color:#f92672">.</span>__name__
+<span style="color:#75715e"># &#39;wrapper&#39;</span>
+
+greet<span style="color:#f92672">.</span>set_name<span style="color:#f92672">.</span>__doc__
+<span style="color:#75715e"># &#39;\n        decorate\n        &#39;</span></code></pre></div>
+
+<p>메소드의 <code>__name__</code> , <code>__doc__</code> 속성을 확인해보면, wrapper 함수의 속성이 나오게 된다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> functools <span style="color:#f92672">import</span> wraps
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">is_admin</span>(func):
+    <span style="color:#a6e22e">@wraps</span>(func)
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">wrapper</span>(<span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs):
+        <span style="color:#66d9ef">if</span> kwargs<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;username&#39;</span>) <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;admin&#39;</span>:
+            <span style="color:#66d9ef">raise</span> <span style="color:#a6e22e">Exception</span>(<span style="color:#e6db74">&#34;아 진짜 안된다니까 그러네..&#34;</span>)
+        <span style="color:#66d9ef">return</span> func(<span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs)
+    <span style="color:#66d9ef">return</span> wrapper
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Greet</span>(object):
+    current_user <span style="color:#f92672">=</span> None
+
+    <span style="color:#a6e22e">@is_admin</span>
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">set_name</span>(self, username):
+        self<span style="color:#f92672">.</span>current_user <span style="color:#f92672">=</span> username
+
+    <span style="color:#a6e22e">@is_admin</span>
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_greeting</span>(self, username):
+        <span style="color:#e6db74">&#34;&#34;&#34;
+</span><span style="color:#e6db74">        greeting
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">        :param username: 이름
+</span><span style="color:#e6db74">        :type username: string
+</span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;Hello {}&#34;</span><span style="color:#f92672">.</span>format(self<span style="color:#f92672">.</span>current_user)
+
+
+greet <span style="color:#f92672">=</span> Greet()
+
+greet<span style="color:#f92672">.</span>get_greeting<span style="color:#f92672">.</span>__name__
+<span style="color:#75715e"># &#39;get_greeting&#39;</span>
+
+greet<span style="color:#f92672">.</span>get_greeting<span style="color:#f92672">.</span>__doc__
+<span style="color:#75715e"># &#39;\n        greeting\n        \n        :param username: \xec\x9d\xb4\xeb\xa6\x84 \n        :type username: string\n        &#39;</span></code></pre></div>
+
+<h2 id="데코레이터에게-인자-넘기기">데코레이터에게 인자 넘기기</h2>
+
+<p>데코레이터에도 추가 인자를 넘겨줄 수 있다.</p>
+
+<p>이때는 데코레이터를 정의하는 것이 아니라 데코레이터를 만들어주는 함수를 정의한다고 볼 수 있다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">add_tags</span>(tag_name):
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;Gernerate decorator&#34;</span>)
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">set_decorator</span>(func):
+        <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">wrapper</span>(username):
+            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&lt;{0}&gt;{1}&lt;/{0}&gt;&#34;</span><span style="color:#f92672">.</span>format(tag_name, func(username))
+        <span style="color:#66d9ef">return</span> wrapper
+    <span style="color:#66d9ef">return</span> set_decorator
+
+<span style="color:#a6e22e">@add_tags</span>(<span style="color:#e6db74">&#34;div&#34;</span>)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">greeting</span>(name):
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;Hello &#34;</span> <span style="color:#f92672">+</span> name
+
+<span style="color:#66d9ef">print</span> greeting(<span style="color:#e6db74">&#34;Jonnung&#34;</span>)</code></pre></div>
+
+<p>&gt; 실행결과</p>
+
+<pre><code>&lt;div&gt;Hello Jonnung&lt;/div&gt;
+</code></pre>
+
+<h2 id="클래스-class-로-데코레이터-만들기">클래스(class)로 데코레이터 만들기</h2>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Sample</span>(object):
+    <span style="color:#66d9ef">def</span> __init__(self):
+        <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;init&#34;</span>)
+    <span style="color:#66d9ef">def</span> __call__(self):
+        <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;call&#34;</span>)
+
+
+sample <span style="color:#f92672">=</span> Sample()
+<span style="color:#75715e"># init</span>
+
+sample()
+<span style="color:#75715e"># call</span></code></pre></div>
+
+<p>클래스의 인스턴스를 함수처럼 호출하기 위해서 클래스에 <code>__call__</code> 이라는 매직 메소드를 정의했다.</p>
+
+<p>이 원리를 이용해서 클래스를 데코레이터로 구현할 수 있다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> functools <span style="color:#f92672">import</span> wraps
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OnlyAdmin</span>(object):
+    <span style="color:#66d9ef">def</span> __init__(self, func):
+        self<span style="color:#f92672">.</span>func <span style="color:#f92672">=</span> func
+
+    <span style="color:#66d9ef">def</span> __call__(self, <span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs):
+        name <span style="color:#f92672">=</span> kwargs<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;name&#39;</span>)<span style="color:#f92672">.</span>upper()
+        self<span style="color:#f92672">.</span>func(name)
+
+<span style="color:#a6e22e">@OnlyAdmin</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">greet</span>(name):
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;Hello {}&#34;</span><span style="color:#f92672">.</span>format(name))
+
+
+greet(name<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;Eunwoo&#39;</span>)</code></pre></div>
+
+<p>&gt; 실행결과</p>
+
+<pre><code>Hello EUNWOO
+</code></pre>
+]]></content>
+        </item>
+        
+        <item>
+            <title>PHP 로 HTTP raw post data를 다루는 방법</title>
+            <link>/php/2015/08/06/php-use-http-raw-post-data/</link>
+            <pubDate>Thu, 06 Aug 2015 23:16:07 +0000</pubDate>
+            
+            <guid>/php/2015/08/06/php-use-http-raw-post-data/</guid>
+            <description>HTTP request는 header 와 body로 나눌 수 있다. body 에는 데이터가 있을 수도 있고, 없을 수도 있다.
+POST 요청도 body에 담겨서 오게 되는데 HTML form 으로부터 전달되는 데이터를 PHP가 파싱해서 $_POST에 담는다.
+만약에 body의 데이터가 json 이거나 PHP가 해석할 수 없는 형태더라도 직접 접근해야만 하는 경우가 있을 수 있다. 이때 사용되는 변수가 $HTTP_RAW_POST_DATA 이다. 하지만 이 변수는 PHP 5.6 부터 Deprecated 이기 때문에 사용하면 안된다.
+일반적으로 php://input 을 사용해서 HTTP body의 raw data를 읽기 전용으로 가져올 수 있다.</description>
+            <content type="html"><![CDATA[<p>HTTP request는 header 와 body로 나눌 수 있다.
+body 에는 데이터가 있을 수도 있고, 없을 수도 있다.</p>
+
+<p>POST 요청도 body에 담겨서 오게 되는데 HTML form 으로부터 전달되는 데이터를 PHP가 파싱해서 <code>$_POST</code>에 담는다.</p>
+
+<p>만약에 body의 데이터가 json 이거나 PHP가 해석할 수 없는 형태더라도 직접 접근해야만 하는 경우가 있을 수 있다.
+이때 사용되는 변수가 <code>$HTTP_RAW_POST_DATA</code> 이다. 하지만 이 변수는 PHP 5.6 부터 Deprecated 이기 때문에 사용하면 안된다.</p>
+
+<p>일반적으로 <code>php://input</code> 을 사용해서 HTTP body의 raw data를 읽기 전용으로 가져올 수 있다. 하지만 <code>enctype=“multipart/form-data”</code> 는 다룰 수 없다는 점을 유의 해야한다.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;?php</span>
+
+$post_data <span style="color:#f92672">=</span> <span style="color:#a6e22e">file_get_contents</span>(<span style="color:#e6db74">&#34;php://input&#34;</span>);
+</code></pre></div>
+
+<p>만약 <code>$HTTP_RAW_POST_DATA</code> 는 사용해야 한다면 <strong>php.ini</strong> 의 <strong><a href="http://php.net/manual/kr/ini.core.php#ini.always-populate-raw-post-data">always_populate_raw_post_data</a></strong> 를 <strong>TRUE</strong> 로 변경하면 가능하지만, 사용하지 않는 것이 잠재적으로 메모리를 절약할 수 있는 방안이 될 수 있다.</p>
+]]></content>
+        </item>
+        
+    </channel>
+</rss>

@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>오정규 Blog</title>
+    <description></description>
+    <link>http://ohjeonggyu.github.io/</link>
+    <atom:link href="http://ohjeonggyu.github.io/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Fri, 03 Mar 2017 00:33:23 +0000</pubDate>
+    <lastBuildDate>Fri, 03 Mar 2017 00:33:23 +0000</lastBuildDate>
+    <generator>Jekyll v3.3.1</generator>
+    
+      <item>
+        <title>Effective java와 kotlin</title>
+        <description>&lt;h1 id=&quot;effective-java와-kotlin&quot;&gt;Effective Java와 Kotlin&lt;/h1&gt;
+
+&lt;h3 id=&quot;2017-3-1&quot;&gt;2017. 3. 1&lt;/h3&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Java의 유명 서적인 &lt;a href=&quot;https://www.pearsonhighered.com/program/Bloch-Effective-Java-2nd-Edition/PGM310651.html&quot;&gt;Effective Java&lt;/a&gt;
+가 &lt;code class=&quot;highlighter-rouge&quot;&gt;Jetbrain&lt;/code&gt;의 &lt;strong&gt;kotlin&lt;/strong&gt; 설계에 어떻게 영향을 주었는 지 정리하는 글을 번역&amp;amp;정리 하는 글임&lt;/p&gt;
+
+&lt;p&gt;다음 문서를 참고하여 작성하였음 &lt;a href=&quot;https://medium.com/@lukleDev/how-effective-java-may-have-influenced-the-design-of-kotlin-part-1-45fd64c2f974#.uueg9fwrg&quot;&gt;part1&lt;/a&gt; &lt;a href=&quot;https://medium.com/@lukleDev/how-effective-java-may-have-influenced-the-design-of-kotlin-part-2-89844d62ddf3#.kjhlca7pt&quot;&gt;part2&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;builder-pattern&quot;&gt;Builder Pattern&lt;/h2&gt;
+
+&lt;h3 id=&quot;effective-java-2장-규칙2&quot;&gt;Effective Java 2장 규칙2&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;객체를 생성하는 다양한 방법이 있으며, 그 중 객체 내에 필드가 선택적인 경우에 &lt;a href=&quot;https://ko.wikipedia.org/wiki/%EB%B9%8C%EB%8D%94_%ED%8C%A8%ED%84%B4&quot;&gt;Builder Pattern&lt;/a&gt;을 사용하라.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;kotlin&quot;&gt;Kotlin&lt;/h3&gt;
+&lt;p&gt;코틀린에서는 Java에서의 빌더패턴을 사용할 필요가 없다. 클래스를 정의하면서 동시에 &lt;code class=&quot;highlighter-rouge&quot;&gt;default&lt;/code&gt; 파라미터를 설정할 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class User ( 
+	private val name :String,
+	private val age :Int = 0,
+	private val address :String,
+	private val phone :Int)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;위와 같이 클래스를 정의하고,&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;val user = User(&quot;Jeonggyu&quot;, 
+				28,
+				phone = 86343623)
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;와 같이 &lt;strong&gt;&lt;em&gt;선택적으로&lt;/em&gt;&lt;/strong&gt; 필요한 필드에 필드 네임을 지정하여 값을 초기화할 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;singletons&quot;&gt;Singletons&lt;/h2&gt;
+
+&lt;h3 id=&quot;effective-java-2장-규칙3&quot;&gt;Effective Java 2장 규칙3&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;싱글톤 객체를 생성하는 방법은 두 가지다. &lt;code class=&quot;highlighter-rouge&quot;&gt;static&lt;/code&gt; 필드로 자기 자신의 객체를 갖는 방법, &lt;code class=&quot;highlighter-rouge&quot;&gt;public static&lt;/code&gt; 팩토리 메서드를 사용하는 방법.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;첫 번째 방법은 다음과 같다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;public class Elvis {
+	public static final Elvis INSTANCE = new Elvis():        
+	private Elvis() { ...}
+	publiC foo();
+	public bar();
+	...
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;위와 같은 방법에서는 Elvis.INSTANCE와 같은 방법으로 싱글톤 객체에 접근할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;두 번째 방법은&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;public class Elvis {
+	private static final Elvis INSTANCE = new Elvis(); 
+	private Elvis() { ...}
+	public static Elvis getlnstance() { return INSTANCE; }
+	public foo();
+	public bar();
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;와 같다. 첫 번째 방법에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;public&lt;/code&gt;으로 선언된 객체에 직접 접근하는 것과 다르게 &lt;code class=&quot;highlighter-rouge&quot;&gt;public static&lt;/code&gt; 메서드를 통해 싱글톤 객체를 얻을 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;kotlin-1&quot;&gt;Kotlin&lt;/h3&gt;
+&lt;p&gt;코틀린에서는 Java에서의 싱글톤 객체를 만들 필요가 없다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;object Elvis {
+	fun foo(){ }
+	fun bar(){ }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;object&lt;/code&gt; 선언을 통해 싱글톤 객체를 손쉽게 만들 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;equals-hashcode&quot;&gt;equals(), hashCode()&lt;/h2&gt;
+
+&lt;h3 id=&quot;effective-java-3장-규칙8-9&quot;&gt;Effective Java 3장 규칙8, 9&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;equals()를 정의할 때 일반 규약을 따라라. 또한 equals()를 정의할 땐 hashCode()도 함께 정의하라.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;effective-java-4장-규칙15&quot;&gt;Effective Java 4장 규칙15&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;변경 가능성을 최소화하라. 변경 가능 클래스로 만들 특별한 이유가 없다면 변경 불가능하도록 작성하라. 변경 불가능은 설계하기 쉽고, 구현하기도 쉽고, 사용하기도 쉽다. 또한 오류도 적고 안전하다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;java---변경-불가능-클래스&quot;&gt;Java - 변경 불가능 클래스&lt;/h3&gt;
+&lt;p&gt;Java에서의 불가능 클래스는 지루하다. 불가능 클래스는 &lt;code class=&quot;highlighter-rouge&quot;&gt;equals()&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;hashCode()&lt;/code&gt;를 재정의 해야한다. 이러한 메서드를 재정의할 때 규칙 8과 9에서 설명하는 &lt;code class=&quot;highlighter-rouge&quot;&gt;일반적인 규약&lt;/code&gt;을 따라야한다. 이러한 규약은 &lt;strong&gt;reflexivity, symmetry, transitivity, consistency and nun-nullity&lt;/strong&gt;이다. 규약들을 모두 지키기엔 자원이 너무 크다.&lt;/p&gt;
+
+&lt;h3 id=&quot;kotlin-2&quot;&gt;Kotlin&lt;/h3&gt;
+&lt;p&gt;코틀린에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;data&lt;/code&gt; 클래스를 정의하여 변경불가능 클래스를 만들 수 있다. 컴파일러는 자동으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;equals()&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;hashCode()&lt;/code&gt;를 자동으로 생성한다.  클래스의 앞에 &lt;code class=&quot;highlighter-rouge&quot;&gt;data&lt;/code&gt;라는 키워드를 붙이면 끝이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;변수field-대신-프로퍼티property&quot;&gt;변수(Field) 대신 프로퍼티(Property)&lt;/h2&gt;
+&lt;h3 id=&quot;effective-java-4장-규칙14&quot;&gt;Effective Java 4장 규칙14&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;public&lt;/code&gt; 클래스 안에는 &lt;code class=&quot;highlighter-rouge&quot;&gt;public&lt;/code&gt; 객체를 두지 말고 접근자를 사용하라. 이 규칙을 지키지 않는다면 캡슐화와 유연성을 잃게 된다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;java의-gettersetter&quot;&gt;Java의 Getter/Setter&lt;/h3&gt;
+&lt;p&gt;이 규칙을 따른다면 &lt;code class=&quot;highlighter-rouge&quot;&gt;private&lt;/code&gt;필드와 &lt;code class=&quot;highlighter-rouge&quot;&gt;public&lt;/code&gt; 접근자를 가질 것이다. 하지만, 이러한 기본 접근자는 클래스 내의 필드가 바뀐다면 모든 접근자 또한 바꿔야한다. 만약 해당 클래스가 공개 API라면 내부 필드를 변경하기는 더욱 힘들다.&lt;/p&gt;
+
+&lt;h3 id=&quot;kotlin-3&quot;&gt;Kotlin&lt;/h3&gt;
+&lt;p&gt;코틀린에서는 Java의 &lt;code class=&quot;highlighter-rouge&quot;&gt;private&lt;/code&gt; 필드 접근자 &lt;code class=&quot;highlighter-rouge&quot;&gt;getter/setter&lt;/code&gt;를 자동으로 생성하는 프로퍼티를 사용한다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class Person {
+	var name :string? = null
+	var age :Int? = null
+}
+
+...
+
+fun foo(){
+	var person = Person()
+	person.name = &quot;Jeonggyu&quot;
+	...
+}
+...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;위와 같이 Java의 &lt;code class=&quot;highlighter-rouge&quot;&gt;public&lt;/code&gt; 객체에 접근하는 방법으로 접근할 수 있다. 코틀린의 프로퍼티를 통해 추가적인 커스텀 접근자를 만들 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;override의-선택적-annotation-대신-강제-키워드&quot;&gt;override의 선택적 annotation 대신 강제 키워드!&lt;/h2&gt;
+&lt;h3 id=&quot;effective-java-6장-규칙36&quot;&gt;Effective Java 6장 규칙36&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;상위 클래스의 메서드를 재정의 할 때는 Override 어노테이션을 일관되게 사용하라.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;java에서는-선택적인-어노테이션&quot;&gt;Java에서는 선택적인 어노테이션&lt;/h3&gt;
+&lt;p&gt;Java에서 어노테이션은 실제로 오버라이딩을 하지 않는데 어노테이션을 붙였을 때 잘못된 어노테이션이라 표시를 해주는 등 필수적인 기능이지만 선택적으로 사용이 가능하다.&lt;/p&gt;
+
+&lt;h3 id=&quot;kotlin에서는-강제-키워드&quot;&gt;Kotlin에서는 강제 키워드&lt;/h3&gt;
+&lt;p&gt;코틀린에서 override는 어노테이션이 아니다. 메서드 앞에 &lt;code class=&quot;highlighter-rouge&quot;&gt;keyword&lt;/code&gt;로 붙여줘야 한다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;open class Parent {
+    open fun foo() { }
+}
+class Child : Parent {
+    override fun foo() { }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;상속을 받는 클래스인 Child에서 Parent의 메서드인 &lt;code class=&quot;highlighter-rouge&quot;&gt;foo()&lt;/code&gt;를 재정의 하기 위하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;override&lt;/code&gt; 키워드를  붙여야한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;final-classes-by-default&quot;&gt;Final classes by default&lt;/h2&gt;
+
+&lt;h3 id=&quot;effective-java-4장-규칙17&quot;&gt;Effective Java 4장 규칙17&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;모든 클래스는 상속을 받을 수 없어야 한다. 혹은 상속을 위해 신중히 설계되고, 문서화되야 한다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;java에서의-클래스&quot;&gt;Java에서의 클래스&lt;/h3&gt;
+&lt;p&gt;Java에서의 클래스는 기본적으로 상속받을 수 있는 클래스이다. 상속을 금지하기 위해선 &lt;code class=&quot;highlighter-rouge&quot;&gt;final&lt;/code&gt; 키워드를 붙여줘야 한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;kotlin-4&quot;&gt;Kotlin&lt;/h3&gt;
+&lt;p&gt;코틀린에서의 클래스는 &lt;code class=&quot;highlighter-rouge&quot;&gt;default&lt;/code&gt;가 &lt;code class=&quot;highlighter-rouge&quot;&gt;final&lt;/code&gt; 클래스이다. 상속을 위해선 &lt;code class=&quot;highlighter-rouge&quot;&gt;open&lt;/code&gt; 키워드를 붙여야 한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;no-checked-exceptions&quot;&gt;No Checked Exceptions&lt;/h2&gt;
+&lt;h3 id=&quot;effective-java-9장-규칙65&quot;&gt;Effective Java 9장 규칙65&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;예외를 무시하지 마라.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;java에서의-예외&quot;&gt;Java에서의 예외&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kotlinlang.org/docs/reference/exceptions.html#checked-exceptions&quot;&gt;코틀린 문서&lt;/a&gt;에서 말하는 Java 예외 처리의 문제점 
+절대로 발생하지 않는 Checked Exception도 모두 처리해야 한다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;코틀린에서는-checked-exception이-없다&quot;&gt;코틀린에서는 Checked Exception이 없다!&lt;/h3&gt;
+&lt;p&gt;코틀린에서 발생할 수 있는 예외를 알리기 위해서 &lt;code class=&quot;highlighter-rouge&quot;&gt;@Throws(&amp;lt;ExceptionName&amp;gt;::class)&lt;/code&gt;태그를 이용하여 발생할 수 있는 예외를 알릴 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;forced-null-checks&quot;&gt;Forced Null-Checks&lt;/h2&gt;
+
+&lt;h3 id=&quot;effective-java-7장-규칙43&quot;&gt;Effective Java 7장 규칙43&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Null 대신 빈 배열이나 컬렉션을 반환하라.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;java&quot;&gt;Java&lt;/h3&gt;
+&lt;p&gt;Java에서는 어떤 메서드가 &lt;code class=&quot;highlighter-rouge&quot;&gt;null&lt;/code&gt;을 리턴 하는지 안하는 지 알 수가 없다. (자바독에서 설명을 해 준다면 운이 좋은 경우이다!)&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;개발자가 실수할 수 있는 두 가지&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;null&lt;/code&gt; 체크를 하지 않는 경우&lt;/li&gt;
+  &lt;li&gt;절대로 &lt;code class=&quot;highlighter-rouge&quot;&gt;null&lt;/code&gt;을 리턴하지 않는 메서드에 필요하지 않은 &lt;code class=&quot;highlighter-rouge&quot;&gt;null&lt;/code&gt; 체크를 하는 경우&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;kotlin-5&quot;&gt;Kotlin&lt;/h3&gt;
+&lt;p&gt;리턴 타입 &lt;code class=&quot;highlighter-rouge&quot;&gt;List&amp;lt;Item&amp;gt;&lt;/code&gt;은 절대로 &lt;code class=&quot;highlighter-rouge&quot;&gt;null&lt;/code&gt;을 리턴하지 않는다. 반면에 &lt;code class=&quot;highlighter-rouge&quot;&gt;List&amp;lt;Item&amp;gt;?&lt;/code&gt;은 &lt;code class=&quot;highlighter-rouge&quot;&gt;null&lt;/code&gt;을 리턴할 수 있다. 이렇게 강한 타입 시스템을 통해 개발자가 실수하는 것을 방지한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;no-raw-type&quot;&gt;No Raw Type&lt;/h2&gt;
+&lt;h3 id=&quot;effective-java-5장-규칙23&quot;&gt;Effective Java 5장 규칙23&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;새 코드에는 무인자 제네릭 자료형을 사용하지 마라.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;easier-way-of-defining-variance&quot;&gt;Easier way of defining variance&lt;/h2&gt;
+&lt;h3 id=&quot;effective-java-5장-규칙28&quot;&gt;Effective Java 5장 규칙28&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;한정적 와일드카드를 써서 API의 유연성을 높여라&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;java-1&quot;&gt;Java&lt;/h3&gt;
+&lt;p&gt;Java에서의 한정적 와일드카드 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;? extends E&amp;gt;&lt;/code&gt; 와 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;? super E&amp;gt;&lt;/code&gt; 같은 키워드들은 이해하기 힘들다.&lt;/p&gt;
+
+&lt;h3 id=&quot;kotlin-6&quot;&gt;Kotlin&lt;/h3&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;in&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;out&lt;/code&gt; 키워드를 사용한다.&lt;/p&gt;
+
+</description>
+        <pubDate>Fri, 31 Mar 2017 00:00:00 +0000</pubDate>
+        <link>http://ohjeonggyu.github.io/2017/03/31/Effective-Java%EC%99%80-Kotlin/</link>
+        <guid isPermaLink="true">http://ohjeonggyu.github.io/2017/03/31/Effective-Java%EC%99%80-Kotlin/</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>Test</title>
+        <description>
+&lt;h2 id=&quot;jekyll&quot;&gt;Jekyll&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;hello&lt;/li&gt;
+  &lt;li&gt;hello2
+    &lt;ul&gt;
+      &lt;li&gt;test&lt;/li&gt;
+      &lt;li&gt;test
+&lt;code class=&quot;highlighter-rouge&quot;&gt;hello world&lt;/code&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+</description>
+        <pubDate>Mon, 04 Apr 2016 00:00:00 +0000</pubDate>
+        <link>http://ohjeonggyu.github.io/2016/04/04/test/</link>
+        <guid isPermaLink="true">http://ohjeonggyu.github.io/2016/04/04/test/</guid>
+        
+        
+      </item>
+    
+  </channel>
+</rss>

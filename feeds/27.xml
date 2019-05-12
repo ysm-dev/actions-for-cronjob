@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>IMHO</title>
+        <description>My humble opinions and stuff</description>
+        <link>http://hskang9.github.io/</link>
+        <atom:link href="http://hskang9.github.io/feed.xml" rel="self" type="application/rss+xml"/>
+        <pubDate>Fri, 02 Mar 2018 17:54:27 +0000</pubDate>
+        <lastBuildDate>Fri, 02 Mar 2018 17:54:27 +0000</lastBuildDate>
+        <generator>Jekyll v3.6.2</generator>
+        
+            <item>
+                <title>여러가지 합성곱 신경망 레이어들 - InceptionV1(Googlenet)</title>
+                <description>&lt;h2&gt;인셉션이 나오기 전&lt;/h2&gt;
+&lt;p&gt;과학자들은 &lt;strong&gt;ImageNet Large-Scale Visual Recognition Challenge(ILSVRC)&lt;/strong&gt; 에서 좋은 성과를 보여주려고 딥러닝에 대해 연구하던 중 여러가지 레이어들이 나왔다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;연산도 간단하고 픽셀마다의 피쳐를 계산해서 최대한 정보를 보존시켜준다는 1x1 Convolution(Conv1x1)&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;연산량을 대폭 줄여주어 cost도 절약되고 overfitting도 줄여주는 MaxPooling&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;이외 여러가지 커널 사이즈들의 Convolution layer들(3x3, 5x5)&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;물론 각 레이어마다 신경망의 정확도를 높이는 데 기여를 하기는 했지만 어느 쪽이 좀 더 효과적인지에 대해 고민하고 있었는데…
+&lt;!--more--&gt;&lt;/p&gt;
+
+&lt;figure&gt;
+    &lt;img src=&quot;/images/posts/whattochoose.png&quot; alt=&quot;whattochoose&quot; /&gt;
+    
+    &lt;figcaption class=&quot;caption-text&quot;&gt;모두 도움이 되긴 하지만 고르라고 하니 고민된다.&lt;/figcaption&gt; 
+    
+&lt;/figure&gt;
+
+&lt;p&gt;구글의 연구자들은 고민을 하다가 Min Lin의 논문인 &lt;a href=&quot;https://arxiv.org/abs/1312.4400&quot;&gt;Network in Network&lt;/a&gt;를 읽게 되고 2010년에 개봉한 영화인 인셉션 meme(짤) “we need to go deeper”를 떠올리며 그냥 레이어들을 합쳐버리기로 결심한다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“codenamed Inception, which derives its name from the Network in network paper by Lin et al &lt;a href=&quot;https://scholar.google.com/citations?user=BGONmkIAAAAJ&amp;amp;hl=en&quot;&gt;[12]&lt;/a&gt;
+in conjunction with the famous “we need to go deeper” internet meme &lt;a href=&quot;http://knowyourmeme.com/memes/we-need-to-go-deeper&quot;&gt;[1]&lt;/a&gt;” &lt;cite&gt;― Inventors of inception module&lt;/cite&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;figure class=&quot;full-width&quot;&gt;
+    &lt;img src=&quot;/images/posts/weneedtogodeeper.jpg&quot; alt=&quot;weneedtogodeeper&quot; /&gt;
+    
+    &lt;figcaption class=&quot;caption-text&quot;&gt;문제의 그 짤&lt;/figcaption&gt;
+    
+&lt;/figure&gt;
+
+&lt;h2&gt;구조&lt;/h2&gt;
+
+&lt;h3&gt;naive version&lt;/h3&gt;
+
+&lt;figure&gt;
+    &lt;img src=&quot;/images/posts/inception_block_naive.png&quot; alt=&quot;&quot; /&gt;
+    
+    &lt;figcaption class=&quot;caption-text&quot;&gt;Inception Module, naive version&lt;/figcaption&gt; 
+    
+&lt;/figure&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tensorflow.contrib.keras.python&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;keras&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;keras&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;keras.layers&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MaxPooling2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AveragePooling2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;concatenate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Input&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;keras&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;inception_block&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'relu'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conv1x1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;filter1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conv3x3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;filter2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conv5x5&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;filter3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pooling&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MaxPooling2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;strides&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+ &lt;span class=&quot;err&quot;&gt; &lt;/span&gt; &lt;span class=&quot;c&quot;&gt;#Average pooling은 평균값을 구하여 줄여주나 연산량을 많이 요구한다.&lt;/span&gt;
+ &lt;span class=&quot;err&quot;&gt; &lt;/span&gt; &lt;span class=&quot;c&quot;&gt;#pooling = AveragePooling2D((3,3), strides=(1,1), padding='same')(input_layer)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;output_layer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;concatenate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conv1x1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conv3x3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conv5x5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pooling&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output_layer&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;224&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;224&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;inputs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;inception_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inception_block&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# output_layer = Dense(64)(inception_1) &lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;model&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3&gt;dimension reduction&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Convolution1x1&lt;/strong&gt; 레이어를 이용하여 dimension을 줄여준다. 이를 실행한 결과 AlexNet보다 12배만큼 적은 패러미터로 훈련시킬 수 있었다.&lt;/p&gt;
+
+&lt;figure&gt;
+    &lt;img src=&quot;/images/posts/inception_block_reduce.png&quot; alt=&quot;&quot; /&gt;
+    
+    &lt;figcaption class=&quot;caption-text&quot;&gt;Inception Module, naive version&lt;/figcaption&gt; 
+    
+&lt;/figure&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tensorflow.contrib.keras.python&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;keras&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;keras&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;keras.layers&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MaxPooling2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AveragePooling2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;concatenate&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;keras&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;inception_block_dim_reduce&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;reduce1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;reduce2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pool_proj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'relu'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pull&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conv1x1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;filter1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conv3x3_reduce&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reduce1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conv3x3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;filter2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conv3x3_reduce&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conv5x5_reduce&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reduce2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conv5x5&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;filter3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conv5x5_reduce&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pooling&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MaxPooling2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;strides&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pool_proj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Conv2D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pool_proj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'same'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;activation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pooling&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;output_layer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;concatenate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conv1x1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conv3x3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conv5x5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pool_proj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    
+    &lt;span class=&quot;c&quot;&gt;# Googlenet exracts pool_proj in order to ensemble in three cases&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pull&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pool_proj&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output_layer&lt;/span&gt;
+    
+&lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;224&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;224&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;inputs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;inception_reduce_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inception_block&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# output_layer = Dense(64)(inception_reduce_1) &lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;model&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output_layer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;h2&gt;GoogLeNet&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/posts/googlenet_components.png&quot; alt=&quot;Googlenet_components&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;GoogLeNet은 4가지 컴포넌트들로 이루어져 있다.&lt;/p&gt;
+
+&lt;h3&gt;stem&lt;/h3&gt;
+
+&lt;p&gt;이 레이어는 다른 인셉션 모듈과 달리 순차적으로 패러미터들을 전파시킨다. stem이라는 이름은 후에 서술되는 v2,v3부터 언급되는데, 인셉션 모듈들만 사용한 모델 대신  stem 레이어를 넣었을 때 문제가 생긴다는 저자의 언급으로 보아, 사라질 위기에 처해있다.&lt;/p&gt;
+
+&lt;h3&gt;inception modules&lt;/h3&gt;
+
+&lt;p&gt;이 레이어는 GoogLeNet을 만드는 데 있어서 가장 기초적인 블록이다. 합성곱 신경망과 pooling 레이어들로 이루어져 있으며, 각 케이스마다 수행된 뒤 depth를 축으로 합쳐진다. conv1x1으로 패러미터를 축소시킬 경우 적은 패러미터로 효과적인 학습을 가능하게 한다.&lt;/p&gt;
+
+&lt;h3&gt;auxiliary classifiers&lt;/h3&gt;
+
+&lt;p&gt;GoogLeNet의 구조가 깊어서 그런지 vanishing gradient 문제를 걱정하던 연구진들은 중간 레이어들에 나오는 feature들로 구분하면 마지막 레이어보다 bias가 높은 판단을 내릴 것이라고 가정한 뒤 auxilary classifier를 두어 loss function에 위 구분자들의 loss값을 일정 부분 포함시킨다. 그러나 테스트 과정에서는 쓰지 않는다.&lt;/p&gt;
+
+&lt;h2&gt;output classifiers&lt;/h2&gt;
+&lt;p&gt;최종 단계로서 이미지를 인식하는 부분을 담당한다. average pooling으로 패러미터를 줄인 뒤 softmax로 각 클래스일 확률을 구한다.&lt;/p&gt;
+
+&lt;h2&gt;Implementation&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/hskang9/Googlenet&quot;&gt;Googlenet(Still working)&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2&gt;결론&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;padding에서 ‘same’ 옵션은 서로 다른 케이스의 레이어들을 합칠 때 쓰인다.&lt;/li&gt;
+  &lt;li&gt;짤을 보며 영감을 얻을 수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;Reference&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://arxiv.org/abs/1409.4842&quot;&gt;Going Deeper with Convolutions&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;www.udacity.com&quot;&gt;Udacity&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://joelouismarino.github.io/blog_posts/blog_googlenet_keras.html&quot;&gt;googlenet in keras&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;다음&lt;/h2&gt;
+&lt;p&gt;전 구글 엔지니어이자 케라스 창시자인 Francois Chollet은 좀 더 효율적으로 패러미터를 생성하는 합성곱 신경망에 대해 고려하게 된다. 이에 ‘Separable Convolution’을 발견하게 되는데…&lt;/p&gt;
+
+&lt;p&gt;여러가지 합성곱 신경망 레이어들 - Xception&lt;/p&gt;
+
+&lt;h2&gt;앞으로 연재 계획&lt;/h2&gt;
+&lt;p&gt;1~2개월에 한번씩 올립니다. 그동안 신경망 예제를 적용하여 성능을 비교해보거나, 만든 프로젝트를 적용한 케이스가 있다면 케라스 코리아에 공유해주셨으면 합니다.&lt;/p&gt;
+
+&lt;script async=&quot;&quot; src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;&lt;ins class=&quot;adsbygoogle&quot; style=&quot;display:block; text-align:center;&quot; data-ad-layout=&quot;in-article&quot; data-ad-format=&quot;fluid&quot; data-ad-client=&quot;ca-pub-1467530008981019&quot; data-ad-slot=&quot;4038013321&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+     (adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.paypal.me/KangHyungsuk&quot;&gt;&lt;img src=&quot;https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif&quot; alt=&quot;paypal&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+</description>
+                <pubDate>Fri, 24 Nov 2017 00:00:00 +0000</pubDate>
+                <link>http://hskang9.github.io/various_cnn/2017/11/24/inception/</link>
+                <guid isPermaLink="true">http://hskang9.github.io/various_cnn/2017/11/24/inception/</guid>
+                
+                <category>Deep Learning</category>
+                
+                <category>Machine Learning</category>
+                
+                <category>Keras</category>
+                
+                
+                <category>various_cnn</category>
+                
+            </item>
+        
+            <item>
+                <title>Google AdSense를 이용하여 Github Page로 돈벌기</title>
+                <description>&lt;!--ppss스타일의 이미지 전용 html--&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;figure align=&quot;center&quot;&gt;
+  &lt;img src=&quot;/images/no_free.jpg&quot; alt=&quot;&amp;lt;strong&amp;gt;이분도 돈 받고 깽판치신다...&amp;lt;/strong&amp;gt;&quot; /&gt;
+  &lt;figcaption&gt;&lt;strong&gt;이분도 돈 받고 깽판치신다...&lt;/strong&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;!--more--&gt;
+
+&lt;h1&gt;돈을 벌고 싶다면…&lt;/h1&gt;
+
+&lt;p&gt;대부분  Github Page를 이용하여 기술 블로그를 만들고, 커뮤니티에 자신의 실력을 뽐낼 수도 있겠지만 알려준만큼 되돌려받고 싶은 것이 사람 마음이다. &lt;strong&gt;되도록 돈으로서 말이다.&lt;/strong&gt; 만약 돌려받고 싶다면 Google의 Adsense를 이용하여 방문자들에게 광고를 돌리는 것으로 돈을 벌 수 있는 방법이 있으니… 이번 포스트는 워드프레스 같이 돈들이고 광고 플러그인을 설치할 필요가 없이 그저 당신이 가장 좋아하는 jekyll theme과 깃헙 계정만으로 컴포넌트화된 광고를 설치하는 법에 대해 소개한다.&lt;/p&gt;
+
+&lt;h1&gt;1. Google Adsense에 가입한다.&lt;/h1&gt;
+&lt;p&gt;Google Adsense는 Google Admob, Google Analytics와 묶여 앱 광고 플랫폼 Admob의 정보를 관리할 수 있게 해주고 Analytics로 유저의 페이지 접속빈도수를 같이 분석할 수 있게 해주는 거 같다.
+&lt;!--ppss스타일의 이미지 전용 html--&gt;
+&lt;br /&gt;&lt;/p&gt;
+&lt;figure align=&quot;center&quot;&gt;
+  &lt;img src=&quot;/images/adsense.jpg&quot; alt=&quot;&amp;lt;strong&amp;gt;출처:구글 애드센스&amp;lt;/strong&amp;gt; &amp;lt;strike&amp;gt;열정페이&amp;lt;/strike&amp;gt; &amp;lt;strike&amp;gt;번역의...상태가...?&amp;lt;/strike&amp;gt;&quot; /&gt;
+  &lt;figcaption&gt;&lt;strong&gt;출처:구글 애드센스&lt;/strong&gt; &lt;strike&gt;열정페이&lt;/strike&gt; &lt;strike&gt;번역의...상태가...?&lt;/strike&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h1&gt;2. 올리고 싶은 광고를 고른다.&lt;/h1&gt;
+&lt;p&gt;Google AdSense가 제공하는 광고는 page-level ad 외 3가지 광고들로 나뉜다.&lt;/p&gt;
+
+&lt;h2&gt;3가지 광고들&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/images/three_ads.jpg&quot; alt=&quot;광고들&quot; /&gt;
+구글이 제공하는 광고로는 단순히 텍스트/그림만 보이는 광고(첫번째), 게시물 피드에 끼우는 광고(두번째), 포스트(article) 문단 사이에 끼는 광고(세번째)가 있으나
+사용법은 다른 거 없고 그냥 구글이 갖다주는 소스를 붙이기만 하면 된다.&lt;/p&gt;
+
+&lt;!--ppss스타일의 이미지 전용 html--&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;figure align=&quot;center&quot;&gt;
+  &lt;img src=&quot;/images/glike_this.jpg&quot; alt=&quot;&quot; /&gt;
+  &lt;figcaption&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2&gt;Page-level Ad&lt;/h2&gt;
+&lt;p&gt;Page-level Ad는 웹 페이지 띄우다보면 아래에서 스멀스멀 기어나오는 광고나 한 화면을 독차지하는 페이지 단위의 광고를 말한다. 
+얘네들도 구글이 가져다주&lt;strike&gt;시&lt;/strike&gt;는 소스를 &amp;lt;head&amp;gt; 사이에 복붙하면 된다.&lt;/p&gt;
+
+&lt;!--ppss스타일의 이미지 전용 html--&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;figure align=&quot;center&quot;&gt;
+  &lt;img src=&quot;/images/glike_this_page.jpg&quot; alt=&quot;&quot; /&gt;
+  &lt;figcaption&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+</description>
+                <pubDate>Fri, 17 Nov 2017 00:00:00 +0000</pubDate>
+                <link>http://hskang9.github.io/survival/2017/11/17/the-post-3428/</link>
+                <guid isPermaLink="true">http://hskang9.github.io/survival/2017/11/17/the-post-3428/</guid>
+                
+                <category>monetize</category>
+                
+                <category>survive</category>
+                
+                <category>money</category>
+                
+                
+                <category>survival</category>
+                
+            </item>
+        
+            <item>
+                <title>C++을 파이썬처럼 주피터에서 돌리기</title>
+                <description>&lt;p&gt;AI framework 들이 생겨나면서 python api 말고도 c++ api도 제공하고 있지만 c++은 컴파일 언어라 수정할 때마다 컴파일을 해줘야 한다는 점이 불편할 수 밖에 없다.
+또한 파일만 컴파일하다 보면 어느 부분에서 잘못됬는지 체크하려 디버깅을 파일을 열거나 돌리면서 해줘야 하는 건 덤;;;&lt;/p&gt;
+
+&lt;p&gt;이를 해결하려면 c++을 파이썬처럼 인터프리터 언어처럼 사용되게 하여야 한다.&lt;/p&gt;
+
+&lt;p&gt;그래서 나온 게 이 &lt;strong&gt;&lt;a href=&quot;https://github.com/vgvassilev/cling&quot;&gt;cling&lt;/a&gt;&lt;/strong&gt;이다.&lt;/p&gt;
+
+&lt;p&gt;이것을 깔면 c++도 주피터 안에서 돌릴 수 있는 것이다.&lt;/p&gt;
+
+&lt;!--more--&gt;
+
+&lt;script async=&quot;&quot; src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;&lt;ins class=&quot;adsbygoogle&quot; style=&quot;display:block; text-align:center;&quot; data-ad-layout=&quot;in-article&quot; data-ad-format=&quot;fluid&quot; data-ad-client=&quot;ca-pub-1467530008981019&quot; data-ad-slot=&quot;4038013321&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+     (adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;cling은 UNIX 운영체제에서 기반한 OS들에게만 지원하니 윈도우를 사용한다면 맥북을 사거나 리눅스를 깔아야 된다.&lt;/p&gt;
+
+&lt;p&gt;우선 &lt;a href=&quot;https://root.cern.ch/download/cling/&quot;&gt;여기 클릭&lt;/a&gt;을 한 뒤 cling에 있는 컴파일된 바이너리 파일 모음들에서 자신의 운영체제에 맞는 바이너리 압축 파일을 가져온다.&lt;/p&gt;
+
+&lt;p&gt;압축파일을 풀고 나면&lt;/p&gt;
+
+&lt;p&gt;아래 커맨드를 입력해준다.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# cling 커널이 돌아가기 위해 먼저 zeromq를 깔아준다.&lt;/span&gt;
+brew install zeromq &lt;span class=&quot;c&quot;&gt;# Mac OS X(homebrew)&lt;/span&gt;
+apt-get install zeromq &lt;span class=&quot;c&quot;&gt;# Linux&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;lt;span &lt;span class=&quot;nv&quot;&gt;style&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;background-color:green&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;/Users/&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;username&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;/&amp;lt;/span&amp;gt;/cling/bin:&lt;span class=&quot;nv&quot;&gt;$PATH&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; &amp;lt;span &lt;span class=&quot;nv&quot;&gt;style&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;background-color:green&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;/Users/&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;username&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;/&amp;lt;/span&amp;gt;/cling/share/cling/Jupyter/kernel
+pip install &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;cling의 커널 스펙을 쥬피터에게 입력해주기(cling-cpp11, cling-cpp14, cling-cpp17도 가능)&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;jupyter-kernelspec install &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt; cling-cpp17
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+</description>
+                <pubDate>Wed, 31 May 2017 00:00:00 +0000</pubDate>
+                <link>http://hskang9.github.io/ai/2017/05/31/cpp-jupyter-for-deep-learning-frameworks(caffe2,-tensorflow)/</link>
+                <guid isPermaLink="true">http://hskang9.github.io/ai/2017/05/31/cpp-jupyter-for-deep-learning-frameworks(caffe2,-tensorflow)/</guid>
+                
+                <category>cpp</category>
+                
+                <category>caffe2</category>
+                
+                <category>jupyter</category>
+                
+                
+                <category>AI</category>
+                
+            </item>
+        
+            <item>
+                <title>리액트VR: 프로젝트 생성하기</title>
+                <description>&lt;p&gt;&lt;strong&gt;&lt;a href=&quot;https://facebook.github.io/react-vr/&quot;&gt;리액트VR 홈페이지&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;a href=&quot;https://www.webvrexperiments.com/&quot;&gt;웹 VR&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;리액트VR은 페이스북에서 개발한 &lt;strong&gt;자바스크립트&lt;/strong&gt;만 이용하는 웹 VR 프레임워크입니다.&lt;/p&gt;
+
+&lt;script async=&quot;&quot; src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;&lt;ins class=&quot;adsbygoogle&quot; style=&quot;display:block; text-align:center;&quot; data-ad-layout=&quot;in-article&quot; data-ad-format=&quot;fluid&quot; data-ad-client=&quot;ca-pub-1467530008981019&quot; data-ad-slot=&quot;4038013321&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+     (adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/p&gt;
+
+&lt;!--more--&gt;
+
+&lt;p&gt;일단 가장 먼저 &lt;strong&gt;&lt;a href=&quot;https://nodejs.org/ko/&quot;&gt;node.js&lt;/a&gt;&lt;/strong&gt; 를 설치하고
+터미널이나 명령 프롬프트 창에 아래 명령어를 입력합니다.&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/hskang9/720f7f611910ecadba86875becf813e1.js&quot;&gt; &lt;/script&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://facebook.github.io/react-vr/img/hellovr.jpg&quot; class=&quot;img-responsive&quot; /&gt;&lt;/p&gt;
+
+&lt;style&gt;
+  .img-responsive {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+&lt;/style&gt;
+
+</description>
+                <pubDate>Mon, 29 May 2017 00:00:00 +0000</pubDate>
+                <link>http://hskang9.github.io/reactvr/2017/05/29/install-reactvr/</link>
+                <guid isPermaLink="true">http://hskang9.github.io/reactvr/2017/05/29/install-reactvr/</guid>
+                
+                <category>react</category>
+                
+                
+                <category>ReactVR</category>
+                
+            </item>
+        
+            <item>
+                <title>Toggle tracking user's location on iOS MKMapView programmatically</title>
+                <description>&lt;!--more--&gt;
+&lt;h1&gt;1. Import MapKit framework from Project setting.&lt;/h1&gt;
+
+&lt;h1&gt;2. Initialize MKMapView and set it as main view for the ViewController.&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cloud.githubusercontent.com/assets/12888144/26548160/acedd0d2-44ad-11e7-89d9-5b19e9bb079f.gif&quot; class=&quot;img-responsive&quot; /&gt;&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/hskang9/fb5bf515bb856200ab5574e0603e1963.js&quot;&gt; &lt;/script&gt;
+
+&lt;h1&gt;3. Import CoreLocation and build locationManager for tracking the user’s location&lt;/h1&gt;
+
+&lt;script src=&quot;https://gist.github.com/hskang9/72bfe1738b4a5af5f27bc284855ad893.js&quot;&gt; &lt;/script&gt;
+
+&lt;h1&gt;4. Make button programmatically and add programmatic control with event&lt;/h1&gt;
+
+&lt;script src=&quot;https://gist.github.com/hskang9/fa847092478b528c1baa3ba81c0470c2.js&quot;&gt; &lt;/script&gt;
+
+</description>
+                <pubDate>Sat, 27 May 2017 00:00:00 +0000</pubDate>
+                <link>http://hskang9.github.io/cocoa/ios/2017/05/27/toggle-tracking-user's-location-on-ios-MKMapView-programmatically/</link>
+                <guid isPermaLink="true">http://hskang9.github.io/cocoa/ios/2017/05/27/toggle-tracking-user's-location-on-ios-MKMapView-programmatically/</guid>
+                
+                <category>iOS</category>
+                
+                <category>swift</category>
+                
+                
+                <category>Cocoa/iOS</category>
+                
+            </item>
+        
+    </channel>
+</rss>

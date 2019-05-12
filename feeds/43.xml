@@ -1,0 +1,626 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Daniel Ku</title>
+  <link href="http://danielku.com/atom.xml" rel="self"/>
+  <link href="http://danielku.com"/>
+  <updated>2015-08-26T14:54:41.280Z</updated>
+  <id>http://danielku.com</id>
+  <author>
+    <name>Daniel Ku</name>
+    <email>d@nielku.com</email>
+  </author>
+
+  
+    
+      <entry>
+        <title>베이글 서비스의 아키텍쳐</title>
+        <link href="http://danielku.com/posts/2015-08-20-bagle-architecture/"/>
+        
+        <updated>2015-08-20T00:00:00.000Z</updated>
+        <id>http://danielku.com/posts/2015-08-20-bagle-architecture/</id>
+        <content type="html">&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=utf-8&quot;&gt;&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge,chrome=1&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;&lt;title&gt;베이글 서비스의 아키텍쳐 | Daniel Ku&lt;/title&gt;&lt;meta name=&quot;description&quot; content=&quot;베이글(bagle.io) 서비스의 아키텍쳐에 대해서 설명한다. 베이글의 아키텍쳐가 베스트 프랙티스라서 이 글을 작성하는 것이 아니라 그냥 내 경험을 개인적으로 정리해 두기 위한 것임을 미리 밝힌다.&quot;&gt;&lt;meta name=&quot;keywords&quot; content=&quot;daniel ku, daniel kj ku, daniel kyojun ku, daniel, kjunine, versatile programmer&quot;&gt;&lt;meta name=&quot;author&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta name=&quot;generator&quot; content=&quot;DocPad v6.78.1&quot; /&gt;&lt;meta property=&quot;og:url&quot; content=&quot;http://danielku.com/posts/2015-08-20-bagle-architecture/&quot;&gt;&lt;meta property=&quot;og:type&quot; content=&quot;article&quot;&gt;&lt;meta property=&quot;og:title&quot; content=&quot;베이글 서비스의 아키텍쳐&quot;&gt;&lt;meta property=&quot;og:description&quot; content=&quot;베이글(bagle.io) 서비스의 아키텍쳐에 대해서 설명한다. 베이글의 아키텍쳐가 베스트 프랙티스라서 이 글을 작성하는 것이 아니라 그냥 내 경험을 개인적으로 정리해 두기 위한 것임을 미리 밝힌다.&quot;&gt;&lt;meta property=&quot;og:image&quot; content=&quot;http://danielku.com/posts/2015-08-20-bagle-architecture/bagle-architecture.jpg&quot;&gt;&lt;meta property=&quot;og:site_name&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta property=&quot;og:locale&quot; content=&quot;ko_KR&quot;&gt;&lt;link href=&quot;/atom.xml&quot; rel=&quot;alternate&quot; type=&quot;application/atom+xml&quot; title=&quot;Daniel Ku&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/earlyaccess/nanumgothic.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Lato:700&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Source+Sans+Pro:300,600&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/normalize.css/normalize.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/font-awesome/css/font-awesome.min.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/highlightjs/styles/agate.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/lightbox2/dist/css/lightbox.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/styles/style.css&quot; /&gt;&lt;/head&gt;&lt;body&gt;&lt;!--[if lt IE 9]&gt;&lt;p class=&quot;browsehappy&quot;&gt;You are using an &lt;strong&gt;outdated&lt;/strong&gt; browser.
+Please &lt;a href=&quot;http://browsehappy.com/&quot;&gt;upgrade your browser&lt;/a&gt; to improve your experience.
+&lt;/p&gt;&lt;![endif]--&gt;&lt;header&gt;&lt;div class=&quot;container&quot;&gt;&lt;a href=&quot;/&quot; class=&quot;logo&quot;&gt;Daniel Ku&lt;/a&gt;&lt;/div&gt;&lt;/header&gt;&lt;section class=&quot;main&quot;&gt;&lt;article class=&quot;post&quot;&gt;&lt;div style=&quot;background-image: url(bagle-architecture.jpg)&quot; class=&quot;image&quot;&gt;&lt;img src=&quot;bagle-architecture.jpg&quot; class=&quot;hidden&quot;/&gt;&lt;/div&gt;&lt;div class=&quot;header&quot;&gt;&lt;h1 class=&quot;title&quot;&gt;베이글 서비스의 아키텍쳐&lt;/h1&gt;&lt;h6 class=&quot;date&quot;&gt;August 20, 2015&lt;/h6&gt;&lt;/div&gt;&lt;div class=&quot;content&quot;&gt;&lt;h1 id=&quot;-bagle-io-http-bagle-io-&quot;&gt;베이글(&lt;a href=&quot;http://bagle.io/&quot;&gt;bagle.io&lt;/a&gt;)이란?&lt;/h1&gt;
+&lt;p&gt;베이글은 스터디지피에스社에서 서비스 중인 일종의 그룹앱 서비스이다. 자세한 내용은 &lt;a href=&quot;/posts/2015-07-04-introducing-bagle/&quot;&gt;베이글 서비스 소개&lt;/a&gt;를 참고하길 바란다.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;../2015-07-04-introducing-bagle/bagle.jpg&quot;&gt;&lt;img src=&quot;../2015-07-04-introducing-bagle/bagle.jpg&quot; alt=&quot;베이글&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;이 글을 통해 베이글 서비스의 아키텍쳐에 대해서 설명해 보겠다.&lt;/p&gt;
+&lt;p&gt;미리 밝히지만 &lt;em&gt;베이글의 아키텍쳐는 베스트 프랙티스가 아니다.&lt;/em&gt; 유사한 서비스를 만들 때 참고는 할 수 있겠지만 그저 &amp;#39;나는 이렇게 한 번 해보았다&amp;#39;라는 정도의 의미임을 고려해주길 바란다.&lt;/p&gt;
+&lt;h1 id=&quot;-&quot;&gt;베이글의 소프트웨어 스택&lt;/h1&gt;
+&lt;p&gt;먼저 가볍게 베이글의 소프트웨어 스택에 대해 살펴보고 넘어가자.&lt;/p&gt;
+&lt;h2 id=&quot;-&quot;&gt;백엔드 소프트웨어 스택&lt;/h2&gt;
+&lt;p&gt;베이글의 백엔드를 구현하기 위해 사용한 소프트웨어로 다음과 같은 것들이 있다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://nodejs.org/&quot;&gt;Node.js&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.mongodb.com/&quot;&gt;MongoDB&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://expressjs.com/&quot;&gt;Express.js&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://mongoosejs.com/&quot;&gt;Mongoose&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://redis.io/&quot;&gt;Redis&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/petkaantonov/bluebird&quot;&gt;Bluebird&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://lodash.com/&quot;&gt;Lodash&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;...&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;백엔드의 언어로 &lt;strong&gt;Node.js&lt;/strong&gt;를, 데이터베이스로 &lt;strong&gt;MongoDB&lt;/strong&gt;를 선택했다. 그 이유로 특별한 것은 없었다. &lt;del&gt;그냥.. 뜨고 있으니까..&lt;/del&gt; &lt;em&gt;고민보다는 실행인 거다.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;자연스럽게 웹 프레임워크로 &lt;strong&gt;Express.js&lt;/strong&gt;를 선택하고, ODM(Object-Document Mapper)으로 &lt;strong&gt;Mongoose&lt;/strong&gt;를 선택했다. 디팩토(De facto) 표준이라 고민할 것이 없었다.&lt;/p&gt;
+&lt;p&gt;또, 큐(Queue)와 임시 저장소의 용도로 &lt;strong&gt;Redis&lt;/strong&gt;를 제한적으로 사용했으며, Node.js 기반의 다양한 라이브러리들을 사용했는데, 특히 Promise 구현체인 &lt;strong&gt;Bluebird&lt;/strong&gt;와 유틸리티인 &lt;strong&gt;Lodash&lt;/strong&gt;를 애용했다.&lt;/p&gt;
+&lt;p&gt;이 기술들에 대해 일년 이상 경험해 본 결과 개인적으로는 &lt;em&gt;&amp;quot;매우 만족&amp;quot;&lt;/em&gt;이다. 각각의 기술에 대해서는 언젠가 자세하게 다룰 날이 있을 것이라 생각한다. 지금은 이 정도로 넘어가자.&lt;/p&gt;
+&lt;h2 id=&quot;-&quot;&gt;프런트엔드 소프트웨어 스택&lt;/h2&gt;
+&lt;p&gt;베이글의 프런트엔드를 구현하기 위해 사용한 소프트웨어로 다음과 같은 것들이 있다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;http://coffeescript.org/&quot;&gt;CoffeeScript&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://jade-lang.com/&quot;&gt;Jade&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://sass-lang.com/&quot;&gt;Sass&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://angularjs.org/&quot;&gt;AngularJS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://angular-ui.github.io/ui-router/site&quot;&gt;AngularUI Router&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/mgonto/restangular&quot;&gt;Restangular&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://angular-gettext.rocketeer.be/&quot;&gt;angular-gettext&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://gulpjs.com/&quot;&gt;Gulp&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://gruntjs.com/&quot;&gt;Grunt&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;...&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;백엔드는 순수 자바스크립트로 개발했지만 더 나중에 개발된 프런트엔드는 &lt;strong&gt;CoffeeScript&lt;/strong&gt;로 개발했다. 더불어 &lt;strong&gt;Jade&lt;/strong&gt;와 &lt;strong&gt;Sass&lt;/strong&gt;를 사용했다. 이러한 전처리기(Preprocessor)들은 처음 도입해보았는데 코드를 보다 간결하게 작성할 수 있게 해주어서 매우 유용했다.&lt;/p&gt;
+&lt;p&gt;그리고 웹 프레임워크로는 대세 중의 대세인 &lt;strong&gt;AngularJS&lt;/strong&gt;를 선택했다. 또, 웹과 AngularJS를 위한 다양한 자바스크립트 라이브러리들을 사용했는데, 특히 라우팅을 위한 &lt;strong&gt;AngularUI Router&lt;/strong&gt;, REST API 클라이언트인 &lt;strong&gt;Restangular&lt;/strong&gt;, 다국어 처리를 위한 &lt;strong&gt;angular-gettext&lt;/strong&gt;를 감명깊게 사용하였다.&lt;/p&gt;
+&lt;p&gt;마지막으로 빌드 도구인 &lt;strong&gt;Gulp&lt;/strong&gt;와 &lt;strong&gt;Grunt&lt;/strong&gt;이다. 원래 Grunt를 사용해 왔으나 이번에 Gulp로 갈아탔다. 빌드된 결과물을 AWS S3로 업로드하기 위한 &lt;a href=&quot;https://github.com/MathieuLoutre/grunt-aws-s3&quot;&gt;Grunt S3 플러그인&lt;/a&gt; 때문에 Grunt도 함께 사용했다.&lt;/p&gt;
+&lt;p&gt;마찬가지로 각각의 기술에 대한 자세한 설명은 다음에 기회가 있을 것이다. 지금은 이 정도로 넘어가자.&lt;/p&gt;
+&lt;h1 id=&quot;-&quot;&gt;베이글의 아키텍쳐&lt;/h1&gt;
+&lt;p&gt;본격적으로 베이글 서비스의 아키텍쳐에 대해 설명한다.&lt;/p&gt;
+&lt;h2 id=&quot;-&quot;&gt;백엔드 아키텍쳐 요구사항&lt;/h2&gt;
+&lt;p&gt;먼저 베이글 서비스의 백엔드 아키텍쳐의 요구사항부터 살펴보자.&lt;/p&gt;
+&lt;p&gt;베이글의 백엔드는 REST API를 제공하는 &lt;strong&gt;API 서버&lt;/strong&gt;와 &lt;strong&gt;데이터베이스&lt;/strong&gt;(MongoDB), 이벤트 처리와 배치 작업을 위한 &lt;strong&gt;워커 서버&lt;/strong&gt;와 이벤트/작업 &lt;strong&gt;큐&lt;/strong&gt;(Redis)로 구성된다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;REST API 서버&lt;/strong&gt;는 사용자, 그룹과 같은 도메인 객체들에 대한 CRUD를 제공한다. 일부 API에서는 &lt;em&gt;이벤트와 작업을 생성해 큐에 저장&lt;/em&gt;하기도 한다. 그리고 사진/파일 저장과 조회를 위한 API는 &lt;em&gt;속도 향상 및 캐싱을 위해 앞단에 CDN을 설정&lt;/em&gt;한다.&lt;/p&gt;
+&lt;p&gt;또, 비밀번호 재설정 API는 해당 사용자의 이메일에 비밀번호 재설정을 할 수 있는 링크를 포함한 &lt;em&gt;이메일을 전송&lt;/em&gt;한다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;워커 서버&lt;/strong&gt;는 Redis로부터 이벤트와 작업을 읽어서 관련 &lt;em&gt;사용자들에게 푸시 알림&lt;/em&gt;을 보내주거나 &lt;em&gt;작업을 수행&lt;/em&gt;하고 데이터베이스에 결과를 저장한다.&lt;/p&gt;
+&lt;p&gt;마지막으로, REST API 서버들과 워커 서버들은, 데이터베이스와 큐도 마찬가지, 향후 사용자 증가를 대비에 자동 혹은 수동으로 &lt;em&gt;스케일이 가능&lt;/em&gt;한 형태로 구현한다.&lt;/p&gt;
+&lt;p&gt;요약하면,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;REST API 서버를 제공한다.&lt;/li&gt;
+&lt;li&gt;데이터베이스가 필요하다.&lt;/li&gt;
+&lt;li&gt;배치 워커 서버를 제공한다.&lt;/li&gt;
+&lt;li&gt;이벤트/작업 큐가 필요하다.&lt;/li&gt;
+&lt;li&gt;사진/파일 캐싱을 위한 CDN이 필요하다.&lt;/li&gt;
+&lt;li&gt;푸시 알림을 보낼 수 있다.&lt;/li&gt;
+&lt;li&gt;이메일을 보낼 수 있다.&lt;/li&gt;
+&lt;li&gt;스케일이 가능하다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&quot;-amazon-web-service-aws-http-aws-amazon-com-for-&quot;&gt;&lt;a href=&quot;http://aws.amazon.com/&quot;&gt;&lt;strong&gt;Amazon Web Service (AWS)&lt;/strong&gt;&lt;/a&gt; for 백엔드 아키텍쳐&lt;/h2&gt;
+&lt;p&gt;백엔드 개발과 인프라를 동시에 담당해야 했기에.. 아마존 웹 서비스(AWS)가 없었으면 난 절대 이 일을 시간 안에 못했겠지.&lt;/p&gt;
+&lt;p&gt;AWS는 인프라를 구성하는 다양한 요소들을 세부 서비스로 제공하고 있다. 베이글에서는 다음과 같은 세부 서비스들을 사용했다.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;aws-web.jpg&quot;&gt;&lt;img src=&quot;aws-web.jpg&quot; alt=&quot;AWS Web Application Hosting Architecture&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/route53/&quot;&gt;Route 53&lt;/a&gt;: 가용성과 확장성이 우수한 DNS 서비스&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/elasticloadbalancing/&quot;&gt;ELB&lt;/a&gt;: 부하 분산과 고가용성을 제공하는 서비스&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/ec2/&quot;&gt;EC2&lt;/a&gt;: 가상 서버 인스턴스를 제공하는 서비스&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/cloudfront/&quot;&gt;CloudFront&lt;/a&gt;: 정적 콘텐츠를 빠르게 배포하기 위한 CDN 서비스&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/cloudwatch/&quot;&gt;CloudWatch&lt;/a&gt;: AWS 내 리소스 상태를 모니터링하는 서비스&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/autoscaling/&quot;&gt;Auto Scaling&lt;/a&gt;: 자동으로 EC2 인스턴스 수를 조절하는 기능을 제공하는 서비스&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/sns/&quot;&gt;SNS&lt;/a&gt;: 모바일 푸시 알림 서비스&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/ses/&quot;&gt;SES&lt;/a&gt;: 이메일 전송 서비스&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;AWS와 각 세부 서비스들에 대해 자세히 알고 싶으면 AWS 홈페이지도 좋지만, 그보단 이재홍(pyrasis)님의 &lt;a href=&quot;http://pyrasis.com/aws.html&quot;&gt;책&lt;/a&gt;과 &lt;a href=&quot;http://pyrasis.com/&quot;&gt;블로그&lt;/a&gt;를 추천한다. 왠만하면 책.&lt;/p&gt;
+&lt;p&gt;앞서 살펴본 요구사항에서 데이터베이스와 큐에 관한 것을 빼고는 위 서비스들로 모두 커버가 가능하다. 기본적으로 &lt;strong&gt;Route 53&lt;/strong&gt;으로 DNS 설정을 한다. 그리고 &lt;strong&gt;EC2&lt;/strong&gt; 서버에 API 서버와 워커 서버를 실행하고, API 서버들 앞에 부하 분산을 위한 &lt;strong&gt;ELB&lt;/strong&gt;를 설정한다. &lt;strong&gt;CloudWatch&lt;/strong&gt;와 &lt;strong&gt;Auto Scaling&lt;/strong&gt;을 설정해 API 서버들과 워커 서버들을 각각 스케일할 수 있도록 한다.&lt;/p&gt;
+&lt;p&gt;또, &lt;strong&gt;CloudFront&lt;/strong&gt; 디스트리뷰션(Distribution)의 오리진(Origin)으로 API의 URL, 정확히는 ELB의 URL을 지정하고 캐싱이 필요한 API는 클라이언트에서 CloudFront 디스트리뷰션의 URL을 사용하도록 한다. 마지막으로 &lt;strong&gt;SNS&lt;/strong&gt;로 푸시 알림을, &lt;strong&gt;SES&lt;/strong&gt;로 이메일 전송을 처리한다.&lt;/p&gt;
+&lt;p&gt;참고로 베이글에서는 데이터베이스와 큐는 각각 MongoDB와 Redis를 사용했지만, AWS를 제대로 이용하려면 RDB를 제공하는 &lt;a href=&quot;https://aws.amazon.com/ko/rds/&quot;&gt;RDS&lt;/a&gt;, NoSQL 데이터베이스인 &lt;a href=&quot;https://aws.amazon.com/ko/dynamodb/&quot;&gt;DynamoDB&lt;/a&gt;와 인 메모리 캐시를 제공하는 &lt;a href=&quot;https://aws.amazon.com/ko/elasticache/&quot;&gt;ElastiCache&lt;/a&gt;, 메시지 큐를 제공하는 &lt;a href=&quot;https://aws.amazon.com/ko/sqs/&quot;&gt;SQS&lt;/a&gt;를 사용할 수도 있다.&lt;/p&gt;
+&lt;p&gt;뭐.. 베이글에서 그 서비스들을 사용하지 않은 이유 역시 딱히 없다. &lt;del&gt;설마.. 잘 몰라서?&lt;/del&gt; MongoDB 운영은 &lt;a href=&quot;https://www.mongodb.com/cloud&quot;&gt;MongoDB Cloud Manager, 舊 MMS&lt;/a&gt;로 하면 꽤 편하고, Redis는 그렇게 많이 사용하지도 않으니까. 하지만 언젠가는 위 서비스들을 사용할 수도 있겠지.&lt;/p&gt;
+&lt;h2 id=&quot;-&quot;&gt;백엔드 아키텍쳐 구조도&lt;/h2&gt;
+&lt;p&gt;아무튼 그래서 베이글의 백엔드 아키텍쳐 구조도는 다음과 같다. 위에서 다 설명했으니 추가 설명은 필요없을 듯 하다.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;backend-architecture.jpg&quot;&gt;&lt;img src=&quot;backend-architecture.jpg&quot; alt=&quot;백엔드 아키텍쳐 구조도&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;-&quot;&gt;프런트엔드 아키텍쳐 요구사항&lt;/h2&gt;
+&lt;p&gt;이번엔 베이글 서비스의 프런트엔드 아키텍쳐에 대해 설명한다.&lt;/p&gt;
+&lt;p&gt;베이글의 프런트엔드는 AngularJS를 기반으로 만들어진 웹 어플리케이션이다. 그러므로 빌드한 결과물은 HTML, CSS, JS, 이미지, 웹폰트 등과 같은 &lt;em&gt;정적 파일들&lt;/em&gt;만으로 이루어진다.&lt;/p&gt;
+&lt;p&gt;그리고 해당 결과물을 &lt;em&gt;웹서버로 서비스&lt;/em&gt;하기만 하면 된다. 웹서버는 당연히 스케일해야 하고, 정적 파일이니 &lt;em&gt;속도 향상과 캐싱을 위한 CDN&lt;/em&gt;이 필수이다.&lt;/p&gt;
+&lt;h2 id=&quot;-amazon-web-service-aws-http-aws-amazon-com-for-&quot;&gt;&lt;a href=&quot;http://aws.amazon.com/&quot;&gt;&lt;strong&gt;Amazon Web Service (AWS)&lt;/strong&gt;&lt;/a&gt; for 프런트엔드 아키텍쳐&lt;/h2&gt;
+&lt;p&gt;백엔드와 마찬가지로 프런트엔드도 AWS 상에 구축되어 있다. AWS의 다음과 같은 서비스를 이용한다.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;aws-cdn.jpg&quot;&gt;&lt;img src=&quot;aws-cdn.jpg&quot; alt=&quot;AWS Web Application Hosting Architecture&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/route53/&quot;&gt;Route 53&lt;/a&gt;: 가용성과 확장성이 우수한 DNS 서비스&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/s3/&quot;&gt;S3&lt;/a&gt;: 비용이 저렴하고 안전성과 확장성이 우수한 인터넷 스토리지를 제공하는 서비스&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://aws.amazon.com/ko/cloudfront/&quot;&gt;CloudFront&lt;/a&gt;: 정적 콘텐츠를 빠르게 배포하기 위한 CDN 서비스&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;AWS와 각 세부 서비스들에 대해 자세히 알고 싶으면 AWS 홈페이지도 좋지만, 그보단 이재홍(pyrasis)님의 &lt;a href=&quot;http://pyrasis.com/aws.html&quot;&gt;책&lt;/a&gt;과 &lt;a href=&quot;http://pyrasis.com/&quot;&gt;블로그&lt;/a&gt;를 추천한다. 왠만하면 책.&lt;/p&gt;
+&lt;p&gt;앞서 살펴본 요구사항을 위 서비스들로 모두 커버가 가능하다. 기본적으로 &lt;strong&gt;Route 53&lt;/strong&gt;으로 DNS 설정을 하고, &lt;strong&gt;S3&lt;/strong&gt; 버킷에 빌드 결과물을 업로드한 후 스태틱 웹사이트 호스팅 기능으로 서비스한다. 마지막으로 &lt;strong&gt;CloudFront&lt;/strong&gt; 디스트리뷰션의 오리진으로 S3 버킷을 지정해 캐싱하면 된다. S3와 CloudFront가 알아서 스케일을 처리하므로 걱정할 것이 없다.&lt;/p&gt;
+&lt;p&gt;덧붙여 &amp;#39;www.bagle.io&amp;#39;로 접속하면 &amp;#39;bagle.io&amp;#39;로 리다이렉트하기 위해 별도의 &lt;strong&gt;CloudFront&lt;/strong&gt; 디스트리뷰션과 &lt;strong&gt;S3&lt;/strong&gt; 버킷을 마련하고, &lt;strong&gt;S3&lt;/strong&gt; 버킷의 스태틱 웹사이트 호스팅 설정에서 리다이렉트하도록 처리한다.&lt;/p&gt;
+&lt;h2 id=&quot;-&quot;&gt;프런트엔드 아키텍쳐 구조도&lt;/h2&gt;
+&lt;p&gt;그래서 베이글의 프런트엔드 아키텍쳐 구조도는 다음과 같다. 단순해서 구조도를 그릴 정도도 아니네.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;frontend-architecture.jpg&quot;&gt;&lt;img src=&quot;frontend-architecture.jpg&quot; alt=&quot;프런트엔드 아키텍쳐 구조도&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id=&quot;-&quot;&gt;베이글 아키텍쳐의 개선점&lt;/h1&gt;
+&lt;h2 id=&quot;-&quot;&gt;백엔드 아키텍쳐 개선점&lt;/h2&gt;
+&lt;p&gt;백엔드 아키텍쳐는 개선할 여지가 무척 많지만 두가지만 언급해본다.&lt;/p&gt;
+&lt;h3 id=&quot;-&quot;&gt;사진/파일 저장소 변경&lt;/h3&gt;
+&lt;p&gt;사진/파일을 현재는 데이터베이스에 저장하고 있다. AWS에는 &lt;a href=&quot;https://aws.amazon.com/ko/s3/&quot;&gt;S3&lt;/a&gt;라는 값싸고 훌륭한 스토리지 서비스가 있는데도 불구하고. 누군가는 S3야말로 AWS를 사용하는 진짜 이유라고 하던데.. 이건 무조건 바꿔야 하는 것이다. 사용자가 많아지기 전에 바꾸는 게 더 좋겠지.&lt;/p&gt;
+&lt;h3 id=&quot;-aws-&quot;&gt;더 상위 수준의 AWS 서비스 이용&lt;/h3&gt;
+&lt;p&gt;직접 EC2를 실행하고, ELB, Auto Scaling 등을 설정하는 대신에 &lt;a href=&quot;https://aws.amazon.com/ko/cloudformation/&quot;&gt;CloudFomation&lt;/a&gt;이나 &lt;a href=&quot;https://aws.amazon.com/ko/opsworks/&quot;&gt;OpsWorks&lt;/a&gt;를 사용하거나 혹은 최근에 런칭한 &lt;a href=&quot;https://aws.amazon.com/ko/ecs/&quot;&gt;ECS&lt;/a&gt;를 사용하는 게 어떨까?&lt;/p&gt;
+&lt;p&gt;배포에 대해서도 자세히 설명할 기회가 있겠지만, 간략히 말해 베이글 백엔드는 &lt;a href=&quot;https://www.chef.io/&quot;&gt;Chef&lt;/a&gt;와 &lt;a href=&quot;https://www.docker.com/&quot;&gt;Docker&lt;/a&gt;를 사용하는데 그렇다면 방금 언급한 보다 더 상위 수준의 서비스를 사용하는 것이 훨씬 편할 것 같다.&lt;/p&gt;
+&lt;p&gt;...&lt;/p&gt;
+&lt;h2 id=&quot;-&quot;&gt;프런트엔드 아키텍쳐 개선점&lt;/h2&gt;
+&lt;p&gt;프런트엔드 아키텍쳐 역시 개선할 여지가 많지만 한가지만 언급한다.&lt;/p&gt;
+&lt;h3 id=&quot;-&quot;&gt;크롤러 대응&lt;/h3&gt;
+&lt;p&gt;다시 한 번 말하지만 베이글의 프런트엔드는 AngularJS를 기반으로 만들어진 웹 어플리케이션이다. 그러므로 프런트엔드에는 아무런 컨텐츠가 담겨있지 않다. 먼저 페이지가 로드된 후 자바스크립트에서 AJAX 통신을 통해 컨텐츠를 불러온다.&lt;/p&gt;
+&lt;p&gt;이런 구조가 무작정 좋은 것이라 생각했지만 부작용이 있었다. 그 중에 하나가 페이스북 같은 서비스에 베이글의 &lt;em&gt;특정 페이지를 공유할 때 해당 페이지의 내용을 미리보기할 수 없다&lt;/em&gt;는 것이다. 왜냐하면 페이스북 같은 서비스의 크롤러에서는 자바스크립트가 동작하지 않기 때문이다.&lt;/p&gt;
+&lt;p&gt;이것에 대응하기 위해서는 좀 더 연구가 필요하다. &lt;strong&gt;CloudFront&lt;/strong&gt;에서 User-Agent 헤더값에 따라 다른 페이지를 서비스하는 것은 가능한 것 같지만 캐싱에 비효율적이라 추천하는 것 같지는 않고, 결국엔 공유를 위한 별도의 URL을 제공해야 할 것 같다. (혹시 좋은 방법이 있으면 알려주세요. ^^)&lt;/p&gt;
+&lt;p&gt;...&lt;/p&gt;
+&lt;h1 id=&quot;-&quot;&gt;마치며&lt;/h1&gt;
+&lt;p&gt;기승전 AWS!&lt;/p&gt;
+&lt;p&gt;...&lt;/p&gt;
+&lt;p&gt;이 글을 작성하기 시작한 후 바로 다른 프로젝트를 시작하는 바람에, 게다가 주어진 시간도 많지 않아서 작성이 너무 더뎠다. 아직까지 그 프로젝트가 끝나진 않았지만 &lt;strong&gt;미리 예약해둔&lt;/strong&gt;, 예이~, 여름 휴가 여행을 떠나는 비행기 안에서 작성하고 있다.&lt;/p&gt;
+&lt;p&gt;별 것 아닌 내용인데도 이렇게 작성하는 것이 오래 걸리다니.. 다시 한 번 글쓰기의 어려움을 절실히 느끼게 되었고, 그냥 내가 게으른 걸지도 ㅠ_ㅠ&lt;/p&gt;
+&lt;p&gt;내가 스스로 정리하기 위한 목적으로 작성한 글이지만, 그냥 우연히 이 글을 읽는 사람에게 조금이나마 도움이 되었으면 한다.&lt;/p&gt;
+&lt;/div&gt;&lt;div class=&quot;related&quot;&gt;&lt;div class=&quot;wrapper&quot;&gt;&lt;h6 class=&quot;text&quot;&gt;Related Posts&lt;/h6&gt;&lt;/div&gt;&lt;ul class=&quot;items&quot;&gt;&lt;li class=&quot;item&quot;&gt;&lt;div class=&quot;title&quot;&gt;&lt;a href=&quot;/posts/2015-07-04-introducing-bagle/&quot;&gt;베이글 서비스를 소개합니다.&lt;/a&gt;&lt;/div&gt;&lt;div class=&quot;date&quot;&gt;July 4, 2015&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;div class=&quot;disqus&quot;&gt;&lt;div id=&quot;disqus_thread&quot;&gt;&lt;/div&gt;&lt;script&gt;var disqus_shortname = 'danielku';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();&lt;/script&gt;&lt;noscript&gt;Please enable JavaScript to view the &lt;a href=&quot;https://disqus.com/?ref_noscript&quot; rel=&quot;nofollow&quot;&gt;comments powered by Disqus.&lt;/a&gt;
+&lt;/noscript&gt;&lt;/div&gt;&lt;div class=&quot;navigation&quot;&gt;&lt;div class=&quot;previous&quot;&gt;&lt;a href=&quot;/posts/2015-07-04-introducing-bagle/&quot;&gt;&lt;span&gt;베이글 서비스를 소개합니다.&lt;/span&gt;&lt;i class=&quot;fa fa-lg fa-long-arrow-right&quot;&gt;&lt;/i&gt;&lt;/a&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;&lt;/section&gt;&lt;footer&gt;&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;https://github.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-github&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;github&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;http://www.linkedin.com/in/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-linkedin&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;linkedin&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://twitter.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-twitter&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;twitter&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://www.facebook.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-facebook&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;facebook&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;mailto:d@nielku.com&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-inbox&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;email&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;/atom.xml&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-rss&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;feed&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;div class=&quot;copyright&quot;&gt;© Daniel Ku 2015&lt;/div&gt;&lt;div class=&quot;endnote&quot;&gt;Made with &lt;a href=&quot;http://docpad.org&quot; target=&quot;_blank&quot;&gt;DocPad&lt;/a&gt;,
+hosted on &lt;a href=&quot;https://github.com&quot; target=&quot;_blank&quot;&gt;GitHub&lt;/a&gt;.
+&lt;/div&gt;&lt;/footer&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/jquery/dist/jquery.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lodash/lodash.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/highlightjs/highlight.pack.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lightbox2/dist/js/lightbox.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/scripts/script.js&quot;&gt;&lt;/script&gt;&lt;script&gt;(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-64883212-1', 'auto');
+ga('send', 'pageview');&lt;/script&gt;&lt;script&gt;var disqus_shortname = 'danielku';
+(function () {
+  var s = document.createElement('script'); s.async = true;
+  s.type = 'text/javascript';
+  s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+  (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+}());&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;</content>
+      </entry>
+    
+  
+    
+      <entry>
+        <title>베이글 서비스를 소개합니다.</title>
+        <link href="http://danielku.com/posts/2015-07-04-introducing-bagle/"/>
+        
+        <updated>2015-08-20T00:00:00.000Z</updated>
+        <id>http://danielku.com/posts/2015-07-04-introducing-bagle/</id>
+        <content type="html">&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=utf-8&quot;&gt;&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge,chrome=1&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;&lt;title&gt;베이글 서비스를 소개합니다. | Daniel Ku&lt;/title&gt;&lt;meta name=&quot;description&quot; content=&quot;2014 데모데이 TOP100 스타트업에 선정된 스터디지피에스(StudyGPS)社가 개발하고 운영 중인 베이글(bagle.io) 서비스를 소개한다.&quot;&gt;&lt;meta name=&quot;keywords&quot; content=&quot;daniel ku, daniel kj ku, daniel kyojun ku, daniel, kjunine, versatile programmer&quot;&gt;&lt;meta name=&quot;author&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta name=&quot;generator&quot; content=&quot;DocPad v6.78.1&quot; /&gt;&lt;meta property=&quot;og:url&quot; content=&quot;http://danielku.com/posts/2015-07-04-introducing-bagle/&quot;&gt;&lt;meta property=&quot;og:type&quot; content=&quot;article&quot;&gt;&lt;meta property=&quot;og:title&quot; content=&quot;베이글 서비스를 소개합니다.&quot;&gt;&lt;meta property=&quot;og:description&quot; content=&quot;2014 데모데이 TOP100 스타트업에 선정된 스터디지피에스(StudyGPS)社가 개발하고 운영 중인 베이글(bagle.io) 서비스를 소개한다.&quot;&gt;&lt;meta property=&quot;og:image&quot; content=&quot;http://danielku.com/posts/2015-07-04-introducing-bagle/bagle.jpg&quot;&gt;&lt;meta property=&quot;og:site_name&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta property=&quot;og:locale&quot; content=&quot;ko_KR&quot;&gt;&lt;link href=&quot;/atom.xml&quot; rel=&quot;alternate&quot; type=&quot;application/atom+xml&quot; title=&quot;Daniel Ku&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/earlyaccess/nanumgothic.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Lato:700&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Source+Sans+Pro:300,600&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/normalize.css/normalize.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/font-awesome/css/font-awesome.min.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/highlightjs/styles/agate.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/lightbox2/dist/css/lightbox.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/styles/style.css&quot; /&gt;&lt;/head&gt;&lt;body&gt;&lt;!--[if lt IE 9]&gt;&lt;p class=&quot;browsehappy&quot;&gt;You are using an &lt;strong&gt;outdated&lt;/strong&gt; browser.
+Please &lt;a href=&quot;http://browsehappy.com/&quot;&gt;upgrade your browser&lt;/a&gt; to improve your experience.
+&lt;/p&gt;&lt;![endif]--&gt;&lt;header&gt;&lt;div class=&quot;container&quot;&gt;&lt;a href=&quot;/&quot; class=&quot;logo&quot;&gt;Daniel Ku&lt;/a&gt;&lt;/div&gt;&lt;/header&gt;&lt;section class=&quot;main&quot;&gt;&lt;article class=&quot;post&quot;&gt;&lt;div style=&quot;background-image: url(bagle.jpg)&quot; class=&quot;image&quot;&gt;&lt;img src=&quot;bagle.jpg&quot; class=&quot;hidden&quot;/&gt;&lt;/div&gt;&lt;div class=&quot;header&quot;&gt;&lt;h1 class=&quot;title&quot;&gt;베이글 서비스를 소개합니다.&lt;/h1&gt;&lt;h6 class=&quot;date&quot;&gt;July 4, 2015&lt;/h6&gt;&lt;/div&gt;&lt;div class=&quot;content&quot;&gt;&lt;h1 id=&quot;-bagle-io-http-bagle-io-&quot;&gt;베이글(&lt;a href=&quot;http://bagle.io/&quot;&gt;bagle.io&lt;/a&gt;)이란?&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;bagle-logo.png&quot;&gt;&lt;img src=&quot;bagle-logo.png&quot; alt=&quot;베이글 로고&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;나는 스터디지피에스라는 회사에서 베이글 서비스를 개발했다. 베이글 서비스는 작년에 서비스했던 StudyGPS 서비스를 개선해 올해 2월초에 모바일(&lt;a href=&quot;https://play.google.com/store/apps/details?id=net.studygps.mobile&quot;&gt;안드로이드&lt;/a&gt;/&lt;a href=&quot;https://itunes.apple.com/app/bagle/id967912345&quot;&gt;아이폰&lt;/a&gt;)부터 오픈했다. 그리고 시간이 좀 걸렸지만 6월말에 &lt;a href=&quot;http://bagle.io/&quot;&gt;웹&lt;/a&gt;도 오픈했다.&lt;/p&gt;
+&lt;p&gt;StudyGPS 서비스는 이름에 걸맞게 교육 분야에 치우쳐 있는 서비스였지만, 베이글은 비슷한 컨셉을 유지하되 분야를 보다 확장해 누구나 사용할 수 있도록 만들었다.&lt;/p&gt;
+&lt;p&gt;다음은 베이글 서비스의 타임라인 기능의 스크린샷이다. 얼핏보면 다른 SNS 서비스와 유사해보인다. 하지만..&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;bagle-timeline.png&quot;&gt;&lt;img src=&quot;bagle-timeline.png&quot; alt=&quot;베이글 타임라인&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id=&quot;-&quot;&gt;베이글의 특징&lt;/h1&gt;
+&lt;p&gt;베이글은 온라인/오프라인 그룹을 운영하고 있는 사람이 적은 노력으로 큰 효과를 볼 수 있는 서비스로, 다음과 같은 특징이 있다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;그룹은 &lt;strong&gt;베이글&lt;/strong&gt;이라 부른다. 베이글의 모양은 원(서클)이고, 서클은 그룹을 뜻하기도 하니까.&lt;/li&gt;
+&lt;li&gt;글, 포스트는 &lt;strong&gt;카드&lt;/strong&gt;라 부른다. 베이글에 누군가가 카드를 작성하면 나머지 멤버들이 답변을 할 수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;그런데 진짜 중요한 특징은 여기부터이다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;지정된 멤버만&lt;/em&gt; 베이글에 카드를 작성할 수 있다!&lt;/li&gt;
+&lt;li&gt;하나의 카드에는 &lt;em&gt;각자 한번만&lt;/em&gt; 답변할 수 있다!&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;답변하기 전에는&lt;/em&gt; 다른 멤버의 답변을 볼 수 없다!&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;그렇다. 지극히 &lt;strong&gt;일방적&lt;/strong&gt;이다. 태생적으로 설문에 가까운 형태이다.&lt;/p&gt;
+&lt;p&gt;베이글은 그룹 관리에 피로를 느끼는 그룹 매니저를 위한 서비스로, &lt;em&gt;자신이 하고 싶은 말만 하고, 멤버들에게 궁금한 것만 물어볼 수 있게&lt;/em&gt; 해준다.&lt;/p&gt;
+&lt;p&gt;얼핏 보면 기존의 SNS와 유사한 형태이지만, 위와 같은 차이로 전혀 다른 서비스가 되었다.&lt;/p&gt;
+&lt;h1 id=&quot;-&quot;&gt;나의 베이글&lt;/h1&gt;
+&lt;p&gt;나도 베이글 서비스에서 &lt;a href=&quot;https://bagle.io/bagles/550e4dc4546555150068729a&quot;&gt;Delicious Bagle&lt;/a&gt;이란 먹방용 베이글을 운영하고 있다. 비록 마지막으로 작성한 카드가 두달 전의 것이지만.. 한번 구경해보길 바란다.&lt;/p&gt;
+&lt;p&gt;최근에 웹도 오픈했으니 나도 다시 잘 사용해 볼 예정이다. 일단 맛있는 것부터 좀 먹고.. ㅠ_ㅠ&lt;/p&gt;
+&lt;h1 id=&quot;-&quot;&gt;...&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://files.bagle.io/photos/551688db54655515006873e5.png&quot;&gt;&lt;img src=&quot;https://files.bagle.io/photos/551688db54655515006873e5.png&quot; alt=&quot;마망갸또&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;여담이지만 초기엔 아이폰에서 세로로 찍은 사진을 업로드하면 위 사진처럼 &lt;em&gt;가로로 회전되어 보이는 문제&lt;/em&gt;가 있었다. 해당 이슈는 해결했지만 그때 업로드한 사진들은 여전히 잘못 표시되고 있다.&lt;/p&gt;
+&lt;p&gt;얼릉 맛있는 거 많이 먹고 새 카드 많이 작성해서 예전 카드들을 안 보이게 파묻어 버려야지.&lt;/p&gt;
+&lt;/div&gt;&lt;div class=&quot;related&quot;&gt;&lt;div class=&quot;wrapper&quot;&gt;&lt;h6 class=&quot;text&quot;&gt;Related Posts&lt;/h6&gt;&lt;/div&gt;&lt;ul class=&quot;items&quot;&gt;&lt;li class=&quot;item&quot;&gt;&lt;div class=&quot;title&quot;&gt;&lt;a href=&quot;/posts/2015-08-20-bagle-architecture/&quot;&gt;베이글 서비스의 아키텍쳐&lt;/a&gt;&lt;/div&gt;&lt;div class=&quot;date&quot;&gt;August 20, 2015&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;div class=&quot;disqus&quot;&gt;&lt;div id=&quot;disqus_thread&quot;&gt;&lt;/div&gt;&lt;script&gt;var disqus_shortname = 'danielku';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();&lt;/script&gt;&lt;noscript&gt;Please enable JavaScript to view the &lt;a href=&quot;https://disqus.com/?ref_noscript&quot; rel=&quot;nofollow&quot;&gt;comments powered by Disqus.&lt;/a&gt;
+&lt;/noscript&gt;&lt;/div&gt;&lt;div class=&quot;navigation&quot;&gt;&lt;div class=&quot;next&quot;&gt;&lt;a href=&quot;/posts/2015-08-20-bagle-architecture/&quot;&gt;&lt;i class=&quot;fa fa-lg fa-long-arrow-left&quot;&gt;&lt;/i&gt;&lt;span&gt;베이글 서비스의 아키텍쳐&lt;/span&gt;&lt;/a&gt;&lt;/div&gt;&lt;div class=&quot;previous&quot;&gt;&lt;a href=&quot;/posts/2014-02-13-markdown/&quot;&gt;&lt;span&gt;마크다운(Markdown)에 대하여&lt;/span&gt;&lt;i class=&quot;fa fa-lg fa-long-arrow-right&quot;&gt;&lt;/i&gt;&lt;/a&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;&lt;/section&gt;&lt;footer&gt;&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;https://github.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-github&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;github&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;http://www.linkedin.com/in/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-linkedin&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;linkedin&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://twitter.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-twitter&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;twitter&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://www.facebook.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-facebook&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;facebook&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;mailto:d@nielku.com&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-inbox&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;email&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;/atom.xml&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-rss&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;feed&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;div class=&quot;copyright&quot;&gt;© Daniel Ku 2015&lt;/div&gt;&lt;div class=&quot;endnote&quot;&gt;Made with &lt;a href=&quot;http://docpad.org&quot; target=&quot;_blank&quot;&gt;DocPad&lt;/a&gt;,
+hosted on &lt;a href=&quot;https://github.com&quot; target=&quot;_blank&quot;&gt;GitHub&lt;/a&gt;.
+&lt;/div&gt;&lt;/footer&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/jquery/dist/jquery.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lodash/lodash.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/highlightjs/highlight.pack.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lightbox2/dist/js/lightbox.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/scripts/script.js&quot;&gt;&lt;/script&gt;&lt;script&gt;(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-64883212-1', 'auto');
+ga('send', 'pageview');&lt;/script&gt;&lt;script&gt;var disqus_shortname = 'danielku';
+(function () {
+  var s = document.createElement('script'); s.async = true;
+  s.type = 'text/javascript';
+  s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+  (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+}());&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;</content>
+      </entry>
+    
+  
+    
+      <entry>
+        <title>마크다운(Markdown)에 대하여</title>
+        <link href="http://danielku.com/posts/2014-02-13-markdown/"/>
+        
+        <updated>2015-07-09T00:00:00.000Z</updated>
+        <id>http://danielku.com/posts/2014-02-13-markdown/</id>
+        <content type="html">&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=utf-8&quot;&gt;&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge,chrome=1&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;&lt;title&gt;마크다운(Markdown)에 대하여 | Daniel Ku&lt;/title&gt;&lt;meta name=&quot;description&quot; content=&quot;개발자의 필수도구 마크다운에 대하여 알아보자.&quot;&gt;&lt;meta name=&quot;keywords&quot; content=&quot;daniel ku, daniel kj ku, daniel kyojun ku, daniel, kjunine, versatile programmer&quot;&gt;&lt;meta name=&quot;author&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta name=&quot;generator&quot; content=&quot;DocPad v6.78.1&quot; /&gt;&lt;meta property=&quot;og:url&quot; content=&quot;http://danielku.com/posts/2014-02-13-markdown/&quot;&gt;&lt;meta property=&quot;og:type&quot; content=&quot;article&quot;&gt;&lt;meta property=&quot;og:title&quot; content=&quot;마크다운(Markdown)에 대하여&quot;&gt;&lt;meta property=&quot;og:description&quot; content=&quot;개발자의 필수도구 마크다운에 대하여 알아보자.&quot;&gt;&lt;meta property=&quot;og:image&quot; content=&quot;http://danielku.com/images/profile.jpg&quot;&gt;&lt;meta property=&quot;og:site_name&quot; content=&quot;Daniel Ku&quot;&gt;&lt;meta property=&quot;og:locale&quot; content=&quot;ko_KR&quot;&gt;&lt;link href=&quot;/atom.xml&quot; rel=&quot;alternate&quot; type=&quot;application/atom+xml&quot; title=&quot;Daniel Ku&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/earlyaccess/nanumgothic.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Lato:700&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link href=&quot;//fonts.googleapis.com/css?family=Source+Sans+Pro:300,600&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/normalize.css/normalize.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/font-awesome/css/font-awesome.min.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/highlightjs/styles/agate.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/dependencies/lightbox2/dist/css/lightbox.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/styles/style.css&quot; /&gt;&lt;/head&gt;&lt;body&gt;&lt;!--[if lt IE 9]&gt;&lt;p class=&quot;browsehappy&quot;&gt;You are using an &lt;strong&gt;outdated&lt;/strong&gt; browser.
+Please &lt;a href=&quot;http://browsehappy.com/&quot;&gt;upgrade your browser&lt;/a&gt; to improve your experience.
+&lt;/p&gt;&lt;![endif]--&gt;&lt;header&gt;&lt;div class=&quot;container&quot;&gt;&lt;a href=&quot;/&quot; class=&quot;logo&quot;&gt;Daniel Ku&lt;/a&gt;&lt;/div&gt;&lt;/header&gt;&lt;section class=&quot;main&quot;&gt;&lt;article class=&quot;post&quot;&gt;&lt;div class=&quot;header&quot;&gt;&lt;h1 class=&quot;title&quot;&gt;마크다운(Markdown)에 대하여&lt;/h1&gt;&lt;h6 class=&quot;date&quot;&gt;February 13, 2014&lt;/h6&gt;&lt;/div&gt;&lt;div class=&quot;content&quot;&gt;&lt;h1 id=&quot;-markdown-&quot;&gt;마크다운(Markdown)이란?&lt;/h1&gt;
+&lt;p&gt;&lt;code&gt;마크다운(Markdown)&lt;/code&gt;을 만든 &lt;a href=&quot;http://en.wikipedia.org/wiki/John_Gruber&quot;&gt;John Gruber&lt;/a&gt;는 마크다운을 다음과 같이 정의하고 있다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&quot;http://daringfireball.net/projects/markdown/&quot;&gt;Markdown is a text-to-HTML conversion tool for web writers. Markdown allows you to write using an easy-to-read, easy-to-write plain text format, then convert it to structurally valid XHTML (or HTML).&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;즉, 마크다운은 다음과 같은 성질을 가지는 &lt;strong&gt;텍스트를 HTML로 변환하는 언어이자 도구&lt;/strong&gt;이다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;사람이 읽고 쓰기 쉽다.&lt;/li&gt;
+&lt;li&gt;컴퓨터도 이해하기 쉽다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;마크다운은 &lt;strong&gt;간단한 문법&lt;/strong&gt;만을 사용해 글을 구조적으로 작성할 수 있고, 마크다운으로 작성된 글을 그냥 읽어도 이해하기 쉽고 HTML로 변환해도 보기에 좋다.
+이 때문에 최근 &lt;a href=&quot;http://github.com/&quot;&gt;GitHub&lt;/a&gt; 같은 개발 관련 웹사이트에서 마크다운을 많이 사용하고 있다.&lt;/p&gt;
+&lt;h2 id=&quot;-&quot;&gt;왜 알아야 하는가?&lt;/h2&gt;
+&lt;p&gt;당신이 &lt;code&gt;개발자&lt;/code&gt;라면 앞으로 반드시 만나게 될 것이기 때문이다. 개발자가 아니라면 아마도 몰라도 될 것이다. WISIWIG 에디터에서도 마크다운을 지원할테니까.&lt;/p&gt;
+&lt;h1 id=&quot;-&quot;&gt;마크다운의 문법&lt;/h1&gt;
+&lt;p&gt;위에서도 말했듯이 마크다운의 문법은 상당히 간단해서 큰 노력을 기울이지 않아도 쉽게 배울 수 있다.&lt;/p&gt;
+&lt;h2 id=&quot;-paragraphs-&quot;&gt;문단(Paragraphs)&lt;/h2&gt;
+&lt;p&gt;하나 이상의 문장의 집합이다. 한 문단과 다음 문단은 하나 이상의 빈 줄로 구분된다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;첫번째 문단의 첫번째 문장이다.
+첫번째 문단의 두번째 문장이다.
+
+두번째 문단의 첫번째 문장이다.
+두번째 문단의 두번째 문장이다.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;다음과 같이 변환된다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;첫번째 문단의 첫번째 문장이다.
+첫번째 문단의 두번째 문장이다.&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;두번째 문단의 첫번째 문장이다.
+두번째 문단의 두번째 문장이다.&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그러므로 다음과 같이 보인다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;첫번째 문단의 첫번째 문장이다.
+첫번째 문단의 두번째 문장이다.&lt;/p&gt;
+&lt;p&gt;두번째 문단의 첫번째 문장이다.
+두번째 문단의 두번째 문장이다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;문장 사이의 줄바꿈은 무시되는 것이 기본이지만, 마크다운 변환기에 따라 줄바꿈을 위해 &lt;code&gt;&amp;lt;br /&amp;gt;&lt;/code&gt; 태그를 삽입하기도 한다.&lt;/p&gt;
+&lt;h2 id=&quot;-headers-&quot;&gt;제목(Headers)&lt;/h2&gt;
+&lt;p&gt;제목을 표현하는 방법에는 2가지 방법이 있다. 먼저 &lt;code&gt;=&lt;/code&gt; 혹은 &lt;code&gt;-&lt;/code&gt; 문자를 이용해 밑줄을 채우는 방법이다.
+밑줄 문자는 하나 이상만 사용하면 되지만 보통은 보기 좋게 제목과 같은 길이만큼 사용한다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;가장 큰 제목
+==========
+그 다음 크기의 제목
+---------------
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;변환하면 다음과 같다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;h1&amp;gt;가장 큰 제목&amp;lt;/h1&amp;gt;
+&amp;lt;h2&amp;gt;그 다음 크기의 제목&amp;lt;/h2&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;결과는...&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&quot;-&quot;&gt;가장 큰 제목&lt;/h1&gt;
+&lt;h2 id=&quot;-&quot;&gt;그 다음 크기의 제목&lt;/h2&gt;
+&lt;hr&gt;
+&lt;p&gt;다른 방법으로는 &lt;code&gt;#&lt;/code&gt; 문자를 제목 앞에 붙이는 방법이 있다.
+보기 좋게 하기 위해 제목 뒤에도 &lt;code&gt;#&lt;/code&gt; 문자를 같은 개수 만큼 붙이기도 한다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;# 가장 큰 제목
+## 그 다음 크기의 제목 ##
+### 또 그 다음 크기의 제목
+###### 가장 작은 크기의 제목 ######
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;변환하면...&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;h1&amp;gt;가장 큰 제목&amp;lt;/h1&amp;gt;
+&amp;lt;h2&amp;gt;그 다음 크기의 제목&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;또 그 다음 크기의 제목&amp;lt;/h3&amp;gt;
+&amp;lt;h6&amp;gt;가장 작은 크기의 제목&amp;lt;/h6&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;h1 id=&quot;-&quot;&gt;가장 큰 제목&lt;/h1&gt;
+&lt;h2 id=&quot;-&quot;&gt;그 다음 크기의 제목&lt;/h2&gt;
+&lt;h3 id=&quot;-&quot;&gt;또 그 다음 크기의 제목&lt;/h3&gt;
+&lt;h6 id=&quot;-&quot;&gt;가장 작은 크기의 제목&lt;/h6&gt;
+&lt;hr&gt;
+&lt;h2 id=&quot;-blockquotes-&quot;&gt;인용(Blockquotes)&lt;/h2&gt;
+&lt;p&gt;인용은 이메일에서처럼 &lt;code&gt;&amp;gt;&lt;/code&gt; 문자를 앞에 붙이는 방식을 사용한다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;&amp;gt; 인용이다.
+&amp;gt;
+&amp;gt; 인용 안에서도 문단을 나눌 수 있다.
+&amp;gt;
+&amp;gt; ### 제목 등의 다른 문법도 사용 가능하다.
+&amp;gt;
+&amp;gt; &amp;gt; 인용 안의 인용도 된다.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;blockquote&amp;gt;
+  &amp;lt;p&amp;gt;인용이다.&amp;lt;/p&amp;gt;
+  &amp;lt;p&amp;gt;인용 안에서도 문단을 나눌 수 있다.&amp;lt;/p&amp;gt;
+  &amp;lt;h3&amp;gt;제목 등의 다른 문법도 사용 가능하다.&amp;lt;/h3&amp;gt;
+  &amp;lt;blockquote&amp;gt;
+    &amp;lt;p&amp;gt;인용 안의 인용도 된다.&amp;lt;/p&amp;gt;
+  &amp;lt;/blockquote&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;blockquote&gt;
+&lt;p&gt;인용이다.&lt;/p&gt;
+&lt;p&gt;인용 안에서도 문단을 나눌 수 있다.&lt;/p&gt;
+&lt;h3 id=&quot;-&quot;&gt;제목 등의 다른 문법도 사용 가능하다.&lt;/h3&gt;
+&lt;blockquote&gt;
+&lt;p&gt;인용 안의 인용도 된다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&quot;-lists-&quot;&gt;목록(Lists)&lt;/h2&gt;
+&lt;p&gt;먼저 순서가 없는 목록이다. 각 항목 앞에 &lt;code&gt;*&lt;/code&gt;, &lt;code&gt;+&lt;/code&gt;, &lt;code&gt;-&lt;/code&gt; 문자를 붙인다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;* 첫번째
+* 두번째
+* 세번째
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;ul&amp;gt;
+  &amp;lt;li&amp;gt;첫번째&amp;lt;/li&amp;gt;
+  &amp;lt;li&amp;gt;두번째&amp;lt;/li&amp;gt;
+  &amp;lt;li&amp;gt;세번째&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;ul&gt;
+&lt;li&gt;첫번째&lt;/li&gt;
+&lt;li&gt;두번째&lt;/li&gt;
+&lt;li&gt;세번째&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;p&gt;다음과 같이 섞어서 사용할 수도 있다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;* 첫번째
++ 두번째
+- 세번째
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;ul&amp;gt;
+  &amp;lt;li&amp;gt;첫번째&amp;lt;/li&amp;gt;
+  &amp;lt;li&amp;gt;두번째&amp;lt;/li&amp;gt;
+  &amp;lt;li&amp;gt;세번째&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;ul&gt;
+&lt;li&gt;첫번째&lt;/li&gt;
+&lt;li&gt;두번째&lt;/li&gt;
+&lt;li&gt;세번째&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;p&gt;항목 사이에 빈줄이 있으면 조금 다르게 해석한다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;* 첫번째
+
+* 두번째
+
+* 세번째
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;ul&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;p&amp;gt;첫번째&amp;lt;/p&amp;gt;&amp;lt;/li&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;p&amp;gt;두번째&amp;lt;/p&amp;gt;&amp;lt;/li&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;p&amp;gt;세번째&amp;lt;/p&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;첫번째&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;두번째&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;세번째&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;p&gt;다음으로 순서가 있는 목록이다. &lt;code&gt;1.&lt;/code&gt;로 시작한다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;1. 첫번째
+1. 두번째
+1. 세번째
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;ol&amp;gt;
+  &amp;lt;li&amp;gt;첫번째&amp;lt;/li&amp;gt;
+  &amp;lt;li&amp;gt;두번째&amp;lt;/li&amp;gt;
+  &amp;lt;li&amp;gt;세번째&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li&gt;첫번째&lt;/li&gt;
+&lt;li&gt;두번째&lt;/li&gt;
+&lt;li&gt;세번째&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr&gt;
+&lt;p&gt;목록을 중첩하는 것 역시 가능하다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;1. 첫번째
+1. 두번째
+  * 두번째의 첫번째
+  * 두번째의 두번째
+  * 두번째의 세번째
+1. 세번째
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;ol&amp;gt;
+  &amp;lt;li&amp;gt;첫번째&amp;lt;/li&amp;gt;
+  &amp;lt;li&amp;gt;두번째&amp;lt;/li&amp;gt;
+  &amp;lt;ul&amp;gt;
+    &amp;lt;li&amp;gt;두번째의 첫번째&amp;lt;/li&amp;gt;
+    &amp;lt;li&amp;gt;두번째의 두번째&amp;lt;/li&amp;gt;
+    &amp;lt;li&amp;gt;두번째의 세번째&amp;lt;/li&amp;gt;
+  &amp;lt;/ul&amp;gt;
+  &amp;lt;li&amp;gt;세번째&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li&gt;첫번째&lt;/li&gt;
+&lt;li&gt;두번째&lt;ul&gt;
+&lt;li&gt;두번째의 첫번째&lt;/li&gt;
+&lt;li&gt;두번째의 두번째&lt;/li&gt;
+&lt;li&gt;두번째의 세번째&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;세번째&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr&gt;
+&lt;h2 id=&quot;-emphasis-&quot;&gt;강조(Emphasis)&lt;/h2&gt;
+&lt;p&gt;문장 내에서 강조하고 싶은 부분이 있으면 &lt;code&gt;*&lt;/code&gt; 혹은 &lt;code&gt;_&lt;/code&gt; 문자로 감싸준다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;이 문장에서 *여기부터 여기까지* 강조한다.
+이 문장에서는 _여기만_ 강조한다.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;변환하면...&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;이 문장에서 &amp;lt;em&amp;gt;여기부터  여기까지&amp;lt;/em&amp;gt; 강조한다.
+이 문장에서는 &amp;lt;em&amp;gt;여기만&amp;lt;/em&amp;gt; 강조한다.&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;p&gt;이 문장에서 &lt;em&gt;여기부터 여기까지&lt;/em&gt; 강조한다.
+이 문장에서는 &lt;em&gt;여기만&lt;/em&gt; 강조한다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;code&gt;*&lt;/code&gt; 혹은 &lt;code&gt;_&lt;/code&gt; 문자를 하나만 쓰면 &lt;code&gt;&amp;lt;em&amp;gt;&lt;/code&gt; 태그가 쓰여 이탤릭체로 강조되지만, 두개씩 쓰면 &lt;code&gt;&amp;lt;strong&amp;gt;&lt;/code&gt; 태그가 쓰여 볼드체로 강조된다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;이 문장에서 **여기부터 여기까지** 강조한다.
+이 문장에서는 __여기만__ 강조한다.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;이 문장에서 &amp;lt;strong&amp;gt;여기부터 여기까지&amp;lt;/strong&amp;gt; 강조한다.
+이 문장에서는 &amp;lt;strong&amp;gt;여기만&amp;lt;/strong&amp;gt; 강조한다.&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;p&gt;이 문장에서 &lt;strong&gt;여기부터 여기까지&lt;/strong&gt; 강조한다.
+이 문장에서는 &lt;strong&gt;여기만&lt;/strong&gt; 강조한다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;em&gt;트리플 강조 구문&lt;/em&gt;이라는 것도 있다. 예측대로 동작한다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;이 문장에서 ***여기부터 여기까지*** 강조한다.
+이 문장에서는 ___여기만___ 강조한다.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;이 문장에서 &amp;lt;strong&amp;gt;&amp;lt;em&amp;gt;여기부터 여기까지&amp;lt;/em&amp;gt;&amp;lt;/strong&amp;gt; 강조한다.
+이 문장에서는 &amp;lt;strong&amp;gt;&amp;lt;em&amp;gt;여기만&amp;lt;/em&amp;gt;&amp;lt;/strong&amp;gt; 강조한다.&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;p&gt;이 문장에서 &lt;strong&gt;&lt;em&gt;여기부터 여기까지&lt;/em&gt;&lt;/strong&gt; 강조한다.
+이 문장에서는 &lt;strong&gt;&lt;em&gt;여기만&lt;/em&gt;&lt;/strong&gt; 강조한다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id=&quot;-links-&quot;&gt;링크(Links)&lt;/h2&gt;
+&lt;p&gt;링크를 거는 방법에도 두 가지 방법이 있다. 하나는 보다 직관적인 방식이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;마크다운에 관한 자세한 내용은 [여기](http://daringfireball.net/projects/markdown/)를 참고하라.
+[여기](http://en.wikipedia.org/wiki/Markdown &amp;quot;Wikipedia&amp;quot;)에도 잘 정리가 되어 있다.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;마크다운에 관한 자세한 내용은 &amp;lt;a href=&amp;quot;http://daringfireball.net/projects/markdown/&amp;quot;&amp;gt;여기&amp;lt;/a&amp;gt;를 참고하라.
+&amp;lt;a href=&amp;quot;http://en.wikipedia.org/wiki/Markdown&amp;quot; title=&amp;quot;Wikipedia&amp;quot;&amp;gt;여기&amp;lt;/a&amp;gt;에도 잘 정리가 되어 있다.&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;p&gt;마크다운에 관한 자세한 내용은 &lt;a href=&quot;http://daringfireball.net/projects/markdown/&quot;&gt;여기&lt;/a&gt;를 참고하라.
+&lt;a href=&quot;http://en.wikipedia.org/wiki/Markdown&quot; title=&quot;Wikipedia&quot;&gt;여기&lt;/a&gt;에도 잘 정리가 되어 있다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;링크 주소 뒤에 입력한 문자열은 링크 위에 커서를 올렸을 때 나타나는 링크의 제목이다.&lt;/p&gt;
+&lt;p&gt;문장 내 링크가 위치했을 때 가독성을 보다 높이기 위해 참조 방식으로 링크를 걸 수도 있다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;마크다운에 관한 자세한 내용은 [여기][1]를 참고하라.
+[여기][2]에도 잘 정리가 되어 있다.
+
+[1]: http://daringfireball.net/projects/markdown/ &amp;quot;Daring Fireball&amp;quot;
+[2]: http://en.wikipedia.org/wiki/Markdown &amp;quot;Wikipedia&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;마크다운에 관한 자세한 내용은 &amp;lt;a href=&amp;quot;http://daringfireball.net/projects/markdown/&amp;quot; title=&amp;quot;Daring Fireball&amp;quot;&amp;gt;여기&amp;lt;/a&amp;gt;를 참고하라.
+&amp;lt;a href=&amp;quot;http://en.wikipedia.org/wiki/Markdown&amp;quot; title=&amp;quot;Wikipedia&amp;quot;&amp;gt;여기&amp;lt;/a&amp;gt;에도 잘 정리가 되어 있다.&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;p&gt;마크다운에 관한 자세한 내용은 &lt;a href=&quot;http://daringfireball.net/projects/markdown/&quot; title=&quot;Daring Fireball&quot;&gt;여기&lt;/a&gt;를 참고하라.
+&lt;a href=&quot;http://en.wikipedia.org/wiki/Markdown&quot; title=&quot;Wikipedia&quot;&gt;여기&lt;/a&gt;에도 잘 정리가 되어 있다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;참조 문자열은 꼭 숫자가 아니어도 된다. 영문, 한글 모두 가능하고 영문의 경우 대소문자를 구분하지도 않으며, 생략도 가능하다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;마크다운에 관한 자세한 내용은 [여기][Daring Fireball]를 참고하라.
+[위키피디아][]에도 잘 정리가 되어 있다.
+
+[daring fireball]: http://daringfireball.net/projects/markdown/ &amp;quot;Daring Fireball&amp;quot;
+[위키피디아]: http://en.wikipedia.org/wiki/Markdown &amp;quot;Wikipedia&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;마크다운에 관한 자세한 내용은 &amp;lt;a href=&amp;quot;http://daringfireball.net/projects/markdown/&amp;quot; title=&amp;quot;Daring Fireball&amp;quot;&amp;gt;여기&amp;lt;/a&amp;gt;를 참고하라.
+&amp;lt;a href=&amp;quot;http://en.wikipedia.org/wiki/Markdown&amp;quot; title=&amp;quot;Wikipedia&amp;quot;&amp;gt;위키피디아&amp;lt;/a&amp;gt;에도 잘 정리가 되어 있다.&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;p&gt;마크다운에 관한 자세한 내용은 &lt;a href=&quot;http://daringfireball.net/projects/markdown/&quot; title=&quot;Daring Fireball&quot;&gt;여기&lt;/a&gt;를 참고하라.
+&lt;a href=&quot;http://en.wikipedia.org/wiki/Markdown&quot; title=&quot;Wikipedia&quot;&gt;위키피디아&lt;/a&gt;에도 잘 정리가 되어 있다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;참고로 링크를 거는 또 다른 방법이 있다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;링크: &amp;lt;http://google.com/&amp;gt;, 이메일: &amp;lt;mail@gmail.com&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;링크: &amp;lt;a href=&amp;quot;http://google.com/&amp;quot;&amp;gt;http://google.com/&amp;lt;/a&amp;gt;, 이메일: &amp;lt;a href=&amp;quot;mailto:mail@gmail.com&amp;quot;&amp;gt;mail@gmail.com&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;p&gt;링크: &lt;a href=&quot;http://google.com/&quot;&gt;http://google.com/&lt;/a&gt;, 이메일: &lt;a href=&quot;&amp;#x6d;&amp;#97;&amp;#x69;&amp;#x6c;&amp;#116;&amp;#111;&amp;#x3a;&amp;#109;&amp;#x61;&amp;#x69;&amp;#x6c;&amp;#64;&amp;#x67;&amp;#x6d;&amp;#97;&amp;#105;&amp;#108;&amp;#x2e;&amp;#99;&amp;#x6f;&amp;#x6d;&quot;&gt;&amp;#109;&amp;#x61;&amp;#x69;&amp;#x6c;&amp;#64;&amp;#x67;&amp;#x6d;&amp;#97;&amp;#105;&amp;#108;&amp;#x2e;&amp;#99;&amp;#x6f;&amp;#x6d;&lt;/a&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id=&quot;-images-&quot;&gt;이미지(Images)&lt;/h2&gt;
+&lt;p&gt;이미지를 삽입하는 것은 링크를 거는 것과 매우 흡사하다. 차이가 있다면 &lt;code&gt;!&lt;/code&gt; 문자만 앞에 붙여주면 된다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;![마크다운 로고](https://raw.github.com/dcurtis/markdown-mark/master/png/208x128.png)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;&amp;lt;img src=&amp;quot;https://raw.github.com/dcurtis/markdown-mark/master/png/208x128.png&amp;quot; alt=&amp;quot;마크다운 로고&amp;quot;&amp;gt;&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;img src=&quot;https://raw.github.com/dcurtis/markdown-mark/master/png/208x128.png&quot; alt=&quot;마크다운 로고&quot;&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;참고로 이 로고는 &lt;a href=&quot;http://dcurt.is/the-markdown-mark&quot;&gt;Dustin Curtis&lt;/a&gt;에 의해 만들어진 마크다운 로고이다.&lt;/p&gt;
+&lt;h2 id=&quot;-code-&quot;&gt;코드(Code)&lt;/h2&gt;
+&lt;p&gt;코드 블럭을 삽입하기 위해서는 앞에 &lt;code&gt;공백 4개&lt;/code&gt; 혹은 &lt;code&gt;탭 1개&lt;/code&gt;를 붙인다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;    &amp;lt;blockquote&amp;gt;
+      &amp;lt;p&amp;gt;코드 예제&amp;lt;/p&amp;gt;
+    &amp;lt;/blockquote&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;변환하면 다음과 같다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;pre&amp;gt;&amp;lt;code&amp;gt;
+  &amp;lt;blockquote&amp;gt;
+    &amp;lt;p&amp;gt;코드 예제&amp;lt;/p&amp;gt;
+  &amp;lt;/blockquote&amp;gt;
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;blockquote&amp;gt;
+  &amp;lt;p&amp;gt;코드 예제&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;hr&gt;
+&lt;p&gt;문장 내에서도 &lt;code&gt;` &lt;/code&gt; 문자를 이용해 코드 삽입이 가능하다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;문장 내에서도 `코드` 삽입이 가능하다.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;p&amp;gt;문장 내에서도 &amp;lt;code&amp;gt;코드&amp;lt;/code&amp;gt; 삽입이 가능하다.&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;p&gt;문장 내에서도 &lt;code&gt;코드&lt;/code&gt; 삽입이 가능하다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;마크다운 변환기에 따라서 &lt;em&gt;펜스 코드블럭&lt;/em&gt;이 사용 가능한 경우도 있다. 펜스 코드블럭은 &lt;code&gt;```&lt;/code&gt; 혹은 &lt;code&gt;~~~&lt;/code&gt; 문자열로 코드 블럭을 감싸는 방법이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;```
+var test = &amp;#39;test&amp;#39;;
+console.log(&amp;#39;test:&amp;#39;, test);
+```
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-html&quot;&gt;&amp;lt;pre&amp;gt;&amp;lt;code&amp;gt;
+var test = &amp;#39;test&amp;#39;;
+console.log(&amp;#39;test:&amp;#39;, test);
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-javascript&quot;&gt;var test = &amp;#39;test&amp;#39;;
+console.log(&amp;#39;test:&amp;#39;, test);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;h2 id=&quot;-backslash-escapes-&quot;&gt;이스케이프(Backslash Escapes)&lt;/h2&gt;
+&lt;p&gt;마크다운으로 글을 작성하다 보면 &lt;code&gt;*&lt;/code&gt; 문자나 &lt;code&gt;_&lt;/code&gt; 문자 등을 사용하고 싶은 경우가 있다. 그럴 때는 &lt;code&gt;\&lt;/code&gt; 문자로 회피할 수 있다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;강조는 \* 문자 혹은 \_ 문자를 사용한다.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;결과 화면은 다음과 같다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;강조는 * 문자 혹은 _ 문자를 사용한다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;혹 코드 내부에 &lt;code&gt;` &lt;/code&gt; 문자를 사용하고 싶으면 &lt;code&gt;` &lt;/code&gt; 대신 &lt;code&gt;``&lt;/code&gt; 문자열로 감싸야 한다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;lang-md&quot;&gt;때론 ``코드 내부에 ` 문자``를 사용하기도 한다.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;결과 화면은...&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;때론 &lt;code&gt;코드 내부에 ` 문자&lt;/code&gt;를 사용하기도 한다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&quot;-&quot;&gt;마치며&lt;/h1&gt;
+&lt;p&gt;간단하지 않은가? 이 정도면 마크다운에 대하여 대부분 살펴보았다. 하지만 마크다운은 아직 진화 중이다. 관심을 가지고 꾸준히 지켜보면 더욱 좋을 것 같다.&lt;/p&gt;
+&lt;/div&gt;&lt;div class=&quot;disqus&quot;&gt;&lt;div id=&quot;disqus_thread&quot;&gt;&lt;/div&gt;&lt;script&gt;var disqus_shortname = 'danielku';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();&lt;/script&gt;&lt;noscript&gt;Please enable JavaScript to view the &lt;a href=&quot;https://disqus.com/?ref_noscript&quot; rel=&quot;nofollow&quot;&gt;comments powered by Disqus.&lt;/a&gt;
+&lt;/noscript&gt;&lt;/div&gt;&lt;div class=&quot;navigation&quot;&gt;&lt;div class=&quot;next&quot;&gt;&lt;a href=&quot;/posts/2015-07-04-introducing-bagle/&quot;&gt;&lt;i class=&quot;fa fa-lg fa-long-arrow-left&quot;&gt;&lt;/i&gt;&lt;span&gt;베이글 서비스를 소개합니다.&lt;/span&gt;&lt;/a&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;&lt;/section&gt;&lt;footer&gt;&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;https://github.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-github&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;github&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;http://www.linkedin.com/in/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-linkedin&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;linkedin&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://twitter.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-twitter&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;twitter&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;https://www.facebook.com/kjunine&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-facebook&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;facebook&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;mailto:d@nielku.com&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-inbox&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;email&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;/atom.xml&quot; target=&quot;_blank&quot;&gt;&lt;i class=&quot;fa fa-rss&quot;&gt;&lt;/i&gt;&lt;span class=&quot;hidden&quot;&gt;feed&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;div class=&quot;copyright&quot;&gt;© Daniel Ku 2015&lt;/div&gt;&lt;div class=&quot;endnote&quot;&gt;Made with &lt;a href=&quot;http://docpad.org&quot; target=&quot;_blank&quot;&gt;DocPad&lt;/a&gt;,
+hosted on &lt;a href=&quot;https://github.com&quot; target=&quot;_blank&quot;&gt;GitHub&lt;/a&gt;.
+&lt;/div&gt;&lt;/footer&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/jquery/dist/jquery.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lodash/lodash.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/highlightjs/highlight.pack.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/dependencies/lightbox2/dist/js/lightbox.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/scripts/script.js&quot;&gt;&lt;/script&gt;&lt;script&gt;(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-64883212-1', 'auto');
+ga('send', 'pageview');&lt;/script&gt;&lt;script&gt;var disqus_shortname = 'danielku';
+(function () {
+  var s = document.createElement('script'); s.async = true;
+  s.type = 'text/javascript';
+  s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+  (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+}());&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;</content>
+      </entry>
+    
+  
+</feed>

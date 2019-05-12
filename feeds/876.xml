@@ -1,0 +1,909 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+        <title>jwChung blog</title>
+        <description>jwChung blog - Jin-Wook Chung</description>
+        <link>http://jwChung.github.io</link>
+        <link>http://jwChung.github.io</link>
+        <lastBuildDate>2017-11-20T02:42:37+00:00</lastBuildDate>
+        <pubDate>2017-11-20T02:42:37+00:00</pubDate>
+        <ttl>1800</ttl>
+
+
+        <item>
+                <title>DI는 IoC를 사용하지 않아도 된다</title>
+                <description>
+&lt;p&gt;Dependency Injection(DI)을 얘기할 때 빠지지 않는 글이 있다. &lt;a href=&quot;https://martinfowler.com/articles/injection.html&quot;&gt;Martin Folwer의 Inversion of Control Containers and the Dependency Injection pattern이다.&lt;/a&gt; 이 글에서 DI란 용어가 생겨나게된 배경을 볼 수 있다. 관련한 내용을 인용하면 다음과 같다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;When these containers talk about how they are so useful because they implement “Inversion of Control” I end up very puzzled. Inversion of control is a common characteristic of frameworks, so saying that these lightweight containers are special because they use inversion of control is like saying my car is special because it has wheels.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;As a result I think we need a more specific name for this pattern. Inversion of Control is too generic a term, and thus people find it confusing. As a result with a lot of discussion with various IoC advocates we settled on the name Dependency Injection.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;의존성 조립 임무를 담당하는 컨테이너는 Inversion of Control(IoC) 사용이 당연한 것으로  얘기된다. 자동차가 바퀴를 가져서 특별하다고 하면 어색한 것처럼 말이다. 그래서 좀 더 특별한 이름이 필요해, 많은 사람과 토론한 끝에 DI란 용어를 정했다고 한다.&lt;/p&gt;
+
+&lt;p&gt;나는 DI가 IoC 사용을 포함한다는 것에 강한 반감을 가지고 있다. IoC가 없는 DI도 큰 장점을 가지기 때문이다. 이 주장에 대한 근거를 말하기 전에, 먼저 DI와 IoC가 무엇인지 이해할 필요가 있다. 이 둘은 많이 혼돈되는 주제다. 좀 더 명확한 개념을 잡기 위해 Dependency Inversion Principle(DIP)까지 함께 얘기해보도록 하자.&lt;/p&gt;
+
+&lt;!-- break --&gt;
+
+&lt;h3 id=&quot;dependency-injection&quot;&gt;Dependency Injection&lt;/h3&gt;
+
+&lt;p&gt;아래 코드는 피자가게에서 피자를 팔고 있는 시나리오를 표현하고 있다. 피자가게 예제는 단순해서 실제 프로젝트에서 사용되는 코드와 동 떨어져 있지만, 개념을 집중해서 설명하는 데는 효과적이라 생각했다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt; 인스턴스는 정해진 개수의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt; 인스턴스를 직접 가지고 있다. 만약 3개를 초과하는 피자를 팔고 싶다면 &lt;a href=&quot;https://en.wikipedia.org/wiki/Open/closed_principle&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt; 클래스를 수정해야 한다. OCP를 위반하게 된다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// C# 코드로 작성되었다. &quot;...&quot; 는 코드가 생략되었다는 의미다.&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PizzaStore&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;readonly&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pizzas&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; 
+            &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Pizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Pizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Pizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Sell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// pizzas 필드를 사용해 피자를 판매한다.&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;OCP 위반은 &lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt; 클래스가 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt; 배열을 직접 참조하기 때문에 발생한다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt; 배열을 인수(argument)로 취하면 문제가 해결된다. 아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt; 인스턴스를 생성할 때 필요한 만큼 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt; 배열을 넘겨주면 되는 것이다. &lt;strong&gt;인수를 취하는 것이 DI의 개념의 대부분이다&lt;/strong&gt;고 말해도 과언이 아니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PizzaStore&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;readonly&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pizzas&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;PizzaStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Pizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pizzas&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pizzas&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pizzas&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Sell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// pizzas 필드를 사용해 피자를 판매한다.&lt;/span&gt;
+
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=ZasXwtTRkio&quot;&gt;Rúnar Bjarnason는 한 세미나에서 다음과 같이 DI는 인수를 취하는 것을 허세적으로 표현한 것에 지나지 않는다고 했다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Dependency Injection is really just a pretentious way to say ‘taking an argument’.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.amazon.com/Dependency-Injection-NET-Mark-Seemann/dp/1935182501&quot;&gt;DI 주제로 500 페이지 넘게 책을 쓴 Mark Seemann&lt;/a&gt;은 적어도 이 표현에 반대할 거라 생각했지만, &lt;a href=&quot;http://blog.ploeh.dk/2017/01/27/dependency-injection-is-passing-an-argument/&quot;&gt;오히려 그는  Rúnar Bjarnason 표현이 틀렸다기보다 추가될 내용이 있다고 말했다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Mark Seemann의 추가 내용을 설명하기 위해 아래 &lt;code class=&quot;highlighter-rouge&quot;&gt;IPizzaStore&lt;/code&gt; 인터페이스를 도입하자. 위에서 언급된 &lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt; 클래스가 이 인터페이스를 구현했다고 가정해보자. &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt; 배열이 인수로 넘겨지지만, &lt;code class=&quot;highlighter-rouge&quot;&gt;IPizzaStore&lt;/code&gt; 인터페이스(추상화)는 전혀 그 정보를 담고 있지 않다. 그는 이 점을 강조했다. &lt;strong&gt;추상화를 해치지 않고 의존성을 인수로 넘겨주는 방법이 DI&lt;/strong&gt;라고 말이다. 이것이 내가 말하고 싶은 DI 개념의 전부이다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;IPizzaStore&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Sell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;dedendency-inversion-principle&quot;&gt;Dedendency Inversion Principle&lt;/h3&gt;
+
+&lt;p&gt;피자가게에서는 대게 한 종류의 피자가 아니라, 여러 종류의 피자를 팔고 있다. 불행히도 위 코드로는 이 시나리오 구현이 불가능하다. 문제는 &lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt;가 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt; 타입에 의존하고 있기 때문이다. 아래 그림에서 보듯이, 더 중요한 &lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt; 클래스가 덜 중요한 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt; 클래스에 의존한 것이다. DIP를 위반하고 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/DIP-violation.png&quot; alt=&quot;DIP&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;덜 중요한 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt; 클래스가 더 중요한 &lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt;에 의존하게 만들어야 한다. 아래 그림과 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;IPizza&lt;/code&gt; 인터페이스(추상화)를 도입해 DIP 문제를 해결해보자. 위 그림에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt; 클래스가 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt; 클래스를 의존(참조, 실선)하는 것에서, &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt; 클래스가 &lt;code class=&quot;highlighter-rouge&quot;&gt;IPizza&lt;/code&gt; 인터페이스에 의존(인터페이스 구현, 점선)하게 만들자. &lt;strong&gt;화살표 방향이 뒤집히는 것&lt;/strong&gt;(역전)을 확인할 수 있다. DIP 원칙을 지켜 이제는 다양한 종류의 피자를 피자가게의 생성자로 넘겨줄 수 있게 되었다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/DIP-resolved.png&quot; alt=&quot;DIP&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;DIP 원칙을 나타내는 아래 두 문장과 함께 DIP를 한번 정리하고 넘어가는 것이 좋겠다. 더 중요한 모듈이 덜 중요한 모듈에 의존하면 안된다. 이 관계를 뒤집기 위해 추상화가 필요하다. 아울러 추상화가 실체에 의존해서는 안된다. 추상화 타입의 멤버필드, 메소드 반환 값 또는 인자(parameter)가 구체타입으로 표현되어서는 안된다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;A. High-level modules should not depend on low-level modules. Both should depend on abstractions.&lt;br /&gt;
+B. Abstractions should not depend on details. Details should depend on abstractions.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;DI는 으레 DIP를 사용한다고 생각한다. 그러나 이 둘은 별개다. DI를 사용하면서 DIP가 필요없는 경우도 많다. 예를들어 아래 &lt;code class=&quot;highlighter-rouge&quot;&gt;CachedUserStore&lt;/code&gt; 클래스를 보자. 사용자를 &lt;code class=&quot;highlighter-rouge&quot;&gt;userId&lt;/code&gt;를 통해 매번 조회하는 것이 아니라 일정 기간(&lt;code class=&quot;highlighter-rouge&quot;&gt;duration&lt;/code&gt;) 동안 캐쉬하는 기능을 제공한다. &lt;code class=&quot;highlighter-rouge&quot;&gt;IUserStore&lt;/code&gt;의 &lt;a href=&quot;http://www.dofactory.com/net/decorator-design-pattern&quot;&gt;Decorator&lt;/a&gt; 역할을 하는 것이다. 이때 &lt;code class=&quot;highlighter-rouge&quot;&gt;duration&lt;/code&gt; 값이 DI를 통해 주입되지만, DIP가 필요한 것은 아니다. DI는 DIP 사용이 필수가 아니란 것을 보여준다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;IUserStore&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;User&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;userId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CachedUserStore&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IUserStore&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;CachedUserStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IUserStore&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;innerStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;duration&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;User&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;userId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;inversion-of-control&quot;&gt;Inversion of Control&lt;/h3&gt;
+
+&lt;p&gt;IoC 개념은 프레임워크와 라이브라리 사용 차이에서 살펴볼 수 있다. 라이브러리를 사용하면 필요한 구성요소를 직접 가져와서 쓰면된다. 반면 프레임워크는 규칙에 따라 구성요소를 등록하면, 프레임워크에서 이 구성요소를 가져다 쓰게 된다. 이 관계에서 제어가 역전되었다고 표현한다. 같은 맥락에서 &lt;a href=&quot;http://www.dofactory.com/net/factory-method-design-pattern&quot;&gt;팩토리메소드&lt;/a&gt;와 &lt;a href=&quot;http://www.dofactory.com/net/template-method-design-pattern&quot;&gt;템플릿메소드&lt;/a&gt; 패턴 역시 IoC를 설명하기에 좋은 예가 된다.&lt;/p&gt;
+
+&lt;p&gt;IoC를 좀 더 외우기 쉽게 Hollywood Principle(헐리우드 원칙)이라고 한다. “내가 전에도 얘기했잖아, 나한테 먼저 연락하지마, 필요하면 내가 연락할께”라고 말이다.&lt;/p&gt;
+
+&lt;p&gt;피자가게 문제로 돌아가보자. DI와 DIP를 사용하여 피자가게에서는 아래 코드와 같이 원하는 종류의 피자를 필요한 개수만큼 만들어 팔 수 있게 되었다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pizzaStore&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;PizzaStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IPizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;CheezePizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;CheezePizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ShrimpPizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;BulgogiPizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;여기서 피자의 종류가 아주 많다면 어떻게 될까? 손으로 일일이 많은 종류의 피자를 나열해서 생성하는 것이 부담스러울 정도로 말이다. 이 번거로운 작업을 프레임워크가 해주면 좋지 않을까? 고맙게도 IoC 컨테이너가 이 역할을 해준다. 아래 코드에서는 특정 모듈(어셈블리)에 속하는 모든 &lt;code class=&quot;highlighter-rouge&quot;&gt;IPizza&lt;/code&gt; 인터페이스 구현 타입을 IoC 컨테이너로 등록하는 것을 보여 준다. 특정 타입의 피자 클래스 생성자는 사용자에 의해 직접호출되는 것이 아니라, IoC 컨테이너에 의해 호출된다. 인스턴스 생성방향이 역전되어, 헐리우드 원칙이 적용된 것이다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pizzaTypes&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Assembly&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GetEntryAssembly&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GetExportedTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;typeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IPizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IsAssignableFrom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;builder&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;IoCContainerBuilder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;buildr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;RegisterTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pizzaTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;IoCContainer&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;builder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Build&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;IPizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;allKindsOfPizzas&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Resolve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IPizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;]&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+
+    &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pizzaStore&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;PizzaStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;allKindsOfPizzas&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;pure-di&quot;&gt;Pure DI&lt;/h3&gt;
+
+&lt;p&gt;DI와 DIP가 별개이듯, IoC도 그렇다. DI를 사용한다고 IoC 컨테이너가 무조건 필요한 것이 아니다. 얼마든지 피자가게 생성자 인수에 피자 인스턴스를 넘겨줄 수 있다. 이것이 DI 개념에 반하는 것이 아니다.&lt;/p&gt;
+
+&lt;p&gt;Mark Seemann은 IoC 컨테이너를 사용하지 않는 DI에 대해 Pure DI라고 했다. 애초에 그는 &lt;a href=&quot;https://www.amazon.com/Dependency-Injection-NET-Mark-Seemann/dp/1935182501&quot;&gt;Dependency Injection in .NET라는 그의 책&lt;/a&gt;에서 이 용어 대신 Poor Man’s DI라는 용어를 사용했다. &lt;a href=&quot;http://blog.ploeh.dk/2014/06/10/pure-di/&quot;&gt;하지만 Poor Man이라는 뜻에서 오는 부정적인 의미 때문에 IoC 컨테이가 없는 DI의 강점이 퇴색되는 것이 안타까웠던 모양이다.&lt;/a&gt; 기존에 책에서 사용하고 있는 용어를 바꾸면 혼란이 있음에도 불구하고, 그는 Poor Man’s DI 대신 Pure DI라 불러주길 원한다.&lt;/p&gt;
+
+&lt;p&gt;Pure DI의 강점이 뭐길래 용어를 바꾸는 모험을 단행한 것일까? &lt;a href=&quot;http://blog.ploeh.dk/2012/11/06/WhentouseaDIContainer/&quot;&gt;When to use a DI Container라는 글에서 그의 생각을 엿볼 수 있다.&lt;/a&gt; IoC 컨테이너를 사용하면 의존성 등록 비용이 적다. 일일이 손으로 하지 않아도 되니 말이다. 하지만 IoC 컨테이너를 배워고 익혀야 한다. 무엇보다 의존성이 잘못 구성되었을 경우, 컴파일 애러 대신 런타임 애러 발생이 큰 단점으로 지적된다.(Weakly typed) 피자 생성자를 IoC 컨테이너에 등록하지 않아도 컴파일 시는 문제가 되지 않는 것처럼 말이다. Weakly typed 문제는 Pure DI에서는 발생되지 않는다. &lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt; 생성자에 인수를 나열하지 않고 인스턴스를 생성할 수 있는가? 당연히 컴파일 애러다. 대신 Pure DI는 의존성 등록 비용이 크다는 단점이 있다.&lt;/p&gt;
+
+&lt;p&gt;IoC 컨테이너와 Pure DI 어느 것을 사용해야 할까라는 의문이 생긴다. 여기에 대한 답을 찾기 전에 &lt;strong&gt;DI는 IoC가 필수가 아니란 점을 강조하고 싶다.&lt;/strong&gt; Pure DI는 Weakly typed 문제를 해결해주는 훌륭한 도구이다. 자칫 DI와 IoC 개념을 잘못 이해해서, DI를 무조건 컨테이너와 같이 사용하는 것은 큰 문제다. 이 글을 쓴 목적이 사실 여기에 있다. &lt;strong&gt;의존성 등록비용을 줄인다는 이유로 IoC 컨테이너 학습비용과 Weakly typed 비용을 고려하지 않는다면 곤란하다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;IoC 컨테이너와 Pure DI 둘 중 어느 것을 사용할까라는 질문에 난 명확한 답을 가지고 있지 않다. &lt;a href=&quot;https://www.facebook.com/jinwook.chung.167/posts/1776835702551864&quot;&gt;다만 경험에 비춰 본다면, 생각했던 것보다 Weakly typed 비용이 의존성 등록비용보다 크다는 것이다.&lt;/a&gt; 그래서 나는 다음과 같은 가이드라인을 제시하고 싶다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;의존성 등록 비용이 Weakly typed 비용보다 크다는 확신이 있을 때까지는 Pure DI를 사용하자.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;상당량 규모의 의존성 등록도 Pure DI로 한다는 것을 보여주는 코드가 있다. &lt;a href=&quot;https://github.com/AutoFixture/AutoFixture/blob/master/Src/AutoFixture/Fixture.cs#L63-L148&quot;&gt;AutoFixture의 Fixture 클래스 생성자인데, 재미삼아 한번 참고해보도록 하자.&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;inversion-of-control-containers-and-the-dependency-injection-pattern&quot;&gt;Inversion of Control Containers and the Dependency Injection pattern&lt;/h3&gt;
+
+&lt;p&gt;이 글 서두에서 Martin Folwer의 DI가 IoC 사용을 포함한다는 표현에 대해 난 반감을 가진다고 했다. Pure DI에 대한 장점을 외면한 표현이라 생각하기 때문이다. 아래 벤다이어그램에서, Martin Folwer 표현은 왼쪽 DI영역이 오른쪽 IoC영역의 부분집합으로 표현되는 것이다. 그러면 그림에서 표현되고 있는 Pure DI영역을 만날 수 없게 된다. 나는 DI가 IoC를 사용한다면 두 영역의 교집합으로 표현되는 것이 맞다고 생각한다. 이를 IoC 컨테이너 또는 DI 컨테이너라 말할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/DI-vs-IoC.png&quot; alt=&quot;DI-vs-IoC&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;나는 Service Locator(SL)를 안티패턴이라 생각한다. 아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;PizzaStore&lt;/code&gt;가 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pizza&lt;/code&gt;에 의존하고 있다는 정보를 드러내지 않고 있기 때문이다. 함축적인 것보다 명확한 것이 좋다. (&lt;a href=&quot;https://www.python.org/dev/peps/pep-0020/&quot;&gt;Explicit is better than implicit - The Zen of Python&lt;/a&gt;)&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PizzaStore&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;readonly&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pizzas&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;PizzaStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pizzas&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ServiceLocator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Resolve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Pizza&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;]&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;p&quot;&gt;....&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;SL을 따로 언급하고 싶지 않지만, 이 부분에서는 재미난 사실이 있다. SL을 위 벤다이어그램으로 나타낸다면 IoC 영역의 부분집합으로 그려야 한다는 것이다. SL은 IoC를 사용한 컨테이너가 필수적이란 얘기다. 따라서, &lt;strong&gt;SL을 IoC의 특정한 형태라 말하는 것은 참이지만, DI를 그렇게 말하는 것은 거짓이다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;summary&quot;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;DI는 의존성을 어떻게 가질 것인가에 대한 문제다. 직접 의존도 가능하고, 의존성을 SL로 위치시킬 수도 있다. 의존성을 인수로 취하는 것이 DI의 특징이다. 이때 DI는 추상화를 해치지 않고 의존성을 주입할 수 있는 수단을 제공한다.&lt;/p&gt;
+
+&lt;p&gt;의존성을 참조하는 의존자가 만약 의존성보다 중요한 모듈(클래스)이라면, 이 둘은 추상화에 의존할 필요가 있다. 자동차가 타이어를 가지는데 한 종류의 타이어만 사용한다는 것은 상상할 수 없는 일이다. 타이어 크기를 추상화해 크기만 맞으면 어떤 타이어도 사용할 수 있도록 해야 된다. 이것이 DIP다. DIP는 실체에 의존할 것이가, 추상화에 의존할 것이가의 문제다.&lt;/p&gt;
+
+&lt;p&gt;IoC는 프로그래밍 전반에서 흔히 접할 수 있는 기법이다. DI와 연관 지어 생각해본다면, 특정 클래스의 생성자를 직접 호출해 인스턴스를 생성하는 방법이 있다. 생성자를 일일이 호출하는 것이 번거롭다면, 이 작업을 프레임워크에 맡길 수 있을 것이다. IoC는 누가 작업을 수행하냐에 대한 얘기다.&lt;/p&gt;
+
+&lt;p&gt;DI는 IoC사용을 필수로 요구하지 않는다. 의존성 등록비용을 줄인다는 이유로 IoC 컨테이너 학습비용과 Weakly typed 비용을 강요해서는 안된다. Weakly typed 비용은 생각보다 클 수 있다. IoC 컨테이너에 대한 확신이 설 때까지 최대한 사용을 미루고, Pure DI에 귀를 기울일 필요가 있다. Pure DI를 사용하다 생기는 불편함이 IoC 컨테이너 사용에 대한 확신을 주며, 안내서 역할을 해줄 것이다.&lt;/p&gt;
+</description>
+                <link>http://jwChung.github.io/DI%EB%8A%94-IoC%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%98%EC%A7%80-%EC%95%8A%EC%95%84%EB%8F%84-%EB%90%9C%EB%8B%A4</link>
+                <guid>http://jwChung.github.io/DI는-IoC를-사용하지-않아도-된다</guid>
+                <pubDate>2017-11-17T00:00:00+00:00</pubDate>
+        </item>
+
+        <item>
+                <title>Sometimes tell, sometimes ask</title>
+                <description>
+&lt;p&gt;필요한 데이터를 묻기보다, 하고 싶은 걸 말해라는 Tell, Don’t Ask(이하 TDA)라는 원칙이 있다. 필요한 데이터 요청없이 행위를 실행하려면, 행위와 데이터가 함께 있어야 한다. Oriented Object Programming(OOP)은 데이터(필드)와 관련 행위(메소드)를 클래스로 한데 묶는 것이 특징인데, TDA 원칙은 이를 잘 살려주는 도구이다.&lt;/p&gt;
+
+&lt;p&gt;아래 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserAccount&lt;/code&gt; 클래스는 &lt;code class=&quot;highlighter-rouge&quot;&gt;email&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;password&lt;/code&gt; 데이터로 표현되며, 데이터베이스에 사용자 계정을 저장하기 위해 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save&lt;/code&gt;라는 행위를 가지고 있다. 데이터를 표현하는 필드, 행위를 의미하는 메소드가 동일 클래스에 위치해서 필요한 데이터를 따로 요청할 필요가 없다. TDA 원칙을 따른 것이다.&lt;/p&gt;
+
+&lt;p&gt;TDA 원칙이 OOP의 특징을 살려주는 도구이지만, 다른 시각에서 보면 문제가 있다.&lt;/p&gt;
+
+&lt;!-- break --&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// C#으로 작성된 코드이며, ...는 코드가 생략되었다는 뜻이다.&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;UserAcccount&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// 필드 초기화&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// 데이터베이스에 저장&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;openclosed-principleocp&quot;&gt;Open/Closed Principle(OCP)&lt;/h3&gt;
+
+&lt;p&gt;사용자 계정을 데이터베이스에 저장하는 대신, 파일로 저장하라는 수정 요청이 들어왔다. 이것을 구현하려면 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save&lt;/code&gt; 메소드 내부 코드를 수정해야만 한다. &lt;a href=&quot;http://blog.ploeh.dk/2012/01/03/SOLIDisAppend-only/&quot;&gt;확장에는 열려있어야 하고, 변경에는 닫혀 있어야 한다는 OCP를 위배한 것이다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;그럼 아래 코드를 보자. &lt;code class=&quot;highlighter-rouge&quot;&gt;DbStore&lt;/code&gt; 클래스가 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save&lt;/code&gt; 메소드를 가지고 있고, 데이터베이스에 저장할 데이터를 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserAcccount&lt;/code&gt; 인스턴스에 묻고 있다. 하고 싶은 걸 말하지 않고, 필요한 데이터를 묻는 경우다. 즉 TDA 원칙을 따르지 않는다. 그러나, 사용자 계정을 파일로 저장할 새로운 &lt;code class=&quot;highlighter-rouge&quot;&gt;FileStore&lt;/code&gt; 클래스를 작성할 수 있게 한다. 코드를 수정하거나 삭제하는 일 없이, 파일로 저장하는 새로운 기능을 추가할 수 있게 된 것이다. OCP를 위배하지 않은 덕이다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;UserAcccount&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// 속성 초기화&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Password&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DbStore&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UserAccount&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;account&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;acccount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// TDA 위배&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;account&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;// 데이터베이스에 저장&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;single-responsibility-principlesrp&quot;&gt;Single Responsibility Principle(SRP)&lt;/h3&gt;
+
+&lt;p&gt;이제 TDA 원칙를 지키면서, 사용자 이메일 주소로 메일을 전송하는 기능을 추가해보자. 이를 구현하면 아래 코드와 같다. 추가된 &lt;code class=&quot;highlighter-rouge&quot;&gt;SendEmail&lt;/code&gt; 메소드는 앞서 언급한 OCP 위배 문제를 가진다. 또한 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserAcccount&lt;/code&gt; 클래스는 계정 저장과 메일 전송이라는 두 가지 책임을 가지게 된다. 두 책임 중 하나만 변경되더라도, 코드 수정이 필요하다. 클래스를 수정하는 이유는 단 하나여야 한다는 SRP를 위배한 것이다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;UserAcccount&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SendEmail&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;SRP를 지키는 방법은 간단하다. 위 OCP 경우에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;FileStore&lt;/code&gt; 클래스를 새로 만든 것처럼, 메일 전송을 위한 새 &lt;code class=&quot;highlighter-rouge&quot;&gt;EmailService&lt;/code&gt; 클래스를 만들면 된다. 이 클래스는 메일 전송을 위해 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserAcccount&lt;/code&gt; 인스턴스에 사용자 이메일 데이터를 묻게될 것이다. TDA 원칙은 포기했지만, SRP는 지키게 되었다.&lt;/p&gt;
+
+&lt;h3 id=&quot;why-ocp-and-srp-matter&quot;&gt;Why OCP and SRP matter?&lt;/h3&gt;
+
+&lt;p&gt;특정 라이브러리를 사용하면서, 필요한 메소드가 없는데 해당 클래스가 관련된 데이터를 노출하지 않아 당혹스러운 경험을 한적이 있는가? 우리는 메소드가 추가되길 기다리거나, Private 접근자로 숨겨진 데이터를 리플렉션(reflection)으로 읽어야만 했다. TDA 원칙을 지키는게 능사가 아닌 것이다. 데이터를 공개하여 행위를 확장할 수 있도록 OCP를 강조하는 것이 필요하다. &lt;a href=&quot;https://martinfowler.com/bliki/PublishedInterface.html&quot;&gt;컨트롤 가능한 코드 영역(non-published interfaces)&lt;/a&gt;에서 OCP를 지키지 않아 발생되는 비용은 상대적으로 크지 않다. 반면 많은 사람들이 사용하는 라이브러리를 배포한 경우(published interfaces)는 비용이 많이 든다. 사용자 계정을 파일로 저장하기 위해 &lt;code class=&quot;highlighter-rouge&quot;&gt;Save&lt;/code&gt; 메소드를 수정하거나 메일을 전송하기 위해 &lt;code class=&quot;highlighter-rouge&quot;&gt;SendEmail&lt;/code&gt; 메소드를 추가했다면, 빌드 후 새로운 버전의 라이브러리를 배포해야 한다. Breaking change라도 생긴다면 비용은 더욱 증가하게 된다.&lt;/p&gt;
+
+&lt;p&gt;TDA 원칙을 따르다면 행위는 관련 데이터가 속한 클래스에 추가되어야 한다. 행위가 하나, 둘씩 추가되면 클래가 비대해지며 SRP를 위배할 가능성이 점차 높아간다. 특정 데이터에 관련된 모든 행위는 그 데이터가 속한 클래스에서 처리되길 희망한다. 그러나 그 클래스가 &lt;a href=&quot;https://en.wikipedia.org/wiki/God_object&quot;&gt;모든 행위를 가지는 God object가 되어선 곤란하다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;OCP와 SRP를 따를수록 클래스가 가지는 행위 수는 점점 작아지는 반면, 클래스 수는 점점 많아지는 경향이 있다. 많은 행위를 가지는 클래스를 사용하기 보다(coarse-grained), 많은 클래스에서 필요한 행위를 골라 쓰는 방향(small-grained)으로 간다. 클래스 수가 많으면 선택하는데 어려움이 있다는 의견이 있는데, 네임스페이스와 Nested 클래스가 좋은 해결 도구가 된다. 관련 있는 클래스끼리 묶은 후 의미 이름을 부여할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;coarse-grained와 small-grained 비교를 위해 재미있는 일화를 하나 소개할까 한다. 어느날 &lt;a href=&quot;http://blog.ploeh.dk/&quot;&gt;Mark Seemann&lt;/a&gt;의 세 살배기 아들이 Duplo 한 주먹을 가져와 그에게 용을 만들어 달라고 한다. 어린 아들 손에 들린 몇 안되는 블럭으로는, 아래 왼쪽 그림처럼 만드는 것이 그가 할 수 있는 최선이었다. 다행히 아들은 만족했다고 한다. 좀 더 작은 Lego 블럭이었다면, 같은 부피(1 duplo = 8 lego)로 그는 오른쪽 그림과 같은 용을 만들었을 것이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/duplo-lego-dragon.jpg&quot; alt=&quot;duplo-lego-dragon&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Mark Seemann이 위 그림의 credits을 가진다. &lt;a href=&quot;https://app.pluralsight.com/library/courses/encapsulation-solid/table-of-contents&quot;&gt;Encapsulation and SOLID라는 그의 온라인 강좌&lt;/a&gt;에서 오리지날 그림이 소개되었다. &lt;a href=&quot;https://www.linkedin.com/pulse/how-unit-bias-can-prevent-us-from-designing-better-piotopoulos&quot;&gt;Anastasios Piotopoulos가 오리지날 그림과 같은 위 그림을 제작했다.&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;블럭의 부피를 코드량으로 빗대어 보면, 그림 왼쪽이 coarse-grained 오른쪽이 small-grained이다. small-grained 접근은 동일한 부피를 사용함에도 불구하고, coarse-grained보다 더 정교한 표현이 가능하다. 필요한 행위만 선택적으로 사용한 까닭이다. 반면 coarse-grained 접근은 필요하지 않은 행위까지 덩어리로 사용해 정교한 표현이 어려운 것이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;TDA 원칙은 데이터와 관련 행위를 클래스로 묶는 OOP 특징을 잘 살려준다. 하지만 TDA 원칙을 따를수록, OCP와 SRP를 지키지 못한다. 마침내 God object를 만나게 될지도 모른다. TDA 원칙의 장점만 보지말자. 필요한 데이터를 묻기도 하고, 때로는 하고 싶은 걸 말하기도 해야한다. 이 두 갈림길에 서게 된다면 어느 길이 지름길인지 고민해야 한다.&lt;/p&gt;
+</description>
+                <link>http://jwChung.github.io/sometimes-tell-sometimes-ask</link>
+                <guid>http://jwChung.github.io/sometimes-tell-sometimes-ask</guid>
+                <pubDate>2017-10-27T00:00:00+00:00</pubDate>
+        </item>
+
+        <item>
+                <title>Testing, Oh my!</title>
+                <description>
+&lt;p&gt;&lt;em&gt;이 글에서 별도 설명없이 사용되는 테스트라는 용어는 코드로 수행되는 자동화테스트를 의미한다.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;예전에 회사 후배가 어떤 코드를 테스트하고 싶은데, 아직 경험과 스킬이 부족해서 힘들다란 말을 했다. 그 후배가 테스트하고자 하는 코드(System Under Test, 이하 SUT)는 테스트하기 어려운 IO 로직에 직접 의존하고 있어 테스트가 거의 불가능했다. 수동테스트 밖에 길이 없었던 것이었다.&lt;/p&gt;
+
+&lt;p&gt;테스트에 어려움을 느끼는 초심자의 큰 오해 중 하나는, 그 어려움이 테스트 스킬 부족 때문이라고 생각하는 것이다. 테스트 스킬이 중요하지 않은 것은 아니지만, 그보다 SUT가 얼마나 테스트하기 쉽게 디자인되었는지가 더 중요한 요소이다. 후배의 예처럼 IO 로직 같은 테스트하기 어려운 코드를 직접 참조해버리면 아무리 뛰어난 스킬이 있더라도 손과 눈으로 수동테스트하는 방법밖엔 없는 것이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;&lt;a href=&quot;https://www.facebook.com/jinwook.chung.167/posts/1890555361179897&quot;&gt;나는 TDD(Test-Driven Development)가 디자인 도구라 생각하지 않는다.&lt;/a&gt; 테스트가 디자인을 이끄는 것이 아니라 좋은 디자인이 테스트하기 쉬운 코드를 만든다고 생각한다. 여기서 다뤄지는 내용은 테스트를 먼저 작성하든(TDD), 테스트를 나중에 작성하든 디자인은 그것들보다 먼저 계획된다는 관점에서 기술되었다.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;그 후배에게 들려줬던 테스트 방법에 대한 내용을 글로 써봤다. 어떤 코드가 테스트하기 쉬운지 또는 어려운지(&lt;a href=&quot;/testable-code&quot;&gt;Testable Code&lt;/a&gt;), 테스트가 쉬운 코드는 어떻게 작성하는지(&lt;a href=&quot;/how-to-write-more-testable-code&quot;&gt;How to write more testable code&lt;/a&gt;), 테스트가 어려운 코드는 어떻게 다뤄야 하는지(&lt;a href=&quot;/test-humility&quot;&gt;Test Humility&lt;/a&gt;), 그리고 테스트하기 쉬운 코드와 어려운 코드가 만나게 되는 지점은 어떤 테스트 방법이 있는지(&lt;a href=&quot;/function-root-testing&quot;&gt;Function Root Testing&lt;/a&gt;)에 대한 내용들이다.&lt;/p&gt;
+
+&lt;!-- break --&gt;
+
+&lt;p&gt;글의 순서는 다음과 같다. 작성 편이를 위해 경어는 생략했다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;/testable-code&quot;&gt;Testable Code&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;/how-to-write-more-testable-code&quot;&gt;How to write more testable code&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;/test-humility&quot;&gt;Test Humility&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;/function-root-testing&quot;&gt;Function Root Testing&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+                <link>http://jwChung.github.io/testing-oh-my</link>
+                <guid>http://jwChung.github.io/testing-oh-my</guid>
+                <pubDate>2017-10-20T00:00:00+00:00</pubDate>
+        </item>
+
+        <item>
+                <title>Function Root Testing</title>
+                <description>
+&lt;p&gt;&lt;a href=&quot;/how-to-write-more-testable-code#function-root&quot;&gt;프로그램에서 각 기능 진입점 역할을 하는 함수 또는 메소드를 Function Root란 용어로 소개한 바 있다.&lt;/a&gt; Function Root는 대체로 외부세상과 소통하는 IO 작업 담고 있어 테스트하기 힘든 코드로 분류된다. 테스트 비용을 줄이기 위해 테스트 가능한 코드는 Function Root로 부터 분리된다. 따라서 Function Root는 테스트하기 쉬운코드와 그렇지 않은 코드가 만나는 장소를 제공하며, 이들을 어떻게 구성하지가 주된 임무가 된다. Function Root는 순수함수코드와 비순수함수코드 전체를 가로지르는 통합테스트로 검증할 수 있는데, 자동화테스트 비용이 높으면 이를 포기하고 수동테스트로 검증할 수도 있다. 이때 &lt;a href=&quot;/test-humility&quot;&gt;Function Root는 겸손해야 한다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;!-- break --&gt;
+
+&lt;h3 id=&quot;structure-inspection&quot;&gt;Structure Inspection&lt;/h3&gt;
+
+&lt;p&gt;Function Root 내 IO 작업을 Test Double로 고립(isolation)시킨다면 Function Root를 단위테스트(unit testing)로도 검증하는 것이 가능하다. 단위테스트는 다른 의존성으로 부터 고립된 최소 단위 API 테스트를 의미한다. 이때 고립이란, &lt;a href=&quot;http://jessitron.com/&quot;&gt;Jessica Kerr&lt;/a&gt;의 표현을 빌리자면, &lt;a href=&quot;http://blog.ploeh.dk/2015/05/07/functional-design-is-intrinsically-testable/&quot;&gt;함수 파라메타를 통해서만 외부세상과 소통할 때 그 함수는 고립되었다고 한다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;A function has the property of Isolation when the only information it has about the external world is passed into it via arguments.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;a href=&quot;/test-humility#humble-object&quot;&gt;이전 글에서 사용한 회원가입 예제&lt;/a&gt;를 Function Root로 나타내기 위해 Web API Endpoint로 바꿔보자. 단위테스트가 가능한 C# 코드로 작성해보면 다음과 같다. 좀 더 복잡한 시나리오를 위해 사용자 이메일을 확인하는 단계를 마지막에 추가했다.(아래 &lt;code class=&quot;highlighter-rouge&quot;&gt;EmailConfirmation.SendAsync&lt;/code&gt; 메소드 호출 참고) IO 작업 코드를 고립시키기 위해 의존성을 직접 사용하지 않고 생성자를 통해 넘겨받고 있는 것을 확인할 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AccountController&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ApiController&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;AccountController&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;IUserStore&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;userStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IEmailConfirmation&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;emailConfirmation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UserStore&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;userStore&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;??&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ArgumentNullException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;nameof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;userStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;EmailConfirmation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;emailConfirmation&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;??&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ArgumentNullException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;nameof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emailConfirmation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IUserStore&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UserStore&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IEmailConfirmation&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EmailConfirmation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HttpPost&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Task&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IHttpActionResult&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SignUpAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;emailObj&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;passwordObj&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UserStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;AddAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emailObj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;passwordObj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;EmailConfirmation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;SendAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emailObj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ArgumentException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exception&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BadRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exception&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;유효한 이메일과 비밀번호로 &lt;code class=&quot;highlighter-rouge&quot;&gt;SignUpAsync&lt;/code&gt; 메소드 테스트를 C# 코드로 작성하면 아래와 같다. &lt;code class=&quot;highlighter-rouge&quot;&gt;IUserStore&lt;/code&gt; 와 &lt;code class=&quot;highlighter-rouge&quot;&gt;IEmailConfirmation&lt;/code&gt; 은 각각 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserStoreSpy&lt;/code&gt; 와 &lt;code class=&quot;highlighter-rouge&quot;&gt;EmailConfirmationSpy&lt;/code&gt; 라는 Test Double로 대체되어 단위테스트를 가능하게 한다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;[Fact]&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Task&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SignUpAsyncWithValidEmailAndPassowordReturnsOkResult&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Fixture setup&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;userStoreSpy&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;UserStoreSpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;emailConfirmationSpy&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;EmailConfirmationSpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+
+    &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sut&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;AccountController&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;userStoreSpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;emailConfirmationSpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;jwchung@hotmail.com&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;P@assW0rd&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// Exercise System&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sut&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;SignUpAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// Verify outcome&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Assert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Equal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;userStoreSpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Assert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Equals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;userStoreSpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;Assert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Equal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;emailConfirmationSpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;UserStoreSpy&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IUserStore&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Password&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Password&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Task&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;AddAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Password&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Password&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Task&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FromResult&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;object&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 빈 Task 반환&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;EmailConfirmationSpy&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IEmailConfirmation&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+            
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Task&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SendAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Task&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FromResult&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;object&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 빈 Task 반환&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이같이 Function Root를 단위테스트로 접근하는 방식을 &lt;a href=&quot;http://blog.ploeh.dk/2013/04/04/structural-inspection/&quot;&gt;Mark Seemann은 Structure Inspection이라고 했다.&lt;/a&gt; Function Root를 이루는 각 단계가 테스트된 후 남은 일은 이들이 맞물려(composition) 전체가 잘 돌아가는지를 테스트하는 것이다. Structure Inspection은 복잡하게 구성된 시스템을 피드백이 빠른 단위테스트로 검증한다는 면에서 장점을 가진다. 하지만 다른 각도에서 생각해볼 문제가 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;reused-abstractions-principlerap&quot;&gt;Reused Abstractions Principle(RAP)&lt;/h3&gt;
+
+&lt;p&gt;추상화란 본디 공통점을 바탕으로 한다. 공통점이란 최소 두 가지 대상물이 존재해야 발견된다. 만약 단위테스트를 위한 고립 목적으로만 추상화가 사용되었다면 &lt;a href=&quot;http://www.codemanship.co.uk/parlezuml/blog/?postid=934&quot;&gt;이는 RAP 위배에 해당한다.&lt;/a&gt; RAP 관점에서 올바른 추상화란 구현체가 최소 2개 이상일 때를 말한다. 위 회원가입 구현은 RAP를 위반한 것인가? 그럴 수도 있고 아닐 수도 있다. 사용된 추상화 &lt;code class=&quot;highlighter-rouge&quot;&gt;IUserStore&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;IEmailConfirmation&lt;/code&gt;의 구현체가 얼마나 되는지 위 코드만으로 확인될 수 없기 때문이다. 그럼 RAP를 위배한 코드는 나쁜가? 사용되지 않는 추상화를 도입했다는 것은 분명 비용 부담이다. 그러나 Function Root의 구성(composition)을 Structure Inspection으로 검증할 수 있는 것은 장점이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;test-induced-design-damage&quot;&gt;Test-induced design damage&lt;/h3&gt;
+
+&lt;p&gt;David Heinemeier Hansson(DHH)이 쓴 &lt;a href=&quot;http://david.heinemeierhansson.com/2014/tdd-is-dead-long-live-testing.html&quot;&gt;TDD is dead&lt;/a&gt; 라는 유명한 글이 있다. 이 글에서 그는 TDD가 죽은 주된 이유로 테스트에서 유발된 디자인 손상을 꼽는다. 주제에서 조금 벗어난 얘기를 하자면, DHH는 TDD를 디자인 도구로 생각하는 모양이다. &lt;a href=&quot;https://www.facebook.com/jinwook.chung.167/posts/1890555361179897&quot;&gt;나는 개인적으로 TDD를 디자인 도구로 생각하지 않는다.&lt;/a&gt; 오히려 디자인이 좋을수록 TDD에 드는 비용이 절감되고, 잘못된 디자인은 TDD를 망친다고 생각한다.&lt;/p&gt;
+
+&lt;p&gt;다시 본론으로 돌아가 DHH 글 중 다음 내용을 살펴보자.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Test-first units leads to an overly complex web of intermediary objects and indirection in order to avoid doing anything that’s “slow”. Like hitting the database. Or file IO. Or going through the browser to test the whole system. It’s given birth to some truly horrendous monstrosities of architecture. A dense jungle of service objects, command patterns, and worse.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;테스트 우선개발 단위테스트는 느린 작업을 피하기 위해 지나치게 복잡한 중간 객체와 간접 참조를 낳게 된다. 그 예로 데이터베이스를 사용하는 작업, 파일 작업, 또는 전체시스템을 브라우져로 테스트하는 것을 들 수 있다. 아울러 테스트 우선개발 단위테스트로 인해 서비스 오브젝트, 커멘드 패턴 그리고 더 나쁜 것들이 모여 정글을 만드는데 이는 실로 끔직한 괴물과도 같은 아키텍처이다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;끔직한 괴물같은 아키텍처에 대해 그는 &lt;a href=&quot;http://david.heinemeierhansson.com/2014/test-induced-design-damage.html&quot;&gt;Test-induced design damage라는 글에서 Hexagonal design damage이라는 내용으로 좀 더 자세히 얘기한다.&lt;/a&gt; 단지 단위테스트의 빠른 실행을 위해 도입되는 복잡한 &lt;a href=&quot;http://blog.ploeh.dk/2013/12/03/layers-onions-ports-adapters-its-all-the-same/&quot;&gt;Hexagonal 디자인&lt;/a&gt;은 금지하고, 레일즈의 컨트롤러 같은 Function Root 검증은 단위테스트가 아니라 통합테스트가 더 적합하다라고 말이다.&lt;/p&gt;
+
+&lt;p&gt;DHH가 말하는 것 처럼 위 회원가입 코드에서 사용된 &lt;code class=&quot;highlighter-rouge&quot;&gt;IUserStore&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;IEmailConfirmation&lt;/code&gt; 추상화는 테스트에서 유발된 디자인 손상(Hexagonal design damage)으로 봐야할까? 단위테스트의 빠른 피드백을 위한 것도 추상화 존재의 이유가 되겠지만, 이들 추상화가 RAP를 준수하면서 의미있는 인터페이스로 디자인될 수 있다. 일례로 &lt;code class=&quot;highlighter-rouge&quot;&gt;IUserStore&lt;/code&gt; 추상화를 통해 우리는 다양한 데이터 저장소를 사용할 수 있다. 이것이 비지니스에 중요한 요구사항이라면 &lt;code class=&quot;highlighter-rouge&quot;&gt;IUserStore&lt;/code&gt;는 결코 디자인 손상이라 할 수 없는 것이다.&lt;/p&gt;
+
+&lt;p&gt;단위테스트의 빠른 피드백이 불필요하고 RAP를 위반한다면 아래코드 처럼 추상화를 사용할 필요없이 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserStore&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;EmailConfirmation&lt;/code&gt;에 직접 의존할 수 있다. 이 경우 &lt;code class=&quot;highlighter-rouge&quot;&gt;SignUpAsync&lt;/code&gt; 메소드는 DHH 말처럼 단위테스트가 아니라 통합테스트할 수 있다. 만약 통합테스트 비용이 많이 들거나 불가능하다면 이를 포기하고 수동테스트 하자. &lt;a href=&quot;/test-humility&quot;&gt;이때 Function Root는 겸손해야 한다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AccountController&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ApiController&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HttpPost&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Task&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IHttpActionResult&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SignUpAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;emailObj&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;passwordObj&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;UserStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;AddAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emailObj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;passwordObj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;EmailConfirmation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;SendAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emailObj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ArgumentException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exception&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;BadRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exception&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;summary&quot;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;Function Root는 테스트하기 쉬운 코드와 그렇지 않은 IO관련 코드가 구성(composition)되는 곳이다. 이것에 포함되는 IO관련 코드를 고립시키면, Structure Inspection을 통해 전체 코드가 잘 구성되어 돌아가는지 단위테스트로 검증이 가능하다. 고립의 수단으로 도입된 추상화는 빠른 실행을 위해서만 존재하기 보다 추상화 본래 목적에 충실해야 한다. 추상화의 구현체가 하나일 경우는 RAP 위배이며, 추상화 도입의 설득력이 약해진다. 다만 RAP 위배에서 오는 단점보다, 구성이 잘 되었는가 단위테스트하여 얻는 빠른 피드백 장점이 더 큰지는 따져봐야 한다. 이 경우 현재 고려되지 못한 구현체가 장래에 도입될 수 있다는 것은 추상화 도입의 긍정적 요소로 평가될 수 있다. 단위테스트의 빠른 피드백이 불필요하고 RAP를 위반한다면 추상화 없이 통합테스트하거나, 겸손한 Function Root 형태로 수동테스트할 수 있다.&lt;/p&gt;
+</description>
+                <link>http://jwChung.github.io/function-root-testing</link>
+                <guid>http://jwChung.github.io/function-root-testing</guid>
+                <pubDate>2017-10-17T00:00:00+00:00</pubDate>
+        </item>
+
+        <item>
+                <title>Test Humility</title>
+                <description>
+&lt;p&gt;&lt;em&gt;이 글에서 별도 설명없이 사용되는 테스트라는 용어는 코드로 수행되는 자동화테스트를 의미한다.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;/testable-code&quot;&gt;이전 글에서 테스트하기 쉬운코드가 무엇인지 알아보았다.&lt;/a&gt; IO 작업과 관련되지 않은 순수함수 형태가 테스트하기 쉬운 코드였다. 순수함수 코드는 입력 값이 같으면 항상 동일한 결과값을 리턴한다. 외부세상을 변경시키는 부수효과 또한 없다. 코드로 수행되는 자동화테스트 검증에 적합한 경우다. 반면 IO 작업과 관련된 비순수함수 테스트는 항상 고비용이 요구되는 것은 아니다. 테스트 비용을 줄일 수 있는 도구들이 속속 등장하고 있기 때문이다. &lt;a href=&quot;https://docs.microsoft.com/en-us/azure/storage/common/storage-use-emulator&quot;&gt;원격 저장소와 동일한 기능을 로컬 머신에서 실행하고 테스트할 수 있는 에뮬레이터&lt;/a&gt;, &lt;a href=&quot;https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-2016-express-localdb&quot;&gt;설정과 관리비용이 적은 로컬 데이터베이스&lt;/a&gt;, 그리고 &lt;a href=&quot;https://docs.microsoft.com/en-us/ef/core/providers/in-memory/&quot;&gt;메모리를 데이터베이스 저장소 활용하여 테스트할 수 있는 도구도 있다.&lt;/a&gt; 자동화테스트 검증 비용이 낮아짐으로 기존에 비용이 높아 자동화테스트 범주에 속하지 못했던 코드들이 점차 그 테두리 안으로 들어오고 있다.&lt;/p&gt;
+
+&lt;p&gt;테스트 용이성은 상대적인 것이기 때문에 한 편에서 느끼는 테스트 비용부담은 다른 편에선 그렇지 않게 느낄 수 있다. 예를들어 비밀번호 재설정을 위한 메일 발송 시나리오를 생각해보자. 이메일이 잘 발송되었는지 자동으로 테스트하려면 실제 메일서비스에 접속하여 메일이 잘 도착되었는지 코드를 통해 검증해야 한다. 이 검증에 대해 비용이 높다는 사람이 있는 반면, 자동화테스트에서 오는 회귀검증의 실이익이 더 크다고 생각하는 사람도 있다.&lt;/p&gt;
+
+&lt;!-- break --&gt;
+
+&lt;h3 id=&quot;humble-object&quot;&gt;Humble Object&lt;/h3&gt;
+
+&lt;p&gt;중요한 사실은 비용이 높은 경우이건 또는 테스트가 불가능한 경우이건, 우리는 자동화테스트를 이행할 수 없는 경우에 놓일 수 있다는 것이다. 내가 테스트 초심자였을 때 테스트하기 어려운 코드를 만나면, 어떻게 테스트 비용을 낮춰 자동화할 수 있을지만 고민했었다. 테스트하지 말아야 한다는 생각을 못했다. 그러던 중 만난 &lt;a href=&quot;https://www.amazon.com/xUnit-Test-Patterns-Refactoring-Code/dp/0131495054&quot;&gt;xUnit Patterns 책&lt;/a&gt;에선 &lt;a href=&quot;http://xunitpatterns.com/Humble%20Object.html&quot;&gt;다음과 같은 사실을 일깨워 주었다.&lt;/a&gt; 목마른 사막에서 만난 오아시스 같았다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;테스트가 어려우면 테스트하지마라. 단, 그 코드는 최대한 겸손(humility)해야 한다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;위 문장에서 테스트하지 말라는 뜻은 자동화테스트에 한정된다. 손과 눈으로 확인하는 수동테스트까지 하지말라는 뜻이 아니다. 겸손은 테스트할 수 없는 코드는 최대한 테스트가 필요없을 만큼 로직이 단순해야 한다는 뜻이다. 사용자 정보(이메일과 비밀번호)를 가지고 회원가입하는 아래 &lt;code class=&quot;highlighter-rouge&quot;&gt;SignUp&lt;/code&gt; 메소드를 살펴보자. C#으로 작성된 코드이며, &lt;code class=&quot;highlighter-rouge&quot;&gt;...&lt;/code&gt; 표시는 코드가 생략되었음을 의미한다. 여기서 사용자 정보 저장(&lt;code class=&quot;highlighter-rouge&quot;&gt;UserStore.AddAsync&lt;/code&gt;)이 테스트 비용이 높아 테스트할 수 없는 경우라 가정해보자. &lt;code class=&quot;highlighter-rouge&quot;&gt;UserStore.AddAsync&lt;/code&gt;를 테스트할 수 없기 때문에 &lt;code class=&quot;highlighter-rouge&quot;&gt;SignUp&lt;/code&gt;도 테스트하기 어렵다. 테스트하기 어려우면 테스트를 포기하고 대신 &lt;code class=&quot;highlighter-rouge&quot;&gt;SignUp&lt;/code&gt; 메소드를 겸손하게 만들어 보자.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Task&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SignUp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// 이메일이 유효한지 검사합니다.&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Contains&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ArgumentException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;유효한 이메일 형식이 아닙니다.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// 비밀번호가 유효한지 검사합니다.&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Length&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ArgumentException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;비밀번호는 최소 8자리 이상입니다.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UserStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;AddAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;passwod&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;테스트 가능한 코드를 최대한 &lt;code class=&quot;highlighter-rouge&quot;&gt;SingUp&lt;/code&gt;에서 분리시켰다. &lt;a href=&quot;/how-to-write-more-testable-code#테스트하기-어려운-코드와-쉬운-코드-분리&quot;&gt;이전 글에서 테스트 가능한 코드를 작성하려면, 테스트하기 어려운 코드와 쉬운 코드 분리하자고 한 것과 연결되는 내용이다.&lt;/a&gt; &lt;a href=&quot;/how-to-write-more-testable-code#테스트하기-어려운-코드와-쉬운-코드-분리&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Email&lt;/code&gt; 클래스&lt;/a&gt;와 같은 방법(Primitive Obsession)으로 구현된 &lt;code class=&quot;highlighter-rouge&quot;&gt;Password&lt;/code&gt; 클래스를 사용해보자. 이 두 클래스를 적용해 아래와 같은 코드를 작성할 수 있다. &lt;code class=&quot;highlighter-rouge&quot;&gt;SignUp&lt;/code&gt; 자체를 테스트할 순 없지만, &lt;code class=&quot;highlighter-rouge&quot;&gt;Email&lt;/code&gt; 클래스와 &lt;code class=&quot;highlighter-rouge&quot;&gt;Password&lt;/code&gt; 클래스는 이와 분리시켜 테스트할 수 있다. &lt;code class=&quot;highlighter-rouge&quot;&gt;SignUp&lt;/code&gt; 메소드를 겸손하게 만든 결과다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Task&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SignUp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;emailObj&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;passwordObj&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UserStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;AddAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emailObj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;passwordObj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;summary&quot;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;모든 코드를 테스트할 순 없다. 비용이 높아서 그럴 수도 있고, 테스트가 불가능할 수도 있다. 테스트할 수 없는 코드는 말 그대로 자동화된 검증을 수행하지 못하므로 겸손할 필요가 있다. 테스트 가능한 코드는 최대한 분리되어야 하며 테스트 불가능한 코드의 로직은 단순해야 한다. 테스트가 어려운 UI 코드(View)에서 테스트 가능한 코드를 최대한 분리하여 Controller, Presenter 또는 ViewModel 에 위치시키는 것도 같은 이치다.&lt;/p&gt;
+</description>
+                <link>http://jwChung.github.io/test-humility</link>
+                <guid>http://jwChung.github.io/test-humility</guid>
+                <pubDate>2017-10-15T00:00:00+00:00</pubDate>
+        </item>
+
+        <item>
+                <title>How to write more testable code</title>
+                <description>
+&lt;p&gt;&lt;a href=&quot;/testable-code&quot;&gt;이전 글에서 테스트하기 어려운 코드와 쉬운 코드를 어떻게 구분하는가에 대해 알아보았다.&lt;/a&gt; &lt;a href=&quot;http://osherove.com/tdd-kata-1/&quot;&gt;TDD, Unit Test를 설명하는 글 속에서 만나게 되는 예제&lt;/a&gt;는 대부분 테스트하기 쉬운 경우에 속한다. 테스트하기 어려운 코드로 테스트를 쉽게 설명할 수 없기 때문이다. 실제 프로젝트에서는 테스트하기 쉬운 코드만 있는 것이 아니다. 요구사항을 구현하기 위해 메일도 보내야하고 데이터베이스에 데이터를 저장하거나 읽어야 한다. 소프트웨어를 통해 이루려는 것은 필연적으로 외부세상과 소통이 필요하기 때문에 테스트하기 어려운 코드는 피할 수 없다. 우리는 이를 최대한 줄이려고 노력해야 한다. 테스트하기 쉬운 코드를 가능한 많이 작성해야 한다는 뜻이다. 이런 노력은 궁극적으로 &lt;strong&gt;테스트에 드는 비용을 최소화하기 위함&lt;/strong&gt;이다.&lt;/p&gt;
+
+&lt;!-- break --&gt;
+
+&lt;h3 id=&quot;테스트하기-어려운-코드와-쉬운-코드-분리&quot;&gt;테스트하기 어려운 코드와 쉬운 코드 분리&lt;/h3&gt;
+
+&lt;p&gt;이메일과 비밀번호를 입력받아 회원가입하는 시나리오를 생각해보자. C#으로 시나리오를 구현하면 아래와 같은 모습이 된다. &lt;code class=&quot;highlighter-rouge&quot;&gt;...&lt;/code&gt; 은 코드가 생략되었음을 의미한다. 이메일, 비밀번호가 유효하면 그 정보를 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserStore&lt;/code&gt;를 통해 데이터베이스에 저장하고 그렇지 않으면 예외를 던진다. 이메일과 비밀번호가 유효한 형식인가를 테스트하려고 해도 어쩔 수 없이 데이터베이스를 통한 통합테스트를 하거나, &lt;a href=&quot;http://xunitpatterns.com/Test%20Double.html&quot;&gt;Test Double을 이용해야 한다.&lt;/a&gt; 테스트 비용이 높은 경우로 테스트하기 어려운 코드다. 이를 단번에 알 수 있는 방법이 있다. &lt;code class=&quot;highlighter-rouge&quot;&gt;SignUp&lt;/code&gt; 메소드의 리턴타입을 보자. &lt;code class=&quot;highlighter-rouge&quot;&gt;Task&lt;/code&gt; 타입, IO관련 작업이다. &lt;a href=&quot;/testable-code#리턴타입별-테스트-용이성&quot;&gt;IO관련 작업은 외부세상과 소통을 의미하므로 테스트하기 어려운 경우다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Task&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SignUp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// 이메일이 유효한지 검사합니다.&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Contains&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ArgumentException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;유효한 이메일 형식이 아닙니다.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// 비밀번호가 유효한지 검사합니다.&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Length&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ArgumentException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;비밀번호는 최소 8자리 이상입니다.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UserStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;AddAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;passwod&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;테스트하기 쉬운코드를 테스트하기 어려운 코드(&lt;code class=&quot;highlighter-rouge&quot;&gt;UserStore.AddAsync&lt;/code&gt;)와 섞음으로 모든 코드가 테스트하기 힘들게 되었다. 해답은 간단하다. 이들을 분리시키자. 테스트하기 쉬운 코드를 최대한 어려운 코드에서 분리하여 순수함수 형태로 만들면 된다.&lt;/p&gt;
+
+&lt;p&gt;이 경우 테스트하기 쉬운코드를 분리하여, &lt;code class=&quot;highlighter-rouge&quot;&gt;Email&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;Password&lt;/code&gt; 타입을 만들면 좋겠다. (Primitive Obsession) 아래와 같이 생성자에서 문자열 값을 받아 유효한 형식인지 체크할 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Email&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// 이메일이 유효한지 검사합니다.&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Contains&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ArgumentException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;유효한 이메일 형식이 아닙니다.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+        
+        &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Value&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Value&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;TryParse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;out&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Email&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ArgumentException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;email&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;테스트하기-어려운-코드는-가장-바깥-쪽에-위치&quot;&gt;테스트하기 어려운 코드는 가장 바깥 쪽에 위치&lt;/h3&gt;
+
+&lt;p&gt;아래 그림과 같이 A 메소드가 B를 호출하고 B메소드가 C, 그리고 D 이런 순서를 가진 콜스택을 생각해보자. 이때 D 메소를 IO 관련 메소드라고 분류하여 빨간색으로 나타내보자.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/how-to-write-more-testable-code/picture1.png&quot; alt=&quot;picture1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그러면 B, C 그리고 A 메소드가 테스트하기 쉬워도 아래 그림처럼 D 메소드의 테스트 어려움이 모든 메소드에 전파 된다. 위 &lt;code class=&quot;highlighter-rouge&quot;&gt;SignUp&lt;/code&gt; 경우에서 테스트하기 쉬운 코드가 분리되기 전 모습과 같다. 이런 테스트 어려움이 전파되는 것을 막기 위해 테스트하기 어려운 코드(D)와 쉬운 코드(B, C)를 분리할 필요가 있다. A 메소드는 콜스택에서 가장 바깥 쪽에 위치하여 진입점이 되어 분리될 수 없다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/how-to-write-more-testable-code/picture2.png&quot; alt=&quot;picture2&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;분리된 D 메소드는 어디에든 위치시켜야 한다. &lt;code class=&quot;highlighter-rouge&quot;&gt;SignUp&lt;/code&gt; 경우에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserStore.AddAsync&lt;/code&gt; 메소드가 어디에든 위치하여 실행되어야 사용자 정보가 저장되어 회원가입이 마무리된다. 테스트하기 어려운 함수가 콜스택 안쪽에 위치할수록 테스트하기 어려운 코드량이 늘어난다. 테스트 비용이 증가되는 것이다. 따라서 아래 그림처럼 테스트하기 어려운 코드를 가장 바깥쪽에 위치시키면 테스트 비용을 최소화할 수 있다. 이때 진입점 역할을 하는 A 메소드는 선택할 여지없이 테스트하기 어려운 코드로 분류된다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/how-to-write-more-testable-code/picture3.png&quot; alt=&quot;picture3&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;function-root&quot;&gt;Function Root&lt;/h3&gt;
+
+&lt;p&gt;A 메소드는 특정 기능 수행의 진입점 역할을 한다. 테스트하기 어려운 IO 관련 코드를 담고 있는 경우가 많다. 그래서 그 자신 역시 테스트하기 어려운 형태가 되는 특징이 있다. 이런 메소드 또는 함수를 Function Root라 하자.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://blog.ploeh.dk/2011/07/28/CompositionRoot/&quot;&gt;어플리케이션에 필요한 모듈들을 한꺼 번에 구성할 수 있는 장소를 Composition Root라고 한다.&lt;/a&gt; Composition Root는 프로그램 시작점이지만, Function Root는 기능 시작점이라는 것에 차이점이 있다.&lt;/p&gt;
+
+&lt;p&gt;Function Root가 될 수 있는 위치를 프레임워크 별로 나눠 생각해보면 다음과 같다&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;UI 프로그램의 이벤트 핸들러&lt;/li&gt;
+  &lt;li&gt;Web API의 액션메소드&lt;/li&gt;
+  &lt;li&gt;Azure Functions 또는 AWS Lambda에서 호출되는 함수&lt;/li&gt;
+  &lt;li&gt;etc&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;summary&quot;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;테스트 비용을 줄이기 위해 테스트하기 쉬운코드를 많이 작성해야 함은 자명한 사실이다. 그러기 위해 테스트하기 어려운 IO 코드를 그렇지 않은 코드로 부터 물리적으로 분리 시키자. 그러면 테스트하기 쉬운 순수함수 코드를 얻을 수 있다. 테스트 하기 어려운 IO 관련 코드는 Function Root 에 위치시키자. Function Root에서 콜스택 안쪽으로 들어 갈수록 테스트 비용이 증가하기 때문이다.&lt;/p&gt;
+
+&lt;p&gt;아래 흐름을 보자. &lt;code class=&quot;highlighter-rouge&quot;&gt;--&amp;gt;&lt;/code&gt; 표시는 참조한다, 의존한다는 의미다. 중요한 모듈(Domain Model)이 상대적으로 덜 중요한 모듈(Data Access)에 의존하고 있다. &lt;a href=&quot;https://en.wikipedia.org/wiki/Dependency_inversion_principle&quot;&gt;Dependency Inversion Principle(DIP) 위배에 해당한다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;User Interface Module –&amp;gt; Domain Model Module –&amp;gt; Data Access Module&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;위 경우는 다음과 같이 바뀌어야 한다. Domain Model이 Data Access에 의존하는 것이 아니라 그 반대가 되어야 한다. 테스트 비용 입장에서 봐도 Domain Model이 Data Access에 의존하면 테스트 어려움 때문에 테스트 비용이 증가하게 된다. Domain Model은 온전히 IO관련 작업에서 분리되어 순수함수 형태의 코드로 테스트 되는 것이 좋다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;User Interface Module –&amp;gt; Domain Model Module &amp;lt;– Data Access Module&lt;/p&gt;
+&lt;/blockquote&gt;
+</description>
+                <link>http://jwChung.github.io/how-to-write-more-testable-code</link>
+                <guid>http://jwChung.github.io/how-to-write-more-testable-code</guid>
+                <pubDate>2017-10-13T00:00:00+00:00</pubDate>
+        </item>
+
+        <item>
+                <title>Testable Code</title>
+                <description>
+&lt;p&gt;&lt;em&gt;이 글에서 별도 설명없이 사용되는 테스트라는 용어는 코드로 수행되는 자동화테스트를 의미한다.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;코드로 수행되는 자동화테스트는 모든 시나리오에 적용될 수 없다. 테스트가 어렵거나 경우에 따라 불가능 경우도 있기 때문이다. 사용자가 비밀번호를 잃어버릴 경우에 대비하여, 비밀번호 재설정을 위한 메일을 발송하는 시나리오를 생각해보자. 메일이 잘 발송되었는지 테스트하는 것은 불가능하지 않지만 상당히 어렵다.이 글에서는 무엇이 테스트를 어렵게 만드는지 일반화된 사실로 정리해보고자 한다. 특정 기능을 수행하는 코드를 작성할 때, 같은 동작을 하더라도 테스트가 어려운 코드가 있는 반면, 테스트하기 쉬운 코드가 있다. 우리가 최대한 후자의 경우로 코드를 작성하려면 테스트하기 쉬운코드와 어려운 코드를 구분할 수 있어야 한다.&lt;/p&gt;
+
+&lt;!-- break --&gt;
+
+&lt;h3 id=&quot;what-does-testable-code-mean&quot;&gt;What does testable code mean?&lt;/h3&gt;
+
+&lt;p&gt;이 글에서 테스트하기 어렵다(non-testable)는 말은 테스트가 불가능하다란 의미가 아니다. 테스트하기 쉬운코드(testable) 보다 테스트가 상대적으로 비용이 많이 든다는 의미이다. 이 비용을 기꺼이 지불하고 테스트를 수행한다고 해서 전혀 틀렸다는 의미가 아니란 것이다. 모든 코드가 테스트되면 좋지만, 앞서 이메일 발송기능과 같이 테스트 비용이 높아 테스트 하지 못하는 경우가 있다. 이 글에서는 &lt;strong&gt;비용을 고려하여 상대적인 의미로 테스트하기 쉽다 또는 어렵다라는 표현을 사용&lt;/strong&gt;하고 있다. 다만 얼마나 테스트하기 어려운지 정량적으로 기술하지 못하는 것은 나의 역량 한계다.&lt;/p&gt;
+
+&lt;h3 id=&quot;불확실성non-determinism&quot;&gt;불확실성(non-determinism)&lt;/h3&gt;
+
+&lt;p&gt;테스트 대상 코드가 테스트가 가능하려면 같은 입력 값에 항상 같은 결과를 반환해야 한다. 아래 &lt;code class=&quot;highlighter-rouge&quot;&gt;GetAMOrPM&lt;/code&gt; 메소드는 현재 시각에 따라 “AM” 또는 “PM” 문자열을 반환한다. 실행되는 시각에 따라 결과가 좌지우지 되므로 우리는 이 메소드의 결과 값에 확신을 가질 수 없다. 즉 테스트가 불가능하다. &lt;strong&gt;불확실성은 테스트를 어렵게 만드는 첫 번째 요인&lt;/strong&gt;이다. 랜덤수, 임의시각은 테스트를 어렵게 만드는 불확실성의 대표적인 예이다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;GetAMOrPM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+ &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+     &lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;now&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DateTime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+     &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Hour&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+         &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;AM&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+     &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+         &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;PM&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+ &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;불확실성은 랜덤수, 임의시각 뿐 아니라 아래와 같은 다양한 경우에서 존재한다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;전역변수&lt;/li&gt;
+  &lt;li&gt;로컬머신에 존재하는 파일&lt;/li&gt;
+  &lt;li&gt;데이터베이스의 특정 레코드&lt;/li&gt;
+  &lt;li&gt;웹서비스를 통해 응답받는 내용&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;전역변수에서 값을 읽을 때, 첫 번째 실행과 두 번째 실행의 결과 사이에 차이가 있을 수 있다. 그 사이에 누가 전역변수의 값을 바꿔버리 수 있기 때문이다. 로컬파일에 있는 내용을 읽어 오는 경우도 마찬가지이다. 누가 파일 내용을 바꿔버리거나 파일을 삭제해버릴 수 있다. 데이터베이스 또는 웹서비스에서 데이터를 읽어오는 경우도 이와 다르지 않다.&lt;/p&gt;
+
+&lt;p&gt;불확실성을 유발하는 모든 경우에 공통된 특징이 있다. &lt;strong&gt;외부세상에서 제공하는 값에 의존&lt;/strong&gt;한다는 것이다. 랜덤수, 임의시각도 외부에서 제공하는 값이라는 테두리에 포함시켜 이해할 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;부수효과side-effects&quot;&gt;부수효과(side effects)&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;테스트를 어렵게 만드는 두 번째 요인은 부수효과&lt;/strong&gt;이다. 부수효과라 함은 관측가능한 값의 변경을 의미한다. 메일을 발송하거나, 파일에 어떤 내용을 쓰거나, 그리고 데이터베이스에 어떤 값을 기록하는 이 모든 경우가 부수효과이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;부수효과는 외부세상에 변경을 가하지만 리턴 값을 가지지 않는 특징&lt;/strong&gt;이 있다. 이 때문에 이를 검증하는 테스트는 비용이 많이 들게 되며 테스트하기 힘든 코드가 된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;순수함수pure-functions&quot;&gt;순수함수(pure functions)&lt;/h3&gt;
+
+&lt;p&gt;테스트를 어렵게 만드는 불확실성은 외부세상에서 값을 읽어오는 것에 기인한다. 부수효과는 반대로 외부세상에 값을 기록하는 것에서 기인된다. 불확실성과 부수효과를 가지지 않는 즉, &lt;strong&gt;외부세상에 단절된 상태를 함수형 프로그램에선 순수함수&lt;/strong&gt;라 한다. 테스트하기 쉬운 코드와 순수함수는 같은 의미가 된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리턴타입별-테스트-용이성&quot;&gt;리턴타입별 테스트 용이성&lt;/h3&gt;
+
+&lt;p&gt;메소드 또는 함수를 크게 둘로 반환타입이 있는 것과 없는 것(&lt;code class=&quot;highlighter-rouge&quot;&gt;void&lt;/code&gt;)으로 나눌 수 있다. 반환타입이 없는 경우는 외부세상을 변경시키는 것이다. 테스트하기 어려운 코드에 해당된다. 반환타입이 있는 메소드에 대해 테스트 용이성을 따지는 것은 조금 복잡하다. (imperative programming 에서) 반환타입있는 메소드일지라도 내부 코드에서 외부세상을 변경시키는 코드가 담겨 있을 수 있다. &lt;a href=&quot;https://martinfowler.com/bliki/CommandQuerySeparation.html&quot;&gt;그런 코드를 담고 있지 않다면 CQS(Command Query Separation)를 준수하는 것이다.&lt;/a&gt; 반환타입이 있고 외부세상을 변경시키는 코드가 없는 메소드는 CQS의 Query 메소드 범주에 속한다. Query 메소드가 테스트하기 쉬운가? 그럴 수도 있고 아닐 수도 있다. 그것은 Query 메소드가 외부세상에서 값을 읽어오느냐, 아니냐에 달려 있다. 데이터베이스에서 읽어온 데이터를 통해 값을 반환한다면 테스트하기 어렵다. 반면 외부세상과 단절된 상태에서 결과를 반환한다면 테스트하기 쉬운 경우다.&lt;/p&gt;
+
+&lt;p&gt;하스켈 언어에서는 외부세상과 소통을 &lt;code class=&quot;highlighter-rouge&quot;&gt;IO&lt;/code&gt; 타입으로 나타낸다. &lt;code class=&quot;highlighter-rouge&quot;&gt;IO&lt;/code&gt; 타입을 반환하는 함수는 비순수함수, 그렇지 않은 함수를 순수함수로 분류한다. 하스켈에서 테스트 용이성은 반환타입만으로 분류할 수 있는 셈이다. 외부세상과 소통(IO)은 대부분 작업이 완료될 때까지 기다림을 수반한다. 이 기다림 비용을 줄이기 위해 C# 같은 언어에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Task&lt;/code&gt; 타입을 통해 async await 기능을 제공한다. C#에서는 하스켈과 같이 정확히 순수/비순수함수로 양분할 순 없지만, 큰 틀에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Task&lt;/code&gt;를 반환하는 메소드를 테스트하기 어려운 경우로 분류할 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;summary&quot;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;테스트하기 쉬운 코드를 작성하려면 먼저 어떤 코드가 테스트하기 쉬운지 구분할 수 있어야 한다. 불확실성과 부수효과를 가지지 않는 즉, 외부세상과 단절된 상태의 코드를 테스트하기 쉬운코드라 한다. 테스트 용이성을 결정짓는 외부세상과 단절은 IO 작업와 관련된다. IO 작업을 하스켈에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;IO&lt;/code&gt; 타입으로 C#에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Task&lt;/code&gt; 타입으로 표현한다. 이들 타입을 반환하는 함수, 메소드는 테스트하기 어려운 코드이다. 같은 기능을 수행하더라도 테스트하기 어려운 코드가 있는 반면, 그 반대의 경우도 있다. &lt;a href=&quot;/how-to-write-more-testable-code&quot;&gt;이어지는 글에서는 어떻게 하면 테스트하기 어려운 코드는 줄이고, 테스트하기 쉬운 코드를 늘릴 수 있는지에 대해 알아보려 한다.&lt;/a&gt;&lt;/p&gt;
+
+</description>
+                <link>http://jwChung.github.io/testable-code</link>
+                <guid>http://jwChung.github.io/testable-code</guid>
+                <pubDate>2017-10-09T00:00:00+00:00</pubDate>
+        </item>
+
+        <item>
+                <title>상속은 코드 중복제거를 위한 최후의 보루</title>
+                <description>
+&lt;p&gt;최근들어 주변에서 구성(composition)과 상속(inheritance)에 대해 얘기하는 것을 많이 듣게 되었습니다. 예전부터 구성과 상속에 대해 개인적인 생각을 한번 정리하고 싶었습니다. 이 기회를 빌려 그동안 미뤄왔던 생각을 정리해볼까 합니다.&lt;/p&gt;
+
+&lt;p&gt;구성과 상속은 코드 재사용 방법에서 큰 비중을 차지합니다. 이 둘은 코드 재사용 면에서는 공통점이 있지만 클래스 혹은 개체(object) 간 관계를 표현하는 것에는 차이를 보입니다. 구성은 특정 기능의 개체를 가지는 것으로 HAS-A관계를 의미합니다. 반면 상속은 부모에서 구현된 멤버가 자식 클래스를 통해 노출되는 것으로 IS-A관계를 의미합니다. GoF의 디자인패턴 책에서 아래과 같이 &lt;em&gt;상속보다는 구성을 활용하라&lt;/em&gt; 는 원칙을 제시합니다. 이 글에서는 왜 IS-A관계보다 HAS-A관계가 좋은지, 어떤 경우에 IS-A관계를 쓸 수 있는지 알아보려 합니다. 결론에서는 HAS-A 사용에 대한 실천적인 방법에 대해서도 살펴보겠습니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Faver object composition over class inheritance.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;!-- break --&gt;
+
+&lt;h3 id=&quot;has-a&quot;&gt;HAS-A&lt;/h3&gt;
+
+&lt;p&gt;현실 세계에서는 대게의 경우 ‘자동차는 바퀴를 가지고 있다’, ‘사람은 동물이다’ 와 같이 직관적으로 HAS-A / IS-A관계 구분이 가능합니다. 하지만 소프트웨어 세상에서는 직관적이지 못할 때가 많습니다.&lt;/p&gt;
+
+&lt;p&gt;데이터를 CRUD 하는 클래스를 작성하려 합니다. 엔티티마다 CRUD 작업클래스를 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserRepository&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;ProductRepository&lt;/code&gt; 와 &lt;code class=&quot;highlighter-rouge&quot;&gt;OrderRepository&lt;/code&gt; 같은 클래스들을 생각할 수 있습니다. 각 클래스는 아래와 같이 실제 데이터베이스에서 CRUD 작업 처리를 위해 &lt;code class=&quot;highlighter-rouge&quot;&gt;DbContext&lt;/code&gt; 와 같은 속성을 가지게 됩니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;DbContext&lt;/code&gt;는 .NET환경에서 사용되는 ORM 도구인 Entity Framework의 클래스입니다. SQL 구문 실행을 위한 &lt;code class=&quot;highlighter-rouge&quot;&gt;DbConnection&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;DbCommand&lt;/code&gt; 클래스와 같은 용도로 이해하시면 됩니다. 아울러, 각 &lt;code class=&quot;highlighter-rouge&quot;&gt;Repository&lt;/code&gt;는 SQL 구문이 처리된 후 로그를 남길 필요가 있다고 가정해보겠습니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;DbContext&lt;/code&gt;와 로깅 기능을 각 클래스에 담아두는 것은 코드가 중복됩니다. 중복코드를 파하기 위해 아래와 같은 &lt;code class=&quot;highlighter-rouge&quot;&gt;RepositoryBase&lt;/code&gt; 클래스를 만들었습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;RepositoryBase&lt;/code&gt; 클래스는 설명에 필요한 부분만 표현되었습니다. “…” 표시는 자세한 코드가 생략되었다는 것을 의미합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;RepositoryBase&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DbContext&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DbContext&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;RepositoryBase&lt;/code&gt;를 상속받아 아래와 같은 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserRepository&lt;/code&gt; 클래스를 만들 수 있습니다. 부모클래스에서 구현된 멤버를 이용해서 새 &lt;code class=&quot;highlighter-rouge&quot;&gt;User&lt;/code&gt;를 DB에 추가하는 코드를 작성할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;UserRepository&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RepositoryBase&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Insert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;User&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;user&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;DbContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;().&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;DbContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;SaveChanges&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;nf&quot;&gt;Log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;New user inserted&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;부모(&lt;code class=&quot;highlighter-rouge&quot;&gt;RepositoryBase&lt;/code&gt;) 클래스에서 구현된 &lt;code class=&quot;highlighter-rouge&quot;&gt;DbContext&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;Log&lt;/code&gt; 멤버들이 자식(&lt;code class=&quot;highlighter-rouge&quot;&gt;UserRepository&lt;/code&gt;) 클래스에서 사용될 뿐 자식클래스에서 노출될 필요는 없습니다. public의 부모 멤버들은 protected 접근한정자로 충분합니다. 자식 클래스에서는 부모 클래스 멤버를 상속한 IS-A 관계가 아닌 HAS-A 관계로 충분히 설명될 수 있습니다. 상속보다는 구성이 바람직한 경우입니다.&lt;/p&gt;
+
+&lt;p&gt;상속은 디자인타임에 결정되는 것으로 런타임에서 상속된 기능을 교체할 수 없습니다. 반면 구성을 사용하면 이 문제를 극복할 수 있습니다. 로그를 파일에 기록할지 아니면 데이터베이스에 기록할지를 런타임에 결정할 수 있습니다. 굳이 런타임 시점이 아니더라도, 아래 코드와 같이 &lt;a href=&quot;https://en.wikipedia.org/wiki/Open/closed_principle&quot;&gt;로그를 어디에 남길지 &lt;code class=&quot;highlighter-rouge&quot;&gt;UserRepository&lt;/code&gt; 클래스 변경 없이 디자인타임에 결정하는 것도 구성의 장점입니다.&lt;/a&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;userRepositoryWithFileLogger&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;UserRepository&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;EnvicaseDbContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;FileLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// or&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;userRepositoryWithDbLogger&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;UserRepository&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;EnvicaseDbContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;DbLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;is-a&quot;&gt;IS-A&lt;/h3&gt;
+&lt;p&gt;상속보다 구성을 사용하라는 디자인 원칙은 상속을 사용하지 말라는 의미는 아닐 것입니다. 상속이 사용된 좋은 예는 UI를 구성하는 요소들을 표현하는 클래스들에서의 상속관계입니다. 윈폼을 구성하는 모든 요소들은 아래 그림에서 보여지는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Control&lt;/code&gt; 클래스를 상속합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/button-hierarchy.png&quot; alt=&quot;버튼 상속 관계&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Control&lt;/code&gt; 클래스를 상속하는 모든 자식 클래스들은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Control&lt;/code&gt; 클래스에서 구현된 모든 멤버들이 노출되어 재사용됩니다. 예를 들어, &lt;code class=&quot;highlighter-rouge&quot;&gt;BackColor&lt;/code&gt; 속성은 요소의 배경색을 지정할 수 있도록 합니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Control&lt;/code&gt;을 상속하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;BackColor&lt;/code&gt; 속성을 재사용할 수 있어 코드 중복을 피할 수 있습니다. 이 같이 부모 클래스에서 구현된 모든 멤버가 자식 클래스에서 노출되어 부모 코드를 재사용할 수 있는 곳에 상속을 사용할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;그러나 상속 사용은 디자인 정교함이 따라야 합니다.&lt;/strong&gt; 위 그림에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;RadioButton&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;CheckBox&lt;/code&gt; 클래스 모두 &lt;code class=&quot;highlighter-rouge&quot;&gt;Checked&lt;/code&gt; 속성을 가지고 있습니다. 모든 버튼이 이 속성을 가질 것으로 오판해서 &lt;code class=&quot;highlighter-rouge&quot;&gt;ButtonBase&lt;/code&gt; 부모 클래스에 이 속성을 선언했다고 가정해보죠. &lt;code class=&quot;highlighter-rouge&quot;&gt;Button&lt;/code&gt; 클래스는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Checked&lt;/code&gt; 속성이 불필요함에도 불구하고 상속할 수 밖에 없습니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;ButtonBase&lt;/code&gt;에서 정의된 &lt;code class=&quot;highlighter-rouge&quot;&gt;Checked&lt;/code&gt; 속성이 &lt;code class=&quot;highlighter-rouge&quot;&gt;Button&lt;/code&gt;에는 동작하지 않게 되므로 &lt;a href=&quot;https://en.wikipedia.org/wiki/Liskov_substitution_principle&quot;&gt;&lt;em&gt;“서브타입은 언제나 자신이 기반타입 (base type)으로 교체할 수 있어야 한다”&lt;/em&gt; 는 LSP원칙을 위반하게 됩니다.&lt;/a&gt; 반면 구성은 그렇지 않습니다. 불필요한 멤버를 가진 클래스를 의존하지 않을 수 있습니다. 만일에 의존하다고 하더라도 불필요한 멤버를 사용하지 않으면 그만입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;is-a--has-a&quot;&gt;IS-A + HAS-A&lt;/h3&gt;
+&lt;p&gt;구성이 적절한 곳에 상속이 사용되는 또 다른 경우가 부모 클래스(IS-A관계)에 HAS-A 관계인 멤버를 밀어 넣은 경우입니다. 모든 Service 클래스들은 서비스이름이 필요하다고 해보죠. &lt;code class=&quot;highlighter-rouge&quot;&gt;ServiceName&lt;/code&gt; 속성을 부모 클래스에 한번 구현하는 것으로 자식 클래스에 노출되어 사용될 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ServiceBase&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ServiceName&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GetType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;그런데 일부 자식 Service 클래스들에서 로깅 기능이 필요하다고 합니다. 로깅 기능을 각 Service 클래스에서 구현하면 중복코드가 발생하기 때문에 아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;Log&lt;/code&gt; 메소드를 부모클래스에서 구현하였습니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Log&lt;/code&gt; 메소드는 자식클래스로 상속이 되어 public으로 노출될 필요가 없습니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Log&lt;/code&gt; 메소드는 HAS-A관계로 표현되는 것이 적절합니다.&lt;/p&gt;
+
+&lt;p&gt;IS-A관계를 잘못 사용하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;Log&lt;/code&gt; 메소드와 같이 일부 자식 클래스에서 필요한 구현이 코드재사용이라는 명분아래 부모에 추가되는 경우가 늘어납니다. &lt;a href=&quot;https://en.wikipedia.org/wiki/God_object&quot;&gt;자식은 부모가 God 이길 바라면 안됩니다.&lt;/a&gt; IS-A 관계의 부모 클래스가 있더라도, HAS-A관계가 적합할 경우는 구성을 사용해야합니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Log&lt;/code&gt; 메소드를 부모 클래스에 밀어 넣으면 안되는 것입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ServiceBase&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ServiceName&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GetType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;결론&quot;&gt;결론&lt;/h3&gt;
+&lt;p&gt;상속보다 구성을 사용하라는 의미를 잘 이해하고 있더라도, 막상 작업할 때는 구성을 사용해야 하는 곳에 상속을 사용해버리는 경우가 있습니다. 구현 시나리오를 이해하고 코드를 작성하는 것에 집중하다 보면, 구성을 사용할 것인가 상속을 사용할 것인가라는 고민을 깊게 하지 못하게 됩니다. 잘못된 상속을 사용하는 경우를 피하기 위해서는 &lt;strong&gt;상속을 중복코드 제거를 위한 최후의 보루&lt;/strong&gt; 로 두는 것이 좋습니다. 상속을 사용하고 싶은 곳이 있다면, &lt;a href=&quot;https://en.wikipedia.org/wiki/Rule_of_three_(computer_programming)&quot;&gt;코드 중복을 한번 허락 해버리거나(Rule of three)&lt;/a&gt; 구성을 사용하는 것이 더 좋은 선택이 아닌지 먼저 고민해야 합니다. &lt;strong&gt;코드 재사용성만이 강조되어 코드 유연성을 저해하는 상속 사용은 금물입니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;상속은 중복코드를 제거하는 최후의 보루이다.&lt;/p&gt;
+&lt;/blockquote&gt;
+</description>
+                <link>http://jwChung.github.io/%EC%83%81%EC%86%8D%EC%9D%80-%EC%BD%94%EB%93%9C-%EC%A4%91%EB%B3%B5%EC%A0%9C%EA%B1%B0%EB%A5%BC-%EC%9C%84%ED%95%9C-%EC%B5%9C%ED%9B%84%EC%9D%98-%EB%B3%B4%EB%A3%A8</link>
+                <guid>http://jwChung.github.io/상속은-코드-중복제거를-위한-최후의-보루</guid>
+                <pubDate>2016-12-19T00:00:00+00:00</pubDate>
+        </item>
+
+        <item>
+                <title>TfsBuilder 소개</title>
+                <description>
+&lt;p&gt;&lt;a href=&quot;http://www.visualstudio.com/&quot;&gt;Visual Studio Online&lt;/a&gt;에서는 무료로 월 60분의 빌드서비스를 제공하고 있습니다. CI(Continuous Integration)서버를 직접 구축하지 않고 이용할 수 있다는 것이 큰 매리트인 것 같습니다. 무료 월 60분이 좀 적은 시간인 것 같긴 하지만 그래도 이게 어딘가하는 생각이 드네요. 부족 분에 대해서는 분 당 30원의 이용금액을 지불하고 이용할 수 있다고 합니다.(&lt;a href=&quot;http://www.windowsazure.com/ko-kr/pricing/details/visual-studio-online/&quot;&gt;가격정책&lt;/a&gt; 참고)&lt;/p&gt;
+
+&lt;p&gt;Visual Studio Online에서는 자체 소스리포지토리를 이용할 경우는 CI 빌드를 제공합니다. 즉, 소스를 중앙리포지토리로 push하면 이것을 신호로 서버에서는 빌드작업을 하게 됩니다. 이 빌드작업에 배포작업까지 끼우게 되면 소스 push로만 빌드에서 배포까지 이루어지는 것입니다.&lt;/p&gt;
+
+&lt;p&gt;그러나, Visual Studio Online에서 만약 GitHub와 같은 외부 소스 리포지토리를 이용하게 되면, CI빌드를 제공하지 않고, 스케줄 빌드 혹은 매뉴얼(직접)빌드만 제공합니다. 그래서 Visual Studio Online에 대한 빌드 서비스훅을 만들어 보았습니다.&lt;/p&gt;
+
+&lt;p&gt;소스와 사용법에 대해서는 GitHub프로젝트 &lt;a href=&quot;https://github.com/jwChung/TfsBuilder&quot;&gt;TfsBuilder&lt;/a&gt;에 있습니다.&lt;/p&gt;
+
+</description>
+                <link>http://jwChung.github.io/TfsBuilder-%EC%86%8C%EA%B0%9C</link>
+                <guid>http://jwChung.github.io/TfsBuilder-소개</guid>
+                <pubDate>2013-12-05T00:00:00+00:00</pubDate>
+        </item>
+
+
+</channel>
+</rss>

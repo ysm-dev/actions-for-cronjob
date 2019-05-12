@@ -1,0 +1,640 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[ZeroCho Blog]]></title><description><![CDATA[ZeroCho의 Javascript와 Node.js 그리고 Web 이야기]]></description><link>https://www.zerocho.com</link><image><url>https://ko.gravatar.com/userimage/106434188/feadce30f4d4d94d86a1e752497bd8bc.png?size=200</url><title>ZeroCho Blog</title><link>https://www.zerocho.com</link></image><generator>RSS for Node</generator><lastBuildDate>Sun, 12 May 2019 06:15:47 GMT</lastBuildDate><atom:link href="https://www.zerocho.com/api/rss.xml" rel="self" type="application/rss+xml"/><copyright><![CDATA[2016- ZeroCho]]></copyright><language><![CDATA[ko]]></language><managingEditor><![CDATA[ZeroCho]]></managingEditor><webMaster><![CDATA[ZeroCho]]></webMaster><category><![CDATA[HTML]]></category><category><![CDATA[CSS]]></category><category><![CDATA[Javascript]]></category><category><![CDATA[jQuery]]></category><category><![CDATA[EcmaScript]]></category><category><![CDATA[React]]></category><category><![CDATA[NodeJS]]></category><category><![CDATA[MongoDB]]></category><category><![CDATA[Algorithm]]></category><category><![CDATA[Git]]></category><category><![CDATA[etc]]></category><category><![CDATA[Webpack]]></category><item><title><![CDATA[ES2019(ES10)의 변화]]></title><description><![CDATA[안녕하세요. 어느덧 한 해가 지나서 ES2019가 나왔습니다. ES10이라고도 부르죠.
+보통 짝수 번째 버전에서 큰 변화가 있었는데요. ES6(새로운 자바스크립트), ES8(async/await)에서 편리한 기능들이 많이 추가되었죠. 그에 반해 ES7, ES9에서는 소소한 기능만 추가되었습니다. 그래서인지 짝수 버전인 ES10에서는 어떤 기능이 나올까 궁금했습니다. 데코레이터가 추가될 것이라고 기대했는데 아쉽게도 추가되지 않았습니다. 작은 수정사항만 있습니다.
+Object.fromEntries
+Object.entries의 반대 기능입니다. Object.entries가 객체를 2차원 배열로 만들었다면, fromEntries는 다시 2차원 배열을 객체로 만들어줍니다. 배열 말고 Map같은 것도 지원합니다.
+Object.entries({ a: 'zerocho', b: ['hello'] }); // [['a', 'zerocho'], ['b', ['hello']]]Object.fromEntries([['a', 'zerocho'], ['b', ['hello']]]); // { a: 'zerocho', b: ['hello'] }
+Array.prototype.flat, Array.prototype.flatMap
+다중 배열을 펼치는 기능(기본 1단계 펼침)입니다. 인수로 숫자를 넣어서 몇 번 연달아 펼칠지 결정할 수 있습니다.
+['abc', 'def', ['gh', ['ijk']]].flat() // ['abc', 'def', 'gh', ['ijk']]['abc', 'def', ['gh', ['ijk']]].flat(2) // ['abc', 'def', 'gh', 'ijk']['abc', 'def', ['gh', ['ijk']]].flat(Infinity) // ['abc', 'def', 'gh', 'ijk']
+flatMap은 왜 별도의 기능으로 추가한 건지 모르겠지만(함수형 프로그래밍, 모나드를 만들 때 필요한 메서드입니다), map과 flat을 섞은 메서드입니다. map 후에 flat을 하는 것보다 살짝 더 효율적이라고 하네요(반복 횟수를 따져보면 이해가 됩니다).
+['abc', 'def'].map((v) =&gt; v.split('')); // [['a', 'b', 'c'], ['d', 'e', 'f']]['abc', 'def'].map((v) =&gt; v.split('')).flat(); // ['a', 'b', 'c', 'd', 'e', 'f']['abc', 'def'].flatMap((v) =&gt; v.split('')); // ['a', 'b', 'c', 'd', 'e', 'f']
+String.prototype.trimStart, trimEnd, trimLeft, trimRight
+기존에 문자열 공백을 지울 때 trim 메서드를 많이 썼죠. 양쪽 공백을 모두 제거했습니다. 그런데 오른쪽 공백만 지우고 싶다면요? 이럴 때 많이들 당황하셨을 겁니다. 그래서 이 메서드들이 추가되었습니다. trimStart와 trimLeft는 왼쪽 공백을 지우고, trimEnd와 trimRight는 오른쪽 공백을 지웁니다. 같은 역할을 하는 메서드를 두 개 만든 게 이색적인데요. 하위 호환성(옛날부터 있었던 메서드를 지원)을 위해 그랬다는 것 같습니다.
+'    abc    '.trim(); // 'abc''    abc    '.trimStart(); // 'abc    ''    abc    '.trimEnd(); // '    abc''    abc    '.trimRight(); // '    abc''    abc    '.trimLeft(); // 'abc    '
+Optional Catch
+이제 catch의 매개변수를 쓰지 않는 경우, error을 생략해도 됩니다.
+try {  new Error('hello')} catch (error) {  console.error('error 안 쓰는데 왜 써야 하지... ㅠㅠ');}
+지금까지는 위와 같이 했어야 했지만, 앞으로는 다음과 같이 error을 쓰지 않을 수 있습니다.
+try {  new Error('hello');} catch {  console.error('에러가 나든지 말든지');}
+기타
+이외에 유니코드와 관련되어 JSON과 toString쪽이 더 개선되었고, Symbol에 description 속성이 생겨서 자신이 어떤 심볼을 사용했는지 알아낼 수 있게 되었습니다.
+Symbol('ZeroCho').description; // ZeroChoSymbol.for('ZeroCho').description; // ZeroCho
+내년에 나올 새로운 자바스크립트 기능과 제 자바스크립트 입문서도 기대해주세요~. 조만간 ES2019에 맞춰 stage-3, 2, 1도 좀 수정해보겠습니다.
+]]></description><link>https://www.zerocho.com/category/ECMAScript/post/5c909bfe5a8005001ffb3f14</link><guid isPermaLink="true">https://www.zerocho.com/category/ECMAScript/post/5c909bfe5a8005001ffb3f14</guid><category><![CDATA[ECMAScript]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Tue, 19 Mar 2019 07:36:30 GMT</pubDate></item><item><title><![CDATA[단기 외주/프리랜싱 합니다.]]></title><description><![CDATA[안녕하세요.
+React/Vue + Node 전문입니다. 웹 크롤러도 제작합니다. React Native로 앱 제작도 하지만 선호하지는 않습니다.
+1~2달 내에 할 수 있는 단기 외주를 상시로 구하고 있습니다. 주변에 관심있는 분이 계시면 알려주시면 감사하겠습니다.
+제작 문의는 open.kakao.com/me/zerocho로 주시면 됩니다. 
+감사합니다.
+]]></description><link>https://www.zerocho.com/category/etc/post/5c9084fb5a8005001ffb3f05</link><guid isPermaLink="true">https://www.zerocho.com/category/etc/post/5c9084fb5a8005001ffb3f05</guid><category><![CDATA[etc]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Tue, 19 Mar 2019 05:58:19 GMT</pubDate></item><item><title><![CDATA[위케어 서비스 출시!]]></title><description><![CDATA[안녕하세요. 제가 최근에 위케어라는 신규 서비스를 출시했습니다!
+요즘 일하고 공부하느라 운동을 자주 못하는데요. 그나마 영양제로 부족한 건강을 보충하고 있습니다. 그런데 영양제도 종류가 너무 많고 영양 성분도 어려운 용어가 많아서 뭘 골라야할지 어렵습니다. 그래서 저희 서비스는 간단한 설문을 통해 필요한 영양소를 알려드리고, 영양제는 랭킹 순으로 보여드립니다. 요즘 몸이 좀 안 좋거나 피로하신 분들 한 번 이용해보세요~! 주기적으로 기능들을 업그레이드해나가고 있고, 앱도 곧 출시 예정입니다.
+https://shallwecare.com 
+개발한 기술 스택은 React(Next) + Node + GCP입니다. 개발 관련 궁금하신 것이 있다면 답해드리겠습니다! 혹시나 버그를 발견하셨다면 제보해주시면 감사하겠습니다(부끄럽네요 ㅠㅠ).
+]]></description><link>https://www.zerocho.com/category/etc/post/5c5d961ec44894001fb475d9</link><guid isPermaLink="true">https://www.zerocho.com/category/etc/post/5c5d961ec44894001fb475d9</guid><category><![CDATA[etc]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Fri, 08 Feb 2019 14:45:50 GMT</pubDate></item><item><title><![CDATA[2019년 1월 개발일지 - next, sentry, puppeteer]]></title><description><![CDATA[안녕하세요. 2019년부터는 1달 간격으로 이번 달 어떤 개발을 했는지 간단히 정리하는 개발일지를 남겨보려고 합니다. 블로그 포스팅은 유튜브 활동과 책 집필 활동으로 할 시간이 많이 부족해졌습니다. 그래도 한 달에 한 번씩, 시간이 난다면 2주에 한 번씩은 회사에서 또는 개인 프로젝트에서 어떤 신기술을 사용해보았고, 소감이나 장단점은 무엇인지 정리해보도록 하겠습니다.
+혹시나 서비스 개발에 관련해서 궁금한 사항이 있으신 분들은 댓글이나 메시지로 문의 주시면 대외비가 아닌 것들은 알려드리도록 하겠습니다.
+서비스 출시
+위케어라는 서비스를 출시했습니다. 요즘 일하고 공부하느라 운동을 자주 못하는데요. 그나마 영양제로 부족한 건강을 보충하고 있습니다. 그런데 영양제도 종류가 너무 많고 영양 성분도 어려운 용어가 많아서 뭘 골라야할지 어렵습니다. 그래서 저희 서비스는 간단한 설문을 통해 필요한 영양소를 알려드리고, 영양제는 랭킹 순으로 보여드립니다. 영양제에 관심이 많으시거나 몸이 안 좋으신 분들, 피로하신 분들은 한 번 이용해보세요~!
+
+
+
+서비스는 React(Next) + Node + GCP(구글 클라우드 플랫폼) 스택입니다. GCP를 사용한 이유는 크레딧 2만 달러를 받았기 때문입니다. 구글의 스타트업 지원 일환으로요. 다음은 이 서비스를 출시하는 데 사용한 기술과, 기술에 대한 소감을 말씀드리겠습니다.
+기술 스택
+Redux + Redux-saga
+요즘 GraphQL이 핫하지만 저는 Apollo를 클라이언트로 삼는 대신 리덕스와 리덕스 사가를 사용했습니다. 함수형 프로그래밍을 좋아하거니와 개발자가 저 혼자인 상황에서는 굳이 GraphQL을 사용해서 얻는 이득이 별로 없었습니다. 제가 프론트와 서버를 다 통제할 수 있기 때문에요. Redux-saga는 대체품으로 thunk나 Observable이 있지만 저는 saga가 테스트하기 쉬워서 씁니다. thunk는 기능이 부족하고요. Observable은 기능이 뛰어나지만 테스트가 어렵다는 평가가 있네요. saga가 제너레이터 기반이기 때문에 next만 호출하면 단계별로 테스트하기 쉽습니다.
+Next
+처음에는 Next.js를 쓸 생각이  없었습니다. 리액트로 서버사이드렌더링(상품별로 검색엔진 노출이 필요하기 때문에 SSR이 필요했습니다)을 한지 3년이 넘었기 때문에 자신이 있었거든요. 그런데 SSR에 필요한 componentWillMount가 deprecated되면서 상황이 좀 달라졌습니다. suspense라는 대체 기능이 나왔지만 서버사이드에서 사용할 수가 없었기 때문에(일해라 페북!) 서버사이드렌더링에 애로사항이 좀 생겼습니다. 거기에 redux-saga 액션을 렌더링 전에 미리 수행하는 것이 상당히 어렵습니다. 거기에 styled components와 redux state까지 모두 head와 body에 렌더링해야 해서 훨씬 복잡해집니다. 이런 것들을 Next와 next-redux-saga 패키지가 자동으로 해줍니다. 코드 스플리팅도 페이지가 많은 사이트에서는 필수인데 이 기능은 기본으로 딸려옵니다.
+
+혹시나 개발 중에 내 사이트가 SSR이 되고 있는건지 판단하시고 싶으시면 절대 눈으로 하시면 안 됩니다. postman같은 프로그램으로 요청을 보내서 받아오는 HTML 태그에서 head, title, meta 태그와 body 부분이 제대로 들어있는지 확인하셔야 합니다. 구글같이 똑똑한 봇은 SSR이 아니더라도 어느 정도 긁어갈 수 있지만 다른 검색 엔진의 봇들은 그렇지 않은 경우가 많습니다.
+아래는 SSR 적용이 완료되어 페이지별로 구글이 크롤링해간 모습입니다.
+
+
+앞으로도 리액트로 프로젝트를 개발하면 Next를 사용할 것 같습니다. Vue라면 Nuxt를요.
+Sentry
+이번 프로젝트에서는 개발 인력이 매우 부족하기 때문에 에러 대응이 어려웠습니다. 그래서 Sentry 라는 서비스를 도입하였습니다. React같은 프론트엔드나 Node같은 벡엔드에 모두 붙일 수 있는 서비스입니다. 무슨 기능을 하냐고요? 바로 콘솔에 에러가 찍히면(console.error) 메일을 보내줍니다. 슬랙과 연동하면 슬랙 메시지로도 오고 다양한 방식으로 알림을 받을 수 있습니다. 개발자 개인이 테스트할 수 있는 양은 한계가 있기 때문에 고객에게 QA를 시킬 수 있는 조금은 꼼수같은 방법인데요. 고객들이 방문한 페이지, 방문한 경로, 기기와 브라우저 버전 등을 모두 알 수 있어 좋습니다. 노드에서도 마찬가지이고요. 개발 시에는 꺼두어야 console.log 위치를 제대로 파악할 수 있다는 점 기억하세요.
+다음 이미지는 에러가 어떻게 표시되는지에 대한 예시입니다. 아랫 부분이 짤렸지만 stack trace까지 다 보여주어 매우 좋습니다.
+
+다음 서비스 개발에도 무조건 쓸 예정입니다.
+Puppeteer
+저는 상당히 크롤링에 자신이 있습니다. 현재 노드로 크롤링 강좌도 제작 중이고요(유튜브에서 보실 수 있습니다!). 그래서 회사에서도 크롤링 기술을 적극 활용하여 다른 사이트의 가격이나 영양소 정보, 영양제 정보를 긁어오고 있습니다(이 때 쿠팡을 보면서 감탄한게 쿠팡은 rate-limit을 적용해서 크롤링을 빠르게 하면 차단하더라고요). 이 때 정말 도움이 되는게 퍼페티어 입니다. 헤들리스 크롬 브라우저인데요. 목이 없는(!?) 브라우저, 즉 화면이 없는 브라우저입니다.
+아니, 화면이 없으면 어디에 쓸 수 있냐 궁금하실텐데요. 바로 프로그래밍으로 브라우저를 컨트롤할 수 있습니다. 즉, 서버에서 웹사이트를 방문하여 스크린샷을 찍어 저장한다거나, HTML 태그를 읽어 필요한 정보를 빼올 수 있습니다. 바로 크롤링을 할 수 있는 것입니다. 비슷한 툴로 셀레늄 이 있습니다만, 셀레늄은 보통 다양한 브라우저에서 자동 테스트를 할 때 쓰고, 크롤링은 간편한 퍼페티어로 하는 것이 좋습니다(퍼페티어는 크롬이기 때문에, IE에서만 방문할 수 있는 페이지라면 좀 슬프네요 ㅠㅠ).
+직접 짠 코드로 브라우저가 알아서 페이지를 방문하고 크롤링을 해오는 모습을 보면 기분이 정말 좋습니다. 마치 말 잘 듣는 로봇을 하나 만든 것 같은 느낌이에요.
+데이터를 주기적으로 긁어오게 되는데 주기적으로 긁어오는 것은 구글 클라우드의 cron 작업 기능 을 사용하고 있습니다. 크롤링 라우터를 하나 만들어두면 cron이 주기적으로 라우터에 요청을 보내줍니다. 아마도 AWS나 Azure도 비슷한 기능이 있을거에요.
+Google Analytics
+요즘 서비스를 출시하시면 기본적으로 구글 애널리틱스나 페이스북 픽셀 같은 것을 붙이시죠? 개발에 관련된 것은 아니지만 서비스를 운영할 때 지표가 되고 인사이트를 얻을 수 있습니다. 리액트에서는 react-ga 로 웬만한 기능을 다 사용하실 수 있습니다. 싱글 페이지 서비스이기 때문에(기본적으로는 페이지 전환이 기록되지 않습니다) 따로 해주어야 하는 것이 있긴 한데요. next.js example에 같이 사용하는 방법이 잘  나와 있습니다.
+앞으로 해야할 것들
+테스트
+지금 개발자가 저 혼자인데다가 일정도 빠듯해 테스트를 제대로 하지 못하고 있습니다. 순수 함수들만 테스트를 하고 있고, 복잡한 리액트 컴포넌트나 익스프레스 라우터는 테스트를 못 하고 있습니다. 이러다보니 하나의 기능을 수정하면 다른 기능이 고장나는 현상을 빈번하게 겪고 있습니다. 그렇다고 테스트 코드를 쓰자니 서비스가 너무 확 바뀌는 경우가 많고, 일정도 맞추기 어려울 것 같아 난감한 상황이네요. 서비스가 안정이 되고 인력이 확충되는대로 테스트 코드를 작성할 예정입니다. 테스트 작성에 관한 것도 하게 되면 개발일지에 남기도록 하겠습니다.
+캐싱 및 성능 최적화
+일단 서버가 일본에 있음에도 속도가 빠르다는 평가를 받고 있어서 한 숨 돌렸지만 내부적으로는 매 번 DB 요청을 하는 등 스케일링에 문제가 될 소지가 많습니다. 불필요한 DB 요청을 최소화하고, 레디스나 localStorage 등에 데이터를 나눠서 저장하여 DB 요청을 줄이려고 합니다. DB 요청이 가장 병목이 많은 구간이기 때문입니다. 테이블이 30개가 넘어 JOIN이 많기 때문에 쿼리 튜닝도 해야할 것 같습니다.
+이상으로 1월 개발일지를 마칩니다. 서비스가 더 성장해서 더 고급 기술들을 적용해 볼 수 있었으면 좋겠네요.
+]]></description><link>https://www.zerocho.com/category/개발일지/post/5c591a672a3c79001fad8192</link><guid isPermaLink="true">https://www.zerocho.com/category/개발일지/post/5c591a672a3c79001fad8192</guid><category><![CDATA[개발일지]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Tue, 05 Feb 2019 05:08:55 GMT</pubDate></item><item><title><![CDATA[Error 객체에 관하여]]></title><description><![CDATA[안녕하세요. 이번 시간에는 자바스크립트에서 발생하는 Error 객체에 관해 다루어보겠습니다.
+자바스크립트에서는 에러 처리가 매우 중요합니다. 언어 특성상 싱글쓰레드이기 때문에 에러가 발생하면 복구가 매우 어렵습니다. 노드에서는 에러 처리를 제대로 하지 않으면 서버가 죽어버리는 현상까지 발생하기 때문에 에러를 처리하는 방법을 꼭 배워두셔야 합니다. 하지만 이번 강좌는 에러 처리가 아니라 Error 객체에 관해서 다뤄볼 것입니다.
+혹시나 에러 처리가 궁금하신 분들을 위해 간단한 것 하나만 알려드리자면, try catch로 에러가 날 만한 코드를 감싸주면 됩니다. try문 안에 그 코드를 넣고, catch문 안에 에러가 났을 때 복구할 방법을 적으세요.
+try {  // 에러가 나는 코드} catch (e) {  console.error(e);}
+이제 본격적으로 Error 객체에 관해 알아보겠습니다. 아래 console.dir는 객체를 콘솔에 로깅하는 메서드입니다.
+try {  a.b.c.d. = f; // Uncaught SyntaxError: Unexpected token =} catch (e) {  console.dir(e);}
+
+
+
+먼저 문법 오류입니다. d 뒤에 점이 붙어 있어 에러가 나는데요. 이 경우는 catch문에 에러가 걸리지 않고 바로 try 문에서부터 에러가 납니다. 문법 오류는 내서는 안 된다는 뜻입니다.
+try {  a.b.c.d = f;} catch (e) {  console.dir(e); // ReferenceError: a is not defined}
+그래서 문법 오류를 수정했습니다. 이제 문법은 유효하지만, 코드를 실행하는 과정에서 에러가 발생합니다. console.dir를 통해 에러인 e가 객체임을 확인할 수 있습니다. e는 다음과 같이 생겼습니다.
+{  message: 'a is not defined',  stack: 'ReferenceError: a is not defined\n    at &lt;anonymous&gt;:2:3',  __proto__: Error}
+프로토타입이 Error인 객체네요. message에는 에러 메시지가, stack에는 에러가 코드의 어떤 부분에서 발생했는지 나와 있습니다. __proto__를 한 번 펴 볼까요?
+{  constructor: ReferenceError()  message: '',  name: 'ReferenceError',  toString: toString(),  __proto__: Object,}
+프로토타입에 에러의 이름이 들어있습니다. 이 이름을 통해서 에러가 어떤 종류의 에러인지 알 수 있겠죠?
+SyntaxError, ReferenceError 외에도 자바스크립트에는 TypeError(공포의 cannot read property 'x' of undefined 에러가 이 유형입니다), RangeError, EvalError, URIError 등이 있습니다.
+자, 이제 직접 에러를 만들어봅시다. 직접 에러를 만드는 경우가 언제인지 궁금하시죠? 문법이나 코드 상에서는 어떠한 에러도 없지만, 의미적으로 이 상황에서 에러가 나야한다고 할 때 만들어줍니다. 예를 들면 로그인 시 가입한 아이디가 없는 경우(단순히 결과가 없다는 것은 에러가 아니지만, 로그인 로직 아래에서는 의미상 에러가 될 수 있습니다)가 있습니다.
+로그인 로직 자체를 코드로 예시를 들어보겠습니다.
+function findUser(id, password) {  User.findById(id, function(err, user) { // 아이디로 회원 찾기    if (err) {      throw err;    }    if (!user) {      return '아이디에 해당하는 회원이 없습니다';    }    if (user.password === password) {      return '로그인 성공';    } else {      return '비밀번호 틀림';    }  });}
+여기서 에러가 하나 나오는데요 바로 err 부분입니다. 회원 정보에 대한 DB 요청을 하는 부분(findById)에서 에러가 날 수 있는데 이 부분은 저희가 어떻게 할 수 있는 부분이 아니니까 넘어갑니다. 하지만 이 부분도 DB 요청 라이브러리에서 커스텀 에러로 만들어두었을 확률이 높습니다.
+저희는 회원이 없거나 비밀번호가 틀렸을 경우에 집중합시다. 코드 상에서는 에러가 아니지만 비밀번호가 틀렸기 때문에 에러로 볼 수 있습니다. return 부분을 throw로 바꿔서 실행해봅시다. new Error로 새로운 에러를 만들고 첫 번째 전달인자로 메시지를 넣어주면 됩니다.
+function findUser(id, password) {  User.findById(id, function(err, user) { // 아이디로 회원 찾기    if (err) {      throw err;    }    if (!user) {      throw new Error('아이디에 해당하는 회원이 없습니다');    }    if (user.password === password) {      return '로그인 성공';    } else {      throw new Error('비밀번호 틀림');    }  });} 
+이 함수를 실행하는 입장에서 에러를 처리해볼까요?
+var User = {  findById: function(id, cb) {    if (id === 'zerocho') {      cb(null, { password: '1234' });    } else {      cb(null, null);    }  },};
+일단 User랑 findById를 모킹(테스트를 간단히 하기 위해서 복잡한 객체를 간단한 객체로 대체하는 것)해주고요.
+다음 두 가지 경우를 테스트해보겠습니다.
+try {  findUser('zerocho', '2345');} catch (e) {  console.dir(e); // Error: 비밀번호 틀림}
+try {  findUser('nero', '1234');} catch (e) {  console.dir(e); // Error: 아이디에 해당하는 회원이 없습니다.}
+위와 같이 두 경우 모두 에러가 잘 발생하지만, 둘 다 기본 에러라서 구별이 쉽지 않습니다. 특히 catch 문 안에서 비밀번호가 틀린 경우와 아이디에 해당하는 회원이 없을 경우 두 가지를 한 번에 처리하고 싶을 때 문제가 생깁니다.
+try {  findUser('zerocho', '1234');} catch (e) {  if (비밀번호틀린에러) {    // 비밀번호틀린에러 처리  } else if (회원없음에러) {    // 회원없음에러 처리  }}
+catch문 안에서 저 if들을 어떻게 구분해야 할까요? 각각 다른 에러 이름을 붙여주면 좋을 것 같습니다.
+function findUser(id, password) {  User.findById(id, function(err, user) { // 아이디로 회원 찾기    if (err) {      throw err;    }    if (!user) {      var err = new Error('아이디에 해당하는 회원이 없습니다');      err.name = 'NoUserError';      throw err;    }    if (user.password === password) {      return '로그인 성공';    } else {      var err = new Error('비밀번호 틀림');      err.name = 'WrongPasswordError';      throw err;    }  });}
+이런 식으로 에러 객체에 name 속성을 붙여주는 방법이 있을 수 있습니다.
+try {  findUser('zerocho', '2345');} catch (e) {  if (e.name === 'NoUserError') {    console.log('회원이 없을 때 에러를 처리');  } else if (e.name === 'WrongPasswordError') {    console.log('비밀번호틀렸을 때 에러를 처리');  } else {    console.log('누구냐 넌');  }}
+이제 name으로 구별이 가능합니다. 
+하지만 한 가지 아쉬운 점이 있다면 console.error(e)의 에러 메시지는 그대로 Error: 비밀번호 틀림입니다. WrongPasswordError: 비밀번호 틀림이 되게 할 수는 없을까요? 이 때는 ES2015 문법이 필요합니다. 만약 ES5 문법으로도 나오게 하려면 console.error(e.stack)을 하면 됩니다. ES2015 문법으로 하면 쓸데 없이 복잡해지는게 그렇게 해야 될 효용을 느끼지는 못하겠네요.
+이상으로 Error 객체에 관한 강좌를 마칩니다. 커스텀 에러를 만들어서 자유자재로 분기처리 해보세요.
+]]></description><link>https://www.zerocho.com/category/JavaScript/post/5c1913622e014f001e827a89</link><guid isPermaLink="true">https://www.zerocho.com/category/JavaScript/post/5c1913622e014f001e827a89</guid><category><![CDATA[JavaScript]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Tue, 18 Dec 2018 15:33:54 GMT</pubDate></item><item><title><![CDATA[2018 블로그 결산 및 개인 회고]]></title><description><![CDATA[안녕하세요. 제로초입니다. 벌써 2018년이 가고 2018년 블로그 결산 및 개인 회고를 쓰게 되었네요. 평소에는 블로그 결산만 쓰다가 개인 회고도 같이 한 번 넣어보았습니다. 시험기간이라서 공부하기 싫어서 쓰는 건 절대 아닙니다. ㅋㅋㅋ 쓰다가 한 번 날아가서 분노에 가득 찬 상태입니다. 자동 저장 기능을 만들어야겠어요.
+작년 블로그 결산 
+개인 회고
+시험기간에서 눈치채셨겠지만 저는 스타트업을 다니면서 학업도 병행하고 있습니다. 이제 한 학기 남았는데 언제 졸업할는지 모르겠네요 ㅠㅠ
+회사는 다른 스타트업으로 옮겼습니다. 패션테크에서 헬스케어 쪽으로요. 내년 1월에 오픈베타 서비스를 진행하고, 또한 웹, 앱으로 출시도 할 것입니다. 개발 팀원을 조만간 구해야 할지도 모르겠네요. 관심있으신 분 계신가요? 저희는 당연히 노드를 씁니다 ㅎㅎ.
+올해는 제 인생에 있어서 최고로 뜻깊은 해였습니다. 바로 1년 간 열심히 준비했던 노드 교과서가 출간된 것인데요. 노력한 만큼 시장에서의 호응이 좋아서 뿌듯했습니다. 출간 후 5개월 간 3500권(종이책, 전자책 합산) 정도가 팔렸는데 꽤나 괜찮은 결과라고 하니 뿌듯합니다. 한 서점에서는 IT 1위도 찍고(5개월 지난 지금도 10위권이라는...!) 기억에 남는 일이 많았습니다. 의문의 싸인회도 하고요 ㅎㅎ
+
+
+
+
+또한 유튜브도 시작하였습니다. 유튜버가 될 생각은 딱히 없지만, 요즘은 유튜브 시대니까요. 유튜브에서는 무료 컨텐츠와 유료 컨텐츠를 동시에 제작 중입니다. 무료 컨텐츠는 내년에 집필할 새 자바스크립트 책을 쓰는 모습과 Vue.js로 진행되는 프로젝트를 라이브로 방송할 것이고, 유료 컨텐츠로는 노드와 자바스크립트 강좌가 올라갈 것입니다. 유료 컨텐츠는 제작 중에는 무료로 공개되지만 제작이 완료되면 인프런에 올라갑니다. 영상편집 기술도 배우고 시청자분들과 소통도 하고 재미있습니다.
+구독자 2000명 가즈아~~ 후원해주시면 감사히 받아 더 좋은 컨텐츠 제작에 힘쓰도록 하겠습니다.
+유튜브 링크
+후원 링크  
+인프런 노드 강좌 바로가기 
+내년에는 조금 벌여놓은 일들을 정리하고, 유튜브, 새 책, 회사에만 집중할 생각입니다. 올해 너무 이것저것 하면서 정신적인 스트레스를 많이 받았습니다. 경제적으로 상당히 여유로워진만큼 워라벨을 좀 챙겨볼까 합니다.
+블로그 결산
+블로그의 인기가 점점 폭발하고 있습니다. 방문해주신 분들 모두 감사드립니다. 제 블로그를 참조한 유사 블로그들이 많이 보이는데 대환영입니다. 개발자라면 블로그를 해야한다고 생각합니다. 여러모로 장점이 많거든요.
+올해는 40개의 포스트를 작성했고, 연말까지 2개를 더 준비중입니다. 원래 매주 하나씩 54개를 썼어야 했는데 실패했네요 ㅎㅎ. 앞으로는 유튜브와 책에 집중하느라 블로그 작성은 더더욱 힘들어질 것 같습니다. 그래서 하나 생각하고 있는데 새로운 언어 강좌를 써서 쉽게 쉽게 포스팅을 작성해보려 하고 있습니다. 새로운 언어는... ㅎㅎ 비밀입니다(자바는 죽었다 깨어나도 하지 않을 겁니다).
+블로그에 관한 구글 애널리틱스 통계들도 공개합니다.
+
+
+블로그 방문자 수가 작년에 비해 3배 증가하였습니다. 작년 세션이 20만이었는데 올해는 60만이네요! 내년에는 100만에 도전합니다.
+
+
+방문에 사용한 브라우저입니다. 사파리가 IE를 제치고 2위로 올라왔습니다. IE는 더 떨어져야 합니다!
+
+
+제 블로그 특성상 데스크탑에서 더 많이 방문하십니다.
+
+
+개발자는 역시 남성이 많고 젊군요!
+
+
+서울과 성남에서 방문자가 많습니다. 성남이면 판교에서 접속하시는 거겠죠? ㅎㅎ
+
+
+방문 시간 분포입니다. 작년과 비슷하게 주말에는 푹 쉬시는군요!
+
+
+가장 많이 방문한 페이지입니다. 자바스크립트가 압도적이네요. 지난 해 알고리즘에 편중되었던 것에 비해 고르게 분포되었습니다. 하지만 검색어는 아직도 알고리즘 쪽이 높습니다.
+마지막으로, 코드스테이츠에서 진행한 "개발자라면 블로그를 하자" 세션을 준비하면서 유물과도 같은 제 블로그 과거 모습을 찾아내었습니다. 여러분께도 제 블로그의 역사를 공유드립니다 ㅎㅎ. 디자인이 충격적이네요. 순서대로 1버전부터 5버전까지입니다. 지금은 6버전이고 내년에 7버전이 나올 것입니다.
+
+
+
+
+
+
+
+
+
+이상으로 블로그 결산 및 개인 회고를 마칩니다. 감사합니다.
+]]></description><link>https://www.zerocho.com/category/etc/post/5c146cbdacc3c4001e39e486</link><guid isPermaLink="true">https://www.zerocho.com/category/etc/post/5c146cbdacc3c4001e39e486</guid><category><![CDATA[etc]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Sat, 15 Dec 2018 02:53:49 GMT</pubDate></item><item><title><![CDATA[[리뷰] 리팩토링 자바스크립트]]></title><description><![CDATA[안녕하세요. 이번에 리뷰할 책은 리팩토링 자바스크립트(길벗, 2018)입니다. 가끔씩 프로그래밍에 관한 포스팅을 하기 힘든 주에는 책 리뷰를 진행하고 있습니다.
+추천 대상: 자바스크립트 언어 학습자
+평점: 4 / 5
+
+길벗 책이라서 그런지, 역시 표지와 폰트가 제 책과 비슷합니다. 저도 자바스크립트 강좌를 할 때 항상 리팩토링을 강조하고, 요즘에는 테스트에 관심을 기울이고 있는데요. 마침 책 이름이 리팩토링 자바스크립트라서 길벗에 책을 요청하게 되었습니다.
+목차는 대략 리팩토링의 뜻 -&gt; 테스트 방법 -&gt; 각종 패턴에 맞춰 리팩토링 하는 법 -&gt; 비동기 -&gt; 함수형 프로그래밍 순인데요.
+테스트는 mocha로 진행합니다. 저는 jest를 주로 사용합니다만, 테스트 프레임워크/라이브러리들은 다 비슷비슷하기에 별 문제가 없습니다.
+마지막 함수형 프로그래밍 파트는 리팩토링과도 관련이 있긴 하지만, 저자가 함수형 프로그래밍 책을 내지 못한 개인적인 한이 서려있는 것 같기도 해 좀 뜬금 없었습니다(실제로 함수형 프로그래밍에 관련해서만 책 수십 권이 나오는 분량입니다).
+리팩토링이라고 하면 거창하고 복잡한 테크닉이 필요할 것 같지만, 생각보다 쉽습니다. 리팩토링이라는 단어 자체가 복잡한 구조를 간단하고, 중복이 없으며 확장성 있는 구조로 변경하는(즉, 품질을 높이는) 것을 의미하기 때문에 조금만 바꿔도 금방 효과가 나는 기법들이 많습니다. 책 전반에 걸쳐 그  기법들을 소개하고요. 생각보다 술술 읽힙니다. 입문자 분들은 reduce, forEach, map, filter 등의 중요한 배열 메서드를 사용법을 배울 수 있는 기회가 될 것입니다. 특히 ES6+ 기반으로 코드를 설명하기 때문에 최신 문법도 함께 배우고, Map, Set과 같은 최신 객체들도 사용해볼 수 있습니다.
+마지막에서 두 번째 챕터인 비동기 리팩토링은 반드시 읽어 보아야 할 부분입니다. 자바스크립트에서 비동기 처리가 제일 복잡하면서도 중요하기 때문에, 자바스크립트 개발자라면 비동기 코드를 깔끔하게 정리하는 방법을 알아두어야 합니다. (콜백 지옥같은 현상은 피할 수 있어야겠죠?) 제너레이터, 옵저버, async/await을 다루지 않는 것은 아쉬우나, 그 기반이 되는 Promise를 다루기 때문에 충분한 것 같습니다.
+이 책은 같은 길벗 출판사의 자바스크립트 패턴과 테스트 (래리 스펜서 저)와 함께 읽으면 시너지가 있습니다. 같이 읽어보시는 것을 추천드리고요.  Node.js 교과서와 같이 읽어도 시너지가.... 리팩토링 방법을 배우면서 자주 쓰지 않았던 자바스크립트 문법도 배울 수 있어 자바스크립트 언어를 공부하시는 분들이 봐도 좋을 것 같습니다.
+
+]]></description><link>https://www.zerocho.com/category/etc/post/5be7b544f2fbcc001c991e0d</link><guid isPermaLink="true">https://www.zerocho.com/category/etc/post/5be7b544f2fbcc001c991e0d</guid><category><![CDATA[etc]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Sun, 11 Nov 2018 04:51:16 GMT</pubDate></item><item><title><![CDATA[MutationObserver]]></title><description><![CDATA[안녕하세요. 이번 시간에는 DOM의 재밌는 기능 중 하나인 MutationObserver 객체를 소개합니다! DOM 요소(태그같은 것)에 발생하는 변경사항을 감지할 수 있습니다. IE11부터 지원됩니다. 바로 코드를 보시죠.
+&lt;body&gt;  &lt;div id="zerocho-changeable"&gt;&lt;/div&gt;  &lt;button id="attributes"&gt;attributes&lt;/div&gt;  &lt;button id="childList"&gt;childList&lt;/div&gt;&lt;/body&gt;
+먼저 html 태그입니다. 버튼들을 누르면 div 태그에 변경이 생기고, MutationObserver 객체가 나중에 변경된 내용을 기록할 것입니다. 스크립트도 같이 보시
+var target = document.getElementById('zerocho-changeable');var observer = new MutationObserver(function(mutations) {  mutations.forEach(function(mutation) {    console.log(mutation);  });});var config = {  attributes: true,  childList: true,  characterData: true,  subtree: true || null,  attributeOldValue: true || null,  characterDataOldValue: true || null,}; // 감시할 내용 설정observer.observe(target, config); // 감시할 대상 등록document.getElementById('attributes').addEventListener('click', function() {  target.setAttribute('class', 'zerocho-newclass'); // 대상에 변경 발생});document.getElementById('childList').addEventListener('click', function() {  target.textContent = 'zerocho'; // 대상에 변경 발생});
+MutationObserver 생성자에서 새로운 옵저버(스타크래프트의 옵저버와 스펠링이 같습니다)를 만들어냅니다. observe라는 메서드가 있는 객체들은 감시자 역할로, 감시하는 대상에 변경사항이 발생할 때마다 미리 정해둔 동작을 수행합니다. observe 메서드에 첫 번째 인자로 감시할 대상을, 두 번째 인자로 어떤 것을 감시할 지에 대한 옵션을 넣어주면 됩니다.
+옵션들을 잠깐 살펴볼까요? attributes는 태그의 속성(id, class, value와 같은)이 변경되는 것을 감지합니다. 추가적으로 attributeOldValue가 true면 변경전 속성값도 보여줘서 유용합니다. 위에 예제에는 넣지 않았지만 attributeFilter도 있는데 ['class']같은 값(배열 형식이어야 합니다)을 주면 class 속성 변경만 감시합니다. childList 속성은 태그의 자식 태그들이 변경되는지를 추적하고, characterData는 태그의 텍스트 데이터가 변경되는지(characterDataOldValue는 변경전 데이터도 보여주겠죠? 단, childList 속성과 겹치기 때문에 chidList를 false로 해야 characterData가 기록됩니다.)를, subtree는 감시 대상의 자식 태그에 변경이 일어나도 변경점을 기록해줍니다.
+콘솔에 찍히는 결과는 다음과 같은 객체입니다. 어떤 부분이 변경되었는지 자세하게 알려줍니다.
+MutationRecords = {  addedNodes: [], // 추가된 자식 노드,  attributeName: null, // 변경된 속성명  attributeNamespace: null, // 변경된 속성네임스페이스  nextSibling: null, // 다음 형제 태그  previousSibling: null, // 이전 형제 태그  oldValue: null, // 변경전 값   removedNodes: [], // 제거된 자식 노드   target: Element, // 대상 태그   type: 'attributes' || 'childList' || 'characterData' // 어떤 종류가 변경되었는지}
+예를 들어 attributes 버튼을 누르면 다음과 같이 기록됩니다.
+{  attributesName: 'class',  target: div#zerocho-changeable.zerocho-newclass,  type: 'attributes',  // 나머지는 기본값}
+마지막으로 옵저버의 disconnect 메서드를 사용해서 감시를 중단할 수 있습니다. 중단 후에 언제든지 다시 observe 메서드로 감시를 재개할 수 있습니다.
+observer.disconnect(); // 감시 중지
+옵저버 객체들은 활용 방법이 무궁무진합니다. 예를 들어, 특정 태그에 클래스가 변경되거나, 어떠한 자식 태그가 추가되었을 때 미리 지정한 동작을 하게 할 수 있습니다. CSS를 바꿀 수도 있고, setTimeout으로 몇 초 뒤에 추가적인 행동을 수행하게 할 수도 있고, 이벤트 리스너같은 용도로 사용할 수 있을 것 같습니다.
+단, 지나친 남용은 옵저버간의 연쇄 작용(서로가 서로를 감시해 하나가 바뀌었을 때 연달아서 모든 게 바뀌어버림)을 심화시켜 디버깅을 매우 어렵게만들 수 있습니다.
+]]></description><link>https://www.zerocho.com/category/HTML&amp;DOM/post/5be24eacdb0c31001c4c5040</link><guid isPermaLink="true">https://www.zerocho.com/category/HTML&amp;DOM/post/5be24eacdb0c31001c4c5040</guid><category><![CDATA[HTML&DOM]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Wed, 07 Nov 2018 02:32:12 GMT</pubDate></item><item><title><![CDATA[블로그 타입스크립트 전환 후기 - 리덕스]]></title><description><![CDATA[안녕하세요. 이번 시간에는 리덕스를 타입스크립트로 전환한 후기입니다. 리덕스는 액션이 많은 만큼 상당히 코드량이 길어지더군요.
+코드가 너무 기니까 두 개 액션만 예시를 들어보겠습니다. 비동기 액션이기 때문에 한 액션 당 3~4개의 타입이 들어갑니다(기본, 요청, 성공, 실패). 각각 방명록과 댓글을 가져오는 비동기 액션입니다.
+export type CHECK_GUESTBOOK = 'CHECK_GUESTBOOK';export const CHECK_GUESTBOOK: CHECK_GUESTBOOK = 'CHECK_GUESTBOOK';export type CHECK_GUESTBOOK_REQUEST = 'CHECK_GUESTBOOK_REQUEST';export const CHECK_GUESTBOOK_REQUEST: CHECK_GUESTBOOK_REQUEST = 'CHECK_GUESTBOOK_REQUEST';export type CHECK_GUESTBOOK_SUCCESS = 'CHECK_GUESTBOOK_SUCCESS';export const CHECK_GUESTBOOK_SUCCESS: CHECK_GUESTBOOK_SUCCESS = 'CHECK_GUESTBOOK_SUCCESS';export type CHECK_GUESTBOOK_FAIL = 'CHECK_GUESTBOOK_FAIL';export const CHECK_GUESTBOOK_FAIL: CHECK_GUESTBOOK_FAIL = 'CHECK_GUESTBOOK_FAIL';export type CHECK_COMMENTS = 'CHECK_COMMENTS';export const CHECK_COMMENTS: CHECK_COMMENTS = 'CHECK_COMMENTS';export type CHECK_COMMENTS_REQUEST = 'CHECK_COMMENTS_REQUEST';export const CHECK_COMMENTS_REQUEST: CHECK_COMMENTS_REQUEST = 'CHECK_COMMENTS_REQUEST';export type CHECK_COMMENTS_SUCCESS = 'CHECK_COMMENTS_SUCCESS';export const CHECK_COMMENTS_SUCCESS: CHECK_COMMENTS_SUCCESS = 'CHECK_COMMENTS_SUCCESS';export type CHECK_COMMENTS_FAIL = 'CHECK_COMMENTS_FAIL';export const CHECK_COMMENTS_FAIL: CHECK_COMMENTS_FAIL = 'CHECK_COMMENTS_FAIL';
+일단 타입의 이름을 이렇게 정의해줍니다. 타입과 변수를 중복해서 만들었습니다. 이게 무슨 짓인가 싶지만, 나중에 리듀서 안의 switch 문에서 타입 가드를 적용하려면 타입을 일일이 만들어줘야 합니다. 타입 가드는 뒤에 리듀서에서 설명합니다.
+export를 하는 이유는 타입이나 인터페이스, 그리고 타입 변수는 앱 전체에 자주 쓰이기 때문입니다.
+export interface ILoadCommentsAction {  type: CHECK_COMMENTS;  promise: (client: IApiClient) =&gt; PromiseLike&lt;void&gt;;}export function loadComments(id: string, limit: number | 'undefined') {   return {    type: CHECK_COMMENTS,    promise: (client: IApiClient) =&gt; client.get(`/comment/${id}?limit=${limit}`),  };}export interface ILoadCommentsRequestAction {  type: CHECK_COMMENTS_REQUEST;}export interface ILoadCommentsSuccessAction {  type: CHECK_COMMENTS_SUCCESS;  result: IComment[];}export interface ILoadCommentsFailureAction {  type: CHECK_COMMENTS_FAIL;  error: Error;}export interface ILoadGuestBookAction {  type: CHECK_GUESTBOOK;  promise: (client: IApiClient) =&gt; PromiseLike&lt;void&gt;;}export function loadGuestBook(): ILoadGuestBookAction {  return {    type: CHECK_GUESTBOOK,    promise: (client: IApiClient) =&gt; client.get(`/comment/${GUESTBOOK_ID}`),  };}export interface ILoadGuestBookRequestAction {  type: CHECK_GUESTBOOK_REQUEST;}export interface ILoadGuestBookSuccessAction {  type: CHECK_GUESTBOOK_SUCCESS;  result: IComment[];}export interface ILoadGuestBookFailureAction {  type: CHECK_GUESTBOOK_FAIL;  error: Error;}
+후... 정말 깁니다. 각 액션마다 인터페이스를 만들어서 액션 안에 어떤 타입이 들어갈 지 적어야합니다. 참고로 저는 redux-thunk나 redux-saga같은 미들웨어를 쓰지 않고 제가 미들웨어를 만들어서 쓰기 때문에 액션 안에 promise라는 속성이 들어 있는 것입니다. 이것은 여러분의 액션에 맞게 수정하시면 됩니다.
+또한 저는 CHECK_COMMENT를 하는 순간 REQUEST, SUCCESS, FAIL는 리덕스 미들웨어에서 자동으로 생성해주기 때문에 실제 액션 객체가 없이 인터페이스만 있습니다. 여러분의 미들웨어 선택에 따라 실제 액션 객체가 필요할 수 있습니다(코드가 더 길어질 수 있다는 얘기! ㅎㅎ)
+액션 인터페이스는 다음과 같이 액션을 리덕스로부터 상속받아 쓸 수도 있습니다. 나중에 모든 코드를 아래처럼 바꾸었습니다.
+import { Action } from 'redux';interface ILoadGuestBookAction extends Action&lt;CHECK_GUESTBOOK&gt; {  promise: (client: IApiClient) =&gt; PromiseLike&lt;void&gt;;}
+다음은 나머지 인터페이스들입니다. 액션 인터페이스에서 쓰였던 IComment와, 리듀서의 defaultState와 그 인터페이스인 ICommentsReducerState, 그리고 위의 액션들을 모두 묶은 타입인 TCommentsReducerAction입니다.
+export interface IWriter {  emailVerified: boolean;  point: number;  medals: 0 | 1 | 2 | 3 | 5;  isSubscribed: boolean;  _id: string;  email: string;  displayName: string;}export interface IComment {  parents: string[];  _id: string;  writer?: IWriter;  content: string;  email?: string;  password?: string;  postId: string;  category: string;  createdAt: string;  updatedAt: string;  __v: number;}export interface ICommentsReducerState {  fetchingCommentUpdate: boolean;  fetchingGuestbook: boolean;  latest: IComment[];  comments: IComment[];  guestbook: IComment[];  message: null;  error: null | Error;}export const defaultStartState = {  fetchingCommentUpdate: false,  fetchingGuestbook: false,  latest: [],  comments: [],  guestbook: [],  message: null,  error: null,};type TCommentsReducerAction =  ILoadGuestBookAction | ILoadGuestBookRequestAction | ILoadGuestBookSuccessAction | ILoadGuestBookFailureAction |  ILoadCommentsAction | ILoadCommentsRequestAction | ILoadCommentsSuccessAction | ILoadCommentsFailureAction;
+마지막으로 리듀서입니다. 리듀서의 매개변수에 인터페이스와 타입을 심어줍시다.
+export default (state: ICommentsReducerState = defaultStartState, action: TCommentsReducerAction) =&gt; {  switch (action.type) {    case CHECK_COMMENTS_REQUEST:    case CHECK_GUESTBOOK_REQUEST:      return {        ...state,        fetchingGuestbook: true,        message: null,        error: null,      };    case CHECK_COMMENTS_SUCCESS:      if (action.result) {        return {          ...state,          fetchingCommentUpdate: false,          comments: action.result,        };      }      return { ...state };    case CHECK_GUESTBOOK_SUCCESS:      if (action.result) {        return {          ...state,          fetchingGuestbook: false,          guestbook: action.result,        };      }      return { ...state };    case CHECK_COMMENTS_FAIL:      return {        ...state,        fetchingCommentUpdate: false,        error: action.error,      };    case CHECK_GUESTBOOK_FAIL:      return {        ...state,        fetchingGuestbook: false,        error: action.error,      };    default:      return state;  }};
+action에 TCommentsReducerAction이 들어갔기 때문에 switch (action.type)에서 타입스크립트가 action.type의 타입에 따라 action이 어떤 인터페이스에 속해 있는지 파악해줍니다. 처음에 액션의 타입마다 모두 type을 선언했던 덕을 이제 보고 있는 것입니다. 이렇게 타입스크립트가 if나 switch같은 분기문에 따라 타입을 찾아주는 기능을 타입 가드(type guard)라고 부릅니다.
+컴포넌트에서는 mapStateToProps나 mapDispatchToProps 같은 것에 이 타입과 인터페이스들을 가져와서 쓰면 됩니다.
+// Comments 컴포넌트는 생략interface IStateToProps {  commentsReducer: ICommentsReducerState;}const mapStateToProps = (state: IReducerState) =&gt; ({  commentsReducer: state.commentsReducer,});interface IDispatchToProps {  checkComments: () =&gt; void;}const mapDispatchToProps = (dispatch: Dispatch) =&gt; ({  checkComments() {    return dispatch({ type: CHECK_COMMENTS });  },  });export default connect(mapStateToProps, mapDispatchProps)(Comments);
+
+인터페이스와 타입 정의 때문에 코드가 매우 길어졌습니다. 이렇게 타입 정의를 해놓고 tsc를 돌려보면 코드에서 많은 에러가 나게 됩니다. 특히 잠재적으로 발생할 수 있는 런타임 에러를 많이 잡아줍니다. 저도 미처 몰랐던 부분이 많아 깜짝 놀랐습니다. 덕분에 제 블로그는 한 층 더 견고해졌습니다(근데 왜 눈물이 나는지 모르겠습니다 ㅠㅠ 타입스크립트는 타입 정의 시간과 소프트웨어 견고성의 trade-off입니다).
+]]></description><link>https://www.zerocho.com/category/TypeScript/post/5bd5abb82a13e6001c702246</link><guid isPermaLink="true">https://www.zerocho.com/category/TypeScript/post/5bd5abb82a13e6001c702246</guid><category><![CDATA[TypeScript]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Sun, 28 Oct 2018 12:29:44 GMT</pubDate></item><item><title><![CDATA[블로그 타입스크립트 전환 후기 - 리액트]]></title><description><![CDATA[이전 글에서 이어집니다.
+이번에는 리액트 컴포넌트를 타입스크립트로 전환한 것을 보여드리겠습니다. 코딩 스타일은 tslint:recommended를 따랐습니다.
+Confirm.tsx
+import * as classNames from 'classnames/bind';import * as React from 'react';const styles = require('../css/App.css');const cx = classNames.bind(styles);interface IProps {  message: string;  callback?: ((bool: boolean) =&gt; void) | null;  yes: string;  no: string;}class Confirm extends React.PureComponent&lt;IProps&gt; {  public static defaultProps = {    yes: '예',    no: '아니오',  };  private onClickYes = () =&gt; {    const { callback } = this.props;    if (callback) {      callback(true);    }  }  private onClickNo = () =&gt; {    const { callback } = this.props;    if (callback) {      callback(false);    }  }  public render() {    const { message, yes, no } = this.props;    return (      &lt;div className={cx('confirm')}&gt;        &lt;div className={cx('confirmMessage')}&gt;          &lt;p&gt;{message}&lt;/p&gt;          &lt;button type="button" onClick={this.onClickYes} className={cx('confirmButton')}&gt;{yes}&lt;/button&gt;          &lt;button type="button" onClick={this.onClickNo} className={cx('confirmButton')}&gt;{no}&lt;/button&gt;        &lt;/div&gt;      &lt;/div&gt;    );  }}export default Confirm;
+짧은 컴포넌트 하나를 골랐습니다(긴 건 부끄러워서...).
+상단에 require이 있는데 웹팩 로더를 적용해야 하는 것은 어쩔 수 없이 require를 쓰는 게 나은 것 같습니다. 제 블로그는 CSS 모듈을 사용합니다.
+그 아래 interface IProps가 나옵니다. 리액트의 props 타입을 정의합니다. 코드를 보면 아시겠지만 타입스크립트를 쓰면 prop-types 패키지를 사용할 필요가 없어집니다. 타입스크립트가 그 역할을 대신 할 수 있거든요. callback prop처럼 ?를 붙여준 것은 필수가 아닌 prop을 의미합니다.
+class Confirm extends React.PureComponent&lt;IProps&gt;로 &lt;&gt;라는 꺽쇠가 눈에 띕니다. 제너릭이라고 불리는데요. 이 부분이 자바스크립트에는 없는 개념이라 좀 헷갈렸는데요. 적절한 비유인지는 모르겠지만 함수형 프로그래밍에서의 고차 함수를 떠올리시면 됩니다. 일반적인 값 대신 함수를 값으로 넘기는 것처럼, 제너릭을 사용해서 단순한 타입 대신 인터페이스나 타입 선언도 넘길 수 있습니다. 그러면 받은 쪽에서 알아서 그 타입을 활용합니다.
+리액트 컴포넌트에서 제너릭은 그냥 첫 번째 칸에는 IProps(props 타입 정의)를 넣는다고 외우셔도 됩니다. 만약  state가 있는 컴포넌트라면 state의 interface를 정의해 React.Component&lt;IProps, IState&gt;하세요.
+그 다음에 리액트가 제공하는 defaultProps, state같은 속성이나 componentDidMount, render같은 메서드 앞에 public을 붙여줍니다. 나머지 메서드는 public, protected나 private을 붙여주면 됩니다. 이것도 자바스크립트에는 없는 개념이라 익숙하지 않으실텐데 public의 경우 공개 메서드, private의 경우 현재 클래스 내에서만 쓸 수 있는 비밀 메서드라고 보시면 됩니다. protected는 상속받은 클래스도 조상 클래스의 메서드를 쓸 수 있게 해줍니다. 사실 private, protected, public은 안 붙여도 되는데 tslint에서 붙이라네요;;;
+이번에는 함수형 컴포넌트입니다.
+interface ILatestProps {  comments: IStructuredComment[];  isLoading: boolean;}const LatestComments: React.FunctionComponent&lt;ILatestProps&gt; = ({ comments, isLoading }) =&gt; {  // 생략  return &lt;div className={cx('sectionBody')}&gt;최신 댓글이 없습니다.&lt;/div&gt;;};
+마찬가지로 Props를 정의해서 넣으면 됩니다. React.PureComponent나 React. Component 대신 React.FunctionComponent를 쓰시면 됩니다(또는 React.StatelessComponent와 React.SFC는 deprecated되었습니다).
+컴포넌트는 쉽게 전환할 수 있었습니다. 다음 시간에는 Redux를 타입스크립트로 전환한 것에 대해 얘기해보겠습니다.
+]]></description><link>https://www.zerocho.com/category/TypeScript/post/5bb63445825898001ca1baf9</link><guid isPermaLink="true">https://www.zerocho.com/category/TypeScript/post/5bb63445825898001ca1baf9</guid><category><![CDATA[TypeScript]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Thu, 04 Oct 2018 15:39:49 GMT</pubDate></item><item><title><![CDATA[블로그 타입스크립트 전환 후기 - import, export]]></title><description><![CDATA[이전 글에서 이어집니다. 지난 시간에 타입스크립트 환경 세팅을 했죠.
+@types 패키지들을 깔고 나면, 기존 코드에서 import 부분부터 에러가 납니다.
+import React, { PureComponent } from 'react';
+위에서 React가 default export가 아니라고 에러가 나죠. 수정하려면 다음과 같이 해야 합니다.
+import * as React from 'react';import { PureComponent } from 'react';
+뭔가 두 줄이 돼서 마음에 들지 않았습니다. tsconfig.json 옵션에서 esModuleInterop이라는 옵션을 켜면 위처럼 한 줄로 쓸 수는 있습니다. 근데 나중에 문제가 생겨서 결국 다시 아래처럼 두 줄을 사용하는 방식으로 되돌아 왔습니다. 그리고 무엇보다도 문법적으로 * as React를 쓰는 것이 올바른 방법이 맞습니다. es 모듈 강좌 
+잘 생각해보면 아래와 같은 경우는 React가 export default 되어 있을 때나 가능한 방식입니다.
+import React, { PureComponent } from 'react';
+하지만 React는 export default React가 아니라 그냥 export = React 되어 있습니다. 따라서 default가 없기 때문에 개별 export들을 모아주는 * as React가 맞더라고요.
+axios같은 경우는 타입 정의에 export default Axios로 되어 있기 때문에 아래처럼 하면 됩니다.
+import axios from 'axios'; // default 가져오기
+가끔가다 @types가 없거나 정의가 틀린(이 경우가 더 화가 납니다, connect-flash같은...) 패키지가 생깁니다. 타입스크립트도 많은 시행착오를 거치면서 언어가 만들어졌기 때문에 과거의 코드가 남아있어 사람들 골치를 썩입니다. 예를 들어 ES6 모듈 대신에 네임스페이스를 써서 글로벌 환경을 오염시킨다거나, 모듈 선언을 export = e 같은 것으로 했거나요.
+어찌됐든 정의가 없는 모듈은 정의(.d.ts 파일)를 만들어주어야 합니다. 처음에는 정의가 없어도 에러가 안 나서 귀찮게 왜 만드냐고 하실 수 있는데 나중에 noImplicAny 옵션을 켜면 에러가 뿜뿜합니다.
+tsconfig.json
+{  "typeRoots": [     "./types",     "./node_modules/@types"  ]}
+지난 시간의 tsconfig.json엣 typeRoots가 타입을 저장할 폴더를 의미합니다. 제가 만든 커스텀 타입들은 types에 넣어줍니다.
+types/
+index.d.tscan-use-dom.d.tsreact-filepicker.d.tsfilestack-react.d.tsexpress-http-proxy.d.tsconnect-flash.d.ts
+types 폴더 내부 d.ts 파일들입니다. 위 패키지들은 타입이 없거나 틀려서 제가 임의로 만들었습니다. 몇 개 파일을 살펴보죠
+index.d.ts
+import { } from 'express';declare global {  interface Window {    swUpdate: boolean;    Notification: any;    adsbygoogle: any[];    __INITIAL_STATE__: string;    Kakao: any;    FB: any;    google: any;    devToolsExtension(): () =&gt; void;  }  interface Error {    code?: number;  }}
+제가 임의로 만든 정의를 모아둔 파일입니다. declare global로 기존에 정의되어있던 인터페이스를 확장했습니다. 뭔가 전역 객체를 확장해서 꺼림칙하긴 하지만 딱히 다른 방법이 떠오르지 않네요. 개별적으로 extend하긴 너무 지저분하고요. import {} from 'express'는 파일을 모듈로 만들기 위한 꼼수입니다. 타입스크립트의 경우 import나 export 선언이 위에 없는 경우 일반 스크립트로 칩니다.
+connect-flash.d.ts
+declare module 'connect-flash' {  global {    namespace Express {      interface Request {        flash(): { [key: string]: string[] };        flash(message: string): any;        flash(event: string, message: string): void;      }    }  }  import express = require('express');  function flash(): express.RequestHandler;  export default flash;}
+이건 connect-flash를 제가 다시 타입 정의한 파일입니다. declare module '패키지명'으로 하시면 됩니다. 꼭 패키지를 100% 정확하게 정의할 필요는 없습니다. 그냥 자신이 쓰는 API 정도만 정의하시면 됩니다. 위의 경우처럼 다른 패키지의 객체를 확장해야 하는 경우가 있어 조금 헤맸습니다.
+이렇게 정의한 타입들이 너무 훌륭하다고 생각하면 @types에 배포하시면 됩니다. 저는 passport-kakao와 passport-naver를 수정해서 배포했고, react-fb-like와 react-vote에 타입을 추가해서 배포했습니다. 타입스크립트를 하면서 오픈소스 컨트리뷰터가 되는 1석2조!
+참고로 이미 ts로 만들어진 라이브러리인 경우, 굳이 .d.ts를 따로 만들 필요가 없습니다. 만들었다간 괜히 .d.ts랑 .ts 파일이 충돌납니다.
+이제 나머지 파일들은 개별적으로 interface나 type을 정의하면 됩니다. 저는 리액트 환경에서 진행해서 리액트 타입을 분석하느라 골머리를 좀 썩혔습니다. 다음 포스팅에서 이어집니다.
+]]></description><link>https://www.zerocho.com/category/TypeScript/post/5bab2086103eac558e45cdd7</link><guid isPermaLink="true">https://www.zerocho.com/category/TypeScript/post/5bab2086103eac558e45cdd7</guid><category><![CDATA[TypeScript]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Wed, 26 Sep 2018 06:00:39 GMT</pubDate></item><item><title><![CDATA[블로그 타입스크립트 전환 후기 - 타입스크립트 환경 설정]]></title><description><![CDATA[안녕하세요. TypeScript 카테고리를 새로 만들었습니다. 이 카테고리에는 제로초 블로그를 타입스크립트로 전환한 후기를 남겨보려 합니다. 사실 타입스크립트 강좌를 쓰려고 했는데 공식 문서가 너무 잘 되어 있어 JS 프로젝트를 타입스크립트로 전환하는 과정을 보여드리는 게 더 좋을 것 같다고 판단했습니다.
+타입스크립트 학습 꿀팁을 드리자면 공식 문서 를 한 번 쭈욱 읽은 후 What's New 부분을 추가로 한 번 더 읽어보시면 됩니다. 타입스크립트 기능들이 어떻게 추가되어 왔는지를 알 수 있어 편합니다.
+시간이 남는다면 강좌도 한 번 써보겠습니다(나중에 타입스크립트 교과서나 deno 교과서 집필도 한 번... ㅋㅋㅋ).
+
+
+
+타입스크립트 전환 이유
+제 블로그는 항상 최신 기술을 접목하는 것을 원칙으로 하고 있었습니다. 그러다가 회사 일을 하고 몸이 지치니 점점 블로그 업데이트가 뜸해 지더군요(게시글은 그래도 1주일에 한 번 포스팅했지만요). 그래서 리프레쉬하고자 블로그를 타입스크립트로 전환해보았습니다. Redux에 reselect도 붙이고요. 
+사실 타입스크립트가 굳이 필요하다고 생각하지는 않지만, 타입스크립트를 배우고 적용하는 노력 대비 얻는 이점(약타입에서 강타입으로 가는 이점)이 크다고 판단했습니다. 회사에서도 타입스크립트로 개발하고 있어서 적응에 문제는 크게 없었습니다. 단, 4만 줄이나 되는 블로그의 js 코드를 수정하는 것이 문제였죠. 이제부터 어떻게 수정했는지 보여드리겠습니다.
+환경 설정 
+일단 js 파일들을 ts로, jsx를 tsx로 바꾸고, 바벨을 타입스크립트로 바꾸는 과정이 필요합니다. 웹팩을 같이 사용하기 때문에 웹팩에 타입스크립트를 처리할 로더도 붙여주고요. 아래 코드들은 실제 코드라기 보다는 전환 과정을 표현하기 위한 코드로 보시면 됩니다.
+npm i typescript awesome-typescript-loader
+webpack.config.js
+{  module: {    rules: [{ test: /\.tsx?$/, loader: 'awesome-typescript-loader' }], // 바벨 지우고 추가  },  resolve: {    modules: [path.join(__dirname, '..', 'app'), 'node_modules'],    extensions: ['.css', '.tsx', '.ts'], // js jsx 대신 ts tsx 추가  },}
+타입스크립트 세팅도 해줍니다.
+tsconfig.json
+{  "compilerOptions": {    "outDir": "./dist",    "allowJs": true,    "target": "es5",    "lib": [      "es2015",      "es2016",      "es2017",      "es2018",      "dom",      "webworker"    ],    "jsx": "react",    "module": "esnext",    "moduleResolution": "node",    "noImplicitReturns": true,    // "noImplicitThis": true,    // "noImplicitAny": true,    // "strictNullChecks": true,    "downlevelIteration": true,    "sourceMap": true,    "typeRoots": [      "./types",      "./node_modules/@types"    ]  },  "include": [    "./**/*"  ],  "exclude": [    "node_modules"  ]}
+실제로 전환할 때는 allowJs를 true로해서 일부 파일만 ts로 바꾸는 것이 좋습니다. 제 블로그만 해도 코드가 4만 줄인데 그걸 한 번에 다 바꾸는 것은 쉽지 않습니다. 점진적으로 바꿔 나가는 것을 추천드립니다.
+target은 es5로 해서 바벨을 대체했고, lib은 타입스크립트가 기본적으로 제공하는 타입들을 활성화시키는 것입니다. 블로그가 PWA이기 때문에 webworker도 넣었습니다. jsx는 리액트를 쓰기 때문에 필요하고요. module은 exnext로 해서 dynamic import(코드 스플리팅)를 쓸 수 있게 하였습니다. moduleResolution은 노드 기반이라 node를 썼고요. downlevelIteration은 이터레이터를 호환하기 위한 설정입니다.
+noImplicit 시리즈가 타입스크립트의 핵심입니다. 이것들을 다 true로 켜 놓아야 진정 타입스크립트를 한다고 할 수 있습니다. 하지만 처음 전환 과정에서는 수정할 것들이 너무 많아지기 때문에 일단 주석 처리해두고, 세팅 완료 후 주석을 풀고 작업할 예정입니다.
+typeRoots를 보시면 types와 node_modules/@types 폴더가 있습니다. 타입스크립트는 여기서 타입 정의들을 읽습니다. types는 제가 만든 타입 정의이고요. @types는 보통 외부 라이브러리들의 정의입니다.
+이제 기존 라이브러리들에 타입을 추가해야 합니다. 직접 추가할 수는 당연히 없고, 타입스크립트 커뮤니티에서 유명한 패키지들은 다 타입을 만들어 두었습니다. 바로 DefinitelyTyped입니다. npm에서 @types로 시작하는 패키지들을 다운받으면 됩니다.
+package.json
+{    "dependencies": {    "@types/classnames": "^2.2.6",    "@types/cookie-parser": "^1.4.1",    "@types/cors": "^2.8.4",    "@types/crypto-js": "^3.1.43",    "@types/draft-js": "^0.10.25",    "@types/express": "^4.16.0",    "@types/express-session": "^1.15.11",    "@types/gravatar": "^1.4.28",    "@types/helmet": "0.0.41",    "@types/hpp": "^0.2.1",    "@types/method-override": "0.0.31",    "@types/mongoose": "^5.2.17",    "@types/morgan": "^1.7.35",    "@types/node": "^10.10.3",    "@types/passport": "^0.4.6",    "@types/passport-facebook": "^2.1.8",    "@types/passport-google-oauth2": "^0.1.2",    "@types/passport-kakao": "^0.2.0",    "@types/passport-local": "^1.0.33",    "@types/passport-naver": "^0.2.0",    "@types/passport-twitter": "^1.0.34",    ...  }}
+이런 식으로 기존 패키지들을 거의 다 설치하면 됩니다. 가끔가다 axios나 moment처럼 스스로 타입을 제공하는 라이브러리들이 있지만, 많지는 않습니다.
+마지막으로 ts-node를 설치합니다. ts 파일을 바로 노드에서 돌릴 수 있게 해주는 패키지입니다. 성능 문제가 있으니 개발용으로만 쓰고, 배포 시에는 타입스크립트를 자바스크립트로 컴파일 한 후 실행해야 합니다.
+npm i -D ts-node
+nodemon.json
+{  "ext": "css json ts tsx",  "exec": "npm run clean &amp;&amp; npm run build:dev &amp;&amp; ts-node server/index"}
+이제 세팅은 끝났습니다. 확장자만 js에서 ts로 바꿨기 때문에 엄청난 에러들이 발생합니다. js 코드를 타입스크립트 기반으로 바꾸는 과정이 필요합니다. 그 과정을 차례로 알아보겠습니다. 다음 포스트에서 import export 부분부터 시작합니다.
+]]></description><link>https://www.zerocho.com/category/TypeScript/post/5ba90297cf54b471088ce40b</link><guid isPermaLink="true">https://www.zerocho.com/category/TypeScript/post/5ba90297cf54b471088ce40b</guid><category><![CDATA[TypeScript]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Mon, 24 Sep 2018 15:28:23 GMT</pubDate></item><item><title><![CDATA[크롤러 강좌 인프런에 등록되었습니다!]]></title><description><![CDATA[안녕하세요. 노드교과서 및 노드 크롤링 강좌가 이제 인프런에 모두 올라갔습니다.
+
+노드 교과서 강좌는 정가 55,000원, 24시간 분량의 긴 강좌입니다. 링크 
+동영상 강좌를 보시는 분들은 책은 굳이 볼 필요가 없습니다. 둘 중에 하나만 보셔도 충분합니다. 
+
+노드 크롤링 강좌는 노드 교과서 강좌의 DLC 격으로(노드 교과서를 어느 정도 학습해야 원활하게 볼 수 있습니다.) 정가 55,000원 12시간 분량입니다. 링크 
+현재 쿠폰이 인프런 이슈로 인하여 발급되지 않습니다.
+블로그를 자주 방문해주시는 분들께 감사드리며 조그만한 이벤트를 준비했습니다(다른 사람들한테는 비밀!!!).
+https://open.kakao.com/me/zerocho 
+로 연락주시면 모든 분들께 노드 교과서 강좌 할인 쿠폰을 드립니다(30%, 쿠폰 소진 시까지, 쿠폰 많이 남았습니다~, 크롤러 강좌는 쿠폰이 없습니다).
+단, 기존에 이 글을 읽지 못하고 구매하신 분들께는 쿠폰을 드릴 수가 없습니다. 이 점 양해 바랍니다(일일이 환불 처리 드리기도 어려울 뿐더러, 평소에 제 블로그를 자주 방문해주신 분들께 혜택을 드리고자 하는 취지에도 맞지 않는 것 같습니다).
+]]></description><link>https://www.zerocho.com/category/etc/post/5ba2fcb44daa9b001be2d5e2</link><guid isPermaLink="true">https://www.zerocho.com/category/etc/post/5ba2fcb44daa9b001be2d5e2</guid><category><![CDATA[etc]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Thu, 20 Sep 2018 01:49:40 GMT</pubDate></item><item><title><![CDATA[노드 프로젝트의 설정 파일들]]></title><description><![CDATA[안녕하세요. 이번 시간에는 노드 프로젝트의 설정 파일들에 대해 알아보겠습니다. 각종 유명한 오픈 소스 프로젝트를 보면요. 최상위 폴더에 수많은 설정 파일들이 존재합니다. 
+
+
+React 깃허브에서 볼 수 있는 수 많은 설정 파일들입니다. 이런 파일들은 입문자들에게 매우 큰 혼돈과 좌절감을 주기에 이 글을 작성하게 되었습니다. 유명한 오픈 소스 몇 가지를 뽑아 설정 파일들을 비교 및 설명해보겠습니다.
+노드 관련 파일
+package.json
+package.json은 노드를 하시는 분들이라면 다 아는 파일일 겁니다. 노드 프로젝트에 대한 정보, 설정, 사용중인 패키지를 기록하는 파일입니다.
+package-lock.json, yarn.lock
+노드 패키지 간의 의존 관계를 고정시켜둔 파일입니다. npm 대신 yarn을 패키지 매니저로 사용한다면 yarn.lock이 대신 있습니다.
+.env
+프로젝트 환경 변수를 저장한 파일입니다. 이름 앞에 점이 붙은 건 숨김 파일이기 때문입니다.  사실 이 파일은 깃허브에 올라와 있으면 안 됩니다. 백번 양보해서 올라와 있더라도 내부에 비밀 키가 적혀 있으면 안 되고요. 혹시나 비밀 키를 안에 넣어 깃허브에 올린 정신 나간 프로그래머가 있다면 얼른 얘기해 줍시다.
+.nvmrc
+노드 버전 관리자로 nvm을 사용하는 경우 어떤 노드 버전을 사용할 지 적혀있습니다.
+.npmignore
+npm에 패키지를 배포할 때 배포하지 않을 파일들 목록입니다.
+lerna.json
+하나의 프로젝트에서 여러 패키지를 관리할 수 있게 해주는 lerna입니다. 그에 관한 설정 파일입니다.
+자바스크립트 관련 파일
+.babelrc
+이름 뒤에 rc가 붙은 파일들은 설정파일들입니다. 바벨은 최신 자바스크립트 문법을 지원하지 않는 브라우저에도 최신 문법의 코드를 쓸 수 있게 도와주는 도구입니다. 최신 코드를 구버전 코드로 변환해줍니다. .babelrc는 그에 대한 설정입니다.
+tsconfig.json, typings.json
+타입스크립트는 자바스크립트의 수퍼셋입니다. 자바스크립트에 강타입을 추가해줍니다. 바벨처럼 자바스크립트로 변환하는 기능이 있기 때문에 설정 파일이 필요합니다. tsconfig는 타입스크립트 설정 파일입니다. typings.json은 타입을 정의해둔 파일 위치를 기록하는 파일입니다.
+.flowconfig
+플로우는 페이스북에서 개발한 타입 체커입니다. 타입스크립트랑 라이벌 관계입니다. 물론 타입스크립트한테는 쨉도 안 됩니다. flowconfig는 그에 관한 설정 파일이고요.
+.eslintrc, .eslintignore, tslint.json, .jshintrc
+eslint는 자바스크립트 코딩 스타일 검사기입니다. 팀원들 간의 서로 다른 코딩 스타일을 하나로 통일해줍니다. eslintrc는 그 코딩 스타일을 적어둔 설정  파일이고, eslintignore는 코딩 스타일을 검사하지 않을 파일 목록입니다. tslint는 타입스크립트용 코딩 스타일 검사기이고, tslint.json으로 설정합니다. jshint나 jslint도 eslint가 나오기 전에 유명했던 검사기입니다.
+.prettierrc
+prettier는 자바스크립트 코딩 스타일을 알아서 적용해주는 도구입니다. eslint가 검사 위주라면 prettier는 알아서 바꾸는 것까지 해주는 것이죠. 그에 관한 설정 파일이 prettierrc입니다.
+.bowerrc, bower.json
+bower은 요즘 거의 망해가고 있지만 예전에 핫했던 프론트엔드 자바스크립트 라이브러리 관리 도구였습니다. bowerrc는 그에 관한 설정 파일입니다.  bower.json는 라이브러리 리스트이고요.
+gulpfile.js, Gruntfile.js, Jakefile.js, webpack.config.js
+태스크 러너인 gulp, grunt와 빌더인 jake, 번들러인 webpack의 설정 파일입니다. 어떤 태스크를 실행하고, 어떻게 번들을 만들지 정의합니다.
+jest.config.js
+테스트 도구인 제스트에 관한 설정 파일입니다. jest 말고도 karma, mocha, jasmine 등이 있으니 그에 관한 설정 파일도 있을 수 있겠죠?
+프로젝트 및 깃허브 관련 파일
+.editorconfig
+에디터 설정에 관한 파일입니다. 이 세상에 수 많은 에디터들이 있는데 그 에디터들 간에 공통된 설정을 할 수 있게 도와줍니다.
+README.md
+프로젝트에 대한 설명을 적은 마크다운 형식 파일입니다. README.md에 적은 설명은 깃허브에 설명서처럼 표시됩니다.
+LICENSE
+프로젝트의 라이센스입니다. 오픈 소스라고 무제한 무료인 것은 아니니 꼭 라이센스를 확인하세요.
+CONTRIBUTING.md, CODE_OF_CONDUCT.md 등등
+오픈 소스에 기여하고자 하는 사람들이 꼭 읽어봐야 하는 문서입니다. 규칙 등이 적혀 있습니다.
+CHANGELOG.md, History.md
+프로젝트의 새 버전이 나올 때마다 어떤 부분이 바뀌었는지를 알려주는 파일입니다.
+Authors.md, .mailmap
+프로젝트에 기여한 사람들 목록과 주소록입니다.
+.gitignore, .gitattributes
+사실 깃허브는 아니고 깃 관련 파일입니다. 깃과 깃허브는 구분하셔야 합니다. gitignore는 깃으로 관리하지 않을 파일이나 폴더 목록을 적어두는 파일이고, gitattributes는 깃에 대한 설정을 하는 파일입니다.
+.gitbook.yaml
+혹시 깃북으로 프로젝트 설명서를 만들었다면 이 설정 파일이 있을 수도 있습니다.
+클라우드 및 CI/CD 관련 파일
+app.yaml, dispatch.yaml
+구글 클라우드 플랫폼에 배포할 때 필요한 파일들입니다. app.yaml은 앱 엔진, dispatch.yaml을 앱 엔진 주소 설정입니다.
+appveyor.yml, .circleci/config.yml, .travis.yml 등등
+CI/CD 서비스의 설정 파일들입니다. CI/CD 서비스는 빌드, 테스트, 배포 등을 자동으로 해주는 서비스입니다. 유명한 것으로 젠킨스, 트래비스, 서클 등이 있습니다. 그리고 gcp, aws, azure도 CI/CD를 지원합니다.
+
+이상으로 다양한 설정 파일에 대해 알아보았습니다. 앞으로 위 파일들을 만나더라도 당황하지 마세요! 혹시나 추가를 원하시는 파일이 있다면 댓글로 알려주세요. 
+]]></description><link>https://www.zerocho.com/category/NodeJS/post/5b934c8e6c974e001b710767</link><guid isPermaLink="true">https://www.zerocho.com/category/NodeJS/post/5b934c8e6c974e001b710767</guid><category><![CDATA[NodeJS]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Sat, 08 Sep 2018 04:14:06 GMT</pubDate></item><item><title><![CDATA[프로그래머스 문제 풀이 Level 3 - 1번 ~ 4번]]></title><description><![CDATA[레벨 3 문제들을 풉니다. 슬슬 어려워지네요. 푸는 시간도 점점 오래 걸리고 있습니다. 알고리즘 대회나 게임 프로그래밍을 할 것이 아니라면 Level 3까지 정도만 하시면 됩니다. 모든 문제는 제가 직접 푼 풀이이며, 더 나은 풀이가 있다면 알려주세요~ 못 푼 문제는 끙끙대며 풀어볼테니 스포 금지! 
+Level 3 1번~4번
+앞으로의 문제들은 설명을 자세하게 해야할 것 같아 한 강의에 다루는 문제 개수를 대폭 줄였습니다. 저도 이제 문제 풀기에 급급해서 코드 정리를 못하고 있네요.
+2 x n 타일링 
+이 문제는 설명을 링크를 통해 직접 보세요. 난이도가 상승할수록 설명하기도 힘들어지네요.
+이 문제의 핵심은 이 문제를 피보나치로 풀 수 있다는 것을 깨닫는 것입니다. 왜 그러냐면요. 길이가 5인 사각형을 구성하는 개수는, 잘 보면 길이가 3인 사각형에 길이가 2인 가로 사각형 두개를 붙인 것 + 길이가 4인 사각형에 길이가 1인 세로 사각형을 붙인 것입니다. 이 규칙만 찾아낸다면 피보나치로 푸는 것은 쉽습니다.
+재귀(탑다운 방식)로 시도했으나 호출 스택 에러가 납니다. 메모이제이션을 해도 소용없네요.
+const cache = [1, 2, 3];function solution(n) {    if (cache[n - 1]) return cache[n - 1];    cache[n - 1] = (solution(n - 1) + solution(n - 2)) % 1000000007;    return cache[n - 1];}
+이럴 때는 바텀업 방식(반복문)으로 하면 됩니다.
+function solution(n) {    const cache = [1, 2];    for (let i = 2; i &lt; n; i++) {        cache[i] = (cache[i - 1] + cache[i - 2]) % 1000000007;    }    return cache[n - 1];}
+마지막에 1000000007을 나누는 것 잊지 마시고요.
+가장 긴 팰린드롬 
+팰린드롬 문제는 지겹네요. 뒤집어도 똑같은 문자열을 팰린드롬이라고 합니다. 문자열 s가 주어질 때 가장 긴 팰린드롬 길이를 return하면 됩니다. abacde라면 aba가 가장 긴 팰린드롬이니까 3입니다.
+일단 팰린드롬 특성상 꺾이는 부분(반으로 접을 수 있는 부분)이 생깁니다. 길이가 홀수일 때랑 짝수일 때가 다르겠고요. 그 꺾이는 부분을 찾는게 핵심입니다. 꺾이는 부분을 찾았다면 그 부분을 기준으로 대칭인지 확인하면 되겠죠.
+일단 특정 인덱스에서 가장 긴 팰린드롬을 찾는 알고리즘을 먼저 구현하고, 그 후에 이 문제를 구현해야겠습니다.
+function pal(i, j) {    let left = i - 1;    let right = s[j] ? j + 1 : i + 1;    let count = s[j] ? 2 : 1;    while (s[left] &amp;&amp; s[right] &amp;&amp; s[left] === s[right]) {        count += 2;        left--;        right++;    }    return count;}
+가운데 인덱스(i)를 주면, 가장 긴 팰린드롬을 찾는 코드입니다. 만약 길이가 짝수가 될 것 같으면 i보다 하나 더 큰 j까지 제공하면 됩니다.
+function solution(s) {    function pal(i, j) {        let left = i - 1;        let right = s[j] ? j + 1 : i + 1;        let count = s[j] ? 2 : 1;        while (s[left] &amp;&amp; s[right] &amp;&amp; s[left] === s[right]) {            count += 2;            left--;            right++;        }        return count;    }    let answer = 1;    for (let i = 0; i &lt; s.length; i++) {        if (s[i + 1] === s[i - 1] &amp;&amp; s[i] === s[i + 1]) {            const count = Math.max(pal(i), pal(i, i + 1));            if (count &gt; answer) answer = count;            } else if (s[i + 1] === s[i - 1]) {            const count = pal(i);            if (count &gt; answer) answer = count;            } else if (s[i] === s[i + 1]) {            const count = pal(i, i + 1);            if (count &gt; answer) answer = count;        }     }    return answer;}
+이제 모든 인덱스에서 가장 긴 팰린드롬을 구하고, 그 중 뭐가 제일 긴지 찾으면 됩니다.
+다른 분의 풀이를 보니까 모든 서브스트링을 찾은 후 팰린드롬 여부를 구한 것 같습니다. 모든 서브스트링을 찾기보다는 서브스트링을 긴 순서로 정렬해서 처음 찾은 팰린드롬의 길이를 구하는 게 더 좋아 보입니다.
+거스름돈 
+1원, 2원, 5원 동전이 있다면 이걸로 특정 금액을 만드는 가짓수를 구하는 것입니다. 예를 들어 5원을 만들어야 하면 (1원 5개, 1원 3개 2원 1개, 1원 1개 2원 2개, 5원 1개)까지 4가지 경우가 있습니다.
+이것도 Level 3의 다른 문제들과 비슷하게 예전에 구한 계산 결과가 다음 결과에 영향을 미칠 것 같습니다. 이 생각을 어떻게 떠올렸냐면, 2 x n 타일링 문제처럼 5원을 만드는 방법은, 4원에 1원을 더하는 방법 + 3원에 2원을 더하는 방법 + 2원에 3원을 더하는 방법 + ... 식으로 되기 때문입니다. 예전 결과들은 캐싱해두면 됩니다. 좀 더 응용된 다이나믹 프로그래밍이죠. 규칙만 찾아내면 쉽습니다.
+이런 건 표를 만들어보면 좋습니다. 0원을 만드는 방법은 1가지가 꼭 있습니다(아무 동전도 안 쓰는 방법 1가지).
+0   1   2   3   4   5   6   7   8   9   10 // 금액1   1   1   1   1   1   1   1   1   1    1 // 1원1   1   2   2   3   3   4   4   5   5    6 // 1,2원1   1   2   2   3   4   5   6   7   8   10 // 1,2,5원
+규칙이 보이시나요? ㅋㅋ 잘 찾지 않으면 찾기 어렵습니다.
+0   1   2   3   4   5   6   7   8   9   10 // 금액1   1   1   1   1   1   1   1   1   1    1 // 1원1   1   2   2   3   3   4   4   5   5    6 // 1,2원1   1   2   2   3   4   5   6   7   8   10 // 1,2,5원 
+1,2원으로 10원을 만드는 방법은, 1원으로 0, 2, 4, 6, 8, 10원을 만드는 방법의 합입니다.
+0   1   2   3   4   5   6   7   8   9   10 // 금액1   1   1   1   1   1   1   1   1   1    1  // 1원1   1   2   2   3   3   4   4   5   5    6  // 1,2원1   1   2   2   3   4   5   6   7   8   10  // 1,2,5원
+1,2,5원으로 9원을 만드는 방법은, 2원으로 4, 9원을 만드는 방법의 합입니다.
+즉, k개의 동전으로 n원을 만드는 방법은 k-1개의 동전으로 n원 만드는 방법 + k-1개의 동전으로 n-x원 만드는 방법 + k-1개의 동전으로 n-2x원 만드는 방법 + ....인 것입니다(x는 가장 큰 동전 액면가). 이전 결과들이 다음 결과 구하는 데 영향을 끼치는 것이죠.
+function solution(n, money) {    const cache = [];    for (let i = 0; i &lt; money.length; i++) {        for (let j = 0; j &lt;= n; j++) {            if (!cache[i]) cache[i] = [];            if (i === 0) {                cache[i][j] = j % money[i] ? 0 : 1;            } else {                cache[i][j] = 0;                for (let mul = 0; j - money[i] * mul &gt;= 0; mul++) {                    cache[i][j] += cache[i - 1][j - money[i] * mul];                }            }                 }    }    return cache[money.length - 1][n] % 1000000007;}
+function solution(n, money) {    const cache = [];    for (let i = 0; i &lt; money.length; i++) {        for (let j = 0; j &lt;= n; j++) {            if (!cache[i]) cache[i] = [];            if (i === 0) {                cache[i][j] = j % money[i] ? 0 : 1;            } else {                cache[i][j] = j &gt;= money[i] ? cache[i - 1][j] + cache[i][j - money[i]] : cache[i - 1][j];                           }                 }    }    return cache[money.length - 1][n] % 1000000007;}
+처음에 시도한 두 가지 방식입니다. 이차원 배열(동전/금액)로 캐싱을 하고 있었는데 계속 시간 초과가 뜨더군요. 생각해보니 이차원 배열로 할 필요가 없다는 것을 나중에 깨달았습니다. 이전 동전 행을 재사용할 일이 없기 때문에 그냥 덮어씌워도 되는 것이었죠. Level 2의 땅따먹기에서 값을 누적한 것과 비슷합니다.
+function solution(n, money) {    const cache = [];    for (let i = 0; i &lt;= n; i++){        cache[i] = i % money[0] ? 0 : 1;    }    for (let i = 1; i &lt; money.length; i++){        for(let j = money[i]; j &lt;= n; j++){            cache[j] += cache[j - money[i]];        }    }    return cache[n] % 1000000007;}
+일차원 배열로 다시 풀었더니 됩니다. 이렇게 다이나믹 프로그래밍 문제는 규칙을 찾는 게 중요합니다. 규칙을 찾은 후, 이전 결괏값들을 캐싱하면서 다음 결과를 계산해나가면 돼요.
+참고로 비슷한 문제로 거스름돈을 가장 적은 동전 개수로 돌려주는 문제가 있습니다. 이것은 다이나믹이 아니라 그리디 프로그래밍으로 풀면 쉽습니다.
+멀리뛰기  
+이것도 2 x n 타일링과 똑같습니다. 피보나치로 풀면 돼요. 한 번에 한 칸 또는 두 칸을 뛸 수 있을 때, 5칸을 뛰는 방법의 수는 3칸에서 두 칸 뛰기 + 4칸에서 한 칸 뛰기 방법을 더한 것입니다. 이전 계산 결과로 다음 결과를 구할 수 있게 되는 것이죠.
+function solution(n) {    const cache = [1, 2];    for (let i = 2; i &lt; n; i++) {        cache[i] = (cache[i - 1] + cache[i - 2])  % 1234567;    }    return cache[n - 1];}
+마지막에 1234567로 나눠줘야 한다는 것만 조심합시다.
+다음 시간에는 5~8번을 풀어보도록 하겠습니다. 다이나믹 프로그래밍 을 꼭 알아두세요!
+]]></description><link>https://www.zerocho.com/category/Algorithm/post/5b87ccc1553b47001bb08d2b</link><guid isPermaLink="true">https://www.zerocho.com/category/Algorithm/post/5b87ccc1553b47001bb08d2b</guid><category><![CDATA[Algorithm]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Thu, 30 Aug 2018 10:53:53 GMT</pubDate></item><item><title><![CDATA[프로그래머스 문제 풀이 Level 2 - 1번~10번]]></title><description><![CDATA[이번 시간부터는 Level 2입니다! 10개씩 풀고싶은데 설명이 길어질 것 같은 문제가 있으면 개수를 좀 줄이겠습니다. 모든 문제는 제가 직접 푼 풀이이며, 더 나은 풀이가 있다면 알려주세요~ 못 푼 문제는 끙끙대며 풀어볼테니 스포 금지! 
+Level 2 1번~10번
+124 나라의 숫자 
+1,2,4만으로 숫자를 표현합니다. 변형된 3진법입니다. 1, 2, 4, 11, 12, 14, 21, 22, 24, 41, 42, 44, 111 이런 순으로 숫자가 커집니다.
+규칙만 찾으면 쉽습니다(반대로 규칙을 못 찾으면 어렵습니다). 3 대신 4가 있는 게 좀 까다롭습니다. 규칙은 3으로 나눴을 때 나머지를 보시면 됩니다.
+function solution(n) {    return n ? solution((n - (n % 3 || 3)) / 3) + (n % 3 || 4): '';}
+재귀를 통해 한 자리씩 만들어 나가도록 하였습니다.
+가장 큰 정사각형 찾기 
+Level 2에 있을 문제가 아닙니다. 프로그래머스 오류인 것 같네요. 훨씬 더 어렵습니다. [[0,0,1,1],[1,0,1,1]]같은 배열이 주어지면 그 안에서 1로 구성된 가장 큰 정사각형을 찾는 문제입니다.
+[  [0, 0, 1, 1],  [1, 0, 1, 1],]굵게 표시한 1 부분의 크기가 4(2X2)입니다.
+정사각형 하나는 작은 정사각형 4개로 쪼갤 수 있다는 데서 아이디어를 얻었습니다(위의 2X2 정사각형은 1X1 정사각형 네 개로 쪼갤 수 있습니다).
+[  [0, 1, 1, 1, 1],  [0, 1, 1, 1, 1],  [0, 1, 1, 1, 0]]
+이런 3X3 정사각형은 2X2 정사각형 네 개로 쪼갤 수 있습니다(좌상, 좌하, 우상, 우하)
+아래 풀이는 재귀로 푼 문제입니다.  그런데 무슨 연유에서인지 틀렸다고 나오더라고요. 확실히 정사각형이 커지면 콜스택 초과가 발생할 수도 있을 것 같습니다.
+const map = {};function solution(board, x = 0, y = 0, l = Math.max(board.length, board[0].length)){    if (l === 1) {        return (board &amp;&amp; board[x] &amp;&amp; board[x][y]) || 0;    }    if (x &gt;= board.length || y &gt;= board[0].length) {       return 0;    }    if (map[x + ',' + y + ',' + l]) {        return map[x + ',' + y + ',' + l];    }    const sol1 = solution(board, x, y, l - 1);    const sol2 = solution(board, x + 1, y, l - 1);    const sol3 = solution(board, x, y + 1, l - 1);    const sol4 = solution(board, x + 1, y + 1, l - 1);    let result = Math.max(sol1, sol2, sol3, sol4);    if (sol1 === sol2 &amp;&amp; sol2 === sol3 &amp;&amp; sol3 === sol4) {        result = (Math.sqrt(sol1) ? Math.sqrt(sol1) + 1 : 0) ** 2;        }    map[x + ',' + y + ',' + l] = result;    return result;}
+이번에는 다이나믹 프로그래밍 으로 푼 풀이입니다. 이것도 정사각형은 작은 정사각형 네 개의 합이라는 원리를 이용한 것입니다. 큰 정사각형이 되려면, 좌상, 좌하, 우상, 우하의 작은 정사각형이 존재해야 한다는 것으로 해석할 수도 있죠. 따라서 넷 다 존재하는 경우, 우하 정사각형 숫자를 1 올리는 것입니다. 아래처럼요.
+[  [0, 1, 1, 1, 1],  [0, 1, 2, 2, 2],  [0, 1, 2, 3, 0]]
+코드로 구현하면 다음과 같습니다. 0, 0, 0, 0일때만 1로 안 올리게 조심하면 됩니다.
+function solution(board) {    board.forEach((r, i) =&gt; r.forEach((f, j) =&gt; {        if (!board[i - 1] || !board[i - 1][j - 1] || !board[i - 1][j] || ! r[j - 1] || !f) return;        board[i][j] = Math.min(board[i - 1][j - 1], board[i - 1][j], r[j - 1]) + 1;    }));    return Math.max(...board.map(r =&gt; Math.max(...r))) ** 2;}
+**가 제곱 연산자인 것은 아시죠?
+올바른 괄호
+괄호 (와 )가 올바르게 짝지어져 있으면 true를 리턴합니다. ()()와 (())()는 올바른 괄호고, )()(나 (()(는 올바르지 않습니다.
+스택을 흉내내서 (면 넣고 )면 빼면 될 것 같습니다. 최종 개수가 0이면 모두 짝지어진 것이라 올바른 괄호입니다. 단 스택을 직접 구현할 필요는 없습니다.
+function solution(s){    let count = 0;    for (let i = 0; i &lt; s.length; i++) {        s[i] === '(' ? count++ : count--;        if (count &lt; 0) return false;    }    if (count !== 0) return false;    return true;}
+함수 안에서는 리턴으로 반복문을 멈출 수 있다는 것도 알아두세요. 반복문 부분은 배열의 every나 some으로 구현하거나, 재귀를 쓸 수도 있을 것 같은데 귀찮아서 패스합니다.
+다음 큰 숫자
+n보다 크면서 이진수로 변환했을 때 n의 이진수와 1의 개수가 같은 숫자를 찾습니다. 78(1001110)의 다음 숫자는 83(1010011)입니다.
+이진법 1의 개수를 세고, n에서부터 1씩 올리면서 이진법 1의 개수가 같은지 비교하면 됩니다.
+function solution(n) {    const bin = n.toString(2).match(/1/g).length;    while (n++) {        if (n.toString(2).match(/1/g).length === bin) return n;    }}
+toString(2)로 이진법으로 바꿀 수 있습니다. match(/1/g).length는 1의 개수를 세는 코드입니다. while문으로 이진법 1의 개수가 같을 때까지 숫자를 올립니다. 함수 안에서는 리턴으로 반복문을 멈출 수 있다는 것도 알아두세요.
+땅따먹기
+Level 2에 있을 문제가 아닙니다. 프로그래머스 오류인 것 같네요. 훨씬 더 어렵습니다.
+1 2 3 55 6 7 84 3 2 1
+위와 같은 땅이 있다면 위에서부터 5, 7, 4를 밟으면 점수가 최대가 됩니다(5를 골랐으면 바로 아래 8은 고르지 못합니다)
+알고리즘 문제는 크게 두 가지로 나눌 수 있는데요. 하나는 공식이나 규칙을 찾아서 쉽게 푸는 문제, 다른 하나는 모든 경우의 수를 구해서 푸는 문제. 이건 후자입니다. 아까 가장 큰 정사각형 찾기도 후자였습니다. 윗줄에서부터 한줄씩 내려와 누적 최대 점수를 구하면 쉽습니다(바로 아랫줄로 못 가는 규칙은 적용하셔야 합니다).
+1   2   3   59  10 11 1212 14 15 16
+이런 식이 됩니다. 예를 들어 첫줄 5를 골랐다면 다음 줄까지의 누적 최대합은 12입니다(8을 못 고르므로 5 + 7) 그리고 12까지 왔다면 그 다음줄의 누적 최대합은 16(12 + 4)가 되고요. 이렇게 최대인 15를 골라내면 됩니다.
+코드로 구현하면 다음과 같습니다. 저는 첫 줄을 0 0 0 0이라고 생각하고 진행했습니다.
+function solution(land) {    return Math.max(...land.reduce((a, c, i) =&gt; {        return [            c[0] + Math.max(a[1], a[2], a[3]),              c[1] + Math.max(a[0], a[2], a[3]),            c[2] + Math.max(a[0], a[1], a[3]),            c[3] + Math.max(a[0], a[1], a[2]),        ];    }, [0, 0, 0, 0]));}
+Math.max(...arr)처럼 배열을 spread하는 문법을 기억하세요. 
+숫자의 표현 
+자연수 n을 연속한 자연수의 합으로 표현하는 가짓수를 묻습니다. 예로 15는 1 + 2 + 3 + 4 + 5, 4 + 5 + 6, 7 + 8, 15까지 네 가지입니다.
+이 문제는 황당하게도 홀수인 약수의 개수를 묻는 문제입니다. 왜 그렇냐고요? 수학적 감각입니다... 연속된 숫자의 개수에 주목해주세요. 5, 3, 2, 1개입니다. 2는 15랑 매핑하면 됩니다. 6의 경우는 1 + 2 + 3, 6 이렇게 두 가지로 나타낼 수 있는데, 개수를 세보면 3과 1입니다. 홀수인 약수의 개수랑 일치하죠? 다른 숫자들도 해보세요.
+function solution(n) {    return Array(n).fill().map((v, i) =&gt; i + 1).filter(v =&gt; (!(n % v) &amp;&amp; v % 2) ).length;}
+
+최댓값과 최솟값 
+문자열에서 최댓값과 최솟값을 찾으면 됩니다. "1 2 3 4"면 1과 4죠.
+문자열을 배열로 만들어서 최댓값, 최솟값 찾는 메서드를 쓰면 되겠습니다.
+function solution(s) {    const o = s.split(' ').map(v =&gt; +v);    return [Math.min(...o), Math.max(...o)].join(' ');}
+Math.min(...o)와 Math.max(...o)처럼 배열을 spread하는 문법을 기억하세요.
+최솟값 만들기 
+[1, 4, 2], [5, 4, 4]가 주어진다면 각 배열에서 두 수 씩 뽑아 곱한 후, 그것들은 더한 값이 최소가 되도록 하는 문제입니다. 1 * 5 + 4 * 4, + 2 * 4면 29가 최소가 됩니다.
+당황스러울 수도 있지만, 간단합니다. 첫 번째 배열은 오름차순으로, 두 번째 배열은 내림차순으로 정렬한 후 곱하고 더해나가면 됩니다.
+[1, 2, 4] * [5, 4, 4] 이렇게 하면 되는 것이죠.
+function solution(A,B){    const b = B.sort((p, c) =&gt; c - p);    return A.sort((p, c) =&gt; p - c).map((v, i) =&gt; v * b[i]).reduce((a, c) =&gt; a + c, 0)}
+피보나치 수 
+n번째 피보나치 수를 구합니다. 재귀적(탑다운)으로 할 수도 있고, 그냥 저처럼 바텀업 방식으로 할 수도 있습니다. 1234567은 이걸로 나눈 결괏값을 리턴하라고 해서 넣어준 것입니다.
+function solution(n) {    const arr = [0, 1];    for (let i = 1; i &lt;= n; i++) {        arr.push((arr[i - 1] + arr[i]) % 1234567);    }       return arr[n];}
+혹시나 재귀 코드가 궁금하시다면 아래처럼 하세요.
+function fibonacci(num) {   if(num &lt; 2) return num;   return fibonacci(num-1) + fibonacci(num-2);}
+행렬의 곱셈 
+[[1, 4], [3, 2], [4,1]]과 [[3,3],[3,3]]이 주어지면 [[15,15],[15,15],[15,15]]가 반환되면 됩니다. 행렬의 곱셈은 수학적인 지식이므로 여기서는 더 자세하게 설명하지 않습니다.
+첫 행렬의 열의 개수와, 두 번째 행렬의 행의 개수가 일치해야 하는 성질이 있죠. 그러면 결과물 행렬은 첫 행렬의 행의 개수 X 두 번째 행렬의 열의 개수가 됩니다. 결과물 행렬의 모양을 생각해서 내용물을 만들면 됩니다.
+function solution(arr1, arr2) {    return Array(arr1.length).fill().map((r, i) =&gt; Array(arr2[0].length).fill().map((v, j) =&gt; arr1[i].reduce((a, c, k) =&gt; a + c * arr2[k][j], 0)))}
+JadenCase 문자열 만들기 
+단어의 첫 문자가 대문자이고, 나머지는 소문자인 문자열로 바꿉니다. 3people unFollowed me는 3people Unfollowed Me가 됩니다.
+단어별로 쪼개서 첫 글자만 대문자로, 나머지는 소문자로, 설명 그대로 바꿔주면 됩니다. 참 쉽죠?
+function solution(s) {    return s.split(' ').map(v =&gt; {         return v.split('').map((a, i) =&gt; i ? a.toLowerCase() : a.toUpperCase()).join('');    }).join(' ');}
+split-apply-combine 3단 기법인 셈입니다.
+N개의 최소공배수 
+여러 숫자 배열의 최소공배수를 구합니다. [2, 6, 8, 14]면 168입니다.
+두 수의 곱은 최소공배수와 최대공약수의 곱과 같다는 성질과, 최대공약수는 유클리드 호제법으로 구할 수 있다는 성질을 이용해서, 두 수씩 최소공배수를 구해나가면 됩니다.
+function solution(arr) {    return arr.reduce((a, c) =&gt; {        function u(n, m) { return m % n ? u(m % n, n) : n; }        return a * c / u(a, c);    }, 1);}
+u 함수가 재귀적으로 최대공약수를 구하는 함수입니다.
+이렇게 Level 2까지 풀었습니다. 중간에 가장 큰 정사각형 찾기랑, 땅따먹기같은 난이도 조절 실패 문제때문에 시간이 오래 걸렸네요.
+]]></description><link>https://www.zerocho.com/category/Algorithm/post/5b7bf396b35bf5001b940dc5</link><guid isPermaLink="true">https://www.zerocho.com/category/Algorithm/post/5b7bf396b35bf5001b940dc5</guid><category><![CDATA[Algorithm]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Tue, 21 Aug 2018 11:12:22 GMT</pubDate></item><item><title><![CDATA[프로그래머스 문제 풀이 Level 1 - 21번~30번]]></title><description><![CDATA[21번부터 30번까지 풀어보겠습니다. 모든 문제는 제가 직접 푼 풀이이며, 더 나은 풀이가 있다면 알려주세요~ 못 푼 문제는 끙끙대며 풀어볼테니 스포 금지! 
+Level 1 21번~30번
+제일 작은 수 제거하기 
+[4,3,2,1]이 있다면 가장 작은 1을 제거해서 [4,3,2]를 리턴하면 됩니다.
+필터링으로 간단하게 할 수 있을 것 같습니다.
+function solution(arr) {  const min = Math.min(...arr);  const r = arr.filter(v =&gt; v !== min);  return r.length ? r : [-1];}
+하나 알아두시면 좋은 게 Math.min(...arr)입니다. ...arr은 배열을 펴서 넣는 것입니다. Math.min(arr[0], arr[1], arr[2], ...)과 같습니다.
+짝수와 홀수 
+function solution(num) {  return num % 2 ? 'Odd' : 'Even';}
+시간 아깝습니다.
+최대공약수와 최소공배수
+두 수의 최대공약수와 최소공배수를 구하는 함수입니다.
+두 가지를 알아두시는 게 좋은데 바로 최대공약수를 구하는 유클리드 호제법과, 두 수의 곱은 최대공약수와 최소공배수의 곱과 같다는 점입니다. 아니 이걸 어떻게 아냐고요? 여러분 모두 중학교 때 배웠습니다...
+function solution(n, m) {  function u(n, m) { return m % n ? u(m % n, n) : n; }  const gcd = u(n, m);  return [gcd, n * m / gcd];}
+u가 유클리드 호제법 함수입니다. 재귀식으로 작성되어 있고요(만약 꼬리재귀가 나중에 된다면 u(m % n, n)을 뒤에 둬야겠죠?). gcd(greatest common divisor)가 최대공약수입니다. 최소공배수는 아까 알려드린 공식대로 구하면 됩니다.
+콜라츠 추측 
+입력된 수가 짝수면 2로 나누고, 홀수면 3을 곱한 후 1을 더합니다. 이 작업을 반복해서 1까지 몇 번만에 나오는지 구해야 합니다. 6의 경우 6 -&gt; 3 -&gt; 10 -&gt; 5 -&gt; 16 -&gt; 8 -&gt; 4 -&gt; 2 -&gt; 1로 8번 만에 1이 됩니다. 500회 반복해도 안 되는 경우 -1을 리턴합니다.
+일단 조건이 크게 세 개입니다. 500회 반복 초과 경우와, 홀수인 경우, 짝수인 경우입니다. 500회 반복 초과만 별도 처리하고 다른 건 재귀식으로 하면 될 것 같습니다. 
+function solution(num, count = 0) {    return count === 500         ? -1         : num === 1            ? count            : solution(num % 2 ? num * 3 + 1 : num / 2, count + 1);}
+재귀를 사용하면 반복 작업을 줄일 수 있어 편합니다.
+평균 구하기  
+function solution(arr) {    return arr.reduce((a, c) =&gt; a + c) / arr.length;}
+평균, 곱, 합 등등 뭔가 쌓이는 것들은 다 reduce로 하면 깔끔합니다.
+하샤드 수 
+x의 자릿수의 합으로 x가 나눠 떨어지면 x는 하샤드 수입니다. 18의 자리수의 합은 1 + 8 = 9이고, 18은 9로 나눠 떨어지므로 18은 하샤드 수인거죠.
+일단 자릿수를 쪼개서 더하는 것부터 합시다. split과 reduce면 되죠.
+function solution(x) {    return !(x % String(x).split('').reduce((a, c) =&gt; a + c * 1, 0));}
+x를 나눌 수 있으면 0(falsy value)가 나오기 때문에 앞에 !를 붙여 true로 만들었습니다. 문자열을 숫자로 만들기 위해 이번에는 * 1을 한 번 붙여봤습니다. parseInt도 있고 +도 있고 / 1도 있고 다양하게 문자열을 숫자로 만들 수 있습니다.
+핸드폰 번호 가리기 
+전화번호 뒷 4자리를 빼고 나머지를 전부 *로 바꾸는 문제입니다. 뒷 네자리를 떼내고 앞은 다 *로 바꾼 뒤 다시 붙이면 되겠죠?
+function solution(phone_number) {    return '*'.repeat(phone_number.length - 4) + phone_number.slice(-4);}
+repeat 메서드를 알아두세요. 문자열을 쉽게 반복할 수 있습니다.
+정규표현식으로 하면 더 간단하더군요 ㅠㅠ (?=)로 look behind를 썼네요.
+function solution(s) {  return s.replace(/\d(?=\d{4})/g, "*");}
+행렬의 덧셈 
+[[1,2],[2,3]]과 [[3,4],[5,6]]이 있으면 [[4,6],[7,9]]가 됩니다. 끼리끼리 더하면 됩니다.
+2차원 배열이기 때문에 반복문이 두 번 필요합니다. for을 안 쓰기로 했기 때문에 map을 두 번 연달아 쓰면 됩니다. map을 쓰는 이유는 1,2가 4,6으로, 2,3이 7,9로 1대1로 바뀌기 때문입니다.
+function solution(arr1, arr2) {    return arr1.map((arr, i) =&gt; arr.map((v, j) =&gt; v + arr2[i][j]));}
+x만큼 간격이 있는 n개의 숫자 
+x의 배수를 n개 나열하면 됩니다. 2와 5면 [2,4,6,8,10]이고 -4와 2면 [-4,-8]입니다.
+Array fill map을 사용하면 숫자로부터 배열을 쉽게 만들 수 있습니다.
+function solution(x, n) {    return Array(n).fill(x).map((v, i) =&gt; (i + 1) * v)}
+map으로 원래의 수와 배수를 1대1로 짝지어주면 됩니다.
+직사각형 별찍기 
+자바스크립트 문제로는 없어서 그냥 제가 직접 풀었습니다. 왜 안 만들었는지 모르겠네요. 5와 3이 주어지면 5열3행의 별을 찍으면 됩니다.
+function solution(a, b) {  return Array(b).fill().map(() =&gt; '*'.repeat(a)).join('\n');}
+\n이 줄바꿈 표시이기때문에 별들로 먼저 배열을 만들고 요소들 사이에 줄바꿈을 넣어줍니다.
+다음 시간부터는 Level 2 문제를 풉니다. Level 1보다 확실히 어렵고, 같은 Level 2끼리도 난이도 편차가 좀 있더군요. 노력해보겠습니다!
+]]></description><link>https://www.zerocho.com/category/Algorithm/post/5b7bce15b35bf5001b940db9</link><guid isPermaLink="true">https://www.zerocho.com/category/Algorithm/post/5b7bce15b35bf5001b940db9</guid><category><![CDATA[Algorithm]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Tue, 21 Aug 2018 08:32:21 GMT</pubDate></item><item><title><![CDATA[프로그래머스 문제 풀이 Level 1 - 11번~20번]]></title><description><![CDATA[안녕하세요. 이번 시간에는 11번부터 20번까지 풀어보겠습니다. 모든 문제는 제가 직접 푼 풀이이며, 더 나은 풀이가 있다면 알려주세요~ 못 푼 문제는 끙끙대며 풀어볼테니 스포 금지!
+Level 1 11번~20번
+소수 찾기 
+1~n 사이의 소수의 개수를 반환해야 합니다.
+소수를 찾으려면 제가 알기로는 반복문 돌면서 나누는 수밖에 없는 것으로 알고 있습니다. 단, 캐싱을 좀 해두면 자원 절약은 되겠죠.
+function solution(n) {  const primes = [];  for (let j = 2; j &lt;= n; j++) {    let isPrime = true;    const sqrt = Math.sqrt(j);    for (let i = 0; primes[i] &lt;= sqrt; i++) {      if (j % primes[i] === 0) {        isPrime = false;        break;      }    }    if (isPrime) {      primes.push(j);    };  }  return primes.length;}
+일단 가장 간단하게 떠오르는 반복문 사용해서 푸는 방법입니다. 근데 반복문을 사용하고 싶지 않다면요? 저처럼 for을 사용하지 않는 사람은 어떻게 해야 할까요?? 바로 재귀를 사용합니다.
+function solution(n, start = 2, primes = [], count = 0) {    if (start &gt; n) return count;    const sqrt = Math.sqrt(start);    const isPrime = primes.every(v =&gt; start % v);    if (isPrime) primes.push(start);    return solution(n, start + 1, primes, count + (isPrime ? 1 : 0));}
+현재 Maximum call stack size exceeded 에러가 뜨네요. 꼬리재귀가 안 돼서 그런 것 같습니다. ㅠㅠ 그럴 때 쓰는 방법이 있긴 한데(setTimeout같은 것 사용) 효율성 측면에서 좋은 방법은 아닙니다.
+근데 재귀가 항상 좋은 것만은 아닙니다. 재귀는 함수를 반복적으로 호출해서 컴퓨터에 더 무리를 줄 수 있습니다. 알고리즘 문제를 풀 때 반복문이 재귀보다 효율성 점수를 높게 받을 가능성이 큽니다.
+위의 코드보다 더 효율적인 방법이 있다는 조언을 들었습니다. 에라토스테네스의 체를 사용하는 것인데요. 위 코드는 하나의 숫자가 소수인지 아닌지 판단할 때 더 효율적이고, 아래 코드는 여러 개의 숫자 중에 소수를 걸러낼 때 더 효과적이라고 하네요.
+function solution(n) {    let range = Array(n - 1).fill().map((v, i) =&gt; i + 2);    for (let i = 0; i &lt; range.length; i++) {        range = range.filter(v =&gt; v === range[i] || v % range[i]);    }    return range.length;}
+근데 코드를 돌려보면 시간 초과가 떠서 이 부분 개선 조언을 받습니다. 혹시나 filter 대신에 다시 반복문으로 해야하는 것일까요. ㅠㅠ
+수박수박수박수박수 
+3이면 수박수, 4면 수박수박, 5면 수박수박수를 리턴하면 됩니다.
+수박을 원하는만큼 반복시켜서 개수만큼 자르면 될 것 같습니다.
+function solution(n) {  return '수박'.repeat(n).substr(0, n);}
+repeat 메서드로 문자열을 반복할 수 있습니다. 코드 길이는 늘어나지만 repeat(n) 대신 repeat(Math.ceil(n / 2))하면 더 효율적일 것 같기도 하네요.
+문자열을 정수로 바꾸기 
+function solution(s) {  return parseInt(s);}
+더 이상 설명이 필요한지...? 근데 또다른 팁으로 문자열을 숫자로 바꾸는 방법 몇 개를 더 설명드리겠습니다. 단, 자바스크립트 원리를 잘 모르면 가독성을 해치기 때문에 저는 잘 쓰지 않습니다. +s, s * 1, s / 1, Number(s) 등이 있습니다.
+시저 암호 
+AB는 1만큼 밀면 BC가 되고, AB를 3만큼 밀면 DE가 됩니다. z는 1만큼 밀면 a가 됩니다. 공백은 그대로 공백이고요.
+즉 문자를 다른 문자로 치환하는 건데요. 이렇게 1대1 변환을 하는 문제는 map으로 다 커버 가능합니다. map 안에서 공백인 경우, 소문자인 경우, 대문자인 경우를 나눠서 하면 되겠습니다. 또는 대소문자 상관 없이 Z에서 다시 A로 돌아오는 것과 같은 경우만 찾아도 되겠고요. 저는 다시 돌아오는 것들을 찾는 식으로 했습니다.
+function solution(s, n) {  return s.split('').map((l) =&gt; {    return l === ' '      ? l      : l.charCodeAt() + n &gt; 122 || (l.charCodeAt() &lt;= 90 &amp;&amp; l.charCodeAt() + n &gt; 90)        ? String.fromCharCode((l.charCodeAt() + n) - 26)        : String.fromCharCode(l.charCodeAt() + n);  }).join('');}
+일단 l이 공백이면 그대로 공백을 리턴하고요. A의 charCodeAt이 65, Z가 90, a가 97, z가 122는 것을 이용해서, 혹시나 Z에서 A로 넘어가거나, z에서 a로 넘어가는 게 있지는 않은지 검사합니다. 넘어가는 게 있다면 -26을 해주고(알파벳이 26개입니다) 없다면 그냥 n을 더해서 리턴합니다. String.fromCharCode가 charCodeAt의 반대 메서드입니다.
+약수의 합  
+약수의 합을 리턴합니다. 12의 약수는 1,2,3,4,6,12라서 모두 더하면 28입니다.
+약수를 구할 때 1부터 n 까지 나눠보고 나누어 떨어지면 약수라고 여기면 되겠습니다.
+function solution(n) {  return Array(n).fill().map((v, i) =&gt; i + 1).reduce((a, c) =&gt; n % c ? a : a + c, 0)}
+후후... 한 줄로 끝낼 수 있습니다. Array fill map 조합은 [1,2,3,...,n]까지 숫자를 만드는 메서드입니다. 보통 range라는 함수로 다른 라이브러리에 많이 들어 있습니다. n % c ? a : a + c이 부분은 나눠지면 나눈 값을 더하고, 안 나눠지면 이전 값을 그대로 사용한다는 의미입니다.
+사실 Array(Math.floor(n/2))로 배열을 만들고 마지막에 + n을 해주는 게 더 효율적일 것 같습니다.
+이상한 문자 만들기 
+단어의 짝수번째 문자는 대문자로, 홀수번째 문자는 소문자로 바꿉니다. try hello world는 TrY HeLlO WoRlD가 되네요.
+대문자로는 toUpperCase() 소문자로는 toLowerCase()를 씁니다. 이것도 단어 하나씩을 치환하는 거니까 map이 어울립니다.
+function solution(s) {  return s.split(' ').map(w =&gt; (    w.split('').map((v, i) =&gt; (i % 2 ? v.toLowerCase() : v.toUpperCase())).join('')  )).join(' ');}
+split map join 삼단콤보(split-apply-combine 기법)로 쉽게 해결할 수 있습니다.
+자릿수 더하기 
+123이면 1+2+3을 해서 6을 리턴하면 됩니다.
+function solution(n) {  return String(n).split('').reduce((acc, cur) =&gt; acc + +cur, 0);}
+사람처럼 생각해서 자릿수를 다 분리한 후 더해나가면 됩니다. +cur로 문자열을 숫자로 바꾸는 기능을 써보았습니다. 근데 좀 지저분하고 가독성도 떨어지죠? 실무에서는 저런 건 그냥 안 쓰시는 게 좋습니다.
+자연수 뒤집어 배열로 만들기
+12345를 뒤집어 [5,4,3,2,1]로 만들면 됩니다. 
+function solution(n) {  return String(n).split('').reverse().map(v =&gt; +v);}
+배열로 만드는 건 split, 뒤집는 건 reverse, 문자열을 숫자로 바꾸는 건 map을 쓰면 됩니다.
+정수 내림차순으로 배치하기
+118372면 내림차순으로 873211을 리턴하면 됩니다.
+이것도 숫자를 한 자리씩 쪼개서 내림차순 정렬을 하고 다시 합치면 되겠죠. 
+function solution(n) {  return +String(n).split('').sort((p, c) =&gt; c - p).join('');}
+앞에 +는 나머지 부분의 결과물로 나오는 문자열을 숫자로 바꾸는 것입니다. 제 입으로 쓰지 말랬는데 자꾸 써서 죄송합니다. 묘하게 중독성이 있네요...
+정수 제곱근 판별
+n이 정수 x의 제곱이라면 x+1의 제곱을 리턴하고, 아니라면 -1을 리턴합니다.
+function solution(n) {  return Math.sqrt(n) === parseInt(Math.sqrt(n)) ? (Math.sqrt(n) + 1) ** 2 : -1}
+곧이곧대로 만들면 되겠습니다. 삼항연산자로 if문을 짧게 줄일 수 있습니다. Math.pow 대신에 ** 연산자 쓸 수 있는 거 아시죠? 효율적인 코드를 만들려면 Math.sqrt(n)처럼 반복되는 것은 캐싱하시는 게 좋습니다.
+이상으로 20번까지 풀어보았습니다. 바로 30번까지 달려봅시다!
+]]></description><link>https://www.zerocho.com/category/Algorithm/post/5b7a19b9337215001b3a1900</link><guid isPermaLink="true">https://www.zerocho.com/category/Algorithm/post/5b7a19b9337215001b3a1900</guid><category><![CDATA[Algorithm]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Mon, 20 Aug 2018 01:30:33 GMT</pubDate></item><item><title><![CDATA[프로그래머스 문제 풀이 Level 1 - 1번~10번]]></title><description><![CDATA[안녕하세요. 이번 시간에는 프로그래머스의 알고리즘 문제 풀이를 하겠습니다. 사용 언어는 자바스크립트입니다. 혹시나 다른 알고리즘 문제 사이트 중 자바스크립트를 지원하고, 문제 내용이 알찬(백준처럼 너무 많지는 않은) 사이트가 있다면 알려주세요~ 시간될 때마다 풀어보겠습니다.
+Level 3까지는 제가 쉽게 푸는데 4랑 5는 좀 고민을 해야겠더군요 ㅠㅠ. 알고리즘 수업을 들은 지 오래 돼서요. 못 푸는 문제가 있다면 일단 그건 뒤로 보류하고 푼 문제부터 알려드리겠습니다. 여기 풀이는 모두 제가 직접 푼 풀이입니다. 혹시나 더 나은 풀이가 있다면 댓글로 알려주세요.
+프로그래머스 알고리즘을 풀 생각이 있으신 분들은 아래 풀이를 보지 마세요. 고민하지 않고 답 먼저 본다면 전혀 실력이 늘지 않습니다. 고민을 하고 다양한 시도를 해야 실력이 느는 것 같습니다. 저도 뭐 알고리즘 대회 입상한 적도 없고, 참가할 생각도 없는 그냥 평범한 사람입니다. 유일한 업적은 대학교 수업 알고리즘 A+받은 것뿐이랄까요 ㅋㅋ. 그냥 고민하면서 한 문제씩 풀어나가고 있습니다.
+문제들을 보니까 if문과 for문만 있으면 간단하게 풀 수 있어 보입니다. 하지만 저는 for문을 쓰지 않는 코딩을 하기(map, forEach 등의 함수형 메서드를 더 선호합니다) 때문에 여러분이 푼 답과 조금 다를 수도 있습니다. 특히 한 줄로 문제를 풀어버리는 것을 좋아해서 짧고 간결하게 풀어보겠습니다. 그리고 몇몇 문제는 정규표현식을 쓰면 엄청 간단하게 풀 수 있습니다. 그래서 어떠한 문제는 정규표현식과 일반 풀이 두 개를 모두 제공해드리겠습니다. 단순한 알고리즘 풀이 외에도 자바스크립트의 메서드나 여러 줄임 표현식같은 것을 알려드리고 있기에 한 번 씩 봐보셔도 좋습니다.
+Level 1 1번~10번
+2016
+2016년 a월 b일은 무슨 요일일까요?라는 문제입니다.
+new Date에서 month가 0부터 시작(1월이 0이고, 12월이 11)한다는 것을 알고, getDay가 요일을 가져오는 메서드라는 것을 이용하면 쉽게 풀 수 있습니다.
+function solution(a, b) {  return ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date(2016, a - 1, b).getDay()];}
+짧은 리스트는 위와 같이 배열로 그냥 하드코딩하는 게 편하기도 합니다.
+가운데 글자 가져오기
+abcde에서는 c를 가져오고 qwer에서는 we 두 글자를 가져오는 문제입니다.
+보통 이런 문제는 글자를 자르면 됩니다. 인덱스를 구하면 되죠.
+function solution(s) {  return s.substr(Math.ceil(s.length / 2) - 1, s.length % 2 === 0 ? 2 : 1);}
+substr로 문자열을 자를 수 있고, 시작 인덱스를 적절히 찾으면 됩니다. 중간점을 찾으려면 보통 s.length / 2를 내림하거나 올림하면 됩니다.
+같은 숫자는 싫어
+[1,1,3,3,0,1,1]이면 [1,3,0,1]로 연속되는 중복을 제거하는 문제죠.
+이런 문제는 필연적으로 반복문이 최소 한 번은 들어가게 됩니다. 사람이라면 어떻게 중복을 제거할 지를 생각해봐도 좋을 것 같습니다. 저라면 지금 숫자랑 다음 숫자랑 같으면 그 숫자는 없애는 방식을 택하겠습니다. 1, 1, 3, 3, 0, 1, 1
+function solution(arr) {  return arr.filter((v, i) =&gt; v !== arr[i + 1]);}
+반복문을 돌면서 숫자를 없앨 수 있는 메서드가 있습니다. 바로 filter죠. 그것을 사용하면 쉽게 다음 숫자랑 같은 숫자를 제거할 수 있습니다.
+나누어 떨어지는 숫자 배열 
+[5,9,7,10]과 5가 주어지면 [5, 10]을 리턴해야 합니다. 아무것도 없으면 [-1]을 리턴합니다.
+역시나 filter로 쉽게 필터링할 수 있습니다. 근데 [-1]을 리턴해야하는 조항 때문에 한 줄로 못 끝내서 짜증이 나네요(한 줄로 하면 코드가 너무 지저분해집니다)
+function solution(arr, divisor) {  const answer = arr.filter(el =&gt; el % divisor === 0);  return answer.length ? answer.sort((p, c) =&gt; p - c) : [-1];}
+마지막에 정답 배열의 개수로 오름차순 정렬을 할지, [-1]을 리턴할지 결정하고 있습니다.
+두 정수 사이의 합 
+3과 5가 주어지면 3+4+5를 해서 리턴하면 됩니다.
+function solution(a, b) {  a &gt; b &amp;&amp; ([a, b] = [b, a]);  return Array(b - a + 1).fill().map((v, i) =&gt; a + i).reduce((a, c) =&gt; a + c);}
+5, 3과 같이 역순으로 주어지는 경우만 추가적으로 고려하면 됩니다. [a, b] = [b, a]는 두 숫자를 바꾸는 편리한 문법이므로 알아두시면 좋습니다. Array부터 시작해서 fill, map까지 이어지는 과정도 [1,2,3,4,5]이런 순차적인 숫자 배열을 만드는 방식이므로 알아두시면 좋습니다.
+이렇게 풀고 짧게 끝냈다며 좋아하고 있었는데, 다른 사람의 풀이를 보는 순간 벙 쪘습니다. 가우스 방식(가우스가 1부터 100까지를 순식간에 더했던 일화)을 사용하신 분들이 있었던 거죠. ㅋㅋ 저는 너무 창의력이 떨어지는 것 같습니다.
+function solution(a, b) {  return (a + b) * ((a &gt; b ? a - b : b - a) + 1) / 2;}
+양쪽 두 수를 더한 것에, 두 수 사이의 숫자 수 + 1을 곱하고 나누기 2를 하는 게 가우스 방식입니다. a와 b 대소관계 때문에 좀 지저분하네요.
+문자열 내 마음대로 정렬하기 
+['abce', 'abcd', 'cdx']와 2가 주어지면 2번째 인덱스 글자(c, c, x)를 기준으로 정렬합니다. 만약 2번째 인덱스 글자가 서로 같다면(c, c처럼) 사전순으로 정렬합니다. abce와 abcd를 사전순으로 정렬하는 것이죠.
+따라서 같을 때와 다를 때 정렬 방법이 달라집니다. 정렬이기 때문에 당연히 sort 메서드가 들어가고요. sort 시 -1이면 순서가 유지되고, 1이면 순서가 서로 바뀐다는 것 이용하면 됩니다.
+function solution(strings, n) {  return strings.sort((p, c) =&gt; p[n] === c[n] ? p.localeCompare(c) : p[n].localeCompare(c[n]))}
+여기서 꿀팁! localeCompare로 사전순으로 정렬할 수 있습니다! sort 메서드 안에서 return a.localeCompare(b)하면 됩니다.  localeCompare 없이도 사전순으로 정렬하는 것을 직접 구현하셔도 되겠죠. 키워드도 하나 알려드립니다. lexicographic order가 사전순 정렬입니다.
+문자열 내 p와 y의 개수 
+문자열 내의 p와 y의 개수가 같으면(대소문자 구분 없음) true 아니면 false를 리턴하면 됩니다. Ppayay는 true입니다.
+해답은 간단하죠. 개수를 세서 하면 됩니다.
+function solution(s) {  const p = s.split('').filter(v =&gt; ['p', 'P'].includes(v));  const y = s.split('').filter(v =&gt; ['y', 'Y'].includes(v));  return p.length === y.length;}
+문자열을 배열로 만들어서 각 단어가 p나 P인지, 또는 y나 Y인지를 찾아서 필터링 후, 개수를 비교합니다.
+이 문제도 제 함수형에 대한 집착(고정관념)을 반성하게 해준 문제입니다. 정규표현식보다 함수형 메서드를 우선 시하여 생각하는 문제가 있는 거죠. 정규표현식으로 하면 엄청 간단한 문제였습니다.
+function solution(s) {  return s.match(/p/gi).length === s.match(/y/gi).length;}
+정규표현식에 걸리는 것들의 개수를 세면 됐습니다. g는 모두 찾는 거고, i는 대소문자 구분 안 한다는 뜻입니다.  그런데 이게 에러가 납니다. (p와 y가 없는 경우 문제가 됩니다)
+function solution(s){  return s.replace(/p/gi, '').length == s.replace(/y/gi, '').length;}
+이렇게 replace에도 정규식을 써서 풀 수 있습니다. 위에 match는 왜 안 되는지 잘 모르겠네요.
+문자열 내림차순으로 배치하기 
+문자열을 역순으로 정렬합니다. 대문자는 소문자보다 뒤에 위치해야 합니다. 예를 들어 Zbcdefg는 gfedcbZ가 됩니다.
+당연히 정렬(sort)을 하게 되고요. localeCompare는 여기서 못 씁니다. 대문자가 소문자보다 뒤에 위치해야 해서요.
+function solution(s) {  return s.split('').sort((prev, cur) =&gt; cur.charCodeAt() - prev.charCodeAt()).join('');}
+제가 좋아하는 split, sort(또는 map) join(또는 reduce)으로 이어지는 메서드입니다. split-apply-combine 기법이라고도 불리는 3단 콤보입니다. 문자열을 split으로 배열로 바꿔서 원하는 처리를 하고 다시 join으로 문자열로 되돌립니다. charCodeAt은 문자의 숫자코드를 알려주는 메서드입니다. 이걸 사용해서 정렬하면 됩니다. 대소문자 정렬에서 localeCompare과 다른 결과를 보여줍니다.
+문자열 다루기 기본
+문자열의 길이가 4 또는 6이고 숫자로만 구성되어 있는지 확인합니다.
+숫자로만 되어있는지와(AND) 길이가 4 또는(OR) 6인지를 확인하면 되겠네요.
+function solution(s) {  return /^[0-9]+$/.test(s) &amp;&amp; [4,6].includes(s.length);}
+프로그래머스에서 \d 정규표현식을 지원하지 않아 저렇게 숫자로 했습니다. OR 조건에서 (s.length === 4 || s.length === 6) 대신 includes로 짧게 줄일 수 있다는 것 알아두세요.
+서울에서 김서방 찾기 
+속담으로 이름을 지은 문제인 것 같네요. ['Jane', 'Kim']이란 배열이 있으면 Kim의 위치를 찾으면 됩니다.
+간단하게 indexOf로 끝내버립시다.
+function solution(seoul) {  return '김서방은 ' + seoul.indexOf('Kim') + '에 있다';}
+Level 1 문제는 30개가 있더군요. 앞으로 두 편 더 Level 1 문제 풀이를 보여드리겠습니다. 여러분의 답과 비교해보시고 얼마나 더 짧게 줄일 수 있는지 테스트해보세요 ㅎㅎ. 사실 너무 쉬워서 블로그 포스팅하는 시간이 몇 배는 더 걸렸네요 ㅠㅠ. Level 2부터 좀 재밌어집니다.
+]]></description><link>https://www.zerocho.com/category/Algorithm/post/5b79898d337215001b3a18eb</link><guid isPermaLink="true">https://www.zerocho.com/category/Algorithm/post/5b79898d337215001b3a18eb</guid><category><![CDATA[Algorithm]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Sun, 19 Aug 2018 15:15:25 GMT</pubDate></item><item><title><![CDATA[[리뷰] 모두의 네트워크]]></title><description><![CDATA[안녕하세요. 오늘은 모두의 네트워크 책 리뷰를 하겠습니다. 길벗 출판사에서 나온 책입니다. 제가 참 길벗 출판사를 좋아하는데요. 물론 제 책이 길벗 출판사에서 나왔기 때문입니다(하하하...)는 아니고 요즘 길벗 출판사에서 IT 전문서를 엄청 퀄리티있게 잘 뽑아냅니다.
+길벗 출판사에는 다양한 시리즈가 있습니다. '교과서', '무따기(무작정 따라하기)', '기술', 그리고 '모두의'까지 대상 독자층에 따라 시리즈가 나누어져 있습니다. 오늘 리뷰할 모두의 네트워크 책은 모두의 시리즈이죠. 이름 그대로 누구나 볼 수 있을 정도로 쉽게 설명되어 있습니다.
+보통 네트워크하면 어렵다는 생각을 많이 합니다. 저도 대학교 전공수업 때 네트워크를 들었는데요. OSI 7계층도 외우고, TCP/IP 모델도 외우고 하다가, sin을 미분하라는 소리에 뛰쳐나갔던 기억이 있습니다. 문과인데 컴퓨터 수업을 듣던 저로서는 싸인(sin)을 어떻게 미분하냐며 비명을 질렀죠. 전공서적을 아무리 읽어도 전문용어들이 너무 어려워서 고통 받았습니다. 그 때, 모두의 네트워크를 미리 읽었더라면하는 생각이 드네요.
+
+책 표지는 위와 같이 생겼습니다(손떨림 죄송합니다...) 표지에 나오는 강아지 학생, 사자 교수님, 고양이 조교가 주인공입니다. 번역서이지만 번역이 매우 깔끔하기 때문에 걱정하지 않으셔도 됩니다. 중간 중간 개그가 나오는데 일본 개그를 어쩜 그리 한국어로 잘 번역했을까 감탄했습니다.
+
+
+책의 내용은 위와 같이(그림자 죄송합니다...) 대화 형식으로 진행됩니다. 강아지 학생이 사자 교수님의 네트워크 수업(1대1 과외인가?)을 듣는 거죠. 
+대화 형식으로 되어있기 때문에 마치 과외 내용을 3자의 입장에서 듣는 기분이 듭니다. 텍스트도 적기 때문에 책도 술술 넘어가고요. 그림 설명이 매우 잘 되어있습니다. 컴퓨터들간의 연결과정, 스위치나 허브의 차이점, 패킷의 구성 요소, 각 계층의 역할 등 전공책으로 배웠다면 눈물을 흘리면서 외워야 했을 것을 그림으로 쉽게 보여줍니다. 문뜩 든 생각은, 이 책을 책장에 꽂아뒀다가 용어를 까먹으면 얼른 펴서 다시 그림을 보면 좋을 것 같습니다.
+저는 컴퓨터학부를 전공했고 속독을 배웠기 때문에 하루만에 읽었는데요. 비전공자 여러분도 일주일 안에 이 책을 다 뗄 수 있으실 겁니다(책 표지는 10일이라고 나와있네요). 단, 한 번 본다고 용어들이 다 외워지는 건 아니기 때문에 몇 번 반복해서 읽으시면 될 겁니다. 책 속 강아지 학생의 실력이 일취월장하는 것을 여러분도 겪으실 수 있습니다.
+이 책의 단점은, 강아지 학생의 아재개그가 조금 괴롭습니다 ㅎㅎ(번역하신 분 대단합니다) 그리고 고양이 조교는 왜 등장인물에만 나오고 책 본문에는 안 나오는지 모르겠습니다! ㅋㅋㅋ 책 자체가 모두가 읽을 수 있게 쓰여져있기 때문에 엄청 자세하거나 깊은 내용을 다루지는 않습니다. 가벼운 책을 좋아하지 않는 분들에게는 맞지 않을 수도 있습니다.
+그래서 추천하는 네트워크 공부 코스를 생각해보았습니다. 네트워크 공부를 위해 전공 서적을 읽기 전에 모두의 네트워크로 기본적인 개념을 익히고 넘어가면 좋습니다. 일단 용어를 쉽게 이해할 수 있다는 점에서 엄청난 메리트가 있습니다. 이 책을 읽으시면 공포의 OSI 7계층이 이렇게 쉬웠나 허탈하게 됩니다. 마지막 무선 AP 부분은 보너스같습니다. 인터넷, 공유기 설치 기사님과 프리 토킹도 가능해집니다. ㅎㅎ
+이상으로 모두의 네트워크 책 리뷰를 마칩니다~ 책 리뷰는 자주 하지는 못하겠지만 좋은 책을 발견하면 틈틈이 하도록 하겠습니다.
+]]></description><link>https://www.zerocho.com/category/etc/post/5b765783dc6a7e001b70788a</link><guid isPermaLink="true">https://www.zerocho.com/category/etc/post/5b765783dc6a7e001b70788a</guid><category><![CDATA[etc]]></category><dc:creator><![CDATA[ZeroCho]]></dc:creator><pubDate>Fri, 17 Aug 2018 05:05:07 GMT</pubDate></item></channel></rss>

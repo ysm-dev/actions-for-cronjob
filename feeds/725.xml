@@ -1,0 +1,803 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ko_KR"><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="https://j911.me/feed.xml" rel="self" type="application/atom+xml" /><link href="https://j911.me/" rel="alternate" type="text/html" hreflang="ko_KR" /><updated>2019-03-25T02:44:07+00:00</updated><id>https://j911.me/feed.xml</id><title type="html">제이구일일의 개발 블로그</title><subtitle>J911의 개발 블로그입니다</subtitle><entry><title type="html">혼자 논문읽기: RCNN 논문 분석</title><link href="https://j911.me/2019/03/analysis-of-rcnn-paper.html" rel="alternate" type="text/html" title="혼자 논문읽기: RCNN 논문 분석" /><published>2019-03-24T00:00:00+00:00</published><updated>2019-03-24T00:00:00+00:00</updated><id>https://j911.me/2019/03/analysis-of-rcnn-paper</id><content type="html" xml:base="https://j911.me/2019/03/analysis-of-rcnn-paper.html">&lt;p&gt;대학원진학을 준비하면서 나도 슬슬 논문을 볼줄 알아야겠다는 생각을 시작했다. 
+그래서 여러 논문을 읽어보려는 시도를 하고 있는데, 그냥하려니 동기가 잘 생기지 않아서 블로깅과 &lt;a href=&quot;https://www.youtube.com/playlist?list=PLUg_fHoAY_3BHsBXINnG26sSFckmG7XQ9&quot;&gt;Youtube 채널&lt;/a&gt;을 하나 운영해 볼까 한다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;참고로 이 블로깅과 영상에서는 내가 이해하고 있는 부분에 대해 정리를 하는 것으로 논문의 모든 내용을 다루지는 않는다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;논문-정보&quot;&gt;논문 정보&lt;/h2&gt;
+&lt;p&gt;이 포스트는 2013년 11월에 공개된 &lt;em&gt;Rich feature hierarchies for accurate object detection and semantic segmentation&lt;/em&gt;
+라는 제목의 논문을 분석한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;r-cnn의-목표-및-이전의-알고리즘&quot;&gt;R-CNN의 목표 및 이전의 알고리즘&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2019-03-24-analysis-of-rcnn-paper/Picture1.png&quot; alt=&quot;Picture1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;R-CNN의 목표는 위의 그림과 같이 입력 이미지에 대해서 그 속의 물체를 탐지해 위치를 찾고(localization) 각각의 물체를 분류(classification)하는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Object Detection&lt;/code&gt;이다.&lt;/p&gt;
+
+&lt;p&gt;다음과 같은 두개의 object detection 알고리즘이 이전에 존재하였는데,&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2019-03-24-analysis-of-rcnn-paper/Picture2.png&quot; alt=&quot;Picture2&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;SIFT(Scalar Invariant Feature Transform)&lt;/li&gt;
+  &lt;li&gt;DOG(Histograms of Oriented Gradient)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이 두 개의 알고리즘은 모두 물체의 특징점을 찾아서 물체를 탐지하는 알고리즘이다.&lt;/p&gt;
+
+&lt;p&gt;논문에서는 이 두개의 알고리즘이 2010 ~ 2012년 동안 아주 느리게 발전해왔다고 한다.&lt;/p&gt;
+
+&lt;p&gt;그래서 이 논문은 더 진보적인 모델을 제안하는데, 바로 &lt;code class=&quot;highlighter-rouge&quot;&gt;R-CNN(Regions with CNN features)&lt;/code&gt;이다.&lt;/p&gt;
+
+&lt;p&gt;논문의 초록에서는 R-CNN을 다음과 같이 소개한다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;간단하면서도 변형하기 쉽다&lt;/li&gt;
+  &lt;li&gt;이전의 object detection 알고리즘의 mAP(평균 정밀도) 보다 30% 성능을 높인 53%의 mAP를 보인다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2019-03-24-analysis-of-rcnn-paper/Picture3.png&quot; alt=&quot;Picture3&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;object-detection-with-r-cnn&quot;&gt;Object detection with R-CNN&lt;/h2&gt;
+&lt;h3 id=&quot;three-modules&quot;&gt;Three modules&lt;/h3&gt;
+&lt;p&gt;논문에서는 R-CNN이 세가지의 모듈로 구성된다고 한다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;물체의 위치를 파악하는 Region Proposal 모델&lt;/li&gt;
+  &lt;li&gt;Region proposal된 각 영역들을 통해 피쳐맵을 추출하는 컨볼루션 뉴럴 네트워크&lt;/li&gt;
+  &lt;li&gt;추출된 피쳐를 통해 classification하는 linear SVM&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h4 id=&quot;region-proposals&quot;&gt;Region proposals&lt;/h4&gt;
+&lt;p&gt;첫번째로 Region proposals을 하는 모듈인데, 물체가 존재할 확률이 있는 영역을 2000개를 추출하는 것이다.
+논문에는 Region proposals을 위해 selective search 알고리즘(ss)을 사용한다.&lt;/p&gt;
+
+&lt;p&gt;아래 그림을 참고하면 ss가 가장 좋은 성능을 보이는 것을 알 수 있다.
+&lt;img src=&quot;/assets/post-assets/2019-03-24-analysis-of-rcnn-paper/Picture10.png&quot; alt=&quot;Picture10&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;feature-extraction&quot;&gt;Feature extraction&lt;/h3&gt;
+&lt;p&gt;그 다음은 추출된 Region proposals 영역을 통해 피쳐를 추출하는 것인데 여기는 CNN이 사용된다.
+네트워크 특성상 고정된 사이즈의 입력만 받을 수 있기 때문에, 각각 나눠진(cropping) Region proposals 영역을 변형(warpping)하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;227 x 227 pixels&lt;/code&gt;을 만든다.&lt;/p&gt;
+
+&lt;p&gt;이렇게 만들어진 입력 이미지는  5개의 컨볼루션 레이어와 2개의 fully-connected 레이어를 거쳐 피쳐가 추출되게 된다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2019-03-24-analysis-of-rcnn-paper/Picture7.png&quot; alt=&quot;Picture7&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;최종적으로는 추출된 피쳐를 SVM을 사용해서 Classification하게 된다.&lt;/p&gt;
+
+&lt;h2 id=&quot;test&quot;&gt;Test&lt;/h2&gt;
+&lt;p&gt;결과적으로 이 모델을 테스트 하는 과정을 다시 나열하면 다음과 같다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;테스트 이미지에서 대락 2000개의 Region proposal을 추출한다.&lt;/li&gt;
+  &lt;li&gt;추출된 영역을 cropping 하고 warpping하여 CNN을 통과시켜 피쳐를 추출한다.&lt;/li&gt;
+  &lt;li&gt;추출된 피쳐를 SVM을 사용해 분류한다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2019-03-24-analysis-of-rcnn-paper/Picture8.png&quot; alt=&quot;Picture8&quot; /&gt;
+&lt;em&gt;(source: https://apple.github.io )&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;만약에 위와 같이 한 물체에 대해서 여러 박스가 겹쳐(overlap) 발생하게 된다면(IoU, intersection-over-union), Threshold를 조절해 가면서 더 높은 확률의 박스를 최종 결과로 정하게 된다.&lt;/p&gt;
+
+&lt;h2 id=&quot;trainning&quot;&gt;Trainning&lt;/h2&gt;
+&lt;p&gt;그 다음은 학습에 대한 부분인데 이 논문과 같은 경우에는 &lt;code class=&quot;highlighter-rouge&quot;&gt;ImageNet&lt;/code&gt;에서 사전 훈련된(pre-trained) CNN 모델을 로드해 사용을 한다.&lt;/p&gt;
+
+&lt;p&gt;그리고 &lt;code class=&quot;highlighter-rouge&quot;&gt;SGD&lt;/code&gt; 를 통해 미세 조정을 하는데 여기에는 128개의 mini-batch를 이용한다.
+mini-batch는 positive sample 32개와 negative sample 96개로 이루어진다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;positive sample은 IoU가 0.5 이상인 샘플&lt;/li&gt;
+  &lt;li&gt;negative sample은 그 이외의 샘플&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;다음으로 SVM을 이용해 학습을 시키는데, 여기에도 positive sample과 negative sample(IoU &amp;lt; 0.3)을 이용해 학습한다.&lt;/p&gt;
+
+&lt;p&gt;이렇게 샘플을 나누는 이유는 아무래도 이미지의 정보중 배경이 차지하는 영역이 훨씬 많기 때문에 높은 학습을 위해 적절하게 비율을 맞추는 것이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;결과&quot;&gt;결과&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2019-03-24-analysis-of-rcnn-paper/Picture9.png&quot; alt=&quot;Picture9&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;결과적으로 R-CNN은 VOC 2007과 VOC 2010 버전의 데이터셋에서 타 알고리즘에 비해 높은 mAP를 보이는 것으로 알 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;결론&quot;&gt;결론&lt;/h2&gt;
+
+&lt;p&gt;여기까지가 논문을 정리한 내용이다. 사실 보통의 R-CNN은 Region Proposals 알고리즘이 CPU기반으로 동작하기 때문에 병목현상(bottleneck)이 발생하는 것이다.&lt;/p&gt;
+
+&lt;p&gt;추가로 2000개의 Region Proposal이 하나씩 warping된 후 각각 CNN에 입력되기 때문에 굉장히 비효율적이다.&lt;/p&gt;
+
+&lt;p&gt;이러한 내용을 배경으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;Fast R-CNN&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;Faster R-CNN&lt;/code&gt;이 나오게 되었다.&lt;/p&gt;
+
+&lt;p&gt;이 부분은 다음번에 이어서 정리해보도록 하겠다.&lt;/p&gt;
+
+&lt;h2 id=&quot;reference&quot;&gt;reference&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Ross Girshick, Jeff Donahue, Trevor Darrell, Jitendra Malik.: Rich feature hierarchies for accurate object detection and semantic segmentation&lt;/li&gt;
+  &lt;li&gt;J. HOSANG ET AL.: HOW GOOD ARE DETECTION PROPOSALS, REALLY?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;links&quot;&gt;links&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Youtube: &lt;a href=&quot;https://youtu.be/8X-Q4-MdIbQ&quot;&gt;https://youtu.be/8X-Q4-MdIbQ&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;슬라이드 다운로드: &lt;a href=&quot;https://drive.google.com/file/d/1pXaXvcUNGVgHKvEn39LQBA1Pm-ikUfRR/view&quot;&gt;https://drive.google.com/file/d/1pXaXvcUNGVgHKvEn39LQBA1Pm-ikUfRR/view&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>J911</name></author><summary type="html">대학원진학을 준비하면서 나도 슬슬 논문을 볼줄 알아야겠다는 생각을 시작했다. 그래서 여러 논문을 읽어보려는 시도를 하고 있는데, 그냥하려니 동기가 잘 생기지 않아서 블로깅과 Youtube 채널을 하나 운영해 볼까 한다.</summary></entry><entry><title type="html">논문 초록 작성법 및 유의사항</title><link href="https://j911.me/2019/03/paper-abstract.html" rel="alternate" type="text/html" title="논문 초록 작성법 및 유의사항" /><published>2019-03-23T00:00:00+00:00</published><updated>2019-03-23T00:00:00+00:00</updated><id>https://j911.me/2019/03/paper-abstract</id><content type="html" xml:base="https://j911.me/2019/03/paper-abstract.html">&lt;p&gt;영어 논문 작성을 위해 우선 논문에 초록이 무엇인지, 그리고 초록은 어떻게 작성되어야 하며 유의사항은 무엇인지에 대해 정리하였다.&lt;/p&gt;
+
+&lt;h2 id=&quot;초록&quot;&gt;초록&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;논문 내용, 결론, 새로운 정보를 요약&lt;/li&gt;
+  &lt;li&gt;논문 전체를 보기 전에 파악을 하기 위함&lt;/li&gt;
+  &lt;li&gt;정확하고 간결하게 작성&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;논문에-포함되어야-하는-내용&quot;&gt;논문에 포함되어야 하는 내용&lt;/h3&gt;
+
+&lt;p&gt;아래 4가지가 모두 포함되어야 함.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;서론: 왜 이걸 연구했는가 (why)&lt;/li&gt;
+  &lt;li&gt;실험 방법: 무엇을 어떻게 햇는가 (how)&lt;/li&gt;
+  &lt;li&gt;결과: 무엇을 찾았는가 (what)&lt;/li&gt;
+  &lt;li&gt;토의: 그 결과는 무엇을 의미하는가 (so what)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;토의에서는 1의 문제점에 대한 Discussion이 되어야 함&lt;/li&gt;
+  &lt;li&gt;토의가 없는 것은 보고서에 불가함.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;형식&quot;&gt;형식&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;직설적인 방법: 일반적인 사항을 기술하는 형식. 비 전문가가 독자인 경우와 해설논문인 경우 적합&lt;/li&gt;
+  &lt;li&gt;전달적인 방법: 토의나 주석없이 정량적 결과에 역점을 두어 기술. 학술지에 적합&lt;/li&gt;
+  &lt;li&gt;복합적인 방법: 대부분의 학술지가 요구하는 형식&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;내용-구성&quot;&gt;내용 구성&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;배경 및 목적&lt;/li&gt;
+  &lt;li&gt;연구 방법&lt;/li&gt;
+  &lt;li&gt;결과(함축하여)&lt;/li&gt;
+  &lt;li&gt;일반적인 결론&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;초록-작성시-주의사항&quot;&gt;초록 작성시 주의사항&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;시제: 과거시제를 사용할 것&lt;/li&gt;
+  &lt;li&gt;참고인용을 지양할 것&lt;/li&gt;
+  &lt;li&gt;하나의 문단으로 작성할 것&lt;/li&gt;
+  &lt;li&gt;능동태 표현을 사용하는 경향이 높다.(능동태 표현을 지향해야함)&lt;/li&gt;
+  &lt;li&gt;전혀 이 논문을 읽어본적 없는 사람에게 설명하듯이 작성&lt;/li&gt;
+  &lt;li&gt;일반적으로 150 ~ 200영단어 사용 (유명 학술지는 100 ~ 150자 사용)&lt;/li&gt;
+  &lt;li&gt;전체 논문 부피의 약 3~5%가 되게 작성&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;reference&quot;&gt;reference&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Hanbat National University, Enginnering English, 이연승 교수(Dept of Information &amp;amp; Communication Enginnering)&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>J911</name></author><summary type="html">영어 논문 작성을 위해 우선 논문에 초록이 무엇인지, 그리고 초록은 어떻게 작성되어야 하며 유의사항은 무엇인지에 대해 정리하였다.</summary></entry><entry><title type="html">난생처음 CNN 프로젝트 해보기(오버피팅 체험해보기)</title><link href="https://j911.me/2019/01/my-first-cnn-project.html" rel="alternate" type="text/html" title="난생처음 CNN 프로젝트 해보기(오버피팅 체험해보기)" /><published>2019-01-19T00:00:00+00:00</published><updated>2019-01-19T00:00:00+00:00</updated><id>https://j911.me/2019/01/my-first-cnn-project</id><content type="html" xml:base="https://j911.me/2019/01/my-first-cnn-project.html">&lt;p&gt;평소 CNN을 공부하고 이론과 예제 프로젝트만 따라해보다가 
+처음으로 나의 프로젝트를 진행해보았다.&lt;/p&gt;
+
+&lt;p&gt;간단하게 얼굴의 위치가 왼쪽을 향해있는지 오른쪽을 향해있는지 추적하는 모델을 설계하고자 하였다.&lt;/p&gt;
+
+&lt;h2 id=&quot;데이터-수집&quot;&gt;데이터 수집&lt;/h2&gt;
+&lt;p&gt;opencv를 통해 나의 얼굴 사진을 캡쳐해 라벨링을 하는 모듈을 개발하였다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2019-01-19-my-first-cnn-project/capture.png&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;‘a’를 누르면 왼쪽 사진 캡쳐 ‘d’를 누르면 오른쪽 사진이 캡쳐되게 개발하였다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;모델-설계&quot;&gt;모델 설계&lt;/h2&gt;
+
+&lt;p&gt;720 * 1280 이미지를 데이터셋으로 하기 때문에 데이터가 너무 크다고 생각이 들어 처음 &lt;code class=&quot;highlighter-rouge&quot;&gt;MaxPool&lt;/code&gt;을 &lt;code class=&quot;highlighter-rouge&quot;&gt;6 x 6&lt;/code&gt;으로 하여 해상도를 낮추고 시작하였다.&lt;/p&gt;
+
+&lt;p&gt;그리고 2개의 컨블루션 레이어와 MaxPool을 번갈아게 설계하고 fully_connected 레이어를 5개 두어서 모델을 완성하였다.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# ...&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conv1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Conv2d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;30&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conv2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Conv2d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;30&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kernel_size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;mp1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MaxPool2d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;mp2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MaxPool2d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;fc1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Linear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;105800&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;fc2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Linear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;fc3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Linear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;fc4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Linear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;50&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;fc5&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Linear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;50&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;fc6&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Linear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# ...&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;in_size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mp1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Dimension collapse&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relu&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mp2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conv1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relu&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mp2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conv2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;view&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;in_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relu&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fc1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relu&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fc2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relu&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fc3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relu&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fc4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relu&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fc5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fc6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2019-01-19-my-first-cnn-project/conv_img.png&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;matplotlib&lt;/code&gt;으로 대강 시각화 해보면 위와 같다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;test&quot;&gt;TEST&lt;/h2&gt;
+
+&lt;h3 id=&quot;첫번째-시도&quot;&gt;첫번째 시도&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;학습 데이터셋: 170&lt;/li&gt;
+  &lt;li&gt;테스트 데이터셋: 62&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;결과&quot;&gt;결과&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Epoch: 1 Batch: 1 Loss: 0.703045
+Epoch: 1 Batch: 2 Loss: 0.676914
+Epoch: 1 Batch: 3 Loss: 0.645690
+Epoch: 1 Batch: 4 Loss: 0.600543
+Epoch: 1 Batch: 5 Loss: 1.113196
+Epoch: 1 Batch: 6 Loss: 1.253301
+Test set: Average loss: 0.7283, Accuracy: 33/62 (53%)
+Epoch: 2 Batch: 1 Loss: 0.782749
+Epoch: 2 Batch: 2 Loss: 0.695042
+Epoch: 2 Batch: 3 Loss: 0.691786
+Epoch: 2 Batch: 4 Loss: 0.678307
+Epoch: 2 Batch: 5 Loss: 0.670357
+Epoch: 2 Batch: 6 Loss: 0.678115
+Test set: Average loss: 0.6580, Accuracy: 33/62 (53%)
+Epoch: 3 Batch: 1 Loss: 0.660232
+Epoch: 3 Batch: 2 Loss: 0.659409
+Epoch: 3 Batch: 3 Loss: 0.649239
+Epoch: 3 Batch: 4 Loss: 0.624184
+Epoch: 3 Batch: 5 Loss: 0.604772
+Epoch: 3 Batch: 6 Loss: 0.608415
+Test set: Average loss: 0.5719, Accuracy: 62/62 (100%)
+Epoch: 4 Batch: 1 Loss: 0.577721
+Epoch: 4 Batch: 2 Loss: 0.545457
+Epoch: 4 Batch: 3 Loss: 0.498851
+Epoch: 4 Batch: 4 Loss: 0.480942
+Epoch: 4 Batch: 5 Loss: 0.455344
+Epoch: 4 Batch: 6 Loss: 0.454041
+Test set: Average loss: 0.3973, Accuracy: 60/62 (96%)
+Epoch: 5 Batch: 1 Loss: 0.358905
+Epoch: 5 Batch: 2 Loss: 0.287745
+Epoch: 5 Batch: 3 Loss: 0.243422
+Epoch: 5 Batch: 4 Loss: 0.265708
+Epoch: 5 Batch: 5 Loss: 0.313908
+Epoch: 5 Batch: 6 Loss: 0.101326
+Test set: Average loss: 0.1962, Accuracy: 61/62 (98%)
+Epoch: 6 Batch: 1 Loss: 0.263859
+Epoch: 6 Batch: 2 Loss: 0.146602
+Epoch: 6 Batch: 3 Loss: 0.103473
+Epoch: 6 Batch: 4 Loss: 0.086840
+Epoch: 6 Batch: 5 Loss: 0.016964
+Epoch: 6 Batch: 6 Loss: 0.010667
+Test set: Average loss: 0.0086, Accuracy: 62/62 (100%)
+Epoch: 7 Batch: 1 Loss: 0.010494
+Epoch: 7 Batch: 2 Loss: 0.008344
+Epoch: 7 Batch: 3 Loss: 0.005243
+Epoch: 7 Batch: 4 Loss: 0.005261
+Epoch: 7 Batch: 5 Loss: 0.011112
+Epoch: 7 Batch: 6 Loss: 0.087835
+Test set: Average loss: 0.0127, Accuracy: 62/62 (100%)
+Epoch: 8 Batch: 1 Loss: 0.048637
+Epoch: 8 Batch: 2 Loss: 0.024537
+Epoch: 8 Batch: 3 Loss: 0.005178
+Epoch: 8 Batch: 4 Loss: 0.002008
+Epoch: 8 Batch: 5 Loss: 0.006720
+Epoch: 8 Batch: 6 Loss: 0.060085
+Test set: Average loss: 0.0014, Accuracy: 62/62 (100%)
+Epoch: 9 Batch: 1 Loss: 0.001239
+Epoch: 9 Batch: 2 Loss: 0.066646
+Epoch: 9 Batch: 3 Loss: 0.001352
+Epoch: 9 Batch: 4 Loss: 0.003270
+Epoch: 9 Batch: 5 Loss: 0.007558
+Epoch: 9 Batch: 6 Loss: 0.003660
+Test set: Average loss: 0.0127, Accuracy: 62/62 (100%)
+Epoch: 10 Batch: 1 Loss: 0.016825
+Epoch: 10 Batch: 2 Loss: 0.120332
+Epoch: 10 Batch: 3 Loss: 0.006820
+Epoch: 10 Batch: 4 Loss: 0.069929
+Epoch: 10 Batch: 5 Loss: 0.007500
+Epoch: 10 Batch: 6 Loss: 0.001166
+Test set: Average loss: 0.0028, Accuracy: 62/62 (100%)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;생각보다 너무 잘 학습되어서 깜짝 놀랐다. 다만 조금 걸렸던 부분은 테스트 셋과 트레이닝셋의 배경이 같아서 다른 배경에서도 잘 예측할까 궁금했다.&lt;/p&gt;
+
+&lt;p&gt;일단 나의 생각은 오버피팅되어 테스트셋의 배경이 변경되면 예측이 어려울 것이라고 생각하고 시도해보았다.&lt;/p&gt;
+
+&lt;h3 id=&quot;두번째-시도&quot;&gt;두번째 시도&lt;/h3&gt;
+
+&lt;p&gt;학습데이터셋은 같은 배경으로 찍고 테스트 셋의 배경을 바꾸어 가며 수집하였다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;학습 데이터셋: 157&lt;/li&gt;
+  &lt;li&gt;테스트 데이터셋: 34&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;결과-1&quot;&gt;결과&lt;/h3&gt;
+&lt;p&gt;어느정도 정확도가 증가하다가(64% -&amp;gt; 83%) 학습이 진행되면서 정확도가 다시 감소(83% -&amp;gt; 53%) 하였다.&lt;/p&gt;
+
+&lt;p&gt;예상로 오버피팅이 된 것 같다.
+학습과정은 실수로 덤프하지 못하였다.&lt;/p&gt;
+
+&lt;h3 id=&quot;세번쨰-시도&quot;&gt;세번쨰 시도&lt;/h3&gt;
+
+&lt;p&gt;두번쨰 시도와 깉은 방법으로 데이터 셋을 수집하고 다시 시도해보았다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;학습 데이터셋: 172&lt;/li&gt;
+  &lt;li&gt;테스트 데이터셋: 30&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;결과-2&quot;&gt;결과&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Epoch: 1 Batch: 1 Loss: 0.703790
+Test set: Average loss: 0.6380, Accuracy: 22/30 (73%)
+Epoch: 2 Batch: 1 Loss: 0.434076
+Test set: Average loss: 0.5627, Accuracy: 20/30 (66%)
+Epoch: 3 Batch: 1 Loss: 0.094061
+Test set: Average loss: 0.6828, Accuracy: 22/30 (73%)
+Epoch: 4 Batch: 1 Loss: 0.002223
+Test set: Average loss: 1.1096, Accuracy: 22/30 (73%)
+Epoch: 5 Batch: 1 Loss: 0.000455
+Test set: Average loss: 1.0117, Accuracy: 22/30 (73%)
+Epoch: 6 Batch: 1 Loss: 0.001119
+Test set: Average loss: 1.1069, Accuracy: 22/30 (73%)
+Epoch: 7 Batch: 1 Loss: 0.000200
+Test set: Average loss: 1.1529, Accuracy: 22/30 (73%)
+Epoch: 8 Batch: 1 Loss: 0.000124
+Test set: Average loss: 1.1521, Accuracy: 22/30 (73%)
+Epoch: 9 Batch: 1 Loss: 0.000723
+Test set: Average loss: 1.1558, Accuracy: 22/30 (73%)
+Epoch: 10 Batch: 1 Loss: 0.000423
+Test set: Average loss: 1.1927, Accuracy: 22/30 (73%)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이번엔 운이 좋게 학습이 잘 되었다. 예측도 어느정도 정확도가 나왓으나, 증가하지 못했다.
+이것역시 오버 피팅이 된것 같다는 생각이들었다.&lt;/p&gt;
+
+&lt;h3 id=&quot;네번째-시도&quot;&gt;네번째 시도&lt;/h3&gt;
+
+&lt;p&gt;이번에는 테스트셋과 트레이닝셋을 모두 다른 배경으로 학습해보았다.(배경, 조명 위치도 변경해보면서)&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;학습 데이터셋: 187&lt;/li&gt;
+  &lt;li&gt;테스트 데이터셋: 46&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;결과-3&quot;&gt;결과&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Epoch: 1 Batch: 1 Loss: 0.721018
+Test set: Average loss: 0.6847, Accuracy: 27/46 (58%)
+Epoch: 2 Batch: 1 Loss: 0.771784
+Test set: Average loss: 0.7919, Accuracy: 27/46 (58%)
+Epoch: 3 Batch: 1 Loss: 0.910422
+Test set: Average loss: 0.7738, Accuracy: 19/46 (41%)
+Epoch: 4 Batch: 1 Loss: 0.646221
+Test set: Average loss: 0.7621, Accuracy: 19/46 (41%)
+Epoch: 5 Batch: 1 Loss: 0.564862
+Test set: Average loss: 0.5495, Accuracy: 31/46 (67%)
+Epoch: 6 Batch: 1 Loss: 0.315956
+Test set: Average loss: 0.4914, Accuracy: 36/46 (78%)
+Epoch: 7 Batch: 1 Loss: 0.202533
+Test set: Average loss: 0.7273, Accuracy: 27/46 (58%)
+Epoch: 8 Batch: 1 Loss: 0.034503
+Test set: Average loss: 1.0348, Accuracy: 24/46 (52%)
+Epoch: 9 Batch: 1 Loss: 0.006013
+Test set: Average loss: 0.9275, Accuracy: 33/46 (71%)
+Epoch: 10 Batch: 1 Loss: 0.005301
+Test set: Average loss: 1.0383, Accuracy: 32/46 (69%)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;학습이 잘 되나 싶더니 또 어느순간 트레이닝셋에 오버피팅되는 것 같다.&lt;/p&gt;
+
+&lt;p&gt;데이터의 다양성을 더 줘서 더 많은 종류의 데이터로 다시 시도해 봐야겠다.&lt;/p&gt;
+
+&lt;h3 id=&quot;마지막-시도&quot;&gt;마지막 시도&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2019-01-19-my-first-cnn-project/capture.gif&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;거의 모든 데이터를 다른 위치에서 찍을 수 있도록 움직이면서 데이터를 수집하였다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;학습 데이터셋: 188&lt;/li&gt;
+  &lt;li&gt;테스트 데이터셋: 47&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;결과-4&quot;&gt;결과&lt;/h2&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Epoch: 1 Batch: 1 Loss: 0.687795
+Test set: Average loss: 0.8108, Accuracy: 21/47 (44%)
+Epoch: 2 Batch: 1 Loss: 0.740914
+Epoch: 2 Batch: 2 Loss: 0.733544
+Epoch: 2 Batch: 3 Loss: 0.697777
+Epoch: 2 Batch: 4 Loss: 0.647917
+Epoch: 2 Batch: 5 Loss: 0.611102
+Epoch: 2 Batch: 6 Loss: 0.619349
+Epoch: 2 Batch: 7 Loss: 0.652097
+Test set: Average loss: 0.7010, Accuracy: 14/47 (29%)
+Epoch: 3 Batch: 1 Loss: 0.561028
+Epoch: 3 Batch: 2 Loss: 0.562631
+Epoch: 3 Batch: 3 Loss: 0.516114
+Epoch: 3 Batch: 4 Loss: 0.485835
+Epoch: 3 Batch: 5 Loss: 0.450926
+Epoch: 3 Batch: 6 Loss: 0.541222
+Epoch: 3 Batch: 7 Loss: 0.689737
+Test set: Average loss: 1.0924, Accuracy: 26/47 (55%)
+Epoch: 4 Batch: 1 Loss: 0.564378
+Epoch: 4 Batch: 2 Loss: 0.388238
+Epoch: 4 Batch: 3 Loss: 0.505561
+Epoch: 4 Batch: 4 Loss: 0.226835
+Epoch: 4 Batch: 5 Loss: 0.578987
+Epoch: 4 Batch: 6 Loss: 0.370516
+Epoch: 4 Batch: 7 Loss: 0.355252
+Test set: Average loss: 0.9801, Accuracy: 26/47 (55%)
+Epoch: 5 Batch: 1 Loss: 0.354714
+Epoch: 5 Batch: 2 Loss: 0.231484
+Epoch: 5 Batch: 3 Loss: 0.318201
+Epoch: 5 Batch: 4 Loss: 0.172871
+Epoch: 5 Batch: 5 Loss: 0.198403
+Epoch: 5 Batch: 6 Loss: 0.162258
+Epoch: 5 Batch: 7 Loss: 0.194906
+Test set: Average loss: 1.3565, Accuracy: 26/47 (55%)
+Epoch: 6 Batch: 1 Loss: 0.537755
+Epoch: 6 Batch: 2 Loss: 0.875094
+Epoch: 6 Batch: 3 Loss: 0.173388
+Epoch: 6 Batch: 4 Loss: 0.321832
+Epoch: 6 Batch: 5 Loss: 0.271180
+Epoch: 6 Batch: 6 Loss: 0.284695
+Epoch: 6 Batch: 7 Loss: 0.326817
+Test set: Average loss: 0.3649, Accuracy: 45/47 (95%)
+Epoch: 7 Batch: 1 Loss: 0.149230
+Epoch: 7 Batch: 2 Loss: 0.107245
+Epoch: 7 Batch: 3 Loss: 0.153434
+Epoch: 7 Batch: 4 Loss: 0.160735
+Epoch: 7 Batch: 5 Loss: 0.142821
+Epoch: 7 Batch: 6 Loss: 0.221091
+Epoch: 7 Batch: 7 Loss: 0.087188
+Test set: Average loss: 0.6452, Accuracy: 29/47 (61%)
+Epoch: 8 Batch: 1 Loss: 0.105633
+Epoch: 8 Batch: 2 Loss: 0.094373
+Epoch: 8 Batch: 3 Loss: 0.027781
+Epoch: 8 Batch: 4 Loss: 0.194711
+Epoch: 8 Batch: 5 Loss: 0.075953
+Epoch: 8 Batch: 6 Loss: 0.010384
+Epoch: 8 Batch: 7 Loss: 0.016869
+Test set: Average loss: 0.2055, Accuracy: 47/47 (100%)
+Epoch: 9 Batch: 1 Loss: 0.156465
+Epoch: 9 Batch: 2 Loss: 0.078115
+Epoch: 9 Batch: 3 Loss: 0.302012
+Epoch: 9 Batch: 4 Loss: 0.042025
+Epoch: 9 Batch: 5 Loss: 0.148871
+Epoch: 9 Batch: 6 Loss: 0.082512
+Epoch: 9 Batch: 7 Loss: 0.034108
+Test set: Average loss: 0.2895, Accuracy: 39/47 (82%)
+Epoch: 10 Batch: 1 Loss: 0.076718
+Epoch: 10 Batch: 2 Loss: 0.080760
+Epoch: 10 Batch: 3 Loss: 0.081116
+Epoch: 10 Batch: 4 Loss: 0.070538
+Epoch: 10 Batch: 5 Loss: 0.067576
+Epoch: 10 Batch: 6 Loss: 0.056461
+Epoch: 10 Batch: 7 Loss: 0.032610
+Test set: Average loss: 0.1523, Accuracy: 44/47 (93%)
+Epoch: 11 Batch: 1 Loss: 0.026311
+Epoch: 11 Batch: 2 Loss: 0.012546
+Epoch: 11 Batch: 3 Loss: 0.042134
+Epoch: 11 Batch: 4 Loss: 0.011619
+Epoch: 11 Batch: 5 Loss: 0.010464
+Epoch: 11 Batch: 6 Loss: 0.009680
+Epoch: 11 Batch: 7 Loss: 0.024475
+Test set: Average loss: 0.1682, Accuracy: 43/47 (91%)
+Epoch: 12 Batch: 1 Loss: 0.025384
+Epoch: 12 Batch: 2 Loss: 0.011390
+Epoch: 12 Batch: 3 Loss: 0.025029
+Epoch: 12 Batch: 4 Loss: 0.012071
+Epoch: 12 Batch: 5 Loss: 0.010480
+Epoch: 12 Batch: 6 Loss: 0.006272
+Epoch: 12 Batch: 7 Loss: 0.009081
+Test set: Average loss: 0.1429, Accuracy: 43/47 (91%)
+Epoch: 13 Batch: 1 Loss: 0.039017
+Epoch: 13 Batch: 2 Loss: 0.011924
+Epoch: 13 Batch: 3 Loss: 0.004064
+Epoch: 13 Batch: 4 Loss: 0.004866
+Epoch: 13 Batch: 5 Loss: 0.044984
+Epoch: 13 Batch: 6 Loss: 0.003499
+Epoch: 13 Batch: 7 Loss: 0.002726
+Test set: Average loss: 0.1349, Accuracy: 47/47 (100%)
+Epoch: 14 Batch: 1 Loss: 0.014280
+Epoch: 14 Batch: 2 Loss: 0.027584
+Epoch: 14 Batch: 3 Loss: 0.027804
+Epoch: 14 Batch: 4 Loss: 0.004797
+Epoch: 14 Batch: 5 Loss: 0.010686
+Epoch: 14 Batch: 6 Loss: 0.031061
+Epoch: 14 Batch: 7 Loss: 0.024077
+Test set: Average loss: 0.1791, Accuracy: 43/47 (91%)
+Epoch: 15 Batch: 1 Loss: 0.002389
+Epoch: 15 Batch: 2 Loss: 0.004827
+Epoch: 15 Batch: 3 Loss: 0.031694
+Epoch: 15 Batch: 4 Loss: 0.003825
+Epoch: 15 Batch: 5 Loss: 0.006952
+Epoch: 15 Batch: 6 Loss: 0.003425
+Epoch: 15 Batch: 7 Loss: 0.006715
+Test set: Average loss: 0.1674, Accuracy: 43/47 (91%)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;확실히 데이터가 다양하니 오버피팅 없이 학습이 잘 된것 같다.
+(물론, 배경에 대해서만..)&lt;/p&gt;
+
+&lt;h2 id=&quot;결론&quot;&gt;결론&lt;/h2&gt;
+
+&lt;p&gt;데이터가 너무 편향적인 데이터만으로만 수집되면 학습이 오버피팅되어 제한적이게 동작할 수 밖에 없다. 따라서 학습 데이터를 수집할 경우 많은 종류의 데이터와 많은 양의 데이터가 중요한 것 같다.&lt;/p&gt;
+
+&lt;p&gt;github-repo: &lt;a href=&quot;https://github.com/J911/binary-classification-CNN&quot;&gt;https://github.com/J911/binary-classification-CNN&lt;/a&gt;&lt;/p&gt;</content><author><name>J911</name></author><summary type="html">평소 CNN을 공부하고 이론과 예제 프로젝트만 따라해보다가 처음으로 나의 프로젝트를 진행해보았다.</summary></entry><entry><title type="html">인공지능과 머신러닝 그리고 딥러닝</title><link href="https://j911.me/2018/10/artificial-intelligence.html" rel="alternate" type="text/html" title="인공지능과 머신러닝 그리고 딥러닝" /><published>2018-10-31T00:00:00+00:00</published><updated>2018-10-31T00:00:00+00:00</updated><id>https://j911.me/2018/10/artificial-intelligence</id><content type="html" xml:base="https://j911.me/2018/10/artificial-intelligence.html">&lt;p&gt;4차 산업혁명 붐이 일면서 국가적으로 인공지능에 대해 크게 투자하기 시작했고, 이제는 인공지능이라는 말을 어디서나 쉽게 접할 수 있게되었다. TV에서는 인공지능 스피커, 인공지능 에어컨등 인공지능이 없는 가전제품을 찾기 어려울정도이다. 그렇다면 인공지능은 무엇이고 그것은 어느정도 까지 발전하였으며 우리에게 어떤 영향을 끼치고 있을까.&lt;/p&gt;
+
+&lt;h3 id=&quot;인공지능&quot;&gt;인공지능&lt;/h3&gt;
+&lt;p&gt;인터넷 위키백과에 따르면 인공지능은 &lt;strong&gt;기계로부터 만들어진 지능&lt;/strong&gt;을 말한다고한다. 조금 보태 설명을 하자면 과거의 기계는 인간이 판단한 알고리즘을 수행하는 것에 불과하였지만, 지금의 인공지능은 스스로가 주변환경을 스스로 학습 및 인식하여 판단하고 행동까지 하게 된 것이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;인공지능의-발전&quot;&gt;인공지능의 발전&lt;/h3&gt;
+&lt;p&gt;인공지능은 대부분 기계학습이라는 알고리즘을 통하여 구현된다. 하지만 이 기계학습이라는 알고리즘은 이미 먼 과거에 개발된 것이다. 하지만 기계학습을 위해 수 많은 연산이 필요했고, 당시 기술력으로는 한계가 존재했던 것이다. 하지만 그래에 들어서 그래픽카드의 기술이 크게 발전하여 GPU의 다차원의 행렬연산을 빠르게 할 수 있게 되었고 이것이 기계학습을 가능하게 했다.&lt;/p&gt;
+
+&lt;h3 id=&quot;인공지능이-우리의-삶에-끼치는-영향&quot;&gt;인공지능이 우리의 삶에 끼치는 영향&lt;/h3&gt;
+&lt;p&gt;인공지능은 이미 우리의 삶에 크게 영향을 끼치고 있다. 가장 우리와 밀접한 스마트폰에서는 AI 음성비서가 우리의 행동을 트래킹하여 내가 좋아하는 것을 추천해 주고 있고, 구글은 이러한 데이터를 활용해 맞춤형 광고서비스를 제공한다. 또한 글로벌 대표 기업인 아마존과 골드만 삭스와 같은 많은 글로벌 기업은 직원이하는 역할을 인공지능으로 대체하고 많은 수의 근로자들이 해고당하고 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;인공지능에-대한-개인적인-견해&quot;&gt;인공지능에 대한 개인적인 견해&lt;/h3&gt;
+&lt;p&gt;인공지능이 인간을 이롭게 한다는 점에서 나 역시도 긍적적이라고 생각한다. 하지만 인공지능이 인간을 대체하는 부분에 대해서는 조금 회의를 느낀다. 너무 무차별적으로 사람을 대체하는 연구를 하다보면 언젠가는 사람이 너무 소외받은 사회가 될까 두렵기 때문이다. 적어도 사람의 사고하는 것, 감정을 느끼는 것과 같은 인간만이 갖을 수 있는 권리를 침해할 수 없도록 해야할 것이다. 인간을 대체하는 기술에 집중하고있는 지금, 인간이 더 인간다울 수 있는 인간다운 기술에 대해서도 생각을 한번 해보아야 할 것 같다.&lt;/p&gt;
+
+&lt;h2 id=&quot;인공지능-머신러닝-딥러닝의-차이와-의미&quot;&gt;인공지능, 머신러닝, 딥러닝의 차이와 의미&lt;/h2&gt;
+&lt;p&gt;인공지능을 구현하기 위해 필요한 접근방식중 하나가 딥러닝이며 또, 딥러닝을 구현하기 위한 접근방식이 머신러닝인 것이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;머신러닝과-딥러닝&quot;&gt;머신러닝과 딥러닝&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;머신러닝&lt;/strong&gt;은 기계학습이라고도 불리며 기계가 학습데이터를 가지고 스스로 학습하고 다음을 예측하는 것이다. 여기에는 학습데이터를 주어지는 지도학습과 데이터셋이 주워지면 비슷한 데이터를 분류하는 비지도학습 그리고 인공지능의 판단에 따라 보상을 달리하여 이상적인 결과를 유도하는 강화학습이 존재한다. 그리고 &lt;strong&gt;딥러닝&lt;/strong&gt;은 이러한 머신러닝을 신경망 구조에 적용하여 뉴런과 뉴련의 연결에 대한 가중치를 변화시켜가며 학습을 시키는 것으로 뉴런간 연결이 많을 수록, 그리고 데이터 셋이 많을 수록 더욱 정교한 성능을 보일 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;신경망-딥러닝이-최근-부각된-이유와-배경&quot;&gt;신경망, 딥러닝이 최근 부각된 이유와 배경&lt;/h2&gt;
+&lt;p&gt;현재 인공지능에 쓰이는 기술들은 [과제 1번]에서 언급한 것과 같이 이미 과거에 개발되어있었다. 하지만 당시의 물리적 기술력이 부족하여 기계학습과 같은 딥러닝을 하는것이 투자대비 비효율적이였다. 하지만 게임 및 미디어 시장의 성장에 맞춰 그래픽 기술이 급 성장하게 되었고, 그래픽 기술에 사용되는 다차원 행렬연산기술이 기계학습의 효율을 높일 수 있게 해주어 인공지능이 발전할 수 있는 계기가 되었다.&lt;/p&gt;</content><author><name>J911</name></author><summary type="html">4차 산업혁명 붐이 일면서 국가적으로 인공지능에 대해 크게 투자하기 시작했고, 이제는 인공지능이라는 말을 어디서나 쉽게 접할 수 있게되었다. TV에서는 인공지능 스피커, 인공지능 에어컨등 인공지능이 없는 가전제품을 찾기 어려울정도이다. 그렇다면 인공지능은 무엇이고 그것은 어느정도 까지 발전하였으며 우리에게 어떤 영향을 끼치고 있을까.</summary></entry><entry><title type="html">ImageNet과 ILSVRC 대회</title><link href="https://j911.me/2018/10/imagenet-and-ilsvrc.html" rel="alternate" type="text/html" title="ImageNet과 ILSVRC 대회" /><published>2018-10-31T00:00:00+00:00</published><updated>2018-10-31T00:00:00+00:00</updated><id>https://j911.me/2018/10/imagenet-and-ilsvrc</id><content type="html" xml:base="https://j911.me/2018/10/imagenet-and-ilsvrc.html">&lt;p&gt;ImageNet은 세계 최대의 이미지 데이터베이스이다. 이 데이터베이스에 이미지의 라벨링은 시스템의 인공지능이 이미지에 대한 라벨링에 관여한다고 한다. ImageNet의 사이트 &lt;a href=&quot;http://www.image-net.org&quot;&gt;www.image-net.org&lt;/a&gt;에 접속해보면 현재까지 &lt;strong&gt;14,197,122개&lt;/strong&gt;의 이미지 데이터베이스가 등록되어있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;ilsvrc-대회&quot;&gt;ILSVRC 대회&lt;/h2&gt;
+&lt;p&gt;ImageNet의 이미지 데이터를 사용하여 이미지 분류 알고리즘을 평하가는 대회이다. 2012년 처음 80%가 넘는 정답률을 보인 알고리즘이 등장하였고 현재는 5%미만의 오차율까지의 성능을 보인 알고리즘이 등장하였다.&lt;/p&gt;
+
+&lt;h3 id=&quot;2010년부터-2017년까지의-각-우승알고리즘&quot;&gt;2010년부터 2017년까지의 각 우승알고리즘&lt;/h3&gt;
+&lt;p&gt;ILSVRC 대회에 알고리즘의 추세는 2012년을 분기로 완전히 달라지게 된다. 2012년 이전에는 특정 알고리즘을 활용하여 이미지 속 객체에 대한 속성들을 일일이 코딩하여 모델을 개발하였지만 사람이 하나하나 속성을 코딩해야하는 한계에 75%를 넘지 못하는 정답률을 보였다. 하지만 2012년 우승팀이 처음 딥러닝을 활용한 인공지능 모델을 제시하면서 84%인 정답률을 보였고 이 이후로는 거의 모든팀이 딥러닝을 활용한 모델을 제시하였고 현재는 오차율 5%이하의 모델까지 등장하게 되었다.&lt;/p&gt;
+
+&lt;h3 id=&quot;2012년부터의-우승알고리즘-변화&quot;&gt;2012년부터의 우승알고리즘 변화&lt;/h3&gt;
+&lt;p&gt;2012년 딥러닝을 이용한 알고리즘 모델로 개발된 인공지능 알렉스넷(Alexnet, CNN모델명)이 우승을 차지하였고 그 이후로 거의 모든 팀들이 딥러닝을 이용한 모델로 개발을하게 되었다.&lt;/p&gt;</content><author><name>J911</name></author><summary type="html">ImageNet은 세계 최대의 이미지 데이터베이스이다. 이 데이터베이스에 이미지의 라벨링은 시스템의 인공지능이 이미지에 대한 라벨링에 관여한다고 한다. ImageNet의 사이트 www.image-net.org에 접속해보면 현재까지 14,197,122개의 이미지 데이터베이스가 등록되어있다.</summary></entry><entry><title type="html">Sigmoid 함수를 사용한 Logistic regression 기법의 코스트 최적화</title><link href="https://j911.me/2018/10/sigmoid-and-cost-optimize.html" rel="alternate" type="text/html" title="Sigmoid 함수를 사용한 Logistic regression 기법의 코스트 최적화" /><published>2018-10-31T00:00:00+00:00</published><updated>2018-10-31T00:00:00+00:00</updated><id>https://j911.me/2018/10/sigmoid-and-cost-optimize</id><content type="html" xml:base="https://j911.me/2018/10/sigmoid-and-cost-optimize.html">&lt;p&gt;로지스틱 회기분석(Logistic regression)에서 cost를 optimize하기 위해서는 활성함수를 미분하여야한다. 하지만 기존의 계단 형태의 활성함수는 &lt;strong&gt;미분이 불가&lt;/strong&gt;한 함수로서 cost optimize하는데 한계가 존재하였다. 그래서 등장한 것이 &lt;strong&gt;시그모이드&lt;/strong&gt;함수이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/sigmoid.png&quot; alt=&quot;sigmoid&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;시그모이드의 함수를 그리면 다음과 같은데&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/sigmoid-graph.png&quot; alt=&quot;sigmoid-graph&quot; /&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;표현의 극대화를 위해 z의 값을 증가시켜 표현하였다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;활성함수를 연속적인 곡선의 형태의 함수로 사용하여 미분이 가능하게되었다.&lt;/p&gt;
+
+&lt;h3 id=&quot;cost-optimization&quot;&gt;Cost optimization&lt;/h3&gt;
+&lt;p&gt;cost는 예측한 값에서 정답과의 차를 계산하여 다음과 같은 공식으로 구할 수 있습니다.
+&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/cost-function.png&quot; alt=&quot;cost-function&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;기존의 Linear 함수&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/hypothesis-function.png&quot; alt=&quot;hypothesis-function&quot; /&gt;를 cost function에 적용해 보았을 때는 곡선 형태의 그래프로 나타나게 된다. 때문에 미분을 이용해 최적의 cost를 계산할 수 있지만 sigmoid 함수를 사용할 경우 울퉁불퉁한 형태의 곡선 그래프가 그려지게 된다. 때문에 미분으로 최적화시키는 것이 쉽지가 않다. 그래서 새로운 cost function이 필요하게 되었다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/new-cost-function.png&quot; alt=&quot;new-cost-function&quot; /&gt;
+&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/c-function.png&quot; alt=&quot;c-function&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이것이 새로운 cost function이다. 이 함수는 Logistic 함수가 들어와도 부드러운 곡선 형태로 잡아주게 된다. 따라서 새로운 Cost funtion을 사용할 경우 기존에 사용하던 Gradint decent 알고리즘을 그대로 사용할 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;과제-6번-신경망의-표현&quot;&gt;[과제 6번] 신경망의 표현&lt;/h2&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;1개의 인풋레이어, 1개의 히든레이어, 1개의 아웃풋 레이어를 가진 신경망&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/neural-network.png&quot; alt=&quot;neural-network&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;forward-propagation&quot;&gt;forward propagation&lt;/h3&gt;
+&lt;p&gt;위의 신경망에서 Input Layer의 뉴런이 다음 뉴런으로 전이되는 과정은 다음과 같이 표현될 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/forward-propagation-step1.png&quot; alt=&quot;forward-propagation-step1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/forward-propagation-1.png&quot; alt=&quot;forward-propagation&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그 결과를 k로 나타내면 마지막 노드에도 적용시키면&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/forward-propagation-step2.png&quot; alt=&quot;forward-propagation-step2&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-31-sigmoid-and-cost-optimize/forward-propagation-2.png&quot; alt=&quot;forward-propagation-step2&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위와 같은 결과를 얻을 수 있게 된다. 이것을 Sigmoid와 같은 활성함수로 처리하게 되면 Predict 값을 구할 수 있게된다.&lt;/p&gt;</content><author><name>J911</name></author><summary type="html">로지스틱 회기분석(Logistic regression)에서 cost를 optimize하기 위해서는 활성함수를 미분하여야한다. 하지만 기존의 계단 형태의 활성함수는 미분이 불가한 함수로서 cost optimize하는데 한계가 존재하였다. 그래서 등장한 것이 시그모이드함수이다.</summary></entry><entry><title type="html">맥북 코팅 벗겨짐 문제 무상수리 후기: 스테인게이트</title><link href="https://j911.me/2018/10/mac-stain-gate.html" rel="alternate" type="text/html" title="맥북 코팅 벗겨짐 문제 무상수리 후기: 스테인게이트" /><published>2018-10-17T00:00:00+00:00</published><updated>2018-10-17T00:00:00+00:00</updated><id>https://j911.me/2018/10/mac-stain-gate</id><content type="html" xml:base="https://j911.me/2018/10/mac-stain-gate.html">&lt;p&gt;나는 최근에 15인치 맥북 프로를 처분하고 13인치 프로를 사용하고있다. 그러다 내 맥북이 &lt;strong&gt;스테인게이트 무상수리&lt;/strong&gt;(정확하게 말하면 상판 무상교체) 대상임을 알게되었고, 이 글은 무상 교체를 받은 것에 대한 후기이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;스테인게이트&quot;&gt;스테인게이트&lt;/h2&gt;
+&lt;p&gt;스테인게이트는 맥북 디스플레이에 반사방지 코팅이 결함에 의해 벗겨저 나가는 현상이다. 애플은 이 결함을 공식 인정하고 결함 디스플레이가 탑재된 모델에 한하여 무상 교체 서비스를 시작했다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-17-mac-stain-gate/stain-gate-1.jpg&quot; alt=&quot;mac-stain-gate&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;내 맥북 역시 사진처럼 굉장히 지저분하게 스테인게이트가 발생했다.  &lt;br /&gt;
+처음에는 무상교체 대상이 아닌줄 알아서 굉장히 가슴아팟다.&lt;/p&gt;
+
+&lt;h2 id=&quot;무상교체-기간은-4년이다&quot;&gt;무상교체 기간은 4년이다.&lt;/h2&gt;
+&lt;p&gt;스테인게이트로 인한 상판 무상교체 기간은 구매일로부터 4년까지이다.
+&lt;img src=&quot;/assets/post-assets/2018-10-17-mac-stain-gate/chat.png&quot; alt=&quot;chat&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;본인의 맥이 해당이 되는지 궁금하면 애플 고객센터에 문의하면 정말 친절하게 답해주신다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-17-mac-stain-gate/preview.jpg&quot; alt=&quot;preview&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;수리가 아니고 맥북 상판교체이기 때문에 나처럼 스티커를 붙여 놓았다면 아쉽지만 스티커는 포기하여야한다.&lt;/p&gt;
+
+&lt;p&gt;대전 UBASE 센터가 공식 애플 서비스센터로 지정이 되어있어 대전 UBASE를 방문했다.&lt;/p&gt;
+
+&lt;p&gt;나는 예약없이 방문을해 번호표를 뽑고 기다렸지만, 대기가 길기 때문에 앞으로 미리 예약을 하고 가는 것이 좋을 것 같다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-17-mac-stain-gate/ubase.jpg&quot; alt=&quot;ubase&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;센터는 꽤 깔끔하고 모던한 느낌이다. 그 것 이외에는 별로 볼만한 것은 없다.&lt;/p&gt;
+
+&lt;p&gt;번호표를 뽑고 기다리면 직원이 불러준다.&lt;/p&gt;
+
+&lt;p&gt;맥을 보여주고 스테인게이트 수리를 하러왔다고 하면 맥북 상태를 보고 접수를 해주신다.&lt;/p&gt;
+
+&lt;p&gt;정확히는 모르겠지만, 너무 흠집이 많으면 무상 교체가 어려울 수 있다고는 한다. 정확한 것은 센터에 방문해 상담을 받아보도록 하자.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-17-mac-stain-gate/paper.jpg&quot; alt=&quot;paper&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;접수가 완료되면 다음과 같이 맥북을 종이 쪼가리로 교환할 수 가있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;교체-후기&quot;&gt;교체 후기&lt;/h2&gt;
+
+&lt;p&gt;영업일 기준으로 3일정도면 처리가 완료됬으니 찾아가라는 문자가 온다. 생각보다 처리가 빨라 기분이 좋았다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-17-mac-stain-gate/result.jpg&quot; alt=&quot;result&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;센터에 방문하면 교체 상태를 확인하고 위 처럼 뽁뽁이 봉투에 맥북을 담아서 돌려준다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-10-17-mac-stain-gate/result2.jpg&quot; alt=&quot;result2&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;혹시 또 문제가 있진 않을까 잠깐 걱정했지만 너무 깨끗한 화면을 보고 안심이 됬다.&lt;/p&gt;
+
+&lt;p&gt;추가로 교체일로 부터 추가 3개월 동안은 보증이 된다고 한다.&lt;/p&gt;
+
+&lt;p&gt;이제 다시 &lt;code class=&quot;highlighter-rouge&quot;&gt;happy coding&lt;/code&gt;을 할 수 있게 되었다!!&lt;/p&gt;</content><author><name>J911</name></author><summary type="html">나는 최근에 15인치 맥북 프로를 처분하고 13인치 프로를 사용하고있다. 그러다 내 맥북이 스테인게이트 무상수리(정확하게 말하면 상판 무상교체) 대상임을 알게되었고, 이 글은 무상 교체를 받은 것에 대한 후기이다.</summary></entry><entry><title type="html">자바스크립트와 옵저버 패턴(Observer Pattern)</title><link href="https://j911.me/2018/10/observer-pattern.html" rel="alternate" type="text/html" title="자바스크립트와 옵저버 패턴(Observer Pattern)" /><published>2018-10-08T00:00:00+00:00</published><updated>2018-10-08T00:00:00+00:00</updated><id>https://j911.me/2018/10/observer-pattern</id><content type="html" xml:base="https://j911.me/2018/10/observer-pattern.html">&lt;p&gt;옵저버 패턴을 공부하면서 간단하게 기록해보기로하였다.&lt;/p&gt;
+
+&lt;h2 id=&quot;observer&quot;&gt;Observer?&lt;/h2&gt;
+&lt;p&gt;옵저버(Observer)는 단어는 관찰자라고 해석된다. 옵저버 패턴에서도 비슷한 의미로 해석이 되는데 간단하게 설명을 할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;옵저버 패턴은 “관찰자와 발행자 두 객체사이에 데이터를 동기화하는 패턴이다”라고 쉽게 이해를 할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;그 방법에 대해 더 자세히(?) 알아보자.&lt;/p&gt;
+
+&lt;h2 id=&quot;옵저버-패턴의-간단한-절차&quot;&gt;옵저버 패턴의 간단한 절차&lt;/h2&gt;
+&lt;p&gt;간단하게 pull방식의 옵저버 패턴 시나리오를 살펴보자.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;모든 관찰자는 발행자가 누구인지 알고있다. 동시에 발행자도 모든 관찰자를 기억하고있다.&lt;/li&gt;
+  &lt;li&gt;발행자는 새로운 데이터를 발행하고, 관찰자에게 변경에 대한 공지를 뿌린다.&lt;/li&gt;
+  &lt;li&gt;공지를 받은 관찰자는 발행자에게서 변경된 데이터를 받아온다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;이 패턴은 관찰자가 발행자로 부터 값을 끌어오는 Pull 방식이고,
+반대로 2번에서 공지와 함께 값을 뿌려주는 Push 방식도 존재한다.&lt;/p&gt;
+
+&lt;p&gt;경우에 따라 Pull, Push를 고려해 개발해야하겠지만 일반적으로 관찰자가 필요한 데이터를 유동적으로 가져올 수 있는 Pull방식을 선호한다.&lt;/p&gt;
+
+&lt;p&gt;이제 위 내용을 코드로 작성하는 것으로 마무리하겠다.&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/J911/3122eea8c7c31d10414d8be815861316.js&quot;&gt; &lt;/script&gt;
+
+&lt;p&gt;위 코드에서는 5초마다 난수를 발급하여 옵저버에게 공지하는 방식의 코드이다.&lt;/p&gt;</content><author><name>J911</name></author><summary type="html">옵저버 패턴을 공부하면서 간단하게 기록해보기로하였다.</summary></entry><entry><title type="html">Bower로 나의 컴포넌트 배포하기</title><link href="https://j911.me/2018/10/publish-bower-component.html" rel="alternate" type="text/html" title="Bower로 나의 컴포넌트 배포하기" /><published>2018-10-03T00:00:00+00:00</published><updated>2018-10-03T00:00:00+00:00</updated><id>https://j911.me/2018/10/publish-bower-component</id><content type="html" xml:base="https://j911.me/2018/10/publish-bower-component.html">&lt;p&gt;Bower에 컴포넌트를 배포하는 것 npm에 모듈을 등록하는 것과 비교해보면 정말 간단하다.&lt;/p&gt;
+
+&lt;h2 id=&quot;우선-bower는-무엇일까&quot;&gt;우선 Bower는 무엇일까.&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;bower&lt;/strong&gt;는 &lt;strong&gt;프론트엔트 패키지 관리도구&lt;/strong&gt;라고 한다. 이름만으로 직관적으로 해석해 보았을 때 프론트엔드 개발에 필요한 컴포넌트를 설치하고 관리하는 모듈로 해석이 된다. 그리고 그 것이 맞다.&lt;/p&gt;
+
+&lt;p&gt;다음과 같은 명령행을 통해 자신의 프로젝트에 컴포넌트를 설치할 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;bower install &amp;lt;package-name&amp;gt; --save
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;bower에-직접-컴포넌트-배포하기&quot;&gt;Bower에 직접 컴포넌트 배포하기&lt;/h2&gt;
+&lt;p&gt;Bower는 자체 저장소를 제공하지 않고 git 저장소를 기반으로 컴포넌트 관리를 제공한다.&lt;/p&gt;
+
+&lt;p&gt;때문에 bower에 컴포넌트를 등록하고자 한다면 사전에 git 저장소를 가지고 있어야 한다는 뜻 이다.&lt;/p&gt;
+
+&lt;p&gt;준비가 다 되었다면, &lt;code class=&quot;highlighter-rouge&quot;&gt;bower init&lt;/code&gt; 이라는 명령으로 본인에 패키지에 bower.json 파일을 생성해주자. 만약 package.json파일이 있다고하면 거의 모든 내용은 자동으로 만들어질 것이다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ bower init
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;그러면 본인 패키지에 bower.json이 생성이 될 것이다. 이를 열어서 ignore에 배포하지 않을 파일 및 디렉토리를 등록하자.&lt;/p&gt;
+
+&lt;p&gt;모든 것이 완료 됬으면, &lt;code class=&quot;highlighter-rouge&quot;&gt;bower register&lt;/code&gt; 명령으로 패키지를 등록할 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ bower register &amp;lt;component-name&amp;gt; &amp;lt;git&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;명령의 첫 번째 인자로는 컴포넌트 이름을 작성하고 두 번째 인자는 깃 저장소의 주소를 넣어주면 된다.&lt;/p&gt;</content><author><name>J911</name></author><summary type="html">Bower에 컴포넌트를 배포하는 것 npm에 모듈을 등록하는 것과 비교해보면 정말 간단하다.</summary></entry><entry><title type="html">지킬 블로그에 무한스크롤 기능 추가하기</title><link href="https://j911.me/2018/09/setup-jekyll-infinite-scroll.html" rel="alternate" type="text/html" title="지킬 블로그에 무한스크롤 기능 추가하기" /><published>2018-09-28T00:00:00+00:00</published><updated>2018-09-28T00:00:00+00:00</updated><id>https://j911.me/2018/09/setup-jekyll-infinite-scroll</id><content type="html" xml:base="https://j911.me/2018/09/setup-jekyll-infinite-scroll.html">&lt;p&gt;지킬 블로그에 포스팅이 점점 많아지면서 무한스크롤 기능이 필요하게 되었다.
+특히 이 블로그처럼 카드 형태로 포스팅이 되는 디자인은 더더욱 무한스크롤이 보기가 좋다.&lt;/p&gt;
+
+&lt;p&gt;흠..하지만 적당한 MIT 라이센스의 무한스크롤 라이브러리를 찾을 수 없었다. 그래서 직접 만들었고, 여기서 그 라이브러리로 무한스크롤 기능 설치법을 소개할 것이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;지킬에서-페이지네이션-사용하기&quot;&gt;지킬에서 페이지네이션 사용하기&lt;/h2&gt;
+&lt;p&gt;우선 지킬 페이지네이션 플러그인인 &lt;code class=&quot;highlighter-rouge&quot;&gt;jekyll-paginate&lt;/code&gt;를 설치해주자.&lt;/p&gt;
+
+&lt;p&gt;_config.yml과 Gemfile 두 개를 수정해주면 된다.&lt;/p&gt;
+
+&lt;p&gt;_config.yml&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;paginate: 6 # 한 페이지에 보이게 할 피드의 개수
+paginate_path: &quot;/page/:num&quot;
+
+plugins:
+    - jekyll-paginate
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Gemfile&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;group :jekyll_plugins do
+  gem &quot;jekyll-paginate&quot;
+end
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;그리고 화면에 포스트들을 뿌려주는 html파일을 수정한다.
+나와 같은 경우는 _layout/home.html을 수정해주면 된다.&lt;/p&gt;
+
+&lt;p&gt;_layout/home.html&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/J911/a430f0bd7efc15c972fa7e9a335e941b/88683326cd46db682f5c7c8f66d66f855971faae.js&quot;&gt; &lt;/script&gt;
+
+&lt;p&gt;이랬던 코드를&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/J911/a430f0bd7efc15c972fa7e9a335e941b/b1b594b8e4a3d762c982548cbb7d4aa7eeab8e11.js&quot;&gt; &lt;/script&gt;
+
+&lt;p&gt;이렇게 바꾸었다. &lt;strong&gt;site를 paginator&lt;/strong&gt;로 바꾼 것이 모두이다.&lt;/p&gt;
+
+&lt;p&gt;이렇게 따라할 경우 _config.yml에 설정한 경로로 설정 개수만큼 나누어 화면에 뿌려줄 수 가있다.&lt;/p&gt;
+
+&lt;p&gt;이 글을 따라오셨다면 /page/2, /page/3 에서 다음 피드들을 나누어 볼 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;본격-무한-스크롤-만들기&quot;&gt;본격 무한 스크롤 만들기&lt;/h2&gt;
+&lt;p&gt;이제 무한스크롤 라이브러리를 다운 받아야한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/J911/jekyll-infinite-scroll/archive/master.zip&quot;&gt;https://github.com/J911/jekyll-infinite-scroll/archive/master.zip&lt;/a&gt;링크로 모듈을 다운받거나&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ bower install jekyll-infinite-scroll --save
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;과 같이 bower을 통해 설치를 하자.&lt;/p&gt;
+
+&lt;p&gt;다음과 같은 CDN을 사용해도 된다. 하지만 모듈을 다운받아 사용하는 것을 권장한다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;script src=&quot;https://cdn.rawgit.com/J911/jekyll-infinite-scroll/master/lib/InfiniteScroll.js&quot;&amp;gt;&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;나는 모듈을 다운받아 /assets/lib/InfiniteScroll.js 위치로 옮겨놓았다.&lt;/p&gt;
+
+&lt;p&gt;그리고 이제 아까 수정했던 home.html을 다시 수정할 것이다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;script src=&quot;{{ '/assets/lib/InfiniteScroll.js' }}&quot;&amp;gt;&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;다음과 같이 라이브러리를 불러와주자.&lt;/p&gt;
+
+&lt;p&gt;이 이후 게시글 전체를 감싸고 있는 태그의 id값과 _config.yml에 입력한 paginate_path값에서 :num 이전 까지의 주소를 변수에 저장해주자.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;var postWrapperId = 'card-wrapper';
+var paginatePath = '/page/'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;여기서 /로 끝나는것을 잘 보아야 한다. 그렇지 않으면 /page/:num이 아닌 /page:num 으로 접근하는 것이다.&lt;/p&gt;
+
+&lt;p&gt;그리고 그것을 &lt;code class=&quot;highlighter-rouge&quot;&gt;jekyll-infinite-scroll&lt;/code&gt; 객체로 만들어주면 끝이 난다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;new InfiniteScroll(paginatePath, postWrapperId);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;완성된 코드는 다음과 같다.&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/J911/a430f0bd7efc15c972fa7e9a335e941b/f9fb865d0b25d84f9811cf4508663ee1fe85c646.js&quot;&gt; &lt;/script&gt;
+
+&lt;h2 id=&quot;결과물&quot;&gt;결과물&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/post-assets/2018-09-28-setup-jekyll-infinite-scroll/infinite-scroll.gif&quot; alt=&quot;result&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;마지막으로 위에서 사용된 jekyll-infinite-scroll 모듈의 깃허브 저장소는 &lt;a href=&quot;https://github.com/J911/jekyll-infinite-scroll.git&quot;&gt;https://github.com/J911/jekyll-infinite-scroll&lt;/a&gt;이다.&lt;/p&gt;</content><author><name>J911</name></author><summary type="html">지킬 블로그에 포스팅이 점점 많아지면서 무한스크롤 기능이 필요하게 되었다. 특히 이 블로그처럼 카드 형태로 포스팅이 되는 디자인은 더더욱 무한스크롤이 보기가 좋다.</summary></entry></feed>

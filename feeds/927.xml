@@ -1,0 +1,2315 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title><![CDATA[jupiny의 개발일지]]></title><description><![CDATA[나를 지탱하고 있는 나뭇가지는 중요하지 않다.
+"날개"를 키우자.]]></description><link>https://jupiny.com/</link><generator>Ghost 0.11</generator><lastBuildDate>Tue, 19 Mar 2019 21:07:42 GMT</lastBuildDate><atom:link href="https://jupiny.com/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title><![CDATA[원격 저장소에 올라간 커밋 되돌리기]]></title><description><![CDATA[<p>Git으로 버젼 관리를 하며 개발하다보면, 작성한 커밋들을 되돌려서 다시 이전 상태로 원상복구하고 싶은 경우가 한번쯤 있을 것이다. <br>
+만약 로컬까지만 저장된 커밋인 경우는 <code>$ git reset</code> 명령어를 이용해 쉽게 커밋을 되돌릴 수 있지만, 이 커밋이 GitHub과 같은 원격 저장소까지 이미 올라갔다면 얘기는 조금 달라진다. <br>
+이 글에서는 이를 해결하기 위한 몇가지 방법들을 하나씩</p>]]></description><link>https://jupiny.com/2019/03/19/revert-commits-in-remote-repository/</link><guid isPermaLink="false">98601949-4642-4865-a839-37d8179a80a8</guid><category><![CDATA[Git]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Tue, 19 Mar 2019 17:00:27 GMT</pubDate><content:encoded><![CDATA[<p>Git으로 버젼 관리를 하며 개발하다보면, 작성한 커밋들을 되돌려서 다시 이전 상태로 원상복구하고 싶은 경우가 한번쯤 있을 것이다. <br>
+만약 로컬까지만 저장된 커밋인 경우는 <code>$ git reset</code> 명령어를 이용해 쉽게 커밋을 되돌릴 수 있지만, 이 커밋이 GitHub과 같은 원격 저장소까지 이미 올라갔다면 얘기는 조금 달라진다. <br>
+이 글에서는 이를 해결하기 위한 몇가지 방법들을 하나씩 소개하려고 한다.</p>
+
+<blockquote>
+  <p>원격 저장소로는 가장 대중적으로 사용되고 있는 GitHub을 사용하였습니다.</p>
+</blockquote>
+
+<p>우선 아래와 같이 "Commit A", "Commit B", "Commit C" 세 개의 커밋들을 모두 푸시까지 한 상태에서 되돌리고 싶은 상황이라고 가정해보자. <br>
+참고로 세 커밋의 작업 내용은 아래와 같다.</p>
+
+<ul>
+<li>Commit A: <code>A.txt</code> 생성 (b31064c29b55f826d1dae3f1bddecc4a27a10e36)</li>
+<li>Commit B: <code>B.txt</code> 생성 (16e2e7f1789973a227a5e6bb47221ed683a8b1ae)</li>
+<li>Commit C: <code>C.txt</code> 생성 (03001425c69fe8eccf219db243d9ecc9a60d64b8)</li>
+</ul>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/03/revert-commits-in-remote-repository-1.png" alt=""></p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/03/revert-commits-in-remote-repository-2.png" alt=""></p>
+
+<hr>
+
+<h3 id="1">1. 로컬에서 커밋 되돌린 후 강제 푸시</h3>
+
+<p>첫번째 방법은 로컬 저장소에서 일단 커밋을 되돌린 후, 이를 원격 저장소에 강제로 반영시키는 방법이다.</p>
+
+<h4 id="">방법</h4>
+
+<p>먼저 로컬에서 <code>$ git reset</code> 명령어를 이용해 내가 되돌리고 싶은 커밋들을 되돌린다.</p>
+
+<pre><code>$ git reset --hard HEAD~3
+</code></pre>
+
+<p>그리고 난 후, <code>$ git push</code>를 실행하면</p>
+
+<pre><code>$ git push origin master
+</code></pre>
+
+<p>아래와 같은 에러 문구가 나타날 것이다. </p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/03/revert-commits-in-remote-repository-3.png" alt=""></p>
+
+<p>로컬 저장소의 커밋 히스토리가 원격 저장소의 커밋 히스토리보다 뒤쳐져 있는데 푸시를 하였으므로 발생하는 에러이다. 하지만 지금 우리가 원하는 것은 이 뒤쳐져 있는 로컬 저장소의 커밋 히스토리를 원격 저장소의 커밋 히스토리로 강제로 덮어쓰는 것이므로 이를 위한 옵션 <code>-f</code> 또는 <code>--force</code> 를 명령어에 추가하여야 한다.</p>
+
+<pre><code>$ git push -f origin master
+</code></pre>
+
+<p>GitHub 페이지를 통해 원격 저장소에서의 커밋이 되돌려졌음을 확인할 수 있다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/03/revert-commits-in-remote-repository-4.png" alt=""></p>
+
+<h4 id="">주의사항</h4>
+
+<p>이 방법을 이용하면 원격 저장소에 흔적도 없이 내가 만들었던 커밋들을 제거할 수 있으므로 겉보기에는 가장 깔끔한 해결책으로 보인다. <br>
+하지만 만약 해당 브랜치가 팀원들과 공유하는 브랜치이고, 내가 커밋들을 되돌리기 전에 다른 팀원이 혹시나 내가 작성한 커밋들을 이미 pull로 땡겨갔다면, 그때부터 다른 팀원의 로컬 저장소에는 내가 되돌린 커밋들이 남아있게 된다. <br>
+그 커밋들이 되돌려진 사실을 모르는 팀원은 자신이 작업한 커밋들과 함께 push할 것이고, 그 때 내가 되돌렸던 커밋들이 다시 원격 저장소에 추가되게 된다.</p>
+
+<p>따라서 이 방법은 다른 팀원이 내가 되돌린 커밋들을 pull로 땡겨가지 않았다고 확신할 수 있는 경우, <br>
+예를 들어,</p>
+
+<ul>
+<li>나 혼자만 사용하는 브랜치에 커밋을 push하였고, 이를 되돌리고 싶은 경우</li>
+<li>팀원들과 직접 커뮤니케이션해서 내가 되돌린 커밋을 pull로 땡겨간 팀원이 없다고 확인된 경우</li>
+</ul>
+
+<p>이러한 경우에는 안전하고 간편하게 사용할 수 있는 방법이다.</p>
+
+<hr>
+
+<h3 id="2gitrevert">2. git revert 사용하기</h3>
+
+<p>앞서 1번 방법에서 발생했던 근본적인 문제점은 다른 팀원들과 공유하는 원격 저장소의 커밋 히스토리를 강제로 조작한다는 점이었다. <br>
+이 때, <code>$ git revert</code> 명령어를 사용하여 revert 커밋을 커밋 히스토리에 쌓는 방식을 사용한다면 이러한 문제점을 막을 수 있다. 쉽게 말해서, 특정 커밋을 되돌리는 작업도 하나의 커밋으로 간주하여 커밋 히스토리에 추가하는 것이므로, 내가 되돌린 작업을 다른 팀원들과도 공유할 수 있게 된다.</p>
+
+<h4 id="">방법</h4>
+
+<p><code>$ git revert [되돌리고 싶은 commit의 hash]</code>는 특정 커밋에서의 변경 사항을 제거하는 또 다른 커밋을 생성하는 명령어이다. <br>
+따라서 <em>Commit A</em> -> <em>Commit B</em> -> <em>Commit C</em> 커밋의 순서로 커밋 히스토리가 쌓여있는걸 생각해봤을 때, <br>
+이를 다시 원래대로 돌리기 위해서는 <em>Commit C</em> -> <em>Commit B</em> -> <em>Commit A</em> 순서로 거꾸로 revert하여야 한다(우리가 흔히 사용하는 "실행취소"를 생각하면 이해하기 쉽다.).</p>
+
+<pre><code>$ git revert 03001425c69fe8eccf219db243d9ecc9a60d64b8 # Revert "Commit C"
+$ git revert 16e2e7f1789973a227a5e6bb47221ed683a8b1ae # Revert "Commit B"
+$ git revert b31064c29b55f826d1dae3f1bddecc4a27a10e36 # Revert "Commit A"
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/03/revert-commits-in-remote-repository-5.png" alt=""></p>
+
+<p>커밋 로그를 보면 알 수 있듯이, 이렇게 하면 되돌리고 싶은 커밋의 수만큼의 불필요한 revert 커밋이 생겨난다. 즉, 되돌리고 싶은 커밋이 100개라면 100개의 revert 커밋을 추가해야한다. <br>
+이때 <code>--no-commit</code> 옵션을 이용하면, revert를 위한 커밋을 하나만 생성할 수도 있다. <br>
+<code>$ git revert --no-commit [되돌리고 싶은 commit의 hash]</code> 을 실행하면, 아까처럼 revert 커밋이 자동으로 생성되는게 아니라 <em>working tree</em>와 <em>index(staging area)</em>에만 변경 사항이 적용된다.</p>
+
+<pre><code>$ git revert --no-commit 03001425c69fe8eccf219db243d9ecc9a60d64b8 # Revert "Commit C"
+$ git revert --no-commit 16e2e7f1789973a227a5e6bb47221ed683a8b1ae # Revert "Commit B"
+$ git revert --no-commit b31064c29b55f826d1dae3f1bddecc4a27a10e36 # Revert "Commit A"
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/03/revert-commits-in-remote-repository-6.png" alt=""></p>
+
+<p>하지만 이 방법도 역시 일일히 revert할 커밋의 수만큼 명령어를 반복해서 실행해야한다는 단점이 있다. <br>
+다행히 <code>$ git revert</code> 는 특정 커밋 하나뿐만 아니라 복수개의 커밋에 대해서도 revert를 지원해주고 있다. 그때는 특정 커밋의 hash아닌 <code>[되돌리고 싶은 커밋의 범위]</code> 를 인수로 입력해주면 된다.</p>
+
+<pre><code>$ git revert --no-commit HEAD~3.. # 또는 master~3..master
+</code></pre>
+
+<p>마지막으로 index에 올라간 변경들을 한꺼번에 커밋한 다음, 원격 저장소에 푸시하면 된다.</p>
+
+<pre><code>$ git commit -m 'Revert "Commit C, B, A"'
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/03/revert-commits-in-remote-repository-7.png" alt=""></p>
+
+<pre><code>$ git push origin master
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/03/revert-commits-in-remote-repository-8.png" alt=""></p>
+
+<hr>
+
+<h3 id="">참고</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="https://stackoverflow.com/questions/1463340/how-to-revert-multiple-git-commits" target="_blank">How to revert multiple git commits?</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[객체지향의 사실과 오해]]></title><description><![CDATA[<h3 id="">객체지향의 사실과 오해</h3>
+
+<p>불과 몇달전만 해도 내가 "객체지향"과 관련된 글을 쓰게 될 줄은 상상도 못했다. <br>
+사실 그 주제에 대해 별로 관심도 없었고, 따로 공부해야될 필요성도 느끼지 못했었다. 여태까지 살아오며 "객체지향"에 대해 한번도 전문적인 교육을 받아본 적은 없었지만, 관련된 블로그 글 몇 개를 읽고 내 나름대로 객체지향으로 개발해보며(<del>이</del></p>]]></description><link>https://jupiny.com/2019/01/12/object-orientation-fact-and-misunderstanding/</link><guid isPermaLink="false">787af251-068d-4bb3-b170-e02430231282</guid><category><![CDATA[Study]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Sat, 12 Jan 2019 12:11:21 GMT</pubDate><content:encoded><![CDATA[<h3 id="">객체지향의 사실과 오해</h3>
+
+<p>불과 몇달전만 해도 내가 "객체지향"과 관련된 글을 쓰게 될 줄은 상상도 못했다. <br>
+사실 그 주제에 대해 별로 관심도 없었고, 따로 공부해야될 필요성도 느끼지 못했었다. 여태까지 살아오며 "객체지향"에 대해 한번도 전문적인 교육을 받아본 적은 없었지만, 관련된 블로그 글 몇 개를 읽고 내 나름대로 객체지향으로 개발해보며(<del>이 책을 읽은 후, 객체지향으로 개발했다라고 말하기에는 우습지만</del>) 아 이런게 "객체지향" 이구나 하며 그냥 넘어갔었다. <br>
+그러다가 우연히 동기의 추천으로 <strong><a id="jupiny-blog-link" href="http://www.yes24.co.kr/24/goods/18249021" target="_blank">객체지향의 사실과 오해</a></strong> 라는 책을 읽게 되었다. <br>
+마치 이 책은 이런 나같은 사람을 저격(?)하는 듯한 느낌의 책이었다. 한구절 한구절들이 나한테 하는 말 같았고, 너 이러고도 객채지향으로 개발한다고 말할 수 있어? 라며 꾸짖는 것 같았다. <br>
+책에는 많은 내용들이 담겨있지만, 그 중에서 인상깊게 읽었던 내용 몇개를 아래에 정리해보았다.</p>
+
+<h4 id="">객체지향은 현실 세계를 모방했다?</h4>
+
+<blockquote>
+  <p>현실 세계에서 식별가능한 개체 또는 사물은 모두 "상태"와 "행동"을 가진 객체로 볼 수 있고, 이를 소프트웨어 세계에 모방해놓은 것이 "객체지향"이다.</p>
+</blockquote>
+
+<p>객체지향에 대해 공부하면서 한번쯤은 봤을 법한 문장이다.
+이 말이 완전 틀렸다고는 볼 수 없지만, 오류가 분명 존재한다. 현실 세계의 객체와 소프트웨어 세계의 객체 사이에는 분명 차이점이 있다. <br>
+예를 들어, "커피"라는 객체가 있다고 하자. 현실 세계의 커피는 스스로 양을 줄이거나 늘릴수도 없는 수동적인 존재이다. 반면 객체지향 세계에서 커피는 스스로 자신의 상태를 관리할 수 있는 자율적인 존재가 된다. 또 필요에 따라 추가적인 능력도 보유할 수 있다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-1.png" alt=""></p>
+
+<p>이처럼 소프트웨어 객체는 일반적으로 현실 객체가 가지지 못한 더많은 특징과 능력을 보유한 객체이다. 객체지향 설계의 목적은 현실 세계를 모방하는 것이 아니라, <strong>새로운 세계를 창조하는 것</strong> 이다. 이것을 이해하는 것이 객체지향 설계의 시작이다.</p>
+
+<h4 id="">객체지향은 "클래스"가 아니라 "객체"를 지향하는 것이다.</h4>
+
+<p>이 책에서도 언급되있지만, 나 또한 객체지향을 생각하면 가장 먼저 "클래스"가 떠오른다. <br>
+아마도 우리는 프로그래밍 수업시간 때,</p>
+
+<blockquote>
+  <p>클래스는 객체를 여러개 만들어내는 설계도(또는 틀)이다.</p>
+</blockquote>
+
+<p>라는 말을 귀에 못박히게 들어왔다. 이 때문에 단순히 객체는 클래스의 생산물이라는 인식이 잡혀있게 된 것 같다. <br>
+물론 코딩하는 관점에서는 그렇게 볼 수 있지만, 객체지향이라는 소설의 주인공은 "클래스"가 아니라 <strong>"객체"</strong>이다. "클래스"의 생산물이 "객체"가 아니라, "객체"를 분류하기 위해 등장한 것이 "클래스"이다. <br>
+객체지향 설계에서 중요한 것은 어떤 클래스가 필요한가가 아니라 어떤 객체들이 어떤 메시지를 주고받으며 협력하는가이다. 코드를 담은 클래스의 관점이 아닌 <strong>메시지를 주고받는 객체</strong> 의 관점으로 애플리케이션을 바라보아야 한다.</p>
+
+<h4 id="">객체의 행동이 상태를 결정한다.</h4>
+
+<p>만약 지금 학생이라는 객체를 설계해야한다고 가정해보자. 아마도 나는 객체의 필요한 상태(학번, 이름, 나이, 전공 등)부터 정의한 후, 이와 관련되어 필요한 행동이 무엇일까 생각해가며 하나씩 추가할 것이다. <br>
+책에서는 이러한 설계 방식의 문제점을 지적하고 있다. 이처럼 상태를 먼저 결정하고, 행동을 후에 결정하는 방식은 협력에 적합한 객체를 만들지 못할 가능성이 크다. <br>
+객체의 존재이유는 다른 객체와 협력하기 위해서다. 그리고 이를 달성하기 위해 서로 메시지를 주고 받는다. 따라서 메시지를 처리할 행동이 먼저 정의돼야하고, 그 다음에 행동을 수행하는 데에 필요한 상태가 정의돼야 한다.</p>
+
+<h4 id="">메시지가 수신자(객체)의 책임을 결정한다.</h4>
+
+<p>앞서 말했었지만,  객채들의 협력에 있어서 가장 중요한 키포인트는 <strong>"메시지"</strong>이다. 객체들은 자신에게 할당된 책임을 완수하기 위해, 다른 객체들에게 도움을 요청하게 된다. 이를 위해 먼저 수신하기에 적합한 객체를 선택한 후, 해당 객체에게 메세지를 전송하게 된다. 이 때, 수신한 객체는 요청받은 메시지를 반드시 처리해야할 책임을 가지게 된다. <br>
+만약 수신한 객체도 다른 객체의 도움이 필요하게 되면, 같은 방식으로 다른 객체에게 메시지를 전송할 것이다. 수신한 그 객체 역시 해당 메시지를 처리할 책임을 가지게 된다. 이런 식으로 서로 간의 주고받는 메시지들을 정의하다되면, 어느새 각 객체들의 책임이 결정될 것이다. <br>
+객체가 메시지를 선택하는 것이 아니라 <strong>메시지가 객체를 선택</strong> 한다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-2.png" alt=""></p>
+
+<h4 id="whathow">메시지는 무엇을(WHAT), 메소드는 어떻게(HOW)</h4>
+
+<p>책에는 <strong>"메시지"</strong>와 <strong>"메소드"</strong>의 관계가 깔끔하게 정리되어있다. <br>
+메시지는 <strong>"무엇을(WHAT)"</strong> 실행할 것인지를 정의한다. 반면 메소드는 그 메시지를 <strong>"어떻게(HOW)"</strong> 실행할 것인지를 정의한 것이고, 이 처리방법은 수신자가 전적으로 결정할 수 있다. <br>
+따라서 동일한 메시지라 하더라도 서로 다른 방식의 메소드의 의해 처리될 수 있고, 이러한 메시지와 메소드 간의 1:N 관계를 객체지향에서 <strong>다형성</strong> 이라고 한다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-3.png" alt=""></p>
+
+<hr>
+
+<h3 id="">객체지향 설계 방법</h3>
+
+<p>위의 내용을 바탕으로 객체지향 설계 순서를 정리하면,</p>
+
+<ol>
+<li>도메인에 필요한 객체 정리  </li>
+<li>필요한 메시지 추가  </li>
+<li>메시지를 수신할 객체 선택  </li>
+<li>더이상 필요한 메시지가 없을 때까지 2-3 과정 반복  </li>
+<li>객체들이 수신하는 메시지를 바탕으로 객체들의 인터페이스 구성  </li>
+<li>객체들의 메소드를 구현</li>
+</ol>
+
+<p>이를 실제 예제에 한번 적용해보자. <br>
+예를 들어 "붕어빵 가게"라는 도메인 모델의 객체지향 설계를 한다고 가정해보자.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-4.jpg" alt=""></p>
+
+<h4 id="1">1. 도메인에 필요한 객체 정리</h4>
+
+<p>우선 어떠한 객체가 필요할지 한번 생각해보자. 당연히 "붕어빵"이라는 객체가 있어야될 것이고, "붕어빵"을 구매하는 "손님", 또 "붕어빵"을 만드는 "붕어빵 장수" 객체가 필요할 것이다. 또 "붕어빵 장수"는 "손님"한테 받은 돈을 저장하기 위해 "금고"라는 객체를 하나 가져야할 것이다. <br>
+필요한 객체들간의 관계를 정리하여 <strong>도메인 모델</strong> 로 표현해보면 아래와 같다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-5.png" alt=""></p>
+
+<h4 id="2t4">2~4. 필요한 메시지 추가 &amp; 수신할 객체 선택</h4>
+
+<p>첫번째로 필요한 메시지는 "붕어빵을 주문하라"이다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-6.png" alt=""></p>
+
+<p>이 메시지를 수신하기에 적합한 객체는 무엇일까? 아마도 "손님"일 것이다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-7.png" alt=""></p>
+
+<p>하지만 "손님" 객체는 붕어빵을 만들 수 없다. 따라서 다른 객체에게 도움을 요청하기 위해 메시지를 날려야 한다. 이 때 등장하는 두번째 메시지는 "붕어빵을 만들어라"이다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-8.png" alt=""></p>
+
+<p>이제 붕어빵을 만들 수 있는 객체를 찾아야한다. 그리고 그 객체는 "붕어빵 장수"일 것이다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-9.png" alt=""></p>
+
+<p>"붕어빵 장수"는 붕어빵을 만들기 전에 먼저 "손님"에게 받은 돈을 저장해야 한다. 따라서 돈을 저장할 수 있는 "금고" 객체에게 메시지를 날리게 된다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-10.png" alt=""></p>
+
+<p>마지막으로 "붕어빵 장수"가 최종적으로 "붕어빵"을 생성하기 위한 메시지가 하나 더 필요하다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-11.png" alt=""></p>
+
+<h4 id="5">5. 인터페이스 정리하기</h4>
+
+<p>객체들이 수신하는 메시지들을 정리하면 아래와 같다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2019/01/object-orientation-fact-and-misunderstanding-12.png" alt=""></p>
+
+<p>그리고 이 메시지들은 객체의 인터페이스를 구성한다.
+아래는 인터페이스를 java 문법으로 표현한 것이다.</p>
+
+<pre><code class="language-java">class Customer {  
+  public void order(int count) {}
+}
+
+class BoongabangMaster {  
+  public List&lt;Boongabang&gt; makeBoongabang(int money, int count) {}
+}
+
+class Safe {  
+  public void saveMoney(int money) {}
+}
+
+class Boongabang {  
+  // public Boongabang() {} 생략
+}
+</code></pre>
+
+<h4 id="6">6. 메소드 구현하기</h4>
+
+<p>앞서 정리한 인터페이스들을 이제 메소드로 구현해보자. 이 과정에서 객체의 인터페이스가 조금 변경될 수도 있지만, 이는 실제 코드로 구현하면서 나타날 수 있는 충분히 정상적인 현상이다.</p>
+
+<pre><code class="language-java">class Customer {  
+  public void order(int count, BoongabangMaster master) {
+    master.makeBoongabang(count, 1000 * count) // 붕어빵 하나의 가격은 1000원
+  }
+}
+
+class BoongabangMaster {  
+  private Safe safe;
+
+  public BoongabangMaster(Safe safe) {
+    this.safe = safe;
+  }
+
+  public List&lt;Boongabang&gt; makeBoongabang(int count, int money) {
+    safe.saveMoney(money);
+    List&lt;Boongabang&gt; list = new ArrayList&lt;Boongabang&gt;();
+    for(int i=0; i&lt;count; i++) {
+      list.add(new Boongabang());
+    }
+    return list;
+  }
+}
+
+class Safe {  
+  private int money;
+
+  public Safe(int money) {
+    this.money = money;
+  }
+
+  public void saveMoney(int money) {
+    this.money += money;
+  }
+}
+
+class Boongabang {  
+  // public Boongabang() {} 생략
+}
+</code></pre>
+
+<hr>
+
+<h3 id="">출처</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="http://www.yes24.co.kr/24/goods/18249021" target="_blank">객체지향의 사실과 오해</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[MySQL의 Transaction Isolation Levels]]></title><description><![CDATA[<p>사실 이 글의 목적은 데이터베이스의 Transaction Isolation Levels에 대해 공부한 내용을 쓰기 위함이었는데, MySQL을 예로 사용하며 여러가지 실습해보며 MySQL에서만 적용되는 몇가지 특성이 있음을 알게 되었고, 제목에다가 "MySQL"을 붙이게 되었다.</p>
+
+<p>아래 4가지 Transaction Isolation Levels에 대해 공부한 내용을 각각 나누어 적어보았다.</p>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="https://jupiny.com/2018/11/30/mysql-transaction-isolation-levels#readuncommitted" target="_blank">READ UNCOMMITTED</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://jupiny.com/2018/11/30/mysql-transaction-isolation-levels#readcommitted" target="_blank">READ COMMITTED</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://jupiny.com/2018/11/30/mysql-transaction-isolation-levels#repeatableread" target="_blank">REPEATABLE READ</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://jupiny.com/2018/11/30/mysql-transaction-isolation-levels#serializable" target="_blank">SERIALIZABLE</a></strong></li>
+</ul>
+
+<blockquote>
+  <p>실습에서는 MySQL</p></blockquote>]]></description><link>https://jupiny.com/2018/11/30/mysql-transaction-isolation-levels/</link><guid isPermaLink="false">ce512a2a-c9e6-4dde-a418-5d3dae7b1abd</guid><category><![CDATA[Study]]></category><category><![CDATA[MySQL]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Fri, 30 Nov 2018 18:29:36 GMT</pubDate><content:encoded><![CDATA[<p>사실 이 글의 목적은 데이터베이스의 Transaction Isolation Levels에 대해 공부한 내용을 쓰기 위함이었는데, MySQL을 예로 사용하며 여러가지 실습해보며 MySQL에서만 적용되는 몇가지 특성이 있음을 알게 되었고, 제목에다가 "MySQL"을 붙이게 되었다.</p>
+
+<p>아래 4가지 Transaction Isolation Levels에 대해 공부한 내용을 각각 나누어 적어보았다.</p>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="https://jupiny.com/2018/11/30/mysql-transaction-isolation-levels#readuncommitted" target="_blank">READ UNCOMMITTED</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://jupiny.com/2018/11/30/mysql-transaction-isolation-levels#readcommitted" target="_blank">READ COMMITTED</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://jupiny.com/2018/11/30/mysql-transaction-isolation-levels#repeatableread" target="_blank">REPEATABLE READ</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://jupiny.com/2018/11/30/mysql-transaction-isolation-levels#serializable" target="_blank">SERIALIZABLE</a></strong></li>
+</ul>
+
+<blockquote>
+  <p>실습에서는 MySQL 14.14  버젼, Storage Engine은 InnoDB를 사용하였습니다.</p>
+</blockquote>
+
+<p>우선 실습하기 전에 미리 실습용 테이블을 하나 생성하였다.</p>
+
+<pre><code class="language-sql">CREATE TABLE user (  
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(20)
+);
+</code></pre>
+
+<p>테이블에 아래와 같이 데이터도 추가하였다.</p>
+
+<pre><code class="language-sql">mysql&gt; INSERT INTO user (name) VALUES ("jupiny");  
+mysql&gt; INSERT INTO user (name) VALUES ("jupiny2");  
+mysql&gt; INSERT INTO user (name) VALUES ("jupiny3");  
+mysql&gt; SELECT * FROM user;  
++----+---------+
+| id | name    |
++----+---------+
+| 1  | jupiny  |
+| 2  | jupiny2 |
+| 3  | jupiny3 |
++----+---------+
+</code></pre>
+
+<hr>
+
+<h2 id="readuncommitted">READ UNCOMMITTED</h2>
+
+<p><strong>READ UNCOMMITTED</strong> 은 이름 그대로 아직 다른 트랜잭션에서 <code>COMMIT</code>되지 않은 데이터들을 읽어올 수 있는 level이다. 이 때 읽어온 데이터들이 결국 <code>COMMIT</code> 된다면 더 빨리 읽어오는게 무슨 문제가 있겠냐 생각할 수도 있다. 하지만 만약 해당 트랜잭션이 <code>COMMIT</code> 되지 않고 <code>ROLLBACK</code> 된다면 결국 세상에 존재해서는 안 될 데이터를 읽어온 게 되어버린다.(이렇게 신뢰할 수 없는 데이터를 읽어오는 것을 <strong><a id="jupiny-blog-link" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_dirty_read" target="_blank">dirty read</a></strong> 라고 부른다.) </p>
+
+<p><strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; SET SESSION transaction isolation level READ UNCOMMITTED;  
+mysql&gt; START TRANSACTION;  
+mysql&gt; SELECT * FROM user;  
++----+---------+
+| id | name    |
++----+---------+
+| 1  | jupiny  |
+| 2  | jupiny2 |
+| 3  | jupiny3 |
++----+---------+
+</code></pre>
+
+<p><br> <br>
+<strong>[TRANSACTION-2]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; START TRANSACTION;  
+mysql&gt; UPDATE user SET name = "updated" WHERE id = 1;  
+mysql&gt; INSERT INTO user (name) VALUES ("inserted");  
+</code></pre>
+
+<p><br> <br>
+<strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; SELECT * FROM user;  
++----+----------+
+| id | name     |
++----+----------+
+| 1  | updated  |
+| 2  | jupiny2  |
+| 3  | jupiny3  |
+| 4  | inserted |
++----+----------+
+</code></pre>
+
+<p>결과를 보면 알 수 있듯이, <strong>TRANSACTION-2</strong> 에서 아직 <code>COMMIT</code> 하지 않았음에도 불구하고, <strong>TRANSACTION-1</strong> 에서는 그 데이터들을 읽어옴을 볼 수 있다. <br>
+<strong>READ UNCOMMITTED</strong> level에서는 아래 세 가지 현상이 모두 발생함을 알 수 있다.</p>
+
+<ul>
+<li>아직 <code>COMMIT</code> 되지 않은 신뢰할 수 없는 데이터를 읽어옴(<em>dirty read</em>) </li>
+<li>한 트랜잭션에서 동일한 <code>SELECT</code> 쿼리의 결과가 다름(<em>non-repeatable read</em>)</li>
+<li>이전의 <code>SELECT</code> 쿼리의 결과에 없던 row가 생김(<em>phantom read</em>)</li>
+</ul>
+
+<hr>
+
+<h2 id="readcommitted">READ COMMITTED</h2>
+
+<p><strong>READ COMMITTED</strong> 는 다른 트랜잭션에서 <code>COMMIT</code> 된 데이터만 읽어올 수 있는 level이다.</p>
+
+<p><strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; SET SESSION transaction isolation level READ COMMITTED;  
+mysql&gt; START TRANSACTION;  
+mysql&gt; SELECT * FROM user;  
++----+---------+
+| id | name    |
++----+---------+
+| 1  | jupiny  |
+| 2  | jupiny2 |
+| 3  | jupiny3 |
++----+---------+
+</code></pre>
+
+<p><br> <br>
+<strong>[TRANSACTION-2]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; START TRANSACTION;  
+mysql&gt; UPDATE user SET name = "updated" WHERE id = 1;  
+mysql&gt; INSERT INTO user (name) VALUES ("inserted");  
+</code></pre>
+
+<p><br> <br>
+<strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; SELECT * FROM user;  
++----+---------+
+| id | name    |
++----+---------+
+| 1  | jupiny  |
+| 2  | jupiny2 |
+| 3  | jupiny3 |
++----+---------+
+</code></pre>
+
+<p>앞서 본 <strong>READ UNCOMMITTED</strong> 의 경우와 다르게 <strong>TRANSACTION-2</strong> 에서 아직 <code>COMMIT</code> 하지 않았기 때문에 <code>SELECT</code> 쿼리의 결과가 이전과 동일함을 볼 수 있다.</p>
+
+<ul>
+<li>아직 <code>COMMIT</code> 되지 않은 신뢰할 수 없는 데이터는 읽어올 수 없음(<del><em>dirty read</em></del>)</li>
+</ul>
+
+<p>여기서 <strong>TRANSACTION-2</strong> 을 COMMIT하면,</p>
+
+<p><strong>[TRANSACTION-2]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; COMMIT;  
+</code></pre>
+
+<p><br> <br>
+<strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; SELECT * FROM user;  
++----+----------+
+| id | name     |
++----+----------+
+| 1  | updated  |
+| 2  | jupiny2  |
+| 3  | jupiny3  |
+| 4  | inserted |
++----+----------+
+</code></pre>
+
+<p>이제 <strong>TRANSACTION-1</strong> 에서 읽어올 수 있게 된다.</p>
+
+<ul>
+<li>한 트랜잭션에서 동일한 <code>SELECT</code> 쿼리의 결과가 다름(<em>non-repeatable read</em>)</li>
+<li>이전의 <code>SELECT</code> 쿼리의 결과에 없던 row가 생김(<em>phantom read</em>)</li>
+</ul>
+
+<hr>
+
+<h2 id="repeatableread">REPEATABLE READ</h2>
+
+<p><strong>REPEATABLE READ</strong> 은 MySQL InnoDB의 기본 isolation level이다. MySQL에서 지정한 기본 level인만큼 동시성과 안정성의 균형을 가장 잘 갖춘 level이 아닐까 생각한다. <br>
+실습을 하기에 앞서, 먼저 내가 알고 있던 <strong>REPEATABLE READ</strong> 에 대해 기대했던 결과를 먼저 적어보았다.</p>
+
+<ul>
+<li>아직 <code>COMMIT</code> 되지 않은 신뢰할 수 없는 데이터는 읽어올 수 없음(<del><em>dirty read</em></del>)</li>
+<li>한 트랜잭션에서 동일한 <code>SELECT</code> 쿼리의 결과가 동일(<del><em>non-repeatable read</em></del>)</li>
+<li>이전의 <code>SELECT</code> 쿼리의 결과에 없던 row가 생김(<em>phantom read</em>)</li>
+</ul>
+
+<p>하지만 실제 MySQL에서는 이 결과와 달랐다.(사실 이 부분에서 많이 놀랐다.)</p>
+
+<p>앞서 실습했던 것과 동일한 순서로 테스트해보면,</p>
+
+<p><strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; SET SESSION transaction isolation level REPEATABLE READ;  
+mysql&gt; START TRANSACTION;  
+mysql&gt; SELECT * FROM user;  
++----+---------+
+| id | name    |
++----+---------+
+| 1  | jupiny  |
+| 2  | jupiny2 |
+| 3  | jupiny3 |
++----+---------+
+</code></pre>
+
+<p><br> <br>
+<strong>[TRANSACTION-2]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; START TRANSACTION;  
+mysql&gt; UPDATE user SET name = "updated" WHERE id = 1;  
+mysql&gt; INSERT INTO user (name) VALUES ("inserted");  
+</code></pre>
+
+<p><br> <br>
+<strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; SELECT * FROM user;  
++----+---------+
+| id | name    |
++----+---------+
+| 1  | jupiny  |
+| 2  | jupiny2 |
+| 3  | jupiny3 |
++----+---------+
+</code></pre>
+
+<ul>
+<li>아직 <code>COMMIT</code> 되지 않은 신뢰할 수 없는 데이터는 읽어올 수 없음(<del><em>dirty read</em></del>)</li>
+</ul>
+
+<p><strong>[TRANSACTION-2]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; COMMIT;  
+</code></pre>
+
+<p><br> <br>
+<strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; SELECT * FROM user;  
++----+---------+
+| id | name    |
++----+---------+
+| 1  | jupiny  |
+| 2  | jupiny2 |
+| 3  | jupiny3 |
++----+---------+
+</code></pre>
+
+<ul>
+<li>한 트랜잭션에서 동일한 <code>SELECT</code> 쿼리의 결과가 동일(<del><em>non-repeatable read</em></del>)</li>
+<li>이전의 <code>SELECT</code> 쿼리의 결과에 없던 row가 생기지 않음(<del><em>phantom read</em></del>)</li>
+</ul>
+
+<p>기대했던 것과 다르게 <em>non-repeatable read</em>는 물론, <em>phantom read</em>도 발생하지 않았다.</p>
+
+<p>이 이유는 <strong><a id="jupiny-blog-link" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html#isolevel_repeatable-read" target="_blank">MySQL 공식 문서</a></strong>에 자세히 설명되어있다.</p>
+
+<ul>
+<li><p><strong>READ UNCOMMITTED</strong></p>
+
+<blockquote>
+  <p>Each consistent read, even within the same transaction, sets and reads its own fresh snapshot.</p>
+</blockquote></li>
+<li><p><strong>REPEATABLE READ</strong></p>
+
+<blockquote>
+  <p>This is the default isolation level for InnoDB. Consistent reads within the same transaction read the snapshot established by the first read.</p>
+</blockquote></li>
+</ul>
+
+<p>MySQL에서는 <strong>REPEATABLE READ</strong> 와 <strong>READ COMMITTED</strong> level에 대해서 한 트랜잭션에서 <code>SELECT</code> 쿼리로 데이터를 읽어올 때 테이블에 lock을 걸지 않고, 해당 시점의 데이터 상태를 의미하는 <strong><a id="jupiny-blog-link" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_snapshot" target="_blank">snapshot</a></strong> 를 구축하여 거기서 데이터를 읽어온다. <br>
+앞에서 다루지 않았지만, <strong>READ COMMITTED</strong> 에서 각각의 <code>SELECT</code> 쿼리는 그때그때 최신의 snapshot을 구축하여 데이터를 읽어온다. 따라서 한 트랜잭션이지만 <code>SELECT</code> 쿼리의 결과가 다르기도 했다. <br>
+이와 다르게 <strong>REPEATABLE READ</strong> 는 한 트랜잭션에서 처음 데이터를 읽어올 때 구축한 snapshot에서 모두 데이터를 읽어온다. 따라서 매번 <code>SELECT</code> 쿼리의 결과들이 항상 처음과 동일했던 것이고, 이로 인해 <em>phantom read</em>도 발생하지 않았던 것이다.</p>
+
+<p>또 한가지 흥미로운 점은, 비록 한 트랜잭션에서 <code>SELECT</code> 쿼리는 항상 동일하더라도, 다른 트랜잭션에서 건드린 row에 대한 <code>UPDATE</code>, <code>DELETE</code> 의 결과는 출력될 수 있다. <br>
+예를 들어 아까 <strong>[TRANSACTION-1]</strong> 을 아직 <code>COMMIT</code> 하지 않은 상황에서 아래와 같이 <code>UPDATE</code> 쿼리를 실행하면,</p>
+
+<p><strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; UPDATE user SET name = "upserted" WHERE name = "inserted";  
+-- Query OK, 1 row affected (0.01 sec)
+-- Rows matched: 1  Changed: 1  Warnings: 0
+</code></pre>
+
+<p><code>SELECT</code> 쿼리 결과에는 분명 name = "inserted"인 row가 없었지만, 1개의 row가 변경됬다는 문구가 출력되었다. <br>
+그리고 다시 <code>SELECT</code> 쿼리를 실행해보면,</p>
+
+<p><strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; SELECT * FROM user;  
++----+----------+
+| id | name     |
++----+----------+
+| 1  | updated  |
+| 2  | jupiny2  |
+| 3  | jupiny3  |
+| 4  | upserted |
++----+----------+
+</code></pre>
+
+<p>최신의 snapshot에서 데이터를 읽어옴을 볼 수 있다.</p>
+
+<hr>
+
+<h2 id="serializable">SERIALIZABLE</h2>
+
+<p>앞서 <strong>REPEATABLE READ</strong> 가 동시성과 안정성의 균형을 가장 잘 갖춘 isolation level였다면, <strong>SERIALIZABLE</strong> 는 동시성을 상당 부분 포기하고 안정성에 큰 비중을 둔 isolation level이다. <strong>SERIALIZABLE</strong> 은 한 트랜잭션 안에서 단순 <code>SELECT</code> 쿼리를 사용하더라도, 모두 <code>SELECT ... FOR SHARE</code> 으로 변환한다. <br>
+<code>SELECT ... FOR SHARE</code> 은 읽어온 row들에 <strong><a id="jupiny-blog-link" href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_shared_lock" target="_blank">shared lock</a></strong>(또는 read lock)을 거는 쿼리이다.</p>
+
+<p><strong>[TRANSACTION-1]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; SET SESSION transaction isolation level SERIALIZABLE;  
+mysql&gt; START TRANSACTION;  
+mysql&gt; SELECT * FROM user;  
++----+---------+
+| id | name    |
++----+---------+
+| 1  | jupiny  |
+| 2  | jupiny2 |
+| 3  | jupiny3 |
++----+---------+
+</code></pre>
+
+<p><br> <br>
+<strong>[TRANSACTION-2]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; START TRANSACTION;  
+mysql&gt; SELECT * FROM user;  
++----+---------+
+| id | name    |
++----+---------+
+| 1  | jupiny  |
+| 2  | jupiny2 |
+| 3  | jupiny3 |
++----+---------+
+</code></pre>
+
+<p>row들에 shared lock이 걸려있으므로 <code>SELECT</code> 쿼리로 데이터는 읽어올 수 있지만,</p>
+
+<p><strong>[TRANSACTION-2]</strong></p>
+
+<pre><code class="language-sql">mysql&gt; UPDATE user SET name = "updated" WHERE id = 1;
+</code></pre>
+
+<p><code>UPDATE</code> 나 <code>INSERT</code> 쿼리로는 해당 row의 lock이 풀리기 전까지 수정이나 추가할 수 없다. 따라서 위에서처럼 <code>UPDATE</code> 쿼리를 실행하면 결과가 출력되지 않고 계속 대기 상태에 있게 된다 . <br>
+물론 한없이 기다리진 않고, 설정된 timeout이 지나면 아래와 같이 에러를 출력할 것이다.</p>
+
+<pre><code class="language-sql">ERROR 1205 (HY000): Lock wait timeout exceeded; try restarting transaction  
+</code></pre>
+
+<p>만약 timeout 되기 전에 <strong>TRANSACTION-1</strong> 이  <code>COMMIT</code> 한다면, 걸려있던 lock이 풀려나 <code>UPDATE</code> 쿼리가 정상적으로 실행될 것이다.  </p>
+
+<p>이렇듯 <strong>SERIALIZABLE</strong> 에서는, 한 트랜잭션에서 <code>SELECT</code> 쿼리를 실행하면 그 트랜잭션이 <code>COMMIT</code> 되기 전까지 다른 트랜잭션에서는 수정, 추가, 삭제 등의 작업조차 할 수 없으므로 아래 3가지 현상 모두 발생할 일이 없다.</p>
+
+<ul>
+<li>아직 <code>COMMIT</code> 되지 않은 신뢰할 수 없는 데이터를 읽어올 수 없음(<del><em>dirty read</em></del>) </li>
+<li>한 트랜잭션에서 동일한 <code>SELECT</code> 쿼리의 결과가 항상 동일(<del><em>non-repeatable read</em></del>)</li>
+<li>이전의 <code>SELECT</code> 쿼리의 결과에 없던 row가 생기지 않음(<del><em>phantom read</em></del>)</li>
+</ul>
+
+<hr>
+
+<h3 id="">참고</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html" target="_blank">MySQL :: MySQL 8.0 Reference Manual :: 15.7.2.1 Transaction Isolation Levels</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[pyenv와 tox를 이용하여 여러 환경에서 테스트하기]]></title><description><![CDATA[<p>현재 내 로컬에서는 <strong><a id="jupiny-blog-link" href="https://github.com/pyenv/pyenv" target="_blank">pyenv</a></strong>, <strong><a id="jupiny-blog-link" href="https://github.com/pyenv/pyenv-virtualenv" target="_blank">pyenv-virtualenv</a></strong>, <strong><a id="jupiny-blog-link" href="https://github.com/kennethreitz/autoenv" target="_blank">autoenv</a></strong> 를 이용하여 파이썬 가상환경을 구축하고 있다. (자세한 방법은 많은 <strong><a id="jupiny-blog-link" href="http://guswnsxodlf.github.io/pyenv-virtualenv-autoenv" target="_blank">블로그</a></strong> 에서 쉽게 찾을 수 있다.)</p>
+
+<p>그리고 이 pyenv와 <strong><a id="jupiny-blog-link" href="https://tox.readthedocs.io/en/latest/" target="_blank">tox</a></strong> 를 이용하여 다양한 파이썬 버젼에서 테스트할 수 있는 환경을 구축해볼려고 한다. tox는 자동으로 가상환경을 구축하여 그 환경에서 지정한 명령어를 실행시켜주는 도구이다.</p>
+
+<p>우선 한 프로젝트에서 사용되는</p>]]></description><link>https://jupiny.com/2018/07/31/test-in-multiple-environments-using-pyenv-and-tox/</link><guid isPermaLink="false">eaef6b5d-6d4a-4ebd-9c52-75f92954ab46</guid><category><![CDATA[Python]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Tue, 31 Jul 2018 18:02:01 GMT</pubDate><content:encoded><![CDATA[<p>현재 내 로컬에서는 <strong><a id="jupiny-blog-link" href="https://github.com/pyenv/pyenv" target="_blank">pyenv</a></strong>, <strong><a id="jupiny-blog-link" href="https://github.com/pyenv/pyenv-virtualenv" target="_blank">pyenv-virtualenv</a></strong>, <strong><a id="jupiny-blog-link" href="https://github.com/kennethreitz/autoenv" target="_blank">autoenv</a></strong> 를 이용하여 파이썬 가상환경을 구축하고 있다. (자세한 방법은 많은 <strong><a id="jupiny-blog-link" href="http://guswnsxodlf.github.io/pyenv-virtualenv-autoenv" target="_blank">블로그</a></strong> 에서 쉽게 찾을 수 있다.)</p>
+
+<p>그리고 이 pyenv와 <strong><a id="jupiny-blog-link" href="https://tox.readthedocs.io/en/latest/" target="_blank">tox</a></strong> 를 이용하여 다양한 파이썬 버젼에서 테스트할 수 있는 환경을 구축해볼려고 한다. tox는 자동으로 가상환경을 구축하여 그 환경에서 지정한 명령어를 실행시켜주는 도구이다.</p>
+
+<p>우선 한 프로젝트에서 사용되는 파이썬 패키지들을 관리할 가상환경을 하나 생성하였다.</p>
+
+<pre><code>$ pyenv virtualenv 3.7.0 tox-test
+</code></pre>
+
+<p>그리고 프로젝트 디렉토리 접근시 자동으로 가상환경을 활성화할 수 있도록 <code>.env</code> 파일에 아래와 같은 스크립트를 추가하였다.</p>
+
+<pre><code class="language-bash">pyenv local tox-test  
+</code></pre>
+
+<p>그리고 테스트를 위해 테스트 코드를 하나 작성하였다. <strong><a id="jupiny-blog-link" href="https://docs.python.org/3/library/unittest.html#basic-example" target="_blank">unittest 공식 문서</a></strong> 에 있는 예제 코드를 그대로 사용하였다.</p>
+
+<pre><code class="language-python"># test_string.py
+
+import unittest
+
+class TestStringMethods(unittest.TestCase):
+
+    def test_upper(self):
+        self.assertEqual('foo'.upper(), 'FOO')
+
+    def test_isupper(self):
+        self.assertTrue('FOO'.isupper())
+        self.assertFalse('Foo'.isupper())
+
+    def test_split(self):
+        s = 'hello world'
+        self.assertEqual(s.split(), ['hello', 'world'])
+        # check that s.split fails when the separator is not a string
+        with self.assertRaises(TypeError):
+            s.split(2)
+</code></pre>
+
+<p>테스트 라이브러리인 <strong><a id="jupiny-blog-link" href="http://nose.readthedocs.io/en/latest/" target="_blank">nose</a></strong> 를 설치한 후, 테스트를 돌려보면 3개의 테스트가 성공했다는 메시지가 나타날 것이다.</p>
+
+<pre><code>$ pip install nose
+$ nosetests
+</code></pre>
+
+<pre><code>...
+----------------------------------------------------------------------
+Ran 3 tests in 0.004s
+
+OK  
+</code></pre>
+
+<p>자 이제, 현재 파이썬 버젼(3.7.0) 뿐만 아니라 다른 환경에서도 위의 테스트 코드가 성공하는지 확인해볼려고 한다.</p>
+
+<p>우선 tox를 설치한 후,</p>
+
+<pre><code>$ pip install tox
+</code></pre>
+
+<p><code>$ tox</code> 라고 실행해보면, <code>setup.py</code> 가 없다는 에러가 뜰 것이다. tox는 테스트를 하기전 프로젝트를 packaging하기 때문에 packaging을 위한 설명서가 되는 <code>setup.py</code> 가 있어야만 한다.</p>
+
+<p>아래과 같이 간단하게 <code>setup.py</code>를 작성하였다.</p>
+
+<pre><code class="language-python"># setup.py
+
+import setuptools
+
+setuptools.setup(  
+    name="tox-test",
+    version="0.0.1",
+    author="jupiny",
+    author_email="tmdghks584@gmail.com",
+    description="A package for test using tox",
+    packages=setuptools.find_packages(),
+)
+</code></pre>
+
+<p>그리고 tox 실행과 관련된 정보를 <code>tox.ini</code> 파일에 작성하면 된다.</p>
+
+<pre><code class="language-ini">[tox]
+envlist = py27, py34, py35, py36, py37
+
+[testenv:py27]
+basepython = python2.7
+
+[testenv:py34]
+basepython = python3.4
+
+[testenv:py35]
+basepython = python3.5
+
+[testenv:py36]
+basepython = python3.6
+
+[testenv:py37]
+basepython = python3.7
+
+[testenv]
+deps = nose  
+commands = nosetests  
+</code></pre>
+
+<p>현재 디렉토리 구조는 아래와 같다.</p>
+
+<pre><code>$ tree
+.
+├── setup.py
+├── tox-test
+│   ├── __init__.py
+│   └── test_string.py
+├── tox.ini
+</code></pre>
+
+<p>다시 <code>$ tox</code> 를 실행하면, 몇몇 파이썬 버젼에서 virtualenv를 생성하는데 실패할 것이다. 나같은 경우는 현재 활성화된 가상환경이 3.7.0 밖에 없기 때문에 <code>py37</code> 를 제외한 모든 버젼에서 실패하였다. 이를 위해 각 버젼에 맞는 가상환경들을 더 생성하여 활성화 시켜야한다.</p>
+
+<pre><code>$ pyenv virtualenv -p python2.7 2.7.12 py27
+$ pyenv virtualenv -p python3.4 3.4.4 py34
+$ pyenv virtualenv -p python3.5 3.5.2 py35
+$ pyenv virtualenv -p python3.6 3.6.6 py36
+$ pyenv virtualenv -p python3.7 3.7.0 py37
+</code></pre>
+
+<p>각 버젼에 해당하는 가상환경들을 추가로 생성하였다. 명령어의 <code>-p pythonX.X</code> 옵션 값과 <code>tox.ini</code> 의 <code>basepython = pythonX.X</code> 부분을 정확히 일치시킨 것에 주목하자. <code>-p</code> 옵션은 가상환경 활성화 시에 실행할 파이썬 파일을 구체적으로 정할 수 있다.</p>
+
+<p>이 가상환경들을 활성화하기 위해 <code>.env</code> 에도 추가하도록 하자.</p>
+
+<pre><code class="language-bash">pyenv local tox-test py27 py34 py35 py36 py37  
+</code></pre>
+
+<p>맨 앞의 <code>tox-test</code> 가상환경은 파이썬 패키지들을 관리할 목적으로 생성한 가상환경이고, 나머지 뒤의 가상환경들은 tox 실행을 위해 추가한 가상환경이라 생각하면 될 것 같다.</p>
+
+<p>이제 <code>$ tox</code> 를 실행하면, </p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/07/test-in-multiple-environments-using-pyenv-and-tox-1.png" alt=""></p>
+
+<p>"congratulations :)" 글자를 볼 수 있을 것이다.</p>
+
+<h3 id="">참고</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="https://github.com/pyenv/pyenv-virtualenv/issues/202" target="_blank">Tox can't find python3.x executable in virtualenv</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://stackoverflow.com/questions/1534210/use-different-python-version-with-virtualenv" target="_blank">Use different Python version with virtualenv</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[git rebase -i 사용하기]]></title><description><![CDATA[<p>Git을 사용하다보면, 이미 커밋한 히스토리를 변경 또는 삭제하고 싶은 경우가 자주 발생한다. 이때 사용할 수 있는 명령어가 바로 <code>$ git rebase -i</code>이다. <br>
+<code>-i</code>는 <code>--interactive</code> 의 약어로 말그대로 <code>git rebase</code> 명령어를 대화형으로 실행하겠다는 의미이다. </p>
+
+<pre><code>$ git rebase -i [수정을 시작할 커밋의 이전 커밋]
+</code></pre>
+
+<p>이렇게 명령어를 실행하면 <strong><em>"수정을 시작할 커밋의 이전 커밋"</em></strong></p>]]></description><link>https://jupiny.com/2018/05/07/git-rebase-i-option/</link><guid isPermaLink="false">5fb82c0e-f8df-4cd3-beec-28e0a8f235a3</guid><category><![CDATA[Git]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Mon, 07 May 2018 16:01:44 GMT</pubDate><content:encoded><![CDATA[<p>Git을 사용하다보면, 이미 커밋한 히스토리를 변경 또는 삭제하고 싶은 경우가 자주 발생한다. 이때 사용할 수 있는 명령어가 바로 <code>$ git rebase -i</code>이다. <br>
+<code>-i</code>는 <code>--interactive</code> 의 약어로 말그대로 <code>git rebase</code> 명령어를 대화형으로 실행하겠다는 의미이다. </p>
+
+<pre><code>$ git rebase -i [수정을 시작할 커밋의 이전 커밋]
+</code></pre>
+
+<p>이렇게 명령어를 실행하면 <strong><em>"수정을 시작할 커밋의 이전 커밋"</em></strong> ~ <strong><em>"현재 커밋(HEAD)"</em></strong> 범위에 있는 모든 커밋들의 리스트가 출력된다.
+예를 들어 <code>$ git rebase -i HEAD~3</code> 를 실행하면 HEAD~2, HEAD~1, HEAD 커밋들이 출력된다. <br>
+사용자는 rebase 하기 전에 그 리스트를 입맛에 맞게 직접 수정함으로써 이전 커밋들의 히스토리를 변경할 수 있다.</p>
+
+<p>테스트를 위해 미리 커밋을 4개 작성하였다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-1.png" alt=""></p>
+
+<p><code>$ git rebase -i HEAD~3</code> 명령어를 실행하면 아래와 같은 에디터 창이 나타난다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-2.png" alt=""></p>
+
+<p>에디터 창에는 커밋들의 리스트와 사용할 수 있는 명령어들에 대한 설명이 주석으로 출력된다. 비록 모두 에디터로 편집이 가능한 텍스트들이지만, 아래 주석을 제외한 상단의 텍스트들은 단순 텍스트 이상의 의미를 지니고 있다.</p>
+
+<p>이제 본격적으로 각 명령어들의 기능에 대해 하나씩 알아보기로 하자.</p>
+
+<h3 id="pick">pick</h3>
+
+<p><strong>pick</strong> 은 커밋을 사용하겠다는 의미이다. 이를 이용해서 커밋의 순서를 바꿀 수도 있고, 커밋의 해쉬값을 이용해 특정 커밋을 가져올 수도 있다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-3.png" alt=""></p>
+
+<p>기본적으로 pick으로 설정되어있기 때문에 아무것도 변경하지 않고 종료한다면, 커밋에 대해 어떤 변경도 일어나지 않는다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-4.png" alt=""></p>
+
+<p>위처럼 2번째, 3번째 줄의 커밋의 순서를 바꾸고 저장 후 종료하면,</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-5.png" alt=""></p>
+
+<p>실제 커밋 히스토리에서 커밋의 순서가 변경된 것을 확인할 수 있다. 단순히 커밋의 순서만 변경된거지만, 커밋 해쉬값들 역시 변경된 것을 볼 수 있다.</p>
+
+<p>특정 커밋을 가져오는 것을 테스트하기 위해 커밋을 추가로 하나 생성하였다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-6.png" alt=""></p>
+
+<p>그리고 <code>$ git reset</code> 명령어를 이용해 커밋을 되돌렸다.</p>
+
+<pre><code>$ git reset --hard HEAD^
+</code></pre>
+
+<p><code>$ git rebase -i</code>를 이용해 이 커밋을 다시 가져와보자.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-18.png" alt=""></p>
+
+<p>앞서 생성했던 커밋의 해쉬값과 커밋 메시지를 중간에 삽입하였다.(커밋 해쉬값이 기억이 나지 않는다면 <code>$ git reflog</code> 명령어를 통해 알아낼 수 있다.)</p>
+
+<p>저장 후 종료하면, 커밋 히스토리와 실제 working directory에도 반영이 되었음을 확인할 수 있다.</p>
+
+<h3 id="reword">reword</h3>
+
+<p><strong>reword</strong> 는 커밋 메시지를 변경하는 명령어이다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-7.png" alt=""></p>
+
+<p>커밋 메시지를 변경할 커밋 앞에 reword 명령어를 쓴 후 저장하면, 해당 커밋의 메시지를 다시 작성하는 에디터 창이 열린다. <code>-i</code> 가 <strong>"대화형"</strong> 명령어 옵션이라고 했던 의미가 이제서야 체감될 것이다.</p>
+
+<p>에디터 창에서 커밋 메시지를 변경한 후, 커밋 히스토리에서 결과를 한번 확인해보자.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-8.png" alt=""></p>
+
+<p>이전 커밋 메시지만 변경할 때는 간단히 <code>$ git commit --amend</code> 를 이용해도 된다.</p>
+
+<h3 id="edit">edit</h3>
+
+<p>앞서 설명한 <strong>reword</strong>는 커밋 메시지만 변경하는 명령어였다면, <strong>edit</strong> 은 커밋 메시지 뿐만 아니라 커밋의 작업 내용도 변경할 수 있는 명령어이다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-9.png" alt=""></p>
+
+<p>저장 후 종료하면, 변경할 커밋으로 checkout 된다. 그 상태에서 변경할 작업을 수행하면 된다.</p>
+
+<p>나는 <code>lion.txt</code> 를 삭제한 후, <code>tiger.txt</code> 를 생성하였다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-10.png" alt=""></p>
+
+<p>변경한 사항들을 아래처럼 해당 커밋에 반영하면 된다.</p>
+
+<pre><code>$ git add lion.txt
+$ git add tiger.txt
+$ git commit --amend
+</code></pre>
+
+<p>커밋 메시지도 변경하고 싶다면 에디터 창에서 변경하면 된다. 커밋이 성공적으로 수행되었다면, 이제 마지막으로 아래 명령어를 실행하면 된다.</p>
+
+<pre><code>$ git rebase --continue
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-11.png" alt=""></p>
+
+<h3 id="squash">squash</h3>
+
+<p><strong>squash</strong> 은 해당 커밋을 이전 커밋과 합치는 명령어이다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-12.png" alt=""></p>
+
+<p>저장 후 종료하면, 커밋 메시지를 수정할 수 있는 에디터 창이 뜬다. 합쳐질 커밋들의 메시지를 확인한 후, 그대로 종료하면 이전 커밋과 하나로 합쳐졌음을 확인할 수 있다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-13.png" alt=""></p>
+
+<h3 id="fixup">fixup</h3>
+
+<p><strong>fixup</strong> 은 <strong>squash</strong> 와 동일하게 해당 커밋을 이전 커밋과 합치는 명령어지만, 커밋 메시지는 합치지 않는다. 결과적으로 이전 커밋 메시지만 남게 된다. 그 점만 빼면 완벽히 앞의 예제와 동일하므로 예제는 생략하도록 하겠다.</p>
+
+<h3 id="exec">exec</h3>
+
+<p><strong>exec</strong> 를 이용하면, 각각의 커밋이 적용된 후 실행할 shell 명령어를 지정할 수 있다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-14.png" alt=""></p>
+
+<p>각각의 커밋이 적용된 후 실행된다는 것을 확인하기 위해 커밋 중간중간에 <code>$ git rev-parse HEAD</code> 명령어를 삽입하였다. 이 명령어는 HEAD가 가리키고 있는 커밋의 해쉬값을 출력해준다.</p>
+
+<p>저장 후 종료하면, 아래와 같이 터미널에 출력되는 것을 확인할 수 있다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-15.png" alt=""></p>
+
+<h3 id="drop">drop</h3>
+
+<p><strong>drop</strong> 은 커밋 히스토리에서 커밋을 삭제하는 명령어이다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-16.png" alt=""></p>
+
+<p>커밋이 삭제됨을 확인할 수 있다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/05/git-rebase-i-option-17.png" alt=""></p>
+
+<p>사실 그냥 커밋 한 줄을 통째로 지워도 동일한 결과를 얻을 수 있다.</p>
+
+<h3 id="">주의사항</h3>
+
+<p><code>$ git rebase</code> 는 이전의 커밋 히스토리를 변경하기 때문에 항상 주의해서 사용하여야 한다. 만약 이미 GitHub과 같은 원격 저장소에 push까지 한 커밋이라면 변경한 커밋들은 원격 저장소에 push되지 않을 것이다. <br>
+이 때 <code>$ git push --force</code> 또는 <code>$ git push -f</code> 명령어로 강제로 원격 저장소에 커밋 히스토리를 덮어쓸 수도 있다. 하지만 만약 이전에 push한 커밋들을 다른 개발자들과 공유하고 있었다면 커밋 히스토리의 불일치가 발생해 흔히 말하는 "git이 꼬였다." 하는 상황이 발생할 수 있다. <br>
+따라서 협업 시 브랜치를 공유하는 상황에서 <code>$ git rebase</code> 는 가급적이면 지양하여야 한다.</p>]]></content:encoded></item><item><title><![CDATA[Django에서 Redis를 이용해 Caching하기]]></title><description><![CDATA[<h3 id="">프로젝트 생성하기</h3>
+
+<p>Model 1개와 View 1개를 가지고 있는 아주 기본적인 Django 프로젝트를 만들어보았다.(보다 빠르게 Django 프로젝트를 생성하고 싶다면 <strong><a id="jupiny-blog-link" href="https://github.com/jupiny/django-quickstarter" target="_blank">django-quickstarter</a></strong> 를 이용하자.)</p>
+
+<pre><code class="language-python"># models.py
+
+from django.db import models
+
+
+class Post(models.Model):  
+    text = models.TextField()
+
+    def __str__(self):
+        return self.text
+</code></pre>
+
+<pre><code class="language-python`"># views.py
+
+from django.http import JsonResponse
+
+from</code></pre>]]></description><link>https://jupiny.com/2018/02/27/caching-using-redis-on-django/</link><guid isPermaLink="false">240c5837-3b37-47dc-b06f-7264050f77e2</guid><category><![CDATA[Django]]></category><category><![CDATA[Python]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Tue, 27 Feb 2018 18:08:57 GMT</pubDate><content:encoded><![CDATA[<h3 id="">프로젝트 생성하기</h3>
+
+<p>Model 1개와 View 1개를 가지고 있는 아주 기본적인 Django 프로젝트를 만들어보았다.(보다 빠르게 Django 프로젝트를 생성하고 싶다면 <strong><a id="jupiny-blog-link" href="https://github.com/jupiny/django-quickstarter" target="_blank">django-quickstarter</a></strong> 를 이용하자.)</p>
+
+<pre><code class="language-python"># models.py
+
+from django.db import models
+
+
+class Post(models.Model):  
+    text = models.TextField()
+
+    def __str__(self):
+        return self.text
+</code></pre>
+
+<pre><code class="language-python`"># views.py
+
+from django.http import JsonResponse
+
+from .models import Post
+
+
+def my_view(request):  
+    posts = Post.objects.all().values('id', 'text')
+    return JsonResponse(list(posts), safe=False)
+</code></pre>
+
+<pre><code class="language-python"># urls.py
+
+from django.urls import path
+
+from .views import my_view
+
+
+urlpatterns = [  
+    path('', my_view),
+]
+</code></pre>
+
+<p>그리고 다수의 <code>Post</code> 모델의 객체들을 한 번에 DB에 추가하기 하기 위해 아래와 같이 <strong><a id="jupiny-blog-link" href="https://docs.djangoproject.com/en/2.0/howto/custom-management-commands/" target="_blank">custom django-admin commands</a></strong> 를 구현하였다.</p>
+
+<pre><code class="language-python"># management/commands/addpost.py
+
+from django.core.management.base import BaseCommand, CommandError
+
+from mydjangoproject.models import Post 
+
+
+class Command(BaseCommand):  
+    help = 'Add as many posts as you want'
+
+    def add_arguments(self, parser):
+        parser.add_argument('post_cnt', type=int)
+
+    def handle(self, *args, **options):
+        post_cnt = options['post_cnt']
+        if post_cnt &gt; 0:
+            Post.objects.bulk_create(
+                [Post(text="Sample Text #{}".format(i)) for i in range(post_cnt)]
+            )
+            self.stdout.write(self.style.SUCCESS('Successfully add {} posts'.format(post_cnt)))
+</code></pre>
+
+<p>테스트를 위해서 아래와 같이 command를 실행해 100000개의 Post 객체들을 PostgreSQL에 넣었다.</p>
+
+<pre><code>$ python manage.py addpost 100000
+</code></pre>
+
+<p>이제 테스트를 위한 기본적인 세팅은 완료되었다.</p>
+
+<p><strong><a id="jupiny-blog-link" href="https://www.npmjs.com/package/loadtest" target="_blank">loadtest</a></strong> 라는 라이브러리를 이용하여 100번의 요청을 날려보자.</p>
+
+<pre><code>$ loadtest -n 100 http://localhost:8000
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/02/caching-using-redis-on-django-1.png" alt="이미지"></p>
+
+<p>약 28초의 시간이 걸렸다. <br>
+이 부분을 이제 Redis로 Caching하여 성능을 개선해보고자 한다.</p>
+
+<h3 id="rediscaching">Redis로 Caching 구현하기</h3>
+
+<p>우선 <strong><a id="jupiny-blog-link" href="https://niwinz.github.io/django-redis/latest/" target="_blank">django-redis</a></strong> 를 설치한 후,</p>
+
+<pre><code>$ pip install django-redis 
+</code></pre>
+
+<p>아래와 같이 <code>settings.py</code>에 추가해주면 Django에서 Redis를 Cache로 사용할 수 있게 된다.</p>
+
+<pre><code class="language-python"># settings.py
+
+# Cache
+CACHES = {  
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1", # 1번 DB
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+</code></pre>
+
+<p>Caching을 적용하기 위해 View 부분을 변경해보자.</p>
+
+<pre><code class="language-python"># views.py
+
+from django.http import JsonResponse  
+from django.core.cache import cache
+
+from .models import Post
+
+
+def my_view(request):  
+    posts = cache.get_or_set('posts', Post.objects.all().values('id', 'text'))
+    return JsonResponse(list(posts), safe=False)
+</code></pre>
+
+<p>Redis에 Caching 되는 것을 확인하기 위해 한번 요청한 후,</p>
+
+<pre><code>$ curl http://localhost:8000
+</code></pre>
+
+<p>redis-cli로 접속하면</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/02/caching-using-redis-on-django-2.png" alt="이미지"></p>
+
+<p><strong>":1:posts"</strong> 라는 key 값으로 잘 들어갔음을 확인할 수 있다.</p>
+
+<p>이젠 얼마나 성능이 개선될까하는 부분 기대감을 안고 loadtest를 다시 돌려보면,</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/02/caching-using-redis-on-django-3.png" alt="이미지"></p>
+
+<p>약 10초의 시간이 더 줄어들었음을 확인할 수 있었다.</p>
+
+<p>하지만 아직 Caching의 구현이 끝난 건 아니다. 이렇게만 해버리면 Redis의 TTL이 만료될 때까지 사용자는 영원히 똑같은 데이터만 전달받게 될 것이다. 따라서 DB의 데이터가 변경될 때마다 Cache를 초기화하여야 한다.(이러한 오버헤드가 존재하기 때문에, 읽기 작업보다 쓰기 작업보다 빈번한 경우에는 Caching이 오히려 성능을 저해할 수 있다.)</p>
+
+<p>아래와 같이 <code>Post</code> 모델의 <code>save()</code>, <code>delete()</code> 함수를 Override하여 구현하였다.</p>
+
+<pre><code class="language-python"># models.py
+
+from django.db import models  
+from django.core.cache import cache
+
+
+class Post(models.Model):  
+    ... # 생략
+    def save(self, *args, **kwargs):
+        cache.delete('posts')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        cache.delete('posts')
+        super().delete(*args, **kwargs)
+</code></pre>
+
+<p>이제 <code>Post</code> 모델의 인스턴스를 생성, 변경 또는 삭제하면 Redis에 저장됐던 키 값이 제거될 것이다.</p>
+
+<h3 id="issue">Issue</h3>
+
+<p>Redis를 Cache로 사용하였을 때의 성능을 확인하기 위해 여러가지 테스트를 해보다가 이상한 점을 한가지 발견했다.</p>
+
+<p>위의 <code>views.py</code>에서 QuerySet 객체가 아닌 list 함수가 적용된 list 객체로 한번 Caching 해보았다.</p>
+
+<pre><code class="language-python"># views.py
+
+from django.http import JsonResponse  
+from django.core.cache import cache
+
+from .models import Post
+
+
+def my_view(request):  
+    posts = cache.get_or_set('posts', list(Post.objects.all().values('id', 'text')))
+    return JsonResponse(posts, safe=False)
+</code></pre>
+
+<p>이렇게 하면 Caching된 값 자체가 이미 list 함수가 적용된 상태이기 때문에 조금 더 성능이 좋아질 것이라 기대했었다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/02/caching-using-redis-on-django-4.png" alt="이미지"></p>
+
+<p>하지만 기대와 달리 loadtest를 돌려보면 앞서 PostgreSQL에서 데이터를 가져오는 경우보다도 더 시간이 오래 걸림을 볼 수 있다. 그리고 한참의 삽질 끝에 그 원인이 <strong><a id="jupiny-blog-link" href="https://docs.djangoproject.com/en/2.0/ref/models/querysets/#when-querysets-are-evaluated" target="_blank">Django에서 QuerySets을 처리하는 방식</a></strong> 에 있음을 알게 되었다.</p>
+
+<blockquote>
+  <p>Internally, a QuerySet can be constructed, filtered, sliced, and generally passed around without actually hitting the database. No database activity actually occurs until you do something to evaluate the queryset.</p>
+</blockquote>
+
+<p>Django에서는 QuerySet을 생성하였다고 하더라도 그 QuerySet이 <em>evaluate</em> 되기 전까지는 실제 DB에 쿼리를 날리지 않는다. 여기서 <em>evaluate</em> 란 QuerySet에 <code>len()</code>, <code>repr()</code> 등을 적용하였을  때를 말하고 여기서 우리가 사용한 <code>list()</code> 함수 역시 여기에 해당된다.</p>
+
+<p>이전의 <code>cache.get_or_set('posts', Post.objects...)</code> 경우에서 <code>Post.objects...</code> QuerySet은 아직 실제 DB에 퀴리를 날리지 않는다. 만약 'posts' 키 값이 없다면, <code>cache.get_or_set()</code> 내부적으로 QuerySet을 Pickling하는 코드가 실행되고 그 때 최초로 한 번 DB에 쿼리를 날려 값을 가져올 것이다. 그 이후부터는 'posts'의 키 값이 존재하므로 DB에 쿼리를 날리지 않아도 된다. <br>
+반면 <code>cache.get_or_set('posts', list(Post.objects...))</code> 경우에는 2번째 인자의 QuerySet에 <code>list()</code> 함수가 적용돼있으므로 'posts' 키 값이 있든 없든 항상 DB에 쿼리를 발생시킨다. 심지어 'posts' 키 값이 있어 Redis에서 Caching된 값을 가져올 때에도 DB로의 쿼리는 발생한다. 이 때문에 Caching을 구현하지 않았을 때보다 오히려 더 긴 응답시간이 발생하였을 것이라 추측한다.</p>
+
+<p>이러한 문제를 해결하기 위해선 <code>cache</code> 에 'posts' 키 값이 있을 때에는 <code>list(Posts.objects...)</code> 코드가 아예 실행되지 않도록 조금 변경해주어야 한다.</p>
+
+<pre><code class="language-python"># views.py
+
+from django.http import JsonResponse  
+from django.core.cache import cache
+
+from .models import Post
+
+
+def my_view(request):  
+    posts =  cache.get('posts')
+    if not posts:
+        posts = list(Post.objects.all().values('id', 'text'))
+        cache.set('posts', posts)
+    return JsonResponse(posts, safe=False)
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2018/02/caching-using-redis-on-django-5.png" alt="이미지"></p>
+
+<p>이제서야 앞서 QuerySet 객체를 Caching 하였을 때와 거의 동일한 시간이 출력됨을 볼 수 있다.</p>
+
+<h3 id="">참고</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="https://medium.com/@amangoeliitb/improving-database-performance-with-redis-dbd38fdf3cb" target="_blank">Improving database performance with Redis</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[개발자로서의 취업을 준비하며]]></title><description><![CDATA[<p>사실 이 블로그에는 나의 개인적인 이야기를 한번도 적은 적이 없다. 그러다 우연히 이 분의 <strong><a id="jupiny-blog-link" href="http://blog.devjoshua.me/2017/12/28/171228-2017%EB%85%84%ED%9A%8C%EA%B3%A0/" target="_blank">글</a></strong> 을 보게 되었고, 취업을 준비하며 내가 느꼈던 생각과 경험들을 나 역시 한번 공유하고 싶다는 감정이 격하게 끌어올라 적게 되었다.</p>
+
+<h3 id="">휴학</h3>
+
+<p>재작년 휴학한 후, 친구가 창업한 스타트업에서 Ruby on Rails로 웹 개발을 처음 시작하였다. 내가 작성한</p>]]></description><link>https://jupiny.com/2018/01/31/prepare-for-employment-as-developer/</link><guid isPermaLink="false">0943d452-56c3-4bfa-ac64-36b1e094aef4</guid><category><![CDATA[etc]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Wed, 31 Jan 2018 18:04:07 GMT</pubDate><content:encoded><![CDATA[<p>사실 이 블로그에는 나의 개인적인 이야기를 한번도 적은 적이 없다. 그러다 우연히 이 분의 <strong><a id="jupiny-blog-link" href="http://blog.devjoshua.me/2017/12/28/171228-2017%EB%85%84%ED%9A%8C%EA%B3%A0/" target="_blank">글</a></strong> 을 보게 되었고, 취업을 준비하며 내가 느꼈던 생각과 경험들을 나 역시 한번 공유하고 싶다는 감정이 격하게 끌어올라 적게 되었다.</p>
+
+<h3 id="">휴학</h3>
+
+<p>재작년 휴학한 후, 친구가 창업한 스타트업에서 Ruby on Rails로 웹 개발을 처음 시작하였다. 내가 작성한 코드를 통해 웹서비스가 동작한다는 것이 재밌었고,
+ 내가 개발한 웹서비스가 실제로 운영되고 유저들이 사용하는 것을 내 눈으로 볼 수 있다는 것은 나에게 큰 즐거움으로 다가왔다.  </p>
+
+<p>하지만 온라인 강의를 보며 독학으로 개발을 하다보니 여러가지 한계점을 느꼈다. 그때마다 내가 계속 이 길을 가도 될까 하는 걱정이 들었고, 전공과 다른 분야에 도전하는 내 모습이 내가 봐도 너무나 위태롭고 불안해보였다.  </p>
+
+<p>그래도 내가 정말 좋아하고 잘하고 싶은 분야였기 때문에 포기할 수 없었던 것 같다. 더욱 깊이 배워보고 싶다는 욕심이 계속 커지고 있을 때 우연히 페이스북에서 <strong><a id="jupiny-blog-link" href="http://school.fastcampus.co.kr/" target="_blank">패스트캠퍼스</a></strong> 에서 운영하는 웹 프로그래밍 스쿨 광고 보게 되었고, 그 강의를 수강하기 위해 서울에 올라오게 되었다.</p>
+
+<h3 id="">인턴</h3>
+
+<p>그 곳에서 강의 뿐만 아니라 강의 수료 후에 인턴 제의를 받아 3개월동안 "개발자"라는 직책으로 근무하였다. 그 때 현업에서의 경험은 개발을 취미로 할지 직업으로 삼을지 항상 고민해왔던 나에게 확신을 주었다. 인턴으로 근무하며 개발에 대한 자신감도 생겼고, 또 많은 개발자들을 만나며 개발자라는 직업에 대한 동경과 매력을 느낄 수 있었다. 서울에서 보낸 그 시간들은 내 인생의 큰 터닝포인트가 되었다.</p>
+
+<h3 id="">전공 공부</h3>
+
+<p>작년 4학년으로 복학한 후, 스타트업이 아닌 대기업(여기서 대기업은 스타트업에 비해 상대적으로 인프라가 갖춰진 회사) 개발자로 커리어를 시작하자는 목표를 세웠다. 
+그때 내 발목을 가장 붙잡았던 건 컴퓨터공학 전공자가 아니라는 점이었다. 내 전공인 전자공학에서도 자료구조, 운영체제, 컴퓨터구조와 같은 기본적인 컴퓨터 관련 수업들이 있었지만, 컴퓨터공학 전공자들과 경쟁하기엔 그것만으론 턱없이 부족했다.</p>
+
+<p>그런 약점을 보완하기 위해 4학년 때는 주로 전공만 공부했고 실제적인 개발은 거의 하지 않았던 것 같다. 이미 전공 졸업학점도 채운 상태였기 때문에 그때부터는 주로 컴퓨터공학과 수업들을 찾아서 들었다. 그 때 들었던 알고리즘 수업은 이제와서 생각해보면 취업을 준비하는 데 있어 정말 큰 도움이 되었던 것 같다. <br>
+그 외에 학교 수업으로 부족한 부분은 별도로 개발 서적들을 구매하여 채워나갈 수 있었다.(형이 다니는 회사에서 1년마다 도서비 30만원이 제공된 것은 나에게 큰 축복이었다.)</p>
+
+<p>아래에 내가 공부한 방법들을 분야별로 정리해보았다.</p>
+
+<h4 id="">알고리즘</h4>
+
+<p>사실 개인적으로 느끼기에 취업의 관점에서는 가장 중요한 과목이 아닐까하는 생각이 든다(코딩 테스트를 통과하지 못하면 면접 기회조차 없으니까..)
+대부분의 IT회사나 대기업의 소프트웨어 계열을 지원할 때 가장 먼저 만나게 되는 관문이 바로 코딩 테스트이다. 요즘은 코딩 테스트를 전문적으로 하는 회사들에 외주를 맡겨 온라인 코딩 테스트를 실시하는 IT회사들도 상당히 많은 것 같다. <br>
+나는 이전에 한 대기업의 코딩 테스트를 두 번이나 떨어진 경험이 있어 "알고리즘"에 대한 컴플렉스가 마음 깊숙히 자리잡고 있었다. 그 때는 알고리즘에 대한 지식이 전혀 없었기 때문에 공부하는 법조차 몰랐다. 그냥 조금 재밌어 보이는 알고리즘 한 문제를 골라서 혼자서 작정 3~4시간씩 풀어봤던 것 같다. <br>
+그러면 결과는 항상 두 가지 중 하나였는데,</p>
+
+<ol>
+<li>아예 못 품.  </li>
+<li>겨우 답은 나오지만 결국 시간초과로 인해 오답. </li>
+</ol>
+
+<p>이렇게 포기를 하고 다른 문제를 풀면 또 이 과정이 반복되었다. 그렇게 실력은 항상 제자리였고 발전도 없었다.  </p>
+
+<p>제대로 된 공부를 해야겠다는 생각이 들었고, 흔히 종만북이라고 알려진 <strong><a id="jupiny-blog-link" href="http://www.kyobobook.co.kr/product/detailViewKor.laf?barcode=9788966260546" target="_blank">알고리즘 문제 해결 전략 세트</a></strong> 란 책을 구매하여 지하철을 타고 다닐 때마다 읽었다. 입문자를 위한 책은 아니다 보니 처음 읽을 때는 내용이 어려워 읽기 힘들었다. 하지만 두 번째 읽을 때는 조금씩 깨달음이 온 거 같다. <br>
+비록 2권은 거의 읽어보지 못했지만 대회 준비가 아닌 취업 준비를 하는 수준에서는 1권 정도면 충분한 거 같다. 1권 내용의 70퍼센트 이상만 이해한다 해도 왠만한 기업의 코딩 테스트는 다 뚫을 수 있을 수준이라 생각한다. 특히 코딩 테스트에 가장 빈출되는 유형인 동적 계획법(다이나믹 프로그래밍) 파트는 이 책에서 꼭 읽어야 될 부분이다. 또한 이 책에 나오는 모든 코드들이 정말 깔끔하게 짜져 있기 때문에 알고리즘의 코딩 스타일 가이드로 삼아도 좋을 것 같다.</p>
+
+<p>책과 더불어 패스트캠퍼스에서 들었던 <strong><a id="jupiny-blog-link" href="https://www.facebook.com/baekjoon" target="_blank">최백준</a></strong> 님의 알고리즘 강의와 학교 컴퓨터학부에서 수강했던 알고리즘 수업을 통해 어느정도 개념이 자리잡혔던 것 같다.</p>
+
+<p>그 때부터는 계속 <strong><a id="jupiny-blog-link" href="https://www.acmicpc.net/" target="_blank">백준 온라인 저지</a></strong> 에서 많은 문제들을 풀어보았다. 주로 다이나믹 프로그래밍, BFS 카테고리에 있는 문제들 중에 정답률이 20 ~ 30%인 문제들만 골라서 풀었다. 또 문제를 풀다가 막혔을 때, 질문을 올리면 많은 고수 분들이 생각보다 빠르게 답변을 달아주셔서 큰 도움을 받을 수 있었다.</p>
+
+<h4 id="">자료구조</h4>
+
+<p>사실 알고리즘과 자료구조는 뗄래야 뗄 수 없는 분야긴 하지만 앞의 알고리즘은 코딩 테스트와 관련된 공부라면 자료구조는 면접을 준비하는 공부라고 보는 편이 좋을 것 같다. <br>
+자료구조를 위한 책을 따로 구매하진 않았고, 주로 <strong><a id="jupiny-blog-link" href="http://www.kyobobook.co.kr/product/detailViewKor.laf?ejkGb=KOR&amp;mallGb=KOR&amp;barcode=9788968480843" target="_blank">프로그래밍 면접 이렇게 준비한다</a></strong> 책에 나와있는 자료구조 빈출 질문들을 보며 준비하였다. 항상 최선인 자료구조는 없으므로 각 자료구조가 가진 장단점을 명확하게 숙지하여 주어진 상황에 적용하는 게 중요한 것 같다. 특히 배열과 연결 리스트의 장단점을 묻는 면접 질문은 어떤 회사에서건 항상 물어보는 단골 질문이다.</p>
+
+<h4 id="">운영체제</h4>
+
+<p>2학년 때 전자공학에 개설된 운영체제 과목을 들었었다. 그 당시 수업을 들었을 때는 다른 과목들에 비해 개념들이 너무 추상적으로 느껴졌고, 내용이 이해가 잘 되지 않았다. 그렇게 "그래서 운영체제가 뭔데?"하는 의문을 그대로 남긴 채로 수업이 종강되었다. <br>
+취업을 준비하기 위해서 다시 한번 제대로 복습해보고 싶다는 생각이 들어 여름방학  1달동안 아는 형과 함께 둘이서 운영체제 스터디를 하였다. 흔히 공룡책으로 유명한 <strong><a id="jupiny-blog-link" href="http://www.kyobobook.co.kr/product/detailViewKor.laf?barcode=9788997570577" target="_blank">Operating System Concepts</a></strong> 책으로 스터디를 시작하였다. 그러나 한 달이라는 짧은 시간 안에 책에 있는 모든 파트를 스터디할 수 없었고, 그 중 더 중요하다고 생각하는 파트를 몇 개를 선별하여 스터디하였다.</p>
+
+<ul>
+<li>프로세스 </li>
+<li>다중 스레드 프로그래밍 </li>
+<li>CPU 스케줄링 </li>
+<li>프로세스 동기화 </li>
+<li>교착상태 </li>
+<li>메모리 관리 전략 </li>
+<li>가상 메모리 </li>
+</ul>
+
+<p>매주 2번씩 하였고,  그 날 스터디할 파트를 각자 미리 공부해와서 서로에게 설명하는 방식으로 진행하였다. 이렇게 서로에게 설명함으로써 면접 때 답변하는 연습도 할 수 있었고, 또 서로가 이해한 부분이 다르다면 어떤 개념이 맞는지 함께 토론할 수도 있었다.</p>
+
+<p>후에 면접을 다니면서 느꼈지만 이 스터디가 정말 큰 도움이 되었다. 특히 스터디에서 했던 "프로세스 동기화"는 한 면접에서 관련 질문이 나왔을 때 막히지 않고 대답할 수 있었던 원동력이 되었다.</p>
+
+<h4 id="">네트워크</h4>
+
+<p>네트워크는 따로 공부한 것보다 학교 수업에 치중을 많이 했던 것 같다. 학교에서 들었던 "데이터 통신", "컴퓨터망" 수업은 OSI 7계층에 대한 개념을 잡는데 큰 역할을 했다. 개인적으로 네트워크를  공부할 때는 <strong><a id="jupiny-blog-link" href="http://www.kyobobook.co.kr/product/detailViewKor.laf?ejkGb=KOR&amp;barcode=9791185890265" target="_blank">그림으로 보는 IT 인프라 구조</a></strong> 라는 책을 읽었는데(다 읽진 못했지만), 책에 네트워크에 대한 설명이 쉽고 자세하게 나와있어 개념을 정리하는 데 큰 도움이 되었다.</p>
+
+<p>면접에서 받았던 네트워크 쪽 질문들의 대부분은 <strong>OSI 7계층</strong> 에 대한 질문이었다. 그만큼 OSI 각 계층 간의 역할과 특징을 명확히 이해하는 것이 네트워크에서 중요한 키포인트인 것 같다. 특히 그 중에서도 자주 물어보는 <strong>Transport 계층</strong>, <strong>Application 계층</strong> 을 중점적으로 공부해가는 것이 면접에 있어 큰 도움이 될 것이다.</p>
+
+<ul>
+<li><strong>Transport 계층</strong>: TCP와 UDP의 차이, TCP의 Handshaking 과정 등</li>
+<li><strong>Application 계층</strong>: Session/Cookies, HTTPS 등</li>
+</ul>
+
+<blockquote>
+  <p>사용자가 웹브라우저에서 웹사이트에 접속할때 일어나는 과정들을 설명해보라.</p>
+</blockquote>
+
+<p>와 같은 질문은 면접자의 네트워크에 대한 전반적인 지식들을 모두 체크할 수 있는 정말 좋은 질문이 아닐까 싶다. 대다수의 IT 기업에서 물어보는 단골 질문이기도 하다.</p>
+
+<h3 id="">면접</h3>
+
+<p>면접 본 회사만 6개 정도되고, 추가적인 면접까지 다 포함하면 면접은 한 10번 정도 봤던 것 같다. 하나의 면접이 끝날때마다 항상 내가 받았던 질문들을 생각나는대로 모두 정리하였다. 그리고 인터넷을 찾아보면서 내가 답변하지 못한 질문들에 대한 답을 적어보았다. 그렇게 정리한 내용들은 다음 면접을 준비하는데 큰 자산이 되었다. <br>
+대부분 소프트웨어 직무 면접에서 물어보는 전공 지식들이 비슷하였고, 같은 포트폴리오를 보며 질문하다보니 프로젝트 관련 질문들도 거의 비슷하였다. 그래서 면접을 많이 다닐수록 질문들의 데이터가 쌓이다 보니 준비하기 수월했던 것 같다. 4, 5번째 면접을 갈 때부터는 따로 공부하지 않고 면접 질문들을 정리한 파일만 한번 보고 가는 것으로도 충분했다.</p>
+
+<h3 id="">현재</h3>
+
+<p>최종적으로 내가 정말 가고 싶었던 IT 기업에 운좋게 취업할 수 있었다. 막상 내가 원하던 회사에 취업되니 기쁜 마음도 들지만 한편으론 불안한 마음도 든다. 이력서와 면접을 진행하며 내가 실제로 가진 실력에 비해 과대평가된 건 아닌가하는 걱정이 생긴다. 함께 입사를 한 동기 중에 개발 실력이 뛰어난 동기들을 보며 가끔씩 내가 왜 뽑혔을까? 하는 의문이 들 때도 있고 심지어 열등감이 느껴질 때도 있다. <br>
+하지만 남들이 가지지 못한 나만의 장점이 분명 있다 생각하고 또 그 장점을 좋게 보고 뽑아주셨을 거라 믿고 싶다. 내가 꿈꾸고 있는 수준의 개발자가 되기 위해서는 아직 갈 길이 한참 멀지만, 훌륭한 개발자 분들의 곁에서 끊임없이 성장해나간다면 조금 더 그 목표를 빠르게 이룰 수 있지 않을까 기대해본다.  </p>]]></content:encoded></item><item><title><![CDATA[Django의 세션을 이용한 단계별 페이지 만들기]]></title><description><![CDATA[<p>작년 스타트업에서 근무하며 아래와 같은 회원가입 페이지를 개발하게 되었다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2017/11/step-by-step-page-using-django-session-1.png" alt=""></p>
+
+<p>회원가입 절차는 총 3단계로 이루어졌고, 사용자는 무조건 각 단계를 순차적으로 거쳐야만 했다. 예를 들어 2단계에 접근할려면 반드시 1단계에서 넘어와야 했고, 3단계에 접근할려면 반드시 2단계에서 넘어와야 했다. 1단계를 거치지 않고, 바로 2단계로 접근할 시에는 잘못된 접근이라는 오류 메시지를 사용자에게 보여주어야 됐다.</p>
+
+<p>하지만</p>]]></description><link>https://jupiny.com/2017/11/25/step-by-step-page-using-django-session/</link><guid isPermaLink="false">5d9b8fff-cede-43bd-b57f-e1a0bd97a1a8</guid><category><![CDATA[Django]]></category><category><![CDATA[Python]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Sat, 25 Nov 2017 17:40:16 GMT</pubDate><content:encoded><![CDATA[<p>작년 스타트업에서 근무하며 아래와 같은 회원가입 페이지를 개발하게 되었다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2017/11/step-by-step-page-using-django-session-1.png" alt=""></p>
+
+<p>회원가입 절차는 총 3단계로 이루어졌고, 사용자는 무조건 각 단계를 순차적으로 거쳐야만 했다. 예를 들어 2단계에 접근할려면 반드시 1단계에서 넘어와야 했고, 3단계에 접근할려면 반드시 2단계에서 넘어와야 했다. 1단계를 거치지 않고, 바로 2단계로 접근할 시에는 잘못된 접근이라는 오류 메시지를 사용자에게 보여주어야 됐다.</p>
+
+<p>하지만 HTTP는 Stateless 프로토콜이다. 따라서 HTTP는 사용자의 히스토리에는 전혀 관심이 없다. 이 사용자가 1단계를 거쳐왔는지, 2단계를 거쳐왔는지에 대해서는 알 길이 없고, 오로지 현재의 요청 정보에 대해서만 순수하게 처리할 뿐이다.</p>
+
+<p>이러한 HTTP의 단점을 보완하기 위해 나온 것이 <strong>세션</strong>과 <strong>쿠키</strong>이고, 이를 통해 해결할 수 있었다. 여기서 그 해결방법을 공유하고자 한다.(글을 쓰기 전에 이것을 어떻게 설명해야될지 몰라서 제목을 정하는 데도 한참 고민하였고, 결국 <strong>"Django의 세션을 이용한 단계별 페이지 만들기"</strong> 라고 이름짓게 되었다. 사실 아직도 100% 마음에 들지는 않는다. 좋은 제목 있으면 추천 부탁드립니..)</p>
+
+<p>우선 세션을 이용하지 않고 간단하게 3개의 페이지를 만들어 보았다.</p>
+
+<pre><code class="language-python"># views.py
+
+from django.views import View  
+from django.shortcuts import redirect, render  
+from django.core.urlresolvers import reverse
+
+class Step1View(View):
+
+    def get(self, request, *args, **kwargs):
+        return render(request, 'step1.html')
+
+    def post(self, request, *args, **kwargs):
+        return redirect(reverse('step2'))
+
+
+class Step2View(View):
+
+    def get(self, request, *args, **kwargs):
+        return render(request, 'step2.html')
+
+    def post(self, request, *args, **kwargs):
+        return redirect(reverse('step3'))
+
+
+class Step3View(View):
+
+    def get(self, request, *args, **kwargs):
+        return render(request, 'step3.html')
+</code></pre>
+
+<pre><code class="language-python"># urls.py
+
+from django.conf.urls import url  
+from django.contrib import admin
+
+from .views import *
+
+
+urlpatterns = [  
+    url(r'^step1/$', Step1View.as_view(), name='step1'),
+    url(r'^step2/$', Step2View.as_view(), name='step2'),
+    url(r'^step3/$', Step3View.as_view(), name='step3'),
+]
+</code></pre>
+
+<pre><code class="language-html">&lt;!-- step1.html --&gt;
+
+&lt;h1&gt;Step1&lt;/h1&gt;
+
+&lt;form action="/step1/", method="POST"&gt;  
+  {% csrf_token %}
+  &lt;input type="submit" value="다음"&gt;
+&lt;/form&gt;  
+</code></pre>
+
+<pre><code class="language-html">&lt;!-- step2.html --&gt;
+
+&lt;h1&gt;Step2&lt;/h1&gt;
+
+&lt;form action="/step2/", method="POST"&gt;  
+  {% csrf_token %}
+  &lt;input type="submit" value="다음"&gt;
+&lt;/form&gt;  
+</code></pre>
+
+<pre><code class="language-html">&lt;!-- step3.html --&gt;
+
+&lt;h1&gt;Step3&lt;/h1&gt;
+
+&lt;p&gt;Complete&lt;/p&gt;  
+</code></pre>
+
+<p>이렇게 구현하면, 모든 페이지에 대해서 URL(/step1/, /step2/, /step3/)로 접근할 수 있다. 이제 세션을 이용해 /step1/ => /step2/ => /step3/ 순서로만 접근이 가능하게 바꾸어보자.</p>
+
+<p>Django에서는 기본적으로 세션 관리 기능을 제공해주고, <code>request.session</code> 이라는 딕셔너리 객체에 필요한 값을 저장하고 읽어올 수 있다. <code>request.session['step1_complete']</code>, <code>request.session['step2_complete']</code> 이 두 키 값을 이용해 아래와 같이 view를 수정하였다.</p>
+
+<pre><code class="language-python"># views.py
+
+from django.views import View  
+from django.shortcuts import redirect, render  
+from django.core.urlresolvers import reverse  
+from django.core.exceptions import PermissionDenied
+
+
+class Step1View(View):
+
+    def get(self, request, *args, **kwargs):
+        request.session['step1_complete'] = False
+        request.session['step2_complete'] = False
+        return render(request, 'step1.html')
+
+    def post(self, request, *args, **kwargs):
+        request.session['step1_complete'] = True
+        return redirect(reverse('step2'))
+
+
+class Step2View(View):
+
+    def get(self, request, *args, **kwargs):
+        if not request.session.get('step1_complete', False):
+            raise PermissionDenied
+        request.session['step1_complete'] = False
+        return render(request, 'step2.html')
+
+    def post(self, request, *args, **kwargs):
+        request.session['step2_complete'] = True
+        return redirect(reverse('step3'))
+
+
+class Step3View(View):
+
+    def get(self, request, *args, **kwargs):
+        if not request.session.get('step2_complete', False):
+            raise PermissionDenied
+        request.session['step2_complete'] = False
+        return render(request, 'step3.html')
+</code></pre>
+
+<p>이제 단계의 순서대로 접근하지 않으면 403 Forbidden 페이지를 볼 수 있을 것이다.</p>]]></content:encoded></item><item><title><![CDATA[Docker를 이용하여 MySQL  Replication 구성해보기]]></title><description><![CDATA[<h3 id="databasereplication">Database Replication?</h3>
+
+<p><strong>Database Replication</strong>은 한 DB 서버의 데이터를 다른 DB 서버들에 복제하는 기술이다.</p>
+
+<p>여기서 복제의 대상이 되는 DB 서버를 보통 <strong>master</strong> 서버라 하고, 데이터가 복제된 DB 서버를 <strong>slave</strong> 서버라 부른다. master 서버는 쓰기 연산을 담당하고, slave 서버는 읽기 연산을 담당한다. 따라서 slave 서버를 여러 대 돌린다면 읽기 연산을 분산시켜</p>]]></description><link>https://jupiny.com/2017/11/07/docker-mysql-replicaiton/</link><guid isPermaLink="false">9c0257b0-43fa-4941-9ac0-58942c4374f1</guid><category><![CDATA[Docker]]></category><category><![CDATA[MySQL]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Tue, 07 Nov 2017 02:02:06 GMT</pubDate><content:encoded><![CDATA[<h3 id="databasereplication">Database Replication?</h3>
+
+<p><strong>Database Replication</strong>은 한 DB 서버의 데이터를 다른 DB 서버들에 복제하는 기술이다.</p>
+
+<p>여기서 복제의 대상이 되는 DB 서버를 보통 <strong>master</strong> 서버라 하고, 데이터가 복제된 DB 서버를 <strong>slave</strong> 서버라 부른다. master 서버는 쓰기 연산을 담당하고, slave 서버는 읽기 연산을 담당한다. 따라서 slave 서버를 여러 대 돌린다면 읽기 연산을 분산시켜 서버의 부하를 상당히 줄일 수 있다(일반적으로 DB의 읽기 연산이 상당한 비중을 차지하므로).</p>
+
+<p>이 때 <strong>Docker</strong>를 이용하면 DB 서버를 가상화할 수 있기 때문에, 실제 물리 서버를 여러 대 돌릴 필요없이 내 로컬 PC 한 대에서 이를 간단히 구성하여 테스트해볼 수 있다.</p>
+
+<blockquote>
+  <p>Docker로 구동하였기 때문에 <strong>master, slave 컨테이너</strong>라 부르는 것이 정확한 표현일테지만, 일반적인 Replication의 구성을 생각하여 <strong>master, slave 서버</strong>라 혼용하여 표현하였다.</p>
+</blockquote>
+
+<h3 id="mysqlmasterslave">MySQL master, slave 컨테이너 실행하기</h3>
+
+<p>우선 MySQL를 master, slave 서버로 실행하기 위한 설정이 필요하다. 아래와 같이 master, slave 컨테이너가 사용할 각각의 <code>.cnf</code> 파일을 작성해주어야한다. <br>
+(반드시 확장자가 <code>.cnf</code> 로 끝나야한다. 실수로 <code>.conf</code> 로 했더니 MySQL에서 설정을 불러오지 못했다;;;)</p>
+
+<pre><code class="language-apacheconf"># /Docker/mysql/master/config_file.cnf
+
+[mysqld]
+log-bin=mysql-bin  
+server-id=1  
+</code></pre>
+
+<pre><code class="language-apacheconf"># /Docker/mysql/slave/config_file.cnf
+
+[mysqld]
+server-id=2  
+</code></pre>
+
+<p><code>log-bin</code> 은 업데이트되는 모든 query들을 바이너리 파일에 로그로 남기겠다는 의미이다. <br>
+기본적으로 바이너리 파일은 MySQL의 datadir인 <code>/var/lib/mysql/</code> 에 <code>호스트명-bin.000001</code>, <code>호스트명-bin.000002</code> 형태로 생성된다. <br>
+위에서처럼 <code>log-bin=...</code> 식으로 뒤에 덧붙이면 바이너리 파일의 경로와 파일명의 접두어를 입맛에 맞게 정할 수 있다. <code>log-bin=mysql</code> 이라 설정하였으므로 <code>mysql-bin.000001</code>, <code>mysql-bin.000002</code> 형태의 바이너리 파일이 생성될 것이다.</p>
+
+<p>여기서 <code>server-id</code> 는 Replication Group에서 식별하기 위한 서버의 고유 ID 값이므로 master, client 각각 다르게 해주어야 한다.</p>
+
+<p>이제 <code>.cnf</code> 파일의 설정을  적용하여 두 컨테이너를 실행해주면 된다.</p>
+
+<pre><code>$ docker run --name mysql-master -v /Docker/mysql/master:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=masterpw -d mysql
+</code></pre>
+
+<pre><code>$ docker run --name mysql-slave -v /Docker/mysql/slave:/etc/mysql/conf.d —link mysql-master -e MYSQL_ROOT_PASSWORD=slavepw -d mysql
+</code></pre>
+
+<p>mysql-slave 컨테이너에서 mysql-master 컨테이너 이름을 Host 주소로 사용하기 위해 <code>--link mysql-master</code> 옵션을 추가한 점을 주목하자.</p>
+
+<p>생성한 master 컨테이너의 mysql에 접속해보자. <br>
+(mysql 비밀번호는 master 컨테이너를 실행할 때 설정한 'MYSQL_ROOT_PASSWORD' 입력)</p>
+
+<pre><code>$ docker exec -it mysql-master /bin/bash
+$  mysql -u root -p  
+</code></pre>
+
+<p>아래의 명령어를 쳤을 때 이미지와 같이 나온다면 앞에 작성한 <code>.cnf</code> 파일의 설정이 정상적으로 적용된 것이다.</p>
+
+<pre><code>mysql&gt; SHOW MASTER STATUS\G  
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2017/11/docker-mysql-replicaiton-1.png" alt=""></p>
+
+<p>위의 명령어는 추후 slave 서버에서 master 서버와 연동하기 직전에 다시 한번 입력해야하므로 자세한 설명은 그때 다루도록 할 것이다.</p>
+
+<h3 id="masteruser">master 서버에서 User 생성하기</h3>
+
+<p>이제 slave 서버에서 접근이 가능하도록 master 서버에 <strong>REPLICATION SLAVE</strong> 권한을 가진 User 계정을 하나 생성해주어야 한다.</p>
+
+<pre><code>$ docker exec -it mysql-master /bin/bash
+mysql&gt; CREATE USER 'repluser'@'%' IDENTIFIED BY 'replpw';  
+mysql&gt; GRANT REPLICATION SLAVE ON *.* TO 'repluser'@'%';  
+</code></pre>
+
+<p>user 테이블을 확인하여 User가 생성되었는지 확인한다.</p>
+
+<pre><code>mysql&gt; USE mysql;  
+mysql&gt;  SELECT user, host FROM user;  
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2017/11/docker-mysql-replicaiton-2.png" alt=""></p>
+
+<p>User가 성공적으로 생성되었다면, Replication 테스트를 위한 DB와 테이블을 생성한다.</p>
+
+<pre><code>mysql&gt; CREATE DATABASE repldb;  
+mysql&gt; USE repldb;  
+mysql&gt; CREATE TABLE repltable ( no INT(8), PRIMARY KEY (no) );  
+mysql&gt; DESC repltable;  
+</code></pre>
+
+<h3 id="masterdbdump">master 서버의 DB dump하기</h3>
+
+<p>우선, master 서버의 현재 DB 상태를 slave에 그대로 반영하기 위해  dump한다.</p>
+
+<pre><code>$ docker exec -it mysql-master /bin/bash
+$ mysqldump -u root -p repldb &gt; dump.sql
+$ exit
+</code></pre>
+
+<p>dump한 파일을 내 로컬 PC(호스트 PC)로 복사해온다.</p>
+
+<pre><code>$ docker cp mysql-master:dump.sql .
+$ cat dump.sql
+</code></pre>
+
+<h3 id="slavedump">slave 서버에서 dump한 데이터 불러오기</h3>
+
+<p>로컬 PC의 dump한 파일을 slave 서버로 복사한 후, DB를 복구한다. <br>
+(mysql 비밀번호는 slave 컨테이너를 실행할 때 설정한 'MYSQL_ROOT_PASSWORD' 입력)</p>
+
+<pre><code>$ docker cp dump.sql mysql-slave:.
+$ docker exec -it mysql-slave /bin/bash
+$ mysql -u root -p
+mysql&gt; CREATE DATABASE repldb;  
+mysql&gt; exit  
+$ mysql -u root -p repldb &lt; dump.sql
+</code></pre>
+
+<p>다시 mysql에 접속하였을 때 <code>repldb</code> DB에 <code>repltable</code> 테이블이 생성되어 있다면 정상적으로 복구된 것이다.</p>
+
+<pre><code>$ mysql -u root -p
+mysql&gt; USE repldb;  
+mysql&gt; SHOW TABLES;  
+</code></pre>
+
+<h3 id="slavemaster">slave 서버에서 master 서버 연동하기</h3>
+
+<p>이제 마지막으로 slave 서버에서 master 서버와 연동하는 작업만 해주면 된다.</p>
+
+<p>그 전에 master 서버의 mysql에 한번 더 접속하여 바이너리 로그 파일의 현재 상태를 읽어야 한다. 이 로그 파일을 통해 master, slave의 DB가 동기화되므로 반드시 동일한 로그의 위치를 서로 참조하고 있어야 한다.</p>
+
+<pre><code>$ docker exec -it mysql-master /bin/bash
+$  mysql -u root -p  
+mysql&gt; SHOW MASTER STATUS\G  
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2017/11/docker-mysql-replicaiton-3.png" alt=""></p>
+
+<p>출력된 결과에서 <code>File</code>, <code>Position</code> 필드의 값을 기억하도록 한다. <br>
+<code>File</code> 은 현재 바이너리 로그 파일명이고, <code>Position</code> 은 현재 로그의 위치를 나타낸다. 앞서 DB와 테이블을 생성한 query가 추가됐으므로 이전에 <code>mysql&gt; SHOW MASTER STATUS\G</code> 를 실행했을 때보다 Position 값이 증가했음을 볼 수 있다.</p>
+
+<p>이제 slave 서버의 mysql에 접속하여 master 서버와의 연결에 필요한 변수들을 적절히 설정해주어야 한다.</p>
+
+<pre><code>$ docker exec -it mysql-slave /bin/bash
+$  mysql -u root -p  
+mysql&gt; CHANGE MASTER TO MASTER_HOST='mysql-master', MASTER_USER='repluser', MASTER_PASSWORD='replpw', MASTER_LOG_FILE='mysql-bin.000003', MASTER_LOG_POS=965;  
+mysql&gt; START SLAVE;  
+</code></pre>
+
+<ul>
+<li><code>MASTER_HOST</code> : master 서버의 호스트명</li>
+<li><code>MASTER_USER</code> : master 서버의 mysql에서 REPLICATION SLAVE 권한을 가진 User 계정의 이름</li>
+<li><code>MASTER_PASSWORD</code> : master 서버의 mysql에서 REPLICATION SLAVE 권한을 가진 User 계정의 비밀번호</li>
+<li><code>MASTER_LOG_FILE</code> : master 서버의 바이너리 로그 파일명</li>
+<li><code>MASTER_LOG_POS</code> : master 서버의 현재 로그의 위치</li>
+</ul>
+
+<p>아래의 명령어를 실행하여 결과를 확인해보자.</p>
+
+<pre><code>mysql&gt; SHOW SLAVE STATUS\G  
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2017/11/docker-mysql-replicaiton-4.png" alt=""></p>
+
+<p><code>Last_Error</code>, <code>Last_IO_Error</code> 필드에 아무 값이 없다면 성공적으로 Replication이 구성된 것이다.</p>
+
+<h3 id="replication">Replication 테스트하기</h3>
+
+<p>테스트를 위해 master 서버의 mysql에 접속하여 테이블에 레코드를 추가해보자.</p>
+
+<pre><code>$ docker exec -it mysql-master /bin/bash
+$  mysql -u root -p  
+mysql&gt; USE repldb;  
+mysql&gt; INSERT INTO repltable VALUES (1);  
+mysql&gt; SELECT * FROM repltable;  
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2017/11/docker-mysql-replicaiton-5.png" alt=""></p>
+
+<p>slave 서버의 테이블에도 똑같이 반영되었음을 확인해 볼 수 있다.</p>
+
+<pre><code>$ docker exec -it mysql-slave /bin/bash
+$  mysql -u root -p  
+mysql&gt; USE repldb;  
+mysql&gt; SELECT * FROM repltable;  
+</code></pre>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2017/11/docker-mysql-replicaiton-6.png" alt=""></p>
+
+<h3 id="">참고</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="http://hys9958.tistory.com/entry/mysql-%EC%9D%B4%EC%A4%91%ED%99%94-master-slave%EA%B5%AC%EC%84%B1%ED%95%98%EA%B8%B0" targt="_blank">mysql 이중화 (master slave)구성하기</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://www.percona.com/blog/2016/03/30/docker-mysql-replication-101/" targt="_blank">Docker MySQL Replication 101</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="http://kit2013.tistory.com/157" targt="_blank">MySQL 5.6.x Replication(MySQL 5.6 이중화)</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[nginx에서 certbot 인증서 갱신 실패할 경우]]></title><description><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<p>현재 개발한 웹서비스들에 무료로 HTTPS를 적용하기 위해 <strong><a id="jupiny-blog-link" href="https://certbot.eff.org/" target="_blank">Certbot</a></strong> 을 항상 사용하고 있다. <strong>Certbot</strong>
+ 의 유일한 단점은 인증서가 3개월 뒤에 만료된다는 것이고, 따라서 만료되기 전에 갱신해주어야 한다. <br>
+하지만 개발자가 3개월마다 서버에 직접 접속하여 인증서를 갱신하는 것은 상당히 구린 일이다. 이를 해결하기 위해 많은 개발</p>]]></description><link>https://jupiny.com/2017/07/12/certbot-renew-failure-on-nginx/</link><guid isPermaLink="false">a323eee8-cf55-4c30-b687-978f3be46cbf</guid><category><![CDATA[etc]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Wed, 12 Jul 2017 11:54:45 GMT</pubDate><content:encoded><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<p>현재 개발한 웹서비스들에 무료로 HTTPS를 적용하기 위해 <strong><a id="jupiny-blog-link" href="https://certbot.eff.org/" target="_blank">Certbot</a></strong> 을 항상 사용하고 있다. <strong>Certbot</strong>
+ 의 유일한 단점은 인증서가 3개월 뒤에 만료된다는 것이고, 따라서 만료되기 전에 갱신해주어야 한다. <br>
+하지만 개발자가 3개월마다 서버에 직접 접속하여 인증서를 갱신하는 것은 상당히 구린 일이다. 이를 해결하기 위해 많은 개발 블로그들에 <strong>cronjob</strong> 을 이용한 자동 인증서 갱신 방법들이 소개되어 있고, 나 또한 글들을 참고하여 자동 인증서 갱신을 설정해놓았다. <br>
+그러나 기대와 달리 인증서는 자동으로 갱신되지 않고, 3개월 뒤 인증서는 결국 만료되었다. 직접 서버에 접속하여 <code>$ certbot-auto renew</code> 인증서 갱신 명령어를 실행해보니 아래와 같이 에러가 나타나며 갱신이 실패하였다.</p>
+
+<p><img src="https://d194zelh06zukz.cloudfront.net/2017/08/certbot-renew-failure-on-nginx-1.png" alt=""></p>
+
+<p>열심히 구글링을 해보았지만 속시원한 해결법은 나오지 않았고, 한참을 헤맨 끝에 HTTP를 통해 도메인 주소의 유효성을 검증하는 과정에서 HTTPS 주소로 리다이렉트 되었기 때문이라는 것을 알게 되었다.</p>
+
+<p>현재 내가 설정한 <code>nginx.conf</code> 파일의 내용은 아래와 같다(<strong><a id="jupiny-blog-link" href="https://github.com/jupiny/awesome-release" target="_blank">Amazon EC2 서버의 ubuntu 환경에서 django project 배포하기</a></strong> 참고).</p>
+
+<pre><code class="language-apacheconf">http {  
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile on;
+
+    server {
+        listen       80;
+        server_name  jupiny.com;
+
+        client_max_body_size 4G;
+        keepalive_timeout 5;
+
+        return 301 https://$server_name$request_uri;
+    }
+
+    server {
+        listen  443 default_server ssl;
+        server_name  jupiny.com;
+
+        (...이하 생략...)
+    }
+}
+</code></pre>
+
+<p>여기서 <code>return 301 https://$server_name$request_uri;
+</code> 이 부분을 주석 처리하고 다시 <code>$ certbot-auto renew</code> 를 실행해보았더니 인증서가 성공적으로 갱신되었다. 하지만 이렇게 주석 처리를 하게 되면 HTTP 주소로 접속시 자동으로 HTTPS 주소로 리다이렉트 되지 않게 된다. 따라서 인증서를 갱신한 후에는 다시 원래대로 설정 파일을 돌려놓아야 한다.</p>
+
+<p>필요한 과정을 다시 정리하면,</p>
+
+<ol>
+<li><code>nginx.conf</code> 에서 <code>return</code> 으로 시작하는 부분 주석 처리  </li>
+<li><code>$ sudo service nginx reload</code> 실행  </li>
+<li><code>$ certbot-auto renew</code> 실행  </li>
+<li><code>nginx.conf</code> 에서 <code>return</code> 으로 시작하는 부분 주석 해제  </li>
+<li><code>$ sudo service nginx reload</code> 실행</li>
+</ol>
+
+<p>이 과정을 그대로 쉘 스크립트에 옮기면 된다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+# OS 환경에 맞는 sed 명령어 설정
+case "$(uname)" in  
+  Darwin|*BSD) sed="sed -E" ;; # OS X 또는 BSD 환경
+  *) sed="sed -r" ;; # GNU 환경
+esac
+
+# 파일의 특정 문자열 치환 함수
+replace_word() {  
+  source=$1
+  expr=$2
+
+  tempfile="tempfile"
+  sudo mv $source $tempfile
+  cat $tempfile | $sed -e "$expr" | sudo tee $source
+  sudo rm $tempfile
+}
+
+main() {  
+  cd $HOME
+  nginx_conf_file="/usr/local/nginx/conf/nginx.conf" # nginx.conf의 경로
+  replace_word $nginx_conf_file "s/return/# return/"
+  sudo service nginx reload
+
+  ./certbot-auto renew --quiet --no-self-upgrade
+
+  replace_word $nginx_conf_file "s/# return/return/"
+  sudo service nginx reload
+}
+
+main  
+</code></pre>
+
+<p>파일에서 특정한 줄의 주석을 처리/해제 하는 부분은 <code>sed</code> 명령어를 이용하여 문자열을 치환하였다(<strong><a id="jupiny-blog-link" href="https://jupiny.com/2017/07/10/linux-command-5-sed/" target="_blank">리눅스 명령어 정리(5) - sed</a></strong> 참고). <br>
+<code>nginx.cnf</code> 파일이 관리자 권한이 필요한 경로에 있기 때문에 명령어 앞에 <code>sudo</code> 를 사용한 것을 볼 수 있다. 명령어의 출력 결과를 파일로 리다이렉트할 때 보통 <code>&gt;</code> 를 사용하지만, 여기서는 관리자 권한으로 실행하기 위해 <code>tee</code> 명령어를 사용하였다.</p>
+
+<p>이제 이 스크립트를 <strong>cronjob</strong> 으로 돌려주기만 하면 된다.</p>
+
+<pre><code>$ crontab -e
+</code></pre>
+
+<pre><code>0 19 * * * sh ${HOME}/renew_ssl.sh # 한국 시간 새벽 4시  
+</code></pre>
+
+<p>하루에 한번씩 스크립트가 실행되고, 인증서 만료 1개월 이내일 경우 인증서가 갱신된다.</p>
+
+<hr>
+
+<h3 id="">참고</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="http://riseshia.github.io/2016/10/16/certbot-let-s-encrypt.html" targt="_blank">Certbot 도입하기 ~ Let's Encrypt 갱신편 ~</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://askubuntu.com/questions/230476/when-using-sudo-with-redirection-i-get-permission-denied" targt="_blank">When using sudo with redirection, I get 'permission denied'</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[쉘 스크립트(Shell Script) 기초(5) - read]]></title><description><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<h3 id="read">read</h3>
+
+<p><strong>read</strong>는 표준 입력(파이프라인 입력 또는 키보드 입력)에서 한 줄의 내용씩 읽어 들이는 명령어이다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+# read_input.sh
+
+read input  
+echo "&lt;${input}&gt;을 입력하셨습니다."  
+</code></pre>
+
+<p><br>  </p>
+
+<pre><code>$ echo "Hello World" | sh read_input.sh
+&lt;Hello World&gt;을 입력하셨습니다.</code></pre>]]></description><link>https://jupiny.com/2017/07/10/shell-script-basic-5/</link><guid isPermaLink="false">06590ed0-17c9-400b-8b4c-2e0d5ea0314a</guid><category><![CDATA[Linux]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Mon, 10 Jul 2017 09:35:23 GMT</pubDate><content:encoded><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<h3 id="read">read</h3>
+
+<p><strong>read</strong>는 표준 입력(파이프라인 입력 또는 키보드 입력)에서 한 줄의 내용씩 읽어 들이는 명령어이다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+# read_input.sh
+
+read input  
+echo "&lt;${input}&gt;을 입력하셨습니다."  
+</code></pre>
+
+<p><br>  </p>
+
+<pre><code>$ echo "Hello World" | sh read_input.sh
+&lt;Hello World&gt;을 입력하셨습니다.  
+</code></pre>
+
+<pre><code>$ sh read_input.sh
+Hello World  
+&lt;Hello World&gt;을 입력하셨습니다.  
+</code></pre>
+
+<p><code>while</code>을 이용해 표준 입력의 모든 줄을 읽을 수도 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+# read_multiple_line.sh
+
+count=1  
+while read line  
+do  
+  echo "${count}번째 줄은 &lt;$line&gt;입니다."
+  count=$(($count + 1))
+done  
+</code></pre>
+
+<p><br>  </p>
+
+<pre><code>$ cat test.txt | sh read_multiple_line.sh
+1번째 줄은 &lt;Apple&gt;입니다.  
+2번째 줄은 &lt;Orange&gt;입니다.  
+3번째 줄은 &lt;Melon&gt;입니다.  
+</code></pre>
+
+<hr>
+
+<h3 id="">프롬프트 출력하기</h3>
+
+<p>-p 옵션을 사용해 프롬프트를 출력할 수도 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+# read_promt.sh
+
+read -p "성은? &gt; " last_name  
+read -p "이름은? &gt; " first_name  
+echo "성은 ${last_name}이고, 이름은 ${first_name}입니다."  
+</code></pre>
+
+<p><br>  </p>
+
+<pre><code>$ sh read_promt.sh
+성은? &gt; 주
+이름은? &gt; 승환
+성은 주이고, 이름은 승환입니다.
+</code></pre>
+
+<p><code>echo</code> 의 -n 옵션을 이용해서도 똑같은 결과를 얻을 수 있다. 이 방식은 프롬프트 부분과 문자 입력 부분을 확실하게 구분할 있고, 프롬프트의 문자 색을 변경할 수 있다는 장점이 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+echo -n "성은? &gt; "  
+read last_name  
+echo -n "이름은? &gt; "  
+read first_name  
+echo "성은 ${last_name}이고, 이름은 ${first_name}입니다."  
+</code></pre>
+
+<hr>
+
+<h3 id="">공백이 들어있는 파일명을 반복문에 사용하기</h3>
+
+<pre><code>$ find . -name "my *"
+./my movie.txt
+./my music.txt
+./my picture.txt
+</code></pre>
+
+<p>현재 디렉토리에서 "my"로 시작하는 파일 3개를 모두 삭제하는 스크립트를 만들려고 한다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+for file in $(find . -name "my *")  
+do  
+  rm file 
+done  
+</code></pre>
+
+<p>위의 스크립트를 실행하면 해당 파일을 찾을 수 업다는 에러가 발생할 것이다. 왜냐하면 for 반복문은 기본적으로 공백을 구분자로 하여 항목을 순서대로 처리하기 때문이다. 따라서 지금처럼 파일명에 공백이 있는 경우 <code>find</code> 명령어의 결과 <code>./my movie.txt ./my music.txt ./my picture.txt</code> 는 <code>./my</code>, <code>movie.txt</code>, <code>./my</code>, <code>music.txt</code>, <code>./my</code>, <code>picture.txt</code> 6개의 항목으로 구분되어 처리되게 된다.</p>
+
+<p>이 때 <code>read</code> 명령어의 한 줄씩 읽는 특성을 이용하면 쉽게 해결할 수 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+find . -name "my *" |  
+while read file  
+do  
+  rm "$file"
+done  
+</code></pre>
+
+<hr>
+
+<h3 id="">출처</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="https://www.gilbut.co.kr/book/bookView.aspx?bookcode=BN001596&amp;page=1&amp;TF=T" target="_blank">만화로 배우는 리눅스 시스템 관리. 2: 명령어 &amp; 셸 스크립트 응용</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[쉘 스크립트(Shell Script) 기초(4) - 서브 쉘(Sub Shell)]]></title><description><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<p>아래는 <code>dir1</code>, <code>dir2</code>, <code>dir3</code> 디렉토리를 만들어 각각의 디렉토리에 <code>file.txt</code> 파일을 추가하는 스크립트이다. </p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+mkdir dir1  
+mkdir dir2  
+mkdir dir3
+
+for dir in dir1 dir2 dir3  
+do  
+  cd $dir
+  touch file.txt
+  cd .. # 주목
+done  
+</code></pre>
+
+<p>for 문이 끝날 때마다 다시 부모 디렉토리로</p>]]></description><link>https://jupiny.com/2017/07/10/shell-script-basic-4/</link><guid isPermaLink="false">3e4be28d-530d-4367-a100-3e64ddfb0916</guid><category><![CDATA[Linux]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Mon, 10 Jul 2017 09:35:11 GMT</pubDate><content:encoded><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<p>아래는 <code>dir1</code>, <code>dir2</code>, <code>dir3</code> 디렉토리를 만들어 각각의 디렉토리에 <code>file.txt</code> 파일을 추가하는 스크립트이다. </p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+mkdir dir1  
+mkdir dir2  
+mkdir dir3
+
+for dir in dir1 dir2 dir3  
+do  
+  cd $dir
+  touch file.txt
+  cd .. # 주목
+done  
+</code></pre>
+
+<p>for 문이 끝날 때마다 다시 부모 디렉토리로 돌아가기 위해 <code>cd ..</code> 명령어가 필요하다.</p>
+
+<p>이 때 <strong>서브 쉘(Sub Shell)</strong> 을 이용하면 더 깔끔하게 스크립트를 작성할 수 있다. <strong>서브 쉘</strong> 은 쉘에서 일시적인 분신을 만들어 그 쪽에서 명령어를 실행하는 방법이다. <strong>서브 쉘</strong> 로 실행하고 싶은 명령어열 전체를 괄호로 감싸면 된다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+mkdir dir1  
+mkdir dir2  
+mkdir dir3
+
+for dir in dir1 dir2 dir3  
+do  
+  (cd $dir
+  touch file.txt)
+done  
+</code></pre>
+
+<hr>
+
+<h3 id="">출처</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="https://www.gilbut.co.kr/book/bookView.aspx?bookcode=BN001596&amp;page=1&amp;TF=T" target="_blank">만화로 배우는 리눅스 시스템 관리. 2: 명령어 &amp; 셸 스크립트 응용</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[쉘 스크립트(Shell Script) 기초(3) - 인수, 함수, case]]></title><description><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<h3 id="">인수 사용하기</h3>
+
+<p>쉘 스크립트에서 인수를 받는 방법은 크게 두 가지가 있다.</p>
+
+<h4 id="">지정한 순서대로 인수 값 참조하기</h4>
+
+<pre><code class="language-bash">#!/bin/bash
+# params.sh
+
+args1=$1  
+args2=$2
+
+if [ $# = 0 ]  
+then  
+  echo "인수가 업습니다"
+elif [ $# = 1 ]  
+then  
+  echo "첫번째 인수는 $args1"
+elif [ $# = 2 ]  
+then  
+  echo "첫번째 인수는</code></pre>]]></description><link>https://jupiny.com/2017/07/10/shell-script-basic-3/</link><guid isPermaLink="false">acf5dce6-bcc5-473b-828e-06db9f77c71d</guid><category><![CDATA[Linux]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Mon, 10 Jul 2017 09:35:00 GMT</pubDate><content:encoded><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<h3 id="">인수 사용하기</h3>
+
+<p>쉘 스크립트에서 인수를 받는 방법은 크게 두 가지가 있다.</p>
+
+<h4 id="">지정한 순서대로 인수 값 참조하기</h4>
+
+<pre><code class="language-bash">#!/bin/bash
+# params.sh
+
+args1=$1  
+args2=$2
+
+if [ $# = 0 ]  
+then  
+  echo "인수가 업습니다"
+elif [ $# = 1 ]  
+then  
+  echo "첫번째 인수는 $args1"
+elif [ $# = 2 ]  
+then  
+  echo "첫번째 인수는 $args1"
+  echo "두번째 인수는 $args2"
+else  
+  echo "인수는 2개 이하이어야 합니다"
+fi
+</code></pre>
+
+<p><br>  </p>
+
+<pre><code>$ sh params.sh dog cat
+첫번째 인수는 dog
+두번째 인수는 cat
+</code></pre>
+
+<h4 id="">옵션 이름으로 인수 값 참조하기</h4>
+
+<pre><code class="language-bash">#!/bin/bash
+# options.sh
+
+while getopts a:b:c: OPT  
+do  
+  case $OPT  in
+    a) a="$OPTARG" ;;
+    b) b="$OPTARG" ;;
+    c) c="$OPTARG" ;;
+  esac
+done
+
+if [ "$a" != "" ]  
+then  
+  echo "a 값은 $a"
+fi  
+if [ "$b" != "" ]  
+then  
+  echo "b 값은 $b"
+fi  
+if [ "$c" != "" ]  
+then  
+  echo "c 값은 $c"
+fi  
+</code></pre>
+
+<p><br>  </p>
+
+<pre><code>$ sh options.sh -a dog -b cat -c lion
+a 값은 dog  
+b 값은 cat  
+c 값은 lion  
+</code></pre>
+
+<hr>
+
+<h3 id="">함수</h3>
+
+<pre><code class="language-bash">#!/bin/bash
+# func.sh
+
+main() {  
+  hello Peter Tom Jack 
+  hello
+  if [ $? != 0 ]
+  then
+    echo "명령어 실패"
+  fi
+}
+
+hello() {  
+  people=$*
+  if [ "$people" = "" ]
+  then
+    echo "인수가 없습니다."
+    return 1
+  fi
+  for person in $people
+  do
+    echo "Hello, $person. Today is $(today)"
+  done
+}
+
+today() {  
+  date +%Y-%m-%d
+}
+
+main  
+</code></pre>
+
+<p><br>  </p>
+
+<pre><code>$ sh func.sh
+Hello, Peter. Today is 2017-07-09  
+Hello, Tom. Today is 2017-07-09  
+Hello, Jack. Today is 2017-07-09  
+인수가 없습니다.  
+명령어 실패
+</code></pre>
+
+<hr>
+
+<h3 id="case">case</h3>
+
+<p>case 문에서는 패턴에 따른 분기도 가능하다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+birth_date=$1
+
+case $birth_date in  
+  921207)
+    echo "저와 생일이 같으시군요!"
+    ;;
+  ??03??|??04??|??05??)
+    echo "봄에 태어나셨군요!"
+    ;;
+  ??06??|??07??|??08??)
+    echo "여름에 태어나셨군요!"
+    ;;
+  ??09??|??10??|??11??)
+    echo "가을에 태어나셨군요!"
+    ;;
+  ??01??|??02??|??12??)
+    echo "겨울에 태어나셨군요!"
+    ;;
+esac  
+</code></pre>
+
+<hr>
+
+<h3 id="">출처</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="http://www.kyobobook.co.kr/product/detailViewKor.laf?mallGb=KOR&amp;ejkGb=KOR&amp;barcode=9791187345824" target="_blank">만화로 배우는 리눅스 시스템 관리. 1: 명령어 &amp; 셸 스크립트 입문</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://www.gilbut.co.kr/book/bookView.aspx?bookcode=BN001596&amp;page=1&amp;TF=T" target="_blank">만화로 배우는 리눅스 시스템 관리. 2: 명령어 &amp; 셸 스크립트 응용</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[쉘 스크립트(Shell Script) 기초(2) -명령어 치환, 산술 확장]]></title><description><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<h3 id="">명령어 치환</h3>
+
+<blockquote>
+  <p>$(명령어열) 또는 `명령어열`</p>
+</blockquote>
+
+<p>쉘 스크립트에서는 명령어열 실행 결과(표준 출력)을 문자열로 치환할 수 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+today=$(date +%Y-%m-%d)  
+filename="file-${today}.txt"  
+touch ${filename}  
+echo "Hello World" &gt; $filename  
+echo "End" &gt;&gt; $filename  
+echo "마지막 줄은</code></pre>]]></description><link>https://jupiny.com/2017/07/10/shell-script-basic-2/</link><guid isPermaLink="false">cafb67af-484b-4f20-84ec-5025a2f0881a</guid><category><![CDATA[Linux]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Mon, 10 Jul 2017 09:34:45 GMT</pubDate><content:encoded><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<h3 id="">명령어 치환</h3>
+
+<blockquote>
+  <p>$(명령어열) 또는 `명령어열`</p>
+</blockquote>
+
+<p>쉘 스크립트에서는 명령어열 실행 결과(표준 출력)을 문자열로 치환할 수 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+today=$(date +%Y-%m-%d)  
+filename="file-${today}.txt"  
+touch ${filename}  
+echo "Hello World" &gt; $filename  
+echo "End" &gt;&gt; $filename  
+echo "마지막 줄은 '$(tail -n 1 $filename)' 입니다."  
+</code></pre>
+
+<p>for 문에서도 아래와 같이 명령어 치환을 사용할 수 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+for filename in $(cd ${HOME}/log; ls *.log | grep -v error.log)  
+do  
+  echo $filename
+done  
+</code></pre>
+
+<hr>
+
+<h3 id="">산술 확장</h3>
+
+<blockquote>
+  <p>$(( 계산식 ))</p>
+</blockquote>
+
+<pre><code>$ [ $(( 3 * (2 + 10) )) -gt $(( 5 * 7 )) ] # 36 &gt; 35
+$ echo $?
+0  
+$ test $(( (2 + 10) / 3 )) -le $(( 1 + 2 )) # 4 &lt;= 3
+$ echo $?
+1  
+</code></pre>
+
+<p>* <code>[</code> 또는 <code>test</code> :  판정 결과를 종료 상태 변수로 반환해주는 명령어</p>
+
+<p>산술 확장을 이용한 수식의 계산 결과를 쉘 스크립트에서도 이용할 수 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+# arithmetic.sh
+
+sum=0  
+first=1  
+i=$first  
+while [ $i -le 10 ]  
+do  
+  sum=$(($sum + $i))
+  i=$(($i + 1))
+done  
+echo "${first}에서 ${i}까지의 합은 ${sum}입니다."  
+</code></pre>
+
+<p><br>  </p>
+
+<pre><code>$ sh arithmetic.sh
+1에서 11까지의 합은 55입니다.  
+</code></pre>
+
+<hr>
+
+<h3 id="">출처</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="http://www.kyobobook.co.kr/product/detailViewKor.laf?mallGb=KOR&amp;ejkGb=KOR&amp;barcode=9791187345824" target="_blank">만화로 배우는 리눅스 시스템 관리. 1: 명령어 &amp; 셸 스크립트 입문</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://www.gilbut.co.kr/book/bookView.aspx?bookcode=BN001596&amp;page=1&amp;TF=T" target="_blank">만화로 배우는 리눅스 시스템 관리. 2: 명령어 &amp; 셸 스크립트 응용</a></strong></li>
+</ul>]]></content:encoded></item><item><title><![CDATA[쉘 스크립트(Shell Script) 기초(1) - 환경변수, 종료 상태 변수($?)]]></title><description><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<h3 id="">환경 변수</h3>
+
+<p><code>$ env</code> 명령어를 통해 사용가능한 환경 변수들을 확인할 수 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+mkdir ${HOME}/directory  
+cd ${HOME}/directory  
+touch file.txt  
+echo "My name is ${USER}" &gt; file.txt  
+</code></pre>
+
+<hr>
+
+<h3 id="d">종료 상태 변수($?)</h3>
+
+<p><code>$?</code> 은 바로 전에 실행한 명령어의 종료 상태를 나태내는 변수이다. <strong>0</strong></p>]]></description><link>https://jupiny.com/2017/07/10/shell-script-basic-1/</link><guid isPermaLink="false">149baa36-ebdd-4b52-9602-3ee373fd583e</guid><category><![CDATA[Linux]]></category><dc:creator><![CDATA[jupiny]]></dc:creator><pubDate>Mon, 10 Jul 2017 09:34:32 GMT</pubDate><content:encoded><![CDATA[<blockquote>
+  <p>Ubuntu 14.04 LTS 환경을 기준으로 작성되었습니다.</p>
+</blockquote>
+
+<h3 id="">환경 변수</h3>
+
+<p><code>$ env</code> 명령어를 통해 사용가능한 환경 변수들을 확인할 수 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+mkdir ${HOME}/directory  
+cd ${HOME}/directory  
+touch file.txt  
+echo "My name is ${USER}" &gt; file.txt  
+</code></pre>
+
+<hr>
+
+<h3 id="d">종료 상태 변수($?)</h3>
+
+<p><code>$?</code> 은 바로 전에 실행한 명령어의 종료 상태를 나태내는 변수이다. <strong>0</strong> 은 정상 종료를 의미하고, 그 외의 값(<strong>1 ~ 255</strong>)은 이상 종료를 의미한다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+dirname="directory"  
+filename="file.txt"
+
+touch_new_file() {  
+  cd $dirname
+  touch $filename
+  echo "Hello World" &gt; $filename
+}
+
+error_message() {  
+  echo "The directory already exists."
+}
+
+mkdir $dirname  
+if [ $? = 0 ]  
+then  
+  touch_new_file
+else  
+  error_message
+fi  
+</code></pre>
+
+<p>종료 상태 변수를 사용하지 않고 <code>&amp;&amp;</code>, <code>||</code> 을 사용하여 더 간단하게 표현할 수 도 있다.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+# ...위와 동일...
+
+mkdir $dirname &amp;&amp; touch_new_file || error_message  
+</code></pre>
+
+<hr>
+
+<h3 id="">출처</h3>
+
+<ul>
+<li><strong><a id="jupiny-blog-link" href="http://www.kyobobook.co.kr/product/detailViewKor.laf?mallGb=KOR&amp;ejkGb=KOR&amp;barcode=9791187345824" target="_blank">만화로 배우는 리눅스 시스템 관리. 1: 명령어 &amp; 셸 스크립트 입문</a></strong></li>
+<li><strong><a id="jupiny-blog-link" href="https://www.gilbut.co.kr/book/bookView.aspx?bookcode=BN001596&amp;page=1&amp;TF=T" target="_blank">만화로 배우는 리눅스 시스템 관리. 2: 명령어 &amp; 셸 스크립트 응용</a></strong></li>
+</ul>]]></content:encoded></item></channel></rss>

@@ -1,0 +1,972 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>진짜 개발자가 되자.</title>
+<link>https://deepweller.tistory.com/</link>
+<description>안녕하세요! 제 블로그에 방문해주셔서 감사합니다.
+jinyp91@gmail.com | github.com/deepweller</description>
+<language>ko</language>
+<pubDate>Sun, 12 May 2019 14:19:12 +0900</pubDate>
+<generator>TISTORY</generator>
+<managingEditor>jinyeonghehe</managingEditor>
+<image>
+<title>진짜 개발자가 되자.</title>
+<url>https://tistory4.daumcdn.net/tistory/2912352/attach/82de19406d204d408fddb8813e791786</url>
+<link>https://deepweller.tistory.com</link>
+<description>안녕하세요! 제 블로그에 방문해주셔서 감사합니다.
+jinyp91@gmail.com | github.com/deepweller</description>
+</image>
+<item>
+<title>StringRedisTemplate, RedisTemplate 객체 serialization</title>
+<link>https://deepweller.tistory.com/38</link>
+<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; &lt;h3 id=&quot;redistamplate&quot;&gt;RedisTemplate&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;org.springframework.data.redis.core&lt;/code&gt;&lt;br /&gt;
+RedisConnection 은 row level 의 메서드를 제공하는 반면 레디스 템플릿은 커넥션 위에서 값을 조작하는 메서드 제공&lt;/p&gt;
+&lt;h3 id=&quot;stringredistemplate&quot;&gt;StringRedisTemplate&lt;/h3&gt;
+&lt;p&gt;대부분 레디스 key-value 는 문자열 위주이기 때문에 문자열에 특화된 템플릿을 제공&lt;br /&gt;
+RedisTemplate&lt;string, string=&quot;&quot;&gt; 을 상속받은 클래스임.&lt;br /&gt;
+&lt;code&gt;StringRedisSerializer&lt;/code&gt;로 직렬화함.&lt;/string,&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public class StringRedisTemplate extends RedisTemplate&amp;lt;String, String&amp;gt; {
+//생략
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;관련이슈&lt;/em&gt;&lt;br /&gt;
+&lt;code&gt;RedisTamplate&lt;/code&gt; 과 &lt;code&gt;HashOperations&amp;lt;Object, Object, Object&amp;gt; hashOperations;&lt;/code&gt;으로 hash를 사용하니깐 key값이나 전달한 object들의 값이 깨져서 나옴.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;해결&lt;/em&gt;&lt;br /&gt;
+&lt;code&gt;StringRedisTemplate&lt;/code&gt;과 &lt;code&gt;private HashOperations&amp;lt;String, String, String&amp;gt; hashOperations;&lt;/code&gt; 사용하니 직렬화가 잘된다.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;참고코드&lt;/em&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Bean
+public RedisTemplate&amp;lt;Object, Object&amp;gt; redisTemplate(JedisConnectionFactory connectionFactory) {
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
+    objectMapper.enable(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
+    objectMapper.registerModule(new JavaTimeModule());
+
+    RedisTemplate&amp;lt;Object, Object&amp;gt; redisTemplate = new RedisTemplate&amp;lt;&amp;gt;();
+    redisTemplate.setKeySerializer(new StringRedisSerializer());
+    redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
+    redisTemplate.setConnectionFactory(connectionFactory);
+    return redisTemplate;
+}
+
+@Bean
+public StringRedisTemplate stringRedisTemplate(JedisConnectionFactory connectionFactory) {
+     StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
+     stringRedisTemplate.setConnectionFactory(connectionFactory);
+
+     return stringRedisTemplate;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;private HashOperations&amp;lt;String, String, String&amp;gt; hashOperations;
+
+@PostConstruct
+public void init() {
+    hashOperations = stringRedisTemplate.opsForHash();
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;참고&quot;&gt;참고&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://arahansa.github.io/docs_spring/redis.html&quot;&gt;레디스&lt;/a&gt;&lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 텍스트디스플레이 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-4674727604243984&quot;
+     data-ad-slot=&quot;7162651529&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>Spring &amp; Spring Boot</category>
+<category>redis</category>
+<category>redistemplate</category>
+<category>Spring</category>
+<category>stringredistemplate</category>
+<author>jinyeonghehe</author>
+<guid>https://deepweller.tistory.com/38</guid>
+<comments>https://deepweller.tistory.com/38#entry38comment</comments>
+<pubDate>Sun, 31 Mar 2019 20:52:09 +0900</pubDate>
+</item>
+<item>
+<title>Spring 에서 ftp 패시브 모드 사용하기</title>
+<link>https://deepweller.tistory.com/37</link>
+<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; &lt;h1 id=&quot;java-spring-ftp-패시브-모드&quot;&gt;java spring FTP 패시브 모드&lt;/h1&gt;
+&lt;p&gt;&lt;em&gt;요약&lt;/em&gt;&lt;br /&gt;
+ftp 접속 문제가 발생하여 원인을 찾던 중, active 모드와 passive 모드의 차이때문에 발생한 문제였다.&lt;br /&gt;
+액티브모드는 서버 접속 시 &lt;br /&gt;
+파일질라는 기본으로 패시브모드로 접근하기 때문에 문제가 발생하지 않았던 것.&lt;br /&gt;
+또한 로컬개발환경에서는 왜 발생하지 않았는지 찾아본 결과 맥의 환경설정 &amp;gt; 네트워크 &amp;gt; 사용중인네트워크의 고급설정에 ftp 설정이 있었다.&lt;br /&gt;
+여기에 패시브모드로 사용이 디폴트였음. 아래 사진을 참고&lt;/p&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:631px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9981A3395C9B31750B&quot; filemime=&quot;image/jpeg&quot; filename=&quot;스크린샷 2019-03-27 오후 5.05.32.png&quot; height=&quot;476&quot; width=&quot;631&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;이슈&lt;/em&gt;&lt;br /&gt;
+ftp gui 툴이나 local 환경에서는 ftp 폴더에 접속해서 파일까지 읽는데 개발환경에서는 파일을 가져오지 못하던 이슈가 발생했음&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;추가정보&lt;/em&gt;&lt;br /&gt;
+현재 ftp 접속 라이브러리는 &lt;code&gt;commons-net&lt;/code&gt; 을 사용하고 있음&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;dependency&amp;gt;
+    &amp;lt;groupId&amp;gt;commons-net&amp;lt;/groupId&amp;gt;
+    &amp;lt;artifactId&amp;gt;commons-net&amp;lt;/artifactId&amp;gt;
+    &amp;lt;version&amp;gt;3.6&amp;lt;/version&amp;gt;
+&amp;lt;/dependency&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;해결&lt;/em&gt;&lt;br /&gt;
+ftp 서버 로그인 전 접근방식을 passive 모드로 설정함&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;client.setSoTimeout(TIMEOUT);
+client.enterLocalPassiveMode();
+boolean isLogin = client.login(ftpUser, ftpPwd);&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;참고메일&lt;/em&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;액티브/패시브 모드에 대해서도 사용하시는 클라이언트가 어떤건지가 중요하며,&lt;/p&gt;&lt;p&gt;
+  로컬에서 테스트 시 파일질라 같은 클라이언트를 이용 하셨다면 기본 옵션이 패시브로 되어있어서 문제가 발생하지 않았을 것 입니다.&lt;/p&gt;
+  &lt;p&gt;또한 액티브 방식의 연결에 실패하신 원인으로 짐작가는 부분은&lt;br /&gt;
+  액티브 연결 시서버가 클라이언트에 접속할 포트를 접근가능하도록 열어놓는 작업이 선행되어야 하는데,&lt;br /&gt;
+  네트워크/방화벽 정책 등에 의해 막혀있다면 접속이 안될것입니다.&lt;/p&gt;
+  &lt;p&gt;액티브 방식의 문제(서버가 클라이언트 접근하는 문제)를 해결하고자 나온 방식이 패시브 방식이며,&lt;br /&gt;
+  저희쪽 포트만 정상적으로 열려있으면 접근이 가능 하셨을 것입니다.&lt;br /&gt;
+  아래 URL 확인 하시면 이해에 도움이 되실겁니다.&lt;br /&gt;
+  &lt;a href=&quot;https://blog.naver.com/itperson/220774933344&quot;&gt;https://blog.naver.com/itperson/220774933344&lt;/a&gt;&lt;br /&gt;
+  감사합니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&quot;참고링크&quot;&gt;참고링크&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://extrememanual.net/3504&quot;&gt;참고1&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&quot;https://extrememanual.net/3504&quot;&gt;참고2&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&quot;https://discussions.apple.com/thread/2203238&quot;&gt;맥 ftp 옵션&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&quot;https://aljjabaegi.tistory.com/376&quot;&gt;Java Spring FTP 파일 다운로드 FTP file download :: 알짜배기 프로그래머&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&quot;https://aljjabaegi.tistory.com/366&quot;&gt;JAVA 임시 파일 생성, FTP 파일 업로드 :: 알짜배기 프로그래머&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&quot;https://jinmanp.tistory.com/entry/java-%EC%97%90%EC%84%9C-ftp-%EC%A0%91%EC%86%8D-%ED%8C%8C%EC%9D%BC-%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-%EC%97%85%EB%A1%9C%EB%93%9C-%EC%82%AD%EC%A0%9C-%EC%BD%94%EB%93%9C&quot;&gt;개발자노트 :: java 에서 ftp 접속 파일 다운로드, 업로드, 삭제 코드&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&quot;https://okihouse.tistory.com/entry/SpringIntegration-Spring%EC%9D%84-%EC%82%AC%EC%9A%A9%ED%95%98%EC%97%AC-FTP-%ED%8C%8C%EC%9D%BC%EC%A0%84%EC%86%A1&quot;&gt;Spring-Integration Spring을 사용하여 FTP 파일전송 :: OKIHOUSE&lt;/a&gt;&lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 텍스트디스플레이 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-4674727604243984&quot;
+     data-ad-slot=&quot;7162651529&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>Spring &amp; Spring Boot</category>
+<category>Active Mode</category>
+<category>ftp</category>
+<category>Java</category>
+<category>Mac</category>
+<category>Passive Mode</category>
+<category>Spring</category>
+<author>jinyeonghehe</author>
+<guid>https://deepweller.tistory.com/37</guid>
+<comments>https://deepweller.tistory.com/37#entry37comment</comments>
+<pubDate>Wed, 27 Mar 2019 17:11:28 +0900</pubDate>
+</item>
+<item>
+<title>Java Enum을 활용하여 특정 값을 그룹화 또는 분류 하기</title>
+<link>https://deepweller.tistory.com/31</link>
+<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; &lt;h3 id=&quot;시작하며&quot;&gt;시작하며&lt;/h3&gt;
+&lt;p&gt;지금 개발하고 있는 거래,결제 파트에서 주문의 상태를 Enum으로 관리하고 있다. 거래를 중개하는 결제가 있어 유독 주문의 상태가 다양하다. 각각 주문의 상태는 구매자와 판매자의 행위에 따라 변경하게 되는데 이 때 중요하게 고려해야할 부분이 생겼다.&lt;/p&gt;&lt;p&gt;특정 상태에서 변경할 수 있는 상태가 정해져 있다는 점이다. 예를 들면 결제완료 상태에서 변경될 수 있는 상태는 배송중, 거래취소 등의 상태가 있다. 이 외에 다른 상태로 변경을 하려고 하면 막아야 한다. (기존 운영하던 서비스에서 이 체크가 제대로 이뤄지고 있지 않아서 큰 장애가 발생했었다.)  &lt;br /&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;
+이를 수많은 if, else if 로 처리해야하나 했지만 예전에 봤던 좋은 Enum 활용 글을 보고 그 방법을 사용해야 겠다고 생각했다. (&lt;a href=&quot;http://woowabros.github.io/tools/2017/07/10/java-enum-uses.html&quot;&gt;참고글&lt;/a&gt;)&lt;/p&gt;
+&lt;h3 id=&quot;샘플코드&quot;&gt;샘플코드&lt;/h3&gt;
+&lt;p&gt;실제로 사용되는 코드가 아닌 포스팅을 위해 간단하게 작성한 코드이다. 아래는 상태를 정의한 Enum이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@AllArgsConstructor
+public enum OrderStatus {
+
+    PAY(&quot;결제완료&quot;),
+    SHIPPING(&quot;배송중&quot;),
+    CANCEL(&quot;취소&quot;),
+    RETURN(&quot;환불&quot;)
+    ;
+
+    @Getter
+    private String description;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;아래는 상태별 변경이 가능한 목록을 정의한 Enum이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@AllArgsConstructor
+public enum OrderStatusChange {
+
+    PAY(&quot;결제완료&quot;, Arrays.asList(OrderStatus.CANCEL, OrderStatus.SHIPPING)),
+    SHIPPING(&quot;배송중&quot;, Arrays.asList(OrderStatus.CANCEL, OrderStatus.RETURN))
+    ;
+
+    @Getter
+    private String description;
+
+    @Getter
+    private List&amp;lt;String&amp;gt; changableList;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;간단하게 설명하면&lt;/p&gt;&lt;p&gt;거래상태에는 결제완료, 배송중, 취소, 환불 이렇게 4가지 상태가 있다. 그리고 결제완료 상태에서 변경이 가능한 상태로는 배송중과 취소가 있고, 배송중인 상태에서는 취소와 환불로 상태변경이 가능하다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;이때, 결제완료 상태에서 환불 상태로 변경하려고 하거나, 배송중인 상태에서 결제완료 상태로 변경하는 것은 막아야 한다.  &lt;br /&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;
+코드만 봐도 상당히 직관적으로 표현되어 있다. 다양한 상태가 있고 그 상태에 포함된 상태가 리스트로 되어있다. 추후에 변경 가능한 상태가 추가되거나 삭제가 되더라도 리스트에 넣거나 빼기만 하면 된다.&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;
+이제 이를 체크하는 로직을 간단하게 보면 다음과 같다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public boolean checkChangable(OrderStatus changeStatus, String nowStatus) {
+    boolean changeable = false;
+
+    if (OrderStatusChange.valueOf(nowStatus).changableList().contains(changeStatus)) {
+        changeable = true;
+    }
+
+    return changeable;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;함수의 파라미터로 변경하려는 상태(changeStatus)와 현재상태(nowStatus)를 차례로 받는다. 그리고 현재상태에서 변경할 수 있는 상태리스트(changableList)에 변경하려고 하는 상태가 들어있는지 확인(contatins)한다.&lt;/p&gt;
+&lt;h3 id=&quot;마치며&quot;&gt;마치며&lt;/h3&gt;
+&lt;p&gt;Enum을 잘 활용하면 누가 봐도 이해하기 쉽고, 관리하기 쉬운 직관적인 코드를 작성할 수 있는 것 같다. 상태의 관리부터 체크하는 로직까지 간단하게 구현이 가능하다. 실제 코드도 샘플코드와 별반 차이가 없다. 하지만 이 간단한 내용으로 이번에 발생한 장애는 다시 발생하지 않을 수 있게 됐다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;또 계속해서 누가봐도 알기 쉬운 코드르 작성하기 위한 방법을 잘 찾아봐야 겠다.&lt;/p&gt;
+&lt;h3 id=&quot;참고&quot;&gt;참고&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://woowabros.github.io/tools/2017/07/10/java-enum-uses.html&quot;&gt;http://woowabros.github.io/tools/2017/07/10/java-enum-uses.html&lt;/a&gt;  &lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 텍스트디스플레이 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-4674727604243984&quot;
+     data-ad-slot=&quot;7162651529&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>Java</category>
+<category>enum</category>
+<category>Java</category>
+<author>jinyeonghehe</author>
+<guid>https://deepweller.tistory.com/31</guid>
+<comments>https://deepweller.tistory.com/31#entry31comment</comments>
+<pubDate>Sat, 10 Nov 2018 14:33:22 +0900</pubDate>
+</item>
+<item>
+<title>Spring AOP @After, @AfterReturning, @AfterThrowing 사용하기</title>
+<link>https://deepweller.tistory.com/30</link>
+<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; &lt;h3 id=&quot;시작하며&quot;&gt;시작하며&lt;/h3&gt;
+&lt;p&gt;지난 번에 외부 API 연동을 하면서 인증을 하는 로직을 AOP로 분리했었다. 이번에는 해당 API를 호출하고 로그를 남기기 위해 AOP 사용한 내용을 공유해본다.  &lt;br /&gt;
+간단하게 상황을 설명하면&amp;nbsp;&lt;/p&gt;&lt;p&gt;외부에서 내가 개발한 API를 호출한다.(호출할 때 내가 허용한 곳에서 호출을 하는지 검증하는 내용을 전 (&lt;a href=&quot;http://deepweller.tistory.com/29&quot;&gt;포스팅&lt;/a&gt;)에서 했다.)&amp;nbsp;&lt;/p&gt;&lt;p&gt;호출을 한 후 상태가 요청한 파라미터와 내가 응답한 파라미터의 로그를 기록한다.&lt;/p&gt;
+&lt;h3 id=&quot;시작하며&quot;&gt;After&lt;/h3&gt;
+&lt;p&gt;처음으로는 별 생각없이 &lt;code&gt;@After&lt;/code&gt;를 사용했다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@After(value = &quot;execution(* com.test.controller.TestController.*(..))&quot;)
+public void writeLog(JoinPoint joinPoint) throws RuntimeException {
+    //logging
+    //joinPoint.getArgs() 를 사용하여 해당 메서드의 파라미터를 가져올 수 있다.
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;그런데 &lt;code&gt;@After&lt;/code&gt;를 사용했을 때 두 가지 문제점이 있었다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &lt;br /&gt;첫 번째는 요청파라미터는 &lt;code&gt;joinPoint&lt;/code&gt;를 통해서 가져올 수 있었지만 내가 응답한 리턴파라미터를 가져오기가 애매했다.  &lt;br /&gt;
+두 번째는 컨트롤러를 통한 서비스에서 예외가 발생했을 때 로그를 정확히 기록하지 못했다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;&amp;nbsp; &lt;br /&gt;그래서 정상처리가 됐을 때와 예외가 발생 했을 때를 구분할 수 있는 방법을 사용했다.&lt;/p&gt;
+&lt;h3 id=&quot;시작하며&quot;&gt;AfterReturning, AfterThrowing&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;@AfterReturning&lt;/code&gt;, &lt;code&gt;@AfterThrowing&lt;/code&gt; 이 두 개의 어노테이션을 사용하면 &lt;code&gt;@After&lt;/code&gt; 어노테이션을 사용했을 때 보다 더 디테일하게 AOP를 구현할 수 있다. 정상적으로 로직이 수행되어 리턴값이 있을 때와 중간에 예외가 발생했을 때 각각 처리가 가능하다.&amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;code&gt;returning = &quot;returnValue&quot;&lt;/code&gt; 와 &lt;code&gt;throwing = &quot;exception&quot;&lt;/code&gt; 를 통해 각각 리턴,예외 객체를 가져와서 사용할 수 있다.  &lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@AfterReturning(value = &quot;execution(* com.test.controller.TestController.*(..))&quot;, returning = &quot;returnValue&quot;)
+public void writeSuccessLog(JoinPoint joinPoint, ResponseObject returnValue) throws RuntimeException {&lt;br /&gt;    //logging
+    //returnValue 는 해당 메서드의 리턴객체를 그대로 가져올 수 있다.
+}
+
+@AfterThrowing(value = &quot;execution(* com.test.controller.TestController.*(..))&quot;, throwing = &quot;exception&quot;)
+public void writeFailLog(JoinPoint joinPoint, Exception exception) throws RuntimeException {&lt;br /&gt;    //logging
+    //exception 으로 해당 메서드에서 발생한 예외를 가져올 수 있다.
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;마치며&quot;&gt;마치며&lt;/h3&gt;
+&lt;p&gt;지난번 글에서도 작성했지만 단점은 내가 작성한 내용을 남들이 알아차리기 힘들다. 로깅이나 인증정도의 로직이 있는지 모른다고 크게 크리티컬한 문제가 발생하지는 않지만 내가 아닌 다른 사람이 이 소스를 유지보수하게 될 때를 대비해서 주석에 Aspect가 존재함을 확실히 기록해야 겠다. (너무 남발하지도 않아야 겠다.)&lt;/p&gt;
+&lt;h3 id=&quot;참고&quot;&gt;참고&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://snoopy81.tistory.com/291&quot;&gt;http://snoopy81.tistory.com/291&lt;/a&gt;  &lt;br /&gt;
+&lt;a href=&quot;https://howtodoinjava.com/spring-aop/aspectj-afterthrowing-annotation-example&quot;&gt;https://howtodoinjava.com/spring-aop/aspectj-afterthrowing-annotation-example&lt;/a&gt;  &lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 텍스트디스플레이 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-4674727604243984&quot;
+     data-ad-slot=&quot;7162651529&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>Spring &amp; Spring Boot</category>
+<category>After</category>
+<category>afterreturning</category>
+<category>afterthrowing</category>
+<category>AOP</category>
+<category>Java</category>
+<category>Spring</category>
+<category>springboot</category>
+<author>jinyeonghehe</author>
+<guid>https://deepweller.tistory.com/30</guid>
+<comments>https://deepweller.tistory.com/30#entry30comment</comments>
+<pubDate>Sat, 10 Nov 2018 13:07:27 +0900</pubDate>
+</item>
+<item>
+<title>스프링의 Filter, Intercepter, AOP와 Request Body</title>
+<link>https://deepweller.tistory.com/29</link>
+<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; &lt;h3 id=&quot;시작하며&quot;&gt;시작하며&lt;/h3&gt;
+&lt;p&gt;외부에서 내가 개발한 API를 호출하는 경우가 있다. 이때 허용한 곳에서만 내 API를 호출하도록 검증하는 과정이 필요하다.  &lt;br /&gt;
+1차적으로는 내 서버에 접속하는 IP를 제한하고, API 내에서도 인증코드 등으로 검증할 수 있다. 스프링 부트에서는 이 검증을 어떻게 해야할지 고민을 한 과정을 적어본다.  &lt;br /&gt;
+일단 상황은 외부에서는 POST로 요청하며 BODY에 인증코드와 기타 파라미터들을 담아서 넘겨주는 형태였다.&lt;/p&gt;
+&lt;h3 id=&quot;spring-filter-or-intercepter&quot;&gt;Spring Filter or Intercepter&lt;/h3&gt;
+&lt;p&gt;첫 번째로 고민은 필터냐 인터셉터냐를 고민했다. 필터와 인터셉터 모두 요청에 대한 전후처리가 가능하고, 특정 조건에서만 로직을 수행할 수 있는 공통점이 있다. 차이는 실행 위치이다.  &lt;br /&gt;
+인터셉터는 DispatcherServlet 내에 있고 필터는 밖에서 동작한다. 이러한 차이때문에 인터셉터에서는 특정 컨트롤러에서만 동작하는 로직을 추가할 수 있다.  &lt;br /&gt;
+외부에서 접근하는 API들을 별도의 컨트롤러로 분리한 뒤 그 컨트롤러로 오는 요청에서만 처리하도록 하기 위해 일단 인터셉터를 선택했다.  &lt;br /&gt;
+&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/990D6A365BD3BECD16&quot; alt=&quot;lifecycle&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;intercepter-와-httpservletrequest&quot;&gt;Intercepter 와 HttpServletRequest&lt;/h3&gt;
+&lt;p&gt;인터셉터를 생성하고 해당 컨트롤러에서 인증코드를 검증하는 로직을 추가했다. 그런데 테스트를 진행하면서 Request 내용이 null이라는 에러가 발생했다.  &lt;br /&gt;
+또 테스트 과정에서 요청을 보내도 인터셉터 내에서 HttpServletRequest를 로그를 한번 찍은 후 로직을 수행하면 로그에는 찍히지만 로직에서는 빈 값이 넘어갔다.  &lt;br /&gt;
+이 과정에서 위의 Stream은 한번만 읽을 수 있다는 내용을 알게 됐다. 필터에서는 이미 로그인 인증을 위해 내용을 읽고 있는데 어떤 차이가 있는지 살펴봤다.  &lt;br /&gt;
+로그인 인증코드는 헤더에 담겨서 넘어오고 현재 테스트하는 API의 인증코드는 바디에 담겨서 넘어왔다. 로그인의 인증코드는 유효시간이 있기때문에 헤더에 담아 보내도 문제가 되지 않지만 API의 인증코드는 그렇지 않았다. 또한 이미 바디에 담아서 보내는 내용으로 약속이 되어서 이를 바꾸는데도 힘들 것 같았다. 결국 이 검증로직을 인터셉터에서 사용할 수 없게 됐다.&lt;/p&gt;
+&lt;h3 id=&quot;aop&quot;&gt;AOP&lt;/h3&gt;
+&lt;p&gt;마지막으로 생각한 것은 Aspect로 추가하는 방법이다. 사실 가장먼저 생각했던 방법이지만 필터나 인터셉터를 공부할 겸 적용해보고자 했지만 결국 실패했다.  &lt;br /&gt;
+AOP에 추가하면 컨트롤러는 깔끔해진다. 중복 로직을 AOP로 분리하기 때문이다. 하지만 이 사실을 모르는 동료개발자는 이 검증로직이 있다는 내용을 놓칠 가능성이 매우 크다. AOP를 사용하면 내가 보기에 깔끔한 코드를 만들었지만 여러명이 사용하기엔 디버깅이나 원작자의 의도를 빨리 알아채기 힘들 수 있다.  &lt;br /&gt;
+그래도 일단은 이 컨트롤러는 내가 담당이고 엄청난 로직이 추가된 것도 아니고, 예외처리도 해놓았기 때문에 혹시나 누군가 설명없이 이 코드를 보더라도 한두번만 테스트해도 검증로직이 있다는 내용을 알 수 있을 것이다.  &lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Before(&quot;execution(* com.api.controller.TestController.*(..))&quot;) //해당 컨드롤러에 있는 모든 API실행 전에 수행
+    public void checkCode(JoinPoint joinPoint) {
+
+        String code = (String) joinPoint.getArgs()[0]; //get args
+
+        if (code.compareTo(TEST_CODE) == 0) { //check code
+            //sucess
+        } else {
+            //fail
+            throw new RuntimeException(&quot;인증실패&quot;);
+        }
+    }&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;마치며&quot;&gt;마치며&lt;/h3&gt;
+&lt;p&gt;스프링을 쓰는 과정은 서비스 로직을 잘 구현하고, 컨트롤러를 잘 설계하고, 데이터를 잘 조회하는 작업이 대부분이다. 이런 경우가 아니라면 수많은 스프링의 디테일한 기능과 구조를 파악하고 사용해보기 힘들다. 항상 스프링에는 모든 것이 구현되어 있고 추상화 되어있다를 잘 기억하고, 상황에 맞게 어떤 방법을 사용하면 좋은지 고민해야겠다. 그전에 어떤 것이 있는지도 알아놔야 쓸테니깐 스프링문서를 자주 봐야겠다.  &lt;br /&gt;
+너무 오랜만에 썼다. 바쁘다는 핑계로 적어도 일주일에 한번은 쓰자고 했던 다짐도 다 어겼다. 주말에 한시간만 투자하면 한주에 가장 많이 고민했던 내용을 정리할 수 있는데 한달이 넘게 핑계만 댔다. 다시 차근차근 해보자.&lt;/p&gt;
+&lt;h3 id=&quot;참고&quot;&gt;참고&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://supawer0728.github.io/2018/04/04/spring-filter-interceptor/&quot;&gt;https://supawer0728.github.io/2018/04/04/spring-filter-interceptor/&lt;/a&gt;  &lt;br /&gt;
+&lt;a href=&quot;https://stackoverflow.com/questions/21193380/get-requestbody-and-responsebody-at-handlerinterceptor&quot;&gt;https://stackoverflow.com/questions/21193380/get-requestbody-and-responsebody-at-handlerinterceptor&lt;/a&gt;  &lt;br /&gt;
+&lt;a href=&quot;https://stackoverflow.com/questions/10457963/spring-rest-service-retrieving-json-from-request/10458119#10458119&quot;&gt;https://stackoverflow.com/questions/10457963/spring-rest-service-retrieving-json-from-request/10458119#10458119&lt;/a&gt;  &lt;/p&gt; &lt;/article&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 텍스트디스플레이 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-4674727604243984&quot;
+     data-ad-slot=&quot;7162651529&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>Spring &amp; Spring Boot</category>
+<category>AOP</category>
+<category>Filter</category>
+<category>Intercepter</category>
+<category>Java</category>
+<category>Spring</category>
+<author>jinyeonghehe</author>
+<guid>https://deepweller.tistory.com/29</guid>
+<comments>https://deepweller.tistory.com/29#entry29comment</comments>
+<pubDate>Sat, 27 Oct 2018 10:26:37 +0900</pubDate>
+</item>
+<item>
+<title>mybatis에서 반복쿼리 생성과 jdbc multiquery 옵션 추가하기</title>
+<link>https://deepweller.tistory.com/28</link>
+<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; &lt;h3 id=&quot;시작하며&quot;&gt;시작하며&lt;/h3&gt;
+&lt;p&gt;mybatis를 사용할 때 &lt;code&gt;foreach&lt;/code&gt; 태그로 쉽게 다중쿼리를 작성할 수 있다. parameter로 리스트를 받아오고 해당 리스트에 있는 VO들에 대응하는 insert 또는 update, delete 등등 다중 쿼리를 생성할 수 있다. 하지만 이렇게 다중 쿼리를 생성을 하고나면 쿼리에 syntax error 가 있다는 출력을 보게된다. 이를 해결하는 jdbc 설정도 알아본다.&lt;/p&gt;
+&lt;h3 id=&quot;foreach&quot;&gt;foreach&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;xml language-xml&quot;&gt;&amp;lt;update id=&quot;updateState&quot; parameterType=&quot;java.util.List&quot;&amp;gt;
+    &amp;lt;foreach collection=&quot;list&quot; item=&quot;vo&quot; index=&quot;index&quot;&amp;gt;
+        UPDATE SAPMLE_TABLE SET state=#{vo.state} where id=#{vo.id};
+    &amp;lt;/foreach&amp;gt;
+&amp;lt;/update&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;다중쿼리를 생성하는 방법은 간단하다. 위 처럼 파라미터로 리스트를 받고 &lt;code&gt;&amp;lt;foreach&amp;gt;&lt;/code&gt;를 이용하면 리스트에 담긴 항목을 하나씩 꺼내서 다중 쿼리를 생성한다.   &lt;br /&gt;
+하지만 이렇게 실행을 하게되면 에러가 나온다. 콘솔에 있는 쿼리는 분명 잘 생성이 됐고, 생성된 쿼리를 사용하고 있는 데이터베이스 툴에서 돌려봐도 문제가 없다. 이때 설정해 줘야 하는 것이 있다.&lt;/p&gt;
+&lt;h3 id=&quot;allowmultiqueries&quot;&gt;allowmultiqueries&lt;/h3&gt;
+&lt;p&gt;스프링 부트에서는 yml이나 properties 파일에 jdbc 설정을 한다. 이때 jdbc의 옵션에 &lt;code&gt;allowmultiqueries&lt;/code&gt;를 추가해줘야 한다. (이 속성은 mysql에만 있다고 합니다.) 위 속성을 jdbc를 정의해 놓은 곳에 추가해 주면 위에서 생긴 에러가 해결된다.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;spring.datasource.url=jdbc:mysql://url:3306/database?characterEncoding=UTF-8&amp;amp;allowMultiQueries=true&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;마치며&quot;&gt;마치며&lt;/h3&gt;
+&lt;p&gt;간단하게 파라미터로 리스트를 받아와 &lt;code&gt;foreach&lt;/code&gt; 태그로 다중쿼리를 생성하는 방법과 jdbc 옵션에 &lt;code&gt;allowmultiqueries&lt;/code&gt;를 추가하는 방법을 살펴보았다.  &lt;/p&gt;
+&lt;p&gt;글 주제와는 별게지만 추가로 쿼리 매핑 기반인 mybatis와 객체 매핑 기반인 jpa hibernate를 모두 사용해본 입장에서는 jpa가 좀 더 oop에 근접한 데이터베이스 엑세스 방법인 것 같다.  &lt;br /&gt;
+먼저 쿼리 기반인 mybatis는 업무 로직을 많은부분 쿼리에서 해결하게 된다. 단순한 crud를 만드는데도 반복적인 작업이 있고, 복잡한 로직을 쿼리로 해결하게 된다. 이렇게 개발을 하면서 쿼리개발자인지 자바개발자인지 해깔릴 때가 있다. 물론 jpa가 쿼리를 전혀 안만든다는 것은 아니다. 하지만 객체 매핑만으로 orm이 자동생성해주는 쿼리보다 더 성능이 좋은 쿼리가 있다고 자신하는 경우가 아니면 거의 없다.  &lt;br /&gt;
+또 개발단계에서는 테이블의 수정이 빈번하게 일어난다. 컬럼이 추가되거나 삭제되는 경우 관련된 쿼리를 다 찾아서 수정해줘야 한다. jpa는 객체에 속성을 하나 추가하는 것으로 끝난다.  &lt;br /&gt;
+마지막으론 멀티 데이터베이스 지원인 경우다. oracle과 mysql에 모두 적용되는 쿼리를 작성하면 될 수 있지만 그 과정이 훨씬 귀찮고, 과연 지금 데이터베이스가 바뀔까? 하는 생각으로 현재 데이터베이스에 맞는 쿼리를 짜게 된다. 하지만 그렇게 될일이 없다고 100% 장담할 수는 없다.  &lt;br /&gt;
+진입장벽이 높다라고 하지만 끊임없이 공부를 해야하는 개발자의 인생이라면 진입장벽이라는 단어는 핑계인 것 같다. 아직 경험이 적다보니 단순히 느껴지는 것만 적어봤다. 경력이 훨씬 많으신 분들과 mybatis와 jpa를 더 많이 더 깊게 사용해본 분들에게 어떻게 생각하시는지 직접 조언을 구해보고 싶다.&lt;/p&gt; &lt;/article&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 텍스트디스플레이 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-4674727604243984&quot;
+     data-ad-slot=&quot;7162651529&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>Spring &amp; Spring Boot</category>
+<category>foreach</category>
+<category>Java</category>
+<category>JDBC</category>
+<category>multiquery</category>
+<category>mybatis</category>
+<category>Spring</category>
+<author>jinyeonghehe</author>
+<guid>https://deepweller.tistory.com/28</guid>
+<comments>https://deepweller.tistory.com/28#entry28comment</comments>
+<pubDate>Wed, 15 Aug 2018 17:34:22 +0900</pubDate>
+</item>
+<item>
+<title>Java8 Study 3 (feat. Java8 in Action) - 람다식</title>
+<link>https://deepweller.tistory.com/27</link>
+<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; &lt;h3 id=&quot;시작하며&quot;&gt;시작하며&lt;/h3&gt;
+&lt;p&gt;chapter2에서는 메서드에 동작(코드 블록)을 전달하는 방법을 봤다. 이는 동작파라미터화 라는 용어로 설명하고 있으며, 변화하는 요구사항에 효과적으로 대응하는 방법이다. java8 이전 버전에서는 어떠한 동작을 실행하기 위해서는 간단히 메서드를 만들 수 있다. 또한 클래스로 감싸서 코드 블럭을 전달하거나 인터페이스를 만들어서 동작을 파라미터로 전달할 수 있었다. &lt;code&gt;java8&lt;/code&gt; 에서는 이러한 동작파라미터화를 람다식과 메서드 레퍼런스라는 새로운 문법으로 지원한다. 기존 방식보다 훨씩 직관적이고, 코드가 간결해짐을 예제로 살펴봤다. 이번 &lt;code&gt;chapter3&lt;/code&gt; 에서는 람다식과 메서드 레퍼런스가 어떻게 동작하는지까지 살펴본다. 이번 chapter도 천천히 예제를 실행해보면서 진행해보자.  &lt;br /&gt;
+&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9959F6445B668FE032&quot; alt=&quot;Java8 in Action&quot;&gt;  &lt;/p&gt;
+&lt;h3 id=&quot;chapter3&quot;&gt;chapter3&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;람다 표현식&lt;/strong&gt; : 메서드로 전달할 수 있는 익명 함수를 단순화한 것으로 다음과 같은 특징을 가진다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;익명 : 일반 메서드와 달리 이름이 없다.&lt;/li&gt;
+&lt;li&gt;함수 : 메서드처럼 특정 클래스에 종속되지 않으므로 '함수' 라고 부른다. (파라미터 리스트, 바디, 반환형식, 예외리스트는 포함한다.)&lt;/li&gt;
+&lt;li&gt;전달 : 람다 표현식을 메서드의 파라미터로 전달하거나 변수로 저장할 수 있다.&lt;/li&gt;
+&lt;li&gt;간결성 : 구현할 코드가 줄어든다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;간단한 코드를 살펴보면, 아래는 사과의 무게를 비교하는 방법이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;//java8 이전
+Comparator&amp;lt;Apple&amp;gt; byWeight = new Comparator&amp;lt;Apple&amp;gt;() {
+    public int compare(Apple a1, Apple a2) {
+        return a1.getWeight().compareTo(a2.getWeight());
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;//java8+
+Comparator&amp;lt;Apple&amp;gt; byWeight = (Apple a1, Apple a2) -&amp;gt; a1.getWeight().compareTo(a2.getWeight());&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;하나씩 살펴보면, 다음과 같다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;(Apple a1, Apple a2)&lt;/code&gt; : 람다 파라미터&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-&amp;gt;&lt;/code&gt; : 람다의 파라미터 리스트와 바디를 구분&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;a1.getWeight().compareTo(a2.getWeight());&lt;/code&gt; : 람다 바디&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;아래는 몇가지 추가 샘플이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;//String 파라미터 하나를 가지고, int를 리턴한다. (return문은 함축되어 있으므로 명시하지 않아도 된다.)
+(String s) -&amp;gt; s.length();
+
+//Apple 형의 파라미터를 하나 가지고, boolean을 리턴한다.
+(Apple a) -&amp;gt; a.getWeight &amp;gt; 150;
+
+//int 형식의 파라미터 2개를 가지고, 리턴값은 없다. (여려행을 포함할 수 있다.)
+(int x, int y) -&amp;gt; {
+    System.out.println(&quot;Result&quot;);
+    System.out.println(x+y);
+}
+
+//파라미터가 없고, int를 반환한다.
+() -&amp;gt; 42;
+
+//Apple 형의 파라미터를 2개를 가지고, int를 반환한다.
+(Apple a1, Apple a2) -&amp;gt; a1.getWeight().compareTo(a2.getWeight());&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이번에는 람다 문법의 잘못된 예제를 살펴보자.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;(Integer i) -&amp;gt; return &quot;number&quot; + i;
+//return 키워드는 흐름제어문이므로 {return &quot;number&quot; + i;} 가 되야 한다.
+
+(String s) -&amp;gt; {&quot;str str&quot;;}
+//&quot;str str&quot;는 구문(statement)이 아니라 표현식(expression)이다. 따라서 &quot;str str&quot;; 또는 {return &quot;str str&quot;;} 가 되야 한다.&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;함수형-인터페이스&quot;&gt;함수형 인터페이스&lt;/h3&gt;
+&lt;p&gt;함수형 인터페이스는 하나의 추상 메서드를 가지는 인터페이스이다. 예로는 앞서 살펴본 &lt;code&gt;java.util.Comparator&lt;/code&gt;, &lt;code&gt;java.lang.Runnable&lt;/code&gt; 이 있다. 각각 &lt;code&gt;compare()&lt;/code&gt;, &lt;code&gt;run()&lt;/code&gt;을 추상 메서드를 하나씩 가진다. (참고로 디폴트 메서드가 여러개 있어도 추상 메서드가 단 한개만 있으면 함수형 인터페이스이다. 9장에 나온다고 한다.)  &lt;/p&gt;
+&lt;p&gt;람다식으로 함수형 인터페이스의 한개 있는 추상메서드를 구현하여 전달할 수 있으므로 람다식은 함수형 인터페이스의 인스턴스가 된다. 이 말을 코드로 살펴보자.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;Runnable r1 = () -&amp;gt; System.out.println(&quot;hello 1&quot;); //람다 식을 변수(r1)에 할당한다.
+
+Runnable r2 = new Runnable() {
+    public void run() {
+        System.out.println(&quot;hello 2&quot;); //코드를 전달하기 위해 익명클래스를 사용한다. 익명클래스의 인스턴스를 변수 r2에 할당한다.
+    }
+}
+
+public static void process(Runnable r) {
+    r.run();
+}
+
+process(r1);
+process(r2);
+process(() -&amp;gt; System.out.println(&quot;hello 3&quot;)); //람다식을 직접 전달한다.&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;출력 결과는  &lt;br /&gt;
+hello 1  &lt;br /&gt;
+hello 2  &lt;br /&gt;
+hello 3  &lt;br /&gt;
+가 차례로 출력된다. 위 코드의 &lt;code&gt;r1&lt;/code&gt; 과 마지막 &lt;code&gt;process&lt;/code&gt;를 보면 람다식 자체가 &lt;code&gt;r2&lt;/code&gt;의 &lt;code&gt;new Runnable()&lt;/code&gt; 과 같이 인터페이스의 인스턴스가 되어 &lt;code&gt;process(Runnable r)&lt;/code&gt;의 파라미터로 전달됨을 볼 수 있다. &lt;strong&gt;람다식은 함수형 인터페이스의 인스턴스이며 메서드의 파라미터로 전달된다.&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;code&gt;@FunctionalInterface&lt;/code&gt; : 함수형 인터페이스를 명시하는 어노테이션이다. 추상 메서드가 하나 이상이면 컴파일에러가 난다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&quot;javautilfunction&quot;&gt;java.util.function&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Predicate&lt;/strong&gt; (java.util.function.Predicate&lt;t&gt;)  &lt;br /&gt;
+&lt;code&gt;test&lt;/code&gt;라는 추상 메서드가 정의되어 있고 &lt;code&gt;boolean&lt;/code&gt;을 리턴한다. 불린 표현식이 필요한 상황에서 사용한다.&lt;/t&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public static &amp;lt;T&amp;gt; List&amp;lt;T&amp;gt; filter(List&amp;lt;T&amp;gt; list, Predicate&amp;lt;T&amp;gt; p) {
+    List&amp;lt;T&amp;gt; results = new ArrayList&amp;lt;&amp;gt;();
+    for(T s : list) {
+        if(p.test(s)) results.add(s);
+    }
+    return results;
+}
+
+Predicate&amp;lt;String&amp;gt; nonEmptyStringPredicate = (String s) -&amp;gt; !s.isEmpty();
+List&amp;lt;String&amp;gt; nonEmpty = filter(listOfStrings, nonEmptyStringPredicate);&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;Consumer&lt;/strong&gt; (java.util.function.Consumer&lt;t&gt;)  &lt;br /&gt;
+&lt;code&gt;accept&lt;/code&gt;라는 추상메서드가 정의되어 있고 T형식의 객체를 받아 특정 동작을 수행한다.&lt;/t&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public static &amp;lt;T&amp;gt; void forEach(List&amp;lt;T&amp;gt; list, Consumer&amp;lt;T&amp;gt; c) {
+    for(T i : list) {
+        c.accept(i);
+    }
+}
+
+forEach(
+    Arrays.asList(1,2,3,4,5),
+    (Integer i) -&amp;gt; System.out.println(i)
+);&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;Function&lt;/strong&gt; (java.util.function.Function&lt;t, r=&quot;&quot;&gt;)  &lt;br /&gt;
+T를 받아서 R을 리턴하는 &lt;code&gt;apply&lt;/code&gt;라는 추상메서드가 정의되어 있다. 입력을 출력으로 매핑하는 람다를 정의할 때 사용할 수 있다.&lt;/t,&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public static &amp;lt;T, R&amp;gt; List&amp;lt;R&amp;gt; map(List&amp;lt;T&amp;gt;, Function&amp;lt;T, R&amp;gt; f) {
+    List&amp;lt;R&amp;gt; result = new ArrayList&amp;lt;&amp;gt;();
+    for(T s : list) {
+        result.add(f.apply(s));
+    }
+    return result;
+}
+
+List&amp;lt;Integer&amp;gt; l = map(
+                        Arrays.asList(&quot;lambdas&quot;, &quot;in&quot;, &quot;action&quot;),
+                        (String s) -&amp;gt; s.length()
+                        );&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&quot;박싱-언박싱-오토박싱&quot;&gt;박싱, 언박싱, 오토박싱&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;primitive type&lt;/code&gt;을 &lt;code&gt;wrapper class&lt;/code&gt;로 변환하는 기능을 박싱이라 하고, 그 반대는 언박싱이다. 오토박싱은 박싱과 언박싱이 자동으로 이루어지는 기능이다.  &lt;br /&gt;
+하지만 class는 힙에 저장되므로 메모리를 더 사용하게되고, 탐색하는 과정도 필요해진다. java8에서는 오토박싱을 피할 수 있는 함수형 인터페이스를 제공한다. 기존 함수형 인터페이스의 이름 앞에 자료형명이 붙는다.  &lt;/p&gt;
+&lt;p&gt;Predicate : IntPredicate, LongPredicate…  &lt;br /&gt;
+Counsumer : IntCounsumer…  &lt;br /&gt;
+…&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;IntPredicate evenNum = (int i) -&amp;gt; i % 2 == 0;
+evenNum.test(1000); // true (박싱 x)
+
+Predicate&amp;lt;Integer&amp;gt; oddNum = (Integer i) -&amp;gt; i % 2 == 1;
+oddNum.test(1000); // false (박싱 o)&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&quot;형식추론&quot;&gt;형식추론&lt;/h4&gt;
+&lt;p&gt;컴파일러는 람다표현식의 컨택스트를 이용해서 관련된 함수형 인터페이스를 추론한다. 즉 함수의 정의를 알 수 있으므로 파라미터까지 추론이 가능하기 때문에 생략이 가능해진다. 상황에 따라 가독성을 위해 생략하거나 유지하면 된다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;List&amp;lt;Apple&amp;gt; apples = filter(inventory, a -&amp;gt; &quot;green&quot;.equals(a.getColor())); // a 에 Apple을 명시하지 않음
+
+Comparator&amp;lt;Apple&amp;gt; c = (a1, a2) -&amp;gt; a1.getWeight().compareTo(a2.getWeight()); // 마찬가지로 Apple을 명시하지 않음&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&quot;람다-캡처링&quot;&gt;람다 캡처링&lt;/h4&gt;
+&lt;p&gt;람다식에 지역변수를 사용하는 것을 람다 캡처링이라 한다. 하지만 지역변수는 재할당이 되서는 안되고 &lt;code&gt;final&lt;/code&gt;로 선언이 되어있거나, final과 다름없이(선언 이후 재할당이 없는) 사용되고 있는 지역변수만 할당이 가능하다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;int a = 123;
+Runnable r = () -&amp;gt; System.out.println(a); // ok
+
+int b = 456;
+Runnable r = () -&amp;gt; System.out.println(b); // error
+b = 789;&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&quot;메서드-레퍼런스&quot;&gt;메서드 레퍼런스&lt;/h4&gt;
+&lt;p&gt;메서드 레퍼런스는 특정 메서드만을 호출하는 람다의 축약형이다. 메서드 레퍼런스는 메서드 앞에 &lt;code&gt;::&lt;/code&gt;를 붙인다. 예를 들어 &lt;code&gt;Apple::getWeigth&lt;/code&gt;는 &lt;code&gt;Apple&lt;/code&gt; 클래스에 정의된 &lt;code&gt;getWeight&lt;/code&gt;의 메서드 레퍼런스다.  &lt;br /&gt;
+메서드 레퍼런스는 3가지 유형이 있다.  &lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;정적 메서드 레퍼런스&lt;/li&gt;
+&lt;li&gt;다양한 형식의 인스턴스 메서드 레퍼런스&lt;/li&gt;
+&lt;li&gt;기존 객체의 인스턴스 메서드 레퍼런스&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;//1
+(args) -&amp;gt; ClassName.staticMethod(args);
+ClassName::staticMethod;
+
+//2
+(arg0, rest) -&amp;gt; arg0.instanceMethod(rest); //arg0 : ClassName
+ClassName::instanceMethod;
+
+//3
+(args) -&amp;gt; expr.instanceMethod(args);
+expr::instanceMethod;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;컴파일러는 메서드 레퍼런스가 주어진 함수형 인터페이스와 호환하는지 확인한다. 메서드 레퍼런스는 컨텍스트의 형식과 일치해야 한다.&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;함수 디스크립터  &lt;br /&gt;
+  Comparator 의 경우 (T, T) -&amp;gt; int 가 함수 디스크립터&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;Function&amp;lt;String, Integer&amp;gt; stringToInteger = (String s)
+ -&amp;gt; Integer.parseInt(s);
+
+//위 람다식은 자신의 인수를 Integer의 정적 메서드인 parseInt로 전달한다.
+//이 메서드는 String을 인수로 받아 파싱한 후 Integer를 리턴한다.
+Function&amp;lt;String, Integer&amp;gt; stringToInteger = Integer::parsInt;
+
+BiPredicate&amp;lt;List&amp;lt;String&amp;gt;, String&amp;gt; contains = (list, element) -&amp;gt; list.contains(element);
+
+//이 람다식은 첫 번째 인수의 contains 메서드를 호출한다.
+//첫 번째 인수가 List이므로 다음과 같이 작성한다.
+BiPredicate&amp;lt;List&amp;lt;String&amp;gt;, String&amp;gt; contains = List::contains;&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&quot;생성자-레퍼런스&quot;&gt;생성자 레퍼런스&lt;/h4&gt;
+&lt;p&gt;클래스 명과 &lt;code&gt;new&lt;/code&gt;키워드로 생성자 레퍼런스를 만들 수 있다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;Supplier&amp;lt;Apple&amp;gt; c1 = Apple::new; //생성자 레퍼런스
+Apple a1 = c1.get(); //NoArgsConstructor
+//기존코드
+Supplier&amp;lt;Apple&amp;gt; c1 = () -&amp;gt; new Apple();&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;위 코드는 생성자에 인수가 없는 경우이다. 아래는 인수가 있는 경우이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;Function&amp;lt;Integer, Apple&amp;gt; c1 = Apple::new; //생성자 레퍼런스
+Apple a1 = c1.apply(110);
+//기존코드
+Function&amp;lt;Integer, Apple&amp;gt; c1 = (weight) -&amp;gt; new Apple(weight);&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;아래 코드는 위 내용을 응용하여 리스트에 있는 숫자를 무게로 가지는 Apple객체를 생성하는 코드이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;List&amp;lt;Integer&amp;gt; weights = Arrays.asList(1,2,3,4);
+List&amp;lt;Apple&amp;gt; apples = map(weights, Apple:new);
+
+public static List&amp;lt;Apple&amp;gt; map(List&amp;lt;Integer&amp;gt; list, Function&amp;lt;Integer, Apple&amp;gt; f) {
+    List&amp;lt;Apple&amp;gt; result = new ArrayList&amp;lt;&amp;gt;();
+    for(Integer e : list) {
+        result.add(f.apply(e));
+    }
+    return result;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;아래 코드는 위 예제를 더 응용해서 다양한 무게 + 다양한 과일을 생성하는 코드이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;static Map&amp;lt;String, Function&amp;lt;Integer, Fruit&amp;gt;&amp;gt; map = new HashMap&amp;lt;&amp;gt;();
+static {
+    map.put(&quot;apple&quot;, Apple::new);
+    map.put(&quot;orange&quot;, Orange::new);
+    //..등
+}
+
+public static Fruit createFruit(String fruit, Integer weight) {
+    return map.get(fruit.toLowerCase()) //과일에 맞는Funtion 객체를 얻는다.
+                                .apply(weight);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;마치며&quot;&gt;마치며&lt;/h3&gt;
+&lt;p&gt;이번장에서는 람다식, 메서드레퍼런스, 생성자레퍼런스의 동작에 방식에 대해 자세히 봤다. 또 앞장에서 봤던 람다식과 메서드레퍼런스 샘플들을 다시 봤다. 사용법과 동장방식을 봤지만 실제 적용을 하는데는 많은 연습이 필요할 것 같다. 함수형 프로그래밍이 익숙해질 시간이 필요할 것 같다.  &lt;br /&gt;
+이번 장은 글을 쓰다가 중간에 너무 방치해두다가 한달 가까이 지난 후에 다시 이어서 썼다. 그러다보니 중간에 맥락이 끊기는 느낌이 들 수 있다. 어쨋든 다시 꾸준히 써야겠다.&lt;/p&gt;
+&lt;h3 id=&quot;참고&quot;&gt;참고&lt;/h3&gt;
+&lt;p&gt;only 책&lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 텍스트디스플레이 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-4674727604243984&quot;
+     data-ad-slot=&quot;7162651529&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>Java</category>
+<category>Java8</category>
+<category>java8 in action</category>
+<category>람다</category>
+<category>메서드 레퍼런스</category>
+<category>생성자 레퍼런스</category>
+<author>jinyeonghehe</author>
+<guid>https://deepweller.tistory.com/27</guid>
+<comments>https://deepweller.tistory.com/27#entry27comment</comments>
+<pubDate>Sun, 05 Aug 2018 14:49:20 +0900</pubDate>
+</item>
+<item>
+<title>Vue 조건에 따라 class 바인딩하기</title>
+<link>https://deepweller.tistory.com/26</link>
+<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; &lt;h3 id=&quot;시작하며&quot;&gt;시작하며&lt;/h3&gt;
+&lt;p&gt;Vue.js 를 진행하고 있는 프로젝트의 프론트엔드 프레임워크로 사용하고 있다. 익숙하진 않지만 샘플과 자료들을 찾아가며 진행하고 있다.  &lt;br /&gt;
+이번에는 특정 조건에 따라 class 속성에 값을 바인딩하는 방법을 적용해봤다. 예를들어 특정 상태값에 따라 버튼의 css를 다르게 적용해야할 때 사용할 수 있다.&lt;/p&gt;
+&lt;h3 id=&quot;샘플코드&quot;&gt;샘플코드&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;html language-html&quot;&gt;&amp;lt;div class=&quot;hide_btn on&quot;&amp;gt;
+
+&amp;lt;div class=&quot;hide_btn&quot;&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;위 샘플을 보면 조건에 따라 클래스에 on 값이 추가되거나 없어지거나 해야한다. vue는 클래스 바인딩을 &lt;code&gt;v-bind:class&lt;/code&gt;로 할 수 있다. 참고로 v-bind는 생략이 가능하여 &lt;code&gt;:class&lt;/code&gt;로만 작성이 가능하다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;html language-html&quot;&gt;&amp;lt;div :class=&quot;{ on : isHideImage }&quot;&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;위와 같이 작성하면 &lt;code&gt;isHideImage&lt;/code&gt; 값이 true 면 class속성에 on 값이 바인딩된다.  &lt;br /&gt;
+그런데 상태값이 true,false 만 있지 않은 경우도 있고 제일 위의 샘플을 보면 &lt;code&gt;hide_btn&lt;/code&gt;값은 항상 있어야 한다. 이러한 경우에 단순 flag 변수가 아닌 함수의 return 값에 따라서 class 속성의 값을 추가할 수 있다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;html language-html&quot;&gt;&amp;lt;div class=&quot;hide_btn&quot; :class=&quot;{ 'on' : isStateTwo(video.state) }&quot;&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot;&gt;isStateTwo: function (state) {
+                if(state == 2) return true;
+                else false;
+            }&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;위와 같이 class에는 &lt;code&gt;hide_btn&lt;/code&gt;가 기본으로 있으며 isStateTwo() 함수의 리턴값에 따라 &lt;code&gt;on&lt;/code&gt;을 추가할 수 있다.&lt;/p&gt;
+&lt;h3 id=&quot;마치며&quot;&gt;마치며&lt;/h3&gt;
+&lt;p&gt;아직 vue.js에 익숙하지 않고 모르는 부분이 많아 다른 더 좋은 방법이 있을지도 모른다. 일단 여러가지 케이스를 경험해보다보면 어떻게 vue 동작과 랜더링 방식에 익숙해 질 것 같다.&lt;/p&gt;
+&lt;h3 id=&quot;참고&quot;&gt;참고&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://kr.vuejs.org/v2/guide/class-and-style.html&quot;&gt;https://kr.vuejs.org/v2/guide/class-and-style.html&lt;/a&gt;  &lt;br /&gt;
+&lt;a href=&quot;https://laracasts.com/discuss/channels/vue/vuejs-add-class-if-specific-property-is-set-to-a-specific-value&quot;&gt;https://laracasts.com/discuss/channels/vue/vuejs-add-class-if-specific-property-is-set-to-a-specific-value&lt;/a&gt;  &lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 텍스트디스플레이 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-4674727604243984&quot;
+     data-ad-slot=&quot;7162651529&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>Framework</category>
+<category>:class</category>
+<category>class binding</category>
+<category>v-bind:class</category>
+<category>vuejs</category>
+<author>jinyeonghehe</author>
+<guid>https://deepweller.tistory.com/26</guid>
+<comments>https://deepweller.tistory.com/26#entry26comment</comments>
+<pubDate>Sat, 04 Aug 2018 09:54:07 +0900</pubDate>
+</item>
+<item>
+<title>리눅스 민트 터미널 Terminator</title>
+<link>https://deepweller.tistory.com/25</link>
+<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; &lt;h3 id=&quot;시작하며&quot;&gt;시작하며&lt;/h3&gt;
+&lt;p&gt;리눅스 민트(Mint)를 개발PC OS로 사용하면서 터미널로 &lt;code&gt;terminator&lt;/code&gt; 사용하게 됐다. 탭을 만들고, 분할 화면으로 사용하기 편하고 동시에 입력하는 기능(broadcast)도 가능하다. 기본적인 설정 방법, 단축키, 사용법을 알아둬야겠다.  &lt;br /&gt;
+&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9901A43F5B3D5DF128&quot; alt=&quot;terminator&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;설정&quot;&gt;설정&lt;/h3&gt;
+&lt;p&gt;config 파일 경로는 &lt;code&gt;/home/jypark/.config/terminator&lt;/code&gt; 아래에 있다. 굳이 config 파일로 안해도 터미네이터 콘솔창에서 &lt;code&gt;마우스우클릭&amp;gt;환경설정&lt;/code&gt; 에서도 가능하다.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[global_config]
+  focus = system
+  handle_size = 0
+[keybindings]
+[layouts]
+  [[default]]
+    [[[child1]]]
+      parent = window0
+      profile = default
+      type = Terminal
+    [[[window0]]]
+      parent = &quot;&quot;
+      size = 1000, 600
+      type = Window
+[plugins]
+[profiles]
+  [[default]]
+    background_darkness = 0.9
+    background_image = None
+    background_type = transparent&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;gruop-broadcast-여러-탭에-동시에-입력하기&quot;&gt;Gruop, Broadcast (여러 탭에 동시에 입력하기)&lt;/h3&gt;
+&lt;p&gt;터미네이터에서는 여러 개로 분할 된 터미널에 동시에 같은 명령어를 입력할 수 있다. 방법으로는 현재 오픈 된 모든 터미널에 같은 내용을 입력하는 방법과 터미널을 그룹으로 묶어 같은 그룹에만 같은 명령어를 실행하는 방법이 있다.  &lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Broadcast All&lt;/strong&gt;  &lt;br /&gt;
+터미널 타이틀의 좌측 상단에 버튼을 누르고, &lt;code&gt;Broadcast all&lt;/code&gt; 을 선택한다.(단축키 &lt;code&gt;Alt + A&lt;/code&gt;) 그러면 현재 오픈된 터미널의 타이틀이 같은 색으로 변하면서 동시에 입력이 가능한 상태가 된다. 주의할 점은 현재 켜져 있는 &lt;strong&gt;탭&lt;/strong&gt; 도 모두 동시에 입력된다.  &lt;br /&gt;
+&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/993AF3405B3D5DF12A&quot; alt=&quot;좌측상단버튼&quot;&gt; &amp;lt; &lt;code&gt;좌측상단버튼&lt;/code&gt;   &lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Broadcast Group&lt;/strong&gt;  &lt;br /&gt;
+마찬가지로 터미널 타이틀의 좌측 상단에 버튼을 누르고, &lt;code&gt;Broadcast group&lt;/code&gt;을 선택한다.(단축키 &lt;code&gt;Alt + G&lt;/code&gt;) 그리고 원하는 터미널을 같은 그룹으로 묶어야 한다.  &lt;/p&gt;
+&lt;p&gt;좌측 상단 버튼을 누르고, &lt;code&gt;New group...&lt;/code&gt;를 선택하면 그룹 명을 입력할 수 있는 박스가 나온다. 그룹 명을 입력하면 그룹이 생성되고 현재 그룹을 생성한 터미널이 생성한 그룹으로 설정된다.  &lt;/p&gt;
+&lt;p&gt;다음으로 다른 분할 된 터미널도 같은 그룹으로 지정해야 한다.  &lt;br /&gt;
+이 작업도 마찬가지로 좌측 상단 버튼을 누르면 제일 위에 방금 생성한 그룹 명이 보인다. 그 그룹을 선택하면 broadcast all 과같이 그룹으로 묶인 터미널의 타이틀이 같은 색으로 바뀌고 동시에 입력이 가능해진다.&lt;/p&gt;
+&lt;h3 id=&quot;단축키&quot;&gt;단축키&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;F11&lt;/code&gt; 풀 스크린 모드  &lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Ctrl + Shift+ O&lt;/code&gt; 수평으로 터미널 나누기  &lt;br /&gt;
+&lt;code&gt;Ctrl + Shift+ E&lt;/code&gt; 수직으로 터미널 나누기  &lt;br /&gt;
+&lt;code&gt;Ctrl + Shift+ W&lt;/code&gt; 현재 탭 닫기  &lt;br /&gt;
+&lt;code&gt;Ctrl + Shift+ T&lt;/code&gt; 새로운 탭 열기  &lt;br /&gt;
+&lt;code&gt;Ctrl + Shift+ C&lt;/code&gt; 복사  &lt;br /&gt;
+&lt;code&gt;Ctrl + Shift+ V&lt;/code&gt; 붙여넣기  &lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Alt + ↑&lt;/code&gt; (화면 분할 시) 현재 터미널에서 윗쪽 터미널로 이동  &lt;br /&gt;
+&lt;code&gt;Alt + ↓&lt;/code&gt; (화면 분할 시) 현재 터미널에서 아랫쪽 터미널로 이동   &lt;br /&gt;
+&lt;code&gt;Alt + ←&lt;/code&gt; (화면 분할 시) 현재 터미널에서 왼쪽 터미널로 이동  &lt;br /&gt;
+&lt;code&gt;Alt + →&lt;/code&gt; (화면 분할 시) 현재 터미널에서 오른쪽 터미널로 이동  &lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Alt + A&lt;/code&gt; set broadcast all  &lt;br /&gt;
+&lt;code&gt;Alt + G&lt;/code&gt; set broadcast group  &lt;br /&gt;
+&lt;code&gt;Alt + O&lt;/code&gt; set broadcast off  &lt;/p&gt;
+&lt;h3 id=&quot;마치며&quot;&gt;마치며&lt;/h3&gt;
+&lt;p&gt;계속 쓰면서 추가할 기능, 설정, 단축키 등이 있으면 내용을 추가해야겠다.&lt;/p&gt;
+&lt;h3 id=&quot;참고&quot;&gt;참고&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://awesometic.tistory.com/96&quot;&gt;http://awesometic.tistory.com/96&lt;/a&gt;  &lt;br /&gt;
+&lt;a href=&quot;http://programmingsummaries.tistory.com/361&quot;&gt;http://programmingsummaries.tistory.com/361&lt;/a&gt;   &lt;br /&gt;
+&lt;a href=&quot;https://blog.al4.co.nz/2011/05/getting-the-most-out-of-terminator/&quot;&gt;https://blog.al4.co.nz/2011/05/getting-the-most-out-of-terminator/&lt;/a&gt;  &lt;/p&gt; &lt;/article&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 텍스트디스플레이 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-4674727604243984&quot;
+     data-ad-slot=&quot;7162651529&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>IT Tool</category>
+<category>Linux</category>
+<category>mint</category>
+<category>terminal</category>
+<category>Terminator</category>
+<author>jinyeonghehe</author>
+<guid>https://deepweller.tistory.com/25</guid>
+<comments>https://deepweller.tistory.com/25#entry25comment</comments>
+<pubDate>Thu, 05 Jul 2018 08:53:21 +0900</pubDate>
+</item>
+<item>
+<title>Java8 Study 2 (feat. Java8 in Action) - 동작파라미터화</title>
+<link>https://deepweller.tistory.com/23</link>
+<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; &lt;h3 id=&quot;시작하며&quot;&gt;시작하며&lt;/h3&gt;
+&lt;p&gt;chapter1 에서 java8의 큰 특징들을 알아봤다. 계속 '뒤 chpater에서 살펴본다.'라는 말이 있어서 완벽히 이해는 안되지만 일단 쭉 읽어봤다. chapter2에서는 '동작 파라미터화 코드 전달하기' 라는 주제인데 주제부터 무슨소리인지 이해가 잘 안간다. 앞서 본 내용으로 봐서는 함수(일급객체)를 메서드의 인수로 전달하는 방법을 보는 것 같다. 차근차근 읽어보고 샘플을 작성해 보자. &lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;chapter2&quot;&gt;chapter2&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;동작파라미터화&lt;/strong&gt;(behavior parameterization) : 아직은 어떻게 실행할 것인지 결정하지 않은 코드 블록으로 나중에 프로그램에서 이 코드 블록을 호출하여 실행한다. 즉, 메서드의 동작이 파라미터화 됨을 의미한다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;리스트의 모든 요소에 특정 동작을 수행&lt;/li&gt;
+&lt;li&gt;리스트 관련 작업을 끝낸 다음에 특정 동작을 수행&lt;/li&gt;
+&lt;li&gt;에러가 발생하면 특정 동작을 수행&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;사과농장에서 농장주가 수확한 사과를 분류해달라고 한다. 녹색사과만 분류해달라고 하다가, 빨간사과도 분류해달라고 하고, 나중에는 무게, 크기 등으로 다양한 방법으로 분류를 해달라고 할 수 있다. 이렇게 변하는 요건을 어떻게 하면 적절하게 필터링 할 수 있을까? 기존의 방법으로는 크게 두 가지 분류가 있다. 두 가지 방법을 샘플코드로 살펴보자.    &lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;1. 메서드 생성&lt;/strong&gt;  &lt;br /&gt;
+가장 쉽게 생각할 수 있는 방법이다. 요건이 생길 때마다 계속 메서드는 추가되고, 필터메서드를 모아두는 클래스는 커진다. 이 방법은 동작 파라미터화가 아닌 값 파라미터화이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public List&amp;lt;Apple&amp;gt; filterGreenApples(List&amp;lt;Apple&amp;gt; inventory){
+    List&amp;lt;Apple&amp;gt; result = new ArrayList&amp;lt;&amp;gt;();
+    for(Apple apple: inventory){
+        if(&quot;green&quot;.equals(apple.getColor())){
+            result.add(apple);
+        }
+    }
+    return result;
+}
+public List&amp;lt;Apple&amp;gt; filterApplesByColor(List&amp;lt;Apple&amp;gt; inventory, String color){
+    List&amp;lt;Apple&amp;gt; result = new ArrayList&amp;lt;&amp;gt;();
+    for(Apple apple: inventory){
+        if(apple.getColor().equals(color)){
+            result.add(apple);
+        }
+    }
+    return result;
+}
+public List&amp;lt;Apple&amp;gt; filterApplesByWeight(List&amp;lt;Apple&amp;gt; inventory, int weight){
+    List&amp;lt;Apple&amp;gt; result = new ArrayList&amp;lt;&amp;gt;();
+    for(Apple apple: inventory){
+        if(apple.getWeight() &amp;gt; weight){
+            result.add(apple);
+        }
+    }
+    return result;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;test code&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Test
+public void 사과_필터링() {
+    AppleFilter appleFilter = new AppleFilter();
+
+    List&amp;lt;Apple&amp;gt; inventory = Arrays.asList(
+            new Apple(80,&quot;green&quot;),
+            new Apple(155, &quot;green&quot;),
+            new Apple(120, &quot;red&quot;)
+    );
+
+    // [Apple{color='green', weight=80}, Apple{color='green', weight=155}]
+    List&amp;lt;Apple&amp;gt; greenApples = appleFilter.filterApplesByColor(inventory, &quot;green&quot;);
+    Assert.assertThat(greenApples.get(0).getColor(), is(&quot;green&quot;));
+
+    // [Apple{color='red', weight=120}]
+    List&amp;lt;Apple&amp;gt; redApples = appleFilter.filterApplesByColor(inventory, &quot;red&quot;);
+    Assert.assertThat(redApples.get(0).getColor(), is(&quot;red&quot;));
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;2. 인터페이스 사용(전략패턴)&lt;/strong&gt;  &lt;br /&gt;
+인터페이스를 사용하는 방법이다. test라는 boolean을 리턴하는 메서드를 정의해 놓고 구현체를 늘려간다.(구현체가 계속 늘어가는 것이 걱정이면 자주사용되지 않을 필터링은 익명클래스를 사용한다.) 그러면 실제로 필터링을 하는 소스에서는 구현체만 전달하면 그 뒤의 일은 신경쓰지 않아도 된다.(test라는 메서드가 무슨 필터링을 하는지 중요하지 않고, boolean형을 리턴한다 라는 것만 알면 된다.)&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public interface ApplePredicate {
+    boolean test(Apple a);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public class AppleColorPredicate implements ApplePredicate {
+    public boolean test(Apple apple){
+        return &quot;green&quot;.equals(apple.getColor());
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public class AppleWeightPredicate implements ApplePredicate {
+    public boolean test(Apple apple){
+        return apple.getWeight() &amp;gt; 150;
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public List&amp;lt;Apple&amp;gt; filter(List&amp;lt;Apple&amp;gt; inventory, ApplePredicate p){
+    List&amp;lt;Apple&amp;gt; result = new ArrayList&amp;lt;&amp;gt;();
+    for(Apple apple : inventory){
+        if(p.test(apple)){
+            result.add(apple);
+        }
+    }
+    return result;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;test code&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Test
+public void 사과_필터링() {
+    AppleFilter appleFilter = new AppleFilter();
+
+    List&amp;lt;Apple&amp;gt; inventory = Arrays.asList(
+            new Apple(80,&quot;green&quot;),
+            new Apple(155, &quot;green&quot;),
+            new Apple(120, &quot;red&quot;)
+    );
+
+    /*
+     * 클래스로 감싸긴 하지만 boolean 을 리턴하는 메서드(동작)를 전달한다.
+     * filter메서드의 인자로 우리가 전달한 ApplePredicate 객체에 따라 필터링의 동작이 결정된다.
+     */
+
+    // [Apple{color='green', weight=155}]
+    List&amp;lt;Apple&amp;gt; heavyApples = appleFilter.filter(inventory, new AppleWeightPredicate());
+    Assert.assertTrue(heavyApples.get(0).getWeight() &amp;gt; 150);
+
+    // [Apple{color='red', weight=120}]
+    List&amp;lt;Apple&amp;gt; redApples2 = appleFilter.filter(inventory, /*익명클래스*/new ApplePredicate() {
+        public boolean test(Apple a){
+            return a.getColor().equals(&quot;red&quot;);
+        }
+    });
+    Assert.assertThat(redApples2.get(0).getColor(), is(&quot;red&quot;));
+
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;위에서 살펴본 방법이 동작 파라미터화다. 하나의 인자로 여러가지 동작을 수행할 수 있게 된다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;하나의 인자 : List&lt;apple&gt; filter(List&lt;apple&gt; inventory, ApplePredicate p) 메서드에서 ApplePredicate  &lt;/apple&gt;&lt;/apple&gt;&lt;/li&gt;
+&lt;li&gt;여러가지 동작 : ApplePredicate의 구현체들의 test() 메서드&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&quot;새로운-방법&quot;&gt;새로운 방법&lt;/h3&gt;
+&lt;p&gt;기존의 방법이 아닌 드디어 java8에서 새로 나온 람다 표현식을 사용한다. (ApplePredicate 인터페이스의 test 메서드의 동작을 아래와 같이 표현하는 정도만 안다. 인터페이스에 정의 된 동작(함수)이 한개이기 때문에 사용이 가능하다. 아직 람다식이 정확히 동작하는 방법은 모른다.. )&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;//ApplePredicate의 test()의 구현부분을 아래의 람다식으로 표현
+List&amp;lt;Apple&amp;gt; result = appleFilter.filter(inventory, (Apple apple) -&amp;gt; &quot;red&quot;.equals(apple.getColor()));
+Assert.assertThat(result.get(0).getColor(), is(&quot;red&quot;));&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;아래는 Apple 뿐만아니라 오렌지, 기타 자료형 등등까지 자유롭게 사용할 수 있는 아주 유연한 방법이다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public interface Predicate&amp;lt;T&amp;gt; {
+    boolean test(T t);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;/* 
+ * 선언부 제일 앞의 &amp;lt;T&amp;gt;는 그 뒤의 T, &amp;lt;T&amp;gt;가 제네릭 타입임을 명시해주는 역할이다.
+ * &amp;lt;T&amp;gt;가 없으면 T를 못찾는다는 에러가 난다. (제네릭 참고)
+ */
+public &amp;lt;T&amp;gt; List&amp;lt;T&amp;gt; filter(List&amp;lt;T&amp;gt; list, Predicate&amp;lt;T&amp;gt; p) {
+    List&amp;lt;T&amp;gt; result = new ArrayList&amp;lt;&amp;gt;();
+    for(T e: list) {
+        if(p.test(e)) {
+            result.add(e);
+        }
+    }
+    return result;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;List&amp;lt;Apple&amp;gt; redApples = filter(inventory, (Apple apple) -&amp;gt; &quot;red&quot;.equals(apple.getColor()));
+
+List&amp;lt;Integer&amp;gt; evenNumbers = filter(inventory, (Integer i) -&amp;gt; i % 2 == 0);&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;동작파라미터화동작코드전달을-사용하는-곳&quot;&gt;동작파라미터화=동작(코드)전달을 사용하는 곳&lt;/h3&gt;
+&lt;p&gt;위에서 살펴본 개념을 실제로 사용할 법한 샘플로 보자.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;1. Comparator&lt;/strong&gt;  &lt;/p&gt;
+&lt;p&gt;Collections.sort를 대체할 수 있는 java8 특징으로 List의 sort 메서드이다. 정렬하는 동작을 sort()에 전달할 수 있다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;//java.util.Comparator
+public interface Comparator&amp;lt;T&amp;gt; {
+    public int compare(T o1, T o2);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;test code&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;List&amp;lt;Apple&amp;gt; inventory = Arrays.asList(
+        new Apple(80,&quot;green&quot;),
+        new Apple(155, &quot;green&quot;),
+        new Apple(120, &quot;red&quot;),
+        new Apple(70, &quot;red&quot;)
+);
+
+inventory.sort(new Comparator&amp;lt;Apple&amp;gt;() {
+    @Override
+    public int compare(Apple o1, Apple o2) {
+        return o1.getWeight().compareTo(o2.getWeight());
+    }
+});
+Assert.assertThat(inventory.get(0).getWeight(), is(70));
+
+//바로 위 sort에 대한 quick fix
+inventory.sort((o1, o2) -&amp;gt; o1.getWeight().compareTo(o2.getWeight()));
+Assert.assertThat(inventory.get(0).getWeight(), is(70));
+
+//바로 위 sort에 대한 quick fix
+inventory.sort(Comparator.comparing(Apple::getWeight));
+Assert.assertThat(inventory.get(0).getWeight(), is(70));&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;3개의 sort가 다 같은 코드이다.(intellij quick fix에 나오길래 다 해봤다. 문법은 뒤 chapter에서..)&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;2. Runnerable&lt;/strong&gt;  &lt;/p&gt;
+&lt;p&gt;스레드로 동작(나중에 실행될 코드 블록)을 run()에 전달하고 싶은 경우이다. Comparator와 마찬가지로 java.lang.Runnable 인터페이스를 이용한다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;//기존
+Thread t = new Thread(new Runnable() {
+    public void run() {
+        System.out.println(&quot;java8 in action&quot;);
+    }
+});
+
+//java8
+Thread t = new Thread(() -&amp;gt; System.out.println(&quot;java8 in action&quot;));&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;3. Event 처리&lt;/strong&gt;  &lt;/p&gt;
+&lt;p&gt;버튼클릭 등의 이벤트가 발생했을 때의 이벤트 처리이다.(옛날에 이클립스 RCP랑 안드로이드 프로그래밍할 때 많이 해본거 같다.) 마찬가지로 이벤트가 발생했을 때의 전달할 동작을 다음과 같이 작성한다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;//기존
+Button button = new Button(&quot;Send&quot;);
+button.setOnAction(new EventHandler&amp;lt;ActionEvent&amp;gt;() {
+    public void handle(ActionEvent event) {
+        label.setText(&quot;Send&quot;);
+    }
+});
+
+//java8
+button.setOnAction((ActionEvent event) -&amp;gt; label.setText(&quot;Send&quot;));&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;마치며&quot;&gt;마치며&lt;/h3&gt;
+&lt;p&gt;chapter2는 기존 java8 이전에서의 동작파라미터를 어떻게 구현했는지를 알아봤다. 기존에는 함수를 인자로 넘기려면 이렇게나 많은 코드와 귀찮은 작업이나 개념을 많이 알아야한다고 알려준다. 일단 람다를 활용한 마지막 코드만 봐도 코드가 많이 간결해 보인다. 이제 다음 chapter부터 람다, 메서드 레퍼런스, 스트림, 병렬 등등 java8의 특성을 본격적으로 알아보는 것 같다. 이번장 까지는 워밍업이다.  &lt;/p&gt;
+&lt;p&gt;요약 : 이전 버전은 구려. 이거봐바, 지저분하잖아. 그치? java8은 이렇게나 간단해! 봤지? 써.   &lt;/p&gt;
+&lt;h3 id=&quot;참고&quot;&gt;참고&lt;/h3&gt;
+&lt;p&gt;(뜬금없는 제네릭 검색)  &lt;br /&gt;
+&lt;a href=&quot;https://stackoverflow.com/questions/11303694/what-is-static-t-listt-methodname-list-super-t-input&quot;&gt;https://stackoverflow.com/questions/11303694/what-is-static-t-listt-methodname-list-super-t-input&lt;/a&gt;  &lt;br /&gt;
+&lt;a href=&quot;https://stackoverflow.com/questions/15888551/how-to-interpret-public-t-t-readobjectdata-classt-type-in-java&quot;&gt;https://stackoverflow.com/questions/15888551/how-to-interpret-public-t-t-readobjectdata-classt-type-in-java&lt;/a&gt;  &lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 텍스트디스플레이 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-4674727604243984&quot;
+     data-ad-slot=&quot;7162651529&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>Java</category>
+<category>Java8</category>
+<category>java8 in action</category>
+<category>동작파라미터화</category>
+<category>람다</category>
+<category>전략패턴</category>
+<author>jinyeonghehe</author>
+<guid>https://deepweller.tistory.com/23</guid>
+<comments>https://deepweller.tistory.com/23#entry23comment</comments>
+<pubDate>Sun, 01 Jul 2018 21:35:52 +0900</pubDate>
+</item>
+</channel>
+</rss>

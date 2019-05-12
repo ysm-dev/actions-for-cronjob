@@ -1,0 +1,1436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>na982</title>
+<link>https://na982.tistory.com/</link>
+<description>삼성 SW 역량 테스트 준비에 도움이 되고자 만든 블로그 입니다.
+동영상 강의 PDF 소스코드를 한페이지에서 보실수 있습니다.
+주인장은 ACM-ICPC 에 중국, 태국, 국내 대회 본선에 참가 한 경험이 있습니다.</description>
+<language>ko</language>
+<pubDate>Sun, 12 May 2019 14:50:00 +0900</pubDate>
+<generator>TISTORY</generator>
+<managingEditor>ㄴ ㅏ구팔이</managingEditor>
+<image>
+<title>na982</title>
+<url>http://cfile24.uf.tistory.com/image/243B423758DB4E0C066745</url>
+<link>https://na982.tistory.com</link>
+<description>삼성 SW 역량 테스트 준비에 도움이 되고자 만든 블로그 입니다.
+동영상 강의 PDF 소스코드를 한페이지에서 보실수 있습니다.
+주인장은 ACM-ICPC 에 중국, 태국, 국내 대회 본선에 참가 한 경험이 있습니다.</description>
+</image>
+<item>
+<title>Linked List</title>
+<link>https://na982.tistory.com/110</link>
+<description>&lt;div style=&quot;float:right;margin:0 0 10px 10px;width:336px;height:280px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/RoLmoljANLI?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/4mV2wT_1xFI?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;iframe src=&quot;https://drive.google.com/file/d/1b-6bNfSAybwUdUoKrL3oSNfUIwU6rFXK/preview&quot; width=&quot;800&quot; height=&quot;460&quot;&gt;&lt;/iframe&gt;
+
+&lt;pre class=&quot;brush:cpp&quot; auto-links:true=&quot;&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;algorithm&amp;gt;
+#include &amp;lt;list&amp;gt;
+#include &quot;Windows.h&quot;
+using namespace std;
+
+struct NODE {
+	int prev;
+	int next;
+	int val;
+};
+
+const int NODE_SIZE = 30000;
+
+//TEST CMD
+const int PUSH_BACK = 0;
+const int PUSH_FRONT = 1;
+const int INSERT = 2;
+const int POP_BACK = 3;
+const int POP_FRONT = 4;
+const int ERASE = 5;
+
+int test_cmd[NODE_SIZE][3];
+
+struct MY_LIST {
+	int HEAD = NODE_SIZE;
+	int TAIL = NODE_SIZE + 1;
+	int pos;
+	NODE node[NODE_SIZE + 2];
+
+	MY_LIST() {
+		pos = 0;
+		node[HEAD].next = TAIL;
+		node[TAIL].prev = HEAD;
+	}
+
+	void push_back(int data) {
+		int prev = node[TAIL].prev;
+		int next = node[prev].next;	// TAIL;
+
+		node[pos].val = data;
+
+		node[pos].prev = prev;
+		node[prev].next = pos;
+
+		node[pos].next = next;
+		node[next].prev = pos;
+		++pos;
+	}
+
+	void push_front(int data) {
+		int next = node[HEAD].next;
+		int prev = node[next].prev;	// HEAD
+		
+		node[pos].val = data;
+
+		node[pos].prev = prev;
+		node[prev].next = pos;
+
+		node[pos].next = next;
+		node[next].prev = pos;
+		++pos;
+	}
+
+	void insert(int p, int data) {
+		int next = node[HEAD].next;
+		for(int i = 0; i &amp;lt; p; ++i) {
+			next = node[next].next;
+		}
+		int prev = node[next].prev;
+	
+		node[pos].val = data;
+
+		node[pos].prev = prev;
+		node[prev].next = pos;
+
+		node[pos].next = next;
+		node[next].prev = pos;
+		++pos;
+	}
+
+	void pop_back() {
+		int target = node[TAIL].prev;
+
+		int prev = node[target].prev;
+		int next = node[target].next;
+
+		node[prev].next = next;
+		node[next].prev = prev;
+	}
+
+	void pop_front() {
+		int target = node[HEAD].next;
+
+		int prev = node[target].prev;
+		int next = node[target].next;
+
+		node[prev].next = next;
+		node[next].prev = prev;
+	}
+
+	void erase(int p) {
+		int target = node[HEAD].next;
+		for (int i = 0; i &amp;lt; p; ++i) {
+			target = node[target].next;
+		}
+		int prev = node[target].prev;
+		int next = node[target].next;
+
+		node[prev].next = next;
+		node[next].prev = prev;
+	}
+};
+
+MY_LIST my_list;
+list&amp;lt;int&amp;gt; stl_list;
+
+int main()
+{
+	// make test case..
+	int cur_size = 0;
+	for (int i = 0; i &amp;lt; NODE_SIZE; ++i) {
+		if (i &amp;lt; NODE_SIZE / 3) {
+			test_cmd[i][0] = rand() % 2;
+		}
+		else {
+			test_cmd[i][0] = rand() % 6;
+		}
+
+		switch (test_cmd[i][0]) {
+		case PUSH_BACK:
+		case PUSH_FRONT: {
+			test_cmd[i][1] = rand();
+			++cur_size;
+			break;
+		}
+		case INSERT: {
+			test_cmd[i][1] = rand() % cur_size;
+			test_cmd[i][2] = rand();
+			++cur_size;
+			break;
+		}
+		case POP_BACK:
+		case POP_FRONT: {
+			--cur_size;
+			break;
+		}
+		case ERASE: {
+			test_cmd[i][1] = rand() % cur_size;
+			--cur_size;
+			break;
+		}
+		}
+	}
+
+	// test my list
+	int my_list_begin = GetTickCount();
+	for (int i = 0; i &amp;lt; NODE_SIZE; ++i) {
+		switch (test_cmd[i][0]) {
+		case PUSH_BACK: {
+			my_list.push_back(test_cmd[i][1]);
+			break;
+		}
+		case PUSH_FRONT: {
+			my_list.push_front(test_cmd[i][1]);
+			break;
+		}
+		case INSERT: {
+			my_list.insert(test_cmd[i][1], test_cmd[i][2]);
+			break;
+		}
+
+		case POP_BACK: {
+			my_list.pop_back();
+			break;
+		}
+		case POP_FRONT: {
+			my_list.pop_front();
+			break;
+		}
+		case ERASE: {
+			my_list.erase(test_cmd[i][1]);
+			break;
+		}
+		}
+	}
+	int my_list_end = GetTickCount();
+
+	// test stl list
+	int stl_list_begin = GetTickCount();
+	for (int i = 0; i &amp;lt; NODE_SIZE; ++i) {
+		switch (test_cmd[i][0]) {
+		case PUSH_BACK: {
+			stl_list.push_back(test_cmd[i][1]);
+			break;
+		}
+		case PUSH_FRONT: {
+			stl_list.push_front(test_cmd[i][1]);
+			break;
+		}
+		case INSERT: {
+			list&amp;lt;int&gt;::iterator it = stl_list.begin();
+			for (int k = 0; k &amp;lt; test_cmd[i][1]; ++k) {
+				++it;
+			}
+			stl_list.insert(it, test_cmd[i][2]);
+			break;
+		}
+
+		case POP_BACK: {
+			stl_list.pop_back();
+			break;
+		}
+		case POP_FRONT: {
+			stl_list.pop_front();
+			break;
+		}
+		case ERASE: {
+			list&amp;lt;int&amp;gt;::iterator it = stl_list.begin();
+			for (int k = 0; k &amp;lt; test_cmd[i][1]; ++k) {
+				++it;
+			}
+			stl_list.erase(it);
+			break;
+		}
+		}
+	}
+	int stl_list_end = GetTickCount();
+
+	//time compare
+	printf(&quot;my list : %d\n&quot;, (my_list_end - my_list_begin));
+	printf(&quot;stl list : %d\n&quot;, (stl_list_end - stl_list_begin));
+
+	//result test
+	list&amp;lt;int&amp;gt;::iterator it = stl_list.begin();
+	int cur = my_list.node[my_list.HEAD].next;
+	while (it != stl_list.end()) {
+		if (*it != my_list.node[cur].val) {
+			printf(&quot;Error\n&quot;);
+		}
+		++it;
+		cur = my_list.node[cur].next;
+	}
+
+	return 0;
+}&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>Data Structure</category>
+<category>ACMICPC</category>
+<category>coding</category>
+<category>Koi</category>
+<category>Linked List</category>
+<category>livecoding</category>
+<category>na982</category>
+<category>SDS</category>
+<category>SW 역량평가</category>
+<category>SW역량평가</category>
+<category>리스트</category>
+<category>링크드 리스트</category>
+<category>문제해결</category>
+<category>백준</category>
+<category>삼성</category>
+<category>삼성SDS</category>
+<category>삼성전자</category>
+<category>알고리즘</category>
+<category>역량평가</category>
+<category>취업</category>
+<category>코딩테스트</category>
+<author>ㄴ ㅏ구팔이</author>
+<guid>https://na982.tistory.com/110</guid>
+<comments>https://na982.tistory.com/110#entry110comment</comments>
+<pubDate>Wed, 13 Feb 2019 23:00:18 +0900</pubDate>
+</item>
+<item>
+<title>Merge Sort</title>
+<link>https://na982.tistory.com/109</link>
+<description>&lt;div style=&quot;float:right;margin:0 0 10px 10px;width:336px;height:280px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/_Z5uaVNxxD4?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/G25VvhbRsVA?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+
+&lt;iframe src=&quot;https://drive.google.com/file/d/12pXaVIT73a73Z1uXf1M0zAo2pSN6a03W/preview&quot; width=&quot;800&quot; height=&quot;460&quot;&gt;&lt;/iframe&gt;
+
+&lt;pre class=&quot;brush:cpp&quot; auto-links:true=&quot;&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &quot;Windows.h&quot;
+#include &amp;lt;algorithm&amp;gt;
+using namespace std;
+
+const int MAX_SIZE = 500000;
+
+int arr_size;
+int ms[MAX_SIZE], qs[MAX_SIZE], stls[MAX_SIZE], buf[MAX_SIZE];
+
+void merge_sort(int* p, int len) {
+	if (len &amp;lt; 2)	return;
+	int i, j, k, mid;
+	mid = (len / 2);
+	i = 0, j = mid, k = 0;
+
+	merge_sort(p, mid);
+	merge_sort((p + mid), (len - mid));
+
+	while (i &amp;lt; mid &amp;amp;&amp;amp; j &amp;lt; len) {
+		if (p[i] &amp;lt; p[j]) {
+			buf[k++] = p[i++];
+		}
+		else {
+			buf[k++] = p[j++];
+		}
+	}
+
+	while (i &amp;lt; mid) {
+		buf[k++] = p[i++];
+	}
+
+	while (j &amp;lt; len) {
+		buf[k++] = p[j++];
+	}
+
+	for (int i = 0; i &amp;lt; len; ++i) {
+		p[i] = buf[i];
+	}
+}
+
+void qsort(int* p, int left, int right) {
+	if (left &amp;gt;= right)	return;
+	int l = left - 1;
+	int r = right + 1;
+	int mid = p[(l + r) / 2];
+	while (1) {
+		while (p[++l] &amp;lt; mid);
+		while (p[--r] &amp;gt; mid);
+		if (l &amp;gt;= r)	break;
+		int temp = p[l];
+		p[l] = p[r];
+		p[r] = temp;
+	}
+	qsort(p, left, l - 1);
+	qsort(p, r + 1, right);
+}
+
+
+int main()
+{
+	arr_size = MAX_SIZE;
+
+	for (int i = 0; i &amp;lt; arr_size; ++i) {
+		ms[i] = rand();
+		qs[i] = stls[i] = ms[i];
+	}
+
+	int quick_sort_begin = GetTickCount();
+	qsort(qs, 0, arr_size - 1);
+	int quick_sort_end = GetTickCount();
+
+	int merge_sort_begin = GetTickCount();
+	merge_sort(ms, arr_size);
+	int merge_sort_end = GetTickCount();
+
+	int stl_sort_begin = GetTickCount();
+	sort(stls, stls + arr_size);
+	int stl_sort_end = GetTickCount();
+
+	printf(&quot;my quick sort : %d\n&quot;, (quick_sort_end - quick_sort_begin));
+	printf(&quot;my merge sort : %d\n&quot;, (merge_sort_end - merge_sort_begin));
+	printf(&quot;stl sort : %d\n&quot;, (stl_sort_end - stl_sort_begin));
+	printf(&quot;=====================================\n&quot;);
+
+	quick_sort_begin = GetTickCount();
+	qsort(qs, 0, arr_size - 1);
+	quick_sort_end = GetTickCount();
+
+	merge_sort_begin = GetTickCount();
+	merge_sort(ms, arr_size);
+	merge_sort_end = GetTickCount();
+
+	stl_sort_begin = GetTickCount();
+	sort(stls, stls + arr_size);
+	stl_sort_end = GetTickCount();
+
+	printf(&quot;my quick sort : %d\n&quot;, (quick_sort_end - quick_sort_begin));
+	printf(&quot;my merge sort : %d\n&quot;, (merge_sort_end - merge_sort_begin));
+	printf(&quot;stl sort : %d\n&quot;, (stl_sort_end - stl_sort_begin));
+	printf(&quot;=====================================\n&quot;);
+
+	for (int i = 0; i &amp;lt; arr_size; ++i) {
+		if (qs[i] != stls[i] || ms[i] != stls[i]) {
+			printf(&quot;Error\n&quot;);
+		}
+	}
+
+	return 0;
+}
+&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>Data Structure</category>
+<category>ACMICPC</category>
+<category>coding</category>
+<category>Koi</category>
+<category>livecoding</category>
+<category>Merge</category>
+<category>Merge Sort</category>
+<category>na982</category>
+<category>qsort</category>
+<category>Quick Sort</category>
+<category>SDS</category>
+<category>sort</category>
+<category>SW 역량평가</category>
+<category>SW역량평가</category>
+<category>문제해결</category>
+<category>백준</category>
+<category>삼성</category>
+<category>삼성SDS</category>
+<category>삼성전자</category>
+<category>알고리즘</category>
+<category>역량평가</category>
+<category>취업</category>
+<category>코딩테스트</category>
+<author>ㄴ ㅏ구팔이</author>
+<guid>https://na982.tistory.com/109</guid>
+<comments>https://na982.tistory.com/109#entry109comment</comments>
+<pubDate>Sun, 10 Feb 2019 23:43:26 +0900</pubDate>
+</item>
+<item>
+<title>[KOI]전국본선 2014 중등부 세번째 문제</title>
+<link>https://na982.tistory.com/108</link>
+<description>&lt;div style=&quot;float:right;margin:0 0 10px 10px;width:336px;height:280px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/xYkB_geBHAE?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;iframe src=&quot;https://drive.google.com/file/d/1m-1MwTWyIRG5W-H6VQHguiHSfteLzO4y/preview&quot; width=&quot;800&quot; height=&quot;460&quot;&gt;&lt;/iframe&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;pre class=&quot;brush:cpp&quot; auto-links:true=&quot;&quot;&gt;
+
+#include &amp;lt;stdio.h&gt;
+#include &amp;lt;algorithm&gt;
+#include &amp;lt;deque&gt;
+using namespace std;
+
+const int MAX_SIZE = 500000;
+
+struct BUS{
+	int s, e, index;
+};
+
+bool comp(BUS a, BUS b) {
+	return (a.s == b.s) ? (a.e &gt; b.e) : (a.s &lt; b.s);
+}
+
+bool comp1(BUS a, BUS b) {
+	return (a.index &lt; b.index);
+}
+
+BUS bus[MAX_SIZE];
+
+int main()
+{
+	int N, M, end_point = 0;
+	scanf(&quot;%d %d&quot;, &amp;N, &amp;M);
+	for(int i = 0; i &lt; M; ++i){
+		scanf(&quot;%d %d&quot;, &amp;bus[i].s, &amp;bus[i].e);
+		bus[i].index = i + 1;
+
+		if (bus[i].s &gt; bus[i].e) {
+			end_point = max(end_point, bus[i].e);
+			bus[i].e += N;
+		}
+	}
+
+	sort(bus, bus + M, comp);
+
+	deque&amp;lt;BUS&gt; q;
+	for (int i = 0; i &lt; M; ++i) {
+		if (q.empty() || q.back().e &lt; bus[i].e) {
+			q.push_back(bus[i]);
+		}
+	}
+
+	while (!q.empty() &amp;&amp; q.front().e &lt;= end_point) {
+		q.pop_front();
+	}
+
+	sort(q.begin(), q.end(), comp1);
+
+	for (auto x : q) {
+		printf(&quot;%d &quot;, x.index);
+	}
+
+	return 0;
+}
+&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>KOI (정보올림피아드) 기출 풀이</category>
+<category>ACMICPC</category>
+<category>coding</category>
+<category>Koi</category>
+<category>livecoding</category>
+<category>na982</category>
+<category>문제해결</category>
+<category>백준</category>
+<category>알고리즘</category>
+<category>정보올림피아드</category>
+<category>취업</category>
+<category>코딩테스트</category>
+<author>ㄴ ㅏ구팔이</author>
+<guid>https://na982.tistory.com/108</guid>
+<comments>https://na982.tistory.com/108#entry108comment</comments>
+<pubDate>Sat, 26 Jan 2019 21:14:39 +0900</pubDate>
+</item>
+<item>
+<title>[KOI]전국본선 2014 중등부 두번째 문제</title>
+<link>https://na982.tistory.com/107</link>
+<description>&lt;div style=&quot;float:right;margin:0 0 10px 10px;width:336px;height:280px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/Ym1hpXcA_Eo?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;iframe src=&quot;https://drive.google.com/file/d/1fSbt6DvN1xjNHJcUQwaOvFl53SQ_duRt/preview&quot; width=&quot;800&quot; height=&quot;460&quot;&gt;&lt;/iframe&gt;
+
+&lt;pre class=&quot;brush:cpp&quot; auto-links:true=&quot;&quot;&gt;
+#include &amp;lt;stdio.h&amp;gt;
+
+int seat[2000][2001];
+
+int gcd(int a, int b) {
+	return (b) ? gcd(b, a % b) : (a);
+}
+
+int main()
+{
+	int ret = 0;
+	int from, to;
+	scanf(&quot;%d %d&quot;, &amp;from, &amp;to);
+	for (int i = from; i &lt;= to; ++i) {
+		for (int j = 0; j &lt; i; ++j) {
+			int g = gcd(i, j);
+			int up = j / g;
+			int down = i / g;
+			if (seat[up][down] == 0) {
+				seat[up][down] = 1;
+				++ret;
+			}
+		}
+	}
+	printf(&quot;%d\n&quot;, ret);
+	return 0;
+}
+
+&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>KOI (정보올림피아드) 기출 풀이</category>
+<category>ACMICPC</category>
+<category>coding</category>
+<category>Koi</category>
+<category>livecoding</category>
+<category>na982</category>
+<category>문제해결</category>
+<category>백준</category>
+<category>알고리즘</category>
+<category>정보올림피아드</category>
+<category>취업</category>
+<category>코딩테스트</category>
+<author>ㄴ ㅏ구팔이</author>
+<guid>https://na982.tistory.com/107</guid>
+<comments>https://na982.tistory.com/107#entry107comment</comments>
+<pubDate>Sat, 26 Jan 2019 21:08:13 +0900</pubDate>
+</item>
+<item>
+<title>[KOI]전국본선 2013 중등부 두번째 문제</title>
+<link>https://na982.tistory.com/106</link>
+<description>&lt;div style=&quot;float:right;margin:0 0 10px 10px;width:336px;height:280px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/Uq1F27Bl7xk?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;iframe src=&quot;https://drive.google.com/file/d/1WC3ieFUbfGapBM_k22bM5QHPUpxLfPqA/preview&quot; width=&quot;800&quot; height=&quot;460&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;pre class=&quot;brush:cpp&quot; auto-links:true=&quot;&quot;&gt;
+#include &amp;lt;stdio.h&amp;gt;
+
+int main()
+{
+	int n;
+	int after[30] = { 0, }, before[30] = { 0, };
+	scanf(&quot;%d&quot;, &amp;amp;n);
+	for (int i = 0; i &amp;lt; n; ++i) {
+		scanf(&quot;%d&quot;, &amp;amp;after[i]);
+	}
+	int cur = 0, count = 0;
+	while (count &amp;lt; n) {
+		while (before[cur] != 0) {
+			cur = (cur + 1) % n;
+		}
+		before[cur] = after[count++];
+		cur = (before[cur] + cur) % n;
+	}
+
+	printf(&quot;%d\n&quot;, n);
+	for (int i = 0; i &amp;lt; n; ++i) {
+		printf(&quot;%d &quot;, before[i]);
+	}
+
+	return 0;
+}
+&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>KOI (정보올림피아드) 기출 풀이</category>
+<category>ACMICPC</category>
+<category>coding</category>
+<category>Koi</category>
+<category>livecoding</category>
+<category>na982</category>
+<category>문제해결</category>
+<category>백준</category>
+<category>시뮬레이션</category>
+<category>알고리즘</category>
+<category>정보 올림피아드</category>
+<category>취업</category>
+<category>코딩테스트</category>
+<author>ㄴ ㅏ구팔이</author>
+<guid>https://na982.tistory.com/106</guid>
+<comments>https://na982.tistory.com/106#entry106comment</comments>
+<pubDate>Sat, 26 Jan 2019 15:05:18 +0900</pubDate>
+</item>
+<item>
+<title>[KOI]전국본선 2013 중등부 첫번째 문제</title>
+<link>https://na982.tistory.com/105</link>
+<description>&lt;div style=&quot;float:right;margin:0 0 10px 10px;width:336px;height:280px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/klA3JxubTqo?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;iframe src=&quot;https://drive.google.com/file/d/1v_xulIfR1WhvVqP5lB9W6oUugMtx2nxl/preview&quot; width=&quot;800&quot; height=&quot;460&quot;&gt;&lt;/iframe&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;pre class=&quot;brush:cpp&quot; auto-links:true=&quot;&quot;&gt;
+#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;algorithm&amp;gt;
+#include &amp;lt;vector&amp;gt;
+using namespace std;
+
+struct ANIMAL {
+	int y, x;
+};
+
+vector&amp;lt;int&amp;gt; hunter;
+vector&amp;lt;animal&amp;gt; animal;
+
+bool comp(const ANIMAL&amp;amp; a, const ANIMAL&amp;amp; b) {
+	return (a.x &amp;lt; b.x);
+}
+
+bool is_kill(const ANIMAL&amp;amp; a, const int h, const int len) {
+	int dist = abs(a.x - h) + a.y;
+	if (dist &amp;lt;= len)		return true;
+	else					return false;
+}
+
+int main()
+{
+	int M, N, L;
+	scanf(&quot;%d %d %d&quot;, &amp;amp;M, &amp;amp;N, &amp;amp;L);
+
+	hunter.resize(M);
+	animal.resize(N);
+
+	for (int i = 0; i &amp;lt; M; ++i) {
+		scanf(&quot;%d&quot;, &amp;amp;hunter[i]);
+	}
+
+	for (int i = 0; i &amp;lt; N; ++i) {
+		scanf(&quot;%d %d&quot;, &amp;amp;animal[i].x, &amp;amp;animal[i].y);
+	}
+
+	sort(hunter.begin(), hunter.end());
+	sort(animal.begin(), animal.end(), comp);
+
+	int ret = 0;
+	for (auto ani : animal) {
+		auto target = lower_bound(hunter.begin(), hunter.end(), ani.x) - hunter.begin();
+		if (is_kill(ani, hunter[target], L)) {
+			++ret;
+		}
+		else {
+			if (target &amp;gt; 0) {
+				--target;
+				if (is_kill(ani, hunter[target], L)) {
+					++ret;
+				}
+			}
+		}
+	}
+
+	printf(&quot;%d\n&quot;, ret);
+	
+	return 0;
+}&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>KOI (정보올림피아드) 기출 풀이</category>
+<category>ACMICPC</category>
+<category>coding</category>
+<category>Koi</category>
+<category>livecoding</category>
+<category>na982</category>
+<category>문제해결</category>
+<category>바이너리 서치</category>
+<category>백준</category>
+<category>알고리즘</category>
+<category>이분탐색</category>
+<category>정보 올림피아드</category>
+<category>취업</category>
+<category>코딩테스트</category>
+<category>파라메트릭서치</category>
+<author>ㄴ ㅏ구팔이</author>
+<guid>https://na982.tistory.com/105</guid>
+<comments>https://na982.tistory.com/105#entry105comment</comments>
+<pubDate>Sat, 26 Jan 2019 14:53:48 +0900</pubDate>
+</item>
+<item>
+<title>[KOI]전국본선 2012 중등부 첫번째 문제</title>
+<link>https://na982.tistory.com/104</link>
+<description>&lt;div style=&quot;float:right;margin:0 0 10px 10px;width:336px;height:280px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/dvI9jeMu6BU?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;iframe src=&quot;https://drive.google.com/file/d/1m6ZA5pZ02QwymDrdivTk_acnMgpjXp82/preview&quot; width=&quot;800&quot; height=&quot;460&quot;&gt;&lt;/iframe&gt;
+
+
+&lt;pre class=&quot;brush:cpp&quot; auto-links:true=&quot;&quot;&gt;
+#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;algorithm&amp;gt;
+using namespace std;
+
+int n, money;
+int city[10000];
+
+bool valid(int mid) {
+	int ret = 0;
+	for (int i = 0; i &amp;lt; n; ++i) {
+		ret += min(mid, city[i]);
+	}
+	return (ret &amp;lt;= money);
+}
+
+int main()
+{
+	int left = 0, right = 0;
+	scanf(&quot;%d&quot;, &amp;amp;n);
+	for (int i = 0; i &amp;lt; n; ++i) {
+		scanf(&quot;%d&quot;, &amp;amp;city[i]);
+		right = max(right, city[i]);
+	}
+	scanf(&quot;%d&quot;, &amp;amp;money);
+
+	while (left != right) {
+		int mid = (left + right + 1) / 2;
+		if (valid(mid)) {
+			left = mid;
+		}
+		else {
+			right = mid - 1;
+		}
+	}
+
+	printf(&quot;%d\n&quot;, left);
+
+	return 0;
+}
+&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>KOI (정보올림피아드) 기출 풀이</category>
+<category>ACMICPC</category>
+<category>coding</category>
+<category>Koi</category>
+<category>livecoding</category>
+<category>na982</category>
+<category>문제해결</category>
+<category>바이너리서치</category>
+<category>백준</category>
+<category>알고리즘</category>
+<category>이분탐색</category>
+<category>정보 올림피아드</category>
+<category>취업</category>
+<category>코딩테스트</category>
+<author>ㄴ ㅏ구팔이</author>
+<guid>https://na982.tistory.com/104</guid>
+<comments>https://na982.tistory.com/104#entry104comment</comments>
+<pubDate>Sat, 26 Jan 2019 14:45:12 +0900</pubDate>
+</item>
+<item>
+<title>Hash</title>
+<link>https://na982.tistory.com/103</link>
+<description>&lt;div style=&quot;float:right;margin:0 0 10px 10px;width:336px;height:280px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/PLmhHLGtAnE?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;/p&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/-yQgN2zH7Ps?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;pre class=&quot;brush:cpp&quot; auto-links:true=&quot;&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;map&amp;gt;
+#include &amp;lt;algorithm&amp;gt;
+#include &quot;Windows.h&quot;
+using namespace std;
+
+const int PN = 23;
+const int HASH_SIZE = 10000;
+
+int table[HASH_SIZE][50];
+int hash_size = 0;
+char hash_raw[30000][100];
+
+char input[30000][100];
+map&amp;lt;char*, int&amp;gt; test;
+
+unsigned int get_key(char str[]) {
+	unsigned int key = 0, p = 1;
+
+	for (int i = 0; str[i] != 0; ++i) {
+		key += (str[i] * p);
+		p *= PN;
+	}
+
+	return (key % HASH_SIZE);
+}
+
+int my_strcamp(char a[], char b[]) {
+	int i = 0, j = 0;
+	while (a[i]) {
+		if (a[i++] != b[j++]) {
+			--i, --j;
+			break;
+		}
+	}
+	return (a[i] - b[j]);
+}
+
+int contain(char str[]) {
+	unsigned int key = get_key(str);
+	int size = table[key][0];
+	for (int i = 1; i &amp;lt;= size; ++i) {
+		int pos = table[key][i];
+		if (my_strcamp(hash_raw[pos], str) == 0) {
+			return pos;
+		}
+	}
+	return -1;
+}
+
+void add(char str[]) {
+	int len = 0;
+	for (len = 0; str[len] != 0; ++len) {
+		hash_raw[hash_size][len] = str[len];
+	}
+	hash_raw[hash_size][len] = 0;
+
+	unsigned int key = get_key(str);
+	int&amp;amp; size = table[key][0];
+	table[key][++size] = hash_size;
+
+	++hash_size;
+}
+
+bool remove(char str[]) {
+	unsigned int key = get_key(str);
+	int&amp;amp; size = table[key][0];
+	for (int i = 1; i &amp;lt;= size; ++i) {
+		int pos = table[key][i];
+		if (my_strcamp(hash_raw[pos], str) == 0) {
+			for (int j = i + 1; j &amp;lt;= size; ++j) {
+				table[key][j - 1] = table[key][j];
+			}
+			--size;
+			return true;
+		}
+	}
+	return false;
+}
+
+int make_int(int min, int max) {
+	return (rand() % (max - min)) + min;
+}
+
+char make_char() {
+	int val = rand() % 52;
+	if (val &amp;lt; 26) {
+		return static_cast&amp;lt;char&amp;gt;('a' + val);
+	}
+	return static_cast&amp;lt;char&amp;gt;('A' + val - 26);
+}
+
+int main()
+{
+	for (int i = 0; i &amp;lt; 30000; ++i) {
+		int len = make_int(10, 100);
+		for (int j = 0; j &amp;lt; len; ++j) {
+			input[i][j] = make_char();
+		}
+		input[i][len] = 0;
+
+		if (contain(input[i]) == -1) {
+			add(input[i]);
+		}
+		test[input[i]] = i;
+
+
+		if (i &amp;gt; 20000) {
+			int cmd = make_int(0, 5);
+			int index = make_int(0, i);
+			if (cmd == 0) {
+				if (contain(input[index]) != -1) {
+					remove(input[index]);
+				}
+
+				test.erase(input[index]);
+			}
+			if (cmd == 1) {
+				int my_pos = contain(input[index]);
+				map&amp;lt;char*, int&amp;gt;::iterator iter = test.find(input[index]);
+				int stl_pos = -1;
+				if (iter != test.end()) {
+					stl_pos = iter-&amp;gt;second;
+				}
+
+				if (my_pos != stl_pos) {
+					printf(&quot;find error!!!\n&quot;);
+				}
+			}
+		}
+	}
+
+	int my_hash_size = 0;
+	for (int i = 0; i &amp;lt; HASH_SIZE; ++i) {
+		my_hash_size += table[i][0];
+	}
+
+	if (my_hash_size != test.size()) {
+		printf(&quot;remove error!!!\n&quot;);
+	}
+
+	return 0;
+}
+&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>Data Structure</category>
+<category>coding</category>
+<category>Hash</category>
+<category>livecoding</category>
+<category>na982</category>
+<category>SDS</category>
+<category>SW 역량평가</category>
+<category>문제해결</category>
+<category>백준</category>
+<category>삼성</category>
+<category>삼성 SDS</category>
+<category>삼성 전자</category>
+<category>삼성SDS</category>
+<category>삼성전자</category>
+<category>알고리즘</category>
+<category>역량평가</category>
+<category>취업</category>
+<category>코딩테스트</category>
+<category>해쉬</category>
+<category>해시</category>
+<author>ㄴ ㅏ구팔이</author>
+<guid>https://na982.tistory.com/103</guid>
+<comments>https://na982.tistory.com/103#entry103comment</comments>
+<pubDate>Tue, 22 Jan 2019 22:59:52 +0900</pubDate>
+</item>
+<item>
+<title>Heap</title>
+<link>https://na982.tistory.com/102</link>
+<description>&lt;div style=&quot;float:right;margin:0 0 10px 10px;width:336px;height:280px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/NX27f36dES0?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;iframe src=&quot;https://drive.google.com/file/d/1wN_JjSthdk5pm5RKlhfb1vVFuCqFt0b9/preview&quot; width=&quot;800&quot; height=&quot;460&quot;&gt;&lt;/iframe&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;pre class=&quot;brush:cpp&quot; auto-links:true=&quot;&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;algorithm&amp;gt;
+#include &quot;Windows.h&quot;
+using namespace std;
+
+int heap_size;
+int heap[10000];
+
+void push(int data) {
+	int target = heap_size + 1;
+	while (target != 1 &amp;amp;&amp;amp; heap[target / 2] &amp;lt; data) {
+		heap[target] = heap[target / 2];
+		target /= 2;
+	}
+	heap[target] = data;
+	++heap_size;
+}
+
+void pop() {
+	int parent = 1, child = 2;
+	int temp = heap[heap_size];
+	while (child &amp;lt; heap_size) {
+		if (child + 1 &amp;lt; heap_size &amp;amp;&amp;amp; heap[child] &amp;lt; heap[child + 1]) {
+			++child;
+		}
+		if (temp &amp;gt;= heap[child]) {
+			break;
+		}
+		heap[parent] = heap[child];
+		parent = child;
+		child *= 2;
+	}
+	heap[parent] = temp;
+	--heap_size;
+}
+
+bool comp(int a, int b) {
+	return (a &amp;gt; b);
+}
+
+int main()
+{
+	int a[10000], b[10000];
+	for (int i = 0; i &amp;lt; 9999; ++i) {
+		a[i] = rand() % 10000;
+		b[i] = a[i];
+	}
+	sort(a, a + 9999, comp);
+
+	for (int i = 0; i &amp;lt; 9999; ++i) {
+		push(b[i]);
+	}
+
+	for (int i = 0; i &amp;lt; 9999; ++i) {
+		if (a[i] != heap[1]) {
+			printf(&quot;not heap!!!\n&quot;);
+		}
+		pop();
+	}
+
+	return 0;
+}
+&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>Data Structure</category>
+<category>coding</category>
+<category>Data Struct</category>
+<category>Data Structure</category>
+<category>Heap</category>
+<category>livecoding</category>
+<category>max heap</category>
+<category>na982</category>
+<category>SDS</category>
+<category>SW 역량평가</category>
+<category>문제해결</category>
+<category>백준</category>
+<category>삼성</category>
+<category>삼성 SDS</category>
+<category>삼성 전자</category>
+<category>삼성SDS</category>
+<category>삼성전자</category>
+<category>알고리즘</category>
+<category>역량평가</category>
+<category>자료구조</category>
+<category>최대 힙</category>
+<category>취업</category>
+<category>코딩테스트</category>
+<category>힙</category>
+<author>ㄴ ㅏ구팔이</author>
+<guid>https://na982.tistory.com/102</guid>
+<comments>https://na982.tistory.com/102#entry102comment</comments>
+<pubDate>Fri, 11 Jan 2019 22:36:08 +0900</pubDate>
+</item>
+<item>
+<title>[삼성 SW 역량 테스트] 아기 상어</title>
+<link>https://na982.tistory.com/101</link>
+<description>&lt;div style=&quot;float:right;margin:0 0 10px 10px;width:336px;height:280px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div class=&quot;tt-youtube-plugin&quot; style=&quot;text-align: center&quot;&gt;&lt;iframe width=&quot;800&quot; height=&quot;600&quot; src=&quot;https://www.youtube.com/embed/6GM1OOtKEg4?rel=0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;iframe src=&quot;https://drive.google.com/file/d/1WkXgu4Yu5fDIEHlJHyxW96AJv86boLCF/preview&quot; width=&quot;800&quot; height=&quot;460&quot;&gt;&lt;/iframe&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;pre class=&quot;brush:cpp&quot; auto-links:true=&quot;&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;queue&amp;gt;
+using namespace std;
+
+struct SHARK {
+	int y, x, time;
+};
+
+int n;
+int map[20][20];
+
+int shark_size, shark_eat;
+SHARK shark;
+
+const int dy[] = { 0, 0, -1, +1 };
+const int dx[] = { -1, +1, 0, 0 };
+
+int main()
+{
+	scanf(&quot;%d&quot;, &amp;amp;n);
+	for (int y = 0; y &amp;lt; n; ++y) {
+		for (int x = 0; x &amp;lt; n; ++x) {
+			scanf(&quot;%d&quot;, &amp;amp;map[y][x]);
+			if (map[y][x] == 9) {
+				shark.y = y, shark.x = x, shark.time = 0;
+				shark_size = 2, shark_eat = 0;
+				map[y][x] = 0;
+			}
+		}
+	}
+
+	bool is_update = true;
+	while (is_update) {
+		is_update = false;
+
+		bool visited[20][20] = { false, };
+		queue&lt;shark&gt; q;
+		visited[shark.y][shark.x] = true;
+		q.push(shark);
+
+		SHARK candi;
+		candi.y = 20, candi.time = -1;
+		while (!q.empty()) {
+			SHARK cur = q.front();	q.pop();
+
+			if (candi.time != -1 &amp;amp;&amp;amp; candi.time &amp;lt; cur.time) {
+				break;
+			}
+
+			if (map[cur.y][cur.x] &amp;lt; shark_size &amp;amp;&amp;amp; map[cur.y][cur.x] != 0) {
+				is_update = true;
+				if (candi.y &amp;gt; cur.y || (candi.y == cur.y &amp;amp;&amp;amp; candi.x &amp;gt; cur.x)) {
+					candi = cur;
+				}
+			}
+
+			for (int dir = 0; dir &amp;lt; 4; ++dir) {
+				SHARK next;
+				next.y = cur.y + dy[dir];
+				next.x = cur.x + dx[dir];
+				next.time = cur.time + 1;
+
+				if (next.y &amp;lt; 0 || next.y &amp;gt;= n || next.x &amp;lt; 0 || next.x &amp;gt;= n) {
+					continue;
+				}
+
+				if (visited[next.y][next.x] == false &amp;amp;&amp;amp; shark_size &amp;gt;= map[next.y][next.x]) {
+					visited[next.y][next.x] = true;
+					q.push(next);
+				}
+			}
+		}
+
+		if (is_update) {
+			shark = candi;
+			++shark_eat;
+			if (shark_eat == shark_size) {
+				++shark_size;
+				shark_eat = 0;
+			}
+			map[shark.y][shark.x] = 0;
+		}
+	}
+
+	printf(&quot;%d\n&quot;, shark.time);
+
+	return 0;
+}
+&lt;/shark&gt;&lt;/pre&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;clear:both&quot;&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;display:inline;text-align:center;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 336-280 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:336px;height:280px&quot;
+     data-ad-client=&quot;ca-pub-7144676142533579&quot;
+     data-ad-slot=&quot;3265725078&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;/div&gt;</description>
+<category>삼성 SW 역량 테스트 기출 풀이</category>
+<category>coding</category>
+<category>livecoding</category>
+<category>na982</category>
+<category>SDS</category>
+<category>SW 역량평가</category>
+<category>문제해결</category>
+<category>백준</category>
+<category>삼성</category>
+<category>삼성 SDS</category>
+<category>삼성 전자</category>
+<category>삼성SDS</category>
+<category>삼성전자</category>
+<category>아기상어</category>
+<category>알고리즘</category>
+<category>역량평가</category>
+<category>취업</category>
+<category>코딩테스트</category>
+<author>ㄴ ㅏ구팔이</author>
+<guid>https://na982.tistory.com/101</guid>
+<comments>https://na982.tistory.com/101#entry101comment</comments>
+<pubDate>Fri, 11 Jan 2019 18:05:18 +0900</pubDate>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,2035 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Daily Development Notes</title>
+    <description>Software Programmer</description>
+    <link>https://wnsgml972.github.io/</link>
+    <atom:link href="https://wnsgml972.github.io/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Thu, 09 May 2019 02:18:59 +0000</pubDate>
+    <lastBuildDate>Thu, 09 May 2019 02:18:59 +0000</lastBuildDate>
+    <generator>Jekyll v3.8.5</generator>
+    
+      <item>
+        <title>Windows 10 Bash로 Ubuntu 개발환경 구성하기</title>
+        <description>&lt;h2 id=&quot;왜-windows-10에서-ubuntu를&quot;&gt;왜 Windows 10에서 Ubuntu를?&lt;/h2&gt;
+
+&lt;p&gt;개발을 진행하다 보면 때때로 Windows 환경을 지원하지 않는 경우가 종종 있습니다. 그로 인해 우리는 가상머신 혹은 컨테이너나 Cygwin 같은 것을 이용해야 했습니다.&lt;/p&gt;
+
+&lt;p&gt;이런 문제점을 개선하기 위해 마이크로소프트와 우분투를 창립한 캐노니컬(Canonical)이라는 회사가 합작하여 &lt;strong&gt;우분투 리눅스에서 수행되는 Bash Shell 바이너리 그 자체를 Windows에서 수행할 수 있도록 만들었습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;이러한 기능을 &lt;code class=&quot;highlighter-rouge&quot;&gt;Windows Subsystem for Linux&lt;/code&gt;라 하여 줄여서 &lt;code class=&quot;highlighter-rouge&quot;&gt;WSL&lt;/code&gt;이라 부르고 있으며, 이것을 이용하면 오픈 소스 기반의 개발 환경을 쉽게 구축할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;완성-모습&quot;&gt;완성 모습&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;WSL&lt;/code&gt;에 설치된 &lt;code class=&quot;highlighter-rouge&quot;&gt;Ubuntu&lt;/code&gt;로 실행한 &lt;code class=&quot;highlighter-rouge&quot;&gt;Ubuntu 파일 관리자&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;gnome-terminal&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;atom&lt;/code&gt; 등을 Windows 환경에서 실행하였으며, 다음 캡처 화면은 웹 개발 환경을 쉽게 구성한 모습을 보여드렸습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Ubuntu&lt;/code&gt;에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;tomcat&lt;/code&gt;을 설치하여 WebContent를 올려줍니다. 다음으로 &lt;strong&gt;Ubuntu의 Firefox가 아닌(같은 localhost 임을 보여주기 위해)&lt;/strong&gt;, Windows Chrome으로 Webcontent가 올라간 주소인 localhost:8080/dashboard/WebContent에 접속합니다. Dashboard가 정상적으로 나온 것을 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;이 모든 것을 이용하면 Windows에서 Ubuntu 개발 환경을 쉽게 구성할 수 있습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/4/ubuntu-setting6.png&quot; alt=&quot;Windows Power Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;windows-10에서-bash-shell-사용-설정하기&quot;&gt;Windows 10에서 Bash Shell 사용 설정하기&lt;/h2&gt;
+
+&lt;h3 id=&quot;리눅스를-위한-윈도우-서브시스템을-설치&quot;&gt;리눅스를 위한 윈도우 서브시스템을 설치&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;관리자 권한으로 Windows Power Shell을 실행합니다.&lt;/li&gt;
+  &lt;li&gt;다음과 같은 명령어를 실행시켜 WSL을 활성화 시킵니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Enable-WindowsOptionalFeature &lt;span class=&quot;nt&quot;&gt;-Online&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-FeatureName&lt;/span&gt; Microsoft-Windows-Subsystem-Linux
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/4/window-powershell.png&quot; alt=&quot;Windows Power Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;활성화된-wsl에-리눅스-설치하기&quot;&gt;활성화된 WSL에 리눅스 설치하기&lt;/h3&gt;
+
+&lt;h4 id=&quot;windows-버젼-16215-이전&quot;&gt;Windows 버젼 16215 이전&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Windows 버전을 확인하여 16215이전 버전이라면 다음 링크를 따라서 설치합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.microsoft.com/en-us/windows/wsl/install-win10#for-anniversary-update-and-creators-update-install-using-lxrun&quot;&gt;https://docs.microsoft.com/en-us/windows/wsl/install-win10#for-anniversary-update-and-creators-update-install-using-lxrun&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;windows-버젼-16215-이후&quot;&gt;Windows 버젼 16215 이후&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Microsoft Store&lt;/code&gt;에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Ubuntu&lt;/code&gt;를 검색하여 설치합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/4/ubuntu-install.png&quot; alt=&quot;Windows Power Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;설치가 완료되면 User의 아이디와 암호 설정을 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/4/ubuntu-setting.png&quot; alt=&quot;Windows Power Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;기본-개발환경-구성하기&quot;&gt;기본 개발환경 구성하기&lt;/h2&gt;
+
+&lt;h3 id=&quot;1-루트의-비밀-번호를-설정&quot;&gt;1. 루트의 비밀 번호를 설정&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/4/ubuntu-setting1.png&quot; alt=&quot;Windows Power Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;2-apt를-빠르게-이용하기-위해-다운-받는-주소를-변경-해외주소---국내주소&quot;&gt;2. apt를 빠르게 이용하기 위해 다운 받는 주소를 변경 (해외주소 -&amp;gt; 국내주소)&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;apt 주소를 변경하기 위해 sources list를 엽니다.
+&lt;br /&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo vi /etc/apt/sources.list&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;글을 일괄적으로 모두 바꿔주기 위한 명령어를 사용합니다. 
+&lt;br /&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;%s/archive.ubuntu.com/ftp.daum.net/g&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/4/ubuntu-setting22.png&quot; alt=&quot;Windows Power Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;마찬가지로 다음 명령어를 통하여 주소를 바꿔줍니다.
+&lt;br /&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;%s/security.ubuntu.com/ftp.daum.net/g&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/4/ubuntu-setting3.png&quot; alt=&quot;Windows Power Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;두가지를 완료한 뒤 &lt;code class=&quot;highlighter-rouge&quot;&gt;wq!&lt;/code&gt;를 입력하여 저장하고 나가줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;3-저장소를-update합니다&quot;&gt;3. 저장소를 update합니다.&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get update
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt full-upgrade
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;필수-설치-프로그램-제안&quot;&gt;필수 설치 프로그램 제안&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Network 개발 환경 구성을 기준으로 작성되었습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo apt-get install build-essential libncurses5 libncurses5-dev kernel-package bin86 libssl-dev ftpd ssh wireshark iperf speedometer mpv git strongswan vim net-tools cmake nvidia-375 ubuntu-restricted-extras&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;각종 프로그램 설명입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;build-essential libncurses5 libncurses5-dev kernel-package bin86 libssl-dev&lt;/code&gt; 는 커널 컴파일을 위한 패키지입니다. (C, C++, Make 등 컴파일 환경 구성 포함)&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ftpd&lt;/code&gt; ftp 서버 사용을 위한 패키지입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ssh&lt;/code&gt; 원격 접속을 위한 패키지입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wireshark&lt;/code&gt; 패킷 캡쳐를 위한 패키지입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;iperf&lt;/code&gt; 네트워크 성능 측정을 위한 패키지입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;speedometer&lt;/code&gt; 네트워크의 대역폭에 대한 모니터링을 할 수 있는 패키지입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mpv&lt;/code&gt; 리눅스에서 사용되는 플레이어 패키지입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;git&lt;/code&gt; git 사용을 위한 패키지입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;strongswan&lt;/code&gt; IPSec 사용을 위한 패키지입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;vim&lt;/code&gt; vi의 업그레이드 버전인 편집 툴 패키지입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;net-tools&lt;/code&gt; 네트워크 관리자가 흔히 사용하는 여러 가지 기능들(명령어, 유틸리티 등)을 사용하기 쉽게 모아놓은 패키지입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;cmake&lt;/code&gt; 멀티플랫폼 빌드 도구입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;nvidia-375&lt;/code&gt; 그래픽 카드 드라이버입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ubuntu-restricted-extras&lt;/code&gt; codec 등 미디어 라이브러리입니다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;아래의 구성은 &lt;strong&gt;고급 개발 환경 구성입니다.&lt;/strong&gt; &lt;br /&gt;
+WSL 환경에서 GUI 프로그램을 구성하는 것이 의미 있는 이유는, 개발 환경의 완전한 단일화와 프로그램 테스트 등에서 유용하게 쓰일 수 있기 때문입니다. 또한 VM 기반이 아니기 때문에 테스트와 사용 시 속도와 효율성 면에 있어서 매우 유리합니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;gui-프로그램-실행을-위한-개발-환경-구성&quot;&gt;GUI 프로그램 실행을 위한 개발 환경 구성&lt;/h2&gt;
+
+&lt;p&gt;Microsoft에서 제공하는 WSL은 GUI 프로그램을 실행할 수 없습니다. Microsoft에서 GUI 프로그램의 실행에 필요한 X org 서버를 제공하지 않기 때문입니다. 그렇기 때문에 위와 같은 프로그램을 사용하려면 &lt;strong&gt;Windows 용 X org 서버를 설치하고 실행해야 합니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;windows-용-x-org-서버-설치하고-실행하기&quot;&gt;Windows 용 X org 서버 설치하고 실행하기&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;vcxsrv&lt;/code&gt; 서버를 다운로드하고 실행합니다. &lt;br /&gt; &lt;a href=&quot;https://sourceforge.net/projects/vcxsrv/&quot;&gt;https://sourceforge.net/projects/vcxsrv/&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;wsl-환경-설정-및-테스트하기&quot;&gt;WSL 환경 설정 및 테스트하기&lt;/h3&gt;
+&lt;h4 id=&quot;1-etcmachine-id-파일-생성&quot;&gt;1. &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/machine-id&lt;/code&gt; 파일 생성&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;아래와 같은 명령을 실행했을 때 16진수 형태의 GUID 값이 표시되면 정상적으로 파일이 만들어진 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;systemd-machine-id-setup
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;dbus-uuidgen - ensure
+&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /etc/machine-id
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;2-x11-apps-패키지와-x-window-system-기본-서체를-설치&quot;&gt;2. &lt;code class=&quot;highlighter-rouge&quot;&gt;x11-apps&lt;/code&gt; 패키지와 &lt;code class=&quot;highlighter-rouge&quot;&gt;X Window System&lt;/code&gt; 기본 서체를 설치&lt;/h4&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; install x11-apps xfonts-base xfonts-100dpi xfonts-75dpi xfonts-cyrillic dbus-x11
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;3-vcxsrv-서버-설정을-현재-세션에서-사용하도록-구성하고-쉘을-다시-시작&quot;&gt;3. vcxsrv 서버 설정을 현재 세션에서 사용하도록 구성하고 쉘을 다시 시작&lt;/h4&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;DISPLAY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;:0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;4-bashrc-파일에-위의-설정을-적용한-뒤-저장&quot;&gt;4. .bashrc 파일에 위의 설정을 적용한 뒤 저장&lt;/h4&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;vim ~/.bashrc
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/4/ubuntu-setting4.png&quot; alt=&quot;Windows Power Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;5-vcxsrv-서버의-실행을-확인한-뒤-xeyes-명령을-친-뒤-눈-모양의-위젯-확인&quot;&gt;5. vcxsrv 서버의 실행을 확인한 뒤 &lt;code class=&quot;highlighter-rouge&quot;&gt;xeyes&lt;/code&gt; 명령을 친 뒤, 눈 모양의 위젯 확인&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/4/ubuntu-setting5.png&quot; alt=&quot;Windows Power Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;주요-응용프로그램-설치-및-설정&quot;&gt;주요 응용프로그램 설치 및 설정&lt;/h2&gt;
+
+&lt;h3 id=&quot;firefox&quot;&gt;Firefox&lt;/h3&gt;
+
+&lt;p&gt;인터넷 브라우저입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; install firefox
+firefox&amp;amp;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;nautilus-file-roller&quot;&gt;Nautilus, File Roller&lt;/h3&gt;
+
+&lt;p&gt;Nautilus : 리눅스 기본 파일 관리자입니다. &lt;br /&gt;
+File Roller : 압축 관리 프로그램입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; install nautilus file-roller
+nautilus&amp;amp;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;gnome-terminal&quot;&gt;Gnome Terminal&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; install gnome-terminal
+gnome-terminal&amp;amp;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;한글-표시와-한국어-locale-설정&quot;&gt;한글 표시와 한국어 Locale 설정&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; install language-pack-ko
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;locale-gen ko_KR.UTF-8
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; install fonts-unfonts-core fonts-unfonts-extra fonts-baekmuk fonts-nanum fonts-nanum-coding fonts-nanum-extra
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;pinta&quot;&gt;Pinta&lt;/h3&gt;
+
+&lt;p&gt;윈도우의 페인트 프로그램과 유사한 프로그램입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; install pinta
+pinta&amp;amp;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;atom&quot;&gt;Atom&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;add-apt-repository ppa:webupd8team/atom
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt update
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt install atom
+atom&amp;amp;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;ms-windows-추후-발전-방향&quot;&gt;MS Windows 추후 발전 방향&lt;/h2&gt;
+
+&lt;h3 id=&quot;더-발전된-ms-windows-terminal&quot;&gt;더 발전된 MS Windows Terminal&lt;/h3&gt;
+
+&lt;iframe width=&quot;640&quot; height=&quot;360&quot; style=&quot;border:1px solid #CCC; margin-left:40px;&quot; src=&quot;https://www.youtube.com/embed/8gw0rXPMMPE&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;더 강력한 버전의 터미널을 MS에서 올해 2019년도 겨울에 1.0 버전으로 정식 출시하는 것을 목표로 하고 있다고 합니다. 오픈 소스로 Github에 공개되어 있으며, 여름에 MS 스토어에 프리뷰 버전을 출시한다고 하니 한번 써보는 것도 좋을 것 같습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/microsoft/terminal&quot;&gt;https://github.com/microsoft/terminal&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;wsl2&quot;&gt;WSL2&lt;/h3&gt;
+
+&lt;p&gt;기존의 WSL은 실제 &lt;code class=&quot;highlighter-rouge&quot;&gt;Linux&lt;/code&gt;가 아닌 NT 커널 위에 Linux ABI의 불완전한 기능 구현입니다. 그렇기 때문에 기존의 리눅스와 완벽하게 호환되지 않아, 정상적으로 작동하지 않는 꽤 많은 응용프로그램이 존재합니다. 이것을 해결하고자 MS에선 실제 Linux 커널을 탑재한 WSL2를 출시한다고 합니다.&lt;/p&gt;
+
+&lt;p&gt;아래의 게시글을 확인하면 자세한 내용을 확인하실 수 있습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://devblogs.microsoft.com/commandline/announcing-wsl-2/&quot;&gt;https://devblogs.microsoft.com/commandline/announcing-wsl-2/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://m.zdnet.co.kr/news_view.asp?article_id=20190508070053&amp;amp;re=zdk#imadnews&quot;&gt;http://m.zdnet.co.kr/news_view.asp?article_id=20190508070053&amp;amp;re=zdk#imadnews&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;관련-게시글&quot;&gt;관련 게시글&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wnsgml972.github.io/linux/linux_virtual_box_init.html&quot;&gt;Virtual Box Ubuntu 설치 및 개발 기본 설정&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;reference&quot;&gt;Reference&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://medium.com/rkttu/windows-10%EC%97%90%EC%84%9C-%EB%A6%AC%EB%88%85%EC%8A%A4%EC%9A%A9-%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8-%EC%84%A4%EC%B9%98%ED%95%98%EA%B3%A0-%EC%8B%A4%ED%96%89%ED%95%98%EA%B8%B0-2cb0d7892d12&quot;&gt;https://medium.com/rkttu/windows-10%EC%97%90%EC%84%9C-%EB%A6%AC%EB%88%85%EC%8A%A4%EC%9A%A9-%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8-%EC%84%A4%EC%B9%98%ED%95%98%EA%B3%A0-%EC%8B%A4%ED%96%89%ED%95%98%EA%B8%B0-2cb0d7892d12&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://brunch.co.kr/@calmglow/6&quot;&gt;https://brunch.co.kr/@calmglow/6&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://brunch.co.kr/@gnugeun/28&quot;&gt;https://brunch.co.kr/@gnugeun/28&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+</description>
+        <pubDate>Tue, 07 May 2019 00:00:00 +0000</pubDate>
+        <link>https://wnsgml972.github.io/setting/wsl.html</link>
+        <guid isPermaLink="true">https://wnsgml972.github.io/setting/wsl.html</guid>
+        
+        <category>windows10</category>
+        
+        <category>ubuntu</category>
+        
+        <category>bash</category>
+        
+        <category>open-source</category>
+        
+        <category>wsl</category>
+        
+        
+        <category>Setting</category>
+        
+      </item>
+    
+      <item>
+        <title>DevOps란?</title>
+        <description>&lt;h2 id=&quot;devops란&quot;&gt;DevOps란?&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;DevOps&lt;/code&gt;는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Development&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;Operations&lt;/code&gt;의 합성어이며, 기존의 개발 업무와 관리 업무로 나누어진 두 역할 사이의 &lt;strong&gt;커뮤니케이션, 협업, 통합&lt;/strong&gt;을 강조하는 개념입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;why-devops&quot;&gt;Why DevOps?&lt;/h2&gt;
+
+&lt;h3 id=&quot;빠른-속도와-빠른-시장&quot;&gt;빠른 속도와 빠른 시장&lt;/h3&gt;
+
+&lt;p&gt;최근 IT 트랜드의 핵심 요소는 속도입니다. 페이스북과 구글에서도 중요 철학 중 하나로 빠른 속도를 내세우고 있으며, 일정한 주기를 가지고 끊임없이 결과물을 만들어 내어 그때그때 필요한 요소를 진행하는 방법론이 대두되고 있습니다.&lt;/p&gt;
+
+&lt;p&gt;결국 빠르게 변하는 비즈니스 환경과 사용자의 요구 사항에 기민하게 대처하고, 비즈니스가 계속 살아남기 위해 필요한 것입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;developer와-operator의-차이&quot;&gt;Developer와 Operator의 차이&lt;/h3&gt;
+
+&lt;p&gt;IT 시스템에서 필요한 큰 핵심 역할은 서비스를 만드는 개발자와 이 서비스를 운영하고 개선하는 시스템 관리자입니다. 서로 간의 역할이 분명하게 나누어져 있지만, 같은 서비스를 만들고 있기에 서로 간의 협업이 매우 중요합니다. 하지만 시스템 간 연결은 복잡해지고 기술과 요구 사항이 지속적으로 변화하고 있는 시점에서 이러한 시스템 운영에 대한 서로 간의 소통이 매우 어렵게 되고 있습니다. 서로 간의 업무와 정보가 손쉽게 공유되지 않아 처리 속도도 매우 느리며, 심하게는 서로 화합하지 못하고 서로를 탓하기만 하는 경우도 빈번히 발생합니다.&lt;/p&gt;
+
+&lt;p&gt;그렇기 때문에 두 역할 간의 커뮤니케이션, 협업, 통합을 강조하여 서로 간의 차이를 줄여주는 DevOps가 필요한 것입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;기술의-진화&quot;&gt;기술의 진화&lt;/h3&gt;
+
+&lt;p&gt;DevOps를 가능하게 하는 요소 중, &lt;strong&gt;자동화는&lt;/strong&gt; 서로 간의 업무와 정보를 쉽게 공유할 수 있는 기반이 됩니다. 개발자가 각각 개발한 소스 코드를 모아서 한꺼번에 빌드 하는 통합 빌드의 과정을 특정 시점이 아니라 주기적으로 수행합니다. 그로 인해 통합에서 발생하는 오류를 사전에 해결하고 이 모든 과정에 소요되는 시간을 줄이기 위한 것이 나오면서 가능하게 되었습니다. 더 이상 빌드는 컴파일만을 의미하지 않습니다. 소프트웨어가 거대해지고 복잡해지면서 팀 단위로 개발을 하게 되었고, 그 과정에 있어서 분업과 협업은 필수적이 되었습니다.&lt;/p&gt;
+
+&lt;p&gt;이러한 기술의 진화로 배포를 위한 빌드 단계, 테스팅 단계 등에서 시간을 절약하는 효과를 발휘하여 빠른 시장 변화 속도에 발맞춰 대응할 수 있는 것이 가능하게 되었습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;devops의-주요-요소&quot;&gt;DevOps의 주요 요소&lt;/h2&gt;
+
+&lt;p&gt;DevOps는 &lt;code class=&quot;highlighter-rouge&quot;&gt;CALMS&lt;/code&gt;라고 해서, 크게 5개지 핵심 요소로 나누어 볼 수 있습니다. 일반적으로 &lt;strong&gt;문화(Culture), 자동화(Automation), 간소화(Lean), 측정(Measurement), 공유(Share)를&lt;/strong&gt; 주요한 원칙으로 제시하고 있습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;문화culture&quot;&gt;문화(Culture)&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;DevOps 문화는 한 마디로 협업입니다.&lt;/strong&gt; 이 세상의 모든 도구와 자동화 시스템은 Dev와 Ops의 협력하고자 하는 마음이 없다면 어떤 것도 해결할 수 없습니다. 그렇기에 DevOps 공식 사이트에서는 이러한 사고방식이 비기술적인 비즈니스 팀을 선내에 배치하는 데 특히 중요하다고 전하기도 했습니다. 즉 DevOps의 문화는 도구의 문제가 아닌, 사람 간의 문제를 해결하기 때문입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;자동화automation&quot;&gt;자동화(Automation)&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;자동화는 위에서 말했듯이 개발, 테스트 및 지속적 배포의 핵심요소입니다.&lt;/strong&gt; 개발 사이클 상에서 높은 수준의 자동화를 도입한다면 막대한 이익을 얻을 수 있습니다. 자동화를 처음 접하는 팀은 보통 &lt;code class=&quot;highlighter-rouge&quot;&gt;CD(Continuous Delivery)&lt;/code&gt;로 시작합니다. CD란 지속적 배포를 뜻하며 자동화 테스트를 통해 각 코드 변경 사항을 실행한 다음, 빌드를 패키징하고, 자동화 배포를 사용하여 생산을 추진하는 과정입니다.&lt;/p&gt;
+
+&lt;p&gt;시스템은 언제나 변화하지만 이러한 자동화 과정을 통해 더 안정적일 뿐만 아니라 위험도 줄일 수가 있습니다. 게다가 Dev와 Ops 간의 서로 업데이트한 내용을 자동화하여 봄으로써 즉각적으로 서로 간의 소통이 가능합니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;간소화lean&quot;&gt;간소화(Lean)&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;간소화란 낭비를 제거함으로 어떻게 고객에게 가치를 빠르게 제공할 수 있을까에 대한 생각이자 사고방식입니다.&lt;/strong&gt; DevOps 상에서는 이러한 낮은 가치를 지닌 것을 끊임없이 찾고 지속적으로 개선하는 것입니다.&lt;/p&gt;
+
+&lt;p&gt;즉 Lean의 핵심은 끊임없이 문제를 해결하고 개선하는 것입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;측정measurement&quot;&gt;측정(Measurement)&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;DevOps는 여러 가지를 측정하고, 측정 결과를 가시화하여 보여줍니다.&lt;/strong&gt; 실질적인 데이터를 보여줌으로써 지속적인 개선을 위한 노력이, 실제 개선으로 이어지고 있는지 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;즉 성공적인 측정을 통해 성공적인 피드백을 하고, 이렇게 얻은 정보를 토대로 로드맵을 작성하고, 다음 계획을 세부적으로 수립할 때 사용합니다. 이 모든 것은 다른 팀, 다른 부서와의 공유를 통해 더욱 강력한 힘을 발휘할 수 있습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;공유share&quot;&gt;공유(Share)&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;성공 여부와 상관없이 DevOps는 다른 사람들이 배울 수 있도록 서로의 경험을 공유합니다.&lt;/strong&gt; Dev와 Ops 간의 마찰은 주로 공유의 부족으로 인해 발생하게 됩니다. 하지만 DevOps를 통하여 서로 간의 경계를 허물어 아이디어 공동 작업, 문제 및 성공 사례의 공유를 통해 피드백 채널을 열어 지속적인 개선을 할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;reference&quot;&gt;Reference&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://ko.atlassian.com/devops&quot;&gt;https://ko.atlassian.com/devops&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://devops.com/using-calms-to-assess-organizations-devops/&quot;&gt;https://devops.com/using-calms-to-assess-organizations-devops/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.redhat.com/ko/topics/devops#?&quot;&gt;https://www.redhat.com/ko/topics/devops#?&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://blog.lgcns.com/1755&quot;&gt;https://blog.lgcns.com/1755&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.slideshare.net/chingu94/devops-62712241&quot;&gt;https://www.slideshare.net/chingu94/devops-62712241&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+</description>
+        <pubDate>Tue, 19 Feb 2019 00:00:00 +0000</pubDate>
+        <link>https://wnsgml972.github.io/devops/devops.html</link>
+        <guid isPermaLink="true">https://wnsgml972.github.io/devops/devops.html</guid>
+        
+        <category>devops</category>
+        
+        <category>agile</category>
+        
+        
+        <category>DevOps</category>
+        
+      </item>
+    
+      <item>
+        <title>2018 회고</title>
+        <description>&lt;h2 id=&quot;왜-회고하는-가&quot;&gt;왜 회고하는 가?&lt;/h2&gt;
+
+&lt;p&gt;이번 해는 글을 쓰는 것에 대한 긍정적인 효과를 정말 많이 얻은 해이다. 생각을 정리하며 글을 적음으로써 내가 알고 있다고 생각하는 것과 정말 아는 것은 큰 차이가 있다는 것을 알게 되었다. 이번 회고록은 다사다난 했던 지난 1년을 정리해보고 실수를 반복하지 않기 위해 작성했다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;블로그-성장세&quot;&gt;블로그 성장세&lt;/h2&gt;
+
+&lt;h3 id=&quot;사용자-세션-그래프&quot;&gt;사용자 세션 그래프&lt;/h3&gt;
+
+&lt;p&gt;많은 사람이 들어오는 것은 아니다.. 그렇지만 불과 반년전까지만 해도 일주일에 약 180명 정도 들어오는 블로그에서, 약 370명 정도까지 들어오는 블로그로 성장했다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/log/2018/blog.png&quot; alt=&quot;session&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;인기-게시글&quot;&gt;인기 게시글&lt;/h3&gt;
+
+&lt;p&gt;2018.12.16 ~ 2018.12.22, 가장 최근 날짜를 기준으로 사람들이 많이 들어오는 인기 게시글 현황이다. 역시 꾸준하게 인기가 많은 글은 mqtt 프로토콜을 분석한 게시글이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/log/2018/page_view1.png&quot; alt=&quot;page view&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;정리&quot;&gt;정리&lt;/h3&gt;
+
+&lt;p&gt;이번 해는 블로그를 알게 되어 정말 얻은 것이 많은 해이다. 처음에는 막막하여 그저 많은 글을 쓰느라 바빴지만, 현재는 많이 쓰기보단 욕심을 가지고 사람들에게 도움이 됐으면 좋겠다는 마음가짐으로 글을 쓰고 있다. 처음 저에게 블로그를 알려 주신 &lt;a href=&quot;https://nesoy.github.io/&quot;&gt;권영재&lt;/a&gt;님 감사드립니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;홀로서기-해커톤-midas-challenge&quot;&gt;홀로서기 해커톤, MIDAS CHALLENGE&lt;/h2&gt;
+
+&lt;p&gt;그동안 여러 교내외 경진대회나 활동을 하였지만, 혼자 이뤄낸 것은 아니기에 항상 스스로의 실력에 대해 궁금했다. 또한 교내 위주로 경쟁하기 때문에 다른 개발자도 만나 협업을 해보고 싶었다. 이런 이유로 바쁜 시기지만 해커톤에 도전하기로 결정했다. &lt;br /&gt;&lt;br /&gt;
+처음 만나는 사람들과 만나자마자 협업하는 것이 생각보다 쉽지 않았다. 내가 받았던 주제는 알고리즘 능력과 문제 해결 능력이 정말 중요한 주제였는데 나의 알고리즘 역량이 많이 부족하여 많이 힘들었다. 이 계기로 계속해서 미뤄놨던 알고리즘 공부를 시작하게 되었다. 많이 힘들고 어려웠지만 모두 열정을 가지고 열심히 하여 좋은 성과를 얻어내게 되었다. 덕분에 이 해커톤을 계기로 개발에 자신감을 가지게 되었던 것 같다.  &lt;br /&gt;&lt;br /&gt;
+다음 링크는 해커톤 후기에 대한 게시글이다.
+&lt;a href=&quot;https://wnsgml972.github.io/log/log_midaschallenge.html&quot;&gt;2018 마이다스 챌린지 후기&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;4년간의-대학생활의-끝-졸업작품&quot;&gt;4년간의 대학생활의 끝, 졸업작품&lt;/h2&gt;
+
+&lt;p&gt;욕심이 많았고, 하고 싶은 것이 많았다. 그렇기에 정말 많은 도전을 했다. 좋게 말하면 다양한 것을 경험했고, 나쁘게 말하면 하나에 집중하지 못했던 것 같다. &lt;br /&gt;&lt;br /&gt;
+졸업작품의 주제로 막연하게 연구원으로서 공부하던 MQTT에 관한 프로젝트를 해보기로 했다. 정확한 주제가 주어진 것이 아니었기 때문에 매일매일 자는 순간까지도 무엇을 할까 고민했던 것 같다. 처음에는 MQTT에 대해 여러 논문과 다양한 검색을 통해 계속해서 읽어보고 공부를 했었다. 그렇지만 계속 부족했고 무엇인가 만들기에 막연했었다. 그런 상태로 오라클에서 공개한 오픈 소스인 MQTT 브로커 Mosquitto를 분석하게 되었다. &lt;br /&gt;&lt;br /&gt;
+당연히 몇 만 줄이나 되는 코드는 눈에 들어오지 않았고 그저 열심히 디버깅하며 읽었다. 그때 교수님의 조언으로 전체 구조를 그림을 그리기 시작했고 MQTT에 대해 글을 적기 시작했다. 물론 한 번에 좋은 글을 적을 수 없었고, 맞는 그림을 그릴 수 없었다. 팀원들과 함께 정말 많은 토론을 했고 (사실 거의 싸우다시피 토론을 했던 것 같다..ㅎㅎ), 그 과정을 통해 협업하는 법을 알게 되고, 팀원들과 말하는 법을 알게 되고, 서로의 생각을 공유하여 좋은 글이 만들어졌다. 주장이 강한 나에게 말하는 법을 알려주고 서로 싸우지 않고 좋은 작품을 만들어준 팀원들에게 정말 너무 감사하다. &lt;br /&gt;&lt;br /&gt;
+졸업 작품은 Mosquitto를 분석하고 수정하여 기능을 확장한 원천 기술이었다. 당연히 사람들에게 데모하거나 발표하기 쉽지 않은 내용이었고, 이것에 더해서 졸업 작품을 발표하기 위한 것을 따로 구성해야 하기에 시간 또한 부족했다. 이 데모를 담당한 팀원 중 한 명이 있었는데 정말 짧은 기간 동안 엄청나게 많은 고민을 하며 시나리오를 구성했다. 모두 지친 상황에 한 팀원이 끝까지 포기하지 않고 비판적인 사고로 교수님에게도 수없이 찾아가고 책임감 있는 모습을 보여줬다. 결국 모두 만족할 만한 시나리오와 그것을 뒷받침해줄 대시보드가 완성되었다. 이런 비판적인 사고를 통해 계속해서 탐구하는 모습이 존경스러웠고 나 또한 배워야겠다고 생각했다. &lt;br /&gt;&lt;br /&gt;
+성공적으로 졸업 작품을 마치고, 제주도로 2018 한국컴퓨터종합학술대회에 참가하게 되었다. 졸업 작품을 논문으로 작성한 것에 대해 발표자로서 발표하게 되었는데 당연히 시간이 부족했고 하고 있는 것은 계속 많았다. 덕분에 제주도에 가서 2박 3일 동안 잠도 안 자고 팀원들과 계속 발표 준비를 했다. 많이 놀고 싶었을 텐데 같이 열심히 해준 팀원들에게 너무 고맙다. 모두 열심히 노력한 덕에 KCC2018에서 우수발표논문상을 수상하였다. &lt;br /&gt;&lt;br /&gt;
+유능한 팀원들 덕에 많은 것을 얻은 시간이었다. &lt;br /&gt;
+비판적인 사고, 글 작성, 그림으로 표현하기, 협업하기&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;첫-인턴-etri&quot;&gt;첫 인턴, ETRI&lt;/h2&gt;
+
+&lt;p&gt;6월부터 8월까지 약 2달간 ETRI에서 연구 연수생으로 근무하며 느낀 회고록이다. 많은 것을 배운 것도 좋았지만 좋은 사람을 만나 더 열심히 공부하는데 좋은 동기가 된 2달이었다.&lt;/p&gt;
+
+&lt;iframe src=&quot;//www.slideshare.net/slideshow/embed_code/key/4NIaJj5bnt7zOP&quot; width=&quot;595&quot; height=&quot;485&quot; frameborder=&quot;0&quot; marginwidth=&quot;0&quot; marginheight=&quot;0&quot; scrolling=&quot;no&quot; style=&quot;border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;&quot; allowfullscreen=&quot;&quot;&gt; &lt;/iframe&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;주니어-개발자로서-첫-입사&quot;&gt;주니어 개발자로서 첫 입사!&lt;/h2&gt;
+
+&lt;p&gt;좋은 기회를 얻어 빠르게 취직을 하게 되었다. 직접 실무에 와서 일을 해보니 정말 대단한 사람이 많다는 것을 알게 되었다. 또한 그동안은 학문을 공부했다면 지금은 직접 실무에 관련된 것을 배우다 보니, 많은 것이 부족했다는 것을 알게 되었다. 그중 가장 많은 것을 느끼게 된 것을 세 가지 뽑으라면 디버깅 기술, 클린 코드, 협업이다. 다음은 요즘 느끼게 된 것을 정리해보았다.&lt;/p&gt;
+
+&lt;h3 id=&quot;이것저것-새로운-것을-배우고-싶은-욕심&quot;&gt;이것저것 새로운 것을 배우고 싶은 욕심?&lt;/h3&gt;
+
+&lt;p&gt;많은 것을 배우고 싶은 욕심에, 기존의 것도 잘하지 않는데 계속 새로운 것을 추구하는 것 같다. 먼저 기본적인 것에 충실해야겠다.&lt;/p&gt;
+
+&lt;h3 id=&quot;테스트-코드&quot;&gt;테스트 코드&lt;/h3&gt;
+
+&lt;p&gt;실제 파는 제품을 처음 개발해보다 보니, 기술에 대한 검증이 중요하다는 것을 알게 되었다. 계속해서 리팩토링을 해야 하다 보니 코드를 정말 깔끔하게 짜야 하며, 그에 따라 테스트 코드가 중요하다는 것을 직접 느끼게 되었다.&lt;/p&gt;
+
+&lt;h3 id=&quot;clean-code&quot;&gt;Clean Code&lt;/h3&gt;
+
+&lt;p&gt;하루 종일 개발을 하다 보니 조금 더 개발을 잘 하고 싶어서 주변 지인에 추천을 받아 Clean Code라는 책을 읽게 되었다. 이 책을 읽다 보니 그동안 짰던 코드의 문제점이 너무 많이 보였고, 계속 수정하게 되었다. 또한 내가 작성한 코드에 대한 책임감이 생기게 된 것 같다.&lt;/p&gt;
+
+&lt;h3 id=&quot;꾸준한-기록&quot;&gt;꾸준한 기록&lt;/h3&gt;
+
+&lt;p&gt;계속해서 기록하기 위해 하루하루 배운 것과 얻은 것, 해야 할 것을 조금씩 정리하여 글을 적고 있다. 사내에서 배운 내용을 모두 공개할 순 없지만 기록하는 버릇이 생긴 것 같아 좋았다. &lt;a href=&quot;https://www.github.com/wnsgml972/midas_log&quot;&gt;MIDAS Log&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;꾸준한-공부&quot;&gt;꾸준한 공부&lt;/h3&gt;
+
+&lt;p&gt;계속해서 딥러닝에 대해 공부하고 싶었지만, 회사의 일 적응을 핑계로 계속해서 미뤄왔다. 지금은 어느 정도 익숙해져 일을 하고 있는 상황에서도 공부를 안 하게 되는 것 같다. 사수님에게 자신의 공부도 꾸준히 하지 않으면 하지 않게 된다. 조금씩이라도 계속 놓지 않으려는 자세가 중요하다는 말을 들었는데, 꾸준히 공부를 해야겠다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;1년-간-얻은-것-더-노력할-점&quot;&gt;1년 간 얻은 것, 더 노력할 점&lt;/h2&gt;
+
+&lt;h3 id=&quot;비판적인-사고&quot;&gt;비판적인 사고&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;가치 판단&lt;/li&gt;
+  &lt;li&gt;진행하고 있는 일에 대한 끊임없는 비판적인 사고, 회고&lt;/li&gt;
+  &lt;li&gt;무엇을 하든 왜?를 먼저 파악할 것&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;생각-표현&quot;&gt;생각 표현&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;생각을 정리하고(글과 그림) 말로서 표현하기&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;그-외-성과&quot;&gt;그 외 성과?&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;졸업 작품&lt;/li&gt;
+  &lt;li&gt;교내 미국 단기 어학연수 프로그램!&lt;/li&gt;
+  &lt;li&gt;교내 3개, 교외 5개의 수상&lt;/li&gt;
+  &lt;li&gt;1회 인턴의 경험&lt;/li&gt;
+  &lt;li&gt;회사 입사&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;나의-개선할-점-하고-싶은-것&quot;&gt;나의 개선할 점, 하고 싶은 것&lt;/h2&gt;
+
+&lt;h3 id=&quot;오픈-소스에-기여&quot;&gt;오픈 소스에 기여&lt;/h3&gt;
+
+&lt;p&gt;지금 분석하고 있는 오픈 소스 프로젝트에 컨트리 뷰트를 시도했지만 적용되지 않았다.. ㅠㅠ&lt;/p&gt;
+
+&lt;h3 id=&quot;부족했던-블로그-포스팅&quot;&gt;부족했던 블로그 포스팅&lt;/h3&gt;
+
+&lt;p&gt;지금도 쓰고 싶은 게시글이 4개나 밀려있지만 적지 못하고 있다.. 꾸준히 투자하여 하나씩 작성하자.&lt;/p&gt;
+
+&lt;h3 id=&quot;말-습관-강한-주장&quot;&gt;말 습관? 강한 주장&lt;/h3&gt;
+
+&lt;p&gt;여전히 옳다고 믿는 것에 대해 강하게 주장을 펼치는 것 같다. 조금 더 부드럽게 말하고, 상대방을 이해하고, 배려하려 노력해야겠다.&lt;/p&gt;
+
+&lt;h3 id=&quot;개인-프로젝트&quot;&gt;개인 프로젝트&lt;/h3&gt;
+
+&lt;p&gt;퇴근 후 딥러닝에 관한 개인 프로젝트를 꼭 해봐야겠다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Good bye 2018, Hello 2019!&lt;/strong&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sun, 23 Dec 2018 00:00:00 +0000</pubDate>
+        <link>https://wnsgml972.github.io/log/Retrospective_2018.html</link>
+        <guid isPermaLink="true">https://wnsgml972.github.io/log/Retrospective_2018.html</guid>
+        
+        <category>retrospective</category>
+        
+        <category>log</category>
+        
+        
+        <category>Log</category>
+        
+      </item>
+    
+      <item>
+        <title>Unicode 분석</title>
+        <description>&lt;h2 id=&quot;intro&quot;&gt;Intro&lt;/h2&gt;
+
+&lt;p&gt;분명 제대로 보이는 한글 이름의 파일을 내려받았는데 읽을 수 없는 이상한 이름으로 저장된 파일을 받아본 경험이 있을 것입니다. 보통 ‘인코딩이 깨졌다.’라고 말하는 이런 상황은 왜 발생하는 것일까요? &lt;strong&gt;그 이유는 컴퓨터에서 한글을 표현하는 다양한 방식이 있는데 해당 방식이 서로 맞지 않기 때문입니다.&lt;/strong&gt; &lt;br /&gt;&lt;br /&gt;
+컴퓨터 발명 초기에는 문자를 표현해야 하는 요구가 많이 없었습니다. 그러나 계속해서 이러한 요구가 생겨났고, 컴퓨터끼리 데이터를 교환해야 하는 일이 생기기도 했습니다. 때문에 컴퓨터끼리 문자 데이터를 교환해야 하는 표준이 필요하게 되었고, 결국에는 &lt;strong&gt;ASCII와 같은 표준 문자 인코딩&lt;/strong&gt;이 만들어지게 되었습니다. &lt;br /&gt;&lt;br /&gt;
+문자를 표현하기 위해서는 가장 먼저 ‘&lt;strong&gt;문자 집합&lt;/strong&gt;‘을 정의해야 합니다. 문자 집합은 표현해야 할 문자를 정하고 순서를 지정한 것입니다. 영어라면 A부터 Z까지입니다. 이러한 숫자와 문자뿐만 아니라 통신을 제어하기 위한 제어 문자도 포함되어야 합니다. 그리고 이러한 문자 집합을 코드 형태로 표현한 것을 &lt;strong&gt;코드화된 문자 집합&lt;/strong&gt;이라고 합니다. 그리고 문자 집합을 컴퓨터에 저장하기 위해서 어떠한 형태로 표현한 것을 &lt;strong&gt;인코딩 방식&lt;/strong&gt;이라고 합니다. &lt;br /&gt;&lt;br /&gt;
+이러한 역사를 토대로 문자를 컴퓨터로 표현하던 중, 영어뿐만 아니라 한글, 한자, 일본에서 사용하는 문자 집합을 처리할 필요성을 느끼게 되었고, 아쉽게도 그 개수가 너무 많아 확장된 ASCII 코드로도 이를 모두 처리할 수 없게 되었습니다. 따라서 이러한 문자를 처리하기 위한 별도의 방안이 필요하게 되었습니다. &lt;strong&gt;결국 세상의 모든 문자 집합의 표준을 만들기 위해 Unicode라는 것이 나오게 되었습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;intro-정리&quot;&gt;Intro 정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;컴퓨터에서 문자를 표현하는 방식에는 다양한 방식이 있다. (여러 인코딩 방식이 있다.)&lt;/li&gt;
+  &lt;li&gt;문자 집합 : 표현해야 할 문자를 정하고 순서를 지정한 것&lt;/li&gt;
+  &lt;li&gt;코드화된 문자 집합 : 문자 집합을 코드 형태로 표현한 것&lt;/li&gt;
+  &lt;li&gt;인코딩 방식 : 문자 집합을 컴퓨터에 저장하기 위해서 어떠한 형태로 표현한 것&lt;/li&gt;
+  &lt;li&gt;ASCII : 초기에 널리 쓰이던 표준 문자 인코딩 (영어와 확장 ASCII에서는 유럽어도 표현이 가능, 확장 ASCII는 ANSI라고도 불림)&lt;/li&gt;
+  &lt;li&gt;Unicode : 모든 문자를 표현할 수 있도록 만들어진 표준 문자 인코딩&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;유니코드&quot;&gt;유니코드&lt;/h2&gt;
+
+&lt;h3 id=&quot;유니코드란&quot;&gt;유니코드란??&lt;/h3&gt;
+
+&lt;p&gt;유니코드(Unicode)는 전 세계의 모든 문자를 컴퓨터에서 일관되게 표현하고 다룰 수 있도록 설계된 표준입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;유니코드의-포함-내용&quot;&gt;유니코드의 포함 내용&lt;/h3&gt;
+
+&lt;p&gt;유니코드는 코드화된 유니코드 문자&lt;code class=&quot;highlighter-rouge&quot;&gt;(Unicode Character Set : ISO 10646)&lt;/code&gt; 뿐만 아니라 문자 정보 데이터베이스, 문자를 다루는 알고리즘, 문화권을 포함하는 개념입니다. 예를 들어 다음과 같은 것이 있습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;문자의 표기 방향 (문자의 Data 순서와 시각적 표기 순서의 차이 : 아랍어는 왼쪽에서 오른쪽으로 작성한다)&lt;/li&gt;
+  &lt;li&gt;문자의 조립, 분해 방식 (예 : 한글 - ㅎㅏㄴㄱㅡㄹ)&lt;/li&gt;
+  &lt;li&gt;렌더링 방식&lt;/li&gt;
+  &lt;li&gt;두 문자의 우선순위 비교 방법&lt;/li&gt;
+  &lt;li&gt;숫자의 구분자 표기 방법&lt;/li&gt;
+  &lt;li&gt;…&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;유니코드의-여러-인코딩-방식-ucs-utf&quot;&gt;유니코드의 여러 인코딩 방식 (UCS, UTF)&lt;/h2&gt;
+
+&lt;p&gt;유니코드의 인코딩 방식을 이해하려면 먼저 &lt;code class=&quot;highlighter-rouge&quot;&gt;Code Point&lt;/code&gt;에 대해 알아야 합니다. Code Point란 유니코드 값을 나타내기 위해 사용하는 것으로서, 보통 &lt;code class=&quot;highlighter-rouge&quot;&gt;U+&lt;/code&gt;를 붙여 표시합니다. 유니코드의 인코딩 방식은 이러한 Code Point를 고정 크기로 인코딩한 &lt;code class=&quot;highlighter-rouge&quot;&gt;UCS-2&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;UCS-4&lt;/code&gt;, 그리고 가변 크기로 인코딩한 &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-8&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-16&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-32&lt;/code&gt;로 나눌 수 있습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;ucs&quot;&gt;UCS&lt;/h3&gt;
+
+&lt;p&gt;UCS는 유니코드를 위한 &lt;strong&gt;고정 길이 문자 인코딩 방식&lt;/strong&gt;입니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;ucs-2-1--2&quot;&gt;UCS-2 (1 : 2)&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;1개의 문자를 2 byte인 16-bit에 저장한다고 하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;UCS-2&lt;/code&gt;라고 명명하였습니다.&lt;/li&gt;
+  &lt;li&gt;일반적으로 사용하는 문자들을 모두 표현할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;ucs-4-1--4&quot;&gt;UCS-4 (1 : 4)&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;1개의 문자를 4 byte인 32-bit에 저장한다고 하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;UCS-4&lt;/code&gt;라고 명명하였습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;UCS-4&lt;/code&gt;는 4개의 byte를 사용하여 &lt;strong&gt;현재 세상의 모든 문자를 표기할 수 있는 코드&lt;/strong&gt;(Code Point)입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;unicode-transformation-format-utf&quot;&gt;Unicode Transformation Format (UTF)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;UTF는 유니코드를 위한 &lt;strong&gt;가변 길이 문자 인코딩 방식&lt;/strong&gt;입니다.&lt;/li&gt;
+  &lt;li&gt;각각의 UTF-x로 인코딩된 코드를 디코딩 하면 이에 해당하는 Unicode Code Point를 획득할 수 있도록 설계되어 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;utf-8&quot;&gt;UTF-8&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;ASCII 기반 응용프로그램이나 파일 시스템에서는 2바이트의 유니코드 문자를 1바이트씩 따로 읽기 때문에 잘못된 해석을 하게 됩니다. 그런 문제점을 해결하고자 &lt;strong&gt;UTF-8은 고정 길이의 유니코드 문자를 가변 길이 ASCII-Safe 바이트 문자열로 변환하여 해석&lt;/strong&gt;합니다.&lt;/li&gt;
+  &lt;li&gt;이런 방법으로 UTF-8은 ASCII를 기반으로 확장한 인코딩 방법입니다.&lt;/li&gt;
+  &lt;li&gt;ASCII와 호완이 가능하면서 유니코드를 표현할 수 있기 때문에 가장 많이 사용됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;utf-16-utf-32&quot;&gt;UTF-16, UTF-32&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;마찬가지로 각 인코딩 환경을 기반으로 확장한 인코딩 방법입니다.
+    &lt;ul&gt;
+      &lt;li&gt;UTF-16은 UCS-2를 기반으로 확장한 인코딩 방법&lt;/li&gt;
+      &lt;li&gt;UTF-32는 UCS-4를 기반으로 확장한 인코딩 방법&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;UTF-16의 경우에는 CPU의 엔디안(Endian)처리 방식에 따라 조금 다르게 인식될 수 있습니다. (BigEndian은 UTF-16BE, LittleEndian은 UTF-16LE)&lt;/li&gt;
+  &lt;li&gt;UTF-16의 엔디안(Endian)을 구분하기 위해 파일의 시작 지점에 BOM(Byte Order Mark : 0xFEFF)를 표준에서 허용하고 있습니다. (4 byte를 읽었을 때 0xFE 0xFF, 0xFF 0xFE 인지에 따라 Endian 처리를 판단함)&lt;/li&gt;
+  &lt;li&gt;UTF-16에서 BOM이 없는 경우 &lt;strong&gt;Big Endian을 기본값으로 가정&lt;/strong&gt;합니다. (Intel CPU를 사용하는 Windows는 Little Endian이 기본값이라 표준과 조금 어긋나있습니다.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;정리&quot;&gt;정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;1개의 문자는 1개의 코드(Code Point)에 대응합니다.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;UCS-2&lt;/code&gt;에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;16-bit&lt;/code&gt;가 &lt;code class=&quot;highlighter-rouge&quot;&gt;1개의 문자&lt;/code&gt;로 대응&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;UCS-4&lt;/code&gt;에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;32-bit&lt;/code&gt;가 &lt;code class=&quot;highlighter-rouge&quot;&gt;1개의 문자&lt;/code&gt;로 대응&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;일반적으로 &lt;strong&gt;Unicode Code Point를 표준으로 사용합니다.&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;유니코드 문자의 좌표는 U+xxxx 형태로 표현 (예 : &lt;code class=&quot;highlighter-rouge&quot;&gt;U+1F61B&lt;/code&gt; -&amp;gt; 😛)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;unicode-vs-ucs-vs-utf&quot;&gt;Unicode vs. UCS vs. UTF&lt;/h2&gt;
+
+&lt;h3 id=&quot;unicode&quot;&gt;Unicode&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;문자를 표현하기 위한 표준안입니다.&lt;/li&gt;
+  &lt;li&gt;표기 순서, 정렬 방식, 문화권 차이 등의 알고리즘을 포함하는 포괄적인 개념입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;ucs-1&quot;&gt;UCS&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;어떠한 문자를 1개의 코드(Code Point)에 대응한 것에 대한 표준입니다.&lt;/li&gt;
+  &lt;li&gt;UCS-2는 문자를 16-bit에 대응한 것으로 &lt;strong&gt;일반적/일상적으로 사용하는 문자들&lt;/strong&gt;(BMP 영역)이 여기에 속해있습니다.&lt;/li&gt;
+  &lt;li&gt;UCS-4는 문자를 32-bit에 대응한 것으로 UCS-2에서 표현할 수 없었던 &lt;strong&gt;고대 상형문자, 이모티콘&lt;/strong&gt; 등을 포함하는 전체 유니코드 영역을 표현합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;utf&quot;&gt;UTF&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;위의 UCS를 가변 크기로 인코딩하는 방식 또는 알고리즘입니다.&lt;/li&gt;
+  &lt;li&gt;UTF-8은 UCS를 ASCII 기반, 8-bit 단위로 인코딩한 것입니다.&lt;/li&gt;
+  &lt;li&gt;UTF-16은 UCS를 UCS-2 기반, 16-bit 단위로 인코딩한 것입니다.&lt;/li&gt;
+  &lt;li&gt;UTF-32는 UCS를 UCS-4 기반, 32-bit 단위로 인코딩한 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/charset/3.png&quot; alt=&quot;unicode&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;unicodes-in-software&quot;&gt;Unicodes in Software&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;W3C : 모든 웹 표준 파일은 &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-8&lt;/code&gt;을 기본으로 사용합니다. (JSON, XML, HTML, CSS 등)&lt;/li&gt;
+  &lt;li&gt;Windows : &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-16&lt;/code&gt;을 기본으로 사용합니다.&lt;/li&gt;
+  &lt;li&gt;Javascript : 많은 엔진 코드가 &lt;code class=&quot;highlighter-rouge&quot;&gt;UCS-2&lt;/code&gt; 또는 &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-16&lt;/code&gt;을 기본으로 사용합니다.&lt;/li&gt;
+  &lt;li&gt;Python : &lt;code class=&quot;highlighter-rouge&quot;&gt;UCS-2&lt;/code&gt;를 기본으로 사용하지만 빌드 옵션에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-32&lt;/code&gt;로 바꿔서 사용이 가능합니다.&lt;/li&gt;
+  &lt;li&gt;International Components for Unicode (ICU) : 내부적으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-16&lt;/code&gt;을 기본으로 사용하고 있다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;unicode-in-c&quot;&gt;Unicode in C++&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wchar_t&lt;/code&gt;는 원래 8-bit보다 큰 문자를 표기하기 위해 정의한 형식입니다. (표준안에서 몇 bit를 사용해야 하는지 정의하지 않음)&lt;/li&gt;
+  &lt;li&gt;Windows : 16-bit를 사용하고 있으며, &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-16&lt;/code&gt; 데이터를 넣어서 사용합니다.&lt;/li&gt;
+  &lt;li&gt;나머지(일반적으로) : 32-bit를 사용하고 있으며, &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-32&lt;/code&gt; 데이터를 넣어서 사용합니다.&lt;/li&gt;
+  &lt;li&gt;C++11에서 명시적인 자료형이 추가되었습니다. (&lt;code class=&quot;highlighter-rouge&quot;&gt;char16_t&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;char32_t&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;str1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;u8&quot;여기는 UTF-8&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// std::string과 대응, 계당 2byte
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char16_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;str2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;u&quot;여기는 UTF-16&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// std::u16string과 대응, 계당 2byte
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;wchar_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;str3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;L&quot;여기는 UTF-16&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// std::wstring과 대응, 계당 2byte
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char32_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;str4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;U&quot;여기는 UTF-32&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// std::u32string과 대응, 계당 4byte
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;unicode-in-java&quot;&gt;Unicode in Java&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Java(JVM) : Java의 &lt;code class=&quot;highlighter-rouge&quot;&gt;String&lt;/code&gt;은 &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-16&lt;/code&gt;를 기본으로 사용합니다.&lt;/li&gt;
+  &lt;li&gt;Java에서 문자열 전송/수신을 위해서 직렬화가 필요할 때 : &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-8&lt;/code&gt;을 기본으로 사용합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;unicode-in-windows&quot;&gt;Unicode in Windows&lt;/h2&gt;
+
+&lt;h3 id=&quot;windows-code-page--1980년대에서-1990년대까지-사용했던-windows의-고유-문자-코드code-point-처리-방식&quot;&gt;Windows Code Page : 1980년대에서 1990년대까지 사용했던 Windows의 고유 문자 코드(Code Point) 처리 방식&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;크게 ANSI Code Page와 OEM Code Page를 가지고 있습니다.&lt;/li&gt;
+  &lt;li&gt;51949 : EUC-KR Code Page로 2000년대 초반 우리나라에서 많이 사용하던 형식입니다.&lt;/li&gt;
+  &lt;li&gt;65001 : UTF-8 Code Page로 표준화된 통신을 위해서는 이 코드를 사용해서 변환해야 합니다.&lt;/li&gt;
+  &lt;li&gt;949 : ANSI/OEM Korean Code Page로 EUC-KR에서 표기할 수 없는 문자를 개선한 확장된 버전입니다. (한글 OS에서 ASCII 형식으로 불러올 때의 기본 인코딩 방식)&lt;/li&gt;
+  &lt;li&gt;메모장에서 볼 수 있는 인코딩 ANSI는 ASCII의 확장만을 의미하는 게 아니라, EUC-KR에서 개선된 위의 방식을 의미합니다. 그렇기 때문에 한글을 저장할 수 있는 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;windows-kernel--내부적으로-16-bit로-된-wchar_t인-utf-16을-기본으로-사용합니다&quot;&gt;Windows Kernel : 내부적으로 16-bit로 된 wchar_t인 UTF-16을 기본으로 사용합니다.&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;TCHAR 계열을 사용하여 개발할 경우 유니코드로 빌드 할 경우 wchar_t로 변환하여 빌드가 됩니다.&lt;/li&gt;
+  &lt;li&gt;기존 코드 호환을 위해 ~~~A와 ~~~W 두 가지 함수를 제공하고 있으며 ~~~A함수를 호출할 경우 내부적으로 wchar_t로 변환한 후 ~~~W를 호출하게 되어있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;windows-programming-tips&quot;&gt;Windows Programming Tips&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Windows에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-16 + BOM&lt;/code&gt;으로 파일을 저장해야 올바르게 유니코드 파일이라고 인식합니다. (예 : 메모장 프로그램 등)&lt;/li&gt;
+  &lt;li&gt;팁 : Visual Studio에서 ‘s8’옵션을 사용하면 UTF-8로 인코딩된 텍스트가 디버그 창에서 올바르게 표기됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/charset/4.png&quot; alt=&quot;unicode&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;한글-코드의-표현-방식&quot;&gt;한글 코드의 표현 방식&lt;/h2&gt;
+
+&lt;p&gt;유니코드 상에서 한글은 각각의 자모와 그 조합으로 구성되어 있습니다. 각 인코딩 방식을 파악하고 해당 환경에서 지원되는 방법으로 인코딩하여 문자를 전송한다면 해당 환경과의 통신은 원활하게 될 것입니다. 그런데 다양한 환경으로 이루어진 웹상에서는 어떻게 한글과 여러 문자들을 표현해야 할까요??&lt;/p&gt;
+
+&lt;h3 id=&quot;웹과-한글&quot;&gt;웹과 한글&lt;/h3&gt;
+
+&lt;p&gt;한글 처리, 특히 웹에서의 한글 처리는 무척 까다롭습니다. 그 이유는 사용자의 환경이 매우 다르다는 데 있습니다. 웹 프로그래밍을 하려면, 운영체제의 기본 인코딩, Java 소스 코드의 인코딩, JSP 파일의 인코딩, HTTP 요청의 인코딩, HTTP 응답의 인코딩, 데이터베이스의 인코딩, 파일의 인코딩 - 이렇게 많은 인코딩과 마주하게 됩니다. &lt;br /&gt;&lt;br /&gt;
+일단 웹에서 한글이 깨지는 이유는? 이제는 알 수 있듯이 브라우저의 인코딩 값과 서버의 인코딩 값이 달라서 문자를 온전하게 읽을 수 없기 때문입니다. 웹에서 여러 인코딩을 지원하고 싶다면 인코딩된 URL 문자열과, 사용한 인코딩 정보를 파라미터로 같이 전달해야 합니다. 이런 방식을 이용하면 여러 인코딩 방식을 지원하는 환경을 구성할 수 있습니다.&lt;br /&gt;&lt;br /&gt;
+ 물론 위에서 말했다시피 웹상에서의 인코딩 방식의 표준은 &lt;code class=&quot;highlighter-rouge&quot;&gt;UTF-8&lt;/code&gt;입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;결론&quot;&gt;결론&lt;/h2&gt;
+
+&lt;p&gt;컴퓨터에서 어떠한 문자를 저장했을 때, 해당 응용프로그램이나 파일 시스템, 환경에서 특정 문자를 확실하게 전달하고 싶다면, 지금까지 정리한 인코딩 방식에 대해 잘 알고 있다면 많은 도움이 될 것입니다. &lt;br /&gt;&lt;br /&gt;
+그에 대한 제 경험으로 한 오픈 소스에서 특정 파일을 읽을 때 영어 밖에 지원하지 않아 확장하던 중, 다국어 지원이 가능하고 해당 운영체제나 환경을 고려해서 프로그램을 만들어야 할 일이 생겼습니다. 아무리 찾아봐도 명쾌하게 정리가 되지 않아 글을 쓰기 시작했는데, 혹시나 제가 틀린 부분이 있다면 지적해주시면 감사하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;참고&quot;&gt;참고&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.ibm.com/support/knowledgecenter/ko/SSEPGG_9.1.0/com.ibm.db2.udb.admin.doc/doc/c0004816.htm&quot;&gt;IBM&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://d2.naver.com/helloworld/19187&quot;&gt;https://d2.naver.com/helloworld/19187&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://d2.naver.com/helloworld/76650&quot;&gt;https://d2.naver.com/helloworld/76650&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://studyforus.tistory.com/167&quot;&gt;http://studyforus.tistory.com/167&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+</description>
+        <pubDate>Thu, 29 Nov 2018 00:00:00 +0000</pubDate>
+        <link>https://wnsgml972.github.io/encoding/encoding_unicode.html</link>
+        <guid isPermaLink="true">https://wnsgml972.github.io/encoding/encoding_unicode.html</guid>
+        
+        <category>unicode</category>
+        
+        <category>ucs</category>
+        
+        <category>utf</category>
+        
+        <category>encoding</category>
+        
+        
+        <category>Encoding</category>
+        
+      </item>
+    
+      <item>
+        <title>VSCode 기본 Setting</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;Visual Studio Basic Setting에 이은 VS Code Basic Setting입니다. &lt;br /&gt;
+최대한 마우스를 사용하지 않고 모든 단축기를 외워서, 개발하기 쉬운 환경을 구성하는 방법입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;설치&quot;&gt;설치&lt;/h2&gt;
+
+&lt;h3 id=&quot;windows&quot;&gt;Windows&lt;/h3&gt;
+
+&lt;p&gt;다운로드 후 설치합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://code.visualstudio.com&quot;&gt;https://code.visualstudio.com&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;ubuntu&quot;&gt;Ubuntu&lt;/h3&gt;
+
+&lt;h4 id=&quot;방법-1&quot;&gt;방법 1&lt;/h4&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://code.visualstudio.com&quot;&gt;https://code.visualstudio.com&lt;/a&gt;에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Linux.deb&lt;/code&gt;를 설치합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$ sudo dpkg -i code_1.23.1-1525968403_amd64.deb&lt;/code&gt;를 입력합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$ code&lt;/code&gt; 명령어로 VS Code를 실행합니다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h4 id=&quot;방법-2&quot;&gt;방법 2&lt;/h4&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://code.visualstudio.com&quot;&gt;https://code.visualstudio.com&lt;/a&gt;에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Linux.deb&lt;/code&gt;를 설치합니다.&lt;/li&gt;
+  &lt;li&gt;만약 방법 1에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Package libconf-24 is not installed.&lt;/code&gt; 에러가 발생한다면&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;$ sudo apt-get install gconf-service-backend gconf-service gconf2-common libgconf-2-4&lt;/code&gt;를 입력합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$ sudo dpkg -i code_1.23.1-1525968403_amd64.deb&lt;/code&gt;를 입력합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$ code&lt;/code&gt; 명령어로 VS Code를 실행합니다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;vs-code-add-in&quot;&gt;VS Code Add In&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + X&lt;/code&gt; 로 Extensions에서 검색할 수 있습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;setting-sync&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=Shan.code-settings-sync#review-details&quot;&gt;Setting Sync&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;다른 컴퓨터에서도 Setting을 동기화 시켜줍니다.&lt;/li&gt;
+  &lt;li&gt;현재 설정을 Github에 저장하기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;shift + alt + U&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Github에 있는 설정 내려받아 적용하기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;shift + alt + D&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;todo-highlight&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight&quot;&gt;TODO-Highlight&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;TODO 주석을 하이라이팅 해줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://github.com/wayou/vscode-todo-highlight/raw/master/assets/material-night-eighties.png&quot; alt=&quot;Todo&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;indent-rainbow&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=oderwat.indent-rainbow&quot;&gt;indent-rainbow&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;들여 쓰기를 효과적으로 볼 수 있게 해줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/oderwat/vscode-indent-rainbow/master/assets/example.png&quot; alt=&quot;indent-rainbow&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;import-cost&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=wix.vscode-import-cost&quot;&gt;Import Cost&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Import 시 드는 메모리 비용을 알려줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://file-wkbcnlcvbn.now.sh/import-cost.gif&quot; alt=&quot;Import Cost&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;ftp-sync&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=lukasz-wronski.ftp-sync#review-details&quot;&gt;ftp-sync&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;VS Code에서 바로 FTP로 업로드 또는 다운로드 할 수 있는 기능을 제공합니다.&lt;/li&gt;
+  &lt;li&gt;서버와 클라이언트 동기화를 기본기능으로 제공하고 열려져있는 파일을 수정하여 저장하면 자동으로 서버에 업로드합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/W9h4pwW.gif&quot; alt=&quot;ftp-sync&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;git-history&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=robertohuertasm.vscode-icons#review-details&quot;&gt;Git History&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;git log 보기, 파일 히스토리, 브랜치와 커밋을 비교 할 수 있는 확장입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/DonJayamanne/gitHistoryVSCode/master/images/gitLogv2.gif&quot; alt=&quot;git-history&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;vscode-icons&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=robertohuertasm.vscode-icons#review-details&quot;&gt;vscode-icons&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;좌측에 있는 트리메뉴와 에디터 상단에 있는 탭메뉴의 타이틀명 앞에 아이콘을 붙혀 주어서 해당 파일이 어떤파일인지 직관적으로 알 수 있게 표시를 해줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/images/screenshot.gif&quot; alt=&quot;icons&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;markdown-shortcuts&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=mdickin.markdown-shortcuts#review-details&quot;&gt;Markdown Shortcuts&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Markdown에 대한 단축키를 제공해 주는 확장프로그램입니다.&lt;/li&gt;
+  &lt;li&gt;단축키나 마우스의 오른클릭을 하면 메뉴로 보여주기때문에 쉽게 Markdown을 작성할 수 있게 해줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/mdickin/vscode-markdown-shortcuts/master/media/demo/bullets.gif&quot; alt=&quot;shortcuts&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;prettier-code-formatter&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode&quot;&gt;Prettier Code formatter&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;파일 저장 시&lt;/strong&gt; 자동으로 코드를 정렬하여 저장합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/3/prettier.gif&quot; alt=&quot;prettier&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;table-formatter&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=shuworks.vscode-table-formatter#review-details&quot;&gt;Table Formatter&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;테이블을 정렬해줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/shuGH/vscode-table-formatter/master/res/complex_demo.gif&quot; alt=&quot;formatter&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;live-server&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer&quot;&gt;Live Server&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;정적 및 동적 페이지에 대해 실시간으로 다시 로드 기능을 사용하여 개발할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://github.com/ritwickdey/vscode-live-server/raw/master/images/Screenshot/vscode-live-server-animated-demo.gif&quot; alt=&quot;Live Server&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;bracket-pair-colorizer&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=CoenraadS.bracket-pair-colorizer&quot;&gt;Bracket Pair Colorizer&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;일치하는 대괄호 색상을 구별하기 쉽게 바꿔줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://github.com/CoenraadS/BracketPair/raw/master/images/example.png&quot; alt=&quot;Bracket Pair Colorizer&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;better-comments&quot;&gt;&lt;a href=&quot;https://marketplace.visualstudio.com/items?itemName=aaron-bond.better-comments&quot;&gt;Better Comments&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;특정 코멘트 별로을 하이라이팅 해줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://github.com/aaron-bond/better-comments/raw/master/images/better-comments.PNG&quot; alt=&quot;Better Comments&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;css-peek&quot;&gt;&lt;a href=&quot;https://github.com/pranaygp/vscode-css-peek&quot;&gt;CSS Peek&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;CSS 아이디로 정의 위치 이동이 가능하게 합니다.&lt;/li&gt;
+  &lt;li&gt;Peek: load the file inline and make quick edits right there. &lt;code class=&quot;highlighter-rouge&quot;&gt;(Ctrl+Shift+F12)&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Go To: jump directly to the file or open it in a new editor &lt;code class=&quot;highlighter-rouge&quot;&gt;(F12)&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Hover: show the definition in a hover over the symbol &lt;code class=&quot;highlighter-rouge&quot;&gt;(Ctrl+hover)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://github.com/pranaygp/vscode-css-peek/raw/master/symbolProvider.gif&quot; alt=&quot;CSS Peek&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;file-peek&quot;&gt;&lt;a href=&quot;https://github.com/abierbaum/vscode-file-peek&quot;&gt;File Peek&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;File Name으로 정의 위치 이동이 가능하게 합니다.&lt;/li&gt;
+  &lt;li&gt;Peek: load the file inline and make quick edits right there. &lt;code class=&quot;highlighter-rouge&quot;&gt;(Ctrl+Shift+F12)&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Go To: jump directly to the file or open it in a new editor &lt;code class=&quot;highlighter-rouge&quot;&gt;(F12)&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Hover: show the definition in a hover over the symbol &lt;code class=&quot;highlighter-rouge&quot;&gt;(Ctrl+hover)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://github.com/abierbaum/vscode-file-peek/raw/master/images/working.gif&quot; alt=&quot;File Peek&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;live-share&quot;&gt;&lt;a href=&quot;https://visualstudio.microsoft.com/ko/services/live-share/&quot;&gt;Live Share&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;실시간으로 공동 작업을 할 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;팀 구성원과의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pair Programming&lt;/code&gt;, 해커톤, 대화형 강의, 어려운 디버깅 작업, 브레인 스토킹 등등의 작업을 하기에 유리합니다.&lt;/li&gt;
+  &lt;li&gt;Visual Studio 2019에서는 기본 기능으로 들어가 있다고 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://visualstudio.microsoft.com/wp-content/uploads/2018/11/v2-Edit-Comp_FINAL-optimized840.gif&quot; alt=&quot;Live Share&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;설정-동기화&quot;&gt;설정 동기화&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Settings Sync&lt;/code&gt; Add In을 사용합니다.&lt;/li&gt;
+  &lt;li&gt;github에 토큰을 입력하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;gist id&lt;/code&gt;를 생성하고, &lt;code class=&quot;highlighter-rouge&quot;&gt;gist id&lt;/code&gt;를 복사해서 다른 컴퓨터에 입력하여 사용하는 방식입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;github-토큰-생성&quot;&gt;github 토큰 생성&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Github에 로그인 한 뒤 &lt;code class=&quot;highlighter-rouge&quot;&gt;Settings -&amp;gt; Developer settings -&amp;gt; Personal access tockens&lt;/code&gt;에 들어가 다음을 클릭합니다.
+&lt;img src=&quot;/img/setting/3/1.png&quot; alt=&quot;SettingSync&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Token 설명을 입력하고 gist를 체크한 뒤 토큰을 생성합니다.
+&lt;img src=&quot;/img/setting/3/2.png&quot; alt=&quot;SettingSync&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;생성된 토큰을 복사합니다.
+&lt;img src=&quot;/img/setting/3/3.png&quot; alt=&quot;SettingSync&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;vscode-settings-sync&quot;&gt;VScode Settings Sync&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + X&lt;/code&gt;를 입력하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;Settings Sync&lt;/code&gt;를 다운받습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;shift + alt + U&lt;/code&gt;를 입력합니다.&lt;/li&gt;
+  &lt;li&gt;이어서 나오는 창에 복사해 둔 &lt;strong&gt;토큰을 입력합니다.&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;성공하면 다음과 같은 출력창이 출력됩니다.&lt;/li&gt;
+  &lt;li&gt;다음과 같은 출력창에 &lt;strong&gt;제일 위에&lt;/strong&gt; 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Github Token&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;Github Gist&lt;/code&gt;를 복사합니다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/3/4.png&quot; alt=&quot;SettingSync&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;다른-pc에서-동기화하기&quot;&gt;다른 pc에서 동기화하기&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + X&lt;/code&gt;를 입력하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;Settings Sync&lt;/code&gt;를 다운받습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;shift + alt + D&lt;/code&gt;를 입력합니다.&lt;/li&gt;
+  &lt;li&gt;이어서 나오는 창에 복사해 둔 &lt;code class=&quot;highlighter-rouge&quot;&gt;Github Token&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;Github Gist&lt;/code&gt;를 순서대로 입력합니다.&lt;/li&gt;
+  &lt;li&gt;이어서 나오는 확인창에 yes를 클릭하면 성공입니다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;한번 설정 이후에는 Github에 올리고 내리는 단축기만 입력하면 쉽게 설정을 동기화할 수 있습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;유용한-단축기&quot;&gt;유용한 단축기&lt;/h2&gt;
+
+&lt;h3 id=&quot;etc&quot;&gt;Etc…&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;각종 Add-In이나 전체 명령어 탐색 기능  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;F1&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;settings-sync&quot;&gt;Settings Sync&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;현재 설정을 Github에 저장하기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;shift + alt + U&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Github에 있는 설정 내려받아 적용하기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;shift + alt + D&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;markdown-shortcuts-1&quot;&gt;Markdown Shortcuts&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;굵은 글씨 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + B&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;글씨 기울기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + I&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;링크 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + L&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;이미지 넣기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + L&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;코드 블럭 생성/삭제 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + M, ctrl + C&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;인라인 코드 블럭 생성/삭제 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + M, ctrl + I&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;블릿 생성/삭제 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + M, ctrl + B&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;리스트 생성/삭제 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + M, ctrl + 1&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;체크박스 생성/삭제 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + M, ctrl + X&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;basic-visual-code&quot;&gt;Basic Visual Code&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;최근 파일이나 기호를 탐색  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + P&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;?&lt;/code&gt; 를 입력하면 명령창에서 실행할 수 있는 명령 목록 조회  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + P&lt;/code&gt;)&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;마지막 연 파일에 접근 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + Tap&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;편집기 명령으로 바로 이동 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + P&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;파일의 특정 기호로 이동 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + O&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;파일의 특정 행으로 이동 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + G&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;주석 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + /&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;터미널 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + `&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;코드 접기/펴기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shfit + [&lt;/code&gt; )&lt;/strong&gt; &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;, ctrl + shfit + ]&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;마크다운 미리보기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + K, V&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;현재 프로젝트 전체 파일에서 검색 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + F&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Explorer 띄우기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + E&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Source Control 띄우기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + G&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Fri, 09 Nov 2018 00:00:00 +0000</pubDate>
+        <link>https://wnsgml972.github.io/setting/setting_vscodeset.html</link>
+        <guid isPermaLink="true">https://wnsgml972.github.io/setting/setting_vscodeset.html</guid>
+        
+        <category>ide</category>
+        
+        <category>visual-studio</category>
+        
+        <category>visual-studio-code</category>
+        
+        <category>vscode</category>
+        
+        <category>setting</category>
+        
+        
+        <category>Setting</category>
+        
+      </item>
+    
+      <item>
+        <title>Visual Studio Setting Import &amp; Export</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;Visual Studio 에서 사용하는 환경을 다른 구성원과 공유할 때 유용한 팁입니다. (VS2017 기준, 제가 이전 게시글에서 Setting 했던 모든 부분을 다른 구성원들과 바로 공유할 수 있습니다.)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;import--export-는-어디서&quot;&gt;Import &amp;amp; Export 는 어디서?&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;VIsual Studio에서 다음 메뉴를 찾아봅시다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;em&gt;Tools &amp;gt; Import and Export Settings…&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/2/1.png&quot; alt=&quot;visual setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;export&quot;&gt;Export&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Export 선택하고 넘어가기&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/2/2.png&quot; alt=&quot;visual setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;필요한 옵션만 체크하고 Next&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;예제에서는 실제 코딩시에 자주 볼 에디터의 폰트 및 색 조합(Fonts &amp;amp; Colors)만 선택&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/2/3.png&quot; alt=&quot;visual setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;내보내기 (~.vssettings)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/2/4.png&quot; alt=&quot;visual setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;import&quot;&gt;Import&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Import 선택하고 넘어가기&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/2/5.png&quot; alt=&quot;visual setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;현재 내 설정을 저장하고 넘어가기&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;무모한 설정 날림을 하지 않기 위해서는 잊지말고 자기 것을 저장 하는 것이 좋습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/2/6.png&quot; alt=&quot;visual setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;세팅 파일 불러오기&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;아까 만들어 놓은 것 불러옵니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/2/7.png&quot; alt=&quot;visual setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;확인하고 불러오면 끝!&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;어떤 세팅값을 가지고 올 지 확인하고 완료하면 됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/2/8.png&quot; alt=&quot;visual setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;관련-게시글&quot;&gt;관련 게시글&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wnsgml972.github.io/setting/setting_visualset.html&quot;&gt;Visual Studio 기본 Setting&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Sun, 04 Nov 2018 00:00:00 +0000</pubDate>
+        <link>https://wnsgml972.github.io/setting/VisualStudio_Setting_Export.html</link>
+        <guid isPermaLink="true">https://wnsgml972.github.io/setting/VisualStudio_Setting_Export.html</guid>
+        
+        <category>ide</category>
+        
+        <category>visual-studio</category>
+        
+        <category>setting</category>
+        
+        
+        <category>Setting</category>
+        
+      </item>
+    
+      <item>
+        <title>C, C++ 외부 라이브러리(dll, lib) 사용하기</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;mosquitto나 ifcplusplused 같은 오픈소스를 Build 하기 위해 많은 노력을 했었는데 그 과정에서 얻게 된 지식을 공유하기 위해 작성하였습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;dll-lib&quot;&gt;dll, lib&lt;/h2&gt;
+
+&lt;h3 id=&quot;dll과-lib은-무엇일까&quot;&gt;dll과 lib은 무엇일까?&lt;/h3&gt;
+
+&lt;p&gt;먼저 무엇인지 말하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt;은 동적 라이브러리이고, &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;은 정적 라이브러리입니다. &lt;br /&gt;
+&lt;strong&gt;외부의 코드를 사용하기 위한 Library라고 생각하시면 됩니다. dll은 Runtime 중에, lib은 Compile 할 때 필요합니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;lib&quot;&gt;lib&lt;/h3&gt;
+
+&lt;h4 id=&quot;link-단계에서-정적으로-라이브러리-파일을-추가합니다&quot;&gt;Link 단계에서 &lt;strong&gt;정적으로&lt;/strong&gt; 라이브러리 파일을 추가합니다.&lt;/h4&gt;
+
+&lt;p&gt;일반적으로 실행 파일을 만들 때는 소스 코드를 컴파일하고 만들어진 obj 파일을 링커가 하나로 묶어 exe 파일을 만듭니다. 여기서 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;을 사용하면 링크 단계에서 링커가 이 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;파일도 같이 묶어서 하나의 exe 파일을 만들게 됩니다. &lt;br /&gt; &lt;br /&gt;
+&lt;strong&gt;쉽게 말하면 우리가 컴파일에 성공해 만들어지는 exe 파일 안에 lib의 내용이 모두 들어가게 됩니다.&lt;/strong&gt;&lt;br /&gt; &lt;br /&gt;
+우리가 일반적으로 쓰는 &lt;code class=&quot;highlighter-rouge&quot;&gt;stdio.h&lt;/code&gt; 같은 코드 덩어리도 실제 선언한 곳에 전부 들어가 있게 됩니다. 그렇기 때문에 많이 쓰이면 쓰일수록 파일이 무거워지게 되며, RAM에 메모리가 많이 올라가게 됩니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;미리-컴파일된-헤더-pch와의-차이는&quot;&gt;미리 컴파일된 헤더 pch와의 차이는??&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;pch&lt;/code&gt;는 말 그대로 전처리기가 헤더 파일의 내용을 가져와서 컴파일러가 그 내용을 컴파일하지만, &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;은 이미 컴파일된 obj 파일을 가지고 링커가 연결만 시켜줍니다. &lt;br /&gt;&lt;br /&gt;
+또한 &lt;code class=&quot;highlighter-rouge&quot;&gt;pch&lt;/code&gt;는 사용하고자 하는 곳에 모두 명시를 해야 하지만, &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;은 하지 않아도 괜찮습니다. 다만 아까 말했듯이 많이 사용한다면 파일의 크기가 커지는 단점이 있습니다. -&amp;gt; &lt;strong&gt;(이러한 단점을 해결하기 위해 dll이 나왔습니다.)&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;내-소스에-적용하기&quot;&gt;내 소스에 적용하기&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;을 만들고 해당 소스를 외부의 다른 프로젝트에서 사용하려면 필요한 것은 2가지가 있습니다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;링커에게 해당 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;의 경로를 알려준다.&lt;/li&gt;
+  &lt;li&gt;해당 &lt;code class=&quot;highlighter-rouge&quot;&gt;include(header)&lt;/code&gt;의 경로를 알려준다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;직접 자신의 소스 파일에 적용하는 방법은 뒤에서 진행하도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;dll&quot;&gt;dll&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Link 단계에서 &lt;strong&gt;동적으로&lt;/strong&gt; 라이브러리 파일을 추가합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt;은 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;과 달리 파일을 실행할 때 해당 링커가 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt;의 위치를 알고 있다면 exe 파일에 내용이 포함되어 있지 않아도 실행이 가능합니다. &lt;br /&gt;&lt;br /&gt;
+&lt;strong&gt;즉 동적인 링킹이 가능합니다.&lt;/strong&gt; (&lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt;은 프로세스의 주소 공간에 동적으로 로드가 가능하게 만들어져있기 때문입니다.)&lt;/p&gt;
+
+&lt;h4 id=&quot;동적-링킹으로-인한-장점은&quot;&gt;동적 링킹으로 인한 장점은?&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;실행 파일의 메모리 절약이 가능합니다.&lt;/li&gt;
+  &lt;li&gt;RAM 메모리 절약 또한 가능합니다. 2개 이상의 파일에서 하나의 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt; 파일을 사용할 때 RAM에는 하나의 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt; 파일만 올라가게 됩니다.&lt;/li&gt;
+  &lt;li&gt;그 밖에도 여러 가지가 있지만 현재 게시글에서 필요한 내용만 적도록 하겠습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;링킹의-방법&quot;&gt;링킹의 방법&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt;은 프로세스의 주소 공간에 로드 되어야만 사용될 수 있는데, 로드 되는 방법에는 2가지가 있습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;암시적 링킹&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;실행 파일 자체에 어떤 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt;의 어떤 함수를 사용하겠다는 정보를 포함시키고 운영체제가 프로그램 실행 시 해당 함수들을 초기화한 후 그것을 이용하는 방법입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;명시적 링킹&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;프로그램이 실행 중일 때 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt; 파일이 있는지 검사하고 동적으로 원하는 함수만 불러와서 쓰는 방법입니다.&lt;br /&gt;&lt;br /&gt;
+현 게시글은 외부 라이브러리를 Import 하기 위한 내용이므로, 각 링킹의 정확한 방법은 밑의 참고에서 확인하시기 바랍니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;dll-파일의-사용&quot;&gt;dll 파일의 사용&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;명시적 링킹은&lt;/strong&gt; 설명한 그대로 직접 코드를 통해 원하는 함수만 불러와서 사용하는 방법입니다. 더 구체적으로 말하면 함수 포인터를 얻어와서 사용하는 방법입니다. 일반적인 오픈 소스에서는 이런 방식을 이용하지 않고 암시적 링킹을 통해 제공하기 때문에 암시적 링킹에 대한 설명 방법을 알려드리도록 하겠습니다. &lt;br /&gt;&lt;br /&gt;
+&lt;strong&gt;암시적 링킹의&lt;/strong&gt; 방법을 통해 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt; 파일을 생성할 경우 총 2개의 파일이 만들어지게 됩니다. 하나는 &lt;code class=&quot;highlighter-rouge&quot;&gt;*.dll&lt;/code&gt;이고, 다른 하나는 &lt;code class=&quot;highlighter-rouge&quot;&gt;*.lib&lt;/code&gt;입니다. 여기서 만들어진 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt; 파일은 위에서 설명한 정적 라이브러리가 아니라 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt;을 통해 불러들일 함수가 들어있습니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;내-소스에-적용하기-1&quot;&gt;내 소스에 적용하기&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt;에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;과 다르게 필요한 것이 총 3가지입니다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt; 파일 (위의 정적 라이브러리 x)&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;include(header)&lt;/code&gt; 파일&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt; 파일&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;여기서 중요한 것은! &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt; 파일은 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;과 다르게, Compile과 실행에 필요한 것이 다르다는 것입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Compile 하기&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Compile 할 때는 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;과 마찬가지로 링커에게 해당 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;의 경로를 알려준 후, 해당 헤더 파일(include)의 경로를 알려주면 Compile에 성공합니다. 하지만 실행하려 할 경우 해당 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt;이 없다며 실패합니다. 해당 함수의 실체인 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt;을 exe 파일이 모르기 때문입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;실행하기&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;따라서 해당 파일을 실행하기 위해선 exe 파일이 실행할 때 필요한 &lt;code class=&quot;highlighter-rouge&quot;&gt;dll&lt;/code&gt; 파일을 연결해줘야 합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;왜 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib(정적 라이브러리)&lt;/code&gt;는 실행에 필요한 과정이 없을까?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;위에서 주의 깊게 읽으셨다면 잘 알겠지만 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib(정적 라이브러리)&lt;/code&gt;의 경우에는 해당 파일의 실체가 다 exe 파일 안에 들어가게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;내-프로젝트에-각종-오픈-소스-적용하기&quot;&gt;내 프로젝트에 각종 오픈 소스 적용하기&lt;/h2&gt;
+
+&lt;p&gt;어떤 소스를 적용하던 크게 2가지만 생각하시면 됩니다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;만약 Compile만 하기 위해 Compile 과정만 거쳤다면 Compile에는 성공하지만 실행은 되지 않습니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Compile 과는 별개로 실행만을 목적으로 하고 있다면 따로 lib과 include 파일을 연결하지 않아도 exe 파일 안에 dll 파일만 넣을 경우 실행에 성공하게 됩니다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;따라서 직접 오픈 소스를 적용하여 테스트하고 싶다면 Compile 하기 위한 lib, include 파일 그리고 실행하기 위해선 dll 파일이 모두 필요합니다. &lt;br /&gt;&lt;br /&gt;
+Visual Studio 기준으로 각 파일을 링크하는 방법입니다. 예제는 ptrhead입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;compile&quot;&gt;Compile&lt;/h3&gt;
+
+&lt;p&gt;Compile 하기 위해선 &lt;code class=&quot;highlighter-rouge&quot;&gt;lib&lt;/code&gt;파일과 &lt;code class=&quot;highlighter-rouge&quot;&gt;include(header)&lt;/code&gt; 파일이 필요합니다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;lib-1&quot;&gt;lib&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;링커 &amp;gt; 일반 &amp;gt; 추가 라이브러리 디렉터리&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;해당 lib 파일의 경로를 입력해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/1/1.png&quot; alt=&quot;setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;링커 &amp;gt; 입력 &amp;gt; 추가 종속성&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;해당 lib 파일의 파일명을 입력해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/1/2.png&quot; alt=&quot;setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;include&quot;&gt;include&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;C/C++ &amp;gt; 일반 &amp;gt; 추가 포함 디렉터리&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;해당 헤더 파일의 경로를 입력해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/1/3.png&quot; alt=&quot;setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;실행&quot;&gt;실행&lt;/h3&gt;
+
+&lt;h4 id=&quot;dll-1&quot;&gt;dll&lt;/h4&gt;
+
+&lt;p&gt;해당 dll 파일의 경로를 입력해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/1/4.png&quot; alt=&quot;setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;예제-pthread-연습해보기&quot;&gt;예제 pthread 연습해보기&lt;/h3&gt;
+
+&lt;p&gt;예제인 pthread를 직접 사용하기위해 Compile 하여 실행해본다면 더 이해가 빠르게 될 수 있습니다. 다음 url은 Window 환경에서 Visual Studio를 이용해 pthread를 사용하는 방법입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wnsgml972.github.io/c/c_windows_pthread.html&quot;&gt;Windows에서 pthread 사용하기&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;그밖에&quot;&gt;그밖에…&lt;/h3&gt;
+
+&lt;p&gt;각 파일을 링크하는 속성 창 중에 VC++ 디렉토리에도 비슷한 것이 있습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;VC++ 디렉터리 &amp;gt; 포함 디렉터리&lt;/li&gt;
+  &lt;li&gt;VC++ 디렉터리 &amp;gt; 라이브러리 디렉터리&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;다음의 2가지는 Visual Studio의 기본 lib과 include 파일을 설정해주는 부분입니다. 추가적인 작업을 할 때는 제가 설명해준 방법대로 하시면 됩니다. &lt;br /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;저도 헷갈려서 mosquitto Build 과정을 위와 섞어서 사용하였는데 추후에 고치도록 하겠습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;정리하자면 다음과 같습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/setting/1/5.png&quot; alt=&quot;setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;참고&quot;&gt;참고&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.microsoft.com/ko-kr/cpp/build/walkthrough-creating-and-using-a-dynamic-link-library-cpp?view=vs-2017&quot;&gt;https://docs.microsoft.com/ko-kr/cpp/build/walkthrough-creating-and-using-a-dynamic-link-library-cpp?view=vs-2017&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://egloos.zum.com/sweeper/v/2991664&quot;&gt;http://egloos.zum.com/sweeper/v/2991664&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://blog.naver.com/PostView.nhn?blogId=ruvendix&amp;amp;logNo=220908681017&amp;amp;parentCategoryNo=66&amp;amp;categoryNo=&amp;amp;viewDate=&amp;amp;isShowPopularPosts=false&amp;amp;from=postList&quot;&gt;RuvendiX&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Thu, 01 Nov 2018 00:00:00 +0000</pubDate>
+        <link>https://wnsgml972.github.io/setting/dll_lib.html</link>
+        <guid isPermaLink="true">https://wnsgml972.github.io/setting/dll_lib.html</guid>
+        
+        <category>dll</category>
+        
+        <category>lib</category>
+        
+        <category>visual-studio</category>
+        
+        <category>open-source</category>
+        
+        
+        <category>Setting</category>
+        
+      </item>
+    
+      <item>
+        <title>Visual Studio 기본 Setting</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;“훌륭한 프로그래머는 게을러야 한다.” 라는 말이 있습니다. 최대한 마우스를 사용하지 않고 모든 단축기를 외워서, 개발하기 쉬운 환경을 구성하는 방법입니다. &lt;br /&gt;
+Font나 기존 단축기를 바꾼 부분은 저의 개인적인 취향이니 꼭 따라하지 않으셔도 됩니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;font&quot;&gt;Font&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;VS실행 -&amp;gt; [도구] -&amp;gt; [옵션] -&amp;gt; [환경] -&amp;gt; [글꼴 및 색] (D2Coding), 크기 10&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;폰트의 경우 Coding Font의 맞게 코딩시 영문자와 숫자, 한글간의 모호성이 있는 기호가 변별력이 있는 폰트를 선택하였습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/naver/d2codingfont&quot;&gt;Naver D2 Coding Font&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;visaul-add-in&quot;&gt;Visaul Add In&lt;/h2&gt;
+
+&lt;h3 id=&quot;visual-기본-add-in&quot;&gt;Visual 기본 Add In&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;VS실행 -&amp;gt; [도구] -&amp;gt; [확장 및 업데이트] -&amp;gt; [온라인] -&amp;gt; [Visual Studio 갤러리] 에서 검색&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Better Comments
+    &lt;ul&gt;
+      &lt;li&gt;주석 &lt;code class=&quot;highlighter-rouge&quot;&gt;!, ?, x, TODO&lt;/code&gt;를 하이라이팅 해줍니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Add New File
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;.gitignore&lt;/code&gt; 같은 형식이 없는 파일을 쉽게 생성할 수 있게 해줍니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;File Icons
+    &lt;ul&gt;
+      &lt;li&gt;파일 아이콘 테마를 바꿔줍니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;File Nesting
+    &lt;ul&gt;
+      &lt;li&gt;중첩되는 파일 별로 Filter를 정리할 수 있게 해줍니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Type Hierachy
+    &lt;ul&gt;
+      &lt;li&gt;Class나 Interface의 Hierachy를 보여줍니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;BuildVision
+    &lt;ul&gt;
+      &lt;li&gt;빌드중 항목을 프로젝트 별로 정리하여 출력합니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;StructureVisualizer (c++ only)
+    &lt;ul&gt;
+      &lt;li&gt;구문, 즉 괄호에 조금 더 잘 알아볼 수 있게 하이라이팅 해줍니다.&lt;/li&gt;
+      &lt;li&gt;기능으로 영역 안에서 ctrl 누르고 있으면 하이라이팅 찐하게 됩니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Viasfora
+    &lt;ul&gt;
+      &lt;li&gt;Text Editor에 다양한 색깔 추가합니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Visual Assist X&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;정말 다양한 기능을 제공합니다.&lt;/li&gt;
+      &lt;li&gt;아쉽게도 유료입니다…&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;VSColorOutput
+    &lt;ul&gt;
+      &lt;li&gt;하단의 [출력] 창에 내용에 로그 수준(경고/에러)에 따라 색상을 부여합니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;CodeMaid
+    &lt;ul&gt;
+      &lt;li&gt;불필요한 공백 기능 제거, 소스 파일에서 어느 필터에 있는지 나오는 기능, 등등 여러 기능을 제공합니다.  (옵션에서 Progresing 옵션을 모두 꺼줘야합니다.)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Clang Power Tools&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;C ++ 코드를 최신 C ++ 지침에 따라 검사하고 &lt;strong&gt;정적 분석 검사&lt;/strong&gt;를 수행하여 수동 코드 검토 프로세스로는 불가능한 미묘한 버그를 발견하는 데 사용할 수 있습니다.&lt;/li&gt;
+      &lt;li&gt;고급 구성의 경우 CI / 자동화 용 PowerShell 스크립트를 수정할 수도 있습니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Live Share&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;VS2019에서는 기본 기능입니다.&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://visualstudio.microsoft.com/ko/services/live-share/&quot;&gt;Microsoft&lt;/a&gt; 에서 다운합니다.&lt;/li&gt;
+      &lt;li&gt;실시간으로 공동 작업을 할 수 있습니다.&lt;/li&gt;
+      &lt;li&gt;팀 구성원과의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pair Programming&lt;/code&gt;, 해커톤, 대화형 강의, 어려운 디버깅 작업, 브레인 스토킹 등등의 작업을 하기에 유리합니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;doxygen&quot;&gt;Doxygen&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;코드상의 주석을 통해 문서를 만들어내는 프로그램, 특정 규칙에 의거하여 주석을 하면 그걸 통해 문서를 만들어줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;visual-lead-detector&quot;&gt;Visual Lead Detector&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;메모리가 누수 되는 것을 잡아주는 툴입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;단축기-설정&quot;&gt;단축기 설정&lt;/h2&gt;
+
+&lt;p&gt;저의 개인적인 취향으로, 유용한 단축기들을 사용하기 쉽게 바꾸는 부분입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;VS실행 -&amp;gt; [도구] -&amp;gt; [옵션] -&amp;gt; [환경] -&amp;gt; [키보드] -&amp;gt; (기본은 텍스트 편집기에서 하고 안 되는 것은 전역으로 하기)&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;목록&quot;&gt;목록&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;솔루션 빌드 (ctrl + shift + B) -&amp;gt; &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;F7&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;뒤로가기 (ctrl + - ) -&amp;gt; &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + 화살표 왼쪽&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;뒤로가기 (ctrl + shift + - ) -&amp;gt; &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + 화살표 오른쪽&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;VAssistX.RefactorAddInclude &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + I&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;VAssistX.OpenCorrespondingFile (alt + O) -&amp;gt;  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + `&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;VAssistX.List Methods In Current File (alt + M) -&amp;gt; &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + Q&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;정렬 (ctrl + shift + F, 원래꺼 지우기) -&amp;gt;  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + F&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;편집.파일에서찾기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + alt + F&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.새창 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 1&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.새세로탭그룹 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 2&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.이전탭그룹으로이동 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 3&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.다음탭그룹으로이동 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 4&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.이전탭 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 5&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.다음탭 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 6&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.문서창닫기 (ctrl + F4, 원래꺼 지우기) -&amp;gt;  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + W&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.탭고정 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + E&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.고정된 항목을 모두 제외하고 닫기 ( ) -&amp;gt; &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + K, W&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;보기.작업목록 (ctrl + \ and T ) -&amp;gt; &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + T&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;유용한-단축기&quot;&gt;유용한 단축기&lt;/h2&gt;
+
+&lt;h3 id=&quot;visual-assist&quot;&gt;Visual Assist&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Header file과 Source file 전환 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + `&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Add Include &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + I&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;원하는 줄로 이동  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + G&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Find Symbol &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + shift + S&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Find File &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + shift + O&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Find References &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + shift + F&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Goto Related &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + shift + G&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;List Methods In Current File &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + Q&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;basic-visual&quot;&gt;Basic Visual&lt;/h3&gt;
+&lt;h4 id=&quot;etc&quot;&gt;Etc&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;빠른실행  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + Q&lt;/code&gt; )&lt;/strong&gt; : 모든 명령어를 검색하여 실행 가능&lt;/li&gt;
+  &lt;li&gt;책갈피  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + F2&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;클립보드  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + V&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;주석, 풀기  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;드래그 + /&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;정렬 바꾼 값 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + F&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;편집.파일에서찾기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + alt + F&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;솔루션 빌드 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;F7&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;뒤로가기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + 화살표 왼쪽&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;뒤로가기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + 화살표 오른쪽&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;줄바꿈 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 화살표 위 or 아래&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;세로편집 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + shift + 화살표 위 or 아래&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;한줄씩편집 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + c, ctrl + v, ctrl + x&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;보기.작업목록 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + T&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;창-tap-관련&quot;&gt;창, Tap 관련&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;창.이전문서창으로이동 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + tap&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.새창 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 1&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.새세로탭그룹 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 2&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.이전탭그룹으로이동 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 3&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.다음탭그룹으로이동 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 4&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;이전탭 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 5&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;다음탭 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;alt + 6&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.문서창닫기  &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + W&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.탭고정 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + E&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;창.고정된 항목을 모두 제외하고 닫기 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + K, W&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;중단점&quot;&gt;중단점&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;중단점 창 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + alt + B&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;중단점 설정/해제/삭제 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;F9&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;중단점 설정/해제 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + F9&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;모든 중단점 설정 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;디버그 텝 메뉴 확인&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;모든 중단점 해제 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;디버그 탭 메뉴 확인&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;모든 중단점 삭제 &lt;strong&gt;( &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl + shift + F9&lt;/code&gt; )&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;캡쳐-화면&quot;&gt;캡쳐 화면&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/ide/1/2.png&quot; alt=&quot;visual setting&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;관련-게시글&quot;&gt;관련 게시글&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wnsgml972.github.io/setting/VisualStudio_Setting_Export.html&quot;&gt;Visual Studio Setting Import &amp;amp; Export&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Sun, 07 Oct 2018 00:00:00 +0000</pubDate>
+        <link>https://wnsgml972.github.io/setting/setting_visualset.html</link>
+        <guid isPermaLink="true">https://wnsgml972.github.io/setting/setting_visualset.html</guid>
+        
+        <category>ide</category>
+        
+        <category>visual-studio</category>
+        
+        <category>setting</category>
+        
+        
+        <category>Setting</category>
+        
+      </item>
+    
+      <item>
+        <title>클라우드 컴퓨팅, IaaS, PaaS, SaaS이란?</title>
+        <description>&lt;h2 id=&quot;cloud-computing이란&quot;&gt;Cloud Computing이란?&lt;/h2&gt;
+
+&lt;h3 id=&quot;정리&quot;&gt;정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;클라우드 컴퓨팅은 서로 다른 물리적인 위치에 존재하는 컴퓨터들의 리소스를 가상화 기술로 통합해 제공하는 기술을 말합니다.&lt;/li&gt;
+  &lt;li&gt;예를들면 개인용 컴퓨터나 기업의 서버에 개별적으로 저장해 두었던 프로그램이나 문서를 클라우드(대형 컴퓨터)에 저장하고 웹 브라우저 등 필요한 어플리케이션을 구동해 원하는 작업을 수행할 수 있는 &lt;strong&gt;사용자 중심의 컴퓨터 환경을 말합니다.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;예시&quot;&gt;예시&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;네이버 오피스, Google DOCs(Google), Work Space(Microsoft), Acrobat(Adobe) 등등이 여기에 해당합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;가상화와-클라우드-컴퓨팅의-차이&quot;&gt;가상화와 클라우드 컴퓨팅의 차이&lt;/h3&gt;
+
+&lt;h4 id=&quot;정의&quot;&gt;정의&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;쉽게 정의하면 가상화는 &lt;strong&gt;기술이고&lt;/strong&gt; 클라우드는 &lt;strong&gt;방법론&lt;/strong&gt; 입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;가상화&quot;&gt;가상화&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;가상화는 우리가 쓰던 VMware나 Virtualbox와 같이 단일한 물리 하드웨어 시스템에서 여러 환경이나 자원을 생성할 수 있는 기술입니다.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;하이퍼바이저&lt;/strong&gt; 라고 불리는 소프트웨어가 하드웨어에 직접 연결되며 가상 머신을 만들 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;이러한 가상 머신은 하이퍼바이저의 자원을 적절하게 배분받은 후 사용합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;클라우드-컴퓨팅&quot;&gt;클라우드 컴퓨팅&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;클라우드 컴퓨팅은 위에서 말했다시피 네트워크 전체에서 컴퓨팅, 네트워크, 스토리지 인프라 자원, 서비스, 플랫폼, 애플리케이션을 &lt;span class=&quot;evidence&quot;&gt;사용자에게 제공하는 접근 방식입니다.&lt;/span&gt;&lt;/li&gt;
+  &lt;li&gt;마지막으로 정의하자면 &lt;strong&gt;가상화는 하드웨어에서 기능을 분리하는 기술&lt;/strong&gt; 이고 &lt;strong&gt;클라우드 컴퓨팅은 이러한 분할을 사용하는 솔루션보다 큰 개념인 방법론입니다.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;iaas-paas-saas란-무엇인가&quot;&gt;IaaS, PaaS, SaaS란 무엇인가?&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/network/1/1.png&quot; alt=&quot;GitBlog&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;정리-1&quot;&gt;정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;클라우드 컴퓨팅이 도입되면서 최근에 자주 들을 수 있는 용어입니다.&lt;/li&gt;
+  &lt;li&gt;IT 인프라의 여러 필요한 구성 요소 중 예전에는 모두 사용자가 관리해야만 했지만, 이제는 일정 부분을 클라우드에서 내려받는 형태가 많이 도입되었습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;얼마만큼 사용자가 관리하고 얼마만큼 클라우드에서 제공받는가에 따라&lt;/strong&gt; 다음과 같이 네 가지로 나누어져 있습니다.&lt;/li&gt;
+  &lt;li&gt;위의 그림에서 보이는 데로 노란색의 You manage는 사용자가 관리해야 할 부분이고, 흰색의 Managed by vendor는 기업(클라우드)에서 관리해주는 부분입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;packaged-software&quot;&gt;Packaged Software&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/network/1/2.png&quot; alt=&quot;GitBlog&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;evidence&quot;&gt;그림에서 보이는 것과 같이 직접 인프라와 플랫폼, 어플리케이션까지 모두 구성하여 관리하는 모델을 의미합니다.&lt;/span&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;정리-2&quot;&gt;정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;물리적인 장치, 하드웨어(CPU, RAM, Storage, Network device 등등)을 모두 직접 구매해야 합니다.&lt;/li&gt;
+  &lt;li&gt;직접 OS를 설치해야 합니다.&lt;/li&gt;
+  &lt;li&gt;네트워크 환경을 직접적으로 구성해야 합니다.&lt;/li&gt;
+  &lt;li&gt;서버 관리를 직접적으로 해야 합니다. (트래픽, 프로지버닝 등등)&lt;/li&gt;
+  &lt;li&gt;이런 모든 것을 직접 사용자가 다 준비해야 하기 때문에 매우 큰 시간과 돈을 소비하게 됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;iaasinfrastructure-as-a-service&quot;&gt;IaaS(Infrastructure as a service)&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/network/1/3.png&quot; alt=&quot;GitBlog&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;evidence&quot;&gt;Infrastructure 레벨을 제공하는 서비스를 의미합니다. 위에 보이는 것과 같이 사용자는 OS를 직접 올리고 그 상위 계층만 구성하면 되는 모델입니다.&lt;/span&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;정리-3&quot;&gt;정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;우리가 자주 사용하는 가상 호스팅(VM Hosting)과 비슷하나 처음에 말했다시피, 가상 호스팅은 우리가 직접 장비를 사서 그 장비의 한에서 자원을 할당하고 구성해야 하지만, IaaS는 기업이 준비해놓은 환경에서 우리가 선택할 수 있다는 점에서 차이가 있습니다.&lt;/li&gt;
+  &lt;li&gt;일반적으로 적은 OS가 지원됩니다. (아마존은 일부 Linux와 Windows Server 제공)&lt;/li&gt;
+  &lt;li&gt;고객은 OS와 어플리케이션을 직접 관리해야 합니다.&lt;/li&gt;
+  &lt;li&gt;관리 측면에서 개발자와 인프라 관리자의 역할을 분담시킬 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;장점&quot;&gt;장점&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;고객은 가상 서버 하위의 레벨에 대해서는 고려할 필요가 없다는 장점이 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;단점&quot;&gt;단점&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;그러나 역설적으로 IT 부서(특히, 운영부서)에서 느끼는 매우 큰 단점은 바로 가상 서버 하위의 레벨에 대해서는 전혀 고객이 접근하거나 컨트롤할 수 없습니다.&lt;/li&gt;
+  &lt;li&gt;결국, 가상 서버 하위의 레벨에 대해서 고려할 필요가 없는 사용자가 쓰기에 적합한 모델입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;예시-1&quot;&gt;예시&lt;/h3&gt;
+
+&lt;h4 id=&quot;aws의-ec2&quot;&gt;AWS의 EC2&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;AWS의 EC2를 이용하면 우리는 물리적인 서버와 Network, Storage 등등을 직접 구매하거나 준비하지 않아도 원하는 OS를 깔아 서버로 사용할 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;AWS의 EC2는 사용자가 원하는 OS를 고르고 그에 해당하는 스펙을 선택하기만 하면, 모든 관리를 아마존에서 해주는 것입니다. OS를 제공한다는 느낌이긴 하지만, 선택권을 주고 OS의 종류나 다양한 자원들을 사용자가 선택하므로 대표적인 IasS라고 불리고 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;제가 이번에 만든 오픈소스 Mosquitto를 이용한 MQTT Broker를 아마존의 EC2에 올려서 사용하고 있는데 매우 편리합니다.&lt;br /&gt;
+1년간은 프리티어로 사용할 수 있으니 관심 있으신 분은 한번 해보시는 게 좋은 것 같습니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;사용자&quot;&gt;사용자&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;AWS 처럼 직접 기업이 클라우드를 운영하고 사용자인 우리가 서비스를 받는 &lt;code class=&quot;highlighter-rouge&quot;&gt;AWS EC2&lt;/code&gt; 같은 것이 이에 해당합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;제공자&quot;&gt;제공자&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;직접 클라우드를 구성할 수 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;OpenStack&lt;/code&gt;이라는 오픈 소스도 IaaS에 해당합니다. 서비스를 제공 받는 입장이 아닌 제공하는 인프라를 구성할 수 있는 오픈 소스입니다.&lt;/li&gt;
+  &lt;li&gt;OpenStack에 관한 게시글은 다음 포스팅에 다루도록 하겠습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;paasplatform-as-a-service&quot;&gt;PaaS(Platform as a service)&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/network/1/4.png&quot; alt=&quot;GitBlog&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;evidence&quot;&gt;개발자가 응용 프로그램을 작성할 수 있도록 플랫폼 및 환경을 제공하는 모델입니다.&lt;/span&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;정리-4&quot;&gt;정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;운영 팀이 인프라를 모니터링할 필요가 없습니다.&lt;/li&gt;
+  &lt;li&gt;사용자는 OS, Server 하드웨어, Network 등등을 고려할 필요가 없습니다.&lt;/li&gt;
+  &lt;li&gt;사용자는 어필리케이션 자체에만 집중할 수 있습니다. &lt;strong&gt;즉 개발자는 빠르게 어플리케이션을 개발하고 서비스 가능하게 할 수 있습니다.&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;IaaS&lt;/code&gt;와 헷갈릴 수 있는데 아마존과 같은 서비스가 VM을 제공하는 &lt;code class=&quot;highlighter-rouge&quot;&gt;IaaS&lt;/code&gt;라면, &lt;code class=&quot;highlighter-rouge&quot;&gt;PaaS&lt;/code&gt;는 &lt;code class=&quot;highlighter-rouge&quot;&gt;node.js, Java&lt;/code&gt;와 같은 런타임을 미리 깔아놓고, 거기에 소스코드를 넣어서 돌리는 구조입니다. &lt;strong&gt;다시 한번 얘기하면 우리는 소스코드만 적어서 빌드 하는 것이고, 컴파일은 클라우드에서 하여 결과만 가져오는 거라고 생각하시면 됩니다.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;장점-1&quot;&gt;장점&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PaaS&lt;/code&gt;의 경우 이미 설치된 미들웨어 위에 코드만 돌리면 되기 때문에, 아무래도 관리가 매우 편리합니다.&lt;/li&gt;
+  &lt;li&gt;가장 이상적인 어플리케이션 플랫폼 관점의 클라우드 모델로 업계에 받아들여지고 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;단점-1&quot;&gt;단점&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이것도 IaaS와 마찬가지로 하나의 인프라를 기반으로 개발할 수 있다는 것 자체가 장점이자 단점이 될 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;PaaS는 기본적으로 어플리케이션과 플랫폼이 함께 제공됩니다. 어플리케이션이 플랫폼에 종속되어 개발되기 때문에 다른 플랫폼으로의 이동이 어려울 수도 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;예시-2&quot;&gt;예시&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;PaaS의 제공 업체로는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Heroku, Google App Engine, IBM Bluemix, OpenShift, SalesForce&lt;/code&gt;가 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;saassoftware-as-a-service&quot;&gt;SaaS(Software as a service)&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/network/1/5.png&quot; alt=&quot;GitBlog&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;evidence&quot;&gt;설치할 필요도 없이 클라우드를 통해 제공되는 SW입니다.&lt;/span&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;정리-5&quot;&gt;정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;위의 그림에서 보이는 것처럼 모든 것을 기업(클라우드)에서 제공함으로 사용자는 별도의 설치나 부담이 필요 없이 SW를 사용할 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;SaaS는 소비 관점에서 제공되는 IT 방식의 서비스로 정리할 수 있습니다. 구독의 방식으로 돈을 벌거나 트래픽 기반으로 돈을 벌 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;장점-2&quot;&gt;장점&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Public Cloud에 있는 SW를 웹 브라우저로 불러와 언제 어디서나 사용할 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;사용자는 웹만 접속하면 되기 때문에 사용하기 매우 쉽고, 최신 SW 업데이트를 빠르게 제공받을 수 있습니다. 사실상 기업 입장에서도 클라우드에 SW가 있기 때문에 따로 업데이트를 하지 않아도 접속한 사용자는 최신 SW를 사용하게 될 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;단점-2&quot;&gt;단점&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;단점으로는 SaaS의 특성상 반드시 인터넷에 접속할 수 있어야만 사용할 수 있고, 외부의 데이터 노출에 대한 위험이 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;예시-3&quot;&gt;예시&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;예로는 웹 메일, 구글 클라우드, 네이버 클라우드, MS오피스365, 드롭박스 등이 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;결과&quot;&gt;결과&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/network/1/0.png&quot; alt=&quot;GitBlog&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;정리하자면 위의 그림과 같이 한 단어로 host, build, consume으로 표현이 가능합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;참고&quot;&gt;참고&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.cisp.or.kr/archives/12017&quot;&gt;https://www.cisp.or.kr/archives/12017&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://assist-software.net/blog/cloud-offering-comparison-between-iaas-paas-saas-baas&quot;&gt;https://assist-software.net/blog/cloud-offering-comparison-between-iaas-paas-saas-baas&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://blogs.msdn.microsoft.com/eva/?p=1383&quot;&gt;https://blogs.msdn.microsoft.com/eva/?p=1383&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://it.donga.com/25782/&quot;&gt;http://it.donga.com/25782/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wodonggun.github.io/wodonggun.github.io/study/IaaS,-PaaS,-SaaS.html&quot;&gt;https://wodonggun.github.io/wodonggun.github.io/study/IaaS,-PaaS,-SaaS.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Tue, 14 Aug 2018 00:00:00 +0000</pubDate>
+        <link>https://wnsgml972.github.io/network/network_cloud-computing.html</link>
+        <guid isPermaLink="true">https://wnsgml972.github.io/network/network_cloud-computing.html</guid>
+        
+        <category>network</category>
+        
+        <category>cloud-computing</category>
+        
+        
+        <category>Network</category>
+        
+      </item>
+    
+      <item>
+        <title>JSP를 이용한 쉘 스크립트 실행</title>
+        <description>&lt;h2 id=&quot;설명&quot;&gt;설명&lt;/h2&gt;
+
+&lt;h3 id=&quot;html-javascript&quot;&gt;HTML, Javascript&lt;/h3&gt;
+
+&lt;h4 id=&quot;overview&quot;&gt;overview&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;html 페이지 버튼 클릭 시 &lt;code class=&quot;highlighter-rouge&quot;&gt;onclick&lt;/code&gt; 이벤트에 자바 스크립트 함수를 넣습니다.&lt;/li&gt;
+  &lt;li&gt;자바 스크립트 함수는 비동기식으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;jsp&lt;/code&gt;를 호출하여 결과 값을 &lt;code class=&quot;highlighter-rouge&quot;&gt;myCallBack&lt;/code&gt; 함수를 통해 받습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;html-code&quot;&gt;html code&lt;/h4&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;button&quot;&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;btn btn-default btn-lg&quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;onclick&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;httpGetAsync('./jsp/start.jsp', myCallBack) &quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/button&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;javascript-code-ajax&quot;&gt;javascript code (ajax)&lt;/h4&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;httpGetAsync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;theUrl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;callback&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;xmlHttp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;XMLHttpRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;xmlHttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;onreadystatechange&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;xmlHttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;readyState&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;xmlHttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;status&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+        	 &lt;span class=&quot;nx&quot;&gt;callback&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;xmlHttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;responseText&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;           
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;xmlHttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;GET&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;theUrl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// true for asynchronous&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;xmlHttp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;myCallBack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;alert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;jsp&quot;&gt;JSP&lt;/h3&gt;
+
+&lt;h4 id=&quot;overview-1&quot;&gt;overview&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;JSP 페이지에서는 자바의 Processbuilder를 이용하여 프로세스를 생성시키고 쉘 명령어를 실행시켰습니다.&lt;/li&gt;
+  &lt;li&gt;쉘 명령어를 실행시키는 변수는 &lt;code class=&quot;highlighter-rouge&quot;&gt;bashCommand&lt;/code&gt;, 쉘 스크립트를 실행시키는 변수는 &lt;code class=&quot;highlighter-rouge&quot;&gt;scriptCommand&lt;/code&gt;로 구분 지었습니다.&lt;/li&gt;
+  &lt;li&gt;프로세스를 새로 만들어 실행하므로 결과를 확인할 수 없습니다. 때문에 프로세스의 inputStream과 errorStream을 받아 버퍼에 넣어 페이지에 출력하도록 하였습니다.&lt;/li&gt;
+  &lt;li&gt;본 예제에서는 shell을 이용해 &lt;code class=&quot;highlighter-rouge&quot;&gt;ls -al&lt;/code&gt;을 호출하여 나온 출력값을 myCallBack을 통해 받아, &lt;code class=&quot;highlighter-rouge&quot;&gt;alert()&lt;/code&gt;를 이용하여 확인하였습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;jsp-code&quot;&gt;jsp code&lt;/h4&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-java&quot; data-lang=&quot;java&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;%&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;@&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;page&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;language&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;java&quot;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;java.io.*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;java&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;util&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.*,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;java&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;net&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.*&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;
+   contentType=&quot;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;html&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;charset&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;EUC&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KR&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot; session=&quot;&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot; %&amp;gt;
+
+&amp;lt;%
+    String path = &quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;home&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tomcat8&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;webapps&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ROOT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dashboard&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;etri&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;jsp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sh&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;play&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ffmpeg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;sh&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;;
+    String bashCommand[] = {&quot;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;, &quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;al&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;}; // bash 명령어
+    String scriptCommand[] = {&quot;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sh&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;, path}; //shell script 실행
+
+    int lineCount = 0;
+    String line=&quot;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;ProcessBuilder&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;builder&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ProcessBuilder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bashCommand&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Process&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;childProcess&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;childProcess&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;builder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+
+      &lt;span class=&quot;n&quot;&gt;BufferedReader&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;br&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;BufferedReader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+                    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;InputStreamReader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+                          &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SequenceInputStream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;childProcess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getInputStream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;childProcess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getErrorStream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;())));&lt;/span&gt;
+
+      &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;br&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;readLine&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;%&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;lt;%=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;%&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;br&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;%&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;br&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+
+   &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IOException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ie&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;ie&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;printStackTrace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+   &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;printStackTrace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+   &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;%&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;확인&quot;&gt;확인&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/linux/4/linux.png&quot; alt=&quot;Linux&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;관련&quot;&gt;관련&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wnsgml972.github.io/linux/linux_ubuntu_tomcat.html&quot;&gt;1. Ubuntu 서버에 Tomcat 설치하기  &lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wnsgml972.github.io/linux/linux_jsp.html&quot;&gt;2. Ubuntu 서버에서 JSP 사용하기 &lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wnsgml972.github.io/linux/linux_shellscript.html&quot;&gt;3. JSP를 이용한 쉘 스크립트 실행 &lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Fri, 03 Aug 2018 00:00:00 +0000</pubDate>
+        <link>https://wnsgml972.github.io/linux/linux_shellscript.html</link>
+        <guid isPermaLink="true">https://wnsgml972.github.io/linux/linux_shellscript.html</guid>
+        
+        <category>jsp</category>
+        
+        <category>html</category>
+        
+        <category>javascript</category>
+        
+        <category>linux</category>
+        
+        <category>processbuilder</category>
+        
+        <category>ajax</category>
+        
+        
+        <category>Linux</category>
+        
+      </item>
+    
+  </channel>
+</rss>

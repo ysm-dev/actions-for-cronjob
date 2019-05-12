@@ -1,0 +1,1074 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>기록 저장소</title>
+    <description>나만 보면 된다.</description>
+    <link>/</link>
+    <atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
+    <pubDate>Thu, 11 Aug 2016 18:00:03 +0900</pubDate>
+    <lastBuildDate>Thu, 11 Aug 2016 18:00:03 +0900</lastBuildDate>
+    <generator>Jekyll v3.1.6</generator>
+    
+      <item>
+        <title>ssh key를 이용한 로그인</title>
+        <description>&lt;p&gt;macOS 에서 ssh key를 지정하여 서버로 비밀번호 타이핑 없이 바로 로그인 하게 하자&lt;br /&gt;
+&lt;del&gt;평소엔 보안때문에 안해놓는다.&lt;/del&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;macos&quot;&gt;macOS&lt;/h3&gt;
+
+&lt;h4 id=&quot;section&quot;&gt;- 키 생성&lt;/h4&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ssh-keygen -t rsa -C &lt;span class=&quot;s2&quot;&gt;&quot;name&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h4 id=&quot;public-key-&quot;&gt;- public key를 조회&lt;/h4&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cat ~/.ssh/id_rsa.pub
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;server-centos&quot;&gt;대상 Server (CentOS)&lt;/h3&gt;
+
+&lt;h4 id=&quot;public-key-sshauthorizedkeys--&quot;&gt;- public key를 &lt;code class=&quot;highlighter-rouge&quot;&gt;~/.ssh/authorized_keys&lt;/code&gt; 파일에 추가&lt;/h4&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;vi ~/.ssh/authorized_keys
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+</description>
+        <pubDate>Thu, 11 Aug 2016 16:07:00 +0900</pubDate>
+        <link>/2016/08/11/ssh-key-login/</link>
+        <guid isPermaLink="true">/2016/08/11/ssh-key-login/</guid>
+        
+        <category>centos</category>
+        
+        <category>ssh</category>
+        
+        <category>macos</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>redis data type 종류</title>
+        <description>&lt;h2 id=&quot;redis-data-type-&quot;&gt;Redis Data Type 요약&lt;/h2&gt;
+&lt;p&gt;인터넷상에 수많은 좋은 자료가 있음에도 공부 차원에서 정리를 한다&lt;/p&gt;
+
+&lt;p&gt;테스트는 &lt;code class=&quot;highlighter-rouge&quot;&gt;redis-cli&lt;/code&gt;를 이용해서 하지만 실제 사용은 언어에 맞는 &lt;code class=&quot;highlighter-rouge&quot;&gt;api library&lt;/code&gt;를 사용 할듯&lt;/p&gt;
+
+&lt;h4 id=&quot;section&quot;&gt;개요&lt;/h4&gt;
+&lt;p&gt;&lt;a href=&quot;http://redis.io/topics/data-types-intro&quot;&gt;http://redis.io/topics/data-types-intro&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;section-1&quot;&gt;예제&lt;/h4&gt;
+&lt;p&gt;&lt;a href=&quot;http://redis.io/topics/data-types&quot;&gt;http://redis.io/topics/data-types&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;strings&quot;&gt;Strings&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;value에 문자 숫자 등을 저장한다&lt;/li&gt;
+  &lt;li&gt;저장시 별도로 형이 없다 (숫자 문자 구분이 없음)&lt;/li&gt;
+  &lt;li&gt;숫자도 저장가능 하다 그리고 숫자에 &lt;code class=&quot;highlighter-rouge&quot;&gt;incr&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;incrby&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;decr&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;decrby&lt;/code&gt; 같은 atomic counter 연산이 가능&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;incrby&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;decrby&lt;/code&gt; 는 특정 수를 더하거나 뺄때 사용 &lt;code class=&quot;highlighter-rouge&quot;&gt;incrby &quot;test_strings&quot; 10&lt;/code&gt; 처럼 사용&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# redis-cli&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;test_strings&quot;&lt;/span&gt; 1
+OK
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;get &lt;span class=&quot;s2&quot;&gt;&quot;test_strings&quot;&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;incr &lt;span class=&quot;s2&quot;&gt;&quot;test_strings&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 2
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;get &lt;span class=&quot;s2&quot;&gt;&quot;test_strings&quot;&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&quot;2&quot;&lt;/span&gt;
+127.0.0.1:6379&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;lists&quot;&gt;Lists&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;value에 list를 저장한다&lt;/li&gt;
+  &lt;li&gt;lrange: 값을 조회 이때 -1은 모두 가져오라는 뜻&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;lpush &lt;span class=&quot;s2&quot;&gt;&quot;test_lists&quot;&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;lpush test_lists 2
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;lrange test_lists 0 -1
+1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;2&quot;&lt;/span&gt;
+2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;rpush test_lists 3
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 3
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;lrange test_lists 0 -1
+1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;2&quot;&lt;/span&gt;
+2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;
+3&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;3&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;rpop&lt;/code&gt;를 이용하여 queue 구현이 가능할꺼 같다&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;rpop test_lists
+&lt;span class=&quot;s2&quot;&gt;&quot;3&quot;&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;lrange test_lists 0 -1
+1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;2&quot;&lt;/span&gt;
+2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;rbpop&lt;/code&gt;을 이용하면 순차적인 분산 작업도 구현 가능할꺼 같다 &lt;code class=&quot;highlighter-rouge&quot;&gt;rpop&lt;/code&gt;과 비슷하나 데이타가 없다면 데이타가 들어올때까지 &lt;code class=&quot;highlighter-rouge&quot;&gt;block&lt;/code&gt; 상태로 대기한다&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;sets&quot;&gt;Sets&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;value을 set형태로 가지고 있음&lt;/li&gt;
+  &lt;li&gt;list는 중복이 되나 set은 중복이 안됨&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;sadd test_sets 1
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;smembers test_sets
+1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;sadd test_sets 1 2 3 4
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 3
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;smembers test_sets
+1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;
+2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;2&quot;&lt;/span&gt;
+3&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;3&quot;&lt;/span&gt;
+4&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;4&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;hashes&quot;&gt;Hashes&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Hashs key/value 목록을 값으로 가진다&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;hset htest username hi
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;hset htest userpwd asdf
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;hget htest username
+&lt;span class=&quot;s2&quot;&gt;&quot;hi&quot;&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;hgetall htest
+1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;username&quot;&lt;/span&gt;
+2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;hi&quot;&lt;/span&gt;
+3&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;userpwd&quot;&lt;/span&gt;
+4&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;asdf&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;hget시에 값이 없다면 (nil)을 반환&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;hget htest temp
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;nil&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;hashkey에 대한 값을 바꿈&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;hget htest userpwd
+&lt;span class=&quot;s2&quot;&gt;&quot;asdf&quot;&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;hset htest userpwd 1234
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 0
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;hget htest userpwd
+&lt;span class=&quot;s2&quot;&gt;&quot;1234&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;sorted-sets&quot;&gt;Sorted sets&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;value를 set형태로 가지고 있음&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Sets&lt;/code&gt;과 마찬가지로 중복은 안됨&lt;/li&gt;
+  &lt;li&gt;score와 함께 저장되며 score를 기준으로 정렬됨&lt;/li&gt;
+  &lt;li&gt;list처럼 사용이 될꺼 같으나 정렬된다는 장점이 있는 것 같다&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;zadd test_ssets 1 1
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;zadd test_ssets 2 2
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;zrange test_ssets 0 -1
+1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;
+2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;2&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;score를 문자형으로 쓰면 안된다&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;zadd test_ssets &lt;span class=&quot;s2&quot;&gt;&quot;a&quot;&lt;/span&gt; 2
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;error&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; ERR value is not a valid float
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;중복이 안되면 동일한 value를 넣으면 기존 데이타의 score를 덮어서 데이타 순서가 바뀐다&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;zadd test_ssets &lt;span class=&quot;s2&quot;&gt;&quot;0&quot;&lt;/span&gt; 2
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 0
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;zrange test_ssets 0 -1
+1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;2&quot;&lt;/span&gt;
+2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;bitmaps&quot;&gt;Bitmaps&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;bit값을 저장해준다&lt;/li&gt;
+  &lt;li&gt;512MB 용량으로 2^32(42억)개의 bit값들을 저장할 수 있다&lt;/li&gt;
+  &lt;li&gt;boolean 옵션값을 저장하는 용도로 사용하면 좋을거 같다 (회원마다 공지 조회여부 등)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;setbit test_bits 0 1
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 0
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;getbit test_bits 0
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;setbit test_bits 0 0
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;127.0.0.1:6379&amp;gt; &lt;/span&gt;getbit test_bits 0
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 0
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+</description>
+        <pubDate>Wed, 27 Jul 2016 14:32:00 +0900</pubDate>
+        <link>/2016/07/27/redis-datatype/</link>
+        <guid isPermaLink="true">/2016/07/27/redis-datatype/</guid>
+        
+        <category>redis</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>maven에서 gradle로 변환...</title>
+        <description>&lt;h2 id=&quot;gradle-for-macos&quot;&gt;gradle설치 (for macOS)&lt;/h2&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;brew install gradle
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;원래 수동으로 설치하는 방법이 있으나.. 나는 위와 같이 자동 설치를 좋아한다
+&lt;del&gt;대부분 그렇지 않을까&lt;/del&gt;~&lt;br /&gt;
+수동 설치는 사이트에서 참고하자 
+&lt;a href=&quot;[https://gradle.org/gradle-download/]&quot;&gt;https://gradle.org/gradle-download/&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;pomxml---buildgradle-&quot;&gt;pom.xml -&amp;gt; build.gradle로 변환&lt;/h2&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 프로젝트 폴더 (pom.xml이 있는곳) 으로 이동 &lt;/span&gt;
+gradle init --type pom
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;위와 같이 하면 
+&lt;code class=&quot;highlighter-rouge&quot;&gt;project name&lt;/code&gt; 및 &lt;code class=&quot;highlighter-rouge&quot;&gt;dependencies&lt;/code&gt; 등이 gralde용 build script로 변환이 되고 프로젝트가 gradle를 사용가능하도록 설정된다&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;intelliJ IDEA&lt;/code&gt;에서 기존 &lt;code class=&quot;highlighter-rouge&quot;&gt;maven&lt;/code&gt;으로 구성된 프로젝트라면 &lt;code class=&quot;highlighter-rouge&quot;&gt;module&lt;/code&gt;을 새로 &lt;code class=&quot;highlighter-rouge&quot;&gt;import&lt;/code&gt;해야 한다 (그래야 툴에서 인식이 되는듯 하다)&lt;br /&gt;
+꼭 &lt;code class=&quot;highlighter-rouge&quot;&gt;import&lt;/code&gt;할때 &lt;code class=&quot;highlighter-rouge&quot;&gt;build.gralde&lt;/code&gt;를 선택하자&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;buildgradle-&quot;&gt;build.gradle 수정&lt;/h2&gt;
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;웹배포용이므로 &lt;code class=&quot;highlighter-rouge&quot;&gt;apply plugin: &#39;war&#39;&lt;/code&gt; 를 추가 한다&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;sourceSets를 지정해 빌드 옵션에 맞추어 특정 resource를 로드 하게 설정 한다&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sourceSets {
+    main.java.srcDirs=[&#39;src/main/java&#39;]
+    main.resources.srcDirs=[&#39;src/main/resources&#39;, &#39;src/main/resources-&#39; + target]
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;war파일명 지정과 webContent 패스를 지정한다&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;war {
+    archiveName &#39;api.war&#39;
+    from &#39;webapp&#39; // adds a file-set to the root of the archive
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h4 id=&quot;buildgradle&quot;&gt;완성된 build.gradle&lt;/h4&gt;
+&lt;div class=&quot;language-text highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apply plugin: &#39;java&#39;
+apply plugin: &#39;war&#39;
+
+group = &#39;com.sample&#39;
+version = &#39;1.0.0&#39;
+
+description = &quot;&quot;&quot;api-server&quot;&quot;&quot;
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile(group: &#39;org.springframework&#39;, name: &#39;spring-context&#39;, version:&#39;4.2.1.RELEASE&#39;) {
+        exclude(module: &#39;commons-logging&#39;)
+    }
+    compile group: &#39;org.springframework&#39;, name: &#39;spring-webmvc&#39;, version:&#39;4.2.1.RELEASE&#39;
+    compile group: &#39;org.springframework&#39;, name: &#39;spring-jdbc&#39;, version:&#39;4.2.1.RELEASE&#39;
+    compile group: &#39;org.springframework&#39;, name: &#39;spring-aop&#39;, version:&#39;4.2.1.RELEASE&#39;
+    compile group: &#39;org.springframework.security&#39;, name: &#39;spring-security-core&#39;, version:&#39;3.2.5.RELEASE&#39;
+    compile group: &#39;org.springframework.data&#39;, name: &#39;spring-data-jpa&#39;, version:&#39;1.9.0.RELEASE&#39;
+    compile group: &#39;org.springframework.amqp&#39;, name: &#39;spring-rabbit&#39;, version:&#39;1.4.1.RELEASE&#39;
+    
+    compile group: &#39;commons-fileupload&#39;, name: &#39;commons-fileupload&#39;, version:&#39;1.2&#39;
+    compile group: &#39;commons-httpclient&#39;, name: &#39;commons-httpclient&#39;, version:&#39;3.0.1&#39;
+    compile group: &#39;commons-dbcp&#39;, name: &#39;commons-dbcp&#39;, version:&#39;1.4&#39;
+    compile group: &#39;commons-lang&#39;, name: &#39;commons-lang&#39;, version:&#39;2.6&#39;
+    compile group: &#39;commons-io&#39;, name: &#39;commons-io&#39;, version:&#39;2.4&#39;
+    compile group: &#39;commons-codec&#39;, name: &#39;commons-codec&#39;, version:&#39;1.10&#39;
+    compile group: &#39;commons-net&#39;, name: &#39;commons-net&#39;, version:&#39;3.3&#39;
+    
+    compile group: &#39;ch.qos.logback&#39;, name: &#39;logback-classic&#39;, version:&#39;1.0.13&#39;
+    compile group: &#39;org.slf4j&#39;, name: &#39;slf4j-api&#39;, version:&#39;1.7.5&#39;
+    compile group: &#39;com.google.code.gson&#39;, name: &#39;gson&#39;, version:&#39;2.2.2&#39;
+    compile group: &#39;mysql&#39;, name: &#39;mysql-connector-java&#39;, version:&#39;5.1.5&#39;
+    compile group: &#39;org.hibernate&#39;, name: &#39;hibernate-entitymanager&#39;, version:&#39;4.3.8.Final&#39;
+    compile group: &#39;com.sun.scn&#39;, name: &#39;sysnet-registration&#39;, version:&#39;1.0.1&#39;
+    testCompile group: &#39;org.springframework&#39;, name: &#39;spring-test&#39;, version:&#39;4.2.1.RELEASE&#39;
+    testCompile group: &#39;junit&#39;, name: &#39;junit&#39;, version:&#39;4.11&#39;
+    providedCompile group: &#39;javax.servlet&#39;, name: &#39;javax.servlet-api&#39;, version:&#39;3.0.1&#39;
+}
+
+
+sourceSets {
+    main.java.srcDirs=[&#39;src/main/java&#39;]
+    main.resources.srcDirs=[&#39;src/main/resources&#39;, &#39;src/main/resources-&#39; + target]
+}
+
+war {
+    archiveName &#39;api.war&#39;
+    from &#39;webapp&#39; // adds a file-set to the root of the archive
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;section&quot;&gt;빌드&lt;/h2&gt;
+&lt;p&gt;빌드시에 Script Parameters를 함께 넣어야 한다
+&lt;img src=&quot;/images/160714_1.png&quot; alt=&quot;빌드옵션&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;빌드 결과물은 &lt;code class=&quot;highlighter-rouge&quot;&gt;build/libs/api.war&lt;/code&gt; 로 확인 할 수 있다&lt;/p&gt;
+
+&lt;h2 id=&quot;section-1&quot;&gt;개발시 개발서버에 바로 배포를 하기 위한 구성 추가 하기!&lt;/h2&gt;
+&lt;p&gt;아래 cargo plugin을 통하여 가능하다
+&lt;a href=&quot;https://github.com/bmuschko/gradle-cargo-plugin&quot;&gt;https://github.com/bmuschko/gradle-cargo-plugin&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;buildgradle--&quot;&gt;build.gradle에 아래 추가&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath &#39;com.bmuschko:gradle-cargo-plugin:2.2.3&#39;
+    }
+}
+
+apply plugin: &#39;com.bmuschko.cargo&#39;
+...
+중략...
+...
+
+cargoRedeployRemote {
+    dependsOn war
+}
+
+cargoDeployRemote {
+    dependsOn war
+}
+
+cargo {
+    containerId = &#39;tomcat7x&#39;
+    port = 8083
+
+    deployable {
+        context = &#39;api&#39;
+    }
+
+    remote {
+        hostname = &#39;172.1.20.22&#39;
+        username = &#39;tomcat&#39;
+        password = &#39;password&#39;
+    }
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;section-2&quot;&gt;터미널창에서 실행&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gradle -Ptarget&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;dev cargoRedeployRemote
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+</description>
+        <pubDate>Thu, 14 Jul 2016 14:15:00 +0900</pubDate>
+        <link>/2016/07/14/gradle/</link>
+        <guid isPermaLink="true">/2016/07/14/gradle/</guid>
+        
+        <category>gradle</category>
+        
+        <category>spring</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>fluentd로 로그를 모으기</title>
+        <description>&lt;p&gt;예전에 flume로 에러 로그들을 모으고 있었는데 fluentd로 갈아타려고 한다.  &lt;br /&gt;
+&lt;del&gt;사실 모으는 목적이 아니라 모니터링이 목적&lt;/del&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;section&quot;&gt;설치&lt;/h2&gt;
+&lt;p&gt;아래 사이트에 나오는 command만 실행해주면 chkconfig 등록까지 다 해준다.
+참고 공식 사이트&lt;br /&gt;
+&lt;a href=&quot;http://docs.fluentd.org/articles/install-by-rpm#step-0-before-installation&quot;&gt;http://docs.fluentd.org/articles/install-by-rpm#step-0-before-installation&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;구성은 flume와 비슷한것 같다&lt;br /&gt;
+client -&amp;gt; server 구성으로 해놓고 client에서 수집된 로그를 server로 전달.&lt;/p&gt;
+
+&lt;h3 id=&quot;section-1&quot;&gt;아래 커맨드 실행&lt;/h3&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -L https://toolbelt.treasuredata.com/sh/install-redhat-td-agent2.sh | sh
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;section-2&quot;&gt;서비스 구동&lt;/h2&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;service td-agent start
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;당연히 &lt;code class=&quot;highlighter-rouge&quot;&gt;service td-agent stop&lt;/code&gt; 가 중지다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;section-3&quot;&gt;설정&lt;/h2&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/td-agent/td-agent.conf&lt;/code&gt; 파일이 설정 파일이다&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;vi /etc/td-agent/td-agent.conf
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;simple하게 각 서비스들에 error.log들만 모아서 로그 서버에 파일로 기록 하도록 해보자.&lt;/p&gt;
+
+&lt;p&gt;우선 내가 구성하려고 하는 설정에 필요한 항목은 아래와 같다.  &lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;source /&amp;gt;&lt;/code&gt;: 데이타 수집 경로, 또는 원격서버로부터 수신 받는다
+&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;match /&amp;gt;&lt;/code&gt;: 수집된 로그들을 처리할 액션을 지정 (다른 서버로 전송을 하거나 로컬에 파일로 저장)&lt;/p&gt;
+
+&lt;p&gt;다른 설정값들은 아래 링크에서 확인 해보자 (많다..)
+&lt;a href=&quot;http://docs.fluentd.org/articles/config-file#2-ldquomatchrdquo-tell-fluentd-what-to-do&quot;&gt;http://docs.fluentd.org/articles/config-file#2-ldquomatchrdquo-tell-fluentd-what-to-do&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;td-agentconf&quot;&gt;로그 수집 td-agent.conf&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;source&amp;gt;
+  @type tail
+  path /logs/error.log
+  tag xx.devwas.error
+
+  format multiline
+  format_firstline /\[[^\s]+\] .*/
+  format1 /\[(?&amp;lt;level&amp;gt;[^\s]+)\] (?&amp;lt;message&amp;gt;.*)/
+&amp;lt;/source&amp;gt;
+
+&amp;lt;match xx.*.*&amp;gt;
+  @type forward
+  send_timeout 60s
+  recover_wait 10s
+  heartbeat_interval 1s
+  phi_threshold 16
+  hard_timeout 60s
+  &amp;lt;server&amp;gt;
+    name logserver
+    host log-server
+    port 24224
+    weight 60
+  &amp;lt;/server&amp;gt;
+&amp;lt;/match&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h4 id=&quot;td-agentconf-1&quot;&gt;로그 저장 td-agent.conf&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;source&amp;gt;
+  @type forward
+  port 24224
+&amp;lt;/source&amp;gt;
+
+&amp;lt;match xx.**&amp;gt;
+  @type file
+  path /logs/td/error
+&amp;lt;/match&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;시작시 아래 오류가 나오면 저장 path에 td-agent의 권한을 주자&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Starting td-agent: 2016-06-22 14:13:53 +0900 [error]: fluent/supervisor.rb:359:rescue in main_process: config error file=&quot;/etc/td-agent/td-agent.conf&quot; error=&quot;out_file: `/logs/td/~~~` is not writable&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;chown td-agent td
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;아래 폴더에 error.시간 으로 저장되는걸 확인 할 수 있다&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@logserver td]# ls -al
+합계 224
+drwxr-xr-x. 2 td-agent root       4096 2016-06-22 15:02 .
+drwxr-xr-x. 4 root     root       4096 2016-06-22 15:16 ..
+-rw-r--r--. 1 td-agent td-agent 220529 2016-06-22 15:38 error.20160622.b535d7aec407e9135
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@logserver td]#
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;그런데 json형태로 저장되고 있다 아무래도 그냥 육안으로 확인은 불편할꺼 같다&lt;/p&gt;
+
+&lt;p&gt;아니면 plugin이 많으니 찾아보자.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 22 Jun 2016 15:47:00 +0900</pubDate>
+        <link>/2016/06/22/fluentd/</link>
+        <guid isPermaLink="true">/2016/06/22/fluentd/</guid>
+        
+        <category>fluentd</category>
+        
+        <category>centos</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>restful api 서버에서 평균 응답시간, 호출횟수, Min, Max 구하기</title>
+        <description>&lt;p&gt;app에서 데이타 통신을하는 api서버가 있다&lt;br /&gt;
+각 인터페이스별 평균 응답시간을 아파치 로그를 활용하여 구해봤다&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;서버는 apache+tomcat, spring으로 구현한 서버이다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;hadoop과 spark, python 설정은&lt;br /&gt;
+&lt;a href=&quot;/2016/05/30/spark-hadoop/&quot;&gt;Python and Spark로 로그 파일 분석 (with hadoop)&lt;/a&gt;
+을 참고 하자&lt;/p&gt;
+
+&lt;h3 id=&quot;transferlog----&quot;&gt;1. 아파치 TransferLog 로그파일에 응답 시간 남기기&lt;/h3&gt;
+&lt;p&gt;우선 분석하기 전에 아파치 로그에 응답 시간을 추가로 기록하도록 하자&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/httpd/conf.d/ssl.conf&lt;/code&gt; 경로에서 아래를 편집했다.&lt;br /&gt;
+물론. 설정 파일이 있는 경로와 이름은 서버마다 틀릴 수 있다&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;VirtualHost _default_:443&amp;gt;
+...
+CustomLog logs/ssl_access_log &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+          &lt;span class=&quot;s2&quot;&gt;&quot;%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x &lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;%r&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt; %b %D&quot;&lt;/span&gt;
+...
+&amp;lt;/VirtualHost&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;기존 TransferLog에 남기지 않고 CustomLog를 하나 더 추가 했다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;맨 뒤에 %D를 붙이면 응답시간이 마이크로초 단위로 찍히게 된다 더욱 자세한 내용은 아래 링크를 참고 한다 &lt;br /&gt;
+&lt;a href=&quot;https://httpd.apache.org/docs/2.2/ko/mod/mod_log_config.html&quot;&gt;https://httpd.apache.org/docs/2.2/ko/mod/mod_log_config.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;그래서 로그가 아래와 같이 쌓이는걸 확인 할 수 있다 맨 마지막 스페이스 이후에 숫자가 응답시간이다&lt;/p&gt;
+
+&lt;div class=&quot;language-text highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[08/Jun/2016:13:37:11 +0900] xx.xx.xx.xx TLSv1 ECDHE-RSA-AES128-SHA &quot;POST /interface/if1 HTTP/1.1&quot; 571 23687
+[08/Jun/2016:13:37:14 +0900] xx.xx.xx.xx TLSv1 ECDHE-RSA-AES128-SHA &quot;POST /interface/if2 HTTP/1.1&quot; 711 17120
+[08/Jun/2016:13:38:22 +0900] xx.xx.xx.xx TLSv1 ECDHE-RSA-AES128-SHA &quot;POST /interface/if3 HTTP/1.1&quot; 571 36293
+[08/Jun/2016:13:38:26 +0900] xx.xx.xx.xx TLSv1 ECDHE-RSA-AES128-SHA &quot;POST /interface/if4 HTTP/1.1&quot; 93 15992
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;python--apachelogpy&quot;&gt;2. python코드 작성 (apachelog.py)&lt;/h3&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#-*-coding: utf-8 -*-&lt;/span&gt;
+
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;re&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pymysql&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pyspark.context&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SparkContext&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;pat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;re&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;compile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/interface/(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;w+)&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;mapLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;search&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;other&quot;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        
+    &lt;span class=&quot;n&quot;&gt;microtime&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rfind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot; &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):]&lt;/span&gt;
+    
+    &lt;span class=&quot;c&quot;&gt;# 마이크로초이므로 백만을 나눠준다&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;avg&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;microtime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;min&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;microtime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;max&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;microtime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;used&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;reduceLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;avg&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;avg&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;avg&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;max&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;max&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;max&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;min&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;min&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;min&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;used&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;used&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;used&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;
+
+
+&lt;span class=&quot;n&quot;&gt;sc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SparkContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;appName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;apache_log&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;textFile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/input2/*&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mapLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reduceByKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reduceLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;l&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;collect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;name&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;avg&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;calls&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# name, avg, max, min, used&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;d&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;avg&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;max&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;min&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;used&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;완료&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;실행은 아래처럼 해야 한다&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$SPARK_HOME&lt;/span&gt;/bin/spark-submit --master &lt;span class=&quot;nb&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;4] apachelog.py
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+</description>
+        <pubDate>Wed, 08 Jun 2016 15:32:00 +0900</pubDate>
+        <link>/2016/06/08/apachelog/</link>
+        <guid isPermaLink="true">/2016/06/08/apachelog/</guid>
+        
+        <category>spark</category>
+        
+        <category>hadoop</category>
+        
+        <category>python</category>
+        
+        <category>apache</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>Python and Spark로 로그 파일 분석 (with hadoop)</title>
+        <description>&lt;h1 id=&quot;spark---&quot;&gt;Spark를 이용한 파일 분석&lt;/h1&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;spark도 잘 모르고 hadoop도 잘 모르는 상태에서 진행해서 틀린 부분이 있을 것이다.&lt;br /&gt;
+참고로 OSX에서 진행된 작업이다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h1 id=&quot;section&quot;&gt;설정&lt;/h1&gt;
+
+&lt;h3 id=&quot;hadoop---&quot;&gt;1. Hadoop를 설치 하고 실행한다&lt;/h3&gt;
+
+&lt;h3 id=&quot;hdfs--&quot;&gt;2. hdfs상에 파일을 올린다.&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /logs
+hdfs dfs -put test.log /input/
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;아래와 같이 파일 브라우징이 가능하다 아래에서 올라간 파일을 확인! 
+&lt;code class=&quot;highlighter-rouge&quot;&gt;http://localhost:50070/explorer.html#/input&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;spark-python--&quot;&gt;3. spark의 python 커맨드 테스트..&lt;/h3&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$SPARK_HOME/bin/pyspark&lt;/code&gt;
+하둡을 켜고 pyspark를 실행하면 아래와 같이 나온다&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Python 2.7.10 (default, Oct 23 2015, 19:19:21)
+[GCC 4.2.1 Compatible Apple LLVM 7.0.0 (clang-700.0.59.5)] on darwin
+Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.
+16/05/30 16:12:16 INFO spark.SparkContext: Running Spark version 1.6.1
+2016-05-30 16:12:17.194 java[5956:1259148] Unable to load realm info from SCDynamicStore
+... 중략 ....
+16/05/30 16:12:19 INFO storage.BlockManagerMasterEndpoint: Registering block manager localhost:50791 with 511.0 MB RAM, BlockManagerId(driver, localhost, 50791)
+16/05/30 16:12:19 INFO storage.BlockManagerMaster: Registered BlockManager
+Welcome to
+      ____              __
+     / __/__  ___ _____/ /__
+    _\ \/ _ \/ _ `/ __/  &#39;_/
+   /__ / .__/\_,_/_/ /_/\_\   version 1.6.1
+      /_/
+
+Using Python version 2.7.10 (default, Oct 23 2015 19:19:21)
+SparkContext available as sc, HiveContext available as sqlContext.
+&amp;gt;&amp;gt;&amp;gt; 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;python---spark-submit-&quot;&gt;4. python 환경 잡기 (spark-submit 환경임)&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; &lt;span class=&quot;c&quot;&gt;# 환경변수 설정을 위해 아래 파일을 연다 (물론 OSX 기준)&lt;/span&gt;
+ vi ~/.bash_profile
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;.bash_profile&lt;/code&gt;파일에 아래와 같이 추가 한다&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;SPARK_HOME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/Users/paper/dev/tool/spark
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PYTHONPATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$SPARK_HOME&lt;/span&gt;/python/:&lt;span class=&quot;nv&quot;&gt;$PYTHONPATH&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;IPYTHON&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PYSPARK_PYTHON&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;python3.5
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PYSPARK_DRIVER_PYTHON&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;ipython
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;혹시 ipython이 없다면 아래 명령어로 설치 한다&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pip install ipython
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 적용 &lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;source&lt;/span&gt; ~/.bash_profile
+
+&lt;span class=&quot;c&quot;&gt;# py4j는 pyspark가 사용하는 모듈이니 설치 해야 함 &lt;/span&gt;
+pip3.5 install py4j
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;voicelogpy---&quot;&gt;5. voicelog.py파일 작성후 간단한 테스트&lt;/h3&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#-*-coding: utf-8 -*-&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pyspark.context&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SparkContext&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;sc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SparkContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;textFile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/input/test.log&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$SPARK_HOME&lt;/span&gt;/bin/spark-submit --master &lt;span class=&quot;nb&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;4] voicelog.py
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;아래와 같이 결과를 볼 수 있다&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;16/05/30 17:52:58 INFO spark.SparkContext: Running Spark version 1.6.1
+2016-05-30 17:52:58.646 java[7629:1534234] Unable to load realm info from SCDynamicStore
+16/05/30 17:52:58 WARN util.NativeCodeLoader: Unable to load native-hadoop library &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;your platform... using &lt;span class=&quot;nb&quot;&gt;builtin&lt;/span&gt;-java classes where applicable
+16/05/30 17:52:58 INFO spark.SecurityManager: Changing view acls to: paper
+... 중략 ...
+16/05/30 17:53:03 INFO scheduler.DAGScheduler: Job 0 finished: count at /Users/paper/dev/git/createXlsFromDb/search_voice_log/voicelog.py:8, took 1.541395 s
+145410
+16/05/30 17:53:03 INFO spark.SparkContext: Invoking stop&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; from shutdown hook
+... 중략 ...
+16/05/30 17:53:03 INFO remote.RemoteActorRefProvider&lt;span class=&quot;nv&quot;&gt;$RemotingTerminator&lt;/span&gt;: Remoting shut down.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h1 id=&quot;intellij-idea&quot;&gt;툴설정 (IntelliJ IDEA)&lt;/h1&gt;
+
+&lt;h3 id=&quot;intellij--&quot;&gt;우선 파일이 연결되는걸 확인했으니 .. intellij에서 연동하는걸 해보자.&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;코드에 pyspark 보이게 하기&lt;br /&gt;
+프로젝트 환경설정에서 SDKs 에 아래와 같이 라이브러리를 추가해 준다 
+&lt;img src=&quot;/images/160601_1.png&quot; alt=&quot;설정&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;실행 스크립트 연결&lt;br /&gt;
+&lt;img src=&quot;/images/160601_2.png&quot; alt=&quot;설정&quot; /&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$SPARK_HOME/bin/spark-submit --master local[4] voicelog.py&lt;/code&gt; 를 실행하도록 구성해준다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h1 id=&quot;voicelogpy-&quot;&gt;구현 &lt;code class=&quot;highlighter-rouge&quot;&gt;voicelog.py&lt;/code&gt; 파일&lt;/h1&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#-*-coding: utf-8 -*-&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pyspark.context&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SparkContext&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;mapLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# lineblock를 불러와서 필요한 부분만 가공하여 tuple형태로 반환한다&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;.pcm&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;str2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;split&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;sent_cd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;str2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;str2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;_&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;str2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sent_cd&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;printLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;line&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;sc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SparkContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;appName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;voicelog&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# /input/ 경로에 있는 모든 파일을 가져와서 분석을 실시한다 &lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# sc.textFile로 하려고 했으나.분석 대상이 multi line이어서 아래를 이용한다&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;newAPIHadoopFile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&#39;/input/&#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&#39;org.apache.hadoop.mapreduce.lib.input.TextInputFormat&#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&#39;org.apache.hadoop.io.LongWritable&#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&#39;org.apache.hadoop.io.Text&#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&#39;textinputformat.record.delimiter&#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&#39;/text/&#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# block중에 record가 포함되지 않고 -11문자열을 포함하는 block만 RDD로 뽑는다&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;l&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;lambda&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/record/&quot;&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;-11&quot;&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# reduceByKey를 한 이유는 몇번이나 발생했는지를 나타낸다 - 사실 중복제거를 하려고 했는데. groupByKey를 사용해도 괜찮다&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;l&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mapLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reduceByKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;lambda&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;collect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# 결과 파일에 쓴다&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;result.log&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;w&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;l&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\r\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;완료&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h4 id=&quot;section-1&quot;&gt;실행 방법&lt;/h4&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$SPARK_HOME&lt;/span&gt;/bin/spark-submit --master &lt;span class=&quot;nb&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;4] voicelog.py
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;참고로 &lt;code class=&quot;highlighter-rouge&quot;&gt;spark-submit --help&lt;/code&gt;를 쳐보면 많은 옵션을 확인 할 수 있다&lt;/p&gt;
+
+&lt;h3 id=&quot;section-2&quot;&gt;스파크 서버에 연결하여 실행&lt;/h3&gt;
+&lt;p&gt;스파크를 실행해서 클러스터 구성후에 연동하는 법은 아래 처럼 스파크를 따로 실행해놓고 python코드에서 스파크 주소를 쓰면 되는것 같다&lt;br /&gt;
+&lt;del&gt;안해봤다&lt;/del&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$SPARK_HOME&lt;/span&gt;/sbin/start-all.sh
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/160601_3.png&quot; alt=&quot;MasterUI 캡쳐&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위에 MasterUI를 자세히 보면 
+URL: spark://로 시작 하는 부분을 확인 할 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;SparkContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;spark://.....&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;voicelog&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;예전에는 단순히 오류 추적에만 사용했던 로그였기에 기간이 지나면 자동삭제하게 해놨었는데..
+앞으로는 로그를 잘 모아놔야겠다&lt;br /&gt;
+일단 로그 쓸때 가치 있는 데이타를 좀 포함시켜보자&lt;/p&gt;
+&lt;/blockquote&gt;
+
+</description>
+        <pubDate>Mon, 30 May 2016 16:35:00 +0900</pubDate>
+        <link>/2016/05/30/spark-hadoop/</link>
+        <guid isPermaLink="true">/2016/05/30/spark-hadoop/</guid>
+        
+        <category>spark</category>
+        
+        <category>hadoop</category>
+        
+        <category>python</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>AWS EC2서버에 패스워드로 로그인 하기</title>
+        <description>&lt;p&gt;AWS ec2 서버에는 password로 ssh접근이 안되도록 되어 있다.
+아래 파일을 수정하여 접근이 되도록 해보자.&lt;/p&gt;
+
+&lt;p&gt;centos 6.5에서 작업한 것이다&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# 루트계정에 패스워드 지정
+passwd root
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo vi /etc/ssh/sshd_config
+
+&lt;span class=&quot;c&quot;&gt;# 아래 두개 옵션을 yes로 하고 저장후 닫기 &lt;/span&gt;
+PermitRootLogin yes
+PasswordAuthentication yes
+
+&lt;span class=&quot;c&quot;&gt;# sshd 재시작 &lt;/span&gt;
+service sshd restart
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+</description>
+        <pubDate>Fri, 08 Apr 2016 11:33:00 +0900</pubDate>
+        <link>/2016/04/08/amazon-ec2-root-pwd/</link>
+        <guid isPermaLink="true">/2016/04/08/amazon-ec2-root-pwd/</guid>
+        
+        <category>aws</category>
+        
+        <category>centos</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>git에서 rebase와 merge</title>
+        <description>&lt;p&gt;요즘엔 git을 많이 이용하는데 항상 &lt;code class=&quot;highlighter-rouge&quot;&gt;rebase&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;merge&lt;/code&gt;에 대해서 헷갈리곤 했다.&lt;/p&gt;
+
+&lt;p&gt;&lt;del&gt;잘 모를때 rebase로 하다가 소스를 날려먹은 후로는.. merge만 써왔다&lt;/del&gt;&lt;/p&gt;
+
+&lt;p&gt;최근에 몇군데 찾아봤는데 rebase 는 branch의 base를 재배치 한다는 의미라고 한다.
+gitflow를 쓰면서 feature를 새로 만들어서 작업을 하다 그동안 쌓인 develop를 rebase를 해봤는데.
+feature에서 작업하던 도중 쌓인 develop의 commit들이 local feature밑으로 들어가지는걸 확인했다.&lt;/p&gt;
+
+&lt;p&gt;히스토리가 꼬이지 않아 좋지만 한가지 문제는 feature를 서버로 push한 상태라면.. feature브런치가 두개가 생겨버린다 
+물론 로컬이 최신이므로 remote/origin을 feature를 삭제하고 신규로 push하면 해결되는것 같다.&lt;/p&gt;
+
+&lt;p&gt;그림을 그려서 설명하면 참 좋겠지만.. 그림을 못그린다.&lt;/p&gt;
+
+&lt;p&gt;rebase시에 컴플릿은 local feature에서 commit한걸 기준으로 한번씩 단계적으로 해결을 resolve를 해나가는데.&lt;/p&gt;
+
+&lt;p&gt;이 과정에서 원하는 결과가 제대로 안나올수 있다. (파일 하나의 resolve 작업을 여러번 해야 하는데..)&lt;/p&gt;
+
+&lt;p&gt;rebase 를 이용하려면 되도록 주기를 짧게 가져가는것이 좋을것같다.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 24 Mar 2016 16:36:00 +0900</pubDate>
+        <link>/2016/03/24/git-rebase-merge/</link>
+        <guid isPermaLink="true">/2016/03/24/git-rebase-merge/</guid>
+        
+        <category>git</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>git local commit revert 시키기</title>
+        <description>&lt;p&gt;아래와 같이 복구 대상 저장소를 지정한다 (현재 checkout이 develop인 경우)&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git reset --hard remotes/origin/develop
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;저장소를 지정하지 않으면 현재 checkout된 remote를 기준으로 revert하는것 같다&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git reset --hard
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+</description>
+        <pubDate>Thu, 25 Feb 2016 14:35:00 +0900</pubDate>
+        <link>/2016/02/25/git-revert-local-commit/</link>
+        <guid isPermaLink="true">/2016/02/25/git-revert-local-commit/</guid>
+        
+        <category>git</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>Python으로 간단한 webserver 체크</title>
+        <description>&lt;p&gt;요즘 파이썬 공부중인데 연습겸 10초마다 webserver가 죽었는지 체크하는 간단한 프로그램을 만들어 봤다.&lt;br /&gt;
+아래코드에는 아래 나열된 사항들에 대한 코딩이 적용되어 있다&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;http request&lt;/li&gt;
+  &lt;li&gt;thread(timer 대응)&lt;/li&gt;
+  &lt;li&gt;logging사용법&lt;/li&gt;
+  &lt;li&gt;try-except 예외처리&lt;/li&gt;
+  &lt;li&gt;raise throw&lt;/li&gt;
+  &lt;li&gt;json parsing 및 데이타 읽기 방법&lt;/li&gt;
+  &lt;li&gt;string 처리&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;servercheckpy-&quot;&gt;ServerCheck.py 파일&lt;/h3&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;threading&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;urllib.request&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;json&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;time&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;logging&lt;/span&gt;
+
+
+&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;myLogger&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# 이런 로그 파일 셋팅 &lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;config_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;formatter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Formatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;[&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%(levelname)&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s] &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%(asctime)&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s - &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%(message)&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FileHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/logs/py/log.log&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stream_handler&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;StreamHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setFormatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;formatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stream_handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setFormatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;formatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stream_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setLevel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DEBUG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;call_error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s에서 &#39;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s&#39;가 발생했습니다&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;check_server&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;check_server_private&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;서버 체크 완료 name=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;call_error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;check_server_private&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;urllib&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;urlopen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;raise&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;RuntimeError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;서버 오류&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;read&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;json_object&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;loads&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;utf-8&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;utf-8&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;json_object&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;result_code&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;0000&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;raise&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;RuntimeError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;서버 응답 오류&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;finally&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;check_all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;check_server&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;server1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;http://server1/checkjson&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;check_server&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;server2&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;http://server2/checkjson&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;run_thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;check_all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;config_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+
+&lt;span class=&quot;n&quot;&gt;th&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;threading&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run_thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;th&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;모니터링 시작 합니다&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;section&quot;&gt;실행 방법&lt;/h3&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;python ServerCheck.py 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;del&gt;근데 타이머를 저런식으로 해도 될런지 모르겠네 …&lt;/del&gt;&lt;/p&gt;
+</description>
+        <pubDate>Wed, 17 Feb 2016 11:41:00 +0900</pubDate>
+        <link>/2016/02/17/python-http-request/</link>
+        <guid isPermaLink="true">/2016/02/17/python-http-request/</guid>
+        
+        <category>python</category>
+        
+        
+      </item>
+    
+  </channel>
+</rss>

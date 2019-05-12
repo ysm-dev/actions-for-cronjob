@@ -1,0 +1,931 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	xmlns:georss="http://www.georss.org/georss" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" xmlns:media="http://search.yahoo.com/mrss/"
+	>
+
+<channel>
+	<title>Charsyam&#039;s Blog</title>
+	<atom:link href="https://charsyam.wordpress.com/feed/" rel="self" type="application/rss+xml" />
+	<link>https://charsyam.wordpress.com</link>
+	<description>Just another WordPress.com weblog</description>
+	<lastBuildDate>Tue, 23 Apr 2019 00:56:41 +0000</lastBuildDate>
+	<language>en</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>http://wordpress.com/</generator>
+<cloud domain='charsyam.wordpress.com' port='80' path='/?rsscloud=notify' registerProcedure='' protocol='http-post' />
+<image>
+		<url>https://s0.wp.com/i/buttonw-com.png</url>
+		<title>Charsyam&#039;s Blog</title>
+		<link>https://charsyam.wordpress.com</link>
+	</image>
+	<atom:link rel="search" type="application/opensearchdescription+xml" href="https://charsyam.wordpress.com/osd.xml" title="Charsyam&#039;s Blog" />
+	<atom:link rel='hub' href='https://charsyam.wordpress.com/?pushpress=hub'/>
+	<item>
+		<title>[입 개발] Hive MetaStore 에서 Location은 어떻게 관리될까?</title>
+		<link>https://charsyam.wordpress.com/2019/04/26/%ec%9e%85-%ea%b0%9c%eb%b0%9c-hive-metastore-%ec%97%90%ec%84%9c-location%ec%9d%80-%ec%96%b4%eb%96%bb%ea%b2%8c-%ea%b4%80%eb%a6%ac%eb%90%a0%ea%b9%8c/</link>
+				<comments>https://charsyam.wordpress.com/2019/04/26/%ec%9e%85-%ea%b0%9c%eb%b0%9c-hive-metastore-%ec%97%90%ec%84%9c-location%ec%9d%80-%ec%96%b4%eb%96%bb%ea%b2%8c-%ea%b4%80%eb%a6%ac%eb%90%a0%ea%b9%8c/#respond</comments>
+				<pubDate>Fri, 26 Apr 2019 17:19:42 +0000</pubDate>
+		<dc:creator><![CDATA[charsyam]]></dc:creator>
+				<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://charsyam.wordpress.com/?p=2780</guid>
+				<description><![CDATA[최근에 아주 이상한 에러를 경험했습니다. 다음과 같은 managed table 이 있다고 가정합니다. test1 이라는 table에 drop table 을 시도했는데!!! 다음과 같은 에러가 발생했습니다. 사실 이 에러는 hadoop 에서 checkPath 라는 함수에 의해서 발생하게 됩니다.(https://github.com/apache/hadoop/blob/trunk/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/FileSystem.java#L711) 코드를 보면 실제 schema에 있는 Location 경로와 실제 hadoop 에서 인식하는 자신의 도메인이 맞지 않을 때 발생하는 에러입니다. 즉 a.b.c 도 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>최근에 아주 이상한 에러를 경험했습니다. 다음과 같은 managed table 이 있다고 가정합니다.</p>
+<pre class="brush: sql; title: ; notranslate">
+CREATE TABLE `test1`(
+  `id` bigint
+PARTITIONED BY (
+  `datestamp` date)
+ROW FORMAT SERDE
+  'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
+STORED AS INPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
+OUTPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
+LOCATION
+  'hdfs://a.b.c:8020/user/hive/warehouse/charsyam.db/test1'
+TBLPROPERTIES (
+  'transient_lastDdlTime'='1556186715')
+</pre>
+<p>test1 이라는 table에 drop table 을 시도했는데!!! 다음과 같은 에러가 발생했습니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.DDLTask. MetaException(message:java.lang.IllegalArgumentException: Wrong FS: hdfs://a.b.c:8020/user/hive/warehouse/charsyam.db/test1, expected: hdfs://ip-b.b.c:8020)
+</pre>
+<p>사실 이 에러는 hadoop 에서 checkPath 라는 함수에 의해서 발생하게 됩니다.(<a href="https://github.com/apache/hadoop/blob/trunk/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/FileSystem.java#L711" rel="nofollow">https://github.com/apache/hadoop/blob/trunk/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/FileSystem.java#L711</a>) 코드를 보면 실제 schema에 있는 Location 경로와 실제 hadoop 에서 인식하는 자신의 도메인이 맞지 않을 때 발생하는 에러입니다. 즉 a.b.c 도 ip 가 1.1.1.1 이고 b.b.c 도 ip 가 1.1.1.1 이지만 table location 이 hdfs://a.b.c:8020 인것과 hdfs://b.b.c:8020 은 서로 다른 도메인이 되는 거죠.</p>
+<pre class="brush: java; title: ; notranslate">
+  protected void checkPath(Path path) {
+    URI uri = path.toUri();
+    String thatScheme = uri.getScheme();
+    if (thatScheme == null)                // fs is relative
+      return;
+    URI thisUri = getCanonicalUri();
+    String thisScheme = thisUri.getScheme();
+    //authority and scheme are not case sensitive
+    if (thisScheme.equalsIgnoreCase(thatScheme)) {// schemes match
+      String thisAuthority = thisUri.getAuthority();
+      String thatAuthority = uri.getAuthority();
+      if (thatAuthority == null &amp;&amp;                // path's authority is null
+          thisAuthority != null) {                // fs has an authority
+        URI defaultUri = getDefaultUri(getConf());
+        if (thisScheme.equalsIgnoreCase(defaultUri.getScheme())) {
+          uri = defaultUri; // schemes match, so use this uri instead
+        } else {
+          uri = null; // can't determine auth of the path
+        }
+      }
+      if (uri != null) {
+        // canonicalize uri before comparing with this fs
+        uri = canonicalizeUri(uri);
+        thatAuthority = uri.getAuthority();
+        if (thisAuthority == thatAuthority ||       // authorities match
+            (thisAuthority != null &amp;&amp;
+             thisAuthority.equalsIgnoreCase(thatAuthority)))
+          return;
+      }
+    }
+    throw new IllegalArgumentException("Wrong FS: " + path +
+                                       ", expected: " + this.getUri());
+  }
+</pre>
+<p>그런데 이런 일이 왜 일어날까가 사실 더 궁금할껍니다. 보통은 발생하면 안되는 일이죠. 사실 이런 현상은 Hadoop 노드를 계속 새로운 장비에 재 구축하는데, Hive Metastore 는 동일하게 저장하기 때문에 발생하는 현상입니다. 보통 하둡 장비들이 크게 바뀔일이 없으니&#8230; 거의 발생할 일도 없는거죠. 그런데 이런 일이 발생하게 되면, 다음과 같은 에러를 맞게 됩니다. 그래서 이걸 파다보니 실제로 Hive MetaStore 에서 Location 을 어떻게 저장하는가가 궁금해졌습니다. 보통 우리는 show create table 등으로 볼 수 있습니다. 그럼 이 정보들은 어디에 저장될까요?</p>
+<p>일단 Hive Metastore 는 실제 저장은 다른 곳 DBMS나 glue 등에 저장을 할 수 있습니다. 여기서는 MYSQL에 저장된 것으로 설명을 하겠습니다. 먼저 mysql 에 hive_metastore 라는 DB가 생성이 됩니다. 그리고 여기서 우리가 살펴볼 table 은 DBS, TBLS, SDS 입니다.(이거 세 개만 보면 됩니다.) 마지막 S는 전부 복수의 S로 보이고 각각 Database, Table, StorageDescriptor 로 보입니다.</p>
+<p>먼저 hive 등에서 create database 로 DB를 생성할 때 마다 해당 정보가 Database 에 저장이 됩니다. 먼저 DBS 테이블의 스키마는 다음과 같습니다.</p>
+<pre class="brush: sql; title: ; notranslate">
+CREATE TABLE `DBS` (
+  `DB_ID` bigint(20) NOT NULL,
+  `DESC` varchar(4000) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `DB_LOCATION_URI` varchar(4000) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL,
+  `NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `OWNER_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `OWNER_TYPE` varchar(10) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  PRIMARY KEY (`DB_ID`),
+  UNIQUE KEY `UNIQUE_DATABASE` (`NAME`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+</pre>
+<p>여기서 주목할 것은 역시 primary key 인 DB_ID 와 DB_LOCATION_URI 입니다. 만약 charsyam db라면, 이 DB_LOCATION_URI 에 들어가는 값이 hdfs://a.b.c/user/hive/warehouse/charsyam.db/ 까지가 들어가게 됩니다. 그리고 이 db에 테이블이 생성되면 table의 location이 항상 이 밑에 생기게 됩니다.</p>
+<p>실제로 TBLS 테이블을 보면 내부에 Location이 없습니다. 그래서 해당 DBS의 DB_LOCATION_URI를 바꾸면 바로 되지 않을까라고 생각을 처음에 했었는데&#8230; 사실 이건 말도 안되는 소리입니다. 왜냐하면 hive 등의 툴을 써보신 분들은 바로 아시겠지만, location 자체는 얼마든지 다른 것으로 바꿀 수 있습니다. 그렇다면 무엇인가? 테이블에는 자기만의 Location 정보가 꼭 있어야 한다는 것입니다. 즉 TBLS에 없다면, 다른곳에 있어야 합니다. 다음은 TBLS 의 schema 입니다.</p>
+<pre class="brush: sql; title: ; notranslate">
+CREATE TABLE `TBLS` (
+  `TBL_ID` bigint(20) NOT NULL,
+  `CREATE_TIME` int(11) NOT NULL,
+  `DB_ID` bigint(20) DEFAULT NULL,
+  `LAST_ACCESS_TIME` int(11) NOT NULL,
+  `OWNER` varchar(767) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `RETENTION` int(11) NOT NULL,
+  `SD_ID` bigint(20) DEFAULT NULL,
+  `TBL_NAME` varchar(256) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `TBL_TYPE` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `VIEW_EXPANDED_TEXT` mediumtext,
+  `VIEW_ORIGINAL_TEXT` mediumtext,
+  `IS_REWRITE_ENABLED` bit(1) NOT NULL,
+  PRIMARY KEY (`TBL_ID`),
+  UNIQUE KEY `UNIQUETABLE` (`TBL_NAME`,`DB_ID`),
+  KEY `TBLS_N50` (`SD_ID`),
+  KEY `TBLS_N49` (`DB_ID`),
+  CONSTRAINT `TBLS_FK1` FOREIGN KEY (`SD_ID`) REFERENCES `SDS` (`SD_ID`),
+  CONSTRAINT `TBLS_FK2` FOREIGN KEY (`DB_ID`) REFERENCES `DBS` (`DB_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+</pre>
+<p>그렇다면 해당 정보는 어디에 있을까요? 당연히!!! 아까 언급했지만, 아직까지 안나온 SDS 입니다. 어떻게 SD 가 StorageDescriptor라고 생각하냐고 하면&#8230; Hive 소스를 보면 ql/src/java/org/apache/hadoop/hive/ql/metadata/Table.java 에 getPath 라는 메서드가 있고 여기서 getSd() 라는 메서드를 호출합니다.</p>
+<pre class="brush: java; title: ; notranslate">
+final public Path getPath() {
+    String location = tTable.getSd().getLocation();
+    if (location == null) {
+      return null;
+    }
+    return new Path(location);
+  }
+</pre>
+<p>이걸 자세히 보면 다음과 같이 StorageDescriptor 라는 클래스를 리턴합니다. 아마도 그러니 저것도&#8230;</p>
+<pre class="brush: java; title: ; notranslate">
+  public StorageDescriptor getSd() {
+    return this.sd;
+  }
+</pre>
+<p>이제 SDS 테이블을 살펴보시죠. Location 항목이 보입니다. 여기에 저장이 되는겁니다.</p>
+<pre class="brush: sql; title: ; notranslate">
+CREATE TABLE `SDS` (
+  `SD_ID` bigint(20) NOT NULL,
+  `CD_ID` bigint(20) DEFAULT NULL,
+  `INPUT_FORMAT` varchar(4000) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `IS_COMPRESSED` bit(1) NOT NULL,
+  `IS_STOREDASSUBDIRECTORIES` bit(1) NOT NULL,
+  `LOCATION` varchar(4000) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `NUM_BUCKETS` int(11) NOT NULL,
+  `OUTPUT_FORMAT` varchar(4000) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `SERDE_ID` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`SD_ID`),
+  KEY `SDS_N49` (`SERDE_ID`),
+  KEY `SDS_N50` (`CD_ID`),
+  CONSTRAINT `SDS_FK1` FOREIGN KEY (`SERDE_ID`) REFERENCES `SERDES` (`SERDE_ID`),
+  CONSTRAINT `SDS_FK2` FOREIGN KEY (`CD_ID`) REFERENCES `CDS` (`CD_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+</pre>
+<p>그런데 이거랑 실제 Table과 어떻게 매칭을 시킬 수 있을까요? 그 비밀은 Primary Key인 SD_ID가 중요합니다. 위에서 언급한 TBLS 테이블을 보면 DB_ID, SD_ID, TBL_NAME 이 있습니다. 즉, 먼저 DBS 에서 database 이름으로 DB_ID 값을 찾고, 그 DB_ID와 TBL_NAME을 이용해서 해당 테이블의 SD_ID를 찾을 수 있습니다. 그리고 그 SD_ID를 이용하면 마지막으로 SDS 테이블에서 최종적으로 해당 테이블의 StorageDescriptor 정보를 볼 수 있는 겁니다. 그리고 SDS 의 Location 값이 show create table 에서 볼 수 있는 바로 그값입니다. 그래서 여기서 해당 컬럼의 값을 바꿔버리면&#8230; show create table 시에도 값이 바뀌게 됩니다.</p>
+<p>당연하지만, SDS 테이블에 데이터가 많은 것은 StorageDescriptor는 테이블마다 하나씩이지만, 당연히 Partition 마다도 존재합니다. 그렇기 때문에 최소한 전체 테이블 수 + 전체 파티션 수 만큼 존재하는게 맞습니다. <img src="https://s0.wp.com/wp-content/mu-plugins/wpcom-smileys/twemoji/2/72x72/1f642.png" alt="🙂" class="wp-smiley" style="height: 1em; max-height: 1em;" /></p>
+]]></content:encoded>
+							<wfw:commentRss>https://charsyam.wordpress.com/2019/04/26/%ec%9e%85-%ea%b0%9c%eb%b0%9c-hive-metastore-%ec%97%90%ec%84%9c-location%ec%9d%80-%ec%96%b4%eb%96%bb%ea%b2%8c-%ea%b4%80%eb%a6%ac%eb%90%a0%ea%b9%8c/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://2.gravatar.com/avatar/eb957612b8f29b31a16f21df385691ed?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">charsyam</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>[입 개발] Spark DataFrameWriter에서 saveAsTable 의 동작</title>
+		<link>https://charsyam.wordpress.com/2019/04/23/%ec%9e%85-%ea%b0%9c%eb%b0%9c-spark-dataframewriter%ec%97%90%ec%84%9c-saveastable-%ec%9d%98-%eb%8f%99%ec%9e%91/</link>
+				<comments>https://charsyam.wordpress.com/2019/04/23/%ec%9e%85-%ea%b0%9c%eb%b0%9c-spark-dataframewriter%ec%97%90%ec%84%9c-saveastable-%ec%9d%98-%eb%8f%99%ec%9e%91/#respond</comments>
+				<pubDate>Tue, 23 Apr 2019 00:56:41 +0000</pubDate>
+		<dc:creator><![CDATA[charsyam]]></dc:creator>
+				<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://charsyam.wordpress.com/?p=2778</guid>
+				<description><![CDATA[s3 에 external table을 만들고 거기에 데이터를 넣는 작업을 하다가 이상한 현상을 경험했습니다. 다음과 같은 테이블을 만들고 아래 코드를 돌렸는데&#8230; 당연히 tmp1 테이블은 데이터를 s3에 그리고 external 테이블로 제대로 저장이 될 것을 기대했는데, 아래와 같이, managed 테이블로 바뀌고 저장 위치로 hdfs 로 바뀌는 것이었습니다. -_-(왜왜왜) Spark DataFrameWriter의 saveAsTable 을 SaveMode.Overwrite mode로 사용하게 되면 이런 일이 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>s3 에 external table을 만들고 거기에 데이터를 넣는 작업을 하다가 이상한 현상을 경험했습니다.<br />
+다음과 같은 테이블을 만들고</p>
+<pre class="brush: sql; title: ; notranslate">
+create external table(
+    id int,
+    name varchar(22)
+) LOCATION
+  's3://bucket/tmp/tmp1';
+</pre>
+<p>아래 코드를 돌렸는데&#8230;</p>
+<pre class="brush: scala; title: ; notranslate">
+val tb = spark.sql(
+        """
+        |SELECT
+        |  id, name
+        |FROM original
+        """
+)
+tb.write.mode(SaveMode.Overwrite).saveAsTable("tmp1")
+</pre>
+<p>당연히 tmp1 테이블은 데이터를 s3에 그리고 external 테이블로 제대로 저장이 될 것을 기대했는데, 아래와 같이, managed 테이블로 바뀌고 저장 위치로 hdfs 로 바뀌는 것이었습니다. -_-(왜왜왜)</p>
+<pre class="brush: sql; title: ; notranslate">
+create table(
+    id int,
+    name varchar(22)
+) LOCATION
+  'hdfs://tmp/blahblah/tmp1';
+</pre>
+<p>Spark DataFrameWriter의 saveAsTable 을 SaveMode.Overwrite mode로 사용하게 되면 이런 일이 벌어지게 됩니다. 왜 그런가 해서 소스 코드를 까봤습니다. DataFrameWriter.scala를 보시면 됩니다.</p>
+<p>그냥 saveAsTable 소스를 보면 간단합니다. 아래를 보면 SaveMode.Overwrite 가 true 일때&#8230; 밑에서 dropTable, createTable 을 부르는군요. 어랏&#8230;. dropTable???, 이거 실화인가요? 즉, 이 때 테이블을 날려버립니다. 그리고 createTable로 재생성해줍니다.</p>
+<pre class="brush: scala; title: ; notranslate">
+  private def saveAsTable(tableIdent: TableIdentifier): Unit = {
+    val catalog = df.sparkSession.sessionState.catalog
+    val tableExists = catalog.tableExists(tableIdent)
+    val db = tableIdent.database.getOrElse(catalog.getCurrentDatabase)
+    val tableIdentWithDB = tableIdent.copy(database = Some(db))
+    val tableName = tableIdentWithDB.unquotedString
+
+    (tableExists, mode) match {
+       ......
+       case (true, SaveMode.Overwrite) =&gt;
+        // Get all input data source or hive relations of the query.
+        val srcRelations = df.logicalPlan.collect {
+          case LogicalRelation(src: BaseRelation, _, _, _) =&gt; src
+          case relation: HiveTableRelation =&gt; relation.tableMeta.identifier
+        }
+
+        val tableRelation = df.sparkSession.table(tableIdentWithDB).queryExecution.analyzed
+        EliminateSubqueryAliases(tableRelation) match {
+          // check if the table is a data source table (the relation is a BaseRelation).
+          case LogicalRelation(dest: BaseRelation, _, _, _) if srcRelations.contains(dest) =&gt;
+            throw new AnalysisException(
+              s"Cannot overwrite table $tableName that is also being read from")
+          // check hive table relation when overwrite mode
+          case relation: HiveTableRelation
+              if srcRelations.contains(relation.tableMeta.identifier) =&gt;
+            throw new AnalysisException(
+              s"Cannot overwrite table $tableName that is also being read from")
+          case _ =&gt; // OK
+        }
+
+        // Drop the existing table
+        catalog.dropTable(tableIdentWithDB, ignoreIfNotExists = true, purge = false)
+        createTable(tableIdentWithDB)
+        // Refresh the cache of the table in the catalog.
+        catalog.refreshTable(tableIdentWithDB)
+      ......
+    }
+  }
+</pre>
+<p>그럼 external이 왜 managed가 되는지 살펴보시죠. createTable 코드를 보면 storage.locationUri.isDefined를 보고 EXTERNAL, MANAGED가 결정됩니다.(다른 글에서 쓰겠지만 Spark Sql에서 현재는 alter table 을 이용한 external, managed 변경이 안됩니다. Spark 2.4 기준)</p>
+<pre class="brush: scala; title: ; notranslate">
+  private def createTable(tableIdent: TableIdentifier): Unit = {
+    val storage = DataSource.buildStorageFormatFromOptions(extraOptions.toMap)
+    val tableType = if (storage.locationUri.isDefined) {
+      CatalogTableType.EXTERNAL
+    } else {
+      CatalogTableType.MANAGED
+    }
+
+    val tableDesc = CatalogTable(
+      identifier = tableIdent,
+      tableType = tableType,
+      storage = storage,
+      schema = new StructType,
+      provider = Some(source),
+      partitionColumnNames = partitioningColumns.getOrElse(Nil),
+      bucketSpec = getBucketSpec)
+
+    runCommand(df.sparkSession, "saveAsTable")(CreateTable(tableDesc, mode, Some(df.logicalPlan)))
+  }
+</pre>
+<p>해당 값은 buildStorageFormatFromOptions 를 보면 가져옵니다. options map에서 path가 있으면 가져오는 군요.</p>
+<pre class="brush: scala; title: ; notranslate">
+  def buildStorageFormatFromOptions(options: Map[String, String]): CatalogStorageFormat = {
+    val path = CaseInsensitiveMap(options).get("path")
+    val optionsWithoutPath = options.filterKeys(_.toLowerCase(Locale.ROOT) != "path")
+    CatalogStorageFormat.empty.copy(
+      locationUri = path.map(CatalogUtils.stringToURI), properties = optionsWithoutPath)
+  }
+</pre>
+<p>여기서 path가 있으면 그냥 locationUri 에 복사해줍니다. 그럼 이제 위의 문제를 어떻게 해결해야 할까요? storage.locationUri.isDefined 를 true로 만들어주는 방법은, 넵 path option을 설정해 주면 간단하게 해결됩니다.</p>
+<pre class="brush: scala; title: ; notranslate">
+val tb = spark.sql(
+        """
+        |SELECT
+        |  id, name
+        |FROM original
+        """
+)
+tb.write
+  .mode(SaveMode.Overwrite)
+  .option("path", "s3://bucket/tmp/tmp1")
+  .saveAsTable("tmp1")
+</pre>
+<p>이렇게 하는 방법말고 만약에 그냥 쉽게 덮어쓰고 싶다면, insertInto 메서드를 쓰셔도 간단하게 해결됩니다.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://charsyam.wordpress.com/2019/04/23/%ec%9e%85-%ea%b0%9c%eb%b0%9c-spark-dataframewriter%ec%97%90%ec%84%9c-saveastable-%ec%9d%98-%eb%8f%99%ec%9e%91/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://2.gravatar.com/avatar/eb957612b8f29b31a16f21df385691ed?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">charsyam</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>[입개발] NAGLE 알고리즘과 TCP_CORK</title>
+		<link>https://charsyam.wordpress.com/2019/03/14/%ec%9e%85%ea%b0%9c%eb%b0%9c-nagle-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98%ea%b3%bc-tcp_cork/</link>
+				<comments>https://charsyam.wordpress.com/2019/03/14/%ec%9e%85%ea%b0%9c%eb%b0%9c-nagle-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98%ea%b3%bc-tcp_cork/#comments</comments>
+				<pubDate>Thu, 14 Mar 2019 16:02:41 +0000</pubDate>
+		<dc:creator><![CDATA[charsyam]]></dc:creator>
+				<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://charsyam.wordpress.com/?p=2776</guid>
+				<description><![CDATA[어쩌다보니, 오늘 처음으로&#8230;(정말로 처음으로!!!) TCP_CORK라는 옵션에 대해서 찾아보게 되었습니다.(아니 이게 무엇이오 여러분!!!) TCP_CORK라는 옵션을 설명하기 전에 먼저 TCP_NODELAY라는 옵션이 있습니다. 원래 데이터 전송의 효율성을 취하기 위해서 기본적으로 TCP 전송에 Nagle이라는 알고리즘이 적용되어 있습니다. 대용량 파일을 보낼 때는 유리하지만, 짧은 길이의 데이터를 보낼때는 사실 유용하지 않습니다. 네트웍 관련 서비스를 만들다 보면, 뭔가 응답이, 아무이유 없이, 아주 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>어쩌다보니, 오늘 처음으로&#8230;(정말로 처음으로!!!) TCP_CORK라는 옵션에 대해서 찾아보게 되었습니다.(아니 이게 무엇이오 여러분!!!)</p>
+<p>TCP_CORK라는 옵션을 설명하기 전에 먼저 TCP_NODELAY라는 옵션이 있습니다. 원래 데이터 전송의 효율성을 취하기 위해서 기본적으로 TCP 전송에 Nagle이라는 알고리즘이 적용되어 있습니다. 대용량 파일을 보낼 때는 유리하지만, 짧은 길이의 데이터를 보낼때는 사실 유용하지 않습니다. 네트웍 관련 서비스를 만들다 보면, 뭔가 응답이, 아무이유 없이, 아주 늦게 가는 케이스를 만나게 되는 경우가 있는데, 실제로, Nagle 알고리즘의 영향을 받아서 늦게 가는 경우가 종종 있습니다.</p>
+<p>그러면 먼저 Nagle 알고리즘에 대해서 알아보면, 그냥 어느정도 데이터가 쌓일 때 까지 패킷을 보내지 않고 기다려 놓다가&#8230; 일정 사이즈가 되면 보내겠다라는 알고리즘입니다. 동네 버스가, 사람이 적을 때는 출발하지 않고, 몇명 와야 출발하는 것 처럼&#8230;(판교역 앞에 계시면 이런 경우를 많이 보시게 됩니다.)</p>
+<p>이렇게 모아서 보내면 효율은 좋지만, 먼저 버스에 탄 사람은 인원 수가 모일때까지 가지 못하고, 기다려야 하는 단점이 있습니다. TCP 전송에서도 이게 그대로 발생합니다. 작은 패킷을 보내면 다른 패킷이 추가되어서 특정 사이즈가 되기 전까지는 전달이 되지 않습니다.(정확히는 send timeout 이 되면 전송됩니다.)</p>
+<p>예전에 서비스를 운영하다보면, 마지막 2바이트가 몇초 뒤에 전송되어서 항상 문제가 되는 경우가 발생한 적이 있는데, 결국 해당 서비스는 TCP_NODELAY를 적용함으로써 해결했습니다.(또다른 문제의 시작일수도?)</p>
+<p>앞에 Nagle을 이렇게 설명한 것을 잘생각해보면 DELAY가 생기는 거고, TCP_NODELAY는 바로 이 Nagle 알고리즘을 끄는 것입니다. 즉 패킷이 들어오면 바로바로 전송하는 거죠. 사실 여기까지가 제가 아는 Nagle 알고리즘이었습니다. 그런데 갑자기 TCP_CORK 가 딱!!!, TCP_CORK 는 Nagle과 유사한 알고리즘(?) 입니다.</p>
+<p><a href="https://stackoverflow.com/questions/22124098/is-there-any-significant-difference-between-tcp-cork-and-tcp-nodelay-in-this-use">https://stackoverflow.com/questions/22124098/is-there-any-significant-difference-between-tcp-cork-and-tcp-nodelay-in-this-use</a> 해당 링크가 잘 설명이 되어 있는데, 요약하면 Nagle은 TCP_CORK의 약화버전이고, Nagle은 ACK를 체크하지만, TCP_CORK는 사이즈만 본다? 라는 뭔가 설명이 있는데&#8230;(그렇습니다. 저는 영어가&#8230;)</p>
+<p>여기서 ACK는 TCP에서도 패킷을 보내고 나면 거기에 대한 ACK를 받게 됩니다. 혼잡제어나, 재전송이나&#8230; 그리고 사이즈라&#8230; 저 사이즈는 뭘까요. 패킷을 모아보내는 사이즈면 설정가능하지 않을까 하고 찾아보면, 따른 설정은 안보입니다. 네트워크 좀 아시는 분들은 아 그거 단위로 보내겠다고 쉽게 생각하시겠지만&#8230; 전 몰라요~~~</p>
+<p>그럼 이제 커널 소스를 보면서 간단하게 생각해보도록 하겠습니다. net/ipv4/tcp_output.c 파일을 보면 tcp_write_xmit 라는 함수가 있습니다. 여기서는 다시 tcp_mss_split_point 를 호출합니다.</p>
+<pre class="brush: cpp; title: ; notranslate">
+......
+		limit = mss_now;
+		if (tso_segs &gt; 1 &amp;&amp; !tcp_urg_mode(tp))
+			limit = tcp_mss_split_point(sk, skb, mss_now,
+						    min_t(unsigned int,
+							  cwnd_quota,
+							  max_segs),
+						    nonagle);
+
+......
+</pre>
+<p>tcp_mss_split_point 를 보면 needed 가 버퍼에 존재하는 패킷의 사이즈로 예측이 됩니다. 소켓 버퍼에 있는 사이즈와 window 사이즈 중에 적은게 선택이 됩니다. 그리고 max_len 이 needed 보다 작으면 max_len 이 전송이 되고, 중요한 부분은 partial 은 구하는 것입니다. 모듈러 하는 변수명이 보이시나요? 아까 말한 그 사이즈는 바로 mss_now 인 것입니다. 여기서 partial은 원래 네트웍에서 패킷을 MSS 단위로 보내기 때문에, 모듈러 mss_now 하면, mss가 1024일 때 우리가 600만 보낸다면, 424바이트가 MSS에 모자라기 때문에 partial 은 424 바이트가 됩니다. 코드를 보면 tcp_nagle_check 하고나서 true면 nagle을 적용해야 하는 상황일테니&#8230; needed &#8211; partial 만큼의 사이즈를 리턴합니다. 즉 MSS 단위로 패킷을 보내도록 짤라준거죠.</p>
+<pre class="brush: cpp; title: ; notranslate">
+static unsigned int tcp_mss_split_point(const struct sock *sk,
+					const struct sk_buff *skb,
+					unsigned int mss_now,
+					unsigned int max_segs,
+					int nonagle)
+{
+	const struct tcp_sock *tp = tcp_sk(sk);
+	u32 partial, needed, window, max_len;
+
+	window = tcp_wnd_end(tp) - TCP_SKB_CB(skb)-&gt;seq;
+	max_len = mss_now * max_segs;
+
+	if (likely(max_len len, window);
+
+	if (max_len packets_out 이 0보다 커야 합니다.(보내는게 있다는 뜻으로...) 그리고 Nagle 알고리즘에서는 마지막으로 minshall 체크라는 걸 합니다. TCP_CORK는 별 다른게 없는데, 아까 Nagle과의 체크에서 ACK를 확인한다는 걸 기억하시나요?
+
+
+static bool tcp_nagle_check(bool partial, const struct tcp_sock *tp,
+			    int nonagle)
+{
+	return partial &amp;&amp;
+		((nonagle &amp; TCP_NAGLE_CORK) ||
+		 (!nonagle &amp;&amp; tp-&gt;packets_out &amp;&amp; tcp_minshall_check(tp)));
+}
+</pre>
+<p>minshall 이라는 분이 계시더군요(먼산&#8230;) 이 알고리즘은 그냥 보낸 패킷의 시퀀스와 ACK 받은 패킷의 시퀀스를 비교하기만 합니다. 아래 before 와 after는 그냥 before는 앞에 파라매터가 작으면 true, after는 앞에 파라매터가 크면 true 입니다. 저기서 snd_sml은 보낸 패킷의 시퀀스, snd_una는 ACK 받은 패킷의 시퀀스입니다. &#8220;!after(tp-&gt;snd_sml, tp-&gt;snd_nxt)&#8221; 이 코드는 시퀀스가 오버플로우 난 걸 확인하는 걸로 보입니다. 하여튼!!!, 즉 여기서 중요한 것은 ack를 다 받았다면 tp-&gt;snd_sml 과 tp-&gt;snd_una는 같은 값일 것이므로 false가 리턴됩니다. 즉 tcp_minshall_check가 true는 현재 ack 받아야할 패킷이 더 있다라는 뜻이고 false는 현재 모든 패킷의 ack를 받았다가 됩니다.</p>
+<pre class="brush: cpp; title: ; notranslate">
+static inline bool before(__u32 seq1, __u32 seq2)
+{
+        return (__s32)(seq1-seq2) snd_sml, tp-&gt;snd_una) &amp;&amp;
+		!after(tp-&gt;snd_sml, tp-&gt;snd_nxt);
+}
+</pre>
+<p>그럼 요약을 하면 TCP_CORK는 이것저것 확인안하고 켜지면 무조건 MSS 단위로만 보내겠다가 됩니다. 그런데 Nagle은 전부 ACK를 받았다면 5 byte만 보낸다고 하더라도&#8230; ACK를 모두 받았으므로 tcp_minshall_check 가 false 가 되어서, 패킷이 보내집니다. 요약하면 mss가 1024이고 4100 바이트를 보낸다면 partial = 4100 % 1024 = 4, TCP_CORK에서는 마지막 4바이트는 전송이 되지 않습니다. 언제까지? timeout 이 발생할때까지&#8230;, 그러나 Nagle은&#8230; ACK를 받을 패킷이 남아있다면 마지막 4바이트가 전송이 안되지만, ACK를 모두 받았다면&#8230; 마지막 4바이트도 전송이 되게 됩니다. 이게 두 가지 옵션의 차이이고, Nagle이, TCP_CORK 보다 조금 약한 제약이라는 의미입니다.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://charsyam.wordpress.com/2019/03/14/%ec%9e%85%ea%b0%9c%eb%b0%9c-nagle-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98%ea%b3%bc-tcp_cork/feed/</wfw:commentRss>
+		<slash:comments>3</slash:comments>
+						
+		<media:content url="https://2.gravatar.com/avatar/eb957612b8f29b31a16f21df385691ed?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">charsyam</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>[입 개발] spark-submit 시에 &#8211;properties-file 와 파라매터에서의 우선 순위</title>
+		<link>https://charsyam.wordpress.com/2019/03/10/%ec%9e%85-%ea%b0%9c%eb%b0%9c-spark-submit-%ec%8b%9c%ec%97%90-properties-file-%ec%99%80-%ed%8c%8c%eb%9d%bc%eb%a7%a4%ed%84%b0%ec%97%90%ec%84%9c%ec%9d%98-%ec%9a%b0%ec%84%a0-%ec%88%9c%ec%9c%84/</link>
+				<comments>https://charsyam.wordpress.com/2019/03/10/%ec%9e%85-%ea%b0%9c%eb%b0%9c-spark-submit-%ec%8b%9c%ec%97%90-properties-file-%ec%99%80-%ed%8c%8c%eb%9d%bc%eb%a7%a4%ed%84%b0%ec%97%90%ec%84%9c%ec%9d%98-%ec%9a%b0%ec%84%a0-%ec%88%9c%ec%9c%84/#comments</comments>
+				<pubDate>Sun, 10 Mar 2019 15:56:41 +0000</pubDate>
+		<dc:creator><![CDATA[charsyam]]></dc:creator>
+				<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://charsyam.wordpress.com/?p=2772</guid>
+				<description><![CDATA[어쩌다보니&#8230; 갑자기 SparkSubmit 시에 사용되는 &#8211;properties-file(일종의 spark-defaults.conf)와 그냥 파라매터로 넘기는 것의 우선순위가 어떻게 적용되는지가 궁금해 졌습니다. 뭐, 당연히 일반적으로 생각하면 파라매터로 넘기는 것이 분명히 spark-defaults.conf 에 들어가있는 것 보다는 우선이 되는게 당연하겠지라는 생각을 가지고 있었고, 결론부터 말하자면, 이게 맞습니다.(다를 수가 없잖아!!! 퍽퍽퍽) 그러나, 우리는 공돌이니 그래도 명확하게 해두자라는 생각이 들어서, 소스를 가볍게 살펴봤습니다. 실제로 해당 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>어쩌다보니&#8230; 갑자기 SparkSubmit 시에 사용되는 &#8211;properties-file(일종의 spark-defaults.conf)와 그냥 파라매터로 넘기는 것의 우선순위가 어떻게 적용되는지가 궁금해 졌습니다. 뭐, 당연히 일반적으로 생각하면 파라매터로 넘기는 것이 분명히 spark-defaults.conf 에 들어가있는 것 보다는 우선이 되는게 당연하겠지라는 생각을 가지고 있었고, 결론부터 말하자면, 이게 맞습니다.(다를 수가 없잖아!!! 퍽퍽퍽)</p>
+<p>그러나, 우리는 공돌이니 그래도 명확하게 해두자라는 생각이 들어서, 소스를 가볍게 살펴봤습니다.<br />
+실제로 해당 내용은 &#8220;core/src/main/scala/org/apache/spark/deploy/SparkSubmitArguments.scala&#8221; 파일을 살펴보면 들어있습니다. 일단 main 코드는 다음과 같습니다. 여기서는 아주 간단히 확인할 것인데&#8230; 이름 부터 이미 parse 와 mergeDefaultSparkProperties 가 있습니다. 우리는 우선순위가 궁금할 뿐이니&#8230; parse 에서 가져온 것들을 mergeDefaultSparkProperties 에서 덮어쓸까만 확인하면 됩니다.</p>
+<pre class="brush: scala; title: ; notranslate">
+  parse(args.asJava)
+  // Populate `sparkProperties` map from properties file
+  mergeDefaultSparkProperties()
+  // Remove keys that don't start with "spark." from `sparkProperties`.
+  ignoreNonSparkProperties()
+  // Use `sparkProperties` map along with env vars to fill in any missing parameters
+  loadEnvironmentArguments()
+  useRest = sparkProperties.getOrElse("spark.master.rest.enabled", "false").toBoolean
+  validateArguments()
+</pre>
+<p>parse를 확인해 봅시다. 특별히 중요한 것은 없고 findCliOption 가 넘겨진 opts 중에서 해당 옵션이 있는지 확인하는 코드이고 handle 에서 실제로 해당 값을 셋팅하는 코드가 있습니다.</p>
+<pre class="brush: scala; title: ; notranslate">
+  protected final void parse(List args) {
+    Pattern eqSeparatedOpt = Pattern.compile("(--[^=]+)=(.+)");
+
+    int idx = 0;
+    for (idx = 0; idx 
+      val properties = Utils.getPropertiesFromFile(filename)
+      properties.foreach { case (k, v) =&gt;
+        defaultProperties(k) = v
+      }
+      // Property files may contain sensitive information, so redact before printing
+      if (verbose) {
+        Utils.redact(properties).foreach { case (k, v) =&gt;
+          logInfo(s"Adding default property: $k=$v")
+        }
+      }
+    }
+    defaultProperties
+  }
+</pre>
+<p>즉 defaultProperties -&gt; sparkProperties 로 저장이 되는 겁니다. 그러면. 실제로 이 값의 우선순위는 어디에 저장이 되는가? 실제로 loadEnvironmentArguments 에서 해당 값이 설정이 됩니다. 아래에 보시면 Option에 먼저 executorMemory 가 NULL 이면 orElse 로 아까 저장한 sparkProperties 에서 가져오고 그래도 없으면 환경 변수에서 가져오고, 그래도 없으면 Null이 리턴됩니다.</p>
+<pre class="brush: scala; title: ; notranslate">
+  private def loadEnvironmentArguments(): Unit = {
+    ......
+    executorMemory = Option(executorMemory)
+      .orElse(sparkProperties.get(config.EXECUTOR_MEMORY.key))
+      .orElse(env.get("SPARK_EXECUTOR_MEMORY"))
+      .orNull
+    ......
+  }
+</pre>
+<p>마지막으로 정리하면 결국 우선순위는 다음과 같습니다.</p>
+<ol>
+<li>파라매터로 전달함 &#8211;executor-memory 이런식으로</li>
+<li>properties-file 로 저장한 값</li>
+<li>환경변수</li>
+</ol>
+<p>그런데 무조건 되는가에 대한 고민을 더 하셔야 합니다. 예를 들어 파라매터로 넘길 수 있는 것이 100%는 아닙니다. 다른 설정이 spark 설정 파일에 있을 수 가 있는 거죠. 즉 spark.yarn.executor.memoryOverhead 이런 값이 spark 설정 파일에 있다면, 여전히 이것 때문에 문제가 발생할 수 있다라는 것을 알아야 합니다.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://charsyam.wordpress.com/2019/03/10/%ec%9e%85-%ea%b0%9c%eb%b0%9c-spark-submit-%ec%8b%9c%ec%97%90-properties-file-%ec%99%80-%ed%8c%8c%eb%9d%bc%eb%a7%a4%ed%84%b0%ec%97%90%ec%84%9c%ec%9d%98-%ec%9a%b0%ec%84%a0-%ec%88%9c%ec%9c%84/feed/</wfw:commentRss>
+		<slash:comments>1</slash:comments>
+						
+		<media:content url="https://2.gravatar.com/avatar/eb957612b8f29b31a16f21df385691ed?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">charsyam</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>[구글스터디잼] Kubernetes in the Google Cloud #3</title>
+		<link>https://charsyam.wordpress.com/2019/01/27/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-3/</link>
+				<comments>https://charsyam.wordpress.com/2019/01/27/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-3/#respond</comments>
+				<pubDate>Sun, 27 Jan 2019 06:45:14 +0000</pubDate>
+		<dc:creator><![CDATA[charsyam]]></dc:creator>
+				<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://charsyam.wordpress.com/?p=2766</guid>
+				<description><![CDATA[해당 글은 현재 하고 있는 구글 스터디잼 Kubernetes in the Google Cloud 을 학습하는 과정에서 배우는 것을 정리하는 글입니다.  * Setting up a Private Kubernetes Cluster 외부 IP를 가지고 않고 내부 네트워크 ip 대역만 가지고 동작하게 되는 쿠버네티스 클러스터를 설정하는 방법에 대해서 소개하는 세션입니다. 그리고 해당 클러스터 master에 접근할 수 있는 네트웍 대역을 지정할 수 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>해당 글은 현재 하고 있는 구글 스터디잼 Kubernetes in the Google Cloud 을 학습하는 과정에서 배우는 것을 정리하는 글입니다.</p>
+<p> * Setting up a Private Kubernetes Cluster<br />
+ 외부 IP를 가지고 않고 내부 네트워크 ip 대역만 가지고 동작하게 되는 쿠버네티스 클러스터를 설정하는 방법에 대해서 소개하는 세션입니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+gcloud beta container clusters create private-cluster \
+    --private-cluster \
+    --master-ipv4-cidr 172.16.0.16/28 \
+    --enable-ip-alias \
+    --create-subnetwork ""
+</pre>
+<p>그리고 해당 클러스터 master에 접근할 수 있는 네트웍 대역을 지정할 수 있습니다. 여기서 MY_EXTERNAL_RANGE 는 CIDR 형태로 172.16.0.16/28 같은 형태로 표현해야 합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+gcloud container clusters update private-cluster \
+    --enable-master-authorized-networks \
+    --master-authorized-networks [MY_EXTERNAL_RANGE]
+</pre>
+<p> </p>
+<ul>
+<li>Helm Package Manager<br />
+Helm 은 쿠버네티스 위에서 어플리케이션을 관리하는 매니저 툴입니다. 클라이언트/서버 구조로 구성되고 클라이언트는 Helm, 서버는 tiller 라고 부릅니다.</p>
+<p>Helm 의 설치는 다음과정을 통해서 이루어집니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get &gt; get_helm.sh
+chmod 700 get_helm.sh
+./get_helm.sh
+kubectl -n kube-system create sa tiller
+</pre>
+<p>그리고 tiller role을 설정해줍니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+</pre>
+<p>tiller를 설치합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+helm init --service-account tiller
+</pre>
+<p>이제 거기에 올라가서 동작할 chart를 설치해봅니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+helm repo update
+helm install stable/mysql
+</pre>
+</p>
+</li>
+<li>
+<p>NGINX Ingress Controller on Google Kubernetes Engine<br />
+Ingress는 해당 노드로 들어오는 트래픽, Egress는 해당 노드에서 외부로 나가는 트래픽을 의미합니다. 여기서는 앞에서 배운 Helm을 이용해서, nginx 라는 좋은 웹서버를 이용해서 Ingress 트래픽을 제어하는 예를 보여주게 됩니다. Ingress 트래픽을 제외한다는 것은 특정 요청을 다른곳으로 보낸다거나, 바꿀수 있습니다.</p>
+</li>
+</ul>
+<p><img data-attachment-id="2767" data-permalink="https://charsyam.wordpress.com/2019/01/27/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-3/ingress/#main" data-orig-file="https://charsyam.files.wordpress.com/2019/01/ingress.png?w=776" data-orig-size="1794,1252" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="ingress" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2019/01/ingress.png?w=776?w=300" data-large-file="https://charsyam.files.wordpress.com/2019/01/ingress.png?w=776?w=776" src="https://charsyam.files.wordpress.com/2019/01/ingress.png?w=776" alt="ingress"   class="alignnone size-full wp-image-2767" srcset="https://charsyam.files.wordpress.com/2019/01/ingress.png?w=776 776w, https://charsyam.files.wordpress.com/2019/01/ingress.png?w=1552 1552w, https://charsyam.files.wordpress.com/2019/01/ingress.png?w=150 150w, https://charsyam.files.wordpress.com/2019/01/ingress.png?w=300 300w, https://charsyam.files.wordpress.com/2019/01/ingress.png?w=768 768w, https://charsyam.files.wordpress.com/2019/01/ingress.png?w=1024 1024w" sizes="(max-width: 776px) 100vw, 776px" /></p>
+<p>먼저 kubenetes 클러스터를 생성합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+gcloud container clusters create nginx-tutorial --num-nodes 2
+</pre>
+<p>그리고 helm 을 인스톨합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get &gt; get_helm.sh
+chmod 700 get_helm.sh
+./get_helm.sh
+</pre>
+<p>Role based access control(RBAC) 설정을 합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+kubectl create serviceaccount --namespace kube-system tiller
+kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'  
+
+helm init --service-account tiller --upgrade
+</pre>
+<p>이제 hello-app 을 실행합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+ kubectl run hello-app --image=gcr.io/google-samples/hello-app:1.0 --port=8080
+ kubectl expose deployment hello-app
+</pre>
+<p>이제 ingress 용 nginx를 실행합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+helm install --name nginx-ingress stable/nginx-ingress --set rbac.create=true
+</pre>
+<p><img data-attachment-id="2768" data-permalink="https://charsyam.wordpress.com/2019/01/27/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-3/%e1%84%89%e1%85%b3%e1%84%8f%e1%85%b3%e1%84%85%e1%85%b5%e1%86%ab%e1%84%89%e1%85%a3%e1%86%ba-2019-01-27-%e1%84%8b%e1%85%a9%e1%84%92%e1%85%ae-3-42-38/#main" data-orig-file="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png?w=776" data-orig-size="1210,646" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="스크린샷 2019-01-27 오후 3.42.38" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png?w=776?w=300" data-large-file="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png?w=776?w=776" src="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png?w=776" alt="스크린샷 2019-01-27 오후 3.42.38"   class="alignnone size-full wp-image-2768" srcset="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png?w=776 776w, https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png?w=150 150w, https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png?w=300 300w, https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png?w=768 768w, https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png?w=1024 1024w, https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png 1210w" sizes="(max-width: 776px) 100vw, 776px" /></p>
+<p>이제 위와 같이 nginx-ingress를 설정합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+kubectl apply -f ingress-resource.yaml
+</pre>
+<p><strong>Reference</strong></p>
+<ol>
+<li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/" rel="nofollow">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/</a></li>
+<li><a href="https://arisu1000.tistory.com/27835" rel="nofollow">https://arisu1000.tistory.com/27835</a></li>
+<li><a href="https://sktelecom-oslab.github.io/Virtualization-Software-Lab/Helm/" rel="nofollow">https://sktelecom-oslab.github.io/Virtualization-Software-Lab/Helm/</a></li>
+<li><a href="https://kubernetes.io/blog/2016/10/helm-charts-making-it-simple-to-package-and-deploy-apps-on-kubernetes/" rel="nofollow">https://kubernetes.io/blog/2016/10/helm-charts-making-it-simple-to-package-and-deploy-apps-on-kubernetes/</a></li>
+<li><a href="https://bcho.tistory.com/1272" rel="nofollow">https://bcho.tistory.com/1272</a></li>
+</ol>
+]]></content:encoded>
+							<wfw:commentRss>https://charsyam.wordpress.com/2019/01/27/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-3/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://2.gravatar.com/avatar/eb957612b8f29b31a16f21df385691ed?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">charsyam</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2019/01/ingress.png" medium="image">
+			<media:title type="html">ingress</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-27-오후-3.42.38.png" medium="image">
+			<media:title type="html">스크린샷 2019-01-27 오후 3.42.38</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>[구글스터디잼] Kubernetes in the Google Cloud #2</title>
+		<link>https://charsyam.wordpress.com/2019/01/20/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-2/</link>
+				<comments>https://charsyam.wordpress.com/2019/01/20/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-2/#respond</comments>
+				<pubDate>Sun, 20 Jan 2019 12:30:45 +0000</pubDate>
+		<dc:creator><![CDATA[charsyam]]></dc:creator>
+				<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://charsyam.wordpress.com/?p=2759</guid>
+				<description><![CDATA[해당 글은 현재 하고 있는 구글 스터디잼 Kubernetes in the Google Cloud 을 학습하는 과정에서 배우는 것을 정리하는 글입니다. 3장 부터 4장은 Kubernetes 에서 Pod, Service, Scaling과 deployment 를 보여주고, 5,6장은 젠킨스와 slackbot 예제를 보여주고 있습니다. 실제로 이 예제를 따라가다 보면, 영어를 착실하게 보지 않는다면, Pod는 무엇이고 Service는 무엇인가에 대해서 막 혼란이 오게 됩니다. Pod는 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>해당 글은 현재 하고 있는 구글 스터디잼 Kubernetes in the Google Cloud 을 학습하는 과정에서 배우는 것을 정리하는 글입니다.</p>
+<p>3장 부터 4장은 Kubernetes 에서 Pod, Service, Scaling과 deployment 를 보여주고, 5,6장은 젠킨스와 slackbot 예제를 보여주고 있습니다.</p>
+<p>실제로 이 예제를 따라가다 보면, 영어를 착실하게 보지 않는다면, Pod는 무엇이고 Service는 무엇인가에 대해서 막 혼란이 오게 됩니다.</p>
+<p>Pod는 하나 또는 여러개의 컨테이너와 볼륨으로 구성된 오브젝트입니다. namespace 를 공유하고 Pod당 하나의 ip가 할당됩니다.(여기서 할당되는 ip는 public 일수도 있고, 그냥 private 일 수도 있습니다. 그러나, 보통 private 이 할당되겠죠?)</p>
+<p><img data-attachment-id="2760" data-permalink="https://charsyam.wordpress.com/2019/01/20/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-2/pods_1/#main" data-orig-file="https://charsyam.files.wordpress.com/2019/01/pods_1.jpg?w=776" data-orig-size="960,540" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="pods_1" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2019/01/pods_1.jpg?w=776?w=300" data-large-file="https://charsyam.files.wordpress.com/2019/01/pods_1.jpg?w=776?w=776" class="alignnone size-full wp-image-2760" src="https://charsyam.files.wordpress.com/2019/01/pods_1.jpg?w=776" alt="pods_1" srcset="https://charsyam.files.wordpress.com/2019/01/pods_1.jpg?w=776 776w, https://charsyam.files.wordpress.com/2019/01/pods_1.jpg?w=150 150w, https://charsyam.files.wordpress.com/2019/01/pods_1.jpg?w=300 300w, https://charsyam.files.wordpress.com/2019/01/pods_1.jpg?w=768 768w, https://charsyam.files.wordpress.com/2019/01/pods_1.jpg 960w" sizes="(max-width: 776px) 100vw, 776px"   /></p>
+<p>그리고 Service는 특정 Pod들에 대한 endpoint 가 됩니다. 해당 Service의 endpoint 에 접속하면 아래의 Pod들에게 자동으로 데이터가 한번씩 전달되게 됩니다.(Load Balancer 역할)</p>
+<p><img data-attachment-id="2761" data-permalink="https://charsyam.wordpress.com/2019/01/20/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-2/service_1/#main" data-orig-file="https://charsyam.files.wordpress.com/2019/01/service_1.jpg?w=776" data-orig-size="960,540" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="service_1" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2019/01/service_1.jpg?w=776?w=300" data-large-file="https://charsyam.files.wordpress.com/2019/01/service_1.jpg?w=776?w=776" class="alignnone size-full wp-image-2761" src="https://charsyam.files.wordpress.com/2019/01/service_1.jpg?w=776" alt="service_1" srcset="https://charsyam.files.wordpress.com/2019/01/service_1.jpg?w=776 776w, https://charsyam.files.wordpress.com/2019/01/service_1.jpg?w=150 150w, https://charsyam.files.wordpress.com/2019/01/service_1.jpg?w=300 300w, https://charsyam.files.wordpress.com/2019/01/service_1.jpg?w=768 768w, https://charsyam.files.wordpress.com/2019/01/service_1.jpg 960w" sizes="(max-width: 776px) 100vw, 776px"   /></p>
+<p>예제를 살펴봐도, 하나의 Pod가 여러개의 container를 포함하지만, 하나의 Pod가 한 종류의 여러 Container를 가지는 걸로 보이지는 않고, 하나의 서버 단위가 하나의 Pod라고 봐도 될듯합니다. 예를 들어, 하나의 Pod에 API Server, Volume 가 들어가고, 이제 Service가 그 Pod들을 로드밸런싱 합니다. 서비스에 더 처리용량이 필요하면, Pod를 계속 추가하는 거죠. 이제 kubernetes의 scaling 이라고 보시면 됩니다.</p>
+<p>아래 그림을 보면 kind 가 Pod로 나옵니다.<br />
+<img data-attachment-id="2764" data-permalink="https://charsyam.wordpress.com/2019/01/20/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-2/%e1%84%89%e1%85%b3%e1%84%8f%e1%85%b3%e1%84%85%e1%85%b5%e1%86%ab%e1%84%89%e1%85%a3%e1%86%ba-2019-01-20-%e1%84%8b%e1%85%a9%e1%84%92%e1%85%ae-8-00-53/#main" data-orig-file="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.53.png?w=776" data-orig-size="736,974" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="스크린샷 2019-01-20 오후 8.00.53" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.53.png?w=776?w=227" data-large-file="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.53.png?w=776?w=736" src="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.53.png?w=776" alt="스크린샷 2019-01-20 오후 8.00.53"   class="alignnone size-full wp-image-2764" srcset="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.53.png 736w, https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.53.png?w=113 113w, https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.53.png?w=227 227w" sizes="(max-width: 736px) 100vw, 736px" /></p>
+<p>그리고 이 Pod 는 다음과 같이 실행이 가능합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+kubectl create -f pods/monolith.yaml
+</pre>
+<p>이제 이 앞단에 들어갈 서비스를 생성해봅시다.</p>
+<p><img data-attachment-id="2763" data-permalink="https://charsyam.wordpress.com/2019/01/20/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-2/%e1%84%89%e1%85%b3%e1%84%8f%e1%85%b3%e1%84%85%e1%85%b5%e1%86%ab%e1%84%89%e1%85%a3%e1%86%ba-2019-01-20-%e1%84%8b%e1%85%a9%e1%84%92%e1%85%ae-8-00-40/#main" data-orig-file="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.40.png?w=776" data-orig-size="438,610" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="스크린샷 2019-01-20 오후 8.00.40" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.40.png?w=776?w=215" data-large-file="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.40.png?w=776?w=438" src="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.40.png?w=776" alt="스크린샷 2019-01-20 오후 8.00.40"   class="alignnone size-full wp-image-2763" srcset="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.40.png 438w, https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.40.png?w=108 108w, https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.40.png?w=215 215w" sizes="(max-width: 438px) 100vw, 438px" /></p>
+<p>생성하는 방법은 동일합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+kubectl create -f service/monolith.yaml
+</pre>
+<p>또, 논리적으로 구분하는 Namespace 라는 개념과, Label 이라는 개념을 이용해서 관리가 가능합니다. 해당 Pod는 frontend 다, backend다 이런식으로 태그를 달아주는 것이죠.</p>
+<p>그리고 이런 오브젝트들을 관리하기 위해 컨트롤로러라는 개념이 있다고 합니다. 여기에 replicaset, deployment 라는 컨트롤러가 있고 이를 이용해서 쉽게 scale 변경이 가능합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+kubectl scale deployment hello --replicas=3
+kubectl scale deployment hello --replicas=5
+</pre>
+<p>그리고 Rolling Update 도 지원합니다(한번에 정해진 단위로만 업데이트를 해서 전체를 업데이트 합니다.)<br />
+다음과 같이 edit deployment 를 이용하여 container 이미지를 수정하게 되면 자동으로 Rolling update가 시작합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+kubectl edit deployment hello
+</pre>
+<p>Rolling update를 멈추거나 멈춘 업데이트를 재개하고 싶다면 다음 명령을 이용합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+kubectl rollout pause deployment/hello
+kubectl rollout resume deployment/hello
+</pre>
+<p>여기서 중요한 것은, 업데이트 이후에 이전 버전으로 돌리고 싶다면&#8230; rollout undo를 이용해서 이전 버전으로 쉽게 돌릴 수 있습니다. 이것도 Rolling update로 진행됩니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+kubectl rollout undo deployment/hello
+</pre>
+<p><strong>Reference</strong><br />
+1. <a href="https://zzsza.github.io/development/2018/04/17/docker-kubernetes/">https://zzsza.github.io/development/2018/04/17/docker-kubernetes/</a><br />
+2. <a href="https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/kubernetes-objects/">https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/kubernetes-objects/</a><br />
+3. <a href="http://bcho.tistory.com/1256">http://bcho.tistory.com/1256</a><br />
+4. <a href="https://blog.2dal.com/2017/03/07/kubernetes/">https://blog.2dal.com/2017/03/07/kubernetes/</a></p>
+]]></content:encoded>
+							<wfw:commentRss>https://charsyam.wordpress.com/2019/01/20/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-2/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://2.gravatar.com/avatar/eb957612b8f29b31a16f21df385691ed?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">charsyam</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2019/01/pods_1.jpg" medium="image">
+			<media:title type="html">pods_1</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2019/01/service_1.jpg" medium="image">
+			<media:title type="html">service_1</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.53.png" medium="image">
+			<media:title type="html">스크린샷 2019-01-20 오후 8.00.53</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2019/01/스크린샷-2019-01-20-오후-8.00.40.png" medium="image">
+			<media:title type="html">스크린샷 2019-01-20 오후 8.00.40</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>[구글스터디잼] Kubernetes in the Google Cloud #1</title>
+		<link>https://charsyam.wordpress.com/2019/01/13/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-1/</link>
+				<comments>https://charsyam.wordpress.com/2019/01/13/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-1/#respond</comments>
+				<pubDate>Sun, 13 Jan 2019 06:49:29 +0000</pubDate>
+		<dc:creator><![CDATA[charsyam]]></dc:creator>
+				<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://charsyam.wordpress.com/?p=2756</guid>
+				<description><![CDATA[해당 글은 현재 하고 있는 구글 스터디잼 Kubernetes in the Google Cloud 을 학습하는 과정에서 배우는 것을 정리하는 글입니다. 총 10개의 챕터가 있고 일단은 가장 처음 두 개인, Introduction to Docker, Hello Node Kubernetes 를 공부했는데&#8230; 1] Introduction to docker -&#62; 실제로 Docker 책을 보면 쉽게 보게되는 명령들을 소개해줍니다. 즉 docker 를 실행시키거나, 현재 수행중인 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>해당 글은 현재 하고 있는 구글 스터디잼 Kubernetes in the Google Cloud 을 학습하는 과정에서 배우는 것을 정리하는 글입니다.</p>
+<p>총 10개의 챕터가 있고 일단은 가장 처음 두 개인, Introduction to Docker, Hello Node Kubernetes 를 공부했는데&#8230;</p>
+<p>1] Introduction to docker<br />
+ -&gt; 실제로 Docker 책을 보면 쉽게 보게되는 명령들을 소개해줍니다. 즉 docker 를 실행시키거나, 현재 수행중인 container 에 접속한다거나, 현재의 수정본을 docker hub 등의 외부 registry에 등록하는 방법(사실 여기서는 gcloud 를 이용해서 gcp내의 registry에 등록하더군요.)</p>
+<p>/node-app:0.2</p>
+<p>사실 이미 docker 를 사용해 보신 경험이 있다면, 특별한 차이를 느끼지 못하실꺼 같습니다. 다른 차이는 실습을 하게 되는 환경에서 이미 docker/kubenetes 등이 다 설치되어 있어서&#8230; 아주 편하게 실습을 할 수 있다는 것 정도&#8230; 일단 제목이 Kubernetes in the Google Cloud 인거 처럼 kubenetes 내용은 2장 부터 시작됩니다.</p>
+<p>2] Hello Node Kubernetes</p>
+<p>Kubernetes 는 Container Orchestration Tool 이라고 볼 수 있습니다.(즉 컨테이너를 관리해주는?) 여기서는 간단히 kubenetes 위에서 node application을 배포하고 Rolling update 하는 것을 보여주게 됩니다.</p>
+<p>2-1] Cluster 의 생성<br />
+ 다음과 같은 과정을 통해서 클러스터를 생성하게 됩니다. 클러스터가 생성된다고 이미지가 돌고 있거나 그러지는 않고, 클러스터만 실행된다고 생각하면 됩니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+#project 이름 설정
+gcloud config set project PROJECT_ID
+
+#hello-world 라는 이름으로 cluster 생성, 노드는 2개, 머신 타입은 n1-standard-1, 생성되는 존은 us-centrall-a 입니다.
+gcloud container clusters create hello-world \
+                --num-nodes 2 \
+                --machine-type n1-standard-1 \
+                --zone us-central1-a
+
+
+</pre>
+<p>2-2] Pod 의 생성<br />
+ 생성된 클러스터에서 이제 실제로 container를 실행하게 됩니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+#hello-node 라는 이름으로 컨테이너 실행
+kubectl run hello-node \
+    --image=gcr.io/PROJECT_ID/hello-node:v1 \
+    --port=8080
+
+#kubectl get deployments 로 현재 deployment 상황을 볼 수 있고
+kubectl get deployments
+
+#kubectl get pods 로 현재 수행중인 pod를 볼 수 있습니다.
+kubectl get pods
+</pre>
+<p>2-3] container 외부에 노출하기<br />
+ 갓 만들어진 컨테이너를 외부에 서비스하기 위해서는 외부에서 접속을 할 수 있어야 합니다. 하지만 처음 생성되었을때는 kubenetes 내부에서만 연결이 되고 외부에서는 접속이 안될 것입니다. 이럴 때 특정 pod는 외부에서 접속할 수 있어야 하는데, 이러면 외부 IP를 가지거나 , 외부에서 해당 pod에 연결할 수 있는 proxy가 실행되어야 할껍니다.(아니면 기존 proxy의 설정이 바뀌거나&#8230;)</p>
+<pre class="brush: bash; title: ; notranslate">
+#외부에 노출하기
+kubectl expose deployment hello-node --type="LoadBalancer"
+
+#어떤 서비스들이 있는지 확인
+kubectl get services
+#결과의 EXTERNAL-IP를 통해서 외부 IP를 확인할 수 있습니다.
+
+</pre>
+<p>2-3] container scaling(개수 변경)<br />
+ 최초에는 container 가 하나만 실행되는데, 이 개수를 바꾸거나 하고 싶을때 어떻게 해야하는지 설명합니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+#실행되는 컨테이너의 개수를 4개로 바꾸기
+kubectl scale deployment hello-node --replicas=4
+
+#kubectl get deployment를 하면 아까와 다른 결과를 볼 수 있습니다.
+</pre>
+<p>다만 이 과정과정가 눈깜짝할 사이에 끝나지는 않습니다. 저는 실험결과 몇초에서 몇분 정도 지나야 이제 제대로 적용되는 걸 볼 수 있습니다.</p>
+<p>이제 쿠버네티스의 상태는 다음과 비슷합니다.<br />
+<img data-attachment-id="2757" data-permalink="https://charsyam.wordpress.com/2019/01/13/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-1/kube1/#main" data-orig-file="https://charsyam.files.wordpress.com/2019/01/kube1.png?w=776" data-orig-size="960,720" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="kube1" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2019/01/kube1.png?w=776?w=300" data-large-file="https://charsyam.files.wordpress.com/2019/01/kube1.png?w=776?w=776" src="https://charsyam.files.wordpress.com/2019/01/kube1.png?w=776" alt="kube1"   class="alignnone size-full wp-image-2757" srcset="https://charsyam.files.wordpress.com/2019/01/kube1.png?w=776 776w, https://charsyam.files.wordpress.com/2019/01/kube1.png?w=150 150w, https://charsyam.files.wordpress.com/2019/01/kube1.png?w=300 300w, https://charsyam.files.wordpress.com/2019/01/kube1.png?w=768 768w, https://charsyam.files.wordpress.com/2019/01/kube1.png 960w" sizes="(max-width: 776px) 100vw, 776px" /></p>
+<p>실제로 다음에 해보면 좋을것 같은 부분&#8230;<br />
+ scale 은 실제로 서비스를 할 때, 중요한 부분이므로, 자신들의 서비스를 넣고, 롤링 업데이트나 scale을 바꿀때, 실제로 영향이 어떻게 되는지를 확인하시는게 좋을듯 합니다.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://charsyam.wordpress.com/2019/01/13/%ea%b5%ac%ea%b8%80%ec%8a%a4%ed%84%b0%eb%94%94%ec%9e%bc-kubernetes-in-the-google-cloud-1/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://2.gravatar.com/avatar/eb957612b8f29b31a16f21df385691ed?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">charsyam</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2019/01/kube1.png" medium="image">
+			<media:title type="html">kube1</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>[입 개발] EXT4 에서 달라진 부분들 #2 &#8211; 데이터 영역의 관리</title>
+		<link>https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/</link>
+				<comments>https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/#respond</comments>
+				<pubDate>Fri, 21 Dec 2018 17:10:14 +0000</pubDate>
+		<dc:creator><![CDATA[charsyam]]></dc:creator>
+				<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://charsyam.wordpress.com/?p=2744</guid>
+				<description><![CDATA[EXT4가 들어오면서 크게 달라진 부분 그 두 번째는, 데이터 영역을 관리하는 방법입니다. 일단 기존에서 사용하던 방식을 알아보도록 하겠습니다. 파일시스템의 특성을 볼때는, 그 시기에 있던 기술의 한계를 알면 도움이 되는데, 최초에 ext가 나오던 시기는 그렇게 큰 파일이 많지는 않던 시기입니다. 즉 엄청 큰 파일을 처리할 일이 많지는 않던 시기입니다. 그리고 기본적으로 ext2~3 까지는 하나의 파일의 최대 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>EXT4가 들어오면서 크게 달라진 부분 그 두 번째는, 데이터 영역을 관리하는 방법입니다. 일단 기존에서 사용하던 방식을 알아보도록 하겠습니다. 파일시스템의 특성을 볼때는, 그 시기에 있던 기술의 한계를 알면 도움이 되는데, 최초에 ext가 나오던 시기는 그렇게 큰 파일이 많지는 않던 시기입니다. 즉 엄청 큰 파일을 처리할 일이 많지는 않던 시기입니다. 그리고 기본적으로 ext2~3 까지는 하나의 파일의 최대 크기는 4 bytes 변수를 사용하기 때문에 최대 4기가 한계입니다.(블럭의 크기와 상관없이 일단 최대한 가졌을 때 표현할 수 있는 한계가 4기가입니다. 파일 크기를 나타내는 변수가 4 bytes 이기 때문이죠.)</p>
+<p>여기서 보통 파일의 종류에 따라서 File/Directory 에서 File이면, 실제 데이터 영역에 파일의 내용이 있고, 디렉토리면, 해당 디렉토리에 있는 파일 목록에 대한 정보가 데이터 영역에 관리가 되게 됩니다. 즉, &#8220;I am a boy&#8221; 라는 내용을 가진 파일이 있다면, 그 파일의 크기는 10이고, block 크기가 4k라면, 한 개의 block만 할당이 되어있을것입니다. 그래서 데이터 영역에 가면 처음 10바이트가 &#8220;I am a boy&#8221;가 들어있게 됩니다. 이걸 관리하는 정보는 EXT는 inode에 있고, ext2~3에서는 그 크기는 총 60바이트입니다. 그리고 블럭을 가리키는 정보는 하나가 4 bytes 입니다. 즉, 60바이트의 공간이 할당되어 있는데, 한 칸이 4 bytes 면 총 15개의 정보를 저장하는 공간이 들어갈 수 있습니다.(FAT32 를 안다면 Fat Table 을 생각하시면 쉽습니다.)</p>
+<p><a href="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/inode1/#main" rel="attachment wp-att-2747"><img data-attachment-id="2747" data-permalink="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/inode1/#main" data-orig-file="https://charsyam.files.wordpress.com/2018/12/inode1.png" data-orig-size="1227,997" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="inode1" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2018/12/inode1.png?w=300" data-large-file="https://charsyam.files.wordpress.com/2018/12/inode1.png?w=776&#038;h=631" src="https://charsyam.files.wordpress.com/2018/12/inode1.png?w=776&#038;h=631" alt="그림1" width="776" height="631" class="aligncenter size-large wp-image-2747" srcset="https://charsyam.files.wordpress.com/2018/12/inode1.png?w=776&amp;h=631 776w, https://charsyam.files.wordpress.com/2018/12/inode1.png?w=150&amp;h=122 150w, https://charsyam.files.wordpress.com/2018/12/inode1.png?w=300&amp;h=244 300w, https://charsyam.files.wordpress.com/2018/12/inode1.png?w=768&amp;h=624 768w, https://charsyam.files.wordpress.com/2018/12/inode1.png?w=1024&amp;h=832 1024w, https://charsyam.files.wordpress.com/2018/12/inode1.png 1227w" sizes="(max-width: 776px) 100vw, 776px" /></a></p>
+<p>그런데 여기서 잘 생각해보면, 그림1 처럼 한칸이 4 bytes라 하나의 블럭을 가리키면&#8230; 60바이트로는 총 15개&#8230; 한 칸이 하나의 블럭을 가리키므로, block 크기가 4k면 4k * 15 = 60k 밖에 안됩니다.(아까는 4기가가 최고라며!!!) 어떻게 된 것일까요? 사실 EXT2/3의 특징 중에 하나가 direct, indirect block, double indirect block, triple indirect block 으로 구성이 된다는 것입니다.</p>
+<p>먼저 시작하기 전에 inode에 들어있는 15 개의 칸은&#8230; 12개의 direct와 각각 하나씩의 indirect, double indirect, triple indirect 로 구성이 되어있습니다. 먼저 direct 는 그 칸 하나가 그림2처럼 실제 디스크의 블럭하나를 가리키는 것입니다. direct 로는 최대 60k 밖에 파일이 가질 수가 없으므로, 이 사이즈를 더 크게 사용하기 위한 것들이 위한 indirect, double indirect, triple indirect 방식입니다.</p>
+<p><a href="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/ext_direct/#main" rel="attachment wp-att-2751"><img data-attachment-id="2751" data-permalink="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/ext_direct/#main" data-orig-file="https://charsyam.files.wordpress.com/2018/12/ext_direct.png" data-orig-size="1432,1168" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="ext_direct" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2018/12/ext_direct.png?w=300" data-large-file="https://charsyam.files.wordpress.com/2018/12/ext_direct.png?w=776&#038;h=633" src="https://charsyam.files.wordpress.com/2018/12/ext_direct.png?w=776&#038;h=633" alt="그림2" width="776" height="633" class="aligncenter size-large wp-image-2751" srcset="https://charsyam.files.wordpress.com/2018/12/ext_direct.png?w=776&amp;h=633 776w, https://charsyam.files.wordpress.com/2018/12/ext_direct.png?w=150&amp;h=122 150w, https://charsyam.files.wordpress.com/2018/12/ext_direct.png?w=300&amp;h=245 300w, https://charsyam.files.wordpress.com/2018/12/ext_direct.png?w=768&amp;h=626 768w, https://charsyam.files.wordpress.com/2018/12/ext_direct.png?w=1024&amp;h=835 1024w, https://charsyam.files.wordpress.com/2018/12/ext_direct.png 1432w" sizes="(max-width: 776px) 100vw, 776px" /></a></p>
+<p>12개니 각 블럭이 4k면 48k의 공간을 지정할 수 있습니다. 그렇다면 13번째 칸의 indirect 는 뭐냐, indirect 가 가리키는 블럭으로 가면, 아까 12개의 direct block을 가리키는 정보가 있던 것과 같은 형태로 실제 디스크를 가리키는 블럭이 direct block이 나옵니다. 블럭 크기가 4k면 여기에 실제 디스크의 블럭을 가리킬 수 있는 정보가 각각 4 byte니 1024개가 들어가게 됩니다. 즉, indirect block은 실제로 direct 블럭 1024개를 가리키므로 4M의 공간을 지정할 수 있습니다. 그림3을 참고합시다.</p>
+<p><a href="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/ext_indirect/#main" rel="attachment wp-att-2749"><img data-attachment-id="2749" data-permalink="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/ext_indirect/#main" data-orig-file="https://charsyam.files.wordpress.com/2018/12/ext_indirect.png" data-orig-size="1644,1096" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="ext_indirect" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2018/12/ext_indirect.png?w=300" data-large-file="https://charsyam.files.wordpress.com/2018/12/ext_indirect.png?w=776&#038;h=517" src="https://charsyam.files.wordpress.com/2018/12/ext_indirect.png?w=776&#038;h=517" alt="그림3" width="776" height="517" class="aligncenter size-large wp-image-2749" srcset="https://charsyam.files.wordpress.com/2018/12/ext_indirect.png?w=776&amp;h=517 776w, https://charsyam.files.wordpress.com/2018/12/ext_indirect.png?w=1552&amp;h=1034 1552w, https://charsyam.files.wordpress.com/2018/12/ext_indirect.png?w=150&amp;h=100 150w, https://charsyam.files.wordpress.com/2018/12/ext_indirect.png?w=300&amp;h=200 300w, https://charsyam.files.wordpress.com/2018/12/ext_indirect.png?w=768&amp;h=512 768w, https://charsyam.files.wordpress.com/2018/12/ext_indirect.png?w=1024&amp;h=683 1024w" sizes="(max-width: 776px) 100vw, 776px" /></a></p>
+<p>그럼 이제 슬슬 이해가 가기 시작할 것입니다. indirect 블럭은 해당 블럭이 direct block을 어드레싱 하는 주소 정보가 들어가 있고, double indirect 블럭이 가리키는 정보는 indirect 블럭을 가리키는 블럭 1024개를 가리키는 블럭에 대한 정보가 됩니다. 그림4를 참고하면, 실제로 double indirect 블럭의 내용은 indirect block 정보들입니다.</p>
+<p><a href="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/ext_double/#main" rel="attachment wp-att-2750"><img data-attachment-id="2750" data-permalink="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/ext_double/#main" data-orig-file="https://charsyam.files.wordpress.com/2018/12/ext_double.png" data-orig-size="1710,1090" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="ext_double" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2018/12/ext_double.png?w=300" data-large-file="https://charsyam.files.wordpress.com/2018/12/ext_double.png?w=776&#038;h=495" src="https://charsyam.files.wordpress.com/2018/12/ext_double.png?w=776&#038;h=495" alt="그림4" width="776" height="495" class="aligncenter size-large wp-image-2750" srcset="https://charsyam.files.wordpress.com/2018/12/ext_double.png?w=776&amp;h=495 776w, https://charsyam.files.wordpress.com/2018/12/ext_double.png?w=1552&amp;h=990 1552w, https://charsyam.files.wordpress.com/2018/12/ext_double.png?w=150&amp;h=96 150w, https://charsyam.files.wordpress.com/2018/12/ext_double.png?w=300&amp;h=191 300w, https://charsyam.files.wordpress.com/2018/12/ext_double.png?w=768&amp;h=490 768w, https://charsyam.files.wordpress.com/2018/12/ext_double.png?w=1024&amp;h=653 1024w" sizes="(max-width: 776px) 100vw, 776px" /></a></p>
+<p>여기서는 4M 짜리 1024개를 가리키므로 4G 의 디스크 정보를 가리킬 수 있습니다. 이쯤되면 이제 triple indirect 의 성격도 눈치 채실 껍니다.<br />
+triple indirect block이 가리키는 정보는 double indirect block 1024개를 가리키는 정보입니다. 그림5를 참고하면 됩니다. 그런데 여기서<br />
+의아한 것은 사실 double indirect block 만으로도&#8230; 실제 파일의 최대 크기인 4G가 넘어간다는 것입니다.(물론 블럭 크기가 4K 일 경우입니다. 1K로 설정되면 이 마지막 블럭을 사용하게 되겠지만&#8230; 블럭 크기가 4k면&#8230; 마지막 triple indirect 는 사용할 이유가 없습니다.)</p>
+<p>블럭 크기가 4k 일때, triple indirect block은 4G * 1024 = 4TB 의 데이터 영역을 가리킬 수 있습니다. 그림5를 참고합시다.</p>
+<p><a href="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/ext_triple/#main" rel="attachment wp-att-2748"><img data-attachment-id="2748" data-permalink="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/ext_triple/#main" data-orig-file="https://charsyam.files.wordpress.com/2018/12/ext_triple.png" data-orig-size="1762,1260" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="ext_triple" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2018/12/ext_triple.png?w=300" data-large-file="https://charsyam.files.wordpress.com/2018/12/ext_triple.png?w=776&#038;h=555" src="https://charsyam.files.wordpress.com/2018/12/ext_triple.png?w=776&#038;h=555" alt="그림5" width="776" height="555" class="aligncenter size-large wp-image-2748" srcset="https://charsyam.files.wordpress.com/2018/12/ext_triple.png?w=776&amp;h=555 776w, https://charsyam.files.wordpress.com/2018/12/ext_triple.png?w=1552&amp;h=1110 1552w, https://charsyam.files.wordpress.com/2018/12/ext_triple.png?w=150&amp;h=107 150w, https://charsyam.files.wordpress.com/2018/12/ext_triple.png?w=300&amp;h=215 300w, https://charsyam.files.wordpress.com/2018/12/ext_triple.png?w=768&amp;h=549 768w, https://charsyam.files.wordpress.com/2018/12/ext_triple.png?w=1024&amp;h=732 1024w" sizes="(max-width: 776px) 100vw, 776px" /></a></p>
+<p>그런데 ext4로 가면서 왜 이런 구조를 버리는 것일까요? 간단하게 생각해보면 해당 구조는 낭비가 너무 심합니다. 혹시나 FAT32에서 NTFS로 가면서 내부구조가 어떻게 바뀌었는지 이해한다면, 실제로 EXT4의 extend를 이해하는 것은 굉장히 수월합니다.</p>
+<p>먼저 간단하게 생각해봅시다. 1000, 1001, 1002, 1003 4개의 블럭이 있다고 할 때 이걸 가리키는 방법으로 ext2에서의 기존 방식은 하나에 한칸을 가리켜야 하므로 총 4칸 16 바이트가 필요합니다. 그런데 이렇게 표현할 수 있지 않을까요? (시작위치, 블럭 개수), 이런 형태면 다음과 같은 (1000, 4) 형태로, 표현이 가능해집니다. 데이터 공간도 각각 4 바이트를 쓴다고 하더라도 8바이트면 줄어듭니다. 물론 매번 필요한 공간이 Fragmentation 이 발생한다면 (1000, 1), (1001, 1), (1002, 1), (1003, 1) 형태로 공간을 낭비하게 됩니다. 즉 연속된 공간이 많이 필요할 수록, 새로운 표현 방법이 공간을 절약할 수 있습니다. 또한 추가 분석할 필요 없이도 쉽게 뒤에 얼마만큼 읽어야 할지도 알 수 있게 됩니다.</p>
+<p>이런 방식을 적용한것이, ntfs의 cluster runs 나, ext4의 extent 라는 구조입니다. 그런데 extent는 (시작위치, 블럭 개수) 의 구조에서 블록 개수에는 2 byte만 할당되어 있습니다. 그래서 block 크기가 4k 기준일 때 무조건 32768 즉 4k * 32768 = 128MB 이상되면 아무리 디스크에 연속적으로 할당된 공간이 있더라도 extend가 추가로 생기게 됩니다. 즉 1GB 파일이면 8개는 extent가 생겨야 합니다.</p>
+<p>그런데 extent구조를 보면 헤더가 일단 12 바이트이고, 리프 노드(실제 파일의 정보를 가리키는)냐, 인덱스 노드(리프 노드나 다른 인덱스 노드의 정보를 가지는)냐에 따라 가지는 정보들이 각각 12 bytes입니다. 즉&#8230; 60바이트에서 헤더를 빼고나면 일단 inode 안에는 4개의 리프 노드만 들어갈 수 있습니다. 즉 512MB 보다 파일 사이즈가 커지거나 fragmentation 이 많이 나면&#8230; 결국 tree 형태로 관리되는 정보가 실제 다른 블럭에 들어가야만 합니다.</p>
+<p><a href="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/ext_extent/#main" rel="attachment wp-att-2752"><img data-attachment-id="2752" data-permalink="https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/ext_extent/#main" data-orig-file="https://charsyam.files.wordpress.com/2018/12/ext_extent.png?w=776" data-orig-size="513,353" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="ext_extent" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2018/12/ext_extent.png?w=776?w=300" data-large-file="https://charsyam.files.wordpress.com/2018/12/ext_extent.png?w=776?w=513" src="https://charsyam.files.wordpress.com/2018/12/ext_extent.png?w=776" alt="그림6"   class="aligncenter size-full wp-image-2752" srcset="https://charsyam.files.wordpress.com/2018/12/ext_extent.png 513w, https://charsyam.files.wordpress.com/2018/12/ext_extent.png?w=150 150w, https://charsyam.files.wordpress.com/2018/12/ext_extent.png?w=300 300w" sizes="(max-width: 513px) 100vw, 513px" /></a></p>
+<p>그래서 실제 구조는 그림6처럼 되게 됩니다. 그리고 이 extent도 실제로는 해당 파일의 inode의 flag에 USE_EXTENT 가 설정되어 있어야 사용하게 됩니다. 즉 ext4 내에 있는 파일이 어떤 건 extent 형태로, 어떤건 옛날 방식으로도 주소 지정이 가능하다라는 것입니다. 다음번에는 기존에 왜 한 디렉토리에 파일이 많으면, 파일 열기등이 느려지는지, ext4에서는 어떻게 풀고 있는지 가볍게 살펴보도록 하겠습니다.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://charsyam.wordpress.com/2018/12/21/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-2-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%98%81%ec%97%ad%ec%9d%98-%ea%b4%80%eb%a6%ac/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://2.gravatar.com/avatar/eb957612b8f29b31a16f21df385691ed?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">charsyam</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2018/12/inode1.png?w=776" medium="image">
+			<media:title type="html">그림1</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2018/12/ext_direct.png?w=776" medium="image">
+			<media:title type="html">그림2</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2018/12/ext_indirect.png?w=776" medium="image">
+			<media:title type="html">그림3</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2018/12/ext_double.png?w=776" medium="image">
+			<media:title type="html">그림4</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2018/12/ext_triple.png?w=776" medium="image">
+			<media:title type="html">그림5</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2018/12/ext_extent.png" medium="image">
+			<media:title type="html">그림6</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>[입 개발] EXT4 에서 달라진 부분들 #1 &#8211; Flexible Block Group</title>
+		<link>https://charsyam.wordpress.com/2018/12/15/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-1/</link>
+				<comments>https://charsyam.wordpress.com/2018/12/15/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-1/#comments</comments>
+				<pubDate>Sat, 15 Dec 2018 01:16:26 +0000</pubDate>
+		<dc:creator><![CDATA[charsyam]]></dc:creator>
+				<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://charsyam.wordpress.com/?p=2738</guid>
+				<description><![CDATA[사실 EXT4는 나온지 굉장히 굉장히 오래된 파일 시스템입니다. EXT의 역사를 보면 간략히 다음과 같습니다. EXT, 1992년 출시 EXT2, 1993년 출시 EXT3, 2001년 커널 2.4.15에 포함 EXT4, 2006년 커널 2.6.19에 포함 2008년 커널 2.6.28에 EXT4 안정 버전 포함 한마디로 굉장히 오래되었습니다. 거의 10년이 지났네요. 그런데 아는 분들은 다 아시지만, 그래도 모르는 사람들은 EXT2 -&#62; EXT3 -&#62; [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>사실 EXT4는 나온지 굉장히 굉장히 오래된 파일 시스템입니다. EXT의 역사를 보면 간략히 다음과 같습니다.</p>
+<ul>
+<li>EXT, 1992년 출시</li>
+<li>EXT2, 1993년 출시</li>
+<li>EXT3, 2001년 커널 2.4.15에 포함</li>
+<li>EXT4, 2006년 커널 2.6.19에 포함</li>
+<li>2008년 커널 2.6.28에 EXT4 안정 버전 포함</li>
+</ul>
+<p>한마디로 굉장히 오래되었습니다. 거의 10년이 지났네요. 그런데 아는 분들은 다 아시지만, 그래도 모르는 사람들은<br />
+EXT2 -&gt; EXT3 -&gt; EXT4로 넘어가면서 무엇이 변했는지 잘 모릅니다. 그냥 좋아졌다?</p>
+<p>EXT4로 들어오면서 크게 바뀐것들이 좀 있는데, 그 중에서도 Flexible Block Group, Extent를 위한 HTree,<br />
+많은 수의 파일 목록에서 쉽게 파일을 찾기 위한 Hash Directories 등이 있습니다.</p>
+<p>일단 생각은 해당 EXT4 시리즈에서는 크게 위의 세 가지만 다뤄볼려고 합니다. 자세한 것은 당연히 다루지 않습니다.<br />
+왜냐&#8230; 잘모르니깐&#8230;</p>
+<p>Flexible Block Group 을 설명하기 위해서는 먼저 EXT에서 Disk Layout 을 어떻게 구성하는가 부터 알아야<br />
+합니다. EXT에서는 Block Group 이라고 해서 특정 사이즈 단위로 디스크를 나눠서 관리 정보를 가지고 있다고<br />
+보시면 됩니다.</p>
+<p><a href="https://charsyam.wordpress.com/2018/12/15/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-1/ext_disk_layout/#main" rel="attachment wp-att-2740"><img data-attachment-id="2740" data-permalink="https://charsyam.wordpress.com/2018/12/15/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-1/ext_disk_layout/#main" data-orig-file="https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png" data-orig-size="1770,479" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="ext_disk_layout" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png?w=300" data-large-file="https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png?w=776&#038;h=210" class="aligncenter size-large wp-image-2740" src="https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png?w=776&#038;h=210" alt="그림1" width="776" height="210" srcset="https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png?w=776&amp;h=210 776w, https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png?w=1552&amp;h=420 1552w, https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png?w=150&amp;h=41 150w, https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png?w=300&amp;h=81 300w, https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png?w=768&amp;h=208 768w, https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png?w=1024&amp;h=277 1024w" sizes="(max-width: 776px) 100vw, 776px" /></a></p>
+<p>즉 그림1 처럼 하나의 디스크를 여러개의 Block Group 으로 나누게 됩니다. 보통 하나의 Block Group 은 128MB<br />
+할당 됩니다. 그럼 하나의 Block Group 은 어떻게 구성되는가? 그림2 처럼 각 Block Group 은 전체 정보를 가지는<br />
+Super Block 과 GDTs, Reserved GDTs를 가지게 됩니다. 이 정보들은 주로 Block Group 0번의 것을 사용하지만<br />
+백업용으로 다른 Block Group 들에도 존재합니다. 이 것 이외에 Block Bitmap, Inode Bitmap, Inode Table,<br />
+Data 영역은 각 Block Group 단위로 관리되는 정보들입니다. 이 때 보면 Block Bitmap, Inode Bitmap은 하나의<br />
+Block 만 할당 받기 때문에 Block의 크기가 4K 라면 bit 단위로 총 32k 개를 관리할 수 있습니다. 그래서 32k * 4K<br />
+해서 하나의 Block Group 의 크기가 128MB로 보통 설정되게 됩니다.</p>
+<p><a href="https://charsyam.wordpress.com/2018/12/15/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-1/block_group/#main" rel="attachment wp-att-2741"><img data-attachment-id="2741" data-permalink="https://charsyam.wordpress.com/2018/12/15/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-1/block_group/#main" data-orig-file="https://charsyam.files.wordpress.com/2018/12/block_group.png" data-orig-size="1770,479" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="block_group" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2018/12/block_group.png?w=300" data-large-file="https://charsyam.files.wordpress.com/2018/12/block_group.png?w=776&#038;h=210" class="aligncenter size-large wp-image-2741" src="https://charsyam.files.wordpress.com/2018/12/block_group.png?w=776&#038;h=210" alt="그림2" width="776" height="210" srcset="https://charsyam.files.wordpress.com/2018/12/block_group.png?w=776&amp;h=210 776w, https://charsyam.files.wordpress.com/2018/12/block_group.png?w=1552&amp;h=420 1552w, https://charsyam.files.wordpress.com/2018/12/block_group.png?w=150&amp;h=41 150w, https://charsyam.files.wordpress.com/2018/12/block_group.png?w=300&amp;h=81 300w, https://charsyam.files.wordpress.com/2018/12/block_group.png?w=768&amp;h=208 768w, https://charsyam.files.wordpress.com/2018/12/block_group.png?w=1024&amp;h=277 1024w" sizes="(max-width: 776px) 100vw, 776px" /></a></p>
+<p>그런데 이 구조의 단점은 무엇일까요? 작은 크기의 파일은 큰 문제가 없는데, 128MB(실제로는 이것보다 조금 더 작은 크기의)<br />
+를 넘어가는 파일부터는 Block Group 하나에 저장되지 않아서, 무조건 Disk 에 물리적으로 Fragmentation 이 발생하게 됩니다.<br />
+즉 연속적으로 읽을 수 없고, Random Access 가 발생해야 한다는 것이죠. 그리고 현재에는 사실 128MB 단위는 생각보다<br />
+많이 작습니다.</p>
+<p>그럼 결국 Flexible Block Group 은 뭐냐? 몇개의 Block Group 들을 하나로 묶자는 것이 메인 아이디어 입니다.<br />
+그래서 그림3 처럼 각 Block Group 의 Block Bitmap, Inode Bitmap 등이 쭈욱 연결되서 하나처럼 관리되게 됩니다. 여기서는<br />
+8개의 Block Group 이 하나처럼 관리되는 것으로 가정했습니다.</p>
+<p><a href="https://charsyam.wordpress.com/2018/12/15/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-1/flexible_block_group/#main" rel="attachment wp-att-2739"><img data-attachment-id="2739" data-permalink="https://charsyam.wordpress.com/2018/12/15/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-1/flexible_block_group/#main" data-orig-file="https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png" data-orig-size="1770,608" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="flexible_block_group" data-image-description="" data-medium-file="https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png?w=300" data-large-file="https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png?w=776&#038;h=267" class="aligncenter size-large wp-image-2739" src="https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png?w=776&#038;h=267" alt="그림3" width="776" height="267" srcset="https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png?w=776&amp;h=267 776w, https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png?w=1552&amp;h=534 1552w, https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png?w=150&amp;h=52 150w, https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png?w=300&amp;h=103 300w, https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png?w=768&amp;h=264 768w, https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png?w=1024&amp;h=352 1024w" sizes="(max-width: 776px) 100vw, 776px" /></a></p>
+<p>정리하자면, 각 Block Group 에 있던, Block Bitmap, Inode Bitmap, Inode Table 영역들이 쭈욱 연결되는 형태로 들어가게 됩니다.<br />
+0번 Block Group 에 다른 Block Group 들의 메타정보(Block Bitmap, Inode Bitmap, Inode Table) 들이 다 넘어오게 되는 것이죠.<br />
+그림2와 비교해보시면 그 차이가 명확하게 보이실 겁니다.</p>
+<p>주의 할 것은 EXT4에서 Flexible Block Group 은 무조건 사용하는 것이 아니라, 헤더에 FLEX_BG 라는 Flag가 설정되어 있어야만 Flexible Block Group 을 사용 가능합니다. 즉, 이 Flag가 꺼져있다면, 예전 방식대로 처리해야한 합니다.</p>
+<p>다음번에는 EXT4에서 extents를 어떻게 관리하는지, 살펴보도록 하겠습니다.</p>
+<p>EXT4 에 대해서 <a href="https://ext4.wiki.kernel.org/index.php/Ext4_Disk_Layout">Ext4 Disk Layout</a> 이라는 매우 좋은 자료가 있습니다. 자세한 건 이걸 참고하세요.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://charsyam.wordpress.com/2018/12/15/%ec%9e%85-%ea%b0%9c%eb%b0%9c-ext4-%ec%97%90%ec%84%9c-%eb%8b%ac%eb%9d%bc%ec%a7%84-%eb%b6%80%eb%b6%84%eb%93%a4-1/feed/</wfw:commentRss>
+		<slash:comments>1</slash:comments>
+						
+		<media:content url="https://2.gravatar.com/avatar/eb957612b8f29b31a16f21df385691ed?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">charsyam</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2018/12/ext_disk_layout.png?w=776" medium="image">
+			<media:title type="html">그림1</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2018/12/block_group.png?w=776" medium="image">
+			<media:title type="html">그림2</media:title>
+		</media:content>
+
+		<media:content url="https://charsyam.files.wordpress.com/2018/12/flexible_block_group.png?w=776" medium="image">
+			<media:title type="html">그림3</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>[입 개발] Redis 에서 zadd 와 zincrby 의 차이</title>
+		<link>https://charsyam.wordpress.com/2018/09/06/%ec%9e%85-%ea%b0%9c%eb%b0%9c-redis-%ec%97%90%ec%84%9c-zadd-%ec%99%80-zincrby-%ec%9d%98-%ec%b0%a8%ec%9d%b4/</link>
+				<comments>https://charsyam.wordpress.com/2018/09/06/%ec%9e%85-%ea%b0%9c%eb%b0%9c-redis-%ec%97%90%ec%84%9c-zadd-%ec%99%80-zincrby-%ec%9d%98-%ec%b0%a8%ec%9d%b4/#respond</comments>
+				<pubDate>Thu, 06 Sep 2018 15:47:22 +0000</pubDate>
+		<dc:creator><![CDATA[charsyam]]></dc:creator>
+				<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://charsyam.wordpress.com/?p=2734</guid>
+				<description><![CDATA[안녕하세요. 입개발 CharSyam입니다. 오래간만에 포스팅을 하게 되네요. 오늘은 아주 간단한 것을 포스팅 할려고 합니다. 가끔씩 Redis의 sorted set 을 사용하는 명령중에 zadd 와 zincrby 가 있습니다. 과연 이 두 개의 명령은 어떤 차이가 있을까요? 결론부터 말하자면, zadd 와 zincrby 는 사실 같은 기능을 사용하는 아주 유사한 명령입니다. 먼저 zadd 는 다음과 같이 사용하니다. 그러면 sorted [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>안녕하세요. 입개발 CharSyam입니다. 오래간만에 포스팅을 하게 되네요. 오늘은 아주 간단한 것을 포스팅 할려고 합니다. 가끔씩 Redis의 sorted set 을 사용하는 명령중에 zadd 와 zincrby 가 있습니다. 과연 이 두 개의 명령은 어떤 차이가 있을까요?</p>
+<p>결론부터 말하자면, zadd 와 zincrby 는 사실 같은 기능을 사용하는 아주 유사한 명령입니다. 먼저 zadd 는 다음과 같이 사용하니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+zadd key score member
+</pre>
+<p>그러면 sorted set 에 member 가 해당 score를 가지게 됩니다. 여기서 가지게 됩니다를 중요하게 봐주세요.</p>
+<p>그리고 zincrby 는 특정 값 increment 만큼 score를 증가시키는 명령입니다.</p>
+<pre class="brush: bash; title: ; notranslate">
+zincrby key increment member
+</pre>
+<p>그렇다면 다음 두 가지 경우로 나눠보도록 하겠습니다. 현재 해당 key에 member가 존재하지 않는 경우와 존재하는 경우입니다. 먼저 존재하지 않을 경우, 두 개의 명령 zadd 와 zincrby 는 모두 해당 member를 생성하게 됩니다. 그리고 zadd 는 해당 score로 설정하고 zincrby 는 0에 해당 increment를 추가한 것 처럼 동작합니다.(즉 둘 다 해당 값으로 설정하게 되는거죠.)</p>
+<p>그렇다면 해당 member가 존재할 경우는 어떻게 될까요? zadd는 해당 member의 score를 현재 넘겨준 값으로 변경시켜 버립니다. 즉 기존에 3이 었는데 zadd key 1 member 라면 해당 member 의 score 는 3에서 1로 변경이 됩니다. zincrby 의 경우는 zincrby key 1 member 라면 기존 값이 3이 있었다면, 이제 3에 1을 더하게 되어서 4가 되게 됩니다.</p>
+<p>코드를 보면 zadd 와 zincrby 는 Flag 하나만 다르고 동일한 함수를 사용합니다.</p>
+<pre class="brush: cpp; title: ; notranslate">
+void zaddCommand(client *c) {
+    zaddGenericCommand(c,ZADD_NONE);
+}
+
+void zincrbyCommand(client *c) {
+    zaddGenericCommand(c,ZADD_INCR);
+}
+</pre>
+<p>그리고 zaddGenericCommand를 보면 zsetAdd 를 호출하게 되는데&#8230; zadd는 모두 기존 값을 가져와서, score 를 비교합니다. 그래서 zincrby 에서 ZADD_INCR 설정되면 new_score 로 기존값 + increment로 설정하고, zadd 에서는 new_score 를 넘겨준 설정값으로 설정하게 됩니다.</p>
+<pre class="brush: cpp; title: ; notranslate">
+            /* Prepare the score for the increment if needed. */
+            if (incr) {
+                score += curscore;
+                if (isnan(score)) {
+                    *flags |= ZADD_NAN;
+                    return 0;
+                }
+                if (newscore) *newscore = score;
+            }
+
+            /* Remove and re-insert when score changed. */
+            if (score != curscore) {
+                zobj-&gt;ptr = zzlDelete(zobj-&gt;ptr,eptr);
+                zobj-&gt;ptr = zzlInsert(zobj-&gt;ptr,ele,score);
+                *flags |= ZADD_UPDATED;
+            }
+</pre>
+<p>그리고 score가 변경되면 sorted set 은 기존 member를 지우고 다시 insert 하는 식으로 동작하게 됩니다. 결국 zadd 와 zincrby 는 거의 다른게 없습니다.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://charsyam.wordpress.com/2018/09/06/%ec%9e%85-%ea%b0%9c%eb%b0%9c-redis-%ec%97%90%ec%84%9c-zadd-%ec%99%80-zincrby-%ec%9d%98-%ec%b0%a8%ec%9d%b4/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://2.gravatar.com/avatar/eb957612b8f29b31a16f21df385691ed?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">charsyam</media:title>
+		</media:content>
+	</item>
+	</channel>
+</rss>

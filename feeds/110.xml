@@ -1,0 +1,1580 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Mingeun Kim</title>
+    <link>https://getsolaris.github.io</link>
+    <atom:link href="https://getsolaris.github.io/feed.xml" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>AWS CodeDeploy 파일 존재 배포 실패 에러 발생시</title>
+        <description>&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;The deployment failed because a specified file already exists at this location&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;AWS CodeDeploy 로 배포 시 &lt;code class=&quot;highlighter-rouge&quot;&gt;codedeploy-agent&lt;/code&gt; 서버에 동일한 파일이 존재할 경우 위와 같은 에러가 발생합니다.
+&lt;br /&gt;
+라라벨 프로젝트를 자동 배포를 하기위해 TravisCI 를 이용해 CodeDeploy 로 배포를 진행 하려고 했는데 위와 같은 충돌에 해결법을 찾았습니다.
+&lt;br /&gt;
+참고로 CodeDeploy는 파일 덮어쓰기(&lt;code class=&quot;highlighter-rouge&quot;&gt;overwrite&lt;/code&gt;)가 불가능 하다는것을 아래 래퍼런스 링크에서 확인 가능합니다. (AWS CodeDeploy GUI 수동 배포시 덮어쓰기 옵션 선택이 가능합니다.)&lt;/p&gt;
+
+&lt;h2 id=&quot;solution&quot;&gt;Solution&lt;/h2&gt;
+
+&lt;p&gt;배포 시 release 디렉터리에 배포 후 appspec hook 을 통해 스크립트를 실행 시킵니다.
+&lt;img src=&quot;https://docs.aws.amazon.com/codedeploy/latest/userguide/images/lifecycle-event-order-ecs.png&quot; /&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;출처: AWS CodeDeploy appspec lifecycle&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;
+빠른 이해를 위해 실제로 해결 했던 스크립트를 아래에 첨부 합니다.
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;afterInstall.bash&lt;/code&gt; 를 실행 하게 되면 모든 파일을 제거하므로 반영에서 제외할 파일들은 따로 &lt;code class=&quot;highlighter-rouge&quot;&gt;release-files&lt;/code&gt; 라는 디렉터리를 생성하여 넣어두고 &lt;code class=&quot;highlighter-rouge&quot;&gt;copy&lt;/code&gt; 하는 형식을 추가했습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-yml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# appspec.yml&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0.0&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;linux&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;./&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;destination&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/var/www/release/&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;permissions&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;object&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/var/www/laravel-central-api/&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;owner&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;www-data&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;www-data&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;hooks&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;BeforeInstall&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;location&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;scripts/beforeInstall.bash&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;AfterInstall&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;location&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;scripts/afterInstall.bash&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# beforeInstall.bash&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;#!/usr/bin/env bash&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; /var/www/release &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;rm &lt;span class=&quot;nt&quot;&gt;-rf&lt;/span&gt; /var/www/release
+&lt;span class=&quot;k&quot;&gt;fi
+&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;mkdir &lt;span class=&quot;nt&quot;&gt;-vp&lt;/span&gt; /var/www/release
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# afterInstall.bash&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;#!/usr/bin/env bash&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;rsync &lt;span class=&quot;nt&quot;&gt;--delete-before&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--verbose&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--archive&lt;/span&gt; /var/www/release/ /var/www/laravel-central-api/ &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; /var/log/deploy.log
+
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /var/www/laravel-central-api
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;composer install
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;cp /var/www/release-files/.env /var/www/laravel-central-api
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;cp /var/www/release-files/Controller.php /var/www/laravel-central-api/app/Http/Controllers
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;php artisan key:generate
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;php artisan config:cache
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;chmod &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; 775 storage bootstrap/cache storage/framework storage/logs
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;chown &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$USER&lt;/span&gt;:www-data storage
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;chown &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$USER&lt;/span&gt;:www-data bootstrap/cache
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;pkill &lt;span class=&quot;nt&quot;&gt;-9&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-ef&lt;/span&gt; bot.php
+nohup php bot.php &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; /dev/null 2&amp;gt; /dev/null &amp;lt; /dev/null &amp;amp;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; /var/www/release &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;rm &lt;span class=&quot;nt&quot;&gt;-rf&lt;/span&gt; /var/www/release
+&lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;reference&quot;&gt;Reference&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/aws/aws-codedeploy-agent/issues/14&quot;&gt;https://github.com/aws/aws-codedeploy-agent/issues/14&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Thu, 09 May 2019 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2019-05-09/aws-codedeploy-trouble-shooting/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2019-05-09/aws-codedeploy-trouble-shooting/</guid>
+      </item>
+    
+      <item>
+        <title>사회초년생 개발자가 오픈소스 개발에 기여하기까지</title>
+        <description>&lt;p&gt;안녕하세요. &lt;br /&gt;해당 포스팅 제목과 같이 저는 빠르게 사회에 뛰어들은 개발자 김민근입니다.&lt;/p&gt;
+
+&lt;p&gt;저는 올해 특성화고 졸업을 무사히 마치고 바로 회사에 취업을 했습니다.&lt;/p&gt;
+
+&lt;p&gt;회사 퇴근 후 특별한 날이 아니면 자는 시간을 제외하곤 온종일 개발을 합니다.&lt;/p&gt;
+
+&lt;p&gt;저는 혼자 프로젝트 개발하는것을 좋아합니다.
+회사일 외 개인적으로 프로젝트를 하고 싶어 혼자 프로젝트를 진행해봤지만
+제 능력의 한계로 쳇바퀴돌듯 매번 그 기술을 재활용 하는 느낌이였습니다.
+&lt;br /&gt;
+&lt;br /&gt;
+그래서 &lt;code class=&quot;highlighter-rouge&quot;&gt;오픈소스&lt;/code&gt; 에 한번 기여를 해보자! 라고 생각을 했습니다.
+&lt;br /&gt;
+.
+&lt;br /&gt;
+.
+&lt;br /&gt;
+.
+&lt;br /&gt;
+.
+&lt;br /&gt;
+그렇게 시작된 오픈소스 여정&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;나에게-맞는-오픈소스를-찾다&quot;&gt;나에게 맞는 오픈소스를 찾다&lt;/h2&gt;
+
+&lt;p&gt;우선 제일 자신 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Laravel&lt;/code&gt; 로 깃허브에 검색을 해가며 &lt;code class=&quot;highlighter-rouge&quot;&gt;help wanted&lt;/code&gt; 라벨이 달린 저장소를 찾고 있었습니다.&lt;/p&gt;
+
+&lt;p&gt;찾는 도중 &lt;code class=&quot;highlighter-rouge&quot;&gt;Laravel Nova Localizations&lt;/code&gt; 저장소를 발견 했고 지원하는 언어는 스무가지 넘게 있었습니다. 해당 저장소에서 제공하는 언어(Localization)는 사람들이 직접 번역을 해 Pull Request 날리고 있었습니다.
+&lt;br /&gt;
+번역에 자신은 없지만 번역기의 힘을 빌려 기여를 해보기로 했습니다.&lt;/p&gt;
+
+&lt;p&gt;해당 저장소를 &lt;code class=&quot;highlighter-rouge&quot;&gt;fork&lt;/code&gt; 한뒤 &lt;code class=&quot;highlighter-rouge&quot;&gt;en.json&lt;/code&gt; 을 copy &amp;amp; paste &lt;code class=&quot;highlighter-rouge&quot;&gt;ko.json&lt;/code&gt; 
+&lt;br /&gt;
+key 는 기본 영어로 저는 value 만 아래 사진처럼 번역을 진행 했습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/nova-source.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;두번째로 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pull Request&lt;/code&gt; 를 날렸습니다. 과연 날린 PR이 닫힐까, 합쳐질까 기대하고 있는 사이
+PR 날린 후 이틀 뒤 합쳐졌다고 이메일이 도착했습니다 !&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/nova-merge.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+해당 기여가 제 생에 첫 기여였고, 다른 사람들이 제가 번역한 &lt;code class=&quot;highlighter-rouge&quot;&gt;Laravel Nova Localizations Korean&lt;/code&gt; 을 사용 한다고 생각만 해도
+정말 뿌듯합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;참여해도-될까요-&quot;&gt;참여해도 될까요 ?&lt;/h2&gt;
+
+&lt;p&gt;번역에 기여한뒤 저는 &lt;a href=&quot;https://modernpug.org/&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ModernPUG&lt;/code&gt;&lt;/a&gt; (PHP 개발자 모임) 슬랙에 참가 하였고, 모임 운영자님에게 해당 홈페이지 개발에 참여를 하고 싶다고 여쭤봤는데, 흔쾌히 수락을 하셨습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;그렇게-시작하게된-개발&quot;&gt;그렇게 시작하게된 개발&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/modernpug-projects-panel.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;운영자님께서 제게 개발 해보고 싶은것을 &lt;code class=&quot;highlighter-rouge&quot;&gt;Todo&lt;/code&gt; 리스트 중에 골라보라고 말씀을 해주셔서, 저는 &lt;code class=&quot;highlighter-rouge&quot;&gt;PHP 관련 릴리즈 소식 업데이트&lt;/code&gt; 를 선택 했습니다.
+&lt;br /&gt;
+구현 해야할 기능들은 3가지가 있습니다. 언어는 당연히 PHP! Laravel 사용합니다.&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;PHP 관련 릴리즈 크롤링&lt;/li&gt;
+  &lt;li&gt;릴리즈 소식 뷰&lt;/li&gt;
+  &lt;li&gt;Slack 알림 발송&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;개발에-대한-정리&quot;&gt;개발에 대한 정리&lt;/h2&gt;
+
+&lt;h4 id=&quot;모델은-생각보다-무겁게&quot;&gt;모델은 생각보다 무겁게&lt;/h4&gt;
+
+&lt;p&gt;저는 모델은 좀 가볍게 서비스에 모든 데이터 관련 로직을 넣는 편이였는데, 해당 프로젝트에서는
+모델에 데이터 관련 로직을 포함 시켰습니다.
+&lt;br /&gt;
+해당 프로젝트에서의 컨셉은 아래 4가지와 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;가장 기본이 되는 객체로써의 존재&lt;/li&gt;
+  &lt;li&gt;도메인 객체간의 관계를 정리한다&lt;/li&gt;
+  &lt;li&gt;해당 객체가 가져야 하는 역할 및 속성을 같이 정리한다&lt;/li&gt;
+  &lt;li&gt;모델은 생각보다 무거운 존재가 된다&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ReleaseNews&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Model&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;sd&quot;&gt;/**
+    * @return object
+    */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getReleaseNews&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;orderBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'released_at'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'desc'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;크롤링-정보들&quot;&gt;크롤링 정보들&lt;/h4&gt;
+
+&lt;p&gt;7개 좀 넘는 정보를 제공 해주는데 모든 크롤링에 대해서는 셀렉터를 각각 지정을 해줘야 했습니다. 
+&lt;br /&gt;
+저는 해당 코드를 팩토리 디자인 패턴을 이용해 리팩토링 할 예정입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ReleaseNews&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Model&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;SUPPORT_RELEASES&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'PHP'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'site_url'&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'http://php.net/releases/'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'version'&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'#layout-content &amp;gt; h2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'date'&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'#layout-content &amp;gt; ul &amp;gt; li:nth-child(1)'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'post'&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                &lt;span class=&quot;s1&quot;&gt;'url'&lt;/span&gt;       &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'http://php.net/releases/#'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s1&quot;&gt;'before'&lt;/span&gt;    &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s1&quot;&gt;'after'&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;''&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s1&quot;&gt;'end'&lt;/span&gt;       &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;''&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'Codeigniter'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'site_url'&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'https://www.codeigniter.com/userguide3/changelog.html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'version'&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'#change-log &amp;gt; div &amp;gt; h2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'date'&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'#change-log &amp;gt; div &amp;gt; p'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'post'&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                &lt;span class=&quot;s1&quot;&gt;'url'&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'https://www.codeigniter.com/userguide3/changelog.html#version-'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s1&quot;&gt;'before'&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'/[. ]/'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s1&quot;&gt;'after'&lt;/span&gt;    &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'-'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;s1&quot;&gt;'end'&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;''&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;공동-프로젝트에서-주석comment-은-필수&quot;&gt;공동 프로젝트에서 주석(comment) 은 필수&lt;/h4&gt;
+
+&lt;p&gt;저는 원래 개인 프로젝트 할때는 주석을 아예 작성하지 않는 편입니다.&lt;/p&gt;
+
+&lt;p&gt;하지만 달라졌습니다. PHPStorm IDE 의 기능을 이용해 주석을 아주 편하게 작성할 수 있기 때문입니다.
+&lt;a href=&quot;https://github.com/ModernPUG/modernpug.org/blob/v2/app/Services/ReleaseNews/Updater.php&quot;&gt;해당 저장소&lt;/a&gt;를 참고해주세요.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Updater&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;sd&quot;&gt;/**
+     * @param   string $url
+     * @return  Crawler
+     */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;convertCrawlerFromUrl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$response&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;client&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$contents&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$response&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getBody&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getContents&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$crawler&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Crawler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$contents&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$crawler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;ide-helper-&quot;&gt;ide-helper ?&lt;/h4&gt;
+
+&lt;p&gt;Laravel 에는 IDE Helper 가 존재합니다. 자세한 내용은 &lt;a href=&quot;https://github.com/barryvdh/laravel-ide-helper&quot;&gt;여기&lt;/a&gt;를 참고해주세요.&lt;/p&gt;
+
+&lt;p&gt;해당 패키지는 정확한 자동 완성 기능을 제공합니다. 쉽게 커맨드로 phpDoc 생성이 가능합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;php artisan ide-helper:models &lt;span class=&quot;nt&quot;&gt;-WR&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;sd&quot;&gt;/**
+ * App\ReleaseNews
+ *
+ * @property int $id
+ * @property string $site_url 웹 사이트의 주소
+ * @property string $type release type (Laravel, PHP, CI)
+ * @property string $version release version
+ * @property \Illuminate\Support\Carbon $released_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\ReleaseNews newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\ReleaseNews newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\ReleaseNews query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\ReleaseNews whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\ReleaseNews whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\ReleaseNews whereReleasedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\ReleaseNews whereSiteUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\ReleaseNews whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\ReleaseNews whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\ReleaseNews whereVersion($value)
+ * @mixin \Eloquent
+ */&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;코딩-스타일-psr-1--psr-2&quot;&gt;코딩 스타일 PSR-1 / PSR-2&lt;/h4&gt;
+
+&lt;p&gt;회사 재직하면서 수많은 코드들을 보면서 코딩 스타일이 달라졌는데, 해당 프로젝트를 시작하고 많은 코드 리뷰를 받으면서 코딩 스타일도 변화하기 시작했습니다. 
+저는 vscode 만 쓰다가 PHPStorm 을 해당 프로젝트 부터 사용하기 시작 했는데 (학생 라이센스 발급 받아놓고 사용을 안했네요.) 정말 신세계라는걸 느꼈습니다.
+&lt;br /&gt;
+IDE 자체에서 코딩 스타일을 설정 할 수 있었고, 개발을 하다가 잘못된 문법 부분은 자동으로 고쳐줘서 편했고 즉시 어느 부분이 잘못되었는지 알 수 있었습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/phpstorm-psr.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;PSR 에 대해서는 &lt;a href=&quot;https://psr.kkame.net/accepted/psr-2-coding-style-guide&quot;&gt;여기&lt;/a&gt;를 참고해주세요.&lt;/p&gt;
+
+&lt;h4 id=&quot;될-수-있으면-짧고-읽기-쉬운-문법을-사용합니다&quot;&gt;될 수 있으면 짧고 읽기 쉬운 문법을 사용합니다&lt;/h4&gt;
+
+&lt;p&gt;기본으로 조건문을 사용하면 아래와 같은 방법으로 사용할 것 입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$fail&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'성공 건수: '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$success&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'중복 건수: '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$duplicate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$fail&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'실패 건수: '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$fail&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;하지만 아래와 같이 더 줄일 수 있습니다.
+&lt;br /&gt;
+릴리즈 정보 크롤링 과정에서 카운트를 아래와 같이 사용했습니다. &lt;a href=&quot;https://github.com/ModernPUG/modernpug.org/blob/v2/app/Services/ReleaseNews/Updater.php&quot;&gt;이곳&lt;/a&gt;을 참고 해주세요.&lt;/p&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$fail&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'성공 건수: '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$success&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'중복 건수: '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$duplicate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$fail&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'실패 건수: '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$fail&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;아래 코드처럼 1번 코드를 2번 같이 줄이면 코드 재사용량이 줄어듭니다.&lt;/p&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// 1
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 2
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?:&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;개발-하면서&quot;&gt;개발 하면서&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/modernpug-code-review.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;개발을 하면서 많은 코드리뷰를 통해 제 코드가 많이 다듬어졌습니다.
+&lt;br /&gt;
+코드리뷰에 대해서는 &lt;a href=&quot;http://blog.logi-spot.com/%EC%BD%94%EB%93%9C%EB%A6%AC%EB%B7%B0%EC%9D%98-%EC%A7%84%EC%A7%9C-%EB%AA%A9%EC%A0%81%EC%9D%80-%EB%94%B0%EB%A1%9C%EC%9E%88%EB%8B%A4/&quot;&gt;여기&lt;/a&gt;를 확인해주세요.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;코드리뷰를-하면서&quot;&gt;코드리뷰를 하면서&lt;/h2&gt;
+
+&lt;p&gt;코드리뷰를 하면서 코드와 네이밍에 많은 변화가 생겼습니다.
+&lt;br /&gt;
+이 글을 포스팅 하면서 공유 했으면 좋겠어서 조심스럽게 올려봅니다.
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;배열을-여러행에-걸쳐-사용할-경우-마지막-인자에-콤마를-넣습니다&quot;&gt;배열을 여러행에 걸쳐 사용할 경우 마지막 인자에 콤마를 넣습니다.&lt;/h4&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Kernel&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ConsoleKernel&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// 코드리뷰 전
+&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$commands&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;CrawlFeed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;CrawlRelease&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;PostImageUpdater&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// 코드리뷰 후
+&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$commands&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;CrawlFeed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;CrawlRelease&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;PostImageUpdater&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;한줄에-80자를-넘지-않습니다&quot;&gt;한줄에 80자를 넘지 않습니다.&lt;/h4&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// 코드리뷰 전
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$siteUrl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;releaseInContent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'post'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'url'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'post'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'before'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'post'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'after'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 코드리뷰 후
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$siteUrl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;releaseInContent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'post'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'url'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'post'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'before'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'post'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'after'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$release&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'post'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'end'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;날짜-mutators&quot;&gt;날짜 Mutators&lt;/h4&gt;
+
+&lt;p&gt;모델의 &lt;code class=&quot;highlighter-rouge&quot;&gt;$dates&lt;/code&gt; 속성을 설정하면 Carbon 클래스의 인스턴스로 변경되어 사용할 수 있습니다.
+&lt;br /&gt;
+사용 안한것과 &lt;code class=&quot;highlighter-rouge&quot;&gt;$dates&lt;/code&gt; 속성의 값을 가져온것끼리 비교를 해보겠습니다.
+&lt;br /&gt;
+저는 &lt;code class=&quot;highlighter-rouge&quot;&gt;$afterVar&lt;/code&gt; 처럼 사용 했고 이번 리뷰를 통해 모델의 &lt;code class=&quot;highlighter-rouge&quot;&gt;$dates&lt;/code&gt; 속성을 알게 되었습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$afterVar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;strtotime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$release&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;released_at&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ReleaseNews&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Model&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$dates&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'released_at'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;$beforeVar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$release&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;released_at&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getTimestamp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위 &lt;code class=&quot;highlighter-rouge&quot;&gt;$beforeVar&lt;/code&gt; 변수를 보면 해당 값은 Carbon 인스턴스로 캐스팅 되기 때문에 Carbon 메소드를 사용할 수 있습니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;메소드명-짓기&quot;&gt;메소드명 짓기&lt;/h4&gt;
+
+&lt;p&gt;원래 동사를 뒤에 쓰는 편이였는데 이번 리뷰를 통해 변수와 메소드 네이밍에 대해 곰곰히 생각해보는 계기가 되었습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// 코드리뷰 전
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;releaseVersionCheck&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;releaseDateModify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$date&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 코드리뷰 후
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;checkReleaseVersion&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;convertReleaseDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$date&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;정리&quot;&gt;정리&lt;/h2&gt;
+
+&lt;h4 id=&quot;릴리즈-뉴스-명령어&quot;&gt;릴리즈 뉴스 명령어&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/command-lists.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;릴리즈 관련된 커맨드입니다. 첫번째는 크롤링이고, 두번째는 슬랙 알림 발송입니다.
+라라벨 스케쥴러(crontab)가 돌면서 자동으로 수행합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Kernel&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ConsoleKernel&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;schedule&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Schedule&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$schedule&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$schedule&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;CrawlReleaseNews&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;hourly&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$schedule&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PushTodayReleaseNews&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;dailyAt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'7:05'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;릴리즈-뉴스-크롤링&quot;&gt;릴리즈 뉴스 크롤링&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/command-crawl.png&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;php artisan release-news:crawl
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;하나의 릴리즈 타입당 5번을 돌며 크롤링 후 데이터베이스에 저장하게 됩니다.
+&lt;br /&gt;
+릴리즈 정보 크롤링 과정에서 깃허브 릴리즈 페이지를 크롤링 해오는데, 매번 셀렉터가 변경되어
+깃허브 API 를 사용했습니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;릴리즈-뉴스-슬랙-알림&quot;&gt;릴리즈 뉴스 슬랙 알림&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/slack-noti.png&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;php artisan release-news:push
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;릴리즈 날짜 기준으로 어제의 데이터를 슬랙에 알림을 제공합니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;홈페이지&quot;&gt;홈페이지&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/website.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;릴리즈 정보들은 탭별로 확인이 가능합니다.
+&lt;br /&gt;
+우측 위젯에 Recently Releases 부분은 각 타입(PHP, Laravel ..) 별로 최근 릴리즈만 표시 됩니다.&lt;/p&gt;
+
+&lt;p&gt;소스 확인은 &lt;a href=&quot;https://github.com/getsolaris/modernpug.org&quot;&gt;여기&lt;/a&gt;를 확인해주세요.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;제게 다른 사람들이 코드를 평가 해주는 시간은 없었습니다.
+&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;ModernPUG&lt;/code&gt; 프로젝트를 하며 많은 코드리뷰를 받았습니다.
+&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;'사회초년생 개발자가 오픈소스 개발에 기여하기까지'&lt;/code&gt; 라는 글을 작성 하면서 다시 한번 코드리뷰의 &lt;code class=&quot;highlighter-rouge&quot;&gt;중요성&lt;/code&gt;을 크게 뉘우쳤습니다.
+코드리뷰의 좋은점은 사람마다 코드 스타일이 다르며 다른사람의 코드 작성법을 알 수 있는 길인것 같습니다.
+&lt;br /&gt;
+코드리뷰를 받으며 ‘아 이런식으로도 가능하구나’, ‘이런식으로 하면 더 가독성이 좋겠구나’ 라는 생각을 여러번 하게 되었습니다.
+&lt;br /&gt;
+또한 오픈소스가 가져오는 결과물은 다른 사람의 잘 짜여진 코드를 보고 개발 하면서 지식을 얻는것 같습니다.
+&lt;br /&gt;
+&lt;br /&gt;
+&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/Screen%20Shot%202019-03-08%20at%2012.02.35%20AM.png&quot; /&gt;
+&lt;br /&gt;
+이 포스팅을 19.03.07 일자에 업로드를 마쳤는데, 하루에 600분이 제 블로그에 방문 그리고 해당 포스트를 봐주셨습니다.
+&lt;br /&gt;
+&lt;br /&gt;
+&lt;br /&gt;
+또한 페이스북을 통해 많은 분들이 &lt;code class=&quot;highlighter-rouge&quot;&gt;'사회초년생 개발자가 오픈소스 개발에 기여하기까지'&lt;/code&gt; 포스트를 공유 해주셨습니다.
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/share1.png&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;OSSF 개발자 그룹&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/share2.png&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;국민대학교 이민석 교수님&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/first-my-opensource-contribute/share3.png&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;비트바이트 안서형 대표님&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;외에도 많은 분들이 많은 관심을 가져주셨습니다.
+&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;'사회초년생 개발자가 오픈소스 개발에 기여하기까지'&lt;/code&gt; 포스트에 관심을 가져주셔서 감사합니다.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 06 Mar 2019 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2019-03-06/first-opensource-project-contribute/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2019-03-06/first-opensource-project-contribute/</guid>
+      </item>
+    
+      <item>
+        <title>Laravel MVCS Design Pattern Service Create Command</title>
+        <description>&lt;h1 id=&quot;라라벨-아티즌-명령어-개발-일기&quot;&gt;라라벨 아티즌 명령어 개발 일기&lt;/h1&gt;
+
+&lt;p&gt;기존 라라벨은 &lt;code class=&quot;highlighter-rouge&quot;&gt;MVC (Model-View-Controller) 패턴&lt;/code&gt;이였지만 회사 첫 출근 후, 서비스 로직은 &lt;code class=&quot;highlighter-rouge&quot;&gt;MVCS (Model-View-Controller-Service) 패턴&lt;/code&gt;이었다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/1da80aee3f4055d3dda05ef16068b0dbf6bb75a5/assets/images/post/laravel-mvcs/mvc.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;위 이미지는 MVC 패턴을 설명한 이미지입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;MVC 패턴의 로직은 Client -&amp;gt; Controller -&amp;gt; Model -&amp;gt; Controller -&amp;gt; View 순서로 이루어져 있다.
+Model 에서 Controller 로 넘어갈땐 Model단에서 가공한 데이터를 컨트롤러에 넘긴뒤 컨트롤러에서는 뷰에게 전달 해준다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/1da80aee3f4055d3dda05ef16068b0dbf6bb75a5/assets/images/post/laravel-mvcs/mvcs.png&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;위 이미지는 MVCS 패턴을 설명한 이미지입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;원래 Controller 단에서 서비스 로직을 전부 처리한다고 할때, Service 를 도입 하면 Controller 에서 Model 과 양방향을 맺는게 아닌 Controller 단에서 Service 를 의존성 주입 (DI) 로 호출한뒤 Service에서 비즈니스 로직을 처리하는 개념이다.&lt;/p&gt;
+
+&lt;p&gt;회사에서 MVCS 패턴을 이용하다 보니 개인 프로젝트에도 자연스럽게 MVCS 패턴을 도입하는게 편하고, 보수가 편리했다.&lt;/p&gt;
+
+&lt;p&gt;기존 라라벨은 &lt;code class=&quot;highlighter-rouge&quot;&gt;php artisan make:controller {name}&lt;/code&gt; 와 같이 컨트롤러(Controller)를 만들어주는 아티즌 명령어는 있었지만, 원래 MVC 패턴이다 보니 서비스(Service)를 만들어주는 명령어는 존재하지 않았다.&lt;/p&gt;
+
+&lt;p&gt;모든 프로젝트에서 일일이 서비스(Service)를 손으로 만들어주다 보면 너무 손이 많이갔다. 그래서 &lt;code class=&quot;highlighter-rouge&quot;&gt;php artisan make:service {name}&lt;/code&gt; 명령어가 있으면 편할것 이라고 생각하고 이와 같은 명령어를 만들어보기로 생각했다.&lt;/p&gt;
+
+&lt;p&gt;라라벨에서 명령어(command)를 생성하는 아티즌 명령어는 &lt;code class=&quot;highlighter-rouge&quot;&gt;php artisan make:command {name}&lt;/code&gt; 이다. 사용자도 쉽게 아티즌 명령어를 생성할 수 있도록 라라벨에서 지원해준다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;본인은 서비스를 생성하는 명령어를 개발한뒤 다른 개발자들도 사용할 수 있도록 packagist 에 업로드 했습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;packagist&lt;/code&gt; 란 ? PHP 패키지 업로드 사이트입니다. 해당 사이트에 업로드를 하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;composer&lt;/code&gt; 명령어를 통해 쉽게 설치가 가능합니다.&lt;/p&gt;
+
+&lt;p&gt;Thanks You! 감사합니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;download&quot;&gt;download&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/getsolaris/laravel-make-service-command&quot;&gt;https://github.com/getsolaris/laravel-make-service-command&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;reference&quot;&gt;reference&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;MVS 이미지 : https://blog.cloudboost.io/what-is-model-view-controller-124a9942246&lt;/li&gt;
+  &lt;li&gt;MVCS 이미지 : https://glossar.hs-augsburg.de/Model-View-Controller-Service-Paradigma&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Sat, 20 Oct 2018 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2018-10-20/laravel-mvcs-service/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2018-10-20/laravel-mvcs-service/</guid>
+      </item>
+    
+      <item>
+        <title>제5회 대한민국 SW 융합 해커톤 우승 후기 그리고 일기</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;제5회 대한민국 SW 융합 해커톤 우승 후기 그리고 일기&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;해커톤-소개&quot;&gt;해커톤 소개&lt;/h2&gt;
+&lt;p&gt;SW 융합 해커톤 대회가 제5회를 맞이했습니다. 8월 30일 부터 9월 1일 까지 진행하는 대회로 무박 42시간 동안 선택한 과제를 개발 합니다.
+저희팀은 5명으로 구성했습니다. 저희는 고등학생으로 이루어진 팀으로 팀이름은 ‘김률륭’ 입니다.&lt;/p&gt;
+
+&lt;p&gt;저희는 [지정과제2] 우정서비스 혁신을 위한 &lt;b&gt;블록체인&lt;/b&gt; 기반 융합서비스 개발을 선택 하였습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/sw-hackerthon-award/main_subject.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;서비스-소개&quot;&gt;서비스 소개&lt;/h2&gt;
+
+&lt;h3 id=&quot;서비스명&quot;&gt;서비스명&lt;/h3&gt;
+&lt;p&gt;POST CHAIN (포스트 체인)&lt;/p&gt;
+
+&lt;h3 id=&quot;기술-구성&quot;&gt;기술 구성&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;loopchain&lt;/li&gt;
+  &lt;li&gt;Docker&lt;/li&gt;
+  &lt;li&gt;Laravel&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;개발-형태&quot;&gt;개발 형태&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;웹 서비스&lt;/li&gt;
+  &lt;li&gt;안드로이드 App&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;개발-배경&quot;&gt;개발 배경&lt;/h3&gt;
+&lt;p&gt;우편함에 있는 고지서 개인정보가 범죄에 악용될 수 있다는 뉴스기사를 보았고, 또한 수 많은 종이 형태로된 고지서 등.. 을 한 눈에 쉽게볼 수 있으면 좋겠다고
+생각하여 개발하게 되었습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;포스트-체인이란&quot;&gt;포스트 체인이란&lt;/h3&gt;
+&lt;p&gt;저희 서비스는 각종 모든 고지서들을 사이트, 앱에서 확인할 수 있어 매우 간편합니다. 또한 간편 납부가 가능하여 국민들이 세금, 과태료 납부등..에 대한 거부감이
+사라져 체납자를 줄일 수 있는 효과를 기대해볼 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;기존 고지서와 달리 종이를 사용하지 않아 종이 자원을 절약하여 매우 친환경적입니다. 환경보호 효과와 인쇄비용을 줄일 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;우편물에 적혀있는 개발정보를 이용하여 범죄에 악용되는 사례는 예전부터 많았습니다. 포스트 체인은 이러한 취약점을 보완할 수 있습니다.
+블록체인 기술로 분산되어있는 데이터로 고신뢰성, 위변조가 불가능하다는 점이 있습니다.&lt;/p&gt;
+
+&lt;p&gt;또한 국민들이 우편을 인터넷이 가능한 장소 어디에서나 확인이 가능해 민간경쟁부분에서 우정사업본부가 우위를 점할 수 있을것 입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;프로세스&quot;&gt;프로세스&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;loopchain API 서버는 1분에 15개 노드를 주기적으로 생성함.&lt;/li&gt;
+  &lt;li&gt;고지서 생성시 loopchain API 에 JSON RPC 2.0 방식으로 트랜잭션을 보내며, 고지서들의 정보를 담은 노드가 생성됨.&lt;/li&gt;
+  &lt;li&gt;고지서의 고유 ID(HASH) 값과 loopchain API 에 HASH 값을 대조 -&amp;gt; 생성된 모든 이전 노드의 HASH 값도 대조.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;일기&quot;&gt;일기&lt;/h2&gt;
+&lt;p&gt;이렇게 큰 정부에서 개최하는 해커톤 대회는 처음 출전해본다. 포스트 체인 서비스를 구현할때까지 42시간이라는 시간이 있었는데
+총 2시간 밖에 자지못했다. 저녁에는 팀원들과 야식을 두번이나 시켜먹었다. 글로 쓰지못할 정말 많은 추억들이 있었고
+&lt;b&gt;우수상&lt;/b&gt;을 받아 너무 기쁘다..&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/sw-hackerthon-award/picture.jpeg&quot; /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sat, 15 Sep 2018 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2018-09-15/sw-hackerthon-award/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2018-09-15/sw-hackerthon-award/</guid>
+      </item>
+    
+      <item>
+        <title>Laravel 5.6 JWT API 개발</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;라라벨 프레임워크를 이용한 jwt 인증&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;create-project&quot;&gt;Create Project&lt;/h2&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;laravel new jwt-exam
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;cp .env.example .env
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;php artisan key:generate
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;php artisan serve &lt;span class=&quot;c&quot;&gt;# 개발 서버 실행&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;개발서버에서 진행 했습니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;jwt-setting&quot;&gt;JWT Setting&lt;/h2&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;composer require tymon/jwt-auth
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# config/app.php
+&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;Tymon\JWTAuth\Providers\JWTAuthServiceProvider&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// providers 
+&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;'JWTAuth'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Tymon\JWTAuth\Facades\JWTAuth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// aliases
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;php artisan vendor:publish &lt;span class=&quot;nt&quot;&gt;--provider&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Tymon&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\J&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;WTAuth&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\P&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;roviders&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\J&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;WTAuthServiceProvider&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;php artisan jwt:generate
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;에러가 발생 한다면 아래와 같이 추가 해주세요!&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# vendor/tymon/jwt-auth/Commands/JWTGenerateCommand.php
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;handle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;fire&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;    
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;미들웨어에 &lt;code class=&quot;highlighter-rouge&quot;&gt;jwt.auth&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;jwt.refresh&lt;/code&gt; 를 추가해줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# app/Http/Kernel.php
+&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;'jwt.auth'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;\Tymon\JWTAuth\Middleware\GetUserFromToken&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// $routeMiddleware
+&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'jwt.refresh'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;\Tymon\JWTAuth\Middleware\RefreshToken&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// $routeMiddleware
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이제 jwt 를 사용하기 위한 설정은 끝났습니다.&lt;/p&gt;
+
+&lt;p&gt;구현할것&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;회원가입&lt;/li&gt;
+  &lt;li&gt;로그인&lt;/li&gt;
+  &lt;li&gt;현재 사용자 정보&lt;/li&gt;
+  &lt;li&gt;토큰 재발행&lt;/li&gt;
+  &lt;li&gt;로그아웃&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;JWT 인증이 들어갈 컨트롤러를 생성 해줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;php artisan make:controller JWTAuthController
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;.env&lt;/code&gt; 데이터베이스 부분을 수정 해줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=
+DB_USERNAME=
+DB_PASSWORD=
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;다음 데이터베이스를 마이그레이션 해줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;php artisan migrate
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;migrate&lt;/code&gt; 명령 도중 SQLSTATE[42000] 오류가 발생 한다면 아래와 같이 추가 해주세요.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# app/Providers/AppServiceProvider.php
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Illuminate\Support\Facades\Schema&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;boot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;Schema&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;defaultStringLength&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;191&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;회원가입 구현&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# routes/api.php
+&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;post&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'register'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'JWTAuthController@register'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;유효성 검사 로직을 컨트롤러에서 구현 하는것 보단 폼 리퀘스트에서 반환 해줄것을 선호하고 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;php artisan make:request RegisterFormRequest
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;생성시 위치는 &lt;code class=&quot;highlighter-rouge&quot;&gt;app/Http/Requests/&lt;/code&gt; 에 위치 하고 있습니다. 폼 리퀘스트 생성시 &lt;code class=&quot;highlighter-rouge&quot;&gt;authorize&lt;/code&gt; 메소드와 &lt;code class=&quot;highlighter-rouge&quot;&gt;rules&lt;/code&gt; 메소드를 기본적으로 생성 해줍니다. 아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;rules&lt;/code&gt; 메소드를 완성 해줍니다.&lt;/p&gt;
+
+&lt;p&gt;폼 리퀘스트에서 메세지를 추가 안하는 이유는 메세지는 블레이드 템플릿에서 확인이 가능하기에, 현재는 API 서버를 구현 하는것 이기 때문에 메세지는 X !&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이름 : 필수적으로 요구, 문자 형식&lt;/li&gt;
+  &lt;li&gt;이메일 : 필수적으로 요구, 이메일 형식, users 테이블에 유일하게 존재&lt;/li&gt;
+  &lt;li&gt;비밀번호 : 필수적으로 요구, 문자 형식&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# app/Http/Requests/RegisterFormRequest.php
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;authorize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'name'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'required|string'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'email'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'required|email|unique:users'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'password'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'required|string'&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;마지막으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;JWTAuthController&lt;/code&gt; 에 &lt;code class=&quot;highlighter-rouge&quot;&gt;register&lt;/code&gt; 메소드를 완성 해줍니다.
+유저 모델 네임스페이스, 폼리퀘스트를 선언 해줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;App\Http\Requests\RegisterFormRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;App\User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# app/Http/Controllers/JWTAuthController.php
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;App\Http\Requests\RegisterFormRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 폼 리퀘스트
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;App\User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 유저 모델 네임스페이스
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;RegisterFormRequest&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;email&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$request&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$request&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bcrypt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$request&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'status'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'success'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'data'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/laravel-jwt/1.png&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;로그인&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# routes/api.php
+&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;post&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'login'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'JWTAuthController@login'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;회원가입과 동일 하게 &lt;code class=&quot;highlighter-rouge&quot;&gt;login&lt;/code&gt; 메소드를 생성해줍니다.&lt;/p&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;JWTAuth&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;를 선언 해줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# app/Http/Controllers/JWTAuthController.php
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;JWTAuth&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;login&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Request&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$credentials&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$request&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;only&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'email'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'password'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;JWTAuth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;attempt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$credentials&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'status'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'error'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'error'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'invalid.credentials'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'msg'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'Invalid Credentials.'&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;400&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'status'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'success'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'token'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$token&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/laravel-jwt/2.png&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;현재 사용자 정보&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;현재 로그인 된 사용자는 발행받은 토큰으로 사용자 정보를 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# routes/api.php
+&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'middleware'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'jwt.auth'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'auth/user'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'JWTAuthController@user'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;앞서 커널에 추가 했던 &lt;code class=&quot;highlighter-rouge&quot;&gt;jwt.auth&lt;/code&gt; 가 익숙 한데, 로그인을 하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;Tymon\JWTAuth\Middleware\GetUserFromToken::class&lt;/code&gt; 여기서, 토큰으로부터 유저의 정보를 받아옵니다.&lt;/p&gt;
+
+&lt;p&gt;인증된 사용자만 &lt;code class=&quot;highlighter-rouge&quot;&gt;jwt.auth&lt;/code&gt; 미들웨어 안에 있는 라우트에 접근이 가능합니다.
+작업하던 컨트롤러에 &lt;code class=&quot;highlighter-rouge&quot;&gt;user&lt;/code&gt; 메소드를 구현!&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Auth&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;를 선언 해줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# app/Http/Controllers/JWTAuthController.php
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Auth&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;user&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Request&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Auth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;user&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'status'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'success'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'data'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/laravel-jwt/3.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;추후에 &lt;code class=&quot;highlighter-rouge&quot;&gt;jwt.auth&lt;/code&gt; 그룹에 로그아웃도 추가 해야합니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;로그아웃&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# routes/api.php
+&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'middleware'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'jwt.auth'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'auth/user'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'JWTAuthController@user'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'auth/logout'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'JWTAuthController@logout'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 로그아웃 추가
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;로그아웃 메소드도 이어 만들어줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# app/Http/Controllers/JWTAuthController.php
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;logout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;JWTAuth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;invalidate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'status'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'success'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'msg'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'Logged out Successfully.'&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/laravel-jwt/6.png&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;토큰 재발행&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# routes/api.php
+&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;middleware&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'jwt.refresh'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'/token/refresh'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'JWTAuthController@refresh'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;리프레시 메소드도 만들어줍니다.&lt;/p&gt;
+
+&lt;p&gt;모든 코드가 완성 되었습니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;refresh&lt;/code&gt; 메소드에서 재발행 해주는 코드는 &lt;code class=&quot;highlighter-rouge&quot;&gt;vendor/tymon/jwt-auth/src/Middleware/RefreshToken.php&lt;/code&gt; 에 위치 해있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# app/Http/Controllers/JWTAuthController.php
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;refresh&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'status'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'success'&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/laravel-jwt/4.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;토큰 재발행&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/laravel-jwt/5.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;토큰 재발행 후 이전 토큰으로 발행시 존재하지 않는 토큰이라 에러&lt;/p&gt;
+</description>
+        <pubDate>Tue, 07 Aug 2018 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2018-08-07/laravel-jwt/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2018-08-07/laravel-jwt/</guid>
+      </item>
+    
+      <item>
+        <title>라라벨로 카카오톡 학교 채팅봇 개발</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;라라벨 프레임워크를 이용한 학교 채팅봇(카카오톡) 개발&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/getsolaris/laravel-kakaobot&quot;&gt;https://github.com/getsolaris/laravel-kakaobot&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;기술&quot;&gt;기술&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Docker&lt;/li&gt;
+  &lt;li&gt;Laravel 5.6&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;학교-채팅봇이란-&quot;&gt;학교 채팅봇이란 ?&lt;/h3&gt;
+&lt;p&gt;학교 급식 기능과 일정을 학생들에게 알려주는 카카오톡 채팅봇입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;채팅봇-히스토리&quot;&gt;채팅봇 히스토리&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;처음에는 루멘으로 개발을 했다. 루멘은 사람들에게 대중적이지 않아 현재는 라라벨로 배포했다.&lt;/li&gt;
+  &lt;li&gt;기존 루멘 이용 당시 급식은 00:00 마다 자동으로 교육청 급식을 크롤링해 각 날짜에 맡게 급식들을 &lt;code class=&quot;highlighter-rouge&quot;&gt;SQLite&lt;/code&gt; 에 저장했다.&lt;/li&gt;
+  &lt;li&gt;하지만 현재는 라라벨로 변경하면서 데이터베이스는 사용하지 않고 유저의 요청에 따라 즉각 긁어서 뿌려준다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;출력-예시&quot;&gt;출력 예시&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;오늘 급식&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[중식] 보리밥 도토리묵냉국 수육 상추쌈/쌈장 비빔막국수 배추김치
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이번달&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;01
+02 2차 지필평가
+03 2차 지필평가
+04 2차 지필평가
+05 2차 지필평가
+06 2차 지필평가
+07
+08
+09
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19 합창한마당
+20 여름방학식
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;좋은-라이브러리란-&quot;&gt;좋은 라이브러리란 ?&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/FriendsOfPHP/Goutte&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Goutte&lt;/code&gt;&lt;/a&gt; 라는 손 쉬운 PHP전용 웹 크롤러 라이브러리이다.&lt;/p&gt;
+
+&lt;p&gt;채팅봇에서 날짜를 손쉽게 출력(계산)할 수 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Carbon&lt;/code&gt; 라이브러리도 있다!&lt;/p&gt;
+
+&lt;h3 id=&quot;배포&quot;&gt;배포&lt;/h3&gt;
+&lt;p&gt;깃허브에 공식적으로 코드를 배포한적은 처음이다. 오픈소스인만큼 소스의 양보단 질이 중요하다고 생각했다. 그리고.. 하루만에 7개의 스타를 받았다..&lt;/p&gt;
+</description>
+        <pubDate>Tue, 03 Jul 2018 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2018-07-03/laravel-chatbot/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2018-07-03/laravel-chatbot/</guid>
+      </item>
+    
+      <item>
+        <title>Docker &amp; Laravel (Laradock) Part 1</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;도커를 이용한 서버 관리&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://ih1.redbubble.net/image.386900865.0087/flat,800x800,075,f.jpg&quot; width=&quot;500&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;도커-입문-계기&quot;&gt;도커 입문 계기&lt;/h3&gt;
+&lt;p&gt;기존 하이스쿨 스토어는 apache2 + php7.1 + mysql 편하게 말하면 apm 기술을 사용하고 있었다. 하지만 라라벨 이용자들의 말을 들어보면 아파치 보다는 엔진엑스가 성능이 더 좋고
+라라벨을 받쳐준다는 말을 듣고 서버를 갈아 엎기 시작했다. nginx … php7.2 … mariadb … 이 세가지를 설치하고 나면 어느 하나가 오류가 나기 시작했다.&lt;/p&gt;
+
+&lt;p&gt;서버를 효율적으로 관리하기위해 구글링을 열심히 해보는중 &lt;code class=&quot;highlighter-rouge&quot;&gt;Docker&lt;/code&gt; 라는 단어가 눈에 띄었다.&lt;/p&gt;
+
+&lt;p&gt;복잡하고 어려운 서버관리대신 손쉬운 서버관리를 선택하는건 &lt;code class=&quot;highlighter-rouge&quot;&gt;당연&lt;/code&gt;했다.&lt;/p&gt;
+
+&lt;h3 id=&quot;서버-운영이-쉬워진다-&quot;&gt;서버 운영이 쉬워진다 ?&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;이미지만 다운받고 컨테이너만 생성하면 된다.&lt;/li&gt;
+  &lt;li&gt;서버의 환경이 바뀌어도 의존성 문제 없이 이미지 다운 -&amp;gt; 컨테이너 생성 로직&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;laradock-이란-&quot;&gt;Laradock 이란 ?&lt;/h3&gt;
+&lt;p&gt;라라독(&lt;a href=&quot;https://github.com/laradock/laradock/&quot;&gt;Laradock&lt;/a&gt;) 은 도커 컨테이너에서 돌아가는 PHP 개발환경이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;laradock-사용&quot;&gt;Laradock 사용&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git clone https://github.com/Laradock/laradock.git
+$ cp env-sample .env
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;.environment(env) 파일에는 laradock 에서 제공하는 이미지들의 환경 값이 들어가있다.&lt;/p&gt;
+
+&lt;p&gt;제공해주는 이미지들은 수없이 많으며 많은 이미지들중 아래 이미지를 선택했다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;nginx&lt;/li&gt;
+  &lt;li&gt;mariadb&lt;/li&gt;
+  &lt;li&gt;phpmyadmin&lt;/li&gt;
+  &lt;li&gt;workspace&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker-compose up -d nginx mariadb phpmyadmin workspace
+$ docker ps
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;http://localhost&lt;/code&gt; 에 접속을 하게되면 nginx 초기 화면이 보일것이다.&lt;/p&gt;
+
+&lt;p&gt;nginx 설정파일을 수정해 기본 접속시 내 프로젝트가 보이게 설정해보자.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;vi laradock/nginx/sites/default.conf&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root /var/www/public;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이 부분을 아래와 같이 자신의 디렉터리로 설정해준다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root /var/www/myProject/public;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;실행중인 도커 프로세스를 확인해보자. &lt;code class=&quot;highlighter-rouge&quot;&gt;nginx&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;workspace&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;php-fpm&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;maria-db&lt;/code&gt; 가 실행중이다.
+&lt;code class=&quot;highlighter-rouge&quot;&gt;php-fpm&lt;/code&gt; 은 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker-compose up&lt;/code&gt; 을 안해도 자동으로 생성되는 컨테이너이다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker ps
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/docker/1.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;새로운 라라벨 프로젝트를 생성한다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ composer create-project --prefer-dist laravel/laravel docker-laravel -vvv
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/docker/2.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;workspace 에 접속하여 자신의 프로젝트 파일을 설정 해준다.&lt;/p&gt;
+
+&lt;p&gt;글에서는 docker-laravel 이지만 &lt;code class=&quot;highlighter-rouge&quot;&gt;myProject&lt;/code&gt; 에는 자신의 라라벨 프로젝트명이 와야함…&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker-compose exec workspace bash
+$ cd myProject
+$ cp .env.sample .env
+$ php artisan key:generate
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/docker/3.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;http://localhost&lt;/code&gt; 에 접속해보자. 라라벨 화면이 뜬다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/docker/4.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이제는 mariadb 를 건들여보자. docker workspace 에 연결중이라면 &lt;code class=&quot;highlighter-rouge&quot;&gt;exit&lt;/code&gt; 를 쳐서 밖으로 빠져나온다.&lt;/p&gt;
+
+&lt;p&gt;따로 laradock .env 를 건들지 않은 상태에서는 mariadb(mysql) 의 초기 비밀번호는 root 이다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker-compose exec mariadb bash
+# mysql -uroot -p
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;잘 접속된다.&lt;/p&gt;
+
+&lt;p&gt;프로젝트에 쿼리를 연결 하려면 &lt;code class=&quot;highlighter-rouge&quot;&gt;myProject/.env&lt;/code&gt; 를 수정하면된다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=myproject
+DB_USERNAME=root
+DB_PASSWORD=root
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;비밀번호는 꼭 변경하도록 하자.&lt;/p&gt;
+
+&lt;p&gt;감사합니다.&lt;/p&gt;
+</description>
+        <pubDate>Sat, 19 May 2018 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2018-05-19/docker-introduction/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2018-05-19/docker-introduction/</guid>
+      </item>
+    
+      <item>
+        <title>하이스쿨 스토어 개발일기 3</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;하이스쿨 스토어 개발일기 3탄&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;링크&quot;&gt;링크&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://hischools.kr&quot;&gt;https://hischools.kr&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;상세-날짜&quot;&gt;상세 날짜&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;개발 시작일 : Dec 21, 2017&lt;/li&gt;
+  &lt;li&gt;라라벨 개발 시작일 : Feb 17, 2018&lt;/li&gt;
+  &lt;li&gt;개발 일지 1 : Mar 20, 2018&lt;/li&gt;
+  &lt;li&gt;개발 일지 2 : Apr 03, 2018&lt;/li&gt;
+  &lt;li&gt;개발 일지 3 : Apr 23, 2018&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;상세-기능&quot;&gt;상세 기능&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;로그인&lt;/li&gt;
+  &lt;li&gt;회원가입&lt;/li&gt;
+  &lt;li&gt;관리자 모드 - 실시간 이용자 확인&lt;/li&gt;
+  &lt;li&gt;매점 관리(매점주인 관리페이지) - 물품 목록, 물품 추가, 학생 관리, 결제 관리, 설정&lt;/li&gt;
+  &lt;li&gt;매점 이용(학생 페이지) - 학교별 인증, 판매목록, 장바구니, 바로구매, 구매확정&lt;/li&gt;
+  &lt;li&gt;쿠폰 시스템(할인)&lt;/li&gt;
+  &lt;li&gt;AR EVENT (증강현실)&lt;/li&gt;
+  &lt;li&gt;번호표 시스템&lt;/li&gt;
+  &lt;li&gt;구매내역&lt;/li&gt;
+  &lt;li&gt;설정 - 비밀번호 변경, 기타개인정보 변경&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이렇게 이쁜 디자인은 NOW UI PRO 를 사용하였음.&lt;/p&gt;
+
+&lt;h2 id=&quot;추가된-기능들&quot;&gt;추가된 기능들&lt;/h2&gt;
+
+&lt;h3 id=&quot;안드로이드-어플리케이션-개발&quot;&gt;안드로이드 어플리케이션 개발&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&quot;https://github.com/getsolaris/getsolaris.github.io/blob/master/assets/images/post/hischool-develop-note/app.jpeg?raw=true&quot; width=&quot;300&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;증강현실ar-이벤트&quot;&gt;증강현실(AR) 이벤트&lt;/h3&gt;
+&lt;p&gt;증강현실 구현은 arjs 로 구현을 하였다. 이벤트 페이지 브라우저를 열어 카메라를 허용한뒤, 마커를 인식하면 프로모션 코드가 나타나는 방식이다.
+&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/hischool-develop-note/ar.png&quot; width=&quot;300&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;장바구니-아이템-나누기&quot;&gt;장바구니 아이템 나누기&lt;/h3&gt;
+&lt;p&gt;일반 학생들이 장바구니에 여러 물건을 담아 예약을 하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;sells&lt;/code&gt; 테이블에 티켓번호가 증가하고 그 티켓번호에 중첩되어 데이터들이 쌓인다.
+예) 오감자, 새우깡을 예약했으면 두개의 아이템으로 분류되어 한 행씩 데이터가 쌓이게된다. 해당 티켓번호는 같이 예약했음으로 동일한 티켓번호이다.&lt;/p&gt;
+
+&lt;p&gt;매점 주인페이지에서는 같은 티켓번호를 가진 물품들을 한 행에 같이 출력을 할것이다. 같은 티켓번호를 여러행으로 출력하게되면 사용하기 불편할것이다.
+예) 학생이 오감자, 새우깡, 만두를 예약했다. 티켓번호를 3번으로 가정하에 &lt;code class=&quot;highlighter-rouge&quot;&gt;get()&lt;/code&gt; 을 사용하면 3개의 행이 출력될것이다.&lt;/p&gt;
+
+&lt;p&gt;당일 예약된 물품들만 출력하기 위에 아래 세번째 라인에 &lt;code class=&quot;highlighter-rouge&quot;&gt;where&lt;/code&gt; 절을 이용하여 연도, 달, 날 이 같을 경우만 필터링한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ticket_number&lt;/code&gt; (티켓번호) 를 묶어 데이터를 출력 해줘야함으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;groupBy&lt;/code&gt; 절을 사용한다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$buyLists&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Sell&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'items'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'sells.item_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'='&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'items.item_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;select&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'sells.*'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'items.item_title'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'items.item_price'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'sells.created_at'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'like'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$timeCheck&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Y-m-d'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'%'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$groupedBuyLists&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$buyLists&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;groupBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'ticket_number'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;view 부분에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;$groupedBuyLists&lt;/code&gt; 를 foreach 문을 돌려 출력시킨다. &lt;code class=&quot;highlighter-rouge&quot;&gt;pluck&lt;/code&gt; 는 주어진 키에 모든 값을 반환하는 메소드이다.&lt;/p&gt;
+
+&lt;p&gt;(( 이 부분은 stackoverflow 커뮤니티의 도움을 받음 ))&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$title&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;implode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$sells&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;pluck&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'item_title'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;쿠폰-시스템&quot;&gt;쿠폰 시스템&lt;/h3&gt;
+
+&lt;p&gt;쿠폰은 하이스쿨 스토어 자체 이벤트로 얻을 수 있다. 사용자들은 코드입력 탭에서 코드를 입력하면, 그에 맞는 코드가 있으면 쿠폰을 지급해준다.&lt;/p&gt;
+
+&lt;p&gt;쿠폰은 구매페이지에서 사용이 가능하다. 쿠폰은 사용 안했으면 1, 사용 했으면 0을 가진다. 사용한 쿠폰은 출력하지않는다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$coupons&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Coupon&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'owns'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'coupons.coupon_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'='&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'owns.coupon_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'owns.status'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'owns.user_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Auth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;userid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/hischool-develop-note/coupon.png&quot; width=&quot;500&quot; /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Mon, 23 Apr 2018 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2018-04-23/hischool-develop-note-3/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2018-04-23/hischool-develop-note-3/</guid>
+      </item>
+    
+      <item>
+        <title>하이스쿨 스토어 개발일기 2</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;하이스쿨 스토어 개발일기 2탄&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;링크&quot;&gt;링크&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://hischools.kr&quot;&gt;https://hischools.kr&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;상세-날짜&quot;&gt;상세 날짜&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;개발 시작일 : Dec 21, 2017&lt;/li&gt;
+  &lt;li&gt;라라벨 개발 시작일 : Feb 17, 2018&lt;/li&gt;
+  &lt;li&gt;개발 일지 1 : Mar 20, 2018&lt;/li&gt;
+  &lt;li&gt;개발 일지 2 : Apr 03, 2018&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;상세-기능&quot;&gt;상세 기능&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;로그인&lt;/li&gt;
+  &lt;li&gt;회원가입&lt;/li&gt;
+  &lt;li&gt;관리자 모드 - 실시간 이용자 확인&lt;/li&gt;
+  &lt;li&gt;매점 관리(매점주인 관리페이지) - 물품 목록, 물품 추가, 학생 관리, 결제 관리, 설정&lt;/li&gt;
+  &lt;li&gt;매점 이용(학생 페이지) - 학교별 인증, 판매목록, 장바구니, 바로구매, 구매확정&lt;/li&gt;
+  &lt;li&gt;번호표 시스템&lt;/li&gt;
+  &lt;li&gt;구매내역&lt;/li&gt;
+  &lt;li&gt;설정 - 비밀번호 변경, 기타개인정보 변경&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;새로운 디자이너 최형주(dexloper)님의 합류로 전반적인 사이트 디자인이 변경되었습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;새로워진-로고&quot;&gt;새로워진 로고&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&quot;https://hischools.kr/images/og/symbol_version.png&quot; width=&quot;500&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;그외-&quot;&gt;그외 ..&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;사이트의 폰트를 나눔스퀘어라운드로 교체하였다.&lt;/li&gt;
+  &lt;li&gt;Lets Encrypt SSL 을 적용 하였다.&lt;/li&gt;
+  &lt;li&gt;디자이너의 합류로 할일을 공유해야하기 때문에 meistertask 라는 협업툴을 도입하였다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;구매-내역-시스템&quot;&gt;구매 내역 시스템&lt;/h3&gt;
+
+&lt;p&gt;현재 구매내역 시스템은 &lt;code class=&quot;highlighter-rouge&quot;&gt;items&lt;/code&gt; 테이블과 &lt;code class=&quot;highlighter-rouge&quot;&gt;sells&lt;/code&gt; 테이블을 조인하여 정보를 보여준다. 보여줌에 있어 orderby(정렬) 방식을 결정해야한다.
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sells&lt;/code&gt; 테이블의 status 를 기준으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;CASE WHEN THEN&lt;/code&gt; 절을 이용하여 조건에 따라 값을 지정해주고, &lt;code class=&quot;highlighter-rouge&quot;&gt;sells&lt;/code&gt;의 생성일을 기준으로 내림차순한다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$sellList&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Item&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Auth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;userid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;leftJoin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'sells'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;nv&quot;&gt;$join&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'sells.item_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'items.item_id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;orderByRaw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;CASE sells.status WHEN 'wait' THEN 1 WHEN 'success' THEN 2 WHEN 'noshow' THEN 3 END&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;orderBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'sells.created_at'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'desc'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;학생-정보-출력&quot;&gt;학생 정보 출력&lt;/h3&gt;
+&lt;p&gt;기본적으로 매점 주인이 학생 정보를 볼때 modal 형태로 띄어서 학생의 정보를 보여준다. 하지만 학생이 많아질수록 코드상 modal 의 수는 많아질것이다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;학생 정보 버튼을 누르면 &lt;code class=&quot;highlighter-rouge&quot;&gt;student_export()&lt;/code&gt; 함수에 학생의 아이디를 넘긴다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;student_export()&lt;/code&gt; 함수에서는 아이디를 받고 &lt;code class=&quot;highlighter-rouge&quot;&gt;GET&lt;/code&gt; 방식으로 학생의 아이디를 넘긴다.&lt;/li&gt;
+  &lt;li&gt;서버에서 받고 학생의 아이디를 조회한뒤 json방식으로 정보를 뿌린다.&lt;/li&gt;
+  &lt;li&gt;받은 정보를 &lt;code class=&quot;highlighter-rouge&quot;&gt;modal_body()&lt;/code&gt; 함수를 통해 보여준다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'id'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'school_code'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Auth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;school_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'id'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'name'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'phone'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;phone&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'buy_count'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;buy_count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'law_count'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;law_count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'register'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;created_at&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ready&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;.owner-status .view&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;click&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;student_export&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;attr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'studentid'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;student_export&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ajax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+		&lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'GET'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;na&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'/owner/student/'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;success&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;modal_body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;modal_body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;#studentModal&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;modal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;.modal-title&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;' ('&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;')'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;.modal-contents&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;html&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'이름 : '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; 
+    &lt;span class=&quot;s1&quot;&gt;'&amp;lt;br&amp;gt;번호 : '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;phone&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&amp;lt;br&amp;gt;구매 횟수 : '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;buy_count&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&amp;lt;br&amp;gt;노쇼 횟수 : '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;law_count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+</description>
+        <pubDate>Tue, 03 Apr 2018 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2018-04-03/hischool-develop-note-2/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2018-04-03/hischool-develop-note-2/</guid>
+      </item>
+    
+      <item>
+        <title>Laravel install Browsersync</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;라라벨 페이지 라이브 리로드 (브라우저싱크)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;브라우저싱크란-&quot;&gt;브라우저싱크란 ?&lt;/h3&gt;
+&lt;p&gt;HTML, CSS, blade 파일을 변경하면 자동으로 브라우저를 업데이트합니다. Laravel-mix 를 이용하여 편하게 자신의 프로젝트에 적용할 수 있습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;설정&quot;&gt;설정&lt;/h3&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;npm&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;npm&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;--&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dev&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;browser&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;sync&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;browser&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;sync&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;webpack&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;plugin&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;webpack.min.js&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nx&quot;&gt;mix&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;browserSync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;proxy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// artisan serve시의 주소
+&lt;/span&gt;    &lt;span class=&quot;nx&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'localhost:8000'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;reqHeaders&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// host를 직접 지정해준다.
+&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;host&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'localhost:3000'&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;webpack 까지 설정을 마친 뒤 아래 명령어를 실행 합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;npm&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;run&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;watch&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/laravel-browsersync/running.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;localhost:3000 으로 접속 가능합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;'https://gracefullight.github.io/2017/08/24/Laravel-5-4-Debugbar%EC%99%80-BrowserSync%EC%9D%98-%EC%B6%A9%EB%8F%8C-%ED%95%B4%EA%B2%B0/'&quot;&gt;출처 : 충돌 에러 해결법&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Wed, 21 Mar 2018 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2018-03-21/laravel-browsersync/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2018-03-21/laravel-browsersync/</guid>
+      </item>
+    
+      <item>
+        <title>하이스쿨 스토어 개발일기 1</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;하이스쿨 스토어 개발일지 1&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;링크&quot;&gt;링크&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://hischools.kr&quot;&gt;http://hischools.kr&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;상세-날짜&quot;&gt;상세 날짜&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;개발 시작일 : Dec 21, 2017&lt;/li&gt;
+  &lt;li&gt;라라벨 개발 시작일 : Feb 17, 2018&lt;/li&gt;
+  &lt;li&gt;개발 일지 1 : Mar 20, 2018&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;상세-기능&quot;&gt;상세 기능&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;로그인&lt;/li&gt;
+  &lt;li&gt;회원가입&lt;/li&gt;
+  &lt;li&gt;관리자 모드(dashboard) 추가중&lt;/li&gt;
+  &lt;li&gt;매점 관리(매점주인 관리페이지) - 물품 목록, 물품 추가, 학생 관리, 결제 관리 (추가중), 설정(추가중)&lt;/li&gt;
+  &lt;li&gt;매점 이용(학생 페이지) - 학교별 인증코드, 판매목록, 장바구니(추가중), 바로구매, 구매확정&lt;/li&gt;
+  &lt;li&gt;번호표 시스템(24시간 기준과 학교별 기준으로 1부터 카운트)&lt;/li&gt;
+  &lt;li&gt;구매내역&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;사용할-기술&quot;&gt;사용할 기술&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Docker&lt;/li&gt;
+  &lt;li&gt;Redis&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;request-경로-조회&quot;&gt;Request 경로 조회&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;하이스쿨 스토어에서는 경로에 따라 네비게이션 바(navigation bar)가 달라지게 하고 있습니다.
+기존 PHP 에서는 PHP_SELF 라는 글로벌 변수를 이용하여 해결을 하였는데 라라벨에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;is&lt;/code&gt; 메소드를 제공해준다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;resources/views/layouts/master.blade.php&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;is&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'test1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'test2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// 네비게이션바 1
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// 네비게이션바 2
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;endif&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;번호표-시스템&quot;&gt;번호표 시스템&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;sells 테이블에 이용자 학교코드인 행에 생성날짜와 현재 날짜와 같으면 생성날짜를 기준으로 내림차순 정렬한다.&lt;/li&gt;
+  &lt;li&gt;정렬된 행중 첫번째 행을 가져온다.&lt;/li&gt;
+  &lt;li&gt;만약 행이 없으면 기본 번호표는 1부터 시작한다.&lt;/li&gt;
+  &lt;li&gt;행이 있으면 그 행 번호표에 +1 을 부여한다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$checkSell&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Sell&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'school_code'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Auth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;school_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'created_at'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'like'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$timeCheck&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Y-m-d'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'%'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;orderBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'created_at'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'desc'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$checkSell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$plusNumber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$plusNumber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$checkSell&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;ticket_number&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;사용자-레벨관리&quot;&gt;사용자 레벨관리&lt;/h3&gt;
+&lt;p&gt;인증된 사용자의 레벨을 관리하는거에 대해서는 아래 사항이 있다.&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;매점 주인 판별 및 관리자 판별여부
+관리자 판별 여부도 아래 미들웨어와 동일하다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;App\Http\Middleware\OwnerCheck.php&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Auth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;level&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;redirect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'access'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+</description>
+        <pubDate>Tue, 20 Mar 2018 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2018-03-20/hischool-develop-note-1/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2018-03-20/hischool-develop-note-1/</guid>
+      </item>
+    
+      <item>
+        <title>리크류팅 개발지</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;2018년 카이스트에서 진행된 창의 코딩 대회 참가 일기&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;대회주제&quot;&gt;대회주제&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;소프트웨어를 통한 미래 일상생활 속의 아이디어 실현&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;개발-스택&quot;&gt;개발 스택&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Laravel&lt;/li&gt;
+  &lt;li&gt;MySQL&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;팀-소개&quot;&gt;팀 소개&lt;/h3&gt;
+&lt;p&gt;제가 재학중인 서울아이티고등학교에서 개발과 창업에 관심 있는 학생 4명(본인포함)이 모여서 자율 동아리를 창설하였고, 그 자율동아리안에서 본 대회를 찾게 되었고 우리의 능력이 어느정도까지 되는지 시험해보자 하며 출전 하게 되었습니다. 팀 이름은 Laraland 이며, 팀명의 뜻은 Laravel 프레임워크의 앞 네자리와 라라벨과 비슷한 억양을 가진 라라랜드 영화를 떠올려 Lara+land 를 융합한 합성어입니다. 저희 팀은 기획 1명, 프론트 개발자 2명, 백엔드 개발자 1명으로 구성 되었습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리크류팅이란-무엇인가&quot;&gt;리크류팅이란 무엇인가&lt;/h3&gt;
+&lt;p&gt;Laraland팀은 이번에 리크류팅이라는 웹 사이트를 개발 하였습니다. 리크류팅은 리크루트에 ing 발음을 추가하여 ‘리크류티ing’ 이라는 발음으로 현재진행형을 나타내었습니다. 우리나라 청소년 기술의 미래를 더욱 펼쳐주고자 개발을 하였습니다. 그리고 인재가 필요한 회사의 입장까지 맞추어 회사가 원하는 인재를 블라인드채용할 수 있도록 하여 사람들에게 꼭 필요한 사이트를 개발하였습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;개발-배경&quot;&gt;개발 배경&lt;/h3&gt;
+&lt;p&gt;고졸 학력을 가진 취업 준비생이나 고졸생은 대졸 학력을 가진 사람들에 비해 취업이 힘듭니다. 또, 이직을 할 때에도 엄청난 불편함이 따르게 됩니다. 그래서 고졸인 사람들을 위해 저희팀에서는 실력으로 뽑아가는 회사들의 입장을 생각하며 리크류팅 사이트를 개발하게 되었습니다. 회사 측에서는 인재를 발견하고, 사람에게는 찾기 힘든 일자리를 찾아주는 사이트가 필요하다고 생각해 개발 하게되었습니다. 고등학생들 중에서도 좋은 실력을 겸비한 학생들에게 방학시즌 인턴경험도 괜찮다고 생각되어 회사와 고등학생, 취업 준비생을 매칭해주는 블라인드 채용 네트워크 서비스인 리크류팅을 개발하게 되었습니다. 숨겨진 인재들을 회사와 연결을 시켜주는 것이 리크류팅의 목표입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;개발-목표&quot;&gt;개발 목표&lt;/h3&gt;
+&lt;p&gt;숨겨진 실력을 겸비한 고등학생 및 취업 준비생 인재들을 발굴할 수 있는 서비스, 블라인드 채용 방식을 채택하여 평등하게 인재를 뽑을 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;일기&quot;&gt;일기&lt;/h3&gt;
+&lt;p&gt;라라벨을 이용하여 무언가를 만드는건 이번이 두번째이다. 확실히 PHP 로 개발 할때보단 수월하고 시간이 절약되는것 같다. 팀원들과 길거리를 돌아다니며 카페를 찾고 카페에서 밤샘하는건 두번다시 잊지못할 엄청난 추억이였다..&lt;/p&gt;
+
+&lt;h3 id=&quot;스크린샷&quot;&gt;스크린샷&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/kaist-recruting/full.png&quot; /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Mon, 19 Mar 2018 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2018-03-19/kaist-recruting/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2018-03-19/kaist-recruting/</guid>
+      </item>
+    
+      <item>
+        <title>서울아이티고등학교 해킹 방어대회</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;해킹 방어대회를 직접 운영하며, 느낀 점과 부족한 점&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;본인이 해킹 방어대회를 직접 운영하며, 느낀 점과 부족한 점 및 개발을 하면서 배운 점을 기록한 기술 문서입니다.
+한창 웹 개발을 배울 때 개발하였습니다. 많이 부족한 점도 있고 틀린 부분은 편하게 알려주시면 수정하도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://ctf.seoulit.kr&quot;&gt;사이트 바로가기 →&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;소개&quot;&gt;소개&lt;/h3&gt;
+
+&lt;p&gt;제1회 &lt;a href=&quot;http://ctf.seoulit.kr&quot;&gt;서울아이티고등학교 해킹 방어대회&lt;/a&gt;는 17년도 09월 22일~23일 까지 총 이틀간 진행되었습니다.
+저는 2017년도 3월달에 해당 고등학교로 전학을 온뒤, 마음이 맡는 친구들과 동아리를 개설 하였고 힘을 모아 대회를 운영 하게 되었습니다.
+본인은 해킹 방어대회의 웹 개발을 맡아 개발 하였습니다.
+웹의 전반적인 디자인은 &lt;a href=&quot;https://getbootstrap.com/&quot;&gt;부트스트랩&lt;/a&gt;을 이용 하였습니다. 문제는 총 열일곱 문제 출제 하였고, 각 분야마다 다른 학생들이 담당하여 출제 하였습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;사용한-기술&quot;&gt;사용한 기술&lt;/h3&gt;
+
+&lt;p&gt;핵심적인 기술은 아래 세가지가 대표적으로 있습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;PHP&lt;/li&gt;
+  &lt;li&gt;MySQL&lt;/li&gt;
+  &lt;li&gt;ajax&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;서버는 PHP 를 이용해 구축 하였고, 유저 데이터관리 및 모든 서버 로그 관리는 MySQL 를 이용 하였습니다. 사용자가 입력받은 flag 를 처리하는 부분은 ajax 를 사용 하였습니다.
+웹 프론트엔드 프레임워크는 부트스트랩을 이용하였고, 페이지 로딩(refresh)시 상단 로딩바는 &lt;a href=&quot;http://github.hubspot.com/pace/docs/welcome/&quot;&gt;pacejs&lt;/a&gt;를 사용 했습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;고비&quot;&gt;고비&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;flag를 입력 받으면 정답 유/무 처리와 동시에 스코어(점수) 지급 및 문제 내 등수 체크 및 추가점수 지급 (아래 이미지 참고)
+    &lt;ul&gt;
+      &lt;li&gt;예를 들어 1번 문제를 첫번째로 풀었으면 추가점수 4점을, 두번째는 추가점수 3점, 첫번째 부터 네번째 까지 추가점수 지급&lt;/li&gt;
+      &lt;li&gt;첫번째에 값이 있으면 두번째로, 두번째에서 세번째로 넘어갔을 때 값이 없으면 세번째에 이용자 이름이 업데이트&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/getsolaris/getsolaris.github.io/master/assets/images/post/seoulit-hacking-defence/problem_rank_logic.png&quot; alt=&quot;고비1번 이미지&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;flag의 모든 입력된 로그들을 쉽게 보기 위해 keyword 별로 나누었음.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;대회-일기장&quot;&gt;대회 일기장&lt;/h3&gt;
+&lt;p&gt;대회 시작은 09월 22일 오전 9시에 진행되었습니다. 대회 시작과 동시에 문제들이 공개되었습니다. ‘한세 사이버 고등학교’ 학생분들이 맨 처음으로 문제를 풀었습니다. 이후 연달아 ‘한세 사이버 고등학교’ 학생분들이 문제를 풀어주셨습니다. 문제 공개와 동시에 많은 학생분이 참가를 해 저희가 힘을 모아 낸 문제를 풀었다는 거에 대해 참으로 뿌듯했습니다. 이틀간 모든 문제를 푼 학생들은 총 다섯 명이었습니다. 그 중 우리 학교 학생은 전체 순위 4등으로 올 클리어를 했습니다. 현재 사이트 가입자는 200명을 돌파하였으며 대회 기간 동안 한 문제라도 푼 학생들은 100여 명이 넘습니다. 대회 종료 후에도 문제들을 공개 (몇 개는 비공개)하여 대회 기간 내에 못 풀어본 문제를 풀어볼 수 있도록 하였습니다. 랭킹 1위 ‘대덕소프트웨어마이스터고등학교’ 학생과 2등 Safflower님 ‘한국교통대학교’ 에게는 정보보안 책을 증정하였습니다. ‘한세 사이버 고등학교’ 학생들이 38명 가입으로 저희 해킹 방어대회 학교 중 많은 인원을 기록 하였습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;느낀점&quot;&gt;느낀점&lt;/h3&gt;
+&lt;p&gt;이틀 동안 학교 친구들과 해킹 방어대회를 운영한다는 것이 정말 뜻깊었다. 
+이 대회 웹사이트를 구축하면서 몰랐던 것을 많이 배운 것 같아 기분이 좋다.&lt;/p&gt;
+
+&lt;h3 id=&quot;부족한점&quot;&gt;부족한점&lt;/h3&gt;
+&lt;p&gt;웹 개발에 앞서 코딩을 나만 알아볼 수 있게 한 것 같다. 학교 친구들과 같이 운영을 하는 만큼 잘 알아볼 수 있게 개발을 해야 했는데….&lt;/p&gt;
+</description>
+        <pubDate>Thu, 21 Sep 2017 00:00:00 +0900</pubDate>
+        <link>https://getsolaris.github.io/2017-09-21/seoulit-hacking-defence/</link>
+        <guid isPermaLink="true">https://getsolaris.github.io/2017-09-21/seoulit-hacking-defence/</guid>
+      </item>
+    
+  </channel>
+</rss>

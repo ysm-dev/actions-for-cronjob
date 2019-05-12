@@ -1,0 +1,1095 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>공부하는 블로그</title>
+<link>https://devtimothy.tistory.com/</link>
+<description>자바스크립트 관련 번역을 취미로 합니다.</description>
+<language>ko</language>
+<pubDate>Sun, 12 May 2019 14:33:47 +0900</pubDate>
+<generator>TISTORY</generator>
+<managingEditor>devtimothy</managingEditor>
+<image>
+<title>공부하는 블로그</title>
+<url>http://cfile9.uf.tistory.com/image/9944DF465BC2F66C0CB958</url>
+<link>https://devtimothy.tistory.com</link>
+<description>자바스크립트 관련 번역을 취미로 합니다.</description>
+</image>
+<item>
+<title>Vue.js의 새롭게 개선된 prop.sync</title>
+<link>https://devtimothy.tistory.com/135</link>
+<description>&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;해당 포스트는 &lt;a href=&quot;https://medium.com/front-end-weekly/vues-v-model-directive-vs-sync-modifier-d1f83957c57c&quot;&gt;여기&lt;/a&gt; 를 번역한 것입니다. 오타나 번역이 이상한 곳이 있으면 말씀해주세요 (_ _)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Vue 2.3에서는 이전에 제거 된 &lt;code&gt;.sync&lt;/code&gt; 수정자가 새로운 방식으로 다시 도입되었습니다.&lt;/p&gt;
+&lt;p&gt;이 포스트는 props를 하위 컴포넌트로 전달하고 업데이트를 전달하는 두 가지 방법을 알아봅니다. 첫 번째 버전은 익숙한 &lt;code&gt;v-model&lt;/code&gt;이며 (Vue 2.2 에서 업데이트) 두 번째 버전은 &lt;code&gt;.sync&lt;/code&gt;와 함께 제공됩니다.&lt;/p&gt;
+&lt;h3&gt;v-model&lt;/h3&gt;
+&lt;p&gt;부모 컴포넌트는 &lt;code&gt;v-model&lt;/code&gt; 지시자로 자식에게 &lt;code&gt;speaks&lt;/code&gt;를 바인딩합니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;template&amp;gt;
+  &amp;lt;doggie v-model=&amp;quot;speaks&amp;quot; /&amp;gt;
+&amp;lt;/template&amp;gt;
+&amp;lt;script&amp;gt;
+  export default {
+    data: {
+      speaks: &amp;#39;bark!&amp;#39;
+    }
+  }
+&amp;lt;/script&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;그 사이에 자식은 &lt;code&gt;speaks&lt;/code&gt; 값을 갖는 &lt;code&gt;value&lt;/code&gt; prop을 선언합니다.&lt;/p&gt;
+&lt;p&gt;또한 실제 &lt;code&gt;&amp;lt;input /&amp;gt;&lt;/code&gt;이 자신의 &lt;code&gt;input&lt;/code&gt; 이벤트를 발생 시키면 &lt;code&gt;input&lt;/code&gt; 이벤트를 발생시킵니다. 해당 이벤트에 전달 된 값은 부모의 &lt;code&gt;speaks&lt;/code&gt;를 업데이트합니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;template&amp;gt;
+    &amp;lt;input :value=&amp;quot;value&amp;quot; @input=&amp;quot;$emit(&amp;#39;input&amp;#39;, $event.target.value)&amp;quot;  /&amp;gt;
+&amp;lt;/template&amp;gt;
+export default {
+  props: [&amp;#39;value&amp;#39;],
+}&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;value&lt;/code&gt; prop을 사용하는 자식 컴포넌트는 &lt;code&gt;input&lt;/code&gt; 인 emit의 이름처럼 기본 동작입니다. 둘 다 재정의 할 수 있습니다 (&lt;a href=&quot;https://vuejs.org/v2/guide/components.html#Customizing-Component-v-model&quot;&gt;Vue 2.2+&lt;/a&gt;를 사용하는 경우) 자식에게 &lt;code&gt;model&lt;/code&gt;을 추가하면 됩니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;export default {  
+  props: [&amp;#39;sound&amp;#39;],
+  model: {
+    prop: &amp;#39;sound&amp;#39;,
+    event: &amp;#39;updateSound&amp;#39;
+  },
+}&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;게다가 이제는 &lt;code&gt;v-model&lt;/code&gt;에 더 이상 묶이지 않는다는 점을 제외하고는 자식 컴포넌트에 대한 &lt;code&gt;value&lt;/code&gt; prop을 선언 할 수 있습니다. 여기에 최종 작업 예제가 있습니다.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://jsfiddle.net/mauromadeit/dzuvu4jd/?utm_source=website&amp;amp;utm_medium=embed&amp;amp;utm_campaign=dzuvu4jd&quot;&gt;https://jsfiddle.net/mauromadeit/dzuvu4jd/?utm_source=website&amp;amp;utm_medium=embed&amp;amp;utm_campaign=dzuvu4jd&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;.sync&lt;/h3&gt;
+&lt;p&gt;알림: &lt;a href=&quot;https://vuejs.org/v2/guide/components.html#sync-Modifier&quot;&gt;Vue 2.3+&lt;/a&gt;에서 동작합니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;v-model&lt;/code&gt; 과 &lt;code&gt;.sync&lt;/code&gt; 의 명백한 차이점은 구문입니다. 부모 컴포넌트가 어떻게 표시되는지 확인해봅시다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-vue&quot;&gt;&amp;lt;template&amp;gt;
+  &amp;lt;doggie :size.sync=&amp;quot;size&amp;quot; /&amp;gt;
+&amp;lt;/template&amp;gt;
+&amp;lt;script&amp;gt;
+  export default {
+    data: {
+      size: &amp;#39;little&amp;#39;
+    }
+  }
+&amp;lt;/script&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;.sync&lt;/code&gt; 를 사용할때는 자식 컴포넌트는 &lt;code&gt;value&lt;/code&gt; prop이 필요하지 않다. 대신 부모와 동일한 prop 이름을 사용하면 된다.&lt;/p&gt;
+&lt;p&gt;It also instead of emitting an &lt;code&gt;input&lt;/code&gt; event to update the prop, you emit the conveniently named event &lt;code&gt;update:prop-name&lt;/code&gt;. This is the main difference between the old &lt;code&gt;.sync&lt;/code&gt; and the new one. Now we need to emit this update event to stay consistent with how we update parent component data like how we do with &lt;code&gt;v-model&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;또한 prop를 업데이트하기 위해 &lt;code&gt;input&lt;/code&gt; 이벤트를 emit하는 대신 편리한 이름의 이벤트인 &lt;code&gt;update:prop-name&lt;/code&gt;을 emit합니다. 이것은 이전 버젼 &lt;code&gt;.sync&lt;/code&gt;와 새 버젼의 가장 큰 차이점입니다. 이제 우리는 &lt;code&gt;v-model&lt;/code&gt;과 같이 부모 구성 요소 데이터를 업데이트하는 방법과 일관되게 이 업데이트 이벤트를 emit 합니다.&lt;/p&gt;
+&lt;p&gt;자식 컴포넌트는 아래와 같습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;template&amp;gt;
+  &amp;lt;input :value=&amp;quot;size&amp;quot; @input=&amp;quot;$emit(&amp;#39;update:size&amp;#39;, $event.target.value)&amp;quot; /&amp;gt;
+&amp;lt;/template&amp;gt;
+export default {
+  props: [&amp;#39;size&amp;#39;],
+}&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;또 다른 차이점은 컴포넌트에 둘 이상의 prop을 동기화 할 수 있다는 점입니다. 여기에 최종 작업 코드가 있습니다.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://jsfiddle.net/mauromadeit/9po4j84o/?utm_source=website&amp;amp;utm_medium=embed&amp;amp;utm_campaign=9po4j84o&quot;&gt;https://jsfiddle.net/mauromadeit/9po4j84o/?utm_source=website&amp;amp;utm_medium=embed&amp;amp;utm_campaign=9po4j84o&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;읽어주셔서 감사합니다. 무언가 부족한 내용이 있다면 아래에 댓글로 남겨주세요.&lt;/p&gt;
+&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>자바스크립트</category>
+<author>devtimothy</author>
+<guid>https://devtimothy.tistory.com/135</guid>
+<comments>https://devtimothy.tistory.com/135#entry135comment</comments>
+<pubDate>Fri, 10 May 2019 16:59:41 +0900</pubDate>
+</item>
+<item>
+<title>리포머 풋워크 시리즈</title>
+<link>https://devtimothy.tistory.com/134</link>
+<description>&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left&quot;&gt;&lt;p&gt;&lt;br&gt;&lt;a href=&quot;https://youtu.be/NhZgWzOoOZM&quot; target=&quot;_blank&quot;&gt;영상 보기&lt;/a&gt;​&lt;br&gt;&lt;br&gt;오늘은 기구 운동을 중심으로 했다.&lt;br&gt;&lt;br&gt;기본적으로는 걷는 자세에 쓰이는 근육을 중심으로 했다.&lt;br&gt;풋바에 발끝을 대고 하는 자세, 아치를 대고 하는 자세, 발목을 붙여 V자가 되게 하고 하는 자세, 풋바 양 끝에 다리를 대고 하는 자세 등을 했다.&lt;br&gt;&lt;br&gt;기본적으로는 날개뼈 눌러주고, 갈비뼈 아래로 내리고, 턱은 당겨주고, 꼬리뼈도 땅에 닿게 한다. 이때 등은 약간 띄워놓고 어깨가 받침대에 닿지 않게 하며 앉았다가 올라오는 것이 중요하다.&lt;br&gt;&lt;br&gt;10회~20회 정도 자세를 바꿔가며 한다.&lt;br&gt;영상 이렇게 좋은게 있다니&lt;br&gt;스트랩을 발에 걸쳐주고 한발만 사용해서 동작을 해준다.&lt;br&gt;스트랩 안 낀 발을 가슴까지 접어줬다 폈다 하는 동작&lt;/div&gt;&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>기타</category>
+<author>devtimothy</author>
+<guid>https://devtimothy.tistory.com/134</guid>
+<comments>https://devtimothy.tistory.com/134#entry134comment</comments>
+<pubDate>Thu, 09 May 2019 22:47:18 +0900</pubDate>
+</item>
+<item>
+<title>죽기 전까지 걷고 싶다면 스쿼트를 하라</title>
+<link>https://devtimothy.tistory.com/133</link>
+<description>&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h1&gt;죽기 전까지 걷고 싶다면 스쿼트를 하라&lt;/h1&gt;
+&lt;p&gt;밀리의 서재 유료 결제 후에 읽은 두번째 책이다. 처음으로 읽은 건 무례한 사람에게 웃으며 대처하는 법이라는 책이고, 요새는 운동을 열심히 하다보니 이 책을 접하게 되었다. 예전에 읽은 &amp;lt;7번읽기 공부법&amp;gt; 책 이후에 가장 예상하기 쉬운 제목의 책이 아닌가 싶다.&lt;/p&gt;
+&lt;p&gt;&amp;lt;7번 읽기 공부법&amp;gt;의 저자도, &amp;lt;죽기 전까지 걷고 싶다면 스쿼트를 하라&amp;gt; 저자도 모두 일본인인데, 일본인들의 특징은 굉장히 안 읽어도 뻔한 결론의 제목을 선정한다는 점이 특이한 듯 하다. 예전에 일본인이 쓴 Docker 기술서도 보면 OSI 7계층까지 설명하는 것들을 보면서 굉장한 TMI를 선호하는구나 싶었다.&lt;/p&gt;
+&lt;p&gt;그도 그럴 것이 예전에 어떤 짤을 봤는데, &amp;quot;한국 사람은 등산을 시작하면 등산장비를 전문가 수준으로 사고, 일본 사람들은 등산을 시작하면 등산 관련 책을 전문가 수준으로 읽고, 중국 사람은 등산을 시작하면 짝퉁 산을 만든다.&amp;quot; 라는 우스갯소리를 들었는데, 그 생각이 나서 웃겼다.&lt;/p&gt;
+&lt;p&gt;책 내용은 사실 출판사와 번역자에게는 미안하지만, 진짜 별 내용 없다. 스쿼트를 하면 좋은 점에 대해 집약해놓은 책이다. 내용도 많지 않아서 정말 금방 읽는다. 지하철 타고가면서 읽으면 출근시간 내에 다 읽을 수 있는 듯 하다. 중요한 건 실천인듯 하다.&lt;/p&gt;
+&lt;p&gt;챌린저스 앱으로 내일부터 나는 스쿼트 2주 챌린지를 시작한다. 정말 제대로 하면 10개 하는것도 무지하게 힘들고 다리가 빡센 게 스쿼트인데, 내일부터 꾸준히 하며 오게 되는 몸의 변화를 기대해보게 된다.&lt;/p&gt;
+&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>기타</category>
+<category>스쿼트</category>
+<category>운동</category>
+<author>devtimothy</author>
+<guid>https://devtimothy.tistory.com/133</guid>
+<comments>https://devtimothy.tistory.com/133#entry133comment</comments>
+<pubDate>Sun, 05 May 2019 22:15:38 +0900</pubDate>
+</item>
+<item>
+<title>독서 (무례한 사람에게 웃으며 대처하는 법)</title>
+<link>https://devtimothy.tistory.com/132</link>
+<description>&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h3&gt;독서 (무례한 사람에게 웃으며 대처하는 법)&lt;/h3&gt;
+&lt;p&gt;사실 꼰대 관련해서 글을 한번 써보고 싶어서 블로그에 글을 올렸다가, 내 필력에 실망하여 글은 대체 어떻게 써야 사람들의 마음을 움직일 수 있는걸까 하는 생각이 들어서 이 책을 읽게 되었다. 예전부터 꼰대와 관련된 책은 읽어보고 싶었는데, 사실 책 내용 자체가 꼰대가 주요 타겟은 아니지만 접하게 되어 읽게 되었다.&lt;/p&gt;
+&lt;p&gt;책 읽으면서 글쓴이처럼 글을 잘 쓰고 싶다는 생각을 했다. 여성인 작가의 관점에서 받아온 무례한 일들을 사례로 들어서 이야기해준다. 남성으로서 살면서 대수롭지 않게 여겨왔던 일들에 대해서 일깨워주었다. 작가가 감성적이고, 예민하고, 우울한 기질이 있는 사람이라는 생각이 들었다. 그러나 그러한 자신을 절제하고, 무례하지 않은 사람이라는 생각이 들었다. 책 제목을 이렇게 쓴것도 이유가 있구나 싶다.&lt;/p&gt;
+&lt;p&gt;한편으로는 작가가 페미니스트인가? 라는 생각이 들면서 동시에 인터넷으로 접해왔던 왜곡된 모습의 페미니스트의 이미지가 생각나기도 했는데, 페미니스트에 대한 선입견을 바로 잡아주는 듯 했다. 작가가 페미니스트가 아니라고 하더라도, 여성들이 사회를 살면서 겪게 되는 어려움 등을 많이 생각해 볼 수 있었다.&lt;/p&gt;
+&lt;p&gt;또한 나는 내 주변의 여성들에게 어떻게 대하고 있었나를 생각해보며, 내가 알게 모르게 받아들이게 되었던 남성들의 왜곡된 문화와 가치관 등을 생각하게 되었다. 그리고 내가 내 가족에게, 이웃에게, 친구들에게 어떻게 상처를 주었던건가... 하며 생각하게 되었다.&lt;/p&gt;
+&lt;p&gt;책 읽으면서 내가 겪었던 무례한 사람들에 대한 기억이 하나씩 스쳐지나간다. 그중에는 내가 정말 친하게 지내왔던 사람들도 있는데, 한창 친하게 지내며 시간을 보낼 때는, 배울 것이 많고 좋은 사람이라는 생각을 했었다. 근데 시간이 지나면서 실망스러운 모습을 많이 보게 되었다. 그간 내가 속고 지내왔구나 하는 생각이 나면서 그를 생각하면 화가 나기도 한다.&lt;/p&gt;
+&lt;p&gt;정치인들도 보면 한때는 시대를 이끌 유망주 라는 타이틀을 갖고 급부상하던 인물들이 몇년이 지나서 보면 꼰대, 고집불통인 나쁜 정치인으로 전락하게 되는 것들도 본다. 무엇이 그들을 그렇게 만드는 것일까? 라는 생각도 하게 된다. 책에서는 &amp;quot;나&amp;quot;에게 무례하게 대하는 사람들에 대해서 대처하는 방법에 대해서 다루고 있는데, 내용들을 하나씩 곰씹어보며 나는 어떻게 행동해야 할 것인가를 고민하게 된다.&lt;/p&gt;
+&lt;p&gt;어느 것이든지 &amp;#39;선&amp;#39;이라는 것이 존재하는데, 무례한 사람에게 단호하며 재치있게 대처하려다가 오히려 선을 넘어 내가 꼰대가 될 수 있지 않을까? 라는 생각이 들기도 한다. 뭐, 방법은 차근차근 찾아가야 하는 것이겠지만… 30대가 되면서 그런 부분에 대해서 고민이 더 많아지는 듯 하다.&lt;/p&gt;
+&lt;p&gt;좀더 겸손하고 절제 있게 사람들을 대할 수 있어야겠다.&lt;/p&gt;
+&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>기타</category>
+<author>devtimothy</author>
+<guid>https://devtimothy.tistory.com/132</guid>
+<comments>https://devtimothy.tistory.com/132#entry132comment</comments>
+<pubDate>Fri, 03 May 2019 08:36:18 +0900</pubDate>
+</item>
+<item>
+<title>꼰대에 대한 생각</title>
+<link>https://devtimothy.tistory.com/131</link>
+<description>&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h3&gt;나는 저러지 말아야지&lt;/h3&gt;
+&lt;p&gt;나도 어느덧 30대에 접어들면서 고민이 되기 시작한 부분이 있다. 나도 젊은 꼰대가 되면 어쩌지? 하는 고민이었다. 30대 넘어선 성인 남성이라면 하게 되는 고민이 아닐까 싶다. 꼰대의 어원은 프랑스어로 &amp;#39;백작&amp;#39; 이라는 뜻을 가진 Comte에서 왔다고 한다. 이를 일본식으로 부른 게 꼰대인데, 이완용 등 친일파들이 작위를 수여받으며 자신을 꼰대라 자랑스럽게 칭했다 한다. 이후 작위를 받은 친일파들이 보여준 행태를 꼰대짓이라고 시작했다카더라.&lt;/p&gt;
+&lt;p&gt;간만에 만나는 사람들을 보면 &lt;code&gt;젊었을 때는 안 그랬는데 지금 와서 보니까 꼰대 다 됐네&lt;/code&gt; 싶어서 질리게 되는 사람이 하나씩 생긴다. 그런 친구들을 보면서 &amp;#39;나는 저러지 말아야지.&amp;#39; 하면서 지내왔는데, 더 나아가서 젊은 꼰대들을 직접 관찰 및 분석하며 느낀점을 기록해보고자 한다.&lt;/p&gt;
+&lt;h3&gt;특징&lt;/h3&gt;
+&lt;p&gt;한국 남성들은 꼰대가 되기 쉬운 환경 안에서 자라게 된다. 대한민국은 기본적으로 유교의 영향을 많이 받아서, 삼강오륜의 기본적인 베이스를 깔고 문화권이 형성이 되어있다. 오륜 중 장유유서, 부자유친, 군신유의와 같은 수직적 체계와 대한민국 남성들이 군대를 다녀오게 되면 꼰대가 될만한 충분한 준비가 된다.&lt;/p&gt;
+&lt;p&gt;또한 사회적으로 직급이 낮고 경험이 없다면 꼰대 기질은 바로 드러나지 않지만, 직급이 높아지거나 사회적 지위가 생기면 사람들의 꼰대 성향이 나타나게 된다. 예전에는 꼰대가 40~50대 중년 남성들을 가리키는 말이었지만, 현재는 &lt;code&gt;젊은 꼰대&lt;/code&gt;들이 많이 등장하며 나이에 상관없이 심심찮게 볼 수 있다.&lt;/p&gt;
+&lt;p&gt;내가 주변에서 경험했던 꼰대들은 다음과 같은 특징을 지녔다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;여성 외모 비하&lt;/strong&gt;: 같이 다니다보면 마치 프로그래밍 된 것 마냥 지나가는 여성들의 외모를 지적한다. &amp;quot;진짜 못생겼다.&amp;quot;, &amp;quot;지나간 여자, 성형했네&amp;quot;, &amp;quot;성형을 해도 저렇게 못생겼냐&amp;quot; 등의 말로 주변인들을 불편하게 한다. 또한 좋은 외모를 가진 여성들을 볼 때에는 &amp;quot;꼬셔볼까?&amp;quot; 등의 이야기를 한다. 그 여자는 너 거들떠도 안봐요.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;내가 왕년에는...&lt;/strong&gt;: 자신이 잘나가던 때를 늘 회상한다. 예전에 몸담았던 그룹(회사 혹은 동아리 등의)에서 자신이 얼마나 열심히 일했는지를 이야기하며, 모든 일이 잘 풀리고 좋았던 시절을 생각한다. 그리고 그 시절의 경험을 가지고 현재 자신이 몸담고 있는 그룹에 동일하게 적용시키려고 한다. 그러다보니 사람들의 공감 얻기도 어렵다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;주변 사람들:&lt;/strong&gt; 젊은 꼰대의 주변 사람들을 보면, 이상하게도 나이가 어린 사람들이 많이 몰린다. 동년배의 친구들이 많지는 않다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;고집불통:&lt;/strong&gt; 이들은 하나같이 고집이 세다. 고집이 세다고 하더라도 대화가 통한다면 좋겠는데, 대화도 통하지 않는다. 이들이 유일하게 이야기를 듣는 사람은 정해져 있다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;가정 환경&lt;/strong&gt;: 어려서 남들이 경험해보지 못한 고생을 먼저 한 케이스이다. 불우한 가정 환경, 어려운 상황들을 겪으면서 동년배 친구들보다 좀 일찍 성숙해져서, 세상물정 모르는 것들은 뭘 모른다는 식으로 남들을 깎아내리는 경우가 많다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;무능함을 감추기 위해&lt;/strong&gt;: 보통 자기가 하는 일에 대한 자신감이 없지만 큰소리는 잘 친다. 위에서 다루었던 부분들도 자신의 무능에 대한 현실회피를 위한 것인 경우가 많다. 자신이 왕년에 어떠했는지를 과시하며, 남들에게  자신의 경험을 적용시키고자 하지만, 사람들의 공감을 얻지 못하고 결국 스스로를 사각지대로 내몰아 자멸하는 경우도 있다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;공감능력 부족&lt;/strong&gt;: 꼰대는 &amp;#39;자신이 맞다&amp;#39;는 신비로울정도로 놀라운 신념을 가지고 있다. 이들은 다름을 인정하기보다는, 문제로 인식한다. 대화를 하다보면 정말이지 할말을 잃게 만드는 능력을 가지고 있다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3&gt;이들을 어떻게 대할까&lt;/h3&gt;
+&lt;p&gt;사실 나랑 상관 없는 사람이라면 모르겠지만, 보통 이런 사람들은 내 주변에 한두명씩 꼭 있다. (주변에 이런 사람이 없다면, 자신이 그 사람이진 않을까? 를 의심해보아야 한다.) 우리가 계속해서 봐야 하는 사람이라면, 참고 넘어가는 게 답인듯 하다.&lt;/p&gt;
+&lt;p&gt;사실은 아직도 이들을 어떻게 대해야할지는 잘 모르겠다. 그렇지만 한가지 확실한 것은, 이들의 꼰대짓 이면에는 외로움이 있다는 것을 느꼈다. 먼저는 이들을 먼저 존중하고, 인정해 줄 줄 알아야겠다. (물론 힘든 일이지만)&lt;/p&gt;
+&lt;p&gt;나 자신도 스스로를 매일 반성하면서 꼰대가 되지 않으려는 노력이 필요할 것 같다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;공감과 소통&lt;/li&gt;
+&lt;li&gt;자기중심적인 사고 탈피&lt;/li&gt;
+&lt;li&gt;단점보다는 장점을 먼저 보라&lt;/li&gt;
+&lt;li&gt;충고나 조언은 참고사항이지, 진리가 아니다.&lt;/li&gt;
+&lt;li&gt;남의 지적을 기분 나빠 하지 말자.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>일기</category>
+<author>devtimothy</author>
+<guid>https://devtimothy.tistory.com/131</guid>
+<comments>https://devtimothy.tistory.com/131#entry131comment</comments>
+<pubDate>Wed, 01 May 2019 15:03:28 +0900</pubDate>
+</item>
+<item>
+<title>#12 디자인 원리</title>
+<link>https://devtimothy.tistory.com/129</link>
+<description>&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h1&gt;#12 디자인 원리&lt;/h1&gt;
+&lt;p&gt;내 나름대로 잘 짠 코드가 아닌 디자인 원리가 적용된 코드. 이는 유지 보수가 용이하고, 유연하고, 확장성이 좋다.&lt;/p&gt;
+&lt;h3&gt;OCP, 개방 폐쇄 원칙&lt;/h3&gt;
+&lt;p&gt;(기존 코드가) 수정에는 닫혀있고, 확장에는 열려 있는 코드. 스타크래프트로 생각해보자면, &amp;lt;테란 시민&amp;gt; 클래스가 있는데, 시민 자체는 변경하지 않고, 다른 유닛으로 확장하는 것으로 생각할 수 있겠지? &lt;code&gt;class 테란시민 extends 마린 {}&lt;/code&gt; 등의 코드로 확장할 수 있겠다.&lt;/p&gt;
+&lt;p&gt;앞서서 살펴본 악기 상점 프로그램을 기억해보자. &lt;/p&gt;
+&lt;p&gt;InstrumentSpec 클래스는 기저 추상 클래스였고, 이를 확장해서 GuitarSpec, MandolinSpec 등이  &lt;code&gt;matches()&lt;/code&gt; 메서드에 구현을 했다. InstrumentSpec은 &lt;strong&gt;수정에는 닫혀있고, 확장에는 열려&lt;/strong&gt;있다고 생각할 수 있겠다.&lt;/p&gt;
+&lt;p&gt;OCP는 유연성에 대한 내용이다. 잘 돌아가고 있는 코드를 바꾸는 일과, 잘 돌아가고 있는 코드를 확장해서 사용하는 것은 완전 다른 이야기이다. 회사에서 구조적으로 짜지 못했던 코드로 인해서 고통받게 되는 경험을 했었다. 하나를 고치면 되는데 전부를 고쳐야 하는 상황은 만들지 않도록 하자. ㅠㅠ&lt;/p&gt;
+&lt;p&gt;OCP가 캡슐화의 일종인가? 궁금할수 있다. OCP는 캡슐화 + 추상화 조합이다. 변경되지 않는 내용 (부모 클래스의 공통된 행동)으로부터 캡슐화 한다. 단순히 상속만이 OCP를 의미하지는 않는다. 한 클래스 내에서도 private 메소드가 여러개 있다면, 이들은 수정에는 닫혀있는 것이다. 이를 public 메소드를 통해 여러 방법으로 호출한다면, 이는 확장에는 열러 있는 것이다.&lt;/p&gt;
+&lt;p&gt;개인적으로는 회사에서 프로젝트를 하면서 dao 클래스에서 OCP 원리를 많이 적용했던 것 같다.&lt;/p&gt;
+&lt;h3&gt;DRY, Don&amp;#39;t Repeat Yourself.&lt;/h3&gt;
+&lt;p&gt;반복을 줄임으로서 유지보수와 재사용성이 좋은 코드를 만든다. 앞서 강아지 문 프로그램을 개발할 때, 이미 자동으로 닫히는 기능을 만들면서 공통된 코드를 추상화한 이력이 있다.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;// BarkRecognizer.ts
+public recognize(bark: Bark): void {
+    console.log(`BarkRecognizer: Heard a ${bark.sound}`);
+    this._door.allowedBarks.forEach((allowedBark: Bark) =&amp;gt; {
+      if (allowedBark.equals(bark)) {
+        this._door.open();
+      }
+    });
+  }
+
+// Remote.ts
+public pressButton(): void {
+    console.log(&amp;quot;Pressing the remote control button...&amp;quot;);
+    if (this._door.isOpen()) {
+      this._door.close();
+    } else {
+      this._door.open();
+    }
+  }
+
+// DogDoor.ts
+public open(): void {
+    console.log(&amp;quot;The dog door opens.&amp;quot;);
+    this._open = true;
+    setTimeout(() =&amp;gt; {
+      this.close();
+    }, 5000);
+  }&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;중복 코드를 추상화해서 끄집어내는 것은 DRY 사용의 좋은 출발이다. 그러나 그것이 전부는 아니다. (이게 심해지면 util 클래스 하나 만들어서 거기에 다 짱박게 되는 안타까운 일도 생긴다.) 오히려 시스템의 정보와 기능이 있어야할 곳에 있도록 배치하는 것을 의미한다. 시스템의 정보와 기능이 어디에 있는지를 정확히 아는 것이 중요하다. DRY는 코드 이상의 내용을 담고 있는 것이다.&lt;/p&gt;
+&lt;p&gt;강아지 소리 인식기가 강아지 문을 닫는 기능에 대해서, 하나의 원천이 되기를 바라진 않을 것이다. (강아지 문이 인식기에게 자기 닫아달라고 매번 부탁하진 않는다.)&lt;/p&gt;
+&lt;h3&gt;SRP, 단일 책임의 원리&lt;/h3&gt;
+&lt;p&gt;객체의 책임. 즉, 시스템에서 어떤 객체가 무슨 일을 하는지에 대한 원리이다. 내가 디자인한 객체가 하나의 책임에만 집중하는 것이다. 그 책임이 변한다면 변화를 반영하기 위해 어느 부분을 봐야하는지 정확히 알게될 것이다.&lt;/p&gt;
+&lt;p&gt;SRP와 DRY가 비슷한 내용 같아 보이지만, DRY는 나의 기능을 한 곳에 두자는 내용이다. SRP는 클래스가 한 가지 일만 잘하게 하자는 내용이다. 좋은 앱에서는 한가지 클래스는 한가지 일을 잘 하고, 다른 클래스들은 같은 일을 하지 않는다.&lt;/p&gt;
+&lt;p&gt;초보 개발자들은 SRP에 능숙하지 않아서 클래스 크기를 오히려 더 크게 만들어 놓는 경우도 생긴다. 그러나 SRP를 사용하면 대개 클래스 크기가 줄고, 전체 앱을 더 간단하게 유지보수할 수 있다. 이는 &lt;strong&gt;응집도&lt;/strong&gt;와도 관련된다. (응집도를 높인다 = SRP 적용이 잘 된다.)&lt;/p&gt;
+&lt;h4&gt;Automobile 클래스를 SRP 적용하기&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;출발 (Automobile)&lt;/li&gt;
+&lt;li&gt;정지 (Automobile)&lt;/li&gt;
+&lt;li&gt;타이어 교체 -&amp;gt; Mechanic (정비공) 클래스&lt;/li&gt;
+&lt;li&gt;운전 -&amp;gt; Driver (운전자) 클래스&lt;/li&gt;
+&lt;li&gt;세차 -&amp;gt; CarWash (세차장) 클래스&lt;/li&gt;
+&lt;li&gt;오일 점검 -&amp;gt; Mechanic (정비공) 클래스&lt;/li&gt;
+&lt;li&gt;기름 얻기 (Automobile)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;여러가지를 생각해보았다. 그러나 여기서 Automobile 클래스가 가질 SRP는 출발, 멈춤, 기름얻기 정도이다. 나머지 SRP와 맞지 않는 내용들은 끄집어내 말이 되게 만든다.&lt;/p&gt;
+&lt;h3&gt;LSP, Liskov Substitution Principle&lt;/h3&gt;
+&lt;p&gt;리스코프 치환 원리로서, 자식타입들은 부모타입들이 사용되는 곳에 대체될 수 있어야 한다. LSP는 잘 디자인된 상속에 관한 내용이다. 부모 클래스를 상속할 때, 부모 클래스가 사용되는 곳은 아무문제없이 자식 클래스도 사용할 수 있어야 한다. 그렇지 않다면 상속을 잘못 사용하고 있는 것이다.&lt;/p&gt;
+&lt;p&gt;앞서 만들었던 게임 프레임웍에서, 공중전 지원을 위해서 2차원 게임 보드가 3차원이 되어야 한다면? Board 부모 클래스를 상속해야 할 것이다. 그러나 이 접근은 많은 문제가 있다. Board 클래스의 메소드들이 3D 환경과 맞지 않아서 대체하기가 어렵다. 이는 LSP를 위반하는 것이다.&lt;/p&gt;
+&lt;p&gt;자식 타입은 부모타입이 사용되는 곳에 사용될 수 있어야 한다. 기술적으로는 문제 없어보이지만, 3D 보드의 객체를 2D 보드 객체처럼 사용하면 여러가지가 문제가 된다. 이해도 어렵고 디버깅도 힘들다.&lt;/p&gt;
+&lt;p&gt;상속을 오용하는 코드들은 이해하기 어렵다. 상속을 하게되면 자식 클래스는 원하든, 그렇지 않든 부모 클래스의 모든 메소드를 상속받는다. 이는 의미없는 많은 메소드들을 상속받게 되기도 한다. 이를 위해서는 LSP 준수를 해야한다.&lt;/p&gt;
+&lt;p&gt;상속 없이 3DBoard의 문제를 해결할 수는 없을까? Board 클래스는 3DBoard 클래스가 필요로 하는 행동이 있지만, 3DBoard 의 부모 타입은 아니다. 이는 확장보다는 연관을 사용해야 한다. 그래야 LSP를 위반하지 않으며 Board의 행동을 사용할 수 있기 때문이다. 3DBoard에서는 3차원 좌표를 사용하여 배열에서 어떤 Board 객체를 사용해서 x,y 좌표를 Board에 위임할지를 알아야 한다.&lt;/p&gt;
+&lt;h4&gt;위임 (Delegation)과 구성(Composition)&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&quot;/var/folders/td/g4tg31r52bngt09vsp7dgtzr0000gp/T/ro.nextwave.Snappy/ro.nextwave.Snappy/1B9D2DA9-4392-4625-92DF-370FB8B84B50.png&quot; alt=&quot;1B9D2DA9-4392-4625-92DF-370FB8B84B50&quot;&gt;&lt;/p&gt;
+&lt;p&gt;위임은 한 클래스가 다른 클래스에 어떤 일을 맡기는 것을 의미한다. 3DBoard 문제를 상속에 의지하지 않고 해결하는 데 사용한다. 이는 다른 클래스의 기능을 그 클래스의 행동의 변경 없이 그대로 사용하고자 할 때 잘 사용된다.&lt;/p&gt;
+&lt;p&gt;때로는 위임이 우리의 필요가 아닐 수 있다. 위임하고 있는 객체의 기능이 변하지 않는다. 3DBoard는 항상 Board 객체들을 사용하고, Board 메소드들의 행동은 항상 같다. 물론 다른 경우도 있다.&lt;/p&gt;
+&lt;p&gt;Weapon 인터페이스를 개발하여, 인터페이스를 다르게 행동하는 여러 클래스들이 구현되어 있다고 생각해보자. Unit 클래스는 이런 클래스들의 행동을 잘 사용해야 한다. Unit은 weapon을 가지고 있고, weapon은 Weapon 인터페이스를 구현한 클래스여야 한다. 유닛은 무기를 바꿀 수 있다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/Ngert/btquFepGwNn/5W1PWKiKyXikpd0keP62ok/img.jpg' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/Ngert/btquFepGwNn/5W1PWKiKyXikpd0keP62ok/img.jpg' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FNgert%2FbtquFepGwNn%2F5W1PWKiKyXikpd0keP62ok%2Fimg.jpg' width=&quot;100%&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;언제 구성(Composition)을 사용할까? Unit 클래스처럼 여러 종류의 기능을 참조하면 구성을 사용하는 것이다. 구성은 인터페이스에 정의된 기능을 사용하고, 컴파일이나 실행 중에 그 인터페이스의 여러 구현 클래스 중 선택하기를 원할 때 위력을 발휘한다.&lt;/p&gt;
+&lt;p&gt;피자의 경우가 구성의 좋은 예다. 여러 토핑으로 구성되지만, 전체 피자 조각은 그대로 둔 채, 토핑을 바꿀 수 있다.&lt;/p&gt;
+&lt;p&gt;구성에 대해 언급하지 않았던 한가지 중요한 점은, 한 객체가 다른 객체들로 구성되고, 소유하고 있는 객체가 없어질 때 구성의 부분인 객체들도 같이 사라진다. 다시 설명하자면, Unit에 Sword 객체를 할당하였는데, Unit 객체가 사라지면, Sword 객체도 사라진다.&lt;/p&gt;
+&lt;p&gt;이같이 구성에 참여한 행동들은 그 구성의 외부에서는 존재하지 않는다.&lt;/p&gt;
+&lt;h3&gt;집합(Aggregation): 사라지지 않는 구성&lt;/h3&gt;
+&lt;p&gt;구성의 모든 이점 (행동을 선택하고 LSP를 준수하는)이 필요하지만 구성에 참여한 객체들이 주 객체의 외부에서도 존재해야 한다면 어떻게 될까? 이때 필요한 게 집합이다.&lt;/p&gt;
+&lt;p&gt;우리는 악기 프로그램 만들면서 이미 집합을 사용했다. Instrument와 InstrumentSpec이 그러하다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bCB2cx/btquHcSdSuZ/AWE7i9AiKN8Vi8Cc0hsSUk/img.jpg' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bCB2cx/btquHcSdSuZ/AWE7i9AiKN8Vi8Cc0hsSUk/img.jpg' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbCB2cx%2FbtquHcSdSuZ%2FAWE7i9AiKN8Vi8Cc0hsSUk%2Fimg.jpg' width=&quot;100%&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;하얀 다이아몬드로 표시된 선은 집합을 의미한다. 집합을 이용해 악기 특유의 서브클래스들을 사용하지 않을 수 있었다. InstrumentSpec은 Instrument의 부분으로 사용되나, 외부에서도 존재할 수 있다. (고객이 검색을 사용할때...)&lt;/p&gt;
+&lt;h4&gt;집합 vs 구성&lt;/h4&gt;
+&lt;p&gt;언제 집합을 사용하고, 언제 구성을 사용할까. 혼동을 피하는 방법은 &lt;em&gt;내가 사용하고 싶은 행동을 가진 객체가 그 행동을 사용하는 객체의 외부에서도 존재하는가?&lt;/em&gt; 를 묻는 것이다. 독립적 존재도 의미가 있다면 집합을 사용해야 한다. 그렇지 않으면 구성을 사용하라. 그러나 객체 용도가 조금만 바뀌어도 결정을 바꿔야 하는 경우도 생긴다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;위임, 구성, 그리고 집합을 상속보다 더 선호하면, 대개의 경우 소프트웨어는 더 유연하고, 유지보수와 확장성, 그리고 재사용성이 더 좋아진다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>design patterns</category>
+<author>devtimothy</author>
+<guid>https://devtimothy.tistory.com/129</guid>
+<comments>https://devtimothy.tistory.com/129#entry129comment</comments>
+<pubDate>Sun, 21 Apr 2019 11:01:25 +0900</pubDate>
+</item>
+<item>
+<title>#11 - 아키텍쳐</title>
+<link>https://devtimothy.tistory.com/128</link>
+<description>&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h1&gt;#11 - 아키텍쳐&lt;/h1&gt;
+&lt;p&gt;우리는 큰 문제를 작은 기능들의 조각으로 나누었고, 작은 조각에 대해서는 해결 방법을 알고 있다. 그러나 유스케이스 다이어그램과 특징 리스트, 그 외에도 고려해야 할 사항이 많다. 처음에 우리는 무엇을 해야할까? 당연하게도 요번 챕터 주제와 같이 아키텍쳐가 필요하다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;아키텍쳐는 시스템의 분할, 나뉜 부분들 사이의 연결과 상호 작용 메커니즘, 그리고 시스템의 디자인에 사용된 원리와 결정 사항들을 담고 있는 시스템의 구조를 말한다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;아키텍쳐는 디자인의 구조이고, 프로그램의 가장 중요한 부분들과 그들 사이의 관계를 명확히 보여주며, 뒤죽박죽 복잡한 내용을 잘 정리된 프로그램으로 바꾸는데 도움을 준다.&lt;/p&gt;
+&lt;p&gt;우리가 1장에서 말했던 &amp;lt;쉬운 3단계로 좋은 소프트웨어 만들기&amp;gt;를 여기서도 적용 가능하다.&lt;/p&gt;
+&lt;h3&gt;기능&lt;/h3&gt;
+&lt;p&gt;첫째 단계는 &amp;lt;고객이 원하는 기능을 하도록 하라&amp;gt; 이다. 특징 리스트를 잠시 살펴보자&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;게임 시스템 프레임웍 특징 리스트
+1. 다양한 타입의 지형을 지원한다.
+2. SF소설이나 판타지 소설에 등장하는 가상의 시대를 포함한 다양한 시대를 지원한다.
+3. 게임 특성에 맞는 여러 타입의 부대 또는 유닛들을 지원한다.
+4. 새로운 작전 수행이나 전쟁 시나리오를 위한 추가 모듈을 지원한다.
+5. 사각형의 타일들로 구성된 보드를 제공하고 각 타일은 지형 타입을 가지고 있는다.
+6. 누구 차례인지에 대한 정보를 유지한다.
+7. 기본적인 이동을 관장한다.&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;이 중에서 뭐가 가장 중요할까? 어디서부턴가는 먼저 시작해야 한다. 구성요소가 없는데 시스템 구성 요소 사이의 관계에 대해 논하기란 어렵다. Board와 Units 모듈이 어떻게 상호작용하는지 알고 싶다면? 먼저는 기본적인 내용을 먼저 알아야 할 것이다. )물론 관계에 대해 알아내는 것만이 가장 중요한 일은 아니다.)&lt;/p&gt;
+&lt;h4&gt;아키텍쳐에 대한 세 가지 질문&lt;/h4&gt;
+&lt;ol&gt;
+&lt;li&gt;시스템의 본질이 되는 부분인가?&lt;ul&gt;
+&lt;li&gt;그 특징이 시스템의 핵심인가?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이것은 &amp;quot;도대체&amp;quot; 무슨 의미인가?&lt;ul&gt;
+&lt;li&gt;무슨 뜻인지 확신이 서지 않는다면 그 특징에 대해 관심을 기울이라.&lt;/li&gt;
+&lt;li&gt;확실치 않은 일은 오래걸리고, 시스템의 나머지 부분을 발목을 잡을수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;도대체 어떻게 해야 하나?&lt;ul&gt;
+&lt;li&gt;구현하기 까다로운 문제가 있다면, 시간을 들여 문제 발생을 막는다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr&gt;
+&lt;p&gt;위 세가지 질문을 보았다면, 무엇이 중요한지 살펴보자.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;게임을 위한 보드 - 1&lt;/li&gt;
+&lt;li&gt;게임 특유의 유닛 - 1, 2&lt;/li&gt;
+&lt;li&gt;프레임웍은 기본적인 이동을 관장한다. - 3&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;시스템의 본질&lt;/h3&gt;
+&lt;p&gt;시스템의 본질이란 가장 기본적인 수준이 완성되었을 때를 말한다. 우리가 부가적으로 넣은 화려한 기능이나 아이디어가 본질은 아니다. 특징을 찾을때는 &amp;quot;이 특징이 구현되지 않으면 시스템이 해야 할 일을 정말 하는걸까?&amp;quot;라는 답에 &amp;quot;아니요&amp;quot;라고 답한다면 본질적인 특징을 찾은 것이다. 쉽게 말하자면, &amp;quot;잘 돌아 가는가?&amp;quot;부터 확인하는 것이다.&lt;/p&gt;
+&lt;p&gt;나의 개발 이야기를 잠깐 하자면, 나는 레스토랑 예약 서비스를 운영하는 스타트업에서 일하고 있다. 어느날 음식을 먹으러 갔다가 음식점 앞에 대기 리스트 적는 판이 있는 것을 보고 우리 서비스에 적용하면 좋겠다는 생각이 들었다. 가장 먼저 했던 일은 대기등록용 앱을 만드는 일이었는데, 정말 간단하게 앱을 만들었다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;손님이 대기 등록을 하게 한다. (이름, 전화번호, 인원 수)&lt;/li&gt;
+&lt;li&gt;매장 관리자 앱과 대기등록 앱이 실시간으로 목록이 갱신되게 한다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;차후에는 여러가지 기능이 무궁무진하게 많아졌지만… 최소한의 조건을 맞추어 개발을 했던 기억이 있다. 초기 단계에서는 시스템이 어떻게 발전할지 몰라 세부적인 것을 만드는 것을 자제하기도 했다. 시스템의 전체를 보기 위함이다.&lt;/p&gt;
+&lt;p&gt;특징 리스트가 있다고 하더라도 결정하기 애매한 것들이 많이 있을 것이다. 비록 시스템을 직접 작성해보진 않았더라도 우리가 어떻게 해야할지 모르는 것은 아니다. 새로운 세부사항이 있는 것 뿐이다. 그러나 가령 멀티 쓰레드를 이용한 채팅 서버 구축을 해야하는데, 쓰레드와 네트워크 프로그래밍에 대해 잘 모른다면, 이는 어떻게 해야할지 모르는 것이다.&lt;/p&gt;
+&lt;p&gt;애매한 것들이 많이 있겠지만, 어찌됐건 우리가 가장 먼저 해야할 일은 익숙한 부분부터 찾아서 시작하는 것이다.&lt;/p&gt;
+&lt;h3&gt;위험 요소를 줄여라&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;게임을 위한 보드&lt;/li&gt;
+&lt;li&gt;게임 특유의 유닛&lt;/li&gt;
+&lt;li&gt;프레임웍은 기본적인 이동을 관장한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;여러 과정을 거쳐서 우리는 위 세가지가 중요한 특징임을 확인했다. 그렇다면 뭐부터 만들어야 할까. 다 중요해보이면 어쩌지? 혹은 사람들마다 중요하게 여기는 게 다르다면 어떻게 해야할까?&lt;/p&gt;
+&lt;p&gt;중요한 것은 위험 요소를 줄이는 방향으로 진행하는 것이다. 위험 요소를 최소화 하려면 Board 인터페이스부터 작성하는 게 좋겠다.&lt;/p&gt;
+&lt;h4&gt;문제점&lt;/h4&gt;
+&lt;p&gt;보드의 높이와 너비는 게임 설계자가 제공한다.&lt;/p&gt;
+&lt;p&gt;보드는 주어진 위치에 있는 타일을 반환한다.&lt;/p&gt;
+&lt;p&gt;유닛들을 타일에 추가하고, 주어진 x, y 위치에 있는 모든 유닛들을 반환한다.&lt;/p&gt;
+&lt;h4&gt;할 일&lt;/h4&gt;
+&lt;ol&gt;
+&lt;li&gt;Board.ts 클래스를 새로 만든다.&lt;/li&gt;
+&lt;li&gt;Board에서 너비와 높이를 받아서 새로운 보드를 만드는 생성자를 추가한다. 생성자는 보드를 사각형 타일들로 x,y 위치에 하나씩 채운다.&lt;/li&gt;
+&lt;li&gt;타일의 x, y 위치가 주어지면 주어진 위치에 있는 타일을 반환할 메소드를 작성한다.&lt;/li&gt;
+&lt;li&gt;타일의 x,y 위치에 맞게 유닛을 추가하는 메소드를 작성한다.&lt;/li&gt;
+&lt;li&gt;주어진 x, y 위치에 있는 타일 위의 모든 유닛들을 반환하는 메소드를 작성하라.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;위 요구사항은 상식선에서 보강한 내용이다. 그러나 경계해야 할 것은 너무 구체적인 내용까지는 생각하지 않는 것이다. 너무 깊이 세세한 내용까지 파고들면 좋은 유스케이스를 뽑아내는데 도움이 되질 않는다.&lt;/p&gt;
+&lt;p&gt;시나리오들이 위험요소를 줄이는 데 도움이 많이 된다. 사실 많은 사람들이 유스케이스 작성에 그렇게 공을 들이지는 않는다. 예약 서비스를 개발한다고 생각해보면, 간단하게 생각할 때는 &lt;code&gt;고객이 예약을 한다. 예약을 할때는 이름, 전화번호, 인원 수를 입력한다.&lt;/code&gt; 정도이지만, 사실 예약 경로가 다른 루트로 들어올 수도 있다. 인스타그램 DM, 전화, 블로그, 카톡 등… 전화번호를 모르지만 예약은 등록해야 하는 경우가 생길수 있다.&lt;/p&gt;
+&lt;p&gt;지금 우리는 보드를 만들고 있고, 여기서는 보드가 어떻게 사용되는지를 생각할 수 있다면 더 좋을 것이다. 가령 8 X 10 칸의 보드에서 1,3 위치에 있는 부대가 4,5 위치에 있는 부대를 친다 등의 내용들을 나타낼 수 있겠다. 아마 지금 내가 생각지 못한 다양한 이슈들이 있을 것이다.&lt;/p&gt;
+&lt;p&gt;시나리오를 작성하면 유스케이스는 필요가 없을까? 그렇지는 않다. 시나리오는 빠르게 문제를 해결 할 때 보편적인 요구사항을 찾는데 도움이 된다. 그러나 이는 유스케이스를 이용할 하나의 경로일 뿐이다. 위험요소를 줄이는데는 고객에게 좋은 요구사항을 뽑아내는 것이다.&lt;/p&gt;
+&lt;p&gt;우리는 시나리오를 이용해서 모듈이나 코드 조각의 기초적인 내용을 이해하고, 앱의 기본적인 부분들을 채워나갈 수 있다. 자, 그러면 시나리오를 한번 작성해보자.&lt;/p&gt;
+&lt;h4&gt;보드 시나리오&lt;/h4&gt;
+&lt;ol&gt;
+&lt;li&gt;게임 설계자가 높이와 너비를 가지고 보드를 생성한다.&lt;/li&gt;
+&lt;li&gt;플레이어 2가 탱크들을 4,5로 옮긴다.&lt;/li&gt;
+&lt;li&gt;플레이어 2가 군대를 4,5로 이동한다.&lt;/li&gt;
+&lt;li&gt;플레이어 1이 포병을 4,5로 이동한다.&lt;/li&gt;
+&lt;li&gt;게임이 4,5의 유닛들을 요구한다.&lt;/li&gt;
+&lt;li&gt;플레이어 1과 플레이어2가 전쟁을 치른다.&lt;/li&gt;
+&lt;li&gt;게임이 4,5의 지형을 요구한다.&lt;/li&gt;
+&lt;li&gt;플레이어 2의 유닛이 전쟁을 승리한다.&lt;/li&gt;
+&lt;li&gt;플레이어 1의 유닛들이 4,5에서 제거된다.&lt;/li&gt;
+&lt;li&gt;플레이어 1이 잠수함을 2,2로 이동한다.&lt;/li&gt;
+&lt;li&gt;게임이 2,2에 있는 지형을 요구한다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3&gt;코드 구현&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;코드를 여기에 놓자&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;배열의 배열을 사용하면 사각형 보드판만 써야 하는거 아니냐? 그래프 자료구조나 좌표계 클래스는 왜 안사용하냐? 라고 생각할 수도 있겠다. 유연성을 생각한다면 좋은 생각이지만, 요구사항에 맞춰서 작성할 했을 뿐이며, 또한 필요 이상의 복잡한 방법을 쓰지는 않았다.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;코드를 여기에 놓자&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Tile과 Unit을 너무 완벽하게 만들고자 하지 말자. 우리가 고민할 내용은 Board 클래스를 만들어 주요 특징들이 작동하게 하는 일이다.&lt;/p&gt;
+&lt;p&gt;Tile 클래스가 유닛 추가/삭제를, Board가 getTile() 메소드를 이용해 타일을 반환할 수 있는데 왜 addUnit, removeUnit 메소드를 Board에 추가할까? getTile을 호출해서 Tile이 알아서 하면 안될까?&lt;/p&gt;
+&lt;p&gt;Unit 관련 오퍼레이션이 getTile()을 통해 반환되는 Tile 객체들을 통해 해결할 수 있다.&lt;/p&gt;
+&lt;p&gt;우리는 Unit 관련 메소드들을 Board에 추가하기로 하고, Board가 게임 설계자의 시작점이 되게 하기로 했다.&lt;/p&gt;
+&lt;p&gt;Tile 메소드들을 protected로 선언했고, Tile과 같은 패키지의 클래스들만이 addUnit, removeUnit 메소드를 직접 호출할 수 있다는 것을 알게 될 것이다. 그래서 Board 객체를 이용해서 타일, 유닛, 지형을 조작하게 됐다.&lt;/p&gt;
+&lt;p&gt;지금은 시스템 프레임웍 전체를 코딩하려고 하는 것이 아니다. 핵심 특징을 나누고, 프로젝트 주요 위험 요소를 줄이는 것을 선행한다. Unit 클래스와 Tile 클래스를 작성하는데 시간 들이는 것이 위험을 줄이는 데 도움이 되지 않을 것이다. 시스템의 핵심이자 프로젝트 성패가 달려있는 곳이라고 결정한 부분이 Board 클래스니까, Board가 동작하는 데 충분한 만큼만 Unit과 Tile에 신경쓰자.&lt;/p&gt;
+&lt;p&gt;큰 위험 요소를 줄이거나 없애고 난 후에는 Unit 클래스와 같은 작은 특징에 신경을 쓸 시간이 많아진다.&lt;/p&gt;
+&lt;h3&gt;좀 더 질서있게, 덜 혼란스럽게&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;게임 시스템 프레임웍 핵심 특징
+1. 게임읠 위한 보드 - 시스템의 본질
+2. 게임 특유의 유닛 - 본질, 이것은 무슨 의미지?
+3. 이동 관장 - 이것은 뭐고, 어떻게 하지?&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;이제 구조도 갖추었겠다, 클래스 간에 어떻게 조화되는지 생각해보자.&lt;/p&gt;
+&lt;p&gt;Board는 Tiles 다차원 배열을 통해 Tile을 소유하고, Tile을 Unit을 소유한다. Board는 Unit 타입에 대한 변수는 가지고 있지 않지만, Unit 객체를 받아들이는 메소드들이 연결되어 있어서 Unit 클래스와 연결된다.&lt;/p&gt;
+&lt;p&gt;Unit 클래스도 준비되었고, 게임 특유의 유닛들에 대해 해결해보는 건 어떨까? Board와 Unit 간 상호작용이 일어나는지도 볼 수 있다.&lt;/p&gt;
+&lt;p&gt;가능하면 이미 만들어진 내용을 기초로 만들라. 요구사항과 다이어그램만 있을 때는 무엇부터 할지 선택해야한다. 그러나 코드와 클래스가 있으니, 이미 만든 것과 관련된 핵심 특징을 선택하는 것이 쉬운 선택일 것이다.&lt;/p&gt;
+&lt;p&gt;아키텍쳐는 디자인의 구조이고, 프로그램의 가장 중요한 부분들과 그들 사이의 관계를 명확히 보여준다.&lt;/p&gt;
+&lt;h3&gt;유닛에 대한 정의&lt;/h3&gt;
+&lt;p&gt;게임 특유의 유닛들에 대해 이해하려면, 게임 설계자와 이야기하는 것이 가장 좋겠다. 유닛에 대해 다음 같은 내용들이 피드백되었다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;공격치&lt;/li&gt;
+&lt;li&gt;방어치&lt;/li&gt;
+&lt;li&gt;경험치&lt;/li&gt;
+&lt;li&gt;무기 착용&lt;/li&gt;
+&lt;li&gt;캐릭터 간의 관계&lt;/li&gt;
+&lt;li&gt;군대, 우주선, 비행기….&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;프레임웍에 기반한 각 게임은 다른 종류의 유닛들이 있고, 유닛들은 다양한 속성과 능력을 갖추고 있다. 그래서 각 게임마다 유닛에 대해 속성들을 가질 수 있어야하고, 그러한 속성들에 대한 여러 데이터 타입을 지원할 수 있어야 한다.&lt;/p&gt;
+&lt;p&gt;그렇다면 다양한 타입의 유닛들 중에 무엇이 공통점일까? 모든 유닛 타입에 적용되는 기본적인 내용에는 무엇이 있을까?&lt;/p&gt;
+&lt;p&gt;유닛들도 다양한 속성을 가지고 있을 것이다. 그렇다면, 앞서서 기타 상점 프로그램을 짤 때처럼, 기타, 만돌린 등으로 여러개의 클래스로 쪼개는 것이 좋은 디자인일까? 유닛 수가 100개, 200개 늘어난다면? 관리가 어려움이 있을 것이다. (스타크래프트만 해도 유닛 수가 엄청 많지 않는가.)&lt;/p&gt;
+&lt;p&gt;좋은 디자인은 항상 위험을 줄여준다. Unit 클래스에 디자인하는 가장 좋은 방법을 찾음으로써, 처음부터 잘 만들 수 있다. 전체 시스템에 깊숙히 들어가 작업해서 타 코드에 영향 주는 Unit 클래스에 수정을 가해야 하기 전에, 게임 특유의 유닛들이 무엇인지 알아냈을 뿐 아니라, 기본적인 Unit 클래스를 정의하고, 프로젝트 진행 중에 별다른 변경 없이 Board 클래스와 같은 다른 클래스들과 연결 될 수 있다.&lt;/p&gt;
+&lt;p&gt;아키텍쳐 핵심은 위험을 줄이고, 질서를 잡는 일이다. &lt;/p&gt;
+&lt;p&gt;(최근에 작업했던 알림톡 템플릿 전송 기능의 경우에도 기존에 잘 설계했더라면 주말에 개고생 하는 일이 없었을텐데… 정말 최신 유행하는 기술서 보는 것보다 중요한게 이런 기본서들을 찾아 읽는 것인듯 하다. 왜 늘 나는 사고가 터진 후에 이런 깨달음을 얻게 되는건가 ㅠㅠ)&lt;/p&gt;
+&lt;p&gt;우리는 코딩을 한 부분도 있고, 안 한 부분도 있다. 시스템의 기본적인 이해가 필요해서 코딩이 필요한 경우가 있다. 그러나 모든 것들의 우선순위는 프로젝트의 위험도를 줄이기 위함임을 기억하자.&lt;/p&gt;
+&lt;p&gt;고객과 이야기하는 것이 능사는 아닐 수 있지만, 우리가 개발하고자 하는 것이 무엇인지 목표를 명확히 한다면 우리를 혼란스럽게 하는 것은 잘 걸러낼 수 있다.&lt;/p&gt;
+&lt;p&gt;객체지향 분석 설계는 많은 코드가 관련된 것은 아니다. 가끔은 가장 좋은 소프트웨어 작성은 코드 작성을 피하는 일일 수도 있다.&lt;/p&gt;
+&lt;p&gt;(개발하면서 기존에 있는 기능들을 운영적으로 풀어내면서 문제를 해결하게 되는 경우가 있다.)&lt;/p&gt;
+&lt;h3&gt;이동 관장&lt;/h3&gt;
+&lt;p&gt;특징에 대해 무슨 말인지 이해가 가지 않을 때는 고객에게 직접 물어보는 게 최고다. 각 유닛이 얼마나 많은 칸을 움직일 수 있는지에 대한 이동 속성을 가지고 있고, 게임은 지형을 확인해서 이동이 가능한지 확인한다. 여기서 더 복잡한 계산으로 나아간다면, 비행기가 건물을 통과해서 날아간다던지, 비행기의 속도가 바람의 영향을 받는다던지 하는 것도 생각할 수 있다.&lt;/p&gt;
+&lt;p&gt;이동에 대해서 기본적으로 느껴지는 공통점이 있는가? 그 특징을 어떻게 시스템에 녹여낼 것인가?&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;유닛들은 한 타일에서 다른 타일로 이동할 수 있어야 한다.&lt;/li&gt;
+&lt;li&gt;이동은 계산이나, 각 게임 특유의 알고리즘을 근거로 하며, 가끔 유닛의 게임 특유의 속성들과 관련된다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;공통점&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;이동 전에, 움직임이 가능한지를 확인한다.&lt;/li&gt;
+&lt;li&gt;유닛의 속성들은 유닛이 얼마나 멀리 갈 수 있는지를 확인하는 데 이용된다.&lt;/li&gt;
+&lt;li&gt;유닛 이외의 요소도 이동에 영향을 준다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;차이점&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;이동의 합법성을 확인하는 알고리즘은 &lt;strong&gt;게임마다 다르다.&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;사용되는 속성의 수나 이동에 영향을 주는 요소들은 &lt;strong&gt;게임마다 다르다.&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;이동에 영향을 주는 요소는 &lt;strong&gt;게임마다 다르다.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;결국은 게임마다 다르다라는 결론이 섰다. 이동과 관련된 내용은 게임 설계자에게 맡겨야 하는 듯 하다. 불확실성이 높기 때문이다. 공통점으로는 이론상 Movement 인터페이스를 만들어 MovementAlgorithm과 LegalMovement 같은 객체를 받아들이는 move() 메소드를 정의할 수 있다. 그러면 각 설계자는 이를 상속받아 확장할 수 있다.&lt;/p&gt;
+&lt;h3&gt;좋은 소프트웨어 != 좋은 코드&lt;/h3&gt;
+&lt;p&gt;좋은 코드는 잘 설계되고, 의도된 대로 작동한다. 좋은 소프트웨어는 잘 설계되고, 스케쥴에 맞게 제작되며, 고객이 원하는 기능을 한다. 이게 아키텍쳐가 필요한 이유다.&lt;/p&gt;
+&lt;p&gt;우리는 먼저 Board를 위한 기본 클래스들을 도출했고, 고객에게 잘못된 보드를 만들어주는 위험을 줄이기에 충분한 코드를 작성했다. 그 다음으로는 유닛에 대해 정의하고, 클래스 다이어그램을 이용해 어떻게 문제를 해결할지 계획했다. 마지막으로, 이동을 다룸으로서 게임 설계자가 고민할 내용이 무엇인지 생각해냈다.&lt;/p&gt;
+&lt;p&gt;많은 코드를 작성하진 않았지만, 제 때에 제대로 된 기능의 소프트웨어를 만들 수 있다고 확신하는 프로젝트가 되었다.&lt;/p&gt;
+&lt;p&gt;다음 장에서는 디자인 원리들에 대해서 알아보자.&lt;/p&gt;
+&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>design patterns</category>
+<author>devtimothy</author>
+<guid>https://devtimothy.tistory.com/128</guid>
+<comments>https://devtimothy.tistory.com/128#entry128comment</comments>
+<pubDate>Mon, 15 Apr 2019 09:05:11 +0900</pubDate>
+</item>
+<item>
+<title>#10 - 정말 큰 문제들 해결하기</title>
+<link>https://devtimothy.tistory.com/127</link>
+<description>&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;본 블로깅은 Head first OOAD: 세상을 설계하는 객체지향 방법론 (한빛미디어) 책을 Typescript 문법으로 전환하며 공부하는 글입니다.&lt;br&gt;글을 읽기 전에, 광고 배너 한번씩만 클릭 부탁드립니다. 블로그 운영에 큰 보탬이 됩니다 :)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;그동안 소프트웨어 디자인을 함께 공부했지만, 사실 실제 프로젝트는 5~10개 정도의 클래스로는 어림도 없다. 거대한 프로그램을 만드려면 어떻게 해야할까? 작은 문제를 풀어가는 방식과 마찬가지로, 큰 문제도 해결할 수 있다.&lt;/p&gt;
+&lt;p&gt;우리는 앞서 좋은 프로그램을 만드는 3단계를 배웠다. 이는 규모가 작건 적건 동일하게 적용된다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;나의 SW가 고객이 원하는 기능을 하게 하라&lt;/li&gt;
+&lt;li&gt;객체지향의 기본 원리를 적용해 SW를 유연하게 하라&lt;/li&gt;
+&lt;li&gt;유지보수와 재사용이 쉬운 디자인을 위해 노력하라&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3&gt;큰 문제를 어떻게 바라보는가&lt;/h3&gt;
+&lt;p&gt;큰 문제를 바라보는 가장 좋은 시각은 여러 기능의 조각들로 나누어 보는 것이다. 각 조각들을 풀어야 할 개별 문제로 바라볼 수도 있고, 크기가 작은 개별 문제에는 이미 알고 있는 도구들을 적용할 수 있다.&lt;/p&gt;
+&lt;p&gt;사실 우리는 이미 소프트웨어 문제 해결에 중요한 여러가지를 배웠다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;변하는 것을 캡슐화하여 프로그램을 더 유연하고 변경하기 쉽게 만든다.&lt;/li&gt;
+&lt;li&gt;구현에 맞춰 코딩하기보다는 인터페이스에 맞춰 코딩하면 소프트웨어 확장이 더 쉬워진다.&lt;/li&gt;
+&lt;li&gt;좋은 요구 사항을 얻는 가장 좋은 방법은 시스템이 해야 하는 일을 이해하는 것이다.&lt;/li&gt;
+&lt;li&gt;좋은 소프트웨어는 변경과 확장이 쉽고 고객이 원하는 일을 한다.&lt;/li&gt;
+&lt;li&gt;분석은 시스템이 실세계에서 잘 동작하도록 만드는 데 도움이 된다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr&gt;
+&lt;h3&gt;게리 게임즈의 비전 기술서&lt;/h3&gt;
+&lt;p&gt;게리 게임즈는 게임 디자이너들이 턴 기반 전략 보드게임을 만드는데 사용할 프레임웍을 제공한다. 아케이드 방식의 슈팅 게임이나 뛰어난 오디오, 비디오를 제공하는 게임과는 달리, 우리의 게임들은 전략과 전술에 관한 기술적 세부 내용에 중점을 두고 있습니다. 우리의 프레임웍은 게임 디자인에 필요한 반복적 코딩 작업을 없애고, 개별 게임을 쉽게 만드는 데 필요한 게임 관리 도구를 제공합니다.&lt;/p&gt;
+&lt;p&gt;게임 시스템 프레임웍은 게리 게임즈에서 만드는 모든 게임들의 핵심 모듈을 제공할 것입니다. 프레임웍은 회사 내의 게임 개발 프로젝트 팀들이 모두 사용할 수 있게 잘 정의된 API 형태의 라이브러리로 제공될 것입니다. 프레임웍이 제공할 기능은 다음과 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;보드의 환경을 정의, 표현한다.&lt;/li&gt;
+&lt;li&gt;부대를 정의하고 군대 또는 다른 전투 유닛들의 환경을 설정한다.&lt;/li&gt;
+&lt;li&gt;보드에서 유닛들을 이동시킨다.&lt;/li&gt;
+&lt;li&gt;유닛의 이동이 가능한 지를 판별한다.&lt;/li&gt;
+&lt;li&gt;전투를 수행한다.&lt;/li&gt;
+&lt;li&gt;유닛의 정보를 제공한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;게임 시스템 프레임웍은 턴 기반 전략 보드게임의 개발 작업을 단순화하여 프레임웍 사용자들이 실제 게임의 내용을 구현하는 데에 노력과 시간을 들이도록 할 것입니다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;위의 비전 기술서를 보면서 가장 먼저 우리가 해야 할 일은 무엇일까? 요구사항과 유스케이스를 먼저 작성할까? 시스템이 해야 할 일을 알 수 있고, 리스트의 순서대로 기능을 하나씩 추가할 수 있어서 좋은 방법이다. 여러개의 작은 문제들을 해결해나가며 하나의 큰 문제를 해결하는 방법이다.&lt;/p&gt;
+&lt;p&gt;그러나 우리가 시스템에 대해 얼마나 알고 있을까? 고작 비전 기술서 하나뿐이다. 시스템이 해야할 일에 대해서는 우리가 기술서만으로는 알 수 없다.&lt;/p&gt;
+&lt;p&gt;시스템을 분석해보면서, 먼저는 공통점과 차이점을 분석해보도록 한다. (사실 나는 기술서를 보면서 처음에 코에이의 삼국지 영걸전 시리즈가 먼저 생각이 났다.)&lt;/p&gt;
+&lt;h3&gt;고객과의 대화&lt;/h3&gt;
+&lt;p&gt;고객과의 대화를 통해 알아낸 내용은 아래와 같다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;고객은 Zork 라는 게임을 예로 들었다.&lt;/li&gt;
+&lt;li&gt;고객은 그래픽 게임이 아닌 텍스트 기반 게임을 좋아한다. (대체 왜)&lt;/li&gt;
+&lt;li&gt;남북전쟁, 1차 세계대전, 우주전쟁 등...&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;다양한 시대적 배경&lt;/strong&gt;, 유닛 타입, 유닛의 유니폼 등을 지원한다.&lt;/li&gt;
+&lt;li&gt;RISK, Stratego 라는 게임 (턴 기반 전쟁 게임)&lt;/li&gt;
+&lt;li&gt;사각형 보드를 만들어 보드를 타일로 채운다.&lt;/li&gt;
+&lt;li&gt;게임 디자이너는 몇 개의 타일을 사용할 지 선택할 수 있다.&lt;/li&gt;
+&lt;li&gt;타일의 높이와 너비를 선택할 수 있다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;지형 종류&lt;/strong&gt;: 산맥, 강, 평야, 분화구, 소행성, 해초, 점토 등.&lt;/li&gt;
+&lt;li&gt;유닛 이동 규칙 등의 고려사항 (무거운 것 들고 있으면 이동거리 짧아짐) -&amp;gt; 이는 게임 디자이너가 활용할 수 있게 함.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;특징 찾아내기(feature)&lt;/h3&gt;
+&lt;p&gt;위 내용에서 굵은 글씨로 적은 것들이 일종의 특징(feature)이다. 특징은 해야 할 일을 추상적으로 나타낸 것인데, 고객과 대화하며 시스템의 특징을 알아낸다. 대개 하나의 특징에 여러가지 요구 사항들이 나온다. 시스템 특징을 알아내는 것은 요구사항을 얻는 좋은 방법이다.&lt;/p&gt;
+&lt;p&gt;특히 규모가 큰 프로젝트의 경우 시스템의 특징부터 시작하는 것이 도움이 된다.&lt;/p&gt;
+&lt;h4&gt;특징(feature)&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;다양한 타입의 지형을 지원한다.&lt;ul&gt;
+&lt;li&gt;요구 사항(개발자용)&lt;ul&gt;
+&lt;li&gt;타일은 지형의 타입과 관련있다.&lt;/li&gt;
+&lt;li&gt;게임 디자이너는 원하는 지형 타입을 만들 수 있다.&lt;/li&gt;
+&lt;li&gt;각 지형은 유닛들의 움직임에 영향을 주는 특성이 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;게임의 특성에 맞는 여러 타입의 부대들 또는 유닛들을 지원한다&lt;/li&gt;
+&lt;li&gt;각 게임은 사각형의 타일들로 구성된 보드를 가지고 있고, 각 타일은 지형 타입을 가지고 있다.&lt;/li&gt;
+&lt;li&gt;공상 과학 소설이나 판타지 소설에 등장하는 가상의 시대를 포함한 다양한 시대를 지원한다.&lt;/li&gt;
+&lt;li&gt;새로운 작전 수행이나 전쟁 시나리오를 위한 추가 모듈을 지원한다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 누구의 차례인지에 대한 정보를 유지하고 유닛들의 기본적인 움직임을 관장한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;특징과 요구 사항의 차이점에 얽매이지 말라.&lt;/h4&gt;
+&lt;p&gt;feature와 requirement를 여러가지 의미로 사용하니 용어에 얽매이진 말자. (많은 사람들이 feature와 requirement를 구분하지 않는다.) feature는 requirement를 아우르는 큰 개념이라고 생각하자.&lt;/p&gt;
+&lt;h4&gt;세부 내용은 늦출 수 있을 때까지 최대한 늦추라&lt;/h4&gt;
+&lt;p&gt;유스케이스는 개발 시스템 전체의 큰 그림을 보는 데 도움이 되지 않는다. 처음부터 너무 자세한 것을 살펴보다가 큰 그림을 까먹게 된다. 아직 우리는 세세한 부분을 다룰 준비가 덜 되어 있다. 지금 시점에서는 프레임웍이 실제 무엇인지를 알아내는 단계이다. 유스케이스 작성을 할 수도 있겠지만, 이는 큰 그림을 그려볼 때 도움이 되지 않는 작업이다.&lt;/p&gt;
+&lt;p&gt;아직 우리는 여전히 시스템이 무엇을 해야하는지를 먼저 파악해야 한다. 세세한 부분은 피하며 시스템 전체의 큰 그림에 중점을 두자.&lt;/p&gt;
+&lt;h3&gt;유스케이스 다이어그램&lt;/h3&gt;
+&lt;p&gt;다이어그램은 자세하진 않지만 시스템이 할 모든 내용을 간단하고 읽기 쉽게 알려준다. 이는 우리가 큰 그림을 볼 수 있게 도와준다. 특징 리스트를 사용해서 유스케이스 다이어그램에 빠진 것이 없게 만들라.&lt;/p&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li&gt;액터: 액터는 시스템과 상호작용을 한다. 액터는 게임 디자이너이다.&lt;/li&gt;
+&lt;li&gt;시스템&lt;ol&gt;
+&lt;li&gt;새 게임 만들기&lt;ul&gt;
+&lt;li&gt;프레임웍은 타일들로 구성된 보드를 제공하고, 타일은 지형 타입을 가지고 있다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 다양한 타입의 지형을 지원한다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 다양한 시대를 지원한다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 다양한 유닛 타입들을 지원한다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 추가 모듈을 지원한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;기존 게임 변경하기&lt;/li&gt;
+&lt;li&gt;게임 배치하기&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;위에 기술했던 특징을 함께 연결지어 놓았는데, 한가지가 눈에 밟힌다. &lt;code&gt;프레임웍은 누구의 차례인지에 대한 정보를 유지하고 유닛들의 기본적인 움직임을 관장한다.&lt;/code&gt; 라는 내용인데, 이 특징은 어디에 연결지을수 있을까? 다이어그램에는 넣을 수 없을듯 하고, 유스케이스가 무언가 빠진 건 아닐까? 우리에게는 작은 액터가 하나 숨어 있다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3&gt;작은 액터&lt;/h3&gt;
+&lt;p&gt;우리는 게임 프레임웍을 만들고 있다. 게임 디자이너가 게임을 만들게 하기 위해서이다. 게임 디자이너는 액터이며, 프레임웍을 이용해서 게임을 설계한다. 게임과 프레임웍은 같지 않다. 왜냐하면 게임은 완성본이고, 게임을 즐길 수 있다. 프레임웍은 게임을 만드는 기반을 제공한다.&lt;/p&gt;
+&lt;p&gt;프레임웍은 게임 디자이너를 위한 도구라고 볼 수 있을까? 그렇지만은 않다. 유스케이스 다이어그램을 그리다가 막힌 부분이 프레임웍이 각 게임에 대해 제공하는 서비스와 관련된 특징이다. 프레임웍은 게임의 일부이며, 게임의 기본 서비스 제공하는 하위레벨 모듈과 같은 것이다. 게임은 프레임웍 위에 올려져 있고, 실제 그것을 사용한다. 그렇다면… 게임은 액터이다!&lt;/p&gt;
+&lt;p&gt;리틀 리스퍼 형식의 문답을 하며 우리는 게임이 액터라는 사실을 추론했다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li&gt;게임 디자이너&lt;ol&gt;
+&lt;li&gt;시스템&lt;ol&gt;
+&lt;li&gt;새 게임 만들기&lt;ul&gt;
+&lt;li&gt;프레임웍은 타일들로 구성된 보드를 제공하고, 타일은 지형 타입을 가지고 있다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 다양한 타입의 지형을 지원한다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 다양한 시대를 지원한다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 다양한 유닛 타입들을 지원한다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 추가 모듈을 지원한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;기존 게임 변경하기&lt;/li&gt;
+&lt;li&gt;게임 배치하기&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;게임&lt;ol&gt;
+&lt;li&gt;시스템&lt;ol&gt;
+&lt;li&gt;보드 만들기&lt;/li&gt;
+&lt;li&gt;유닛 이동&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;프레임웍은 누구의 차례인지에 대한 정보를 유지하고 유닛들의 기본적인 움직임을 관장한다.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;유닛 추가/삭제&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr&gt;
+&lt;p&gt;위에서 보다시피 액터가 꼭 사람일 필요는 없다. 예전에 코드스피츠에서 강의 들을 때, 양놈들의 사고방식을 설명들으며 JS에게는 브라우저가 OS일 수 있고, 브라우저에게는 윈도우가 OS일 수도 있다는 설명을 들었는데… 비슷한 내용이 아닌가 싶다.&lt;/p&gt;
+&lt;p&gt;저 굵은 글씨로 써놓은 것이 이제 들어갈 곳을 찾았다. 그러나 여전히 찜찜하다. 누가 이동할 차례인지에 대한 정보 유지는 어쩌지? 다이어그램에 무언가 아직 빠져있는듯 하다.&lt;/p&gt;
+&lt;p&gt;자 그렇다면...&lt;/p&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li&gt;게임 디자이너&lt;ol&gt;
+&lt;li&gt;시스템&lt;ol&gt;
+&lt;li&gt;새 게임 만들기&lt;ul&gt;
+&lt;li&gt;프레임웍은 타일들로 구성된 보드를 제공하고, 타일은 지형 타입을 가지고 있다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 다양한 타입의 지형을 지원한다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 다양한 시대를 지원한다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 다양한 유닛 타입들을 지원한다.&lt;/li&gt;
+&lt;li&gt;프레임웍은 추가 모듈을 지원한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;기존 게임 변경하기&lt;/li&gt;
+&lt;li&gt;게임 배치하기&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;게임&lt;ol&gt;
+&lt;li&gt;시스템&lt;ol&gt;
+&lt;li&gt;보드 만들기&lt;/li&gt;
+&lt;li&gt;유닛 이동&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;유닛들의 기본적인 움직임을 관장한다.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;유닛 추가/삭제&lt;/li&gt;
+&lt;li&gt;차례 바꾸기&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;프레임웍은 누구의 차례인지에 대한 정보를 유지한다.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr&gt;
+&lt;p&gt;위와 같이 차례 바꾸기 유스 케이스를 추가하여 특징을 쪼갰다.&lt;/p&gt;
+&lt;p&gt;우리는 특징, 요구사항 리스트로 시스템이 해야 할 큰 일들을 알아내보았다. 유스케이스 다이어그램은 세부사항에 얽매이지 않고 우리가 만들 시스템을 나타낼 수 있게 도와주었다.&lt;/p&gt;
+&lt;h3&gt;도메인 분석&lt;/h3&gt;
+&lt;p&gt;이제 코드에 대한 이야기를 시작할 때가 되지는 않았나? 특징 리스트, 유스케이스 다이어그램 등을 만든다 하더라도 결국 코드가 구현이 되어야 하지 않는가? 고객은 우리가 이쯤되면 됐다 하고서 클래스가 어쩌고 하며 이야기를 하기 시작하면 당황하게 될 것이다. 그래서 도메인 분석이 필요하다. 고객이 이해할 수 있는 용어로 설명을 하는 것이다. 고객과 이야기 할 때는 클래스, 객체, 메소드가 아닌 유닛, 지형 타일에 대해 이야기하는 것이다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;도메인 분석을 통해서 디자인을 확인할 수 있고, 고객이 사용하는 용어를 사용할 수 있다.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;도메인 분석은 기존 시스템과 개발 이력, 도메인 전문가들로부터 얻은 지식, 기반 이론, 그리고 도메인에서 새로 등장하는 기술을 기반으로 도메인 관련 정보를 찾아내고, 모으고, 구조화하고, 나타내는 프로세스이다.&lt;/p&gt;
+&lt;h4&gt;특징&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;시대적 배경: 다양한 지형, 유닛 타입, 무기&lt;/li&gt;
+&lt;li&gt;타일: 기본 타일, 지형 타입, 유닛, 전쟁 지원&lt;/li&gt;
+&lt;li&gt;지형 타입: 최소 하나의 지형 타입을 지원함. 들판, 호수, 행성 등&lt;/li&gt;
+&lt;li&gt;유닛&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;크게 나누기&lt;/h4&gt;
+&lt;p&gt;시스템의 특징들을 다루면서, 큰 문제를 여러개의 더 작고 관리하기 쉬운 기능의 조각들로 나눈다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Units: 부대, 군대, 유닛 등&lt;/li&gt;
+&lt;li&gt;Board: 보드, 타일, 지형, 게임에서 사용될 실제 보드를 만드는 것과 이와 관련된 클래스를 가짐&lt;/li&gt;
+&lt;li&gt;Game: 모든 디자이너가 확장할 기본 클래스를 저장한다.&lt;/li&gt;
+&lt;li&gt;Utilities: 모듈간 공유하는 도구, 헬퍼 클래스들을 보관&lt;/li&gt;
+&lt;li&gt;Controller: 각 플레이어 순서, 기본 이동, 게임의 실제 흐름과 관련된 내용을 다룸&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;이게 다 정답이지는 않다. 각자 프로그램을 만들다보면 다를 수 있다.&lt;/p&gt;
+&lt;p&gt;누군가는 &amp;quot;이 게임 노잼인데? 그래픽도 별로고.&amp;quot; 할수 있다. 그러나 우리의 고객은 게이머가 아니라 게임 디자이너임을 잊지말자.&lt;/p&gt;
+&lt;h3&gt;디자인 패턴&lt;/h3&gt;
+&lt;p&gt;우리가 나누어 본 것을 보면 MVC 패턴을 차용했음을 알 수 있다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Model: Board, Units&lt;/li&gt;
+&lt;li&gt;View: Graphics&lt;/li&gt;
+&lt;li&gt;Controller: Controller&lt;/li&gt;
+&lt;li&gt;기타: Game, Utilities&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;우리는 보통 이미 만들어진 라이브러리, 프레임웍을 이용한다. 라이브러리와 프레임웍은 컴포넌트를 찾아 연결하는 방식의 개발 모델이다. 그러나 우리 프로그램을 이해하기 쉽고, 유지보수와 유연성이 높은 방식으로 구조화하는데는 도움이 되지 않는다. 이럴 때 우리는 디자인 패턴을 이용한다.&lt;/p&gt;
+&lt;p&gt;디자인 패턴은 특정 문제를 위한 해결 방안을 디자인하는 방법이다. 디자인 패턴을 알고나면 새로운 디자인에 적용할 수 있고, 내 코드가 유연하지 않은 코드로 변질되어 갈 때도 디자인 패턴으로 다시 작업할 수 있다. 디자인 패턴을 잘 모르더라도 괜찮다. 이는 마지막 단계에 도움이 되기 때문이다.&lt;/p&gt;
+&lt;h3&gt;요약&lt;/h3&gt;
+&lt;p&gt;우리가 지금까지 한 내용을 살펴본다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;특징들 수집&lt;/li&gt;
+&lt;li&gt;도메인 분석&lt;/li&gt;
+&lt;li&gt;시스템을 여러개의 모듈로 나누기&lt;/li&gt;
+&lt;li&gt;시스템이 MVC 패턴을 이용한다는 것을 알기&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;크게는 이렇게 일을 했다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;우리는 고객의 말에 귀 기울여 들었다.&lt;/li&gt;
+&lt;li&gt;우리가 시스템을 이해하는지 확인했다. - 고객이 이해하는 용어로 설명할 수 있어야 한다.&lt;/li&gt;
+&lt;li&gt;우리가 만드는 시스템에 대한 청사진(설계도)를 그렸다. - 유스케이스 다이어그램을 사용했다.&lt;/li&gt;
+&lt;li&gt;큰 문제를 기능의 작은 조각들로 나누었다.&lt;/li&gt;
+&lt;li&gt;작은 문제들의 해결에 디자인 패턴을 적용한다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>design patterns</category>
+<author>devtimothy</author>
+<guid>https://devtimothy.tistory.com/127</guid>
+<comments>https://devtimothy.tistory.com/127#entry127comment</comments>
+<pubDate>Thu, 11 Apr 2019 20:11:50 +0900</pubDate>
+</item>
+<item>
+<title>#9 좋은 디자인 = 유연한 소프트웨어 : 변하지 않는 것은 없다 (2)</title>
+<link>https://devtimothy.tistory.com/126</link>
+<description>&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h1&gt;#9 좋은 디자인 = 유연한 소프트웨어 : 변하지 않는 것은 없다 (2)&lt;/h1&gt;
+&lt;blockquote&gt;
+&lt;p&gt;본 블로깅은 Head first OOAD: 세상을 설계하는 객체지향 방법론 (한빛미디어) 책을 Typescript 문법으로 전환하며 공부하는 글입니다.&lt;br&gt;글을 읽기 전에, 광고 배너 한번씩만 클릭 부탁드립니다. 블로그 운영에 큰 보탬이 됩니다 :)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;프로그램을 변경할 때마다 모든 코드의 부분을 뜯어고치는 일은 굉장히 짜증나고 성가신 일이다. 나는 제왕적 사고방식에 찌들어 있던 사람이다보니, 이런 일이 빈번했다. 그러던 중 소프트웨어를 유연하고 튼튼하게 만들 방법은 없을까? 하는 생각이 든다. 객체지향이 어떻게 프로그램을 유연하게 만들까? 어떻게 높은 응집도가 결합도에 도움이 되는지도 이 글을 통해서 공부해본다.&lt;/p&gt;
+&lt;h3&gt;악기 검색 프로그램을 돌아가보자&lt;/h3&gt;
+&lt;p&gt;코드에서 몇가지 문제를 생각해본다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;addInstrument()&lt;/code&gt;는 악기 타입별로 해당되는 코드가 있어서 새로운 악기 서브클래스 추가시마다 코드를 수정해야 함&lt;/li&gt;
+&lt;li&gt;각 Instrument 마다 &lt;code&gt;search()&lt;/code&gt; 메서드가 있음.&lt;/li&gt;
+&lt;li&gt;악기가 추가될때마다 그에 대한 클래스와 코드를 추가해야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;어떻게 해결하면 좋을까?&lt;/p&gt;
+&lt;p&gt;InstrumentSpec을 인자로 받는 &lt;code&gt;search()&lt;/code&gt; 메소드를 만든다. 다양한 악기를 반환할 수 있도록 하는 것이다. 그리고 InstrumentSpec은 더 이상 추상클래스가 아닌 일반 클래스로 만들도록 한다. 이는 구현 클래스가 아닌 인터페이스에 초점을 두기 위함이다.&lt;/p&gt;
+&lt;p&gt;우선 Inventory 클래스를 수정해보자.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot;&gt;export const Inventory = class {
+  private _inventory: any[];
+  constructor() {
+    this._inventory = new Array&amp;lt;Guitar&amp;gt;();
+  }
+  addInstrument(
+    serialNumber: string,
+    price: number,
+    spec: InstrumentSpec
+  ): void {
+    let instrument: Instrument = null;
+    if (spec instanceof GuitarSpec) {
+      instrument = new Guitar(serialNumber, price, spec as GuitarSpec);
+    } else if (spec instanceof MandolinSpec) {
+      instrument = new Mandolin(serialNumber, price, spec as MandolinSpec);
+    }
+    this._inventory.push(instrument);
+  }
+  public get(serialNumber: string): Instrument {
+    return this._inventory.filter(
+      (item: Instrument): boolean =&amp;gt; item.serialNumber == serialNumber
+    )[0];
+  }
+  public search(searchSpec: InstrumentSpec): Instrument[] {
+    return this._inventory.filter(
+      (item: InstrumentSpec): boolean =&amp;gt; {
+        return searchSpec.matches(item);
+      }
+    );
+  }
+};&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;왜 Instrument 클래스가 필요할까? 대부분의 악기들이 일련번호, 가격 같은 공통된 속성들이 몇몇 존재한다. Instrument는 공통의 속성들을 저장하고, 특정 악기 타입들은 Instrument를 상속한다. 상속된 악기들은 다른 Spec 을 가지고 있기 때문에 각 악기는 다른 생성자를 갖는다.&lt;/p&gt;
+&lt;p&gt;보통 서브 클래스를 만드는 이유는 서브 클래스의 행동이 슈퍼 클래스와 다르기 때문이다. 이 프로그램에서 Guitar의 행동이 Instrument의 행동과 다른가? 사실 그놈이 그놈이다. (악기의 연주 방식을 표현했다면 다를 수 있겠지만)&lt;/p&gt;
+&lt;p&gt;그렇다면 어떻게 만드는 게 좋을까. 속성들은 다르지만, 각 악기마다 서브클래스를 만드는 일이 맞는 일일까? 객체지향 원리를 살펴보며 디자인 개선을 해보자.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;상속: Instrument와 InstrumentSpec 클래스, 그리고 서브 클래스들에 이미 상속을 사용함. 하지만 Instrument 클래스의 서브 클래스 상속 말고는 하는일 없음.&lt;/li&gt;
+&lt;li&gt;다형성: search() 메소드에서 객체에 관계없이 사용. addInstrument 도 적용되면 좋을 듯&lt;/li&gt;
+&lt;li&gt;추상화: InstrumentSpec은 새로운 속성을 Instrument 클래스에 영향 주지 않고 추가할 수 있게 함. 각 악기의 세부 사항들을 instrument 클래스 자신으로부터 추상화함.&lt;/li&gt;
+&lt;li&gt;캡슐화: 캡슐화를 많이 사용하지만, 더 사용할 수 있을 듯. &lt;strong&gt;변경되는 것들은 캡슐화한다.&lt;/strong&gt; 악기에서 변하는 것들은 속성들인데, Instrument와 InstrumentSpec으로부터 완전히 분리해서 캡슐화 할 방법이 있을까?&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;악기의 행동은 변하지 않는데, 악기 타입마다 서브 클래스를 꼭 만들어야 하는 것일까? Instrument 클래스가 InstrumentSpec에 대해 참조하고 있고 속성의 차이는 그 클래스들이 다룰 수 있다. 프로그램을 복잡하게 할 필요가 없는 것이다.&lt;/p&gt;
+&lt;p&gt;그렇다면 이제 우리는 어떻게 해야할까?&lt;/p&gt;
+&lt;h3&gt;디자인의 죽음&lt;/h3&gt;
+&lt;p&gt;악기 타입별로 새로운 Instrument의 서브 클래스를 만드는 것은 말이 안 된다. 우리에게 중요한 건 처음에 가진 생각을 버리는 일이다.&lt;/p&gt;
+&lt;p&gt;필자의 이야기를 잠시 하고자 한다. 개인적으로 어제 회사에서 코딩을 하다가 데이터를 underscore.js의 chain을 걸어서 작업해야 하는 일이 있었다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot;&gt;private mergeReservableTimes(restaurant: Restaurant): Restaurant {
+  const reservableTimes = _.chain(restaurant.reservableTimes)
+    .groupBy((element) =&amp;gt; element.dayOfWeek)
+    .defaults({0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []})
+    .values()
+    .map((dayArray) =&amp;gt; _.sortBy(dayArray, &amp;#39;level&amp;#39;))
+    .value();
+
+  return _.omit(restaurant, &amp;#39;reservableTimes&amp;#39;)
+    .extend({ reservableTimes })
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;위와 같이 작업이 되어있었는데, 아래 return 구문에 omit, extend에 chain을 걸지 않아서 버그가 발생했다. 팀 개발자들이 모여서 코드를 확인하는데 아래 return 구문 쪽을 chain 구문으로 해결하려고 하니 문제가 발생했다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot;&gt;return _.chain(restaurant)
+  .omit(&amp;#39;reservableTimes&amp;#39;)
+  .extend({ reservableTimes })
+  .value()&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Type &amp;#39;_Chain&amp;#39; is missing the following properties from type &amp;#39;Restaurant&amp;#39;: idx, name, address1, address2, and 70 more.ts(2740)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;아무래도 underscore 쪽에서 &lt;code&gt;value()&lt;/code&gt;로 리턴하는 부분이 문제가 발생한 것 같았다. 그래서 삽질을 좀 했었는데, 동료 개발자가 보더니 &amp;quot;어, 이거 굳이 chain으로 할 필요 없잖아요?&amp;quot; 하는 것이었다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-typescript&quot;&gt;private mergeReservableTimes(restaurant: Restaurant): any {
+  const reservableTimes: any = _.chain(restaurant.reservableTimes)
+    .groupBy((element) =&amp;gt; element.dayOfWeek)
+    .defaults({ 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] })
+    .values()
+    .map((dayArray) =&amp;gt; _.sortBy(dayArray, &amp;#39;level&amp;#39;))
+    .value();
+  restaurant.reservableTimes = reservableTimes;
+  return restaurant;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;위와 같이 바꾸고 나니 뒤늦게서야 저럴 필요가 없었음을 깨달았다. 먼저 구현되었던 코드가 underscore chain을 사용하다보니 계속 chain을 쓰려고 하는 &amp;#39;지식의 저주&amp;#39;에 걸려버렸던 것이다  &lt;/p&gt;
+&lt;p&gt;위와같이 우리가 처음 디자인한 코드에 대한 생각을 버리는 일은 쉽지 않다. 처음에는 일리 있는 코드였다고 생각하고, 그것이 이미 잘 동작한다고 여기면, 그 생각을 바꾸는 일이 쉽지 않다. 코드 리뷰나 Pull Request를 잘 날리는 일이 그래서 중요한 것 같다. 변경을 두려워말라. 차후에는 바뀐 디자인이 우리의 시간을 많이 줄여주는 효과가 날 것이다.&lt;/p&gt;
+&lt;p&gt;사실 내가 짠 코드에 대해 태클(?)이 들어오면 자존심이 상하기도 할텐데, 우리에게 중요한 것은 그 ego를 버리는 일이다. 사람들에게 상처받을 것이 두려워서 자신이 짠 코드를 남들에게 공개하는 일을 두려워하지 말자.&lt;/p&gt;
+&lt;h3&gt;코드 구현&lt;/h3&gt;
+&lt;p&gt;우리가 구현에 앞서 결정할 것은, 가장 먼저는 악기의 서브 클래스들을 모두 없애는 일이다. 새로운 악기를 추가한다고 해도 클래스를 만들 필요가 없게 만들자.&lt;/p&gt;
+&lt;p&gt;속성 값에 접근할 수 있게 하면서 새로운 속성이 추가되더라도 InstrumentSpec을 수정하지 않아도 되는 타입이 있을까? Map 은 다양한 타입의 속성을 다루고, 새로운 속성들을 언제나 추가할 수 있는 좋은 방법이다.&lt;/p&gt;
+&lt;p&gt;이제 Instrument와 InstrumentSpec은 모두 구상 클래스가 된다. 개념이 아닌 실제 악기를 나타낸다. InstrumentSpec은 고객들이 검색할 때 그들이 원하는 사양을 전달하기 위해 사용하기도 하고, Instrument가 악기의 속성들을 저장하기 위해 사용하기도 한다.&lt;/p&gt;
+&lt;p&gt;Guitar, Mandolin 같은 클래스들은 이제 없앨 수 있다. Instrument 클래스를 직접 사용하기 때문이다. 사실 각 악기의 서브 클래스들에서 한 일은 새로운 생성자를 만드는 일밖에 없었다. 프로그램의 유연성을 해치고, 그래서 아무 도움도 되지 않았던 것이다.&lt;/p&gt;
+&lt;p&gt;또한 Map을 사용함으로서 InstrumentSpec 이하의 서브 클래스들을 Map에 넣을 수 있었다. (사실 Java의 언어적 속성 때문에 이런 설명이 들어있는 것인데, TS에서는 또 다른 표현들이 가능하다.)&lt;/p&gt;
+&lt;p&gt;객체지향 설계에서 가장 중요한 원리 중 하나는 &lt;strong&gt;변하는 것에 대한 캡슐화&lt;/strong&gt;이다. InstrumentSpec에서 빼내서 Map에 넣음으로서 새로운 속성이 있는지 검사할때마다 Properties Map에서 이름 값/쌍으로 새로운 속성을 넣을 수 있다.&lt;/p&gt;
+&lt;p&gt;클래스 수가 적어짐으로서 소프트웨어가 유연해지냐? 하면 사실은 캐바캐다. 지금의 경우에는 그렇지만, 어떤 경우는 클래스를 더 추가함으로서 디자인이 유연해지는 경우도 있다. 사실 이런 감이 처음부터 생기는 건 아니다. 우리가 이런 감을 늘릴 수 있는 방법은 사이드 프로젝트를 자주 하며 경험을 늘리는 것이리라.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;좋은 디자인은 나쁜 디자인의 분석을 통해서 나온다.&lt;/strong&gt; 실수, 변경을 절대 두려워 말라.&lt;/p&gt;
+&lt;h3&gt;변경 사항&lt;/h3&gt;
+&lt;blockquote&gt;
+&lt;p&gt;코드 변경한 내용은 &lt;a href=&quot;https://github.com/yunseop-kim/headfirst-ooad-study&quot;&gt;이곳&lt;/a&gt; 을 참조하라.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ol&gt;
+&lt;li&gt;Inventory 클래스에는 이제 &lt;code&gt;search()&lt;/code&gt; 메소드가 하나 있다. 그리고 그 메소드는 여러 종류의 악기 타입을 반환할 수 있다.&lt;/li&gt;
+&lt;li&gt;Instrument 클래스는 더 이상 추상 클래스가 아니고, 타입별 악기 특유의 서브 클래스들도 없앴다.&lt;/li&gt;
+&lt;li&gt;InstrumentType이라는 새로운 열거형 타입을 추가해서 악기 타입을 나타낸다.&lt;/li&gt;
+&lt;li&gt;InstrumentSpec도 더 이상 추상클래스가 아니다. 그리고 Map을 이용해서 모든 속성들을 저장하고 있으며, 그래서 각 악기 타입마다 서브 클래스를 만들 필요가 없다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;우리가 프로그램을 개선했으나, 점검해볼 사항들이 있다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;프로그램을 변경하는 것이 얼마나 쉬운가?&lt;/li&gt;
+&lt;li&gt;잘 디자인 되었는가?&lt;/li&gt;
+&lt;li&gt;&amp;quot;응집되었다&amp;quot;는게 무슨 말일까?&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;크게는 이렇게 세가지이다. 좀더 자세히 톺아보면...&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;새로운 타입의 악기를 제공하려면 몇개의 클래스를 추가해야 할까? =&amp;gt; 없다. Instrument, InstrumentSpec의 서브 클래스들이 없지 않은가.&lt;/li&gt;
+&lt;li&gt;새로운 타입의 악기를 지원하려면 몇개의 클래스를 변경해야 하는가? =&amp;gt; InstrumentType에만 새로운 악기 타입을 추가한다.&lt;/li&gt;
+&lt;li&gt;제조일자를 관리하기로 했다면 몇개의 클래스를 변경해야 하는가? =&amp;gt; 없다. InstrumentSpec의 Map에 악기 제조일자를 넣으면 된다.&lt;/li&gt;
+&lt;li&gt;기타 손잡이의 neckWood라는 속성을 추가한다면 몇개의 클래스를 변경해야 하는가? =&amp;gt; 최악의 경우 하나. Wood enum 값을 변경해야할 수 있다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3&gt;소프트웨어 응집도&lt;/h3&gt;
+&lt;blockquote&gt;
+&lt;p&gt;응집된 클래스는 하나의 일을 정말 잘하고 그 외의 일은 하려고 하지 않는다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ol&gt;
+&lt;li&gt;클래스마다 응집도가 높을수록 소프트웨어 응집도가 높아진다.&lt;/li&gt;
+&lt;li&gt;응집된 클래스들은 특정한 일에 집중하고 있다. Inventory 클래스는 재고 목록만 걱정하지, 어떤 나무가 사용되었는지는 상관하지 않는다.&lt;/li&gt;
+&lt;li&gt;Instrument는 검색이나 어떤 나무 사용하는지에 대해 다루지 않는다. 오직 악기를 설명함.&lt;/li&gt;
+&lt;li&gt;클래스의 메소드를 살펴보자. 클래스와 관련이 있는가? 관련 없는 메소드가 있다면 다른 클래스에 들어가야 하는 메소드일지도 모른다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;응집도&lt;/strong&gt;: 응집도는 하나의 모듈, 클래스, 또는 객체들을 이루는 원소들 사이에 연결의 정도를 나타냄. 소프트웨어 응집도가 높을수록, 프로그램에서 각 클래스의 역할들이 잘 정의되어 있고, 잘 연결되어 있는 것이다. 각 클래스는 밀접하게 연결되어 있는 하나의 매우 특정한 집합의 일들을 수행한다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;응집도라는 것이 그냥 프로그램이 얼마나 쉽게 변경될 수 있는지를 나타내는 것일까?&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;그렇지 않다. 클래스, 객체, 패키지의 구성에 초점을 맞춘다고 보면 좋다. 한 클래스가 몇가지 일만 한다면 응집도가 높은 프로그램, 클래스 하나가 관련 없는 여러 일을 하면, 낮은 응집도의 프로그램이라고 보면 됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;높은 응집도의 소프트웨어는 느슨하게 결합된 것인가?&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;맞다. 소프트웨어가 더 응집되어 있을수록, 클래스간 더 느슨한 결합을 갖게 됨.&lt;/li&gt;
+&lt;li&gt;Inventory 클래스는 재고 목록만 걱정하면 됨. 악기 사양이 어떤지는 상관하지 않음. =&amp;gt; 응집도가 높은 클래스임을 나타냄&lt;/li&gt;
+&lt;li&gt;이는 프로그램의 각 부분이 느슨하게 결함되어 있음을 나타냄. =&amp;gt; Instrument 변경한다고 Inventory가 영향받지 않음.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;소프트웨어가 변경하기 더 쉬울 것이지 않는가?&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;대부분의 경우 맞다. 프로그램 처음에는 Guitar만 있었던게, Mandolin 추가되고, 또 프로그램을 변경하고… 나중에는 여러 종류를 추가하는 것처럼. 응집도 자체가 소프트웨어가 변경하기 쉬운지에 대한 척도는 아니지만 동작 방식을 대폭 수정하는 경우가 아니라면 응집도 높은 소프트웨어가 대개 변경이 용이하다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;높은 응집도가 낮은 응집도보다 나은가?&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;그렇다. 좋은 객체지향 설계에서는 각 클래스와 모듈이 &lt;strong&gt;하나의 기본적인 일&lt;/strong&gt;을 한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;응집도가 높은 소프트웨어가 변경 뿐 아니라 재사용도 쉽지 않는가?&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;그렇다. 높은 응집도 + 느슨한 결함 = 소프트웨어 안 객체들이 서로 의존하지 않게 함. 확장 용이, 재사용 쉬움.&lt;/li&gt;
+&lt;li&gt;SRP 원칙을 생각해보자.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;소프트웨어 다시 검토하기&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;1장에서 작성했던 프로그램을 기억하는가? 두 개의 클래스가 있었고, 잘 응집되지도 않았었다.&lt;/li&gt;
+&lt;li&gt;만돌린을 지원하고자 했더니 프로그램을 재설계 해야 하는 일이 있었으나, 프로그램 응집도는 높았다.&lt;/li&gt;
+&lt;li&gt;여러 타입의 악기를 지원하고자 했더니, 오히려 응집도가 2번 때보다 낮아졌다.&lt;/li&gt;
+&lt;li&gt;새로운 악기를 넣는다는 것은 엄청난 참사였다&lt;/li&gt;
+&lt;li&gt;지금 만들어놓은 디자인은 응집도가 높고, 느슨한 결합으로 확장과 재사용이 용이하다.&lt;/li&gt;
+&lt;li&gt;소프트웨어 변경 때마다 점점 응집도가 올라가는지 확인하자.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;사실 소프트웨어 디자인은 한번 시작하면 한도 끝도 없다. 고객의 요구사항을 너무 깊게 생각하여 투머치로 작성하게 될 수도 있고, 때로는 돈이 없어서 디자인을 멈춰야 하는 경우도 있다. 일단 소프트웨어가 잘 동작하고, 고객이 만족스러워하고, 소프트웨어 디자인에 최선을 다했다면 그것으로 충분하다. &amp;quot;완벽한 소프트웨어&amp;quot;를 작성하기 위해 많은 시간을 들이는 것은 시간낭비이다.&lt;/p&gt;
+&lt;h3&gt;분석과 설계&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;잘 디자인된 소프트웨어는 변경과 확장이 쉽다.&lt;/li&gt;
+&lt;li&gt;기본적인 캡슐화와 상속 같은 객체지향 원리를 사용하여 소프트웨어를 좀 더 유연하게 만들라.&lt;/li&gt;
+&lt;li&gt;디자인이 유연하지 않으면, &lt;strong&gt;변경하라.&lt;/strong&gt; 변경해야 하는 것이 내 디자인이어도, 결코 나쁜 디자인은 고수하지 말라.&lt;/li&gt;
+&lt;li&gt;각 클래스의 응집도를 높게 하라. 클래스 각각은 하나의 일을 정말 잘 하는 것에 중점을 두어야 한다.&lt;/li&gt;
+&lt;li&gt;소프트웨어 디자인을 진행하며, 항상 높은 응집도를 위해 노력하라.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;객체지향 원리&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;변하는 것을 캡슐화하라&lt;/li&gt;
+&lt;li&gt;구현에 의존하기보다는 인터페이스에 의존하도록 코딩하라&lt;/li&gt;
+&lt;li&gt;각 클래스는 변경 요인이 오직 하나이어야 한다.&lt;/li&gt;
+&lt;li&gt;클래스는 행동과 기능에 관한 것이다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>design patterns</category>
+<author>devtimothy</author>
+<guid>https://devtimothy.tistory.com/126</guid>
+<comments>https://devtimothy.tistory.com/126#entry126comment</comments>
+<pubDate>Fri, 05 Apr 2019 16:31:20 +0900</pubDate>
+</item>
+<item>
+<title>#8 좋은 디자인 = 유연한 소프트웨어 : 변하지 않는 것은 없다</title>
+<link>https://devtimothy.tistory.com/125</link>
+<description>&lt;div style=&quot;text-align:center;margin:0 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;h1&gt;#8 좋은 디자인 = 유연한 소프트웨어 : 변하지 않는 것은 없다&lt;/h1&gt;
+&lt;blockquote&gt;
+&lt;p&gt;본 블로깅은 Head first OOAD: 세상을 설계하는 객체지향 방법론 (한빛미디어) 책을 Typescript 문법으로 전환하며 공부하는 글입니다.&lt;br&gt;글을 읽기 전에, 광고 배너 한번씩만 클릭 부탁드립니다. 블로그 운영에 큰 보탬이 됩니다 :)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;우리가 #1~#4에 걸쳐서 보았던 기타 상점 프로그램으로 다시 돌아가본다. 고갱님의 기타 상점 사업이 번창해서 이제는 &amp;quot;현악기&amp;quot; 상점으로 진화를 하게 된다. 축하한다.  &lt;/p&gt;
+&lt;p&gt;만돌린이라는 악기를 취급할 예정이라고 하는데, 현재 프로그램에서 고갱님이 만돌린을 취급할 수 있게 만드려면 어떻게 해야할까? 아래는 클래스 다이어그램이 있다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bVYsg7/btqtYZlRtPX/j2E2Km1XW2Pz2F6TsXZ2P1/img.jpg' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bVYsg7/btqtYZlRtPX/j2E2Km1XW2Pz2F6TsXZ2P1/img.jpg' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbVYsg7%2FbtqtYZlRtPX%2Fj2E2Km1XW2Pz2F6TsXZ2P1%2Fimg.jpg' width=&quot;100%&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;이제 만돌린을 검색할 수 있게 변경해보자.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bd2rXB/btqtZNyuIyp/bKVEdILAEaS2qvjdjM5Kf1/img.jpg' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bd2rXB/btqtZNyuIyp/bKVEdILAEaS2qvjdjM5Kf1/img.jpg' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fbd2rXB%2FbtqtZNyuIyp%2FbKVEdILAEaS2qvjdjM5Kf1%2Fimg.jpg' width=&quot;100%&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;여기서 Instrument는 추상 부모 클래스이다. 이에 따라서 Guitar에 있던 대부분의 내용이 Instrument로 옮겨갔다. Guitar는 Instrument를 상속한다.&lt;/p&gt;
+&lt;h3&gt;추상 부모 클래스란?&lt;/h3&gt;
+&lt;p&gt;Instrument 클래스를 보자. 이는 추상 클래스인데, 추상 클래스 자체는 Instrument 자체의 객체는 생성할 수 없다. Mandolin이나 Guitar 같은 Instrument의 서브 클래스가 지정되어야 한다. Instrument는 저장장소 역할만 하기 때문에 추상 클래스로 지정하였다. 구현은 서브 클래스들이 담당한다. Instrument는 실제 구현 클래스들을 위한 Generic 클래스이다.&lt;/p&gt;
+&lt;h4&gt;MandolinSpec 클래스를 만들어보자&lt;/h4&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/zrVJE/btqt1jb83bb/AhibqZGTqpHAGlkfLrxaMk/img.jpg' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/zrVJE/btqt1jb83bb/AhibqZGTqpHAGlkfLrxaMk/img.jpg' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FzrVJE%2Fbtqt1jb83bb%2FAhibqZGTqpHAGlkfLrxaMk%2Fimg.jpg' width=&quot;100%&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;만돌린 클래스를 만들어보니 겹치는게 꽤 많다. InstrumentSpec 클래스로 추상 부모 클래스를 만들 수 있을 것 같다.&lt;/p&gt;
+&lt;h3&gt;UML 용어와 표기&lt;/h3&gt;
+&lt;p&gt;UML의 기호와 표기 방식은 많이 있지만, 기본적인 것만 가지고도 많은 사람들이 불만없이 잘 사용한다. 이정도만 익히고 사용하더라도 다른 사람들에게 잘 설명할 수 있을 것이다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;추상 클래스&lt;ul&gt;
+&lt;li&gt;자바: 추상 클래스&lt;/li&gt;
+&lt;li&gt;UML: 추상 클래스, 이탤릭체의 클래스명&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;관계&lt;ul&gt;
+&lt;li&gt;자바: 관계&lt;/li&gt;
+&lt;li&gt;UML: 연관, 일반 직선 화살표&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;상속&lt;ul&gt;
+&lt;li&gt;자바: 상속&lt;/li&gt;
+&lt;li&gt;UML: 일반화, 세모 화살표&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;집합&lt;ul&gt;
+&lt;li&gt;자바: 집합&lt;/li&gt;
+&lt;li&gt;UML: 집합, 마름모 화살표&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;코드 작성&lt;/h3&gt;
+&lt;p&gt;코드가 너무 많아서… &lt;a href=&quot;https://github.com/yunseop-kim/headfirst-ooad-study/commit/8f9c5ece256b52c2ce57871de57698996d000c8c&quot;&gt;여기&lt;/a&gt;를 참조하자.&lt;/p&gt;
+&lt;p&gt;Guitar, Mandolin은 생성자만 가지고 있는 클래스임을 확인할 수 있다. 과연 서브클래스가 필요한 것일까? 라는 생각이 들지만 필요하다. 클래스 타입을 확인하는 방법 밖에는 어떤 타입의 악기인지 알 수가 없다. 그래서 Guitar 클래스를 만들면서 그 생성자에는 MandolinSpec을 전달할 수 없다.&lt;/p&gt;
+&lt;p&gt;사실 Java로 작성되었던 코드에서는 (나는 Typescript로 하고 있다.) search 메소드가 두개로 갈린다. 하나는 MandolinSpec을 검색하는 것, 하나는 GuitarSpec을 검색하는 것으로 말이다.&lt;/p&gt;
+&lt;p&gt;추상 클래스를 사용해서 중복을 없애고 악기 속성은 캡슐화해서 사양 클래스로 빼는 것들은 잘한 일이다. 하지만 여전히 Guitar와 Mandolin 클래스가 비어 있고 addInstrument() 메소드가 악기에 대한 지식을 가지고 있는 것도 마음이 걸린다.&lt;/p&gt;
+&lt;p&gt;물론 검색 기능은 잘 돌아간다. 캡슐화, 중복 코드 피하기, 확장성이 좋게 만들기 등의 객체지향 원리를 녹였다. 물론 새로운 악기 타입을 추가하기에는 많은 작업이 필요하다. 재사용성은 어렵다. 모두 단단히 연결되었고, InstrumentSpec이 Instrument의 일부이다.&lt;/p&gt;
+&lt;p&gt;처음부터 완벽하게 소프트웨어를 만들긴 어렵다. 그래서 사용하면서 조금씩 바꿔나가는 것도 한 방법이다. 악기 타입이 추가된다고 생각해보자. 각 악기별로 특유의 속성이 있다면? 악기 클래스를 만들고, 사양 클래스를 계속 하나둘씩 만들어야 될 것이다. 그런데 각 악기별로 또 공통점이 보일 수도 있다. 점점 프로그램을 짜기는 복잡해질 것이다.&lt;/p&gt;
+&lt;p&gt;그렇다면 뭘 해야할까?&lt;/p&gt;
+&lt;h3&gt;인터페이스&lt;/h3&gt;
+&lt;p&gt;인터페이스는 여러 타입에 적용되는 행동을 정의하는 역할과 그 여러 타입을 사용하는 클래스들의 관심의 초점을 나타내는 역할의 두 가지 역할이 있다.&lt;/p&gt;
+&lt;p&gt;구현보다는 인터페이스에 의존하도록 코딩하는게 소프트웨어 확장에 용이하다.&lt;/p&gt;
+&lt;p&gt;예: 운동 선수 인터페이스 - 농구선수 클래스, 축구선수 클래스, 야구선수 클래스 등...&lt;/p&gt;
+&lt;p&gt;인터페이스는 프로그램에 유연성을 추가해준다. 야구선수 클래스와 같은 특정 서브 클래스하고만 상호작용함이 아닌 운동선수 인터페이스와 상호작용이 가능하다. 하키선수, 테니스선수 같은 운동선수 인터페이스의 서브클래스이면 어떤 클래스이든 괜찮다. (아직 안 만들어졌더라도 말이다.)&lt;/p&gt;
+&lt;h3&gt;캡슐화&lt;/h3&gt;
+&lt;p&gt;캡슐화는 객체의 행동 변화에 필요한 코드 변경을 국한하여, 어떤 객체지향 원리보다도 유지보수에서 생기는 문제를 막는 책임을 지고 있다. 쉽게 말하면 클래스를 불필요한 변경으로부터 보호한다.&lt;/p&gt;
+&lt;p&gt;변화 가능성이 있는 기능이 있다면, 자주 변하지 않을 부분과 분리하려는 노력이 필요하다.&lt;/p&gt;
+&lt;p&gt;화가 클래스가 있다면, 받침대 준비하고, 붓을 닦고, 그림 그리는 일은 변하지 않을 것이다. 그러나 현대풍 화법일지, 초현실주의 화법일지에 대한 것은 바뀔수 있다.&lt;/p&gt;
+&lt;h3&gt;변경&lt;/h3&gt;
+&lt;p&gt;모든 클래스가 변경에 대해 하나의 이유만을 갖도록 한다. 앞서서 &amp;quot;모든 소프트웨어는 변한다&amp;quot; 라는 불변의 진리를 함께 이야기했다. 클래스의 변경 요인을 줄여서 변경 가능성을 줄이는 것이 필요하다.&lt;/p&gt;
+&lt;p&gt;자동차 클래스가 출발, 멈춤, 타이어 교체, 운전, 세차, 오일점검까지 다 할 필요는 없다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;자동차 클래스는 출발, 멈춤, 기름넣기&lt;/li&gt;
+&lt;li&gt;차 세척 클래스는 세차&lt;/li&gt;
+&lt;li&gt;운전자 클래스는 운전&lt;/li&gt;
+&lt;li&gt;수리공 클래스는 기름 점검, 타이어 교체&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;이런식으로 나누는 게 좋다.&lt;/p&gt;
+&lt;p&gt;다음 포스트에서는 지금까지 만든 코드를 뜯어고쳐보는 시간을 갖도록 하자.&lt;/p&gt;
+&lt;h3&gt;요약&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;변하는 것을 캡슐화하라&lt;/li&gt;
+&lt;li&gt;구현에 의존하기보다는 인터페이스에 의존하도록 하라&lt;/li&gt;
+&lt;li&gt;각 클래스는 변경 요인이 오직 하나여야 한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div style=&quot;text-align:center;margin:10px 0 10px 0;&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- PC용 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:inline-block;width:728px;height:90px&quot;
+     data-ad-client=&quot;ca-pub-4995410357973680&quot;
+     data-ad-slot=&quot;7067300297&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>design patterns</category>
+<author>devtimothy</author>
+<guid>https://devtimothy.tistory.com/125</guid>
+<comments>https://devtimothy.tistory.com/125#entry125comment</comments>
+<pubDate>Mon, 01 Apr 2019 09:02:54 +0900</pubDate>
+</item>
+</channel>
+</rss>

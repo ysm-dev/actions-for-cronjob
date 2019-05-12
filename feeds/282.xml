@@ -1,0 +1,1613 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	xmlns:georss="http://www.georss.org/georss" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" xmlns:media="http://search.yahoo.com/mrss/"
+	>
+
+<channel>
+	<title>it&#039;s compiling</title>
+	<atom:link href="https://heejune.me/feed/" rel="self" type="application/rss+xml" />
+	<link>https://heejune.me</link>
+	<description>I&#039;m posting this while it&#039;s compiling</description>
+	<lastBuildDate>Wed, 16 Aug 2017 14:44:14 +0000</lastBuildDate>
+	<language>en</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>http://wordpress.com/</generator>
+<cloud domain='heejune.me' port='80' path='/?rsscloud=notify' registerProcedure='' protocol='http-post' />
+<image>
+		<url>https://s0.wp.com/i/buttonw-com.png</url>
+		<title>it&#039;s compiling</title>
+		<link>https://heejune.me</link>
+	</image>
+	<atom:link rel="search" type="application/opensearchdescription+xml" href="https://heejune.me/osd.xml" title="it&#039;s compiling" />
+	<atom:link rel='hub' href='https://heejune.me/?pushpress=hub'/>
+	<item>
+		<title>Setup rsync server over SSH on Windows Server 2012 easy way</title>
+		<link>https://heejune.me/2018/08/02/setup-rsync-server-over-ssh-on-windows-server-2012-easy-way/</link>
+				<comments>https://heejune.me/2018/08/02/setup-rsync-server-over-ssh-on-windows-server-2012-easy-way/#respond</comments>
+				<pubDate>Thu, 02 Aug 2018 03:53:06 +0000</pubDate>
+		<dc:creator><![CDATA[Heejune]]></dc:creator>
+				<category><![CDATA[devops]]></category>
+
+		<guid isPermaLink="false">http://heejune.wordpress.com/?p=593</guid>
+				<description><![CDATA[Configuring sshd from Windows server There&#8217;re few options available such as Cygwin, WSL, MSYS2(Git for Windows) and Win32-OpenSSH. Personally I &#8216;thought&#8217;: Cygwin: installing the Cygwin was relatively easy, but configuring the sshd wasn&#8217;t. Not providing uninstaller was also minus. WSL: Looked promising, but it didn&#8217;t support background daemon. Quote: https://blogs.windows.com/buildingapps/2017/08/08/windows-subsystem-linux-windows-server/ What this isn&#8217;t — WSL &#8230; <a href="https://heejune.me/2018/08/02/setup-rsync-server-over-ssh-on-windows-server-2012-easy-way/" class="more-link">Continue reading <span class="screen-reader-text">Setup rsync server over SSH on Windows Server 2012 easy&#160;way</span> <span class="meta-nav">&#8594;</span></a>]]></description>
+								<content:encoded><![CDATA[<ol>
+<li>Configuring sshd from Windows server</li>
+</ol>
+<p>There&#8217;re few options available such as Cygwin, WSL, MSYS2(Git for Windows) and Win32-OpenSSH. Personally I &#8216;thought&#8217;:</p>
+<ul>
+<li>Cygwin: installing the Cygwin was relatively easy, but configuring the sshd wasn&#8217;t. Not providing uninstaller was also minus.</li>
+<li>WSL: Looked promising, but it didn&#8217;t support background daemon.</li>
+</ul>
+<p>Quote: <a href="https://blogs.windows.com/buildingapps/2017/08/08/windows-subsystem-linux-windows-server/">https://blogs.windows.com/buildingapps/2017/08/08/windows-subsystem-linux-windows-server/</a></p>
+<blockquote><p>What this isn&#8217;t — WSL is not a Linux server</p></blockquote>
+<blockquote><p><span style="font-size:12pt;">Just as with WSL on Windows Client, you can run daemons and jobs like MySQL, PostgreSQL, sshd, etc., via an interactive shell, but you cannot currently use WSL to run persistent Linux services, daemons, jobs, etc. as background tasks.<br />
+</span></p>
+<ul>
+<li>Win32-OpenSSH: It&#8217;s official way to use the sshd on Windows(It even recently started including OpenSSH from the OS additional <a href="https://blogs.msdn.microsoft.com/powershell/2017/12/15/using-the-openssh-beta-in-windows-10-fall-creators-update-and-windows-server-1709/">features</a>). Detailed instruction, (un)install Powershell scripts are also provided here <a href="https://github.com/PowerShell/Win32-OpenSSH/">https://github.com/PowerShell/Win32-OpenSSH/</a>.</li>
+</ul>
+</blockquote>
+<p>So I installed Win32-OpenSSH following by <a href="https://github.com/PowerShell/Win32-OpenSSH/wiki/Install-Win32-OpenSSH">https://github.com/PowerShell/Win32-OpenSSH/wiki/Install-Win32-OpenSSH</a> page.</p>
+<p>The server already installed the &#8216;Git for Windows(MSYS2)&#8217; so that I made the bash.exe as a default shell of the sshd.</p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/080218_0336_setuprsyncs1.png?w=1100" alt="" /></p>
+<p>Name: DefaultShell</p>
+<p>Value: C:\Program Files\Git\bin\bash.exe</p>
+<p>Few more tweaks required,</p>
+<ul>
+<li>I appended the client&#8217;s public key into the Windows Server(where rsync.exe server will be running)&#8217;s ~/.ssh/ authorized_keys</li>
+<li>The server&#8217;s sshd_config file is located at &#8216;C:\ProgramData\ssh&#8217; (unless you changed). &#8216;PubkeyAuthentication yes&#8217; option is commented out by default. Let&#8217;s enable it.</li>
+</ul>
+<p>So far, you should be able to ssh login to the Windows Server and see the MSYS2&#8217;s bash.exe shell as the result.</p>
+<p>2. Installing rsync on the Server</p>
+<p>I was struggling with this part at first because when I googled &#8216;rsync over ssh windows&#8217; the results were outdated or insufficient. However, I found <a href="https://serverfault.com/a/872557">this</a> and if you&#8217;re using MSYS2(Git for Windows), it&#8217;s extremely simple. Just grab the compiled <a href="http://repo.msys2.org/msys/x86_64/rsync-3.1.3-1-x86_64.pkg.tar.xz">binary</a> from msys2 <a href="http://repo.msys2.org/msys/x86_64/">repo</a> and paste it to the bin folder(C:\Program Files\Git\usr\bin).</p>
+<p>Refs: <a href="https://serverfault.com/a/872557">https://serverfault.com/a/872557</a> &amp; <a href="https://blog.tiger-workshop.com/add-rsync-to-git-bash-for-windows/">https://blog.tiger-workshop.com/add-rsync-to-git-bash-for-windows/</a></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/080218_0336_setuprsyncs2.png?w=1100" alt="" /></p>
+<p><span style="font-family:Lucida Console;font-size:9pt;">Then I was able to successfully &#8216;rsync&#8217;ing by:<br />
+</span></p>
+<p><span style="font-family:Lucida Console;font-size:9pt;">rsync …… -e ssh -vvv /c/somedir/folderA user@pcname.xxx.xxx:/c/detination_folder<br />
+</span></p>
+<p>Last bonus:</p>
+<p>3. Working it through Jenkins</p>
+<p>Additional chores remained if you want it to work through Jenkins because Jenkins service process is running under the <strong>SYSTEM</strong> account (if you didn&#8217;t modify). For example, if someone tried to launch a job does Jenkins rsync over SSH, then they&#8217;ll see the following error:</p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:623px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="padding-left:7px;padding-right:7px;border:solid .5pt;">[rsync test] $ C:\&#8230;\Git\bin\bash.exe -xe C:\Windows\TEMP\jenkins500000000000000003.sh</p>
+<p>+ <span style="background-color:yellow;">whoami</span></p>
+<p><span style="background-color:yellow;">SYSTEM</span></p>
+<p>+ rsync &#8230; -e &#8216;ssh -vvv -i /c/Users/xxxxx/.ssh/id_rsa&#8217; /c/&#8230;.</p>
+<p>OpenSSH_7.5p1, OpenSSL 1.0.2k 16 Jan 2017</p>
+<p>debug1: Reading configuration data /etc/ssh/ssh_config</p>
+<p>: : :</p>
+<p>: : :</p>
+<p>debug3: hostkeys_foreach: reading file &#8220;/etc/ssh/ssh_known_hosts&#8221;</p>
+<p>debug3: hostkeys_foreach: reading file &#8220;/etc/ssh/ssh_known_hosts&#8221;</p>
+<p>debug1: read_passphrase: can&#8217;t open /dev/tty: No such device or address</p>
+<p><span style="background-color:yellow;">Host key verification failed.</span></p>
+<p>rsync: connection unexpectedly closed (0 bytes received so far) [sender]</p>
+<p>rsync error: error in rsync protocol data stream (code 12) at io.c(226) [sender=3.1.3]</p>
+<p>Build step &#8216;Execute shell&#8217; marked build as failure</p>
+<p>Finished: FAILURE</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>I believe this problem can be fixed by making the Jenkins to run under normal user account, but I approached bit differently by</p>
+<ul>
+<li>Launching cmd.exe as the SYSTEM privilege using Sysinternals&#8217; PsExec.exe</li>
+</ul>
+<p><img src="https://heejune.files.wordpress.com/2018/08/080218_0336_setuprsyncs3.png?w=1100" alt="" /></p>
+<ul>
+<li>From that console, run bash.exe again and just login to the server once to create known_hosts for %SYSTEMPROFILE%.</li>
+</ul>
+<p><img src="https://heejune.files.wordpress.com/2018/08/080218_0336_setuprsyncs4.png?w=1100" alt="" /></p>
+]]></content:encoded>
+							<wfw:commentRss>https://heejune.me/2018/08/02/setup-rsync-server-over-ssh-on-windows-server-2012-easy-way/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:thumbnail url="https://heejune.files.wordpress.com/2018/08/080218_0336_setuprsyncs4.png" />
+		<media:content url="https://heejune.files.wordpress.com/2018/08/080218_0336_setuprsyncs4.png" medium="image">
+			<media:title type="html">080218_0336_Setuprsyncs4.png</media:title>
+		</media:content>
+
+		<media:content url="https://1.gravatar.com/avatar/4b48bdefc89aa1166a187c5ba5a715cc?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">heejune</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/080218_0336_setuprsyncs1.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/080218_0336_setuprsyncs2.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/080218_0336_setuprsyncs3.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/080218_0336_setuprsyncs4.png" medium="image" />
+	</item>
+		<item>
+		<title>CrashDump analysis automation using SlackBot, python, cdb from Windows</title>
+		<link>https://heejune.me/2018/08/01/crashdump-analysis-automation-using-slackbot-python-cdb-from-windows/</link>
+				<comments>https://heejune.me/2018/08/01/crashdump-analysis-automation-using-slackbot-python-cdb-from-windows/#comments</comments>
+				<pubDate>Tue, 31 Jul 2018 20:33:19 +0000</pubDate>
+		<dc:creator><![CDATA[Heejune]]></dc:creator>
+				<category><![CDATA[Python]]></category>
+		<category><![CDATA[windbg]]></category>
+		<category><![CDATA[automation]]></category>
+		<category><![CDATA[python]]></category>
+		<category><![CDATA[slackclient]]></category>
+		<category><![CDATA[windows]]></category>
+
+		<guid isPermaLink="false">http://heejune.me/?p=581</guid>
+				<description><![CDATA[I&#8217;m going to show how to automate dump analysis using a Slackbot but using telegram bot is also quite same. In order automate dump analysis, Visual Studio or WinDbg can be used in theory, however writing a script which behaves manipulate other application which has GUI interface, emulating keyboard and mouse inputs, and reading the &#8230; <a href="https://heejune.me/2018/08/01/crashdump-analysis-automation-using-slackbot-python-cdb-from-windows/" class="more-link">Continue reading <span class="screen-reader-text">CrashDump analysis automation using SlackBot, python, cdb from&#160;Windows</span> <span class="meta-nav">&#8594;</span></a>]]></description>
+								<content:encoded><![CDATA[<p><span style="color:black;font-family:Malgun Gothic;font-size:13pt;">I&#8217;m going to show how to automate dump analysis using a Slackbot but using telegram bot is also quite same.<br />
+</span></p>
+<p><span style="color:black;font-size:13pt;"><span style="font-family:Malgun Gothic;">In order automate dump analysis, Visual Studio or WinDbg can be used in theory, however writing a script which behaves manipulate </span><span style="font-family:Tahoma;">other application which has GUI interface, emulating keyboard and mouse inputs, and reading the specific text within edit control from running application </span><span style="font-family:Malgun Gothic;">going to be a challenge</span><span style="font-family:Tahoma;">. You might accomplish it using Windows Automation API, but Windows Debugger </span><span style="font-family:Malgun Gothic;">Toolset provides a better way command line-based utility such as cdb.exe.<br />
+</span></span></p>
+<h2>CDB.EXE<span style="font-family:Tahoma;"><br />
+</span></h2>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">cdb.exe is located same directory where WinDbg.exe resides.<br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan1.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Following page has basic instructions how to open a dump file with cdb.exe from command line.<br />
+</span></p>
+<p><a href="https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/analyzing-a-user-mode-dump-file-with-cdb"><span style="color:#0000ee;font-family:Tahoma;font-size:9pt;text-decoration:underline;">https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/analyzing-a-user-mode-dump-file-with-cdb</span></a><span style="color:#0000ee;font-family:Tahoma;font-size:9pt;text-decoration:underline;"><br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan2.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<blockquote>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:876px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;">
+<p style="text-align:center;margin-left:7pt;">cdb -y SymbolPath -i ImagePath -z DumpFileName</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</blockquote>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">You can find out more command line options for cdb.exe:<br />
+</span></p>
+<p><a href="https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/cdb-command-line-options"><span style="color:#0000ee;font-family:Tahoma;font-size:9pt;text-decoration:underline;">https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/cdb-command-line-options</span></a><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Let&#8217;s see how it works with simple demo. The directory contains demo app and its PDB symbol.<br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan3.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Run the cdb.exe with &#8216;-y&#8217; option to specify the dump to open with.<br />
+</span></p>
+<blockquote>
+<p style="text-align:center;margin-left:7pt;">&amp; &#8220;C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe&#8221; -z crashme.dmp</p>
+</blockquote>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">The result shows exactly same what we&#8217;ve seen from WinDBG.<br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan4.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan5.png?w=1100" alt="" /><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan6.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:1308px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;"><span style="font-family:Courier New;"><span style="font-size:9pt;">PS D:\workspace\playground\crashme\Release&gt; <span style="background-color:yellow;"><strong>&amp; &#8220;C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe&#8221; -z crashme.dmp</strong></span></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Microsoft (R) Windows Debugger Version 10.0.14321.1024 X86</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Copyright (c) Microsoft Corporation. All rights reserved.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Loading Dump File [D:\workspace\playground\crashme\Release\crashme.dmp]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">User Mini Dump File with Full Memory: Only application data is available</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">************* Symbol Path validation summary **************</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Response                         Time (ms)     Location</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Deferred                                       srv*d:\symbols*<a href="https://msdl.microsoft.com/download/symbols"><span style="color:#0000ee;text-decoration:underline;">https://msdl.microsoft.com/download/symbols</span></a></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Symbol search path is: srv*d:\symbols*<a href="https://msdl.microsoft.com/download/symbols"><span style="color:#0000ee;text-decoration:underline;">https://msdl.microsoft.com/download/symbols</span></a></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Executable search path is:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Windows 10 Version 16299 MP (8 procs) Free x86 compatible</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Product: WinNt, suite: SingleUserTS</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Built by: 10.0.16299.15 (WinBuild.160101.0800)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Machine Name:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Debug session time: Mon Nov 27 22:54:12.000 2017 (UTC + 9:00)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">System Uptime: 2 days 17:55:58.676</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Process Uptime: 0 days 0:00:18.000</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">&#8230;&#8230;</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">This dump file has an exception of interest stored in it.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">The stored exception information can be accessed via .ecxr.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">(3fac.21d0): Access violation &#8211; code c0000005 (first/second chance not available)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">*** WARNING: Unable to verify checksum for crashme.exe</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">eax=00000000 ebx=aabbccdd ecx=00000000 edx=00000000 esi=742d80e8 edi=02a85998</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">eip=00311015 esp=006ffa98 ebp=006ffaa8 iopl=0         nv up ei pl zr na pe nc</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010244</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">crashme!main+0x15:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">00311015 c700ddccbbaa    mov     dword ptr [eax],0AABBCCDDh ds:002b:00000000=????????</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">0:000&gt;</span><span style="font-size:12pt;"><br />
+</span></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">cdb.exe successfully launched and waits user input. Press &#8216;q &lt;enter&gt;&#8217; to return to the command line.<br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:1308px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;"><span style="font-family:Courier New;"><span style="font-size:9pt;">PS D:\workspace\playground\crashme\Release&gt; &amp; &#8220;C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe&#8221; -z crashme.dmp</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Microsoft (R) Windows Debugger Version 10.0.14321.1024 X86</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Copyright (c) Microsoft Corporation. All rights reserved.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Loading Dump File [D:\workspace\playground\crashme\Release\crashme.dmp]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">User Mini Dump File with Full Memory: Only application data is available</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">************* Symbol Path validation summary **************</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Response                         Time (ms)     Location</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Deferred                                       srv*d:\symbols*<a href="https://msdl.microsoft.com/download/symbols"><span style="color:#0000ee;text-decoration:underline;">https://msdl.microsoft.com/download/symbols</span></a></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Symbol search path is: srv*d:\symbols*<a href="https://msdl.microsoft.com/download/symbols"><span style="color:#0000ee;text-decoration:underline;">https://msdl.microsoft.com/download/symbols</span></a></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Executable search path is:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Windows 10 Version 16299 MP (8 procs) Free x86 compatible</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Product: WinNt, suite: SingleUserTS</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Built by: 10.0.16299.15 (WinBuild.160101.0800)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Machine Name:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Debug session time: Mon Nov 27 22:54:12.000 2017 (UTC + 9:00)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">System Uptime: 2 days 17:55:58.676</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Process Uptime: 0 days 0:00:18.000</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">&#8230;&#8230;</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">This dump file has an exception of interest stored in it.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">The stored exception information can be accessed via .ecxr.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">(3fac.21d0): Access violation &#8211; code c0000005 (first/second chance not available)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">*** WARNING: Unable to verify checksum for crashme.exe</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">eax=00000000 ebx=aabbccdd ecx=00000000 edx=00000000 esi=742d80e8 edi=02a85998</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">eip=00311015 esp=006ffa98 ebp=006ffaa8 iopl=0         nv up ei pl zr na pe nc</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010244</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">crashme!main+0x15:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">00311015 c700ddccbbaa    mov     dword ptr [eax],0AABBCCDDh ds:002b:00000000=????????</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">0:000&gt; <span style="background-color:yellow;"><strong>q</strong></span></span><span style="font-size:12pt;"><strong><br />
+</strong></span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">quit:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;font-size:9pt;">PS D:\workspace\playground\crashme\Release&gt;</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">You can use &#8216;-c&#8217; to pass initial command runs followed by opening the dump. Each command is separated by &#8216;;&#8217; so that enables carry out multiple command at once. For example, &#8220;u @eip; r; q&#8221; will show the disassembly since @EIP points, prints out registers and quit the cdb.exe itself then.<br />
+</span></p>
+<blockquote>
+<p style="text-align:center;margin-left:7pt;">PS D:\workspace\playground\crashme\Release&gt; &amp; &#8220;C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe&#8221; -z crashme.dmp <span style="background-color:yellow;"><strong>-c &#8220;u @eip; r; q&#8221;</strong></span><span style="font-size:13pt;"><br />
+</span></p>
+</blockquote>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan7.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:1326px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;"><span style="font-family:Courier New;"><span style="font-size:9pt;">PS D:\workspace\playground\crashme\Release&gt; &amp; &#8220;C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe&#8221; -z crashme.dmp <span style="background-color:yellow;">-c &#8220;u @eip; r; q&#8221;</span></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Microsoft (R) Windows Debugger Version 10.0.14321.1024 X86</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Copyright (c) Microsoft Corporation. All rights reserved.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Loading Dump File [D:\workspace\playground\crashme\Release\crashme.dmp]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">User Mini Dump File with Full Memory: Only application data is available</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">************* Symbol Path validation summary **************</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Response                         Time (ms)     Location</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Deferred                                       srv*d:\symbols*<a href="https://msdl.microsoft.com/download/symbols"><span style="color:#0000ee;text-decoration:underline;">https://msdl.microsoft.com/download/symbols</span></a></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Symbol search path is: srv*d:\symbols*<a href="https://msdl.microsoft.com/download/symbols"><span style="color:#0000ee;text-decoration:underline;">https://msdl.microsoft.com/download/symbols</span></a></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Executable search path is:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Windows 10 Version 16299 MP (8 procs) Free x86 compatible</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Product: WinNt, suite: SingleUserTS</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Built by: 10.0.16299.15 (WinBuild.160101.0800)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Machine Name:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Debug session time: Mon Nov 27 22:54:12.000 2017 (UTC + 9:00)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">System Uptime: 2 days 17:55:58.676</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Process Uptime: 0 days 0:00:18.000</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">&#8230;&#8230;</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">This dump file has an exception of interest stored in it.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">The stored exception information can be accessed via .ecxr.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">(3fac.21d0): Access violation &#8211; code c0000005 (first/second chance not available)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">*** WARNING: Unable to verify checksum for crashme.exe</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">eax=00000000 ebx=aabbccdd ecx=00000000 edx=00000000 esi=742d80e8 edi=02a85998</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">eip=00311015 esp=006ffa98 ebp=006ffaa8 iopl=0         nv up ei pl zr na pe nc</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010244</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">crashme!main+0x15:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">00311015 c700ddccbbaa    mov     dword ptr [eax],0AABBCCDDh ds:002b:00000000=????????</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">0:000&gt; <span style="background-color:yellow;">cdb: Reading initial command &#8216;u @eip; r; q&#8217;</span></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">crashme!main+0x15:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">00311015 c700ddccbbaa    mov     dword ptr [eax],0AABBCCDDh</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">0031101b 5b              pop     ebx</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">0031101c 58              pop     eax</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">0031101d 33c0            xor     eax,eax</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">0031101f 5b              pop     ebx</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">00311020 8be5            mov     esp,ebp</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">00311022 5d              pop     ebp</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">00311023 c3              ret</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">eax=00000000 ebx=aabbccdd ecx=00000000 edx=00000000 esi=742d80e8 edi=02a85998</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">eip=00311015 esp=006ffa98 ebp=006ffaa8 iopl=0         nv up ei pl zr na pe nc</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010244</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">crashme!main+0x15:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">00311015 c700ddccbbaa    mov     dword ptr [eax],0AABBCCDDh ds:002b:00000000=????????</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">quit:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">PS D:\workspace\playground\crashme\Release&gt;</span><span style="font-size:12pt;"><br />
+</span></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">We now have figured out how to open a crash dump with initial analysis command from command line, it&#8217;s time to write the script automate those.<br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Let&#8217;s make the python virtual environment first.<br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:1203px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;"><span style="font-family:Courier New;"><span style="font-size:9pt;">PS D:\workspace\playground\crashme\Release&gt; python -m venv venv</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">PS D:\workspace\playground\crashme\Release&gt; .\venv\Scripts\activate</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">(venv) PS D:\workspace\playground\crashme\Release&gt;</span><span style="font-size:12pt;"><br />
+</span></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan8.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Launching cdb.exe and Gettings its output from Python script.<br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">You can use the subprocess python module for spawning other process and getting its output. Please see the following:<br />
+</span></p>
+<p><span style="color:black;font-family:Consolas;">        process = subprocess.Popen(cdb_param, stdout=subprocess.PIPE)<span style="font-size:16pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Consolas;">        for line in process.stdout:<span style="font-size:16pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Consolas;">            output_line = line.decode(&#8216;utf-8&#8217;, &#8216;ignore&#8217;)<span style="font-size:16pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Consolas;">            #print(output_line, end=&#8221;)<span style="font-size:16pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Consolas;">            output_str_list.append(output_line)<span style="font-size:16pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">In case you are wondering how to pass remaining options including -z dump file itself and initial command with -u…<br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:1113px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;"><span style="font-family:Consolas;font-size:10pt;">import subprocess<br />
+</span></p>
+<p><span style="font-family:Consolas;font-size:10pt;">import sys<br />
+</span></p>
+<p><span style="font-family:Consolas;font-size:10pt;">exe_path = r&#8221;C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe&#8221;<br />
+</span></p>
+<p><span style="font-family:Consolas;font-size:10pt;">arguments = [&#8216;-z&#8217;, &#8216;crashme.dmp&#8217;, &#8216;-c&#8217;, &#8216;u @eip; r; q&#8217;]<br />
+</span></p>
+<p><span style="font-family:Consolas;font-size:10pt;">def run_command(command):<br />
+</span></p>
+<p><span style="font-family:Consolas;font-size:10pt;">    output = subprocess.check_output(command)<br />
+</span></p>
+<p><span style="font-family:Consolas;font-size:10pt;">    print(output.decode(&#8216;utf-8&#8217;))<br />
+</span></p>
+<p><span style="font-family:Consolas;font-size:10pt;">if __name__ == &#8220;__main__&#8221;:<br />
+</span></p>
+<p><span style="font-family:Consolas;font-size:10pt;">    run_command([exe_path] + arguments)<br />
+</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Let&#8217;s name the script as &#8216;cdb.py&#8217; and now we&#8217;re ready to launch the cdb.exe and getting its result:<br />
+</span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">D:\workspace\playground\crashme\Release&gt;<span style="background-color:yellow;">python cdb.py</span></span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Microsoft (R) Windows Debugger Version 10.0.14321.1024 X86</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Copyright (c) Microsoft Corporation. All rights reserved.</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Loading Dump File [D:\workspace\playground\crashme\Release\crashme.dmp]</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">User Mini Dump File with Full Memory: Only application data is available</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">************* Symbol Path validation summary **************</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Response                         Time (ms)     Location</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Deferred                                       srv*d:\symbols*<a href="https://msdl.microsoft.com/download/symbols"><span style="color:#0000ee;text-decoration:underline;">https://msdl.microsoft.com/download/symbols</span></a></span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Symbol search path is: srv*d:\symbols*<a href="https://msdl.microsoft.com/download/symbols"><span style="color:#0000ee;text-decoration:underline;">https://msdl.microsoft.com/download/symbols</span></a></span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Executable search path is:</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Windows 10 Version 16299 MP (8 procs) Free x86 compatible</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Product: WinNt, suite: SingleUserTS</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Built by: 10.0.16299.15 (WinBuild.160101.0800)</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Machine Name:</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Debug session time: Mon Nov 27 22:54:12.000 2017 (UTC + 9:00)</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">System Uptime: 2 days 17:55:58.676</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">Process Uptime: 0 days 0:00:18.000</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">&#8230;&#8230;</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">This dump file has an exception of interest stored in it.</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">The stored exception information can be accessed via .ecxr.</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">(3fac.21d0): Access violation &#8211; code c0000005 (first/second chance not available)</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">*** WARNING: Unable to verify checksum for crashme.exe</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">eax=00000000 ebx=aabbccdd ecx=00000000 edx=00000000 esi=742d80e8 edi=02a85998</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">eip=00311015 esp=006ffa98 ebp=006ffaa8 iopl=0         nv up ei pl zr na pe nc</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010244</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">crashme!main+0x15:</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">00311015 c700ddccbbaa    mov     dword ptr [eax],0AABBCCDDh ds:002b:00000000=????????</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">0:000&gt; cdb: Reading initial command &#8216;u @eip; r; q&#8217;</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">crashme!main+0x15:</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">00311015 c700ddccbbaa    mov     dword ptr [eax],0AABBCCDDh</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">0031101b 5b              pop     ebx</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">0031101c 58              pop     eax</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">0031101d 33c0            xor     eax,eax</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">0031101f 5b              pop     ebx</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">00311020 8be5            mov     esp,ebp</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">00311022 5d              pop     ebp</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">00311023 c3              ret</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">eax=00000000 ebx=aabbccdd ecx=00000000 edx=00000000 esi=742d80e8 edi=02a85998</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">eip=00311015 esp=006ffa98 ebp=006ffaa8 iopl=0         nv up ei pl zr na pe nc</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010244</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">crashme!main+0x15:</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">00311015 c700ddccbbaa    mov     dword ptr [eax],0AABBCCDDh ds:002b:00000000=????????</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">quit:</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Courier New;"><span style="font-size:9pt;">D:\workspace\playground\crashme\Release&gt;</span><span style="font-size:13pt;"><br />
+</span></span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan9.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Other useful initial commands may include:<br />
+</span></p>
+<ul>
+<li><span style="color:black;font-family:Tahoma;font-size:13pt;">!analyze -v<br />
+</span></li>
+<li><span style="color:black;font-family:Tahoma;font-size:13pt;">ecxr;kb<br />
+</span></li>
+<li><span style="color:black;font-family:Tahoma;font-size:13pt;">ecxr;kP;dv /t/V<br />
+</span></li>
+<li><span style="color:black;font-family:Tahoma;font-size:13pt;">etc…<br />
+</span></li>
+</ul>
+<h2>Connecting the cdb.py to SlackBot</h2>
+<p><span style="color:black;font-family:Malgun Gothic;font-size:13pt;">This post isn&#8217;t a comprehensive bot writing manual, so here describes only essential steps.<br />
+</span></p>
+<p><span style="color:black;font-family:Malgun Gothic;font-size:13pt;">First, you need to create a new bot user from the Integration page. Visit the &#8216;Administration &gt; Manage apps &gt; Custom Integrations&#8217;.<br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan10.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Malgun Gothic;font-size:13pt;">I named it a &#8216;debugbot&#8217; here.<br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan11.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">If it&#8217;s successfully created, it&#8217;ll show a API token. It&#8217;s a secret so don&#8217;t share publicly (the &#8216;debugbot&#8217; no longer exist).<br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan12.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">You can also modify the bot&#8217;s name and profile picture here.<br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan13.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><a href="https://github.com/slackapi/python-slackclient"><span style="color:#0000ee;font-family:Tahoma;font-size:9pt;text-decoration:underline;">https://github.com/slackapi/python-slackclient</span></a><span style="color:#0000ee;font-family:Tahoma;"><span style="font-size:9pt;text-decoration:underline;"><br />
+</span><span style="color:black;font-size:13pt;">is the official repo of the Slack&#8217;s Python bot client. Clone the slack-client library.<br />
+</span></span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:1241px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;"><span style="font-family:Courier New;"><span style="font-size:9pt;">(venv) D:\workspace\playground\crashme\Release&gt;git clone</span><span style="font-size:12pt;"> </span><span style="color:#0000ee;font-size:9pt;text-decoration:underline;"><a href="https://github.com/slackapi/python-slackclient.git" rel="nofollow">https://github.com/slackapi/python-slackclient.git</a></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Cloning into &#8216;python-slackclient&#8217;&#8230;</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">remote: Counting objects: 1320, done.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">remote: Compressing objects: 100% (24/24), done.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">remote: Total 1320 (delta 15), reused 24 (delta 10), pack-reused 1286</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Receiving objects: 100% (1320/1320), 878.80 KiB | 359.00 KiB/s, done.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Resolving deltas: 100% (797/797), done.</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">(venv) D:\workspace\playground\crashme\Release&gt;cd python-slackclient</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">(venv) D:\workspace\playground\crashme\Release\python-slackclient&gt;pip install -r requirements.txt</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Obtaining file:///D:/workspace/playground/crashme/Release/python-slackclient (from -r requirements.txt (line 3))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Collecting websocket-client&lt;1.0a0,&gt;=0.35 (from slackclient==1.0.9-&gt;-r requirements.txt (line 3))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">  Downloading websocket_client-0.44.0-py2.py3-none-any.whl (199kB)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">    100% |████████████████████████████████| 204kB 799kB/s</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Collecting requests&lt;3.0a0,&gt;=2.11 (from slackclient==1.0.9-&gt;-r requirements.txt (line 3))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">  Downloading requests-2.18.4-py2.py3-none-any.whl (88kB)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">    100% |████████████████████████████████| 92kB 738kB/s</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Collecting six&lt;2.0a0,&gt;=1.10 (from slackclient==1.0.9-&gt;-r requirements.txt (line 3))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">  Downloading six-1.11.0-py2.py3-none-any.whl</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Collecting chardet&lt;3.1.0,&gt;=3.0.2 (from requests&lt;3.0a0,&gt;=2.11-&gt;slackclient==1.0.9-&gt;-r requirements.txt (line 3))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">  Downloading chardet-3.0.4-py2.py3-none-any.whl (133kB)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">    100% |████████████████████████████████| 143kB 172kB/s</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Collecting certifi&gt;=2017.4.17 (from requests&lt;3.0a0,&gt;=2.11-&gt;slackclient==1.0.9-&gt;-r requirements.txt (line 3))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">  Downloading certifi-2017.11.5-py2.py3-none-any.whl (330kB)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">    100% |████████████████████████████████| 337kB 297kB/s</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Collecting urllib3&lt;1.23,&gt;=1.21.1 (from requests&lt;3.0a0,&gt;=2.11-&gt;slackclient==1.0.9-&gt;-r requirements.txt (line 3))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">  Downloading urllib3-1.22-py2.py3-none-any.whl (132kB)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">    100% |████████████████████████████████| 133kB 197kB/s</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Collecting idna&lt;2.7,&gt;=2.5 (from requests&lt;3.0a0,&gt;=2.11-&gt;slackclient==1.0.9-&gt;-r requirements.txt (line 3))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">  Downloading idna-2.6-py2.py3-none-any.whl (56kB)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">    100% |████████████████████████████████| 61kB 72kB/s</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Installing collected packages: six, websocket-client, chardet, certifi, urllib3, idna, requests, slackclient</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">  Running setup.py develop for slackclient</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Successfully installed certifi-2017.11.5 chardet-3.0.4 idna-2.6 requests-2.18.4 six-1.11.0 slackclient urllib3-1.22 websocket-client-0.44.0</span><span style="font-size:12pt;"><br />
+</span></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan14.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Then you need to invite the bot to read text from the client coming from the Slack channel. I created a dedicated &#8216;#autoanalysis&#8217; channel and invited the bot for example.<br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan15.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan16.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan17.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Run the following command from a command line to set the API token to &#8216;SLACK_API&#8217; environment variable for convenient.<br />
+</span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">SET SLACK_API_TOKEN=xoxb-282029623751-BVtmnS3BQitmjZvjpQL7PSGP</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Then, write a basic Slack bot client code as following. Please refer to the full documentation more detail from <a href="https://slackapi.github.io/python-slackclient/">https://slackapi.github.io/python-slackclient/</a> and <a href="https://python-slackclient.readthedocs.io/en/latest/basic_usage.html#sending-a-message">https://python-slackclient.readthedocs.io/en/latest/basic_usage.html#sending-a-message</a>. It basically does WebAPI call with &#8216;chat.postMessage&#8217; command described here <a href="https://api.slack.com/methods/chat.postMessage">https://api.slack.com/methods/chat.postMessage</a>.<br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:935px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="padding-left:11px;padding-right:11px;border:solid .5pt;"><span style="font-family:Consolas;"><span style="font-size:9pt;">import os</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">from slackclient import SlackClient<br />
+</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">slack_token = os.environ[&#8220;SLACK_API_TOKEN&#8221;]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">sc = SlackClient(slack_token)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">ret = sc.api_call(</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">  &#8220;chat.postMessage&#8221;,</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">  channel=&#8221;#autoanalysis&#8221;,</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">  text=&#8221;Hello from Python! :tada:&#8221;</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">print(ret)</span><span style="font-size:12pt;"><br />
+</span></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">I added &#8216;print(ret)&#8217; last line to see what the Slack server returned. The return object also contains the API call result.<br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:935px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="padding-left:11px;padding-right:11px;border:solid .5pt;"><span style="font-family:Courier New;"><span style="font-size:9pt;">(venv) D:\workspace\playground\crashme\Release&gt;python slack.py</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">{&#8216;ok&#8217;: True, &#8216;channel&#8217;: &#8216;C88K023NZ&#8217;, &#8216;ts&#8217;: &#8216;1512317953.000112&#8217;, &#8216;message&#8217;: {&#8216;text&#8217;: &#8216;Hello from Python! :tada:&#8217;, &#8216;username&#8217;: &#8216;bot&#8217;, &#8216;bot_id&#8217;: &#8216;B892XRL93&#8217;, &#8216;type&#8217;: &#8216;message&#8217;, &#8216;subtype&#8217;: &#8216;bot_message&#8217;, &#8216;ts&#8217;: &#8216;1512317953.000112&#8217;}}</span><span style="font-size:12pt;"><br />
+</span></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">If everything goes well, you&#8217;ll see the small snippet prints that string to the Slack channel as below:<br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan18.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<h2>Read a command and do analysis from the Bot</h2>
+<p><span style="color:black;font-size:13pt;"><span style="font-family:Malgun Gothic;">Using the WebAPI based &#8216;api_call&#8217; was simple to use but it&#8217;s not enough to receive real time messages others talking from the channel. For that purpose, the SlackClient provides </span><span style="font-family:Tahoma;">Real Time Messaging API(RTM API).</span></span></p>
+<p><a href="http://slackapi.github.io/python-slackclient/real_time_messaging.html"><span style="color:#0000ee;font-family:Tahoma;font-size:9pt;text-decoration:underline;">http://slackapi.github.io/python-slackclient/real_time_messaging.html#</span></a></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Next snippet shows how to connect to the bot channel and keep printing messages in real time while it&#8217;s connected.<br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:935px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="padding-left:11px;padding-right:11px;border:solid .5pt;"><span style="font-family:Consolas;"><span style="font-size:9pt;">import os</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import time</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">from slackclient import SlackClient</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">slack_token = os.environ[&#8220;SLACK_API_TOKEN&#8221;]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">sc = SlackClient(slack_token)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">if sc.rtm_connect():</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    while True:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        print( sc.rtm_read())</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        time.sleep(1)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">else:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;font-size:9pt;">    print( &#8220;Connection Failed&#8221;)</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">It&#8217;ll keep running until pressing &#8216;Ctrl+C'(or disconnected)<br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:935px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="padding-left:11px;padding-right:11px;border:solid .5pt;"><span style="font-family:Courier New;"><span style="font-size:9pt;">(venv) D:\workspace\playground\crashme\Release&gt;python slack.py</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">[]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">[{&#8216;type&#8217;: &#8216;hello&#8217;}]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">[{&#8216;type&#8217;: &#8216;reconnect_url&#8217;, &#8216;url&#8217;: &#8216;wss://<a href="http://mpmulti-7vr5.lb.slack-msgs.com/websocket/_gkSQP2x_PoYBPCsYMqpryRjT7ggXh4AfVyTT8Gz1MJ44xZLpLHg_iPHzIFEXxPBS0TwuH9gy9Nqe3PdqE5ikWUlYsF2Ior3GTdI-eZ83GadFvzf9b0KTGFvfVUK_GROj06QwQkEiy3zlVguHGmPRThTTau6u0J2ws69qF4Yv1Q='%7D%5D"><span style="color:#0000ee;text-decoration:underline;">mpmulti-7vr5.lb.slack-msgs.com/websocket/_gkSQP2x_PoYBPCsYMqpryRjT7ggXh4AfVyTT8Gz1MJ44xZLpLHg_iPHzIFEXxPBS0TwuH9gy9Nqe3PdqE5ikWUlYsF2Ior3GTdI-eZ83GadFvzf9b0KTGFvfVUK_GROj06QwQkEiy3zlVguHGmPRThTTau6u0J2ws69qF4Yv1Q=&#8217;}]</span></a></span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">[{&#8216;type&#8217;: &#8216;presence_change&#8217;, &#8216;presence&#8217;: &#8216;active&#8217;, &#8216;user&#8217;: &#8216;U8A0VJBN3&#8217;}]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">[]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">[]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">[]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">[]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">Traceback (most recent call last):</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">  File &#8220;slack.py&#8221;, line 11, in &lt;module&gt;</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">    time.sleep(1)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;"><span style="font-size:9pt;">KeyboardInterrupt</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Courier New;font-size:9pt;">(venv) D:\workspace\playground\crashme\Release&gt;</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan19.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Malgun Gothic;font-size:13pt;">You can filter out only messages by following:<br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:1247px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;"><span style="font-family:Consolas;"><span style="font-size:9pt;">import os</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import time</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">from slackclient import SlackClient</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">slack_token = os.environ[&#8220;SLACK_API_TOKEN&#8221;]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">sc = SlackClient(slack_token)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">if sc.rtm_connect():</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    while True:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        json_response = sc.rtm_read()</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        for json_item in json_response:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">            if &#8220;type&#8221; in json_item and json_item[&#8220;type&#8221;] == &#8220;message&#8221;:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                print(json_item[&#8220;text&#8221;])</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        time.sleep(1)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">else:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    print( &#8220;Connection Failed&#8221;)</span><span style="font-size:12pt;"><br />
+</span></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Let&#8217;s put all together. It waits until someone type &#8216;analyze&#8217;, run the cdb.exe and finally upload its output as a text attachment.<br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:1223px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;"><span style="font-family:Consolas;"><span style="font-size:9pt;">import os</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import time</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import subprocess</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import sys</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import io</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">exe_path = r&#8221;C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe&#8221;</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">arguments = [&#8216;-z&#8217;, &#8216;crashme.dmp&#8217;, &#8216;-c&#8217;, &#8216;u @eip; r; q&#8217;]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">def <span style="background-color:yellow;"><strong>run_command</strong></span>(command):</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    output = subprocess.check_output(command)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    return output.decode(&#8216;utf-8&#8217;)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">from slackclient import SlackClient</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">slack_token = os.environ[&#8220;SLACK_API_TOKEN&#8221;]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">sc = SlackClient(slack_token)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">if sc.rtm_connect():</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    while True:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        json_response = sc.rtm_read()</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        for json_item in json_response:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">            if &#8220;type&#8221; in json_item and json_item[&#8220;type&#8221;] == &#8220;message&#8221;:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                if json_item[&#8220;text&#8221;].lower() == &#8220;analyze&#8221;:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                    result = <span style="background-color:yellow;"><strong>run_command</strong></span>([exe_path] + arguments)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                    ret = sc.api_call(&#8220;files.upload&#8221;, filename=&#8221;cdb_analyze_result.txt&#8221;,channels=json_item[&#8220;channel&#8221;],file=io.BytesIO(str.encode(result)))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                    if not &#8216;ok&#8217; in ret or not ret[&#8216;ok&#8217;]:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                        print(ret[&#8216;error&#8217;])</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        time.sleep(1)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">else:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    print( &#8220;Connection Failed&#8221;)</span><span style="font-size:12pt;"><br />
+</span></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">The cdb&#8217;s output showed up in that channel successfully.<br />
+</span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan20.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-size:13pt;"><span style="font-family:Malgun Gothic;">Let&#8217;s separate the upload part as a different function named &#8216;upload_text&#8217; for simplicity.</span><span style="font-family:Tahoma;"><br />
+</span></span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:1236px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;"><span style="font-family:Consolas;"><span style="font-size:9pt;">import os</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import time</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import subprocess</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import sys</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;font-size:9pt;">import io<br />
+</span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">exe_path = r&#8221;C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe&#8221;</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;font-size:9pt;">arguments = [&#8216;-z&#8217;, &#8216;crashme.dmp&#8217;, &#8216;-c&#8217;, &#8216;u @eip; r; q&#8217;]<br />
+</span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">def <span style="background-color:yellow;">run_command</span>(command):</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    output = subprocess.check_output(command)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;font-size:9pt;">    return output.decode(&#8216;utf-8&#8217;)<br />
+</span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">def <span style="background-color:yellow;">upload_text</span>(text, file_name, channel):</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    ret = sc.api_call(&#8220;files.upload&#8221;, filename=file_name,channels=channel,file=io.BytesIO(str.encode(text)))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    if not &#8216;ok&#8217; in ret or not ret[&#8216;ok&#8217;]:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;font-size:9pt;">        print(ret[&#8216;error&#8217;])<br />
+</span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">from slackclient import SlackClient</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">slack_token = os.environ[&#8220;SLACK_API_TOKEN&#8221;]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">sc = SlackClient(slack_token)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">if sc.rtm_connect():</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    while True:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        json_response = sc.rtm_read()</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        for json_item in json_response:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">            if &#8220;type&#8221; in json_item and json_item[&#8220;type&#8221;] == &#8220;message&#8221;:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                if json_item[&#8220;text&#8221;].lower() == &#8220;analyze&#8221;:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                    result = <span style="background-color:yellow;">run_command</span>([exe_path] + arguments)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                    <span style="background-color:yellow;">upload_text</span>(result, &#8220;cdb_analyze_result.txt&#8221;, json_item[&#8220;channel&#8221;])</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        time.sleep(1)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">else:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    print( &#8220;Connection Failed&#8221;)</span><span style="font-size:12pt;"><br />
+</span></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-size:13pt;"><span style="font-family:Malgun Gothic;">More tests!</span><span style="font-family:Tahoma;"><br />
+</span></span></p>
+<p><img src="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan21.png?w=1100" alt="" /><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Here&#8217;s the last sample slightly improved to handle errors and command reading.<br />
+</span></p>
+<div>
+<table style="border-collapse:collapse;" border="0">
+<colgroup>
+<col style="width:1287px;" /></colgroup>
+<tbody valign="top">
+<tr>
+<td style="border-top:solid #cccccc .75pt;border-left:solid #cccccc .75pt;border-bottom:solid #cccccc .75pt;border-right:none;padding:12px;"><span style="font-family:Consolas;"><span style="font-size:9pt;">import os</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import time</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import subprocess</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">import sys</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;font-size:9pt;">import io<br />
+</span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">exe_path = r&#8221;C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe&#8221;</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;font-size:9pt;">arguments = [&#8216;-c&#8217;, &#8216;u @eip; r; q&#8217;]<br />
+</span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">def <span style="background-color:yellow;">run_command</span>(command):</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    try:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        output = subprocess.check_output(command)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        return output.decode(&#8216;utf-8&#8217;)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    except subprocess.CalledProcessError as e:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        return &#8216;analysis failed with {}, {}&#8217;.format(e.returncode, e.output.decode(&#8216;utf-8&#8217;))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">def <span style="background-color:yellow;">upload_text</span>(text, file_name, channel):</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    ret = sc.api_call(&#8220;files.upload&#8221;, filename=file_name,channels=channel,file=io.BytesIO(str.encode(text)))</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    if not &#8216;ok&#8217; in ret or not ret[&#8216;ok&#8217;]:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        print(ret[&#8216;error&#8217;])</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">from slackclient import SlackClient</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">slack_token = os.environ[&#8220;SLACK_API_TOKEN&#8221;]</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">sc = SlackClient(slack_token)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">if sc.rtm_connect():</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    while True:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        json_response = sc.rtm_read()</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        for json_item in json_response:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">            if &#8220;type&#8221; in json_item and json_item[&#8220;type&#8221;] == &#8220;message&#8221;:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                args = json_item[&#8220;text&#8221;].split()</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                if args[0].startswith(&#8216;!&#8217;):</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                    if len(args) &gt; 1 and args[0].lower() == &#8220;!analyze&#8221;:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                        result = run_command([exe_path] + [&#8216;-z&#8217;, args[1]] + arguments)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                        upload_text(result, &#8220;cdb_analyze_result.txt&#8221;, json_item[&#8220;channel&#8221;])</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                    else:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">                        ret = sc.api_call(&#8220;chat.postMessage&#8221;, channel=json_item[&#8220;channel&#8221;],text=&#8221;Unknown command&#8221;)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">        time.sleep(1)</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">else:</span><span style="font-size:12pt;"><br />
+</span></span></p>
+<p><span style="font-family:Consolas;"><span style="font-size:9pt;">    print( &#8220;Connection Failed&#8221;)</span><span style="font-size:12pt;"><br />
+</span></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Thanks for reading.<br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;">Heejune.<br />
+</span></p>
+<p><span style="color:black;font-family:Tahoma;font-size:13pt;"><br />
+</span></p>
+]]></content:encoded>
+							<wfw:commentRss>https://heejune.me/2018/08/01/crashdump-analysis-automation-using-slackbot-python-cdb-from-windows/feed/</wfw:commentRss>
+		<slash:comments>1</slash:comments>
+						
+		<media:thumbnail url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan20.png" />
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan20.png" medium="image">
+			<media:title type="html">073118_2029_CrashDumpan20.png</media:title>
+		</media:content>
+
+		<media:content url="https://1.gravatar.com/avatar/4b48bdefc89aa1166a187c5ba5a715cc?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">heejune</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan1.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan2.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan3.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan4.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan5.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan6.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan7.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan8.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan9.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan10.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan11.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan12.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan13.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan14.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan15.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan16.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan17.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan18.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan19.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan20.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2018/08/073118_2029_crashdumpan21.png" medium="image" />
+	</item>
+		<item>
+		<title>Qt/Chromium code search</title>
+		<link>https://heejune.me/2018/05/08/qt-chromium-code-search/</link>
+				<comments>https://heejune.me/2018/05/08/qt-chromium-code-search/#comments</comments>
+				<pubDate>Tue, 08 May 2018 02:04:59 +0000</pubDate>
+		<dc:creator><![CDATA[Heejune]]></dc:creator>
+				<category><![CDATA[C++]]></category>
+		<category><![CDATA[QT dev]]></category>
+
+		<guid isPermaLink="false">http://heejune.me/?p=558</guid>
+				<description><![CDATA[Reading good code is essential to be a better developer. Searching good code is also important. Here are two good starters to begin with: Chromium code search https://cs.chromium.org/ Qt5 Source search https://code.woboq.org/qt5/ Heejune.]]></description>
+								<content:encoded><![CDATA[<p>Reading good code is essential to be a better developer. Searching good code is also important. Here are two good starters to begin with:</p>
+<ul>
+<li>Chromium code search
+<ul>
+<li><a href="https://cs.chromium.org/" rel="nofollow">https://cs.chromium.org/</a></li>
+</ul>
+</li>
+<li>Qt5 Source search
+<ul>
+<li><a href="https://code.woboq.org/qt5/" rel="nofollow">https://code.woboq.org/qt5/</a></li>
+</ul>
+</li>
+</ul>
+<p>Heejune.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://heejune.me/2018/05/08/qt-chromium-code-search/feed/</wfw:commentRss>
+		<slash:comments>1</slash:comments>
+						
+		<media:content url="https://1.gravatar.com/avatar/4b48bdefc89aa1166a187c5ba5a715cc?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">heejune</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>[Tip] Python snippet increases the UWP product version</title>
+		<link>https://heejune.me/2017/09/22/tip-python-snippet-increases-the-uwp-product-version/</link>
+				<comments>https://heejune.me/2017/09/22/tip-python-snippet-increases-the-uwp-product-version/#comments</comments>
+				<pubDate>Fri, 22 Sep 2017 11:04:59 +0000</pubDate>
+		<dc:creator><![CDATA[Heejune]]></dc:creator>
+				<category><![CDATA[Python]]></category>
+		<category><![CDATA[UWP]]></category>
+		<category><![CDATA[msbuild]]></category>
+		<category><![CDATA[python]]></category>
+
+		<guid isPermaLink="false">http://heejune.me/?p=528</guid>
+				<description><![CDATA[If you have a C# project and want to manage the assembly version info during automation build process such as the msbuild with Jenkins, then two options are available: Specify the version number in AssemblyInfo.cs to with asterisk(*) &#8211; n.n.* (for example, &#8216;1.0.*&#8217;) Or you might want to manage it with a build script such &#8230; <a href="https://heejune.me/2017/09/22/tip-python-snippet-increases-the-uwp-product-version/" class="more-link">Continue reading <span class="screen-reader-text">[Tip] Python snippet increases the UWP product&#160;version</span> <span class="meta-nav">&#8594;</span></a>]]></description>
+								<content:encoded><![CDATA[<p>If you have a C# project and want to manage the assembly version info during automation build process such as the msbuild with Jenkins, then two options are available:</p>
+<ol>
+<li>Specify the version number in AssemblyInfo.cs to with asterisk(*) &#8211; n.n.* (for example, &#8216;1.0.*&#8217;)</li>
+<li>Or you might want to manage it with a build script such as python or powershell.</li>
+</ol>
+<p>Here is a python build script to manage the version string within AssemblyInfo.cs and Package.appxmanifest.</p>
+<style>.gist table { margin-bottom: 0; }</style>
+<div class="gist-oembed" data-gist="6f1fa927e0fee6661c34c32f8d8071de.json"></div>
+<p>Thanks,</p>
+<p>Heejune</p>
+]]></content:encoded>
+							<wfw:commentRss>https://heejune.me/2017/09/22/tip-python-snippet-increases-the-uwp-product-version/feed/</wfw:commentRss>
+		<slash:comments>1</slash:comments>
+						
+		<media:content url="https://1.gravatar.com/avatar/4b48bdefc89aa1166a187c5ba5a715cc?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">heejune</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>Deferred caller(or delegator.. whatever you name it) implementation with variadic template</title>
+		<link>https://heejune.me/2017/08/16/deferred-calleror-delegator-whatever-you-name-it-implementation-with-variadic-template/</link>
+				<comments>https://heejune.me/2017/08/16/deferred-calleror-delegator-whatever-you-name-it-implementation-with-variadic-template/#respond</comments>
+				<pubDate>Wed, 16 Aug 2017 14:44:11 +0000</pubDate>
+		<dc:creator><![CDATA[Heejune]]></dc:creator>
+				<category><![CDATA[C++]]></category>
+		<category><![CDATA[lambda]]></category>
+		<category><![CDATA[template]]></category>
+		<category><![CDATA[variadic template]]></category>
+
+		<guid isPermaLink="false">http://heejune.me/?p=520</guid>
+				<description><![CDATA[Deferred caller, delegator implementation with variadic template Recently I started playing with a small toy project – tiny web server with C++. The first requirement I wanted to implement was the &#8216;static type routing handler&#8217; as shown from the crow project. Which means, users should be able to register its routing handlers as the following &#8230; <a href="https://heejune.me/2017/08/16/deferred-calleror-delegator-whatever-you-name-it-implementation-with-variadic-template/" class="more-link">Continue reading <span class="screen-reader-text">Deferred caller(or delegator.. whatever you name it) implementation with variadic&#160;template</span> <span class="meta-nav">&#8594;</span></a>]]></description>
+								<content:encoded><![CDATA[<p>Deferred caller, delegator implementation with variadic template</p>
+<p>Recently I started playing with a small toy project – tiny web server with C++. The first requirement I wanted to implement was the &#8216;static type routing handler&#8217; as shown from the <a href="https://github.com/ipkn/crow">crow project</a>.</p>
+<p>Which means, users should be able to register its routing handlers as the following manner:</p>
+<p><img src="https://heejune.files.wordpress.com/2017/08/081617_1437_deferredcal1.png?w=1100" alt="" /></p>
+<p>In order to do that, two things come up to the list:</p>
+<ol>
+<li>constexpr string parser to determine the parameter type (e.g &lt;int&gt;, &lt;string&gt;…)</li>
+<li>being able to register lambda which can have variadic template arguments</li>
+</ol>
+<p>Regarding #2 issue, people would agree it should have been called &#8216;delegator&#8217; or &#8216;deferred caller&#8217;. Its concept is basically same. Accepts a functor, saves it and calls it later. Then, how can I save functor which can have variadic number and types without using variant?</p>
+<p>I got a hint from the <a href="https://www.codeproject.com/Articles/896341/Variadic-Delegates">Codeproject article</a>, and implemented as follows. The routing_delegator structure is a container owns a pointer to the routing_record interface pointer.</p>
+<style>.gist table { margin-bottom: 0; }</style>
+<div class="gist-oembed" data-gist="06fcbf25c6bd8eae458ac6b9c362402b.json"></div>
+<p>&#8216;to(F&amp;&amp; f)&#8217; is lambda subscribing function. If user tries to pass a lambda to the function, you can figure out the lambda&#8217;s parameters by specifying operator() functor signature to a specialized template below. (refer to this <a href="https://stackoverflow.com/a/6512387">SO</a> link)</p>
+<p>The typed_routing_recored is the template class, and lambda signature will be deduced, and the typed figured out all will be saved to the std::function.</p>
+<style>.gist table { margin-bottom: 0; }</style>
+<div class="gist-oembed" data-gist="d17b0255251363343adc1a673404dd11.json"></div>
+<p>How about calling the saved functors? The routing_record is an interface and declares one abstract function – which is &#8216;handle(void*)&#8217;. As you might guess from its name, <strong>void* is the key point to enable accept variadic sized, typed arguments.</strong></p>
+<p><img src="https://heejune.files.wordpress.com/2017/08/081617_1437_deferredcal2.png?w=1100" alt="" /></p>
+<p>If user calls &#8216;handle&#8217; with parameters, routing_delegator::handle(Args&amp;&amp;&#8230; args) wconverterts those parameters into tuple and passes it to the routing_record::handle(void*) with its address</p>
+<p><img src="https://heejune.files.wordpress.com/2017/08/081617_1437_deferredcal3.png?w=1100" alt="" /></p>
+<p>And finally child class&#8217;s handle(void*) implementation will casts into tuple again and delivers it to the actual std::function functor.</p>
+<p><img src="https://heejune.files.wordpress.com/2017/08/081617_1437_deferredcal4.png?w=1100" alt="" /></p>
+<p>You can check out the all code here, <a href="https://github.com/heejune/tinyweb-cppserver/blob/develop/router.h">https://github.com/heejune/tinyweb-cppserver/blob/develop/router.h</a></p>
+<p>Please be warned, it&#8217;s still in development and all experimental code. Thanks!</p>
+<p>Heejune.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://heejune.me/2017/08/16/deferred-calleror-delegator-whatever-you-name-it-implementation-with-variadic-template/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:thumbnail url="https://heejune.files.wordpress.com/2017/08/081617_1437_deferredcal3.png" />
+		<media:content url="https://heejune.files.wordpress.com/2017/08/081617_1437_deferredcal3.png" medium="image">
+			<media:title type="html">081617_1437_Deferredcal3.png</media:title>
+		</media:content>
+
+		<media:content url="https://1.gravatar.com/avatar/4b48bdefc89aa1166a187c5ba5a715cc?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">heejune</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2017/08/081617_1437_deferredcal1.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/08/081617_1437_deferredcal2.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/08/081617_1437_deferredcal3.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/08/081617_1437_deferredcal4.png" medium="image" />
+	</item>
+		<item>
+		<title>Sieve of Eratosthenes in C++</title>
+		<link>https://heejune.me/2017/06/05/sieve-of-eratosthenes-in-c/</link>
+				<comments>https://heejune.me/2017/06/05/sieve-of-eratosthenes-in-c/#respond</comments>
+				<pubDate>Sun, 04 Jun 2017 16:14:52 +0000</pubDate>
+		<dc:creator><![CDATA[Heejune]]></dc:creator>
+				<category><![CDATA[C++]]></category>
+		<category><![CDATA[development general]]></category>
+		<category><![CDATA[algorithm]]></category>
+
+		<guid isPermaLink="false">http://heejune.me/?p=504</guid>
+				<description><![CDATA[Updated June 8th, 2017. This post was introduced to the Reddit /r/cpp soon after I posted and immediately got a feedback saying &#8220;both semantically wrong as well as poorly optimized&#8221; which is quite true. 🙂  So I&#8217;d like to recommend visiting the Reddit link and consider the comments before preceding or even better, refer to the &#8230; <a href="https://heejune.me/2017/06/05/sieve-of-eratosthenes-in-c/" class="more-link">Continue reading <span class="screen-reader-text">Sieve of Eratosthenes in&#160;C++</span> <span class="meta-nav">&#8594;</span></a>]]></description>
+								<content:encoded><![CDATA[<blockquote><p><strong>Updated June 8th, 2017.</strong> This post was introduced to the Reddit <a href="https://www.reddit.com/r/cpp/">/r/cpp</a> soon after I posted and immediately got a <a href="https://www.reddit.com/r/cpp/comments/6f8kq3/sieve_of_eratosthenes_in_c/digf629/">feedback </a>saying &#8220;<strong>both semantically wrong as well as poorly optimized</strong>&#8221; which is quite true. <img src="https://s0.wp.com/wp-content/mu-plugins/wpcom-smileys/twemoji/2/72x72/1f642.png" alt="🙂" class="wp-smiley" style="height: 1em; max-height: 1em;" />  So I&#8217;d like to recommend visiting the Reddit link and consider the comments before preceding or even better, refer to the better example introduced <a href="https://github.com/germandiagogomez/the-cpp-abstraction-penalty">here</a>.</p></blockquote>
+<p>Let&#8217;s talk about prime numbers. As an application/system software developer, it&#8217;s not often to deal with prime numbers in daily working environments. For me, I came across it while solving the Project Euler&#8217;s questions.</p>
+<p>There&#8217;re a lot of good reads on the net describing what prime numbers are, how to get the numbers. So instead of a basic introduction, I&#8217;d like to talk about few tricks which can improve the performance of getting prime numbers.</p>
+<p>Let&#8217;s first talk about the very basic approach to get prime numbers to compare with optimized version later.</p>
+<p>You can check whether it&#8217;s a prime number or not when a number is given by following:</p>
+<style>.gist table { margin-bottom: 0; }</style>
+<div class="gist-oembed" data-gist="6b0be3b094264b6cdcb1a1a965f98b97.json"></div>
+<p>You&#8217;ll also get the Nth prime number based on the isPrime() function above by incrementing the counter when it returns true.</p>
+<style>.gist table { margin-bottom: 0; }</style>
+<div class="gist-oembed" data-gist="c351b1de6b4c4180d0ed17172f6c504d.json"></div>
+<p>It&#8217;s self-descriptive and easy.</p>
+<p>Can we improve the performance? Sure! There&#8217;s a &#8216;<a href="https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes">Sieve of Eratosthenes</a>&#8216; algorithm, and basically, it does pre-calculate all the non-prime numbers when it found a new prime number by removing all multiples.</p>
+<p>Here&#8217;s the implementation of the algorithm and its example.</p>
+<style>.gist table { margin-bottom: 0; }</style>
+<div class="gist-oembed" data-gist="94ddc10f29fac593d3d908d1e7e5f9f3.json"></div>
+<p>And Lastly, can we improve the Sieve of Eratosthenes algorithm better? Yeah, it&#8217;s possible. I first saw the optimized implementation from one of the answers here: <a href="http://qa.geeksforgeeks.org/3090/how-to-find-nth-prime-number">http://qa.geeksforgeeks.org/3090/how-to-find-nth-prime-number</a> It&#8217;s tricky to understand at first glance in fact. So that I rewrote a little bit and here&#8217;s the result:</p>
+<style>.gist table { margin-bottom: 0; }</style>
+<div class="gist-oembed" data-gist="c04050cc376198135e2ce3d218cae4e5.json"></div>
+<p>Comments are still Koreans and will be translated into English soon. Few tricks used to improve the performance are like following:</p>
+<p>#1. Check against odd numbers only from line 26 – <span style="color:#a71d5d;"><span style="font-family:Consolas;font-size:9pt;">if<span style="color:#24292e;"><span style="background-color:#f8eec7;"> (j &amp; </span><span style="color:#0086b3;">1</span></span></span><br />
+</span></p>
+<p>#2. Getting the odd number index when an odd number n is given: (n &#8211; 3) &gt;&gt; 1</p>
+<p><img src="https://heejune.files.wordpress.com/2017/06/060417_1610_sieveoferat1.png?w=1100" alt="" /></p>
+<p>If I changed the unit into ns…</p>
+<p><img src="https://heejune.files.wordpress.com/2017/06/060417_1610_sieveoferat2.png?w=1100" alt="" /></p>
+<p>D:\workspace\playground\SieveOfEratosthenes\Release&gt;SieveOfEratosthenes.exe &#8211;benchmark_format=json</p>
+<p>{</p>
+<p>&#8220;context&#8221;: {</p>
+<p>&#8220;date&#8221;: &#8220;06/05/17 01:06:32&#8221;,</p>
+<p>&#8220;num_cpus&#8221;: 8,</p>
+<p>&#8220;mhz_per_cpu&#8221;: 2592,</p>
+<p>&#8220;cpu_scaling_enabled&#8221;: false,</p>
+<p>&#8220;library_build_type&#8221;: &#8220;release&#8221;</p>
+<p>},</p>
+<p>&#8220;benchmarks&#8221;: [</p>
+<p>{</p>
+<p>&#8220;name&#8221;: &#8220;BM_get_nth_prime_without_sieve/10001&#8221;,</p>
+<p>&#8220;iterations&#8221;: 160,</p>
+<p>&#8220;real_time&#8221;: 4618235,</p>
+<p>&#8220;cpu_time&#8221;: 4589844,</p>
+<p>&#8220;time_unit&#8221;: &#8220;ns&#8221;</p>
+<p>},</p>
+<p>{</p>
+<p>&#8220;name&#8221;: &#8220;BM_get_nth_prime_with_basic_sieve/10001&#8221;,</p>
+<p>&#8220;iterations&#8221;: 373,</p>
+<p>&#8220;real_time&#8221;: 1854873,</p>
+<p>&#8220;cpu_time&#8221;: 1843164,</p>
+<p>&#8220;time_unit&#8221;: &#8220;ns&#8221;</p>
+<p>},</p>
+<p>{</p>
+<p>&#8220;name&#8221;: &#8220;BM_get_nth_prime_with_optimized_sieve/10001&#8221;,</p>
+<p>&#8220;iterations&#8221;: 1120,</p>
+<p>&#8220;real_time&#8221;: 642190,</p>
+<p>&#8220;cpu_time&#8221;: 655692,</p>
+<p>&#8220;time_unit&#8221;: &#8220;ns&#8221;</p>
+<p>}</p>
+<p>]</p>
+<p>}</p>
+<p>You can access the sample here: <a href="https://github.com/heejune/SieveOfEratosthenes">https://github.com/heejune/SieveOfEratosthenes</a></p>
+<p>It&#8217;ll require the google benchmark and few modifications to correctly link and search headers and libraries to build.</p>
+<p>Thanks,</p>
+<p>Heejune</p>
+]]></content:encoded>
+							<wfw:commentRss>https://heejune.me/2017/06/05/sieve-of-eratosthenes-in-c/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:thumbnail url="https://heejune.files.wordpress.com/2017/06/060417_1610_sieveoferat1.png" />
+		<media:content url="https://heejune.files.wordpress.com/2017/06/060417_1610_sieveoferat1.png" medium="image">
+			<media:title type="html">060417_1610_SieveofErat1.png</media:title>
+		</media:content>
+
+		<media:content url="https://1.gravatar.com/avatar/4b48bdefc89aa1166a187c5ba5a715cc?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">heejune</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2017/06/060417_1610_sieveoferat1.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/06/060417_1610_sieveoferat2.png" medium="image" />
+	</item>
+		<item>
+		<title>Visual Studio 2017 – Why can’t I see the local and auto variables during UWP app debugging?</title>
+		<link>https://heejune.me/2017/04/14/visual-studio-2017-why-cant-i-see-the-local-and-auto-variables-during-uwp-app-debugging/</link>
+				<comments>https://heejune.me/2017/04/14/visual-studio-2017-why-cant-i-see-the-local-and-auto-variables-during-uwp-app-debugging/#respond</comments>
+				<pubDate>Fri, 14 Apr 2017 11:21:42 +0000</pubDate>
+		<dc:creator><![CDATA[Heejune]]></dc:creator>
+				<category><![CDATA[UWP]]></category>
+		<category><![CDATA[C++]]></category>
+		<category><![CDATA[Debugging]]></category>
+		<category><![CDATA[VS2017]]></category>
+
+		<guid isPermaLink="false">http://heejune.me/?p=495</guid>
+				<description><![CDATA[I&#8217;d like to share my short episode regarding UWP app debugging which happened today. Recent days I&#8217;ve developed a WinRT dynamic library which is based on cppwinrt. Most of time, I tested it with an unittest project and everything went fine. However, when I used the WinRT dll from actual .exe UWP application then very &#8230; <a href="https://heejune.me/2017/04/14/visual-studio-2017-why-cant-i-see-the-local-and-auto-variables-during-uwp-app-debugging/" class="more-link">Continue reading <span class="screen-reader-text">Visual Studio 2017 – Why can’t I see the local and auto variables during UWP app&#160;debugging?</span> <span class="meta-nav">&#8594;</span></a>]]></description>
+								<content:encoded><![CDATA[<p>I&#8217;d like to share my short episode regarding UWP app debugging which happened today. Recent days I&#8217;ve developed a WinRT dynamic library which is based on <a href="https://heejune.me/2017/02/25/building-winrt-component-with-wrlnon-ccx-and-cppwinrt/">cppwinrt</a>. Most of time, I tested it with an unittest project and everything went fine. However, when I used the WinRT dll from actual .exe UWP application then very strange problem showed up.</p>
+<p>As you see the below screenshots, the Visual Studio 2017 debugger shows nothing about local variables, auto and even watch window variables during the UWP app debugging.</p>
+<p><img src="https://heejune.files.wordpress.com/2017/04/041417_1116_visualstudi1.png?w=1100" alt="" /></p>
+<p><img src="https://heejune.files.wordpress.com/2017/04/041417_1116_visualstudi2.png?w=1100" alt="" /></p>
+<p>Moreover, if I tried to type specific variables into Watch window or immediate window, the debugger shows &#8216;<strong>Internal error in the C# compiler</strong>&#8216; error message!</p>
+<p><img src="https://heejune.files.wordpress.com/2017/04/041417_1116_visualstudi3.png?w=1100" alt="" /></p>
+<p><img src="https://heejune.files.wordpress.com/2017/04/041417_1116_visualstudi4.png?w=1100" alt="" /></p>
+<p>Later I noticed that the strange problem starts just right after the following output messages come up from Output window.</p>
+<blockquote><p><span style="color:black;font-family:Consolas;font-size:9pt;">&#8216;Example.exe&#8217; (CoreCLR: CoreCLR_UWP_Domain): Loaded &#8216;Anonymously Hosted DynamicMethods Assembly&#8217;.<br />
+</span></p>
+<p><span style="color:black;font-family:Consolas;font-size:9pt;">&#8216;Example.exe&#8217; (Win32): Loaded &#8216;C:\src\Example\build\Win32\Debug\AppX\Example.winmd&#8217;. Module was built without symbols.<br />
+</span></p>
+<p><span style="color:black;font-family:Consolas;font-size:9pt;">&#8216;Example.exe&#8217; (CoreCLR: CoreCLR_UWP_Domain): Loaded &#8216;C:\src\Example\build\Win32\Debug\AppX\Example.winmd&#8217;. Module was built without symbols.<br />
+</span></p></blockquote>
+<p>How just loading .winmd file could affect the weird debugger problem? Then I realized I used the same name(&#8216;Example&#8217;) for the application and the WinRT module both. Which means I created the WinRT dll component as &#8216;Example.DLL&#8217; and along with &#8216;Example.winmd&#8217; as its descriptive winmd file name, of course. But I also named the target UWP application as &#8216;Example&#8217;.</p>
+<p>So while debugging, the debugger tried to load the winmd file for it&#8217;s target WinRT component which was being debugged and suddenly the namespace seemed clashed within between the app and debugee DLL.</p>
+<p>So, I changed the name of the WinRT component as &#8216;Example.Library.dll&#8217; and problem solved!</p>
+<p>Thanks,</p>
+<p>Heejune</p>
+]]></content:encoded>
+							<wfw:commentRss>https://heejune.me/2017/04/14/visual-studio-2017-why-cant-i-see-the-local-and-auto-variables-during-uwp-app-debugging/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:thumbnail url="https://heejune.files.wordpress.com/2017/04/041417_1116_visualstudi4.png" />
+		<media:content url="https://heejune.files.wordpress.com/2017/04/041417_1116_visualstudi4.png" medium="image">
+			<media:title type="html">041417_1116_VisualStudi4.png</media:title>
+		</media:content>
+
+		<media:content url="https://1.gravatar.com/avatar/4b48bdefc89aa1166a187c5ba5a715cc?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">heejune</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2017/04/041417_1116_visualstudi1.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/04/041417_1116_visualstudi2.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/04/041417_1116_visualstudi3.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/04/041417_1116_visualstudi4.png" medium="image" />
+	</item>
+		<item>
+		<title>Lessons learend (from failuere) while I developing a log server for Windows</title>
+		<link>https://heejune.me/2017/03/03/lessons-learend-from-failuere-while-i-developing-a-log-server-for-windows/</link>
+				<comments>https://heejune.me/2017/03/03/lessons-learend-from-failuere-while-i-developing-a-log-server-for-windows/#respond</comments>
+				<pubDate>Fri, 03 Mar 2017 02:31:50 +0000</pubDate>
+		<dc:creator><![CDATA[Heejune]]></dc:creator>
+				<category><![CDATA[IIS]]></category>
+		<category><![CDATA[Web development]]></category>
+		<category><![CDATA[2008R2]]></category>
+		<category><![CDATA[asp.net]]></category>
+		<category><![CDATA[log server]]></category>
+		<category><![CDATA[windows]]></category>
+		<category><![CDATA[Windows Server]]></category>
+
+		<guid isPermaLink="false">http://heejune.me/?p=126</guid>
+				<description><![CDATA[Wrote this post in Jan 2015 as a quick draft, and remained as it is still today. I thought it&#8217;s not that useful so tried to delete it, but changed mind and released here. Hope it helps. Recently I developed a logging server based on C#/asp.net on Windows 2008 R2 server. The server primarily does receiving log files &#8230; <a href="https://heejune.me/2017/03/03/lessons-learend-from-failuere-while-i-developing-a-log-server-for-windows/" class="more-link">Continue reading <span class="screen-reader-text">Lessons learend (from failuere) while I developing a log server for&#160;Windows</span> <span class="meta-nav">&#8594;</span></a>]]></description>
+								<content:encoded><![CDATA[<p><em>Wrote this post in Jan 2015 as a quick draft, and remained as it is still today. I thought it&#8217;s not that useful so tried to delete it, but changed mind and released here. Hope it helps.</em></p>
+<p>Recently I developed a logging server based on C#/asp.net on Windows 2008 R2 server. The server primarily does receiving log files from clients and write into database and also drop files to that server. After I released it to production, I met some unexpected issues.</p>
+<p>1. Huge(99.9%) memory consumption issue</p>
+<p>The logging server writes huge excessive IO to the disk and it instantly caused the os SYSTEM process to consume almost all physical memories. I searched online and analyzed it through the Sysinternals&#8217; RAMMap. It turns out the OS&#8217;s system cache takes all the memories. You can find out details from following links:</p>
+<p><a href="http://www.microsoft.com/en-us/download/details.aspx?id=9258" rel="nofollow">http://www.microsoft.com/en-us/download/details.aspx?id=9258</a> Windows Dynamic Cache Service</p>
+<p>Sysinternals http://technet.microsoft.com/en-us/sysinternals/bb897561</p>
+<p>KB article http://support.microsoft.com/kb/976618/</p>
+<p>[Korean] <a href="http://snoopybox.co.kr/1635" rel="nofollow">http://snoopybox.co.kr/1635</a></p>
+<p><strong>Lesson learned:</strong> <em>Reduce the file IO as much as you can!</em></p>
+<p>&nbsp;</p>
+<p><a href="http://blogs.msdn.com/b/ntdebugging/archive/2009/02/06/microsoft-windows-dynamic-cache-service.aspx" rel="nofollow">http://blogs.msdn.com/b/ntdebugging/archive/2009/02/06/microsoft-windows-dynamic-cache-service.aspx</a></p>
+<p><a href="http://blogs.msdn.com/b/ntdebugging/archive/2007/11/27/too-much-cache.aspx" rel="nofollow">http://blogs.msdn.com/b/ntdebugging/archive/2007/11/27/too-much-cache.aspx</a></p>
+<p>&nbsp;</p>
+<p>2. MongoDB</p>
+<ul>
+<li>Don&#8217;t forget to use the indexing</li>
+<li>You can figure it out whether it uses the index or not by using &#8216;Explain&#8217;</li>
+</ul>
+<p>&nbsp;</p>
+<p>3. Deleting files from disk will take longer than you expect</p>
+<ul>
+<li>My initial design approach was complete wrong and failure. The server used to drop huge number of files into the physical disk, and just deleting the very small portion of files required actually even hours.</li>
+</ul>
+<p><strong>Lesson learned: </strong><em>Does your server collect a number of files? Store it into the database directly.</em></p>
+<p>Thanks,</p>
+<p>Heejune</p>
+]]></content:encoded>
+							<wfw:commentRss>https://heejune.me/2017/03/03/lessons-learend-from-failuere-while-i-developing-a-log-server-for-windows/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://1.gravatar.com/avatar/4b48bdefc89aa1166a187c5ba5a715cc?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">heejune</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>Beginning the coroutine with Visual Studio 2015 Update 3 Part 2</title>
+		<link>https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/</link>
+				<comments>https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/#comments</comments>
+				<pubDate>Thu, 02 Mar 2017 14:17:08 +0000</pubDate>
+		<dc:creator><![CDATA[Heejune]]></dc:creator>
+				<category><![CDATA[C++]]></category>
+		<category><![CDATA[UWP]]></category>
+		<category><![CDATA[WRL]]></category>
+		<category><![CDATA[coroutine]]></category>
+
+		<guid isPermaLink="false">http://heejune.me/?p=462</guid>
+				<description><![CDATA[As we discussed through Part I, co_wait keyword requires sort of &#8220;resumable thing&#8221;. So what if we want to use co_await with time delta? For example, you can see the code which the co_await takes std::chrono::duration in order to suspend for the specified time from here: https://github.com/Microsoft/cppwinrt/blob/master/10.0.14393.0/Samples/JustCoroutines/Main.cpp#L31 The answer is the fact that vc++ compiler &#8230; <a href="https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/" class="more-link">Continue reading <span class="screen-reader-text">Beginning the coroutine with Visual Studio 2015 Update 3 Part&#160;2</span> <span class="meta-nav">&#8594;</span></a>]]></description>
+								<content:encoded><![CDATA[<p>As we discussed through <a href="https://heejune.me/2017/02/20/beginning-the-coroutine-with-visual-studio-2015-update-3-part-1/">Part I</a>, co_wait keyword requires sort of &#8220;resumable thing&#8221;. So what if we want to use co_await with time delta?</p>
+<p>For example, you can see the code which the co_await takes std::chrono::duration in order to suspend for the specified time from here: <a href="https://github.com/Microsoft/cppwinrt/blob/master/10.0.14393.0/Samples/JustCoroutines/Main.cpp#L31">https://github.com/Microsoft/cppwinrt/blob/master/10.0.14393.0/Samples/JustCoroutines/Main.cpp#L31</a></p>
+<p><img src="https://heejune.files.wordpress.com/2017/03/030217_1403_beginningth1.png?w=1100" alt="" /></p>
+<p>The answer is the fact that vc++ compiler allows co_await to be overloaded. So, we can overload the co_await keyword and returns the &#8220;resumable thing&#8221; within the overloading implementation.</p>
+<p>See the code here. <a href="https://github.com/Microsoft/cppwinrt/blob/master/10.0.14393.0/winrt/base.h#L8897">https://github.com/Microsoft/cppwinrt/blob/master/10.0.14393.0/winrt/base.h#L8897</a></p>
+<p><img src="https://heejune.files.wordpress.com/2017/03/030217_1403_beginningth2.png?w=1100" alt="" /></p>
+<p>If you follow the resume_after(), then you&#8217;ll clearly see it actually returns the instance of resumable thing struct which contain implementations of await_ready, await_suspend, and await_resume.</p>
+<p><a href="https://github.com/Microsoft/cppwinrt/blob/master/10.0.14393.0/winrt/base.h#L8643">https://github.com/Microsoft/cppwinrt/blob/master/10.0.14393.0/winrt/base.h#L8643</a></p>
+<p><img src="https://heejune.files.wordpress.com/2017/03/030217_1403_beginningth3.png?w=1100" alt="" /></p>
+<p>Let&#8217;s test with another test sample here. <a href="https://github.com/heejune/wrl-cppwinrt-sample/blob/async-support/SampleLib.Shared/DemoCore.cpp#L81">https://github.com/heejune/wrl-cppwinrt-sample/blob/async-support/SampleLib.Shared/DemoCore.cpp#L81</a></p>
+<p>In this sample, I called the winrt&#8217;s co_await as the above sample illustrated.</p>
+<p><img src="https://heejune.files.wordpress.com/2017/03/030217_1403_beginningth4.png?w=1100" alt="" /></p>
+<p><img src="https://heejune.files.wordpress.com/2017/03/030217_1403_beginningth5.png?w=1100" alt="" /></p>
+<p>And if I step into the co_await… we hit the overloaded co_await.</p>
+<p><img data-attachment-id="476" data-permalink="https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/part_ii_1/" data-orig-file="https://heejune.files.wordpress.com/2017/03/part_ii_11.png?w=1100" data-orig-size="1760,294" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="part_ii_1" data-image-description="" data-medium-file="https://heejune.files.wordpress.com/2017/03/part_ii_11.png?w=1100?w=300" data-large-file="https://heejune.files.wordpress.com/2017/03/part_ii_11.png?w=1100?w=1024" class="alignnone size-full wp-image-476" src="https://heejune.files.wordpress.com/2017/03/part_ii_11.png?w=1100" alt="part_ii_1" srcset="https://heejune.files.wordpress.com/2017/03/part_ii_11.png?w=1100 1100w, https://heejune.files.wordpress.com/2017/03/part_ii_11.png?w=150 150w, https://heejune.files.wordpress.com/2017/03/part_ii_11.png?w=300 300w, https://heejune.files.wordpress.com/2017/03/part_ii_11.png?w=768 768w, https://heejune.files.wordpress.com/2017/03/part_ii_11.png?w=1024 1024w, https://heejune.files.wordpress.com/2017/03/part_ii_11.png 1760w" sizes="(max-width: 1100px) 100vw, 1100px"   /></p>
+<p>Step in again, then finally it creates resume_after struct instance and calls the await_suspend.</p>
+<p><img data-attachment-id="466" data-permalink="https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/part_ii_2/" data-orig-file="https://heejune.files.wordpress.com/2017/03/part_ii_2.png?w=1100" data-orig-size="1852,735" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="part_ii_2" data-image-description="" data-medium-file="https://heejune.files.wordpress.com/2017/03/part_ii_2.png?w=1100?w=300" data-large-file="https://heejune.files.wordpress.com/2017/03/part_ii_2.png?w=1100?w=1024" class="alignnone size-full wp-image-466" src="https://heejune.files.wordpress.com/2017/03/part_ii_2.png?w=1100" alt="part_ii_2" srcset="https://heejune.files.wordpress.com/2017/03/part_ii_2.png?w=1100 1100w, https://heejune.files.wordpress.com/2017/03/part_ii_2.png?w=150 150w, https://heejune.files.wordpress.com/2017/03/part_ii_2.png?w=300 300w, https://heejune.files.wordpress.com/2017/03/part_ii_2.png?w=768 768w, https://heejune.files.wordpress.com/2017/03/part_ii_2.png?w=1024 1024w, https://heejune.files.wordpress.com/2017/03/part_ii_2.png 1852w" sizes="(max-width: 1100px) 100vw, 1100px"   /></p>
+<p><img data-attachment-id="468" data-permalink="https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/part_ii_3/" data-orig-file="https://heejune.files.wordpress.com/2017/03/part_ii_3.png?w=1100" data-orig-size="1837,721" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="part_ii_3" data-image-description="" data-medium-file="https://heejune.files.wordpress.com/2017/03/part_ii_3.png?w=1100?w=300" data-large-file="https://heejune.files.wordpress.com/2017/03/part_ii_3.png?w=1100?w=1024" class="alignnone size-full wp-image-468" src="https://heejune.files.wordpress.com/2017/03/part_ii_3.png?w=1100" alt="part_ii_3" srcset="https://heejune.files.wordpress.com/2017/03/part_ii_3.png?w=1100 1100w, https://heejune.files.wordpress.com/2017/03/part_ii_3.png?w=150 150w, https://heejune.files.wordpress.com/2017/03/part_ii_3.png?w=300 300w, https://heejune.files.wordpress.com/2017/03/part_ii_3.png?w=768 768w, https://heejune.files.wordpress.com/2017/03/part_ii_3.png?w=1024 1024w, https://heejune.files.wordpress.com/2017/03/part_ii_3.png 1837w" sizes="(max-width: 1100px) 100vw, 1100px"   /></p>
+<p>It spawns timer thread with specified time, and finally resume_after::callback static callback is being called.</p>
+<p><img data-attachment-id="467" data-permalink="https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/part_ii_3-4png/" data-orig-file="https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png?w=1100" data-orig-size="1875,682" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="part_ii_3-4png" data-image-description="" data-medium-file="https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png?w=1100?w=300" data-large-file="https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png?w=1100?w=1024" class="alignnone size-full wp-image-467" src="https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png?w=1100" alt="part_ii_3-4png" srcset="https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png?w=1100 1100w, https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png?w=150 150w, https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png?w=300 300w, https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png?w=768 768w, https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png?w=1024 1024w, https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png 1875w" sizes="(max-width: 1100px) 100vw, 1100px"   /></p>
+<p>The callback will finally call resume().</p>
+<p><img data-attachment-id="469" data-permalink="https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/part_ii_4/" data-orig-file="https://heejune.files.wordpress.com/2017/03/part_ii_4.png?w=1100" data-orig-size="1889,677" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="part_ii_4" data-image-description="" data-medium-file="https://heejune.files.wordpress.com/2017/03/part_ii_4.png?w=1100?w=300" data-large-file="https://heejune.files.wordpress.com/2017/03/part_ii_4.png?w=1100?w=1024" class="alignnone size-full wp-image-469" src="https://heejune.files.wordpress.com/2017/03/part_ii_4.png?w=1100" alt="part_ii_4" srcset="https://heejune.files.wordpress.com/2017/03/part_ii_4.png?w=1100 1100w, https://heejune.files.wordpress.com/2017/03/part_ii_4.png?w=150 150w, https://heejune.files.wordpress.com/2017/03/part_ii_4.png?w=300 300w, https://heejune.files.wordpress.com/2017/03/part_ii_4.png?w=768 768w, https://heejune.files.wordpress.com/2017/03/part_ii_4.png?w=1024 1024w, https://heejune.files.wordpress.com/2017/03/part_ii_4.png 1889w" sizes="(max-width: 1100px) 100vw, 1100px"   /></p>
+<p>And the resume() transfers its context into where the co_await being called.</p>
+<p><img data-attachment-id="470" data-permalink="https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/part_ii_5/" data-orig-file="https://heejune.files.wordpress.com/2017/03/part_ii_5.png?w=1100" data-orig-size="1877,712" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="part_ii_5" data-image-description="" data-medium-file="https://heejune.files.wordpress.com/2017/03/part_ii_5.png?w=1100?w=300" data-large-file="https://heejune.files.wordpress.com/2017/03/part_ii_5.png?w=1100?w=1024" class="alignnone size-full wp-image-470" src="https://heejune.files.wordpress.com/2017/03/part_ii_5.png?w=1100" alt="part_ii_5" srcset="https://heejune.files.wordpress.com/2017/03/part_ii_5.png?w=1100 1100w, https://heejune.files.wordpress.com/2017/03/part_ii_5.png?w=150 150w, https://heejune.files.wordpress.com/2017/03/part_ii_5.png?w=300 300w, https://heejune.files.wordpress.com/2017/03/part_ii_5.png?w=768 768w, https://heejune.files.wordpress.com/2017/03/part_ii_5.png?w=1024 1024w, https://heejune.files.wordpress.com/2017/03/part_ii_5.png 1877w" sizes="(max-width: 1100px) 100vw, 1100px"   /></p>
+<p>And lastly, the coroutine function hits the co_return keyword after looping 5 times,</p>
+<p><img data-attachment-id="471" data-permalink="https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/part_ii_6/" data-orig-file="https://heejune.files.wordpress.com/2017/03/part_ii_6.png?w=1100" data-orig-size="1889,682" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="part_ii_6" data-image-description="" data-medium-file="https://heejune.files.wordpress.com/2017/03/part_ii_6.png?w=1100?w=300" data-large-file="https://heejune.files.wordpress.com/2017/03/part_ii_6.png?w=1100?w=1024" class="alignnone size-full wp-image-471" src="https://heejune.files.wordpress.com/2017/03/part_ii_6.png?w=1100" alt="part_ii_6" srcset="https://heejune.files.wordpress.com/2017/03/part_ii_6.png?w=1100 1100w, https://heejune.files.wordpress.com/2017/03/part_ii_6.png?w=150 150w, https://heejune.files.wordpress.com/2017/03/part_ii_6.png?w=300 300w, https://heejune.files.wordpress.com/2017/03/part_ii_6.png?w=768 768w, https://heejune.files.wordpress.com/2017/03/part_ii_6.png?w=1024 1024w, https://heejune.files.wordpress.com/2017/03/part_ii_6.png 1889w" sizes="(max-width: 1100px) 100vw, 1100px"   /></p>
+<p>And reached the end.</p>
+<p>Next time, I&#8217;d like to talk about another co_await adapter &#8216;await_adapter&#8217; which makes winrt IAsync.. types possible to be awaitable. Thanks.</p>
+<p>Heejune</p>
+]]></content:encoded>
+							<wfw:commentRss>https://heejune.me/2017/03/02/beginning-the-coroutine-with-visual-studio-2015-update-3-part-2/feed/</wfw:commentRss>
+		<slash:comments>1</slash:comments>
+						
+		<media:content url="https://1.gravatar.com/avatar/4b48bdefc89aa1166a187c5ba5a715cc?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">heejune</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/030217_1403_beginningth1.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/030217_1403_beginningth2.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/030217_1403_beginningth3.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/030217_1403_beginningth4.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/030217_1403_beginningth5.png" medium="image" />
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/part_ii_11.png" medium="image">
+			<media:title type="html">part_ii_1</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/part_ii_2.png" medium="image">
+			<media:title type="html">part_ii_2</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/part_ii_3.png" medium="image">
+			<media:title type="html">part_ii_3</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/part_ii_3-4png.png" medium="image">
+			<media:title type="html">part_ii_3-4png</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/part_ii_4.png" medium="image">
+			<media:title type="html">part_ii_4</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/part_ii_5.png" medium="image">
+			<media:title type="html">part_ii_5</media:title>
+		</media:content>
+
+		<media:content url="https://heejune.files.wordpress.com/2017/03/part_ii_6.png" medium="image">
+			<media:title type="html">part_ii_6</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>How to upload a file from slack using SlackClient?</title>
+		<link>https://heejune.me/2017/02/28/how-to-upload-a-file-from-slack-using-slackclient/</link>
+				<comments>https://heejune.me/2017/02/28/how-to-upload-a-file-from-slack-using-slackclient/#comments</comments>
+				<pubDate>Tue, 28 Feb 2017 02:33:38 +0000</pubDate>
+		<dc:creator><![CDATA[Heejune]]></dc:creator>
+				<category><![CDATA[Python]]></category>
+		<category><![CDATA[python]]></category>
+		<category><![CDATA[slackclient]]></category>
+
+		<guid isPermaLink="false">http://heejune.me/?p=408</guid>
+				<description><![CDATA[Slack provides an official python client module which you can easily work with. It&#8217;s simple and easy to use. For example, sending a text line to a specific channel is simple enough to call through just one API &#8211; api_call(&#8220;chat.postMessage&#8220;, channel=channel, text=msg, attachments=attachment, as_user=True) You can also upload a file to a channel. However, when I &#8230; <a href="https://heejune.me/2017/02/28/how-to-upload-a-file-from-slack-using-slackclient/" class="more-link">Continue reading <span class="screen-reader-text">How to upload a file from slack using&#160;SlackClient?</span> <span class="meta-nav">&#8594;</span></a>]]></description>
+								<content:encoded><![CDATA[<p>Slack provides an official python <a href="https://github.com/slackapi/python-slackclient">client module</a> which you can easily work with.</p>
+<p>It&#8217;s simple and easy to use. For example, sending a text line to a specific channel is simple enough to call through just one API &#8211; api_call(<span class="pl-s"><span class="pl-pds">&#8220;</span>chat.postMessage<span class="pl-pds">&#8220;</span></span>, <span class="pl-v">channel</span><span class="pl-k">=</span>channel, <span class="pl-v">text</span><span class="pl-k">=</span>msg, <span class="pl-v">attachments</span><span class="pl-k">=</span>attachment, <span class="pl-v">as_user</span><span class="pl-k">=</span><span class="pl-c1">True</span>)</p>
+<p>You can also upload a file to a channel. However, when I was searching some info how to achieve that at the first time, the answer described in the SlackClient&#8217;s <a href="https://github.com/slackapi/python-slackclient/issues/64">Github issue </a>was actually wrong. So I tested and added a snippet. Please check the issue page.</p>
+<p>Anyway, I also shared the snippet at the public gist. The &#8216;upload_file&#8217; method takes a long text as the &#8216;content&#8217; param and upload it as a file. You&#8217;ll also upload a file directory from disk or memory if you modify it slightly.</p>
+<style>.gist table { margin-bottom: 0; }</style>
+<div class="gist-oembed" data-gist="9d38fb0a71f3a78dc88d469e7cdc0251.json"></div>
+<p>Thanks,</p>
+<p>Heejune</p>
+]]></content:encoded>
+							<wfw:commentRss>https://heejune.me/2017/02/28/how-to-upload-a-file-from-slack-using-slackclient/feed/</wfw:commentRss>
+		<slash:comments>2</slash:comments>
+						
+		<media:content url="https://1.gravatar.com/avatar/4b48bdefc89aa1166a187c5ba5a715cc?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">heejune</media:title>
+		</media:content>
+	</item>
+	</channel>
+</rss>

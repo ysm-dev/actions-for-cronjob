@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="https://000namc.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://000namc.github.io/" rel="alternate" type="text/html" hreflang="en" /><updated>2019-05-11T02:37:05+00:00</updated><id>https://000namc.github.io/feed.xml</id><title type="html">Seong-Uk's Blog</title><subtitle>A Blog for Machine Learning and Optimization</subtitle><author><name>{&quot;name&quot;=&gt;nil, &quot;job_title&quot;=&gt;nil, &quot;location&quot;=&gt;nil, &quot;email&quot;=&gt;&quot;000namc@gmail.com&quot;, &quot;social_links&quot;=&gt;[{&quot;name&quot;=&gt;&quot;facebook&quot;, &quot;url&quot;=&gt;&quot;https://www.facebook.com/profile.php?id=100011446640614&quot;}, {&quot;name&quot;=&gt;&quot;github&quot;, &quot;url&quot;=&gt;&quot;https://github.com/000namc&quot;}, {&quot;name&quot;=&gt;&quot;instagram&quot;, &quot;url&quot;=&gt;&quot;https://www.instagram.com/000namc/&quot;}, {&quot;name&quot;=&gt;&quot;linkedin&quot;, &quot;url&quot;=&gt;&quot;https://www.linkedin.com/in/seong-uk-nam/&quot;}, {&quot;name&quot;=&gt;&quot;stackoverflow&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;twitter&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;vk&quot;, &quot;url&quot;=&gt;nil}]}</name><email>000namc@gmail.com</email></author><entry><title type="html">Note : Backpropagation Algorithm</title><link href="https://000namc.github.io/blog/2018/12/14/note-backpropagation/" rel="alternate" type="text/html" title="Note : Backpropagation Algorithm" /><published>2018-12-14T00:00:00+00:00</published><updated>2018-12-14T00:00:00+00:00</updated><id>https://000namc.github.io/blog/2018/12/14/note-backpropagation</id><content type="html" xml:base="https://000namc.github.io/blog/2018/12/14/note-backpropagation/">&lt;p&gt;&lt;strong&gt;Posts Layout&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://000namc.github.io/blog/2018/12/14/note-backpropagation/&quot;&gt;2018-12-14 : Note : Backpropagation Algorithm&lt;/a&gt; $\leftarrow$&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;이번 글에서는 BP(Backpropagation) Algorithm에 대해 정리해보도록 하겠습니다.
+BP란 머신러닝 모형들중 Neural Network에서 등장하는 알고리즘입니다.
+조금 더 구체적으로, 보통 머신러닝 모형은 Cost Function을 Minimize하는 방식으로 모형을 데이터에 적합을 시키는데 이때 Cost Function의
+Gradient를 계산하게 됩니다. Neural Network는 그 특성상 구조가 복잡하여 해당하는 Gradient를 계산하는데 많은 계산이 필요하여
+효율적인 계산이 필요하게 되고 이를 구현한것이 바로 Backpropagation Algorithm이 되겠습니다.
+붙여진 이름은 알고리즘 내의
+특정값들이 계산되는 방향이 뒤에서 앞쪽으로(Back) 흘러가기때문에 그렇습니다.&lt;/p&gt;
+
+&lt;p&gt;이 포스트를 작성하면서 Cousera의 Andrew Ng 교수님의 Machine Learning 강좌를 많이
+ 참고하였음을 먼저 밝힙니다. 아래 등장하는 Notation들 역시 해당 강의에서 사용하는 Notation을
+ 사용하였습니다. 글은 Notation, Definition을 먼저 설명하고, 메인이 되는 BP를 서술하고 이를
+ 증명하는 순서로 작성하였습니다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Notation, Convention&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\\&lt;/script&gt;
+
+&lt;p&gt;Newral Network의 BP를 설명하기 위해서는 아래와같은 기호들이 필요합니다.&lt;br /&gt;
+충분히 기호가 많기 때문에 식을 전개할때,
+특정 example을 지칭하는 $(i)$ 는 생략하도록 하였습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;$n$ : number of features.&lt;/li&gt;
+  &lt;li&gt;$m$ : number of examples.&lt;/li&gt;
+  &lt;li&gt;$L$ : total number of layers in the network.&lt;/li&gt;
+  &lt;li&gt;$S_l$ : number of units in layer $l$ (not containing bias unit).&lt;/li&gt;
+  &lt;li&gt;$\theta^{(l)}_{ij}$ : parameter from $j$-th unit of $l$-th layer to $i$-th unit of $(l+1)$-th layer.&lt;/li&gt;
+  &lt;li&gt;$z^{(l)(i)}_x$ $(= z^{(l)}_x)$ :  $x$-th unit of $l$-th layer for the $i$-th example.&lt;/li&gt;
+  &lt;li&gt;$a^{(l)(i)}_x$ $(= a^{(l)}_x)$ :  activation of $z^{(l)(i)}_x$.&lt;/li&gt;
+  &lt;li&gt;$\delta^{(l)(i)}_x$ $(= \delta^{(l)}_x)$.&lt;/li&gt;
+  &lt;li&gt;$h_{\theta}(x)$ : the Hypothesis function of data x with the parameter $\theta$.&lt;/li&gt;
+  &lt;li&gt;$J(\theta)$ : the Cost function.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://000namc.github.io/assets/images/bp_figure.png&quot; alt=&quot;temp&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Definition&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\\&lt;/script&gt;
+
+&lt;p&gt;위에서 언급된 여러 기호들에 대하여 아래와 같이 정의함으로써 Neural Network Classifier를 설계하도록 합니다.&lt;br /&gt;
+여기서, activation function으로는 sigmoid function만을 고려하였습니다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{aligned}
+ z^{(l)}_x &amp;= \theta^{(l-1)}_{x0}a^{(l-1)}_0 +
+ \theta^{(l-1)}_{x1}a^{(l-1)}_1 +
+ \cdots + \theta^{(l-1)}_{xS_{L-1}}a^{(l-1)}_{S_{l-1}}.\\
+ a^{(l)}_x &amp;= g(z_x^{(l)}). \\
+ g(z) &amp;= \frac{1}{1+e^{-z}}. \\
+ h_{\theta}(x) &amp;= \Big(g(z_1^{(L)}),g(z_2^{(L)}),\cdots,g(z_{S_L}^{(L)})\Big). \\
+ (h_{\theta}(x))_t &amp;= g(z_t^{(L)}). \\
+ J(\theta) &amp;= - \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t \log(h_{\theta}(x)_t) + (1-y_t)\log(1-h_{\theta}(x)_t) \Big]. \\
+ y^{(i)}&amp;= y \\
+ &amp;= S_L \times 1 \text{ vector of i-th example that represent class which belongs to}. \\
+ y_t &amp;= \begin{cases}
+ 1 \text{ if i-th example is belongs to t-th class}\\
+ 0 \text{ otherwise.}
+ \end{cases}
+ \end{aligned} %]]&gt;&lt;/script&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Backpropagation Algorithm을 증명하기위해 두개의 Lemma를 활용하였습니다.&lt;br /&gt;
+먼저 정리와 Lemma를 서술하였고, 이후 증명을 작성하였습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Theorem(Backpropagation Algorithm)&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial}{\partial \theta^{(l)}_{kj}} J(\theta) = \frac{1}{m} \sum^m_{i=1}\Big[a^{(l)(i)}_j \delta^{(l+1)(i)}_k \Big] \text{,}&lt;/script&gt;
+
+&lt;p&gt;where&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{aligned}
+\delta^{(L)}_k &amp;= a^{(L)}_k - y_k, \quad k=1 \cdots S_L  ,\\
+\delta^{(l)}_k &amp;= g'(z^{(l)}_k) \sum^{S_{l+1}}_{j=1} \Big[ \delta^{(l+1)}_j \theta^{(l)}_{jk} \Big], \quad k = 1 \cdots S_l, l = 1 \cdots L-1
+\end{aligned} %]]&gt;&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Lemma 1&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial}{\partial \theta^{(l)}_{kj}} J(\theta) =  \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ \frac{\partial z_t^{(L)}}{\partial \theta^{(l)}_{kj}} \delta_t^{(L)} \Big] ,\quad l = 1,\cdots,L-1&lt;/script&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Lemma 2&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\sum_{t=1}^{S_L} \frac{\partial z_t^{(L)}}{\partial a^{(l)}_{x}} \delta^{(L)}_t =
+\theta_{1x}^{(l)}\delta_1^{(l+1)}+\theta_{2x}^{(l)}\delta_2^{(l+1)} + \cdots + \theta_{S_{l+1}x}^{(l)}\delta_{S_{l+1}}^{(l+1)},\quad l = 1,\cdots,L-1&lt;/script&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;em&gt;Proof of Theorem(Backpropagation Algorithm)&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;$l = L-1$ 일때,&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{aligned}
+\frac{\partial}{\partial \theta^{(L-1)}_{kj}} J(\theta) &amp;=  \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ \frac{\partial z_t^{(L)}}{\partial \theta^{(L-1)}_{kj}} \delta_t^{(L)} \Big], \text{ by Lemma 1} \\
+&amp;= \frac{1}{m} \sum^m_{i=1} \Big[a_j^{(L-1)} \delta_k^{(L)} \Big]
+\end{aligned} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;$l &amp;lt; L-1$ 일때,&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{aligned}
+\frac{\partial}{\partial \theta^{(l)}_{kj}} J(\theta) &amp;=  \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ \frac{\partial z_t^{(L)}}{\partial \theta^{(l)}_{kj}} \delta_t^{(L)} \Big], \text{ by Lemma 1} \\
+&amp;= \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ \frac{\partial a_k^{(l+1)}}{\partial \theta^{(l)}_{kj}} \frac{\partial z_t^{(L)}}{\partial a_k^{(l+1)}} \delta_t^{(L)} \Big], \text{ by Chain rule} \\
+&amp;= \frac{1}{m} \sum^m_{i=1}\frac{\partial a_k^{(l+1)}}{\partial \theta^{(l)}_{kj}} \Big[\sum^{S_L}_{t=1}\Big[  \frac{\partial z_t^{(L)}}{\partial a_k^{(l+1)}} \delta_t^{(L)} \Big]\Big] \\
+&amp;= \frac{1}{m} \sum^m_{i=1}\frac{\partial a_k^{(l+1)}}{\partial \theta^{(l)}_{kj}} \Big[\theta_{1k}^{(l+1)}\delta_1^{(l+2)}+\theta_{2k}^{(l+1)}\delta_2^{(l+2)} + \cdots + \theta_{S_{l+2}k}^{(l+1)}\delta_{S_{l+2}}^{(l+2)}  \Big], \text{ by Lemma 2} \\
+&amp;= \frac{1}{m} \sum^m_{i=1} a_j^{(l)}g'(z^{(l+1)}_k) \Big[\theta_{1k}^{(l+1)}\delta_1^{(l+2)}+\theta_{2k}^{(l+1)}\delta_2^{(l+2)} + \cdots + \theta_{S_{l+2}k}^{(l+1)}\delta_{S_{l+2}}^{(l+2)}  \Big] \\
+&amp;= \frac{1}{m} \sum^m_{i=1} \Big[a_j^{(l)} \delta_k^{(l+1)} \Big] , \text{ by Definition of delta}
+\end{aligned} %]]&gt;&lt;/script&gt;
+
+&lt;hr /&gt;
+&lt;p&gt;&lt;em&gt;Proof of Lemma 1&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;$J(\theta)$의 정의로부터 계산을 해 나가면 아래와 같이 된다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{aligned}
+J(\theta) &amp;= - \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t \log(h_{\theta}(x)_t) + (1-y_t)\log(1-h_{\theta}(x)_t) \Big] \\
+&amp;=- \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t \log( \frac{1}{1+e^{-z_t^{(L)}}} ) + (1-y_t)\log(1-\frac{1}{1+e^{-z_t^{(L)}}}) \Big] \\
+&amp;=- \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t \log( \frac{1}{1+e^{-z_t^{(L)}}} ) + (1-y_t)\log(\frac{e^{-z_t^{(L)}}}{1+e^{-z_t^{(L)}}}) \Big] \\
+&amp;=- \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ -y_t \log( 1+e^{-z_t^{(L)}} ) + (1-y_t) (-z_t^{(L)} - \log(1+e^{-z_t^{(L)}})) \Big] \\
+&amp;=- \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t z_t^{(L)} - z_t^{(L)} - \log(1+e^{-z_t^{(L)}}) \Big] \\
+&amp;=- \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t z_t^{(L)} - \log(1+e^{z_t^{(L)}}) \Big] \\
+\end{aligned} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;따라서,&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{aligned}
+\frac{\partial}{\partial \theta^{(l)}_{kj}} J(\theta) &amp;= - \frac{\partial}{\partial \theta^{(l)}_{kj}}\frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t z_t^{(L)} - \log(1+e^{z_t^{(L)}}) \Big] \\
+&amp;= - \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t \frac{\partial}{\partial \theta^{(l)}_{kj}}z_t^{(L)} - \frac{\partial}{\partial \theta^{(l)}_{kj}}\log(1+e^{z_t^{(L)}}) \Big] \\
+&amp;= - \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t \frac{\partial}{\partial \theta^{(l)}_{kj}}z_t^{(L)} - \frac{\partial}{\partial \theta^{(l)}_{kj}} [z_t^{(L)}] \frac{e^{z_t^{(L)}}}{1+e^{z_t^{(L)}}} \Big] \\
+&amp;= - \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t \frac{\partial}{\partial \theta^{(l)}_{kj}}z_t^{(L)} - \frac{\partial}{\partial \theta^{(l)}_{kj}} [z_t^{(L)}] \frac{1}{1+e^{-z_t^{(L)}}} \Big] \\
+&amp;= - \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ y_t \frac{\partial}{\partial \theta^{(l)}_{kj}}z_t^{(L)} - \frac{\partial}{\partial \theta^{(l)}_{kj}} [z_t^{(L)}] a^{(L)}_t \Big] \\
+&amp;= - \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ \frac{\partial}{\partial \theta^{(l)}_{kj}} [z_t^{(L)}](y_t - a_t^{(L)})\Big] \\
+&amp;= \frac{1}{m} \sum^m_{i=1}\sum^{S_L}_{t=1}\Big[ \frac{\partial z_t^{(L)}}{\partial \theta^{(l)}_{kj}} \delta_t^{(L)} \Big]
+\end{aligned} %]]&gt;&lt;/script&gt;
+
+&lt;hr /&gt;
+&lt;p&gt;&lt;em&gt;Proof of Lemma 2&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;$l$에 대한 귀납법을 이용하여 위 Lemma를 증명하도록 하자.&lt;br /&gt;
+우리는 간단한 계산을 통해 $l = L-1$ 일때 위 식이 성립함을 확인 할 수 있다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{aligned}
+\frac{\partial z_t^{(L)}}{\partial a^{(L-1)}_{x}} \delta^{(L)}_t &amp;= \frac{\partial}{\partial a^{(L-1)}_{x}} \Big(z_t^{(L)}\Big) \delta^{(L)}_t\\
+&amp;=\frac{\partial}{\partial a^{(L-1)}_{x}} \Big( a_0^{(L-1)}\theta_{t0}^{(L-1)} + a_1^{(L-1)}\theta_{t1}^{(L-1)} + \cdots + a_{S_{L-1}}^{(L-1)}\theta_{tS_{L-1}}^{(L-1)} \Big) \delta^{(L)}_t\\
+&amp;=\theta_{tx}^{(L-1)} \delta^{(L)}_t.\\
+\end{aligned} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;따라서,&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\sum_{t=1}^{S_L} \frac{\partial z_t^{(L)}}{\partial a^{(L-1)}_{x}} \delta^{(L)}_t =
+\theta_{1x}^{(L-1)}\delta_1^{(L)}+\theta_{2x}^{(L-1)}\delta_2^{(L)} + \cdots + \theta_{S_{L}x}^{(L-1)}\delta_{S_{L}}^{(L)}.&lt;/script&gt;
+
+&lt;p&gt;$l=p$일 때 성립함을 가정하면,&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\sum_{t=1}^{S_L} \frac{\partial z_t^{(L)}}{\partial a^{(p)}_{x}} \delta^{(L)}_t =
+\theta_{1x}^{(p)}\delta_1^{(p+1)}+\theta_{2x}^{(p)}\delta_2^{(p+1)} + \cdots + \theta_{S_{p+1}x}^{(p)}\delta_{S_{p+1}}^{(p+1)}.&lt;/script&gt;
+
+&lt;p&gt;다음과 같이 $l=p-1$ 일 때 성립함을 보일 수 있다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{aligned}
+\sum_{t=1}^{S_L} \frac{\partial z_t^{(L)}}{\partial a^{(p-1)}_{x}} \delta^{(L)}_t &amp;=
+\sum_{t=1}^{S_L}\Big[ \frac{\partial a_1^{(p)}}{\partial a^{(p-1)}_{x}} \frac{\partial z_t^{(L)}}{\partial a^{(p)}_{1}}\delta^{(L)}_t \Big] +
+\sum_{t=1}^{S_L}\Big[ \frac{\partial a_2^{(p)}}{\partial a^{(p-1)}_{x}} \frac{\partial z_t^{(L)}}{\partial a^{(p)}_{2}}\delta^{(L)}_t \Big] +
+\cdots + \sum_{t=1}^{S_L}\Big[ \frac{\partial a_{S_p}^{(p)}}{\partial a^{(p-1)}_{x}} \frac{\partial z_t^{(L)}}{\partial a^{(p)}_{S_p}}\delta^{(L)}_t \Big] \\
+&amp;= \frac{\partial a_1^{(p)}}{\partial a^{(p-1)}_{x}} \Big[ \theta_{11}^{(p)}\delta_1^{(p+1)}+\theta_{21}^{(p)}\delta_2^{(p+1)} + \cdots + \theta_{S_{p+1}1}^{(p)}\delta_{S_{p+1}}^{(p+1)} \Big] + \\
+&amp;\phantom{000}\frac{\partial a_2^{(p)}}{\partial a^{(p-1)}_{x}} \Big[ \theta_{12}^{(p)}\delta_1^{(p+1)}+\theta_{22}^{(p)}\delta_2^{(p+1)} + \cdots + \theta_{S_{p+1}2}^{(p)}\delta_{S_{p+1}}^{(p+1)} \Big] + \\
+&amp;\phantom{000} \cdots + \frac{\partial a_{S_p}^{(p)}}{\partial a^{(p-1)}_{x}} \Big[ \theta_{1S_p}^{(p)}\delta_1^{(p+1)}+\theta_{2S_p}^{(p)}\delta_2^{(p+1)} + \cdots + \theta_{S_{p+1}S_p}^{(p)}\delta_{S_{p+1}}^{(p+1)} \Big] \\
+&amp;= \theta^{(p-1)}_{1x} g'(z_1^{(p)}) \Big[ \theta_{11}^{(p)}\delta_1^{(p+1)}+\theta_{21}^{(p)}\delta_2^{(p+1)} + \cdots + \theta_{S_{p+1}1}^{(p)}\delta_{S_{p+1}}^{(p+1)} \Big] + \\
+&amp;\phantom{000} \theta^{(p-1)}_{2x} g'(z_2^{(p)}) \Big[ \theta_{12}^{(p)}\delta_1^{(p+1)}+\theta_{22}^{(p)}\delta_2^{(p+1)} + \cdots + \theta_{S_{p+1}2}^{(p)}\delta_{S_{p+1}}^{(p+1)} \Big] + \\
+&amp;\phantom{000} \cdots + \theta^{(p-1)}_{S_px} g'(z_{S_p}^{(p)}) \Big[ \theta_{1S_p}^{(p)}\delta_1^{(p+1)}+\theta_{2S_p}^{(p)}\delta_2^{(p+1)} + \cdots + \theta_{S_{p+1}S_p}^{(p)}\delta_{S_{p+1}}^{(p+1)} \Big] \\
+&amp;= \theta_{1x}^{(p-1)}\delta_1^{(p)}+\theta_{2x}^{(p-1)}\delta_2^{(p)} + \cdots + \theta_{S_{p}x}^{(p-1)}\delta_{S_{p}}^{(p)}.
+\end{aligned} %]]&gt;&lt;/script&gt;</content><author><name>{&quot;name&quot;=&gt;nil, &quot;job_title&quot;=&gt;nil, &quot;location&quot;=&gt;nil, &quot;email&quot;=&gt;&quot;000namc@gmail.com&quot;, &quot;social_links&quot;=&gt;[{&quot;name&quot;=&gt;&quot;facebook&quot;, &quot;url&quot;=&gt;&quot;https://www.facebook.com/profile.php?id=100011446640614&quot;}, {&quot;name&quot;=&gt;&quot;github&quot;, &quot;url&quot;=&gt;&quot;https://github.com/000namc&quot;}, {&quot;name&quot;=&gt;&quot;instagram&quot;, &quot;url&quot;=&gt;&quot;https://www.instagram.com/000namc/&quot;}, {&quot;name&quot;=&gt;&quot;linkedin&quot;, &quot;url&quot;=&gt;&quot;https://www.linkedin.com/in/seong-uk-nam/&quot;}, {&quot;name&quot;=&gt;&quot;stackoverflow&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;twitter&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;vk&quot;, &quot;url&quot;=&gt;nil}]}</name><email>000namc@gmail.com</email></author><category term="neural network" /><category term="backpropagation" /><category term="note" /><summary type="html">Posts Layout</summary></entry><entry><title type="html">블로그 Customizing 2</title><link href="https://000namc.github.io/blog/2018/07/29/blog_customizing_2/" rel="alternate" type="text/html" title="블로그 Customizing 2" /><published>2018-07-29T00:00:00+00:00</published><updated>2018-07-29T00:00:00+00:00</updated><id>https://000namc.github.io/blog/2018/07/29/blog_customizing_2</id><content type="html" xml:base="https://000namc.github.io/blog/2018/07/29/blog_customizing_2/">&lt;p&gt;&lt;strong&gt;Posts Layout&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://000namc.github.io/blog/2018/03/06/blog_begin/&quot;&gt;2018-03-06 : 블로그를 시작했습니다.&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://000namc.github.io/blog/2018/04/20/blog_customizing_1/&quot;&gt;2018-04-20 : 블로그 Customizing_1&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://000namc.github.io/blog/2018/07/29/blog_customizing_2/&quot;&gt;2018-07-29 : 블로그 Customizing_2&lt;/a&gt;  $\leftarrow$&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;http://jekyllthemes.org/ 이곳에보면 이용할 수 있는 많은 테마들이 있는데, 이중에 최종적으로 &lt;a href=&quot;https://github.com/yizeng/jekyll-theme-simple-texture&quot;&gt;simple texture&lt;/a&gt; 라는 테마를 이용하기로 결정하였습니다. 깔끔한 디자인과 보다 글들이 직관적으로 정렬되어 있고 search 기능을 제공한다는 것이 마음에 들어 선택하였습니다.&lt;/p&gt;
+
+&lt;p&gt;이번에 제가 진행한 Customizing은 다음과 같습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Posts Layout 추가&lt;/li&gt;
+  &lt;li&gt;수식입력 명령어 Customizing&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>{&quot;name&quot;=&gt;nil, &quot;job_title&quot;=&gt;nil, &quot;location&quot;=&gt;nil, &quot;email&quot;=&gt;&quot;000namc@gmail.com&quot;, &quot;social_links&quot;=&gt;[{&quot;name&quot;=&gt;&quot;facebook&quot;, &quot;url&quot;=&gt;&quot;https://www.facebook.com/profile.php?id=100011446640614&quot;}, {&quot;name&quot;=&gt;&quot;github&quot;, &quot;url&quot;=&gt;&quot;https://github.com/000namc&quot;}, {&quot;name&quot;=&gt;&quot;instagram&quot;, &quot;url&quot;=&gt;&quot;https://www.instagram.com/000namc/&quot;}, {&quot;name&quot;=&gt;&quot;linkedin&quot;, &quot;url&quot;=&gt;&quot;https://www.linkedin.com/in/seong-uk-nam/&quot;}, {&quot;name&quot;=&gt;&quot;stackoverflow&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;twitter&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;vk&quot;, &quot;url&quot;=&gt;nil}]}</name><email>000namc@gmail.com</email></author><category term="blog" /><category term="diary" /><summary type="html">Posts Layout</summary></entry><entry><title type="html">블로그 Customizing 1</title><link href="https://000namc.github.io/blog/2018/04/20/blog_customizing_1/" rel="alternate" type="text/html" title="블로그 Customizing 1" /><published>2018-04-20T00:00:00+00:00</published><updated>2018-04-20T00:00:00+00:00</updated><id>https://000namc.github.io/blog/2018/04/20/blog_customizing_1</id><content type="html" xml:base="https://000namc.github.io/blog/2018/04/20/blog_customizing_1/">&lt;p&gt;&lt;strong&gt;Posts Layout&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://000namc.github.io/blog/2018/03/06/blog_begin/&quot;&gt;2018-03-06 : 블로그를 시작했습니다.&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://000namc.github.io/blog/2018/04/20/blog_customizing_1/&quot;&gt;2018-04-20 : 블로그 Customizing_1&lt;/a&gt;  $\leftarrow$&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://000namc.github.io/blog/2018/07/29/blog_customizing_2/&quot;&gt;2018-07-29 : 블로그 Customizing_2&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;http://jekyllthemes.org/ 이곳에보면 이용할 수 있는 많은 테마들이 있는데, 이중에 최종적으로 &lt;a href=&quot;https://github.com/yizeng/jekyll-theme-simple-texture&quot;&gt;simple texture&lt;/a&gt; 라는 테마를 이용하기로 결정하였습니다. 깔끔한 디자인과 보다 글들이 직관적으로 정렬되어 있고 search 기능을 제공한다는 것이 마음에 들어 선택하였습니다.&lt;/p&gt;
+
+&lt;p&gt;이번에 제가 진행한 Customizing은 다음과 같습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;댓글기능 추가&lt;/li&gt;
+  &lt;li&gt;댓글 counter 추가&lt;/li&gt;
+  &lt;li&gt;All posts 정렬 년도단위 -&amp;gt; 개월단위&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>{&quot;name&quot;=&gt;nil, &quot;job_title&quot;=&gt;nil, &quot;location&quot;=&gt;nil, &quot;email&quot;=&gt;&quot;000namc@gmail.com&quot;, &quot;social_links&quot;=&gt;[{&quot;name&quot;=&gt;&quot;facebook&quot;, &quot;url&quot;=&gt;&quot;https://www.facebook.com/profile.php?id=100011446640614&quot;}, {&quot;name&quot;=&gt;&quot;github&quot;, &quot;url&quot;=&gt;&quot;https://github.com/000namc&quot;}, {&quot;name&quot;=&gt;&quot;instagram&quot;, &quot;url&quot;=&gt;&quot;https://www.instagram.com/000namc/&quot;}, {&quot;name&quot;=&gt;&quot;linkedin&quot;, &quot;url&quot;=&gt;&quot;https://www.linkedin.com/in/seong-uk-nam/&quot;}, {&quot;name&quot;=&gt;&quot;stackoverflow&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;twitter&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;vk&quot;, &quot;url&quot;=&gt;nil}]}</name><email>000namc@gmail.com</email></author><category term="blog" /><category term="diary" /><summary type="html">Posts Layout</summary></entry><entry><title type="html">블로그를 시작했습니다!</title><link href="https://000namc.github.io/blog/2018/03/06/blog_begin/" rel="alternate" type="text/html" title="블로그를 시작했습니다!" /><published>2018-03-06T00:00:00+00:00</published><updated>2018-03-06T00:00:00+00:00</updated><id>https://000namc.github.io/blog/2018/03/06/blog_begin</id><content type="html" xml:base="https://000namc.github.io/blog/2018/03/06/blog_begin/">&lt;p&gt;&lt;strong&gt;Posts Layout&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://000namc.github.io/blog/2018/03/06/blog_begin/&quot;&gt;2018-03-06 : 블로그를 시작했습니다.&lt;/a&gt; $\leftarrow$&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://000namc.github.io/blog/2018/04/20/blog_customizing_1/&quot;&gt;2018-04-20 : 블로그 Customizing_1&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://000namc.github.io/blog/2018/07/29/blog_customizing_2/&quot;&gt;2018-07-29 : 블로그 Customizing_2&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;2018년 3월 5일에 처음으로 https://github.com/bencentra 에서 fork를 받았습니다.https://github.com/chrisbobbe/jekyll-theme-prologue 이곳에서 받아서 쓰길 원했었는데요. 디자인도 훨씬 깔끔하고 맘에드는데 세부적인것을 수정하기가 아직 익숙치 않아서 이 테마를 사용하게 되었습니다. linux와 github, html 문법, markdown형식에 익숙해지면 차차 개선해보겠습니다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;20181107 추가&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;이 블로그는 아래와같은 대범주로 구성되어 있습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Blog&lt;br /&gt;
+블로그를 구성하며 알게된 것들을 다음에 다시보고 참고할 목적으로 정리.&lt;/li&gt;
+  &lt;li&gt;Linux&lt;br /&gt;
+리눅스를 공부하며 알게된 것들을 다음에 다시보고 참고할 목적으로 정리.&lt;/li&gt;
+  &lt;li&gt;Study&lt;br /&gt;
+정기적으로 진행한 스터디를 공유 목적으로 정리.&lt;/li&gt;
+  &lt;li&gt;Project&lt;br /&gt;
+맡아 진행한 프로젝트의 내용을 공유 목적으로 정리.&lt;/li&gt;
+  &lt;li&gt;Note &lt;br /&gt;
+특별한 주제를 정하여 수학적으로 깊이있게 분석하고 공유할 목적으로 정리.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;20181124 추가&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;글을 정리하는 형식을 업데이트 하였습니다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;위에서 정한 대범주 아래에 새로운 범주가 필요할 경우 소범주를 만들어 사용하였습니다. 소범주를 정의할때는 대범주를 유추할 수 있는 이름을 사용합니다.&lt;/li&gt;
+  &lt;li&gt;category는 &lt;strong&gt;대범주&lt;/strong&gt; 로 정의 하였습니다. 만약 소범주가 필요한 포스트라면 &lt;strong&gt;대범주 : 소범주&lt;/strong&gt; 로 정의합니다.&lt;/li&gt;
+  &lt;li&gt;업로드하는 모든 포스트의 제목은 &lt;strong&gt;대범주 : subject&lt;/strong&gt; 로 정의하였습니다. 만약 소범주가 필요한 포스트라면 &lt;strong&gt;소범주 : subject&lt;/strong&gt; 로 정의합니다.
+    &lt;blockquote&gt;
+      &lt;p&gt;category를 입력할때에 하나의 단어단위로만 입력을 받아서…, 현재 띄어쓰기는 특수문자로 대체하여 썼습니다.&lt;/p&gt;
+    &lt;/blockquote&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;따라서 2018년 11월 24일 현재 category는 아래와 같이 나누어집니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Blog&lt;/li&gt;
+  &lt;li&gt;Linux&lt;/li&gt;
+  &lt;li&gt;Study : Python Study&lt;/li&gt;
+  &lt;li&gt;Note&lt;/li&gt;
+  &lt;li&gt;Project&lt;/li&gt;
+  &lt;li&gt;Uncategorized&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;hr /&gt;</content><author><name>{&quot;name&quot;=&gt;nil, &quot;job_title&quot;=&gt;nil, &quot;location&quot;=&gt;nil, &quot;email&quot;=&gt;&quot;000namc@gmail.com&quot;, &quot;social_links&quot;=&gt;[{&quot;name&quot;=&gt;&quot;facebook&quot;, &quot;url&quot;=&gt;&quot;https://www.facebook.com/profile.php?id=100011446640614&quot;}, {&quot;name&quot;=&gt;&quot;github&quot;, &quot;url&quot;=&gt;&quot;https://github.com/000namc&quot;}, {&quot;name&quot;=&gt;&quot;instagram&quot;, &quot;url&quot;=&gt;&quot;https://www.instagram.com/000namc/&quot;}, {&quot;name&quot;=&gt;&quot;linkedin&quot;, &quot;url&quot;=&gt;&quot;https://www.linkedin.com/in/seong-uk-nam/&quot;}, {&quot;name&quot;=&gt;&quot;stackoverflow&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;twitter&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;vk&quot;, &quot;url&quot;=&gt;nil}]}</name><email>000namc@gmail.com</email></author><category term="blog" /><category term="diary" /><summary type="html">Posts Layout</summary></entry><entry><title type="html">개발환경</title><link href="https://000namc.github.io/blog/2018/03/06/Linux_1st/" rel="alternate" type="text/html" title="개발환경" /><published>2018-03-06T00:00:00+00:00</published><updated>2018-03-06T00:00:00+00:00</updated><id>https://000namc.github.io/blog/2018/03/06/Linux_1st</id><content type="html" xml:base="https://000namc.github.io/blog/2018/03/06/Linux_1st/">&lt;ul&gt;
+  &lt;li&gt;2018/03/06&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;운영체제 : Ubuntu 16.04&lt;br /&gt;
+프로그래밍언어 : R, Python, Octave&lt;br /&gt;
+코드 편집기 : Atom, jupyter, Rstudio&lt;br /&gt;
+마크다운 편집기 : Atom
+파이썬 버전관리 : pyenv&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;2019/05/11&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;운영체제 : Mac os
+프로그래밍언어 : R, Python, Octave&lt;br /&gt;
+코드 편집기 : Atom, jupyter, Rstudio&lt;br /&gt;
+마크다운 편집기 : Atom
+파이썬 버전관리 : anaconda&lt;/p&gt;</content><author><name>{&quot;name&quot;=&gt;nil, &quot;job_title&quot;=&gt;nil, &quot;location&quot;=&gt;nil, &quot;email&quot;=&gt;&quot;000namc@gmail.com&quot;, &quot;social_links&quot;=&gt;[{&quot;name&quot;=&gt;&quot;facebook&quot;, &quot;url&quot;=&gt;&quot;https://www.facebook.com/profile.php?id=100011446640614&quot;}, {&quot;name&quot;=&gt;&quot;github&quot;, &quot;url&quot;=&gt;&quot;https://github.com/000namc&quot;}, {&quot;name&quot;=&gt;&quot;instagram&quot;, &quot;url&quot;=&gt;&quot;https://www.instagram.com/000namc/&quot;}, {&quot;name&quot;=&gt;&quot;linkedin&quot;, &quot;url&quot;=&gt;&quot;https://www.linkedin.com/in/seong-uk-nam/&quot;}, {&quot;name&quot;=&gt;&quot;stackoverflow&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;twitter&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;vk&quot;, &quot;url&quot;=&gt;nil}]}</name><email>000namc@gmail.com</email></author><category term="linux" /><summary type="html">2018/03/06</summary></entry><entry><title type="html">A quick demo of Simple Texture theme's code highlighting features</title><link href="https://000namc.github.io/blog/2017/05/27/code-highlighting/" rel="alternate" type="text/html" title="A quick demo of Simple Texture theme's code highlighting features" /><published>2017-05-27T00:00:00+00:00</published><updated>2017-05-27T00:00:00+00:00</updated><id>https://000namc.github.io/blog/2017/05/27/code-highlighting</id><content type="html" xml:base="https://000namc.github.io/blog/2017/05/27/code-highlighting/">&lt;blockquote&gt;
+  &lt;p&gt;This is code blocks and highlighting test page for &lt;a href=&quot;https://github.com/yizeng/jekyll-theme-simple-texture&quot;&gt;Simple Texture&lt;/a&gt; theme.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul class=&quot;toc&quot; id=&quot;markdown-toc&quot;&gt;
+  &lt;li&gt;&lt;a href=&quot;#heading-code-spans&quot; id=&quot;markdown-toc-heading-code-spans&quot;&gt;Code Spans&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#heading-fenced-code-blocks&quot; id=&quot;markdown-toc-heading-fenced-code-blocks&quot;&gt;Fenced Code Blocks&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#heading-simple-codeblock-with-long-lines&quot; id=&quot;markdown-toc-heading-simple-codeblock-with-long-lines&quot;&gt;Simple codeblock with long lines&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#heading-language-of-code-blocks&quot; id=&quot;markdown-toc-heading-language-of-code-blocks&quot;&gt;Language of Code Blocks&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#heading-highlighted&quot; id=&quot;markdown-toc-heading-highlighted&quot;&gt;Highlighted&lt;/a&gt;    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;#heading-external-gist&quot; id=&quot;markdown-toc-heading-external-gist&quot;&gt;External Gist&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;#heading-simple-highlight&quot; id=&quot;markdown-toc-heading-simple-highlight&quot;&gt;Simple Highlight&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;#heading-highlight-with-long-lines&quot; id=&quot;markdown-toc-heading-highlight-with-long-lines&quot;&gt;Highlight with long lines&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;#heading-highlight-with-line-numbers-and-long-lines&quot; id=&quot;markdown-toc-heading-highlight-with-line-numbers-and-long-lines&quot;&gt;Highlight with line numbers and long lines&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;heading-code-spans&quot;&gt;Code Spans&lt;/h1&gt;
+
+&lt;p&gt;This is a test for inline codeblocks like &lt;code class=&quot;highlighter-rouge&quot;&gt;C:/Ruby23-x64&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;SELECT  &quot;offices&quot;.* FROM &quot;offices&quot; &lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Here is a literal &lt;code class=&quot;highlighter-rouge&quot;&gt;`&lt;/code&gt; backtick.
+And here is a Ruby code fragment &lt;code class=&quot;language-ruby highlighter-rouge&quot;&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;new&lt;/span&gt;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;heading-fenced-code-blocks&quot;&gt;Fenced Code Blocks&lt;/h1&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;~~~~~~~
+code with tildes
+~~~~~~~~
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;zz
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;heading-simple-codeblock-with-long-lines&quot;&gt;Simple codeblock with long lines&lt;/h1&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;function myFunction() {
+    alert(&quot;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;heading-language-of-code-blocks&quot;&gt;Language of Code Blocks&lt;/h1&gt;
+
+&lt;div class=&quot;language-ruby highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;what?&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;42&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;heading-highlighted&quot;&gt;Highlighted&lt;/h1&gt;
+
+&lt;h2 id=&quot;heading-external-gist&quot;&gt;External Gist&lt;/h2&gt;
+
+&lt;script src=&quot;https://gist.github.com/yizeng/9b871ad619e6dcdcc0545cac3101f361.js&quot;&gt;&lt;/script&gt;
+
+&lt;h2 id=&quot;heading-simple-highlight&quot;&gt;Simple Highlight&lt;/h2&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;foo&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'foo'&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h2 id=&quot;heading-highlight-with-long-lines&quot;&gt;Highlight with long lines&lt;/h2&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c#&quot; data-lang=&quot;c#&quot;&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Hello&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;WriteLine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h2 id=&quot;heading-highlight-with-line-numbers-and-long-lines&quot;&gt;Highlight with line numbers and long lines&lt;/h2&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;myFunction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;alert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;</content><author><name>{&quot;name&quot;=&gt;nil, &quot;job_title&quot;=&gt;nil, &quot;location&quot;=&gt;nil, &quot;email&quot;=&gt;&quot;000namc@gmail.com&quot;, &quot;social_links&quot;=&gt;[{&quot;name&quot;=&gt;&quot;facebook&quot;, &quot;url&quot;=&gt;&quot;https://www.facebook.com/profile.php?id=100011446640614&quot;}, {&quot;name&quot;=&gt;&quot;github&quot;, &quot;url&quot;=&gt;&quot;https://github.com/000namc&quot;}, {&quot;name&quot;=&gt;&quot;instagram&quot;, &quot;url&quot;=&gt;&quot;https://www.instagram.com/000namc/&quot;}, {&quot;name&quot;=&gt;&quot;linkedin&quot;, &quot;url&quot;=&gt;&quot;https://www.linkedin.com/in/seong-uk-nam/&quot;}, {&quot;name&quot;=&gt;&quot;stackoverflow&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;twitter&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;vk&quot;, &quot;url&quot;=&gt;nil}]}</name><email>000namc@gmail.com</email></author><summary type="html">This is code blocks and highlighting test page for Simple Texture theme.</summary></entry><entry><title type="html">Quick kramdown demo</title><link href="https://000namc.github.io/blog/2017/05/25/quick-kramdown-demo/" rel="alternate" type="text/html" title="Quick kramdown demo" /><published>2017-05-25T00:00:00+00:00</published><updated>2017-05-25T00:00:00+00:00</updated><id>https://000namc.github.io/blog/2017/05/25/quick-kramdown-demo</id><content type="html" xml:base="https://000namc.github.io/blog/2017/05/25/quick-kramdown-demo/">&lt;blockquote&gt;
+  &lt;p&gt;This is &lt;a href=&quot;https://kramdown.gettalong.org/&quot;&gt;kramdown&lt;/a&gt; formatting test page for &lt;a href=&quot;https://github.com/yizeng/jekyll-theme-simple-texture&quot;&gt;Simple Texture&lt;/a&gt; theme.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul class=&quot;toc&quot; id=&quot;markdown-toc&quot;&gt;
+  &lt;li&gt;&lt;a href=&quot;#heading-general-usage&quot; id=&quot;markdown-toc-heading-general-usage&quot;&gt;General Usage&lt;/a&gt;    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;#heading-blockquotes&quot; id=&quot;markdown-toc-heading-blockquotes&quot;&gt;Blockquotes&lt;/a&gt;        &lt;ul&gt;
+          &lt;li&gt;&lt;a href=&quot;#heading-nested&quot; id=&quot;markdown-toc-heading-nested&quot;&gt;Nested&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href=&quot;#heading-lists-inside&quot; id=&quot;markdown-toc-heading-lists-inside&quot;&gt;Lists inside&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href=&quot;#heading-long-lines&quot; id=&quot;markdown-toc-heading-long-lines&quot;&gt;Long lines&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;#heading-lists&quot; id=&quot;markdown-toc-heading-lists&quot;&gt;Lists&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;#heading-tables&quot; id=&quot;markdown-toc-heading-tables&quot;&gt;Tables&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;#heading-horizontal-rules&quot; id=&quot;markdown-toc-heading-horizontal-rules&quot;&gt;Horizontal Rules&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;#heading-images&quot; id=&quot;markdown-toc-heading-images&quot;&gt;Images&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Some Markdown text with &lt;span style=&quot;background-color:yellow&quot;&gt;some &lt;em&gt;blue&lt;/em&gt; text &lt;/span&gt;.
+Some Markdown text with &lt;span style=&quot;color:yellow&quot;&gt;some &lt;em&gt;blue&lt;/em&gt; text &lt;/span&gt;.&lt;/p&gt;
+
+&lt;h1 id=&quot;heading-general-usage&quot;&gt;General Usage&lt;/h1&gt;
+
+&lt;p&gt;This is a normal paragraph.&lt;/p&gt;
+
+&lt;p&gt;This is &lt;a href=&quot;http://yizeng.me&quot;&gt;a link&lt;/a&gt; to my homepage.
+A &lt;a href=&quot;http://yizeng.me/blog&quot; title=&quot;Yi Zeng's Blog&quot;&gt;link&lt;/a&gt; can also have a title.&lt;/p&gt;
+
+&lt;p&gt;This is a &lt;strong&gt;&lt;em&gt;text with light and strong emphasis&lt;/em&gt;&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;This &lt;strong&gt;is &lt;em&gt;emphasized&lt;/em&gt; as well&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;This &lt;em&gt;does _not_ work&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;This &lt;strong&gt;does __not__ work either&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is a footnote&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+
+&lt;p&gt;This scarcely known tag emulates &lt;kbd&gt;keyboard text&lt;/kbd&gt;, which is usually styled like the &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;code&amp;gt;&lt;/code&gt; tag.&lt;/p&gt;
+
+&lt;p&gt;This tag should denote &lt;ins&gt;inserted&lt;/ins&gt; text.&lt;/p&gt;
+
+&lt;p&gt;The emphasize tag should &lt;em&gt;italicize&lt;/em&gt; text.&lt;/p&gt;
+
+&lt;p&gt;This tag will let you &lt;strike&gt;strikeout text&lt;/strike&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;heading-blockquotes&quot;&gt;Blockquotes&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;ruby -v&lt;/p&gt;
+
+  &lt;p&gt;tsc -v&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;heading-nested&quot;&gt;Nested&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This is a paragraph in blockquote.&lt;/p&gt;
+
+  &lt;blockquote&gt;
+    &lt;p&gt;A nested blockquote.&lt;/p&gt;
+  &lt;/blockquote&gt;
+
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;heading-lists-inside&quot;&gt;Lists inside&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Unordered List&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;lists one&lt;/li&gt;
+    &lt;li&gt;lists two&lt;/li&gt;
+    &lt;li&gt;lists three&lt;/li&gt;
+  &lt;/ul&gt;
+
+  &lt;p&gt;Ordered List&lt;/p&gt;
+  &lt;ol&gt;
+    &lt;li&gt;lists one&lt;/li&gt;
+    &lt;li&gt;lists two&lt;/li&gt;
+    &lt;li&gt;lists three&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;heading-long-lines&quot;&gt;Long lines&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Jekyll is a simple, blog-aware, static site generator perfect for personal, project, or organization sites. Think of it like a file-based CMS, without all the complexity. Jekyll takes your content, renders Markdown and Liquid templates, and spits out a complete, static website ready to be served by Apache, Nginx or another web server. Jekyll is the engine behind GitHub Pages, which you can use to host sites right from your GitHub repositories.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;heading-lists&quot;&gt;Lists&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;list 1 item 1
+    &lt;ul&gt;
+      &lt;li&gt;nested list item 1&lt;/li&gt;
+      &lt;li&gt;nested list item 2&lt;/li&gt;
+      &lt;li&gt;nested list item 3 with blockquote
+        &lt;blockquote&gt;
+          &lt;p&gt;ruby -v&lt;/p&gt;
+
+          &lt;p&gt;tsc -v&lt;/p&gt;
+        &lt;/blockquote&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;list 1 item 2&lt;/li&gt;
+  &lt;li&gt;list 1 item 3&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;heading-tables&quot;&gt;Tables&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Table 1&lt;/p&gt;
+
+    &lt;table&gt;
+      &lt;thead&gt;
+        &lt;tr&gt;
+          &lt;th&gt;Default aligned&lt;/th&gt;
+          &lt;th style=&quot;text-align: left&quot;&gt;Left aligned&lt;/th&gt;
+          &lt;th style=&quot;text-align: center&quot;&gt;Center aligned&lt;/th&gt;
+          &lt;th style=&quot;text-align: right&quot;&gt;Right aligned&lt;/th&gt;
+        &lt;/tr&gt;
+      &lt;/thead&gt;
+      &lt;tbody&gt;
+        &lt;tr&gt;
+          &lt;td&gt;First body part&lt;/td&gt;
+          &lt;td style=&quot;text-align: left&quot;&gt;Second cell&lt;/td&gt;
+          &lt;td style=&quot;text-align: center&quot;&gt;Third cell&lt;/td&gt;
+          &lt;td style=&quot;text-align: right&quot;&gt;fourth cell&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Second line&lt;/td&gt;
+          &lt;td style=&quot;text-align: left&quot;&gt;foo&lt;/td&gt;
+          &lt;td style=&quot;text-align: center&quot;&gt;&lt;strong&gt;strong&lt;/strong&gt;&lt;/td&gt;
+          &lt;td style=&quot;text-align: right&quot;&gt;baz&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Third line&lt;/td&gt;
+          &lt;td style=&quot;text-align: left&quot;&gt;quux&lt;/td&gt;
+          &lt;td style=&quot;text-align: center&quot;&gt;baz&lt;/td&gt;
+          &lt;td style=&quot;text-align: right&quot;&gt;bar&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Footer row&lt;/td&gt;
+          &lt;td style=&quot;text-align: left&quot;&gt; &lt;/td&gt;
+          &lt;td style=&quot;text-align: center&quot;&gt; &lt;/td&gt;
+          &lt;td style=&quot;text-align: right&quot;&gt; &lt;/td&gt;
+        &lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Table 2&lt;/p&gt;
+
+    &lt;table&gt;
+      &lt;thead&gt;
+        &lt;tr&gt;
+          &lt;th&gt;Default aligned&lt;/th&gt;
+          &lt;th style=&quot;text-align: left&quot;&gt;Left aligned&lt;/th&gt;
+          &lt;th style=&quot;text-align: center&quot;&gt;Center aligned&lt;/th&gt;
+          &lt;th style=&quot;text-align: right&quot;&gt;Right aligned&lt;/th&gt;
+        &lt;/tr&gt;
+      &lt;/thead&gt;
+      &lt;tbody&gt;
+        &lt;tr&gt;
+          &lt;td&gt;First body part&lt;/td&gt;
+          &lt;td style=&quot;text-align: left&quot;&gt;Second cell&lt;/td&gt;
+          &lt;td style=&quot;text-align: center&quot;&gt;Third cell&lt;/td&gt;
+          &lt;td style=&quot;text-align: right&quot;&gt;fourth cell&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Second line&lt;/td&gt;
+          &lt;td style=&quot;text-align: left&quot;&gt;foo&lt;/td&gt;
+          &lt;td style=&quot;text-align: center&quot;&gt;&lt;strong&gt;strong&lt;/strong&gt;&lt;/td&gt;
+          &lt;td style=&quot;text-align: right&quot;&gt;baz&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Third line&lt;/td&gt;
+          &lt;td style=&quot;text-align: left&quot;&gt;quux&lt;/td&gt;
+          &lt;td style=&quot;text-align: center&quot;&gt;baz&lt;/td&gt;
+          &lt;td style=&quot;text-align: right&quot;&gt;bar&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;Footer row&lt;/td&gt;
+          &lt;td style=&quot;text-align: left&quot;&gt; &lt;/td&gt;
+          &lt;td style=&quot;text-align: center&quot;&gt; &lt;/td&gt;
+          &lt;td style=&quot;text-align: right&quot;&gt; &lt;/td&gt;
+        &lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;heading-horizontal-rules&quot;&gt;Horizontal Rules&lt;/h2&gt;
+
+&lt;hr /&gt;
+
+&lt;hr /&gt;
+
+&lt;hr /&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;heading-images&quot;&gt;Images&lt;/h2&gt;
+
+&lt;p&gt;Here comes an image!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://kramdown.gettalong.org/overview.png&quot; alt=&quot;smiley&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;footnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:1&quot;&gt;
+      &lt;p&gt;This is a footnote. &lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;</content><author><name>{&quot;name&quot;=&gt;nil, &quot;job_title&quot;=&gt;nil, &quot;location&quot;=&gt;nil, &quot;email&quot;=&gt;&quot;000namc@gmail.com&quot;, &quot;social_links&quot;=&gt;[{&quot;name&quot;=&gt;&quot;facebook&quot;, &quot;url&quot;=&gt;&quot;https://www.facebook.com/profile.php?id=100011446640614&quot;}, {&quot;name&quot;=&gt;&quot;github&quot;, &quot;url&quot;=&gt;&quot;https://github.com/000namc&quot;}, {&quot;name&quot;=&gt;&quot;instagram&quot;, &quot;url&quot;=&gt;&quot;https://www.instagram.com/000namc/&quot;}, {&quot;name&quot;=&gt;&quot;linkedin&quot;, &quot;url&quot;=&gt;&quot;https://www.linkedin.com/in/seong-uk-nam/&quot;}, {&quot;name&quot;=&gt;&quot;stackoverflow&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;twitter&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;vk&quot;, &quot;url&quot;=&gt;nil}]}</name><email>000namc@gmail.com</email></author><summary type="html">This is kramdown formatting test page for Simple Texture theme.</summary></entry><entry><title type="html">Hello World!</title><link href="https://000namc.github.io/blog/2013/04/22/hello-world/" rel="alternate" type="text/html" title="Hello World!" /><published>2013-04-22T00:00:00+00:00</published><updated>2013-04-22T00:00:00+00:00</updated><id>https://000namc.github.io/blog/2013/04/22/hello-world</id><content type="html" xml:base="https://000namc.github.io/blog/2013/04/22/hello-world/">&lt;p&gt;Hello World! This is the beginning of this theme.&lt;/p&gt;</content><author><name>{&quot;name&quot;=&gt;nil, &quot;job_title&quot;=&gt;nil, &quot;location&quot;=&gt;nil, &quot;email&quot;=&gt;&quot;000namc@gmail.com&quot;, &quot;social_links&quot;=&gt;[{&quot;name&quot;=&gt;&quot;facebook&quot;, &quot;url&quot;=&gt;&quot;https://www.facebook.com/profile.php?id=100011446640614&quot;}, {&quot;name&quot;=&gt;&quot;github&quot;, &quot;url&quot;=&gt;&quot;https://github.com/000namc&quot;}, {&quot;name&quot;=&gt;&quot;instagram&quot;, &quot;url&quot;=&gt;&quot;https://www.instagram.com/000namc/&quot;}, {&quot;name&quot;=&gt;&quot;linkedin&quot;, &quot;url&quot;=&gt;&quot;https://www.linkedin.com/in/seong-uk-nam/&quot;}, {&quot;name&quot;=&gt;&quot;stackoverflow&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;twitter&quot;, &quot;url&quot;=&gt;nil}, {&quot;name&quot;=&gt;&quot;vk&quot;, &quot;url&quot;=&gt;nil}]}</name><email>000namc@gmail.com</email></author><summary type="html">Hello World! This is the beginning of this theme.</summary></entry></feed>

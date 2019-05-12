@@ -1,0 +1,2358 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title><![CDATA[park jong hyun - Tech Maketh Man Sexy]]></title><description><![CDATA[Tech Maketh Man Sexy: We share our technical knowledge.]]></description><link>http://tmmse.xyz/</link><image><url>http://tmmse.xyz/favicon.png</url><title>park jong hyun - Tech Maketh Man Sexy</title><link>http://tmmse.xyz/</link></image><generator>Ghost 1.22</generator><lastBuildDate>Thu, 27 Sep 2018 05:53:50 GMT</lastBuildDate><atom:link href="http://tmmse.xyz/author/park/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title><![CDATA[Debian Packaging & Policy]]></title><description><![CDATA[<div class="kg-card-markdown"><p>본 포스트는 debian packaging과 policy(정책) 일부 대한 기본적인 지식을 소개하도록 함.</p>
+<h1 id="introduction">Introduction</h1>
+<p><a href="https://www.debian.org/index.ko.html">Debian</a> project 는 쉽게 말해 free OS 중 일종이고, 대표적인 예로 Ubutnu 가 debian 계열의 linux 배포판 중 하나이다.<br>
+개인적으로 내가 생각하는 Debian 의 가장 큰 장점은 package managing 이다.<br>
+Ubuntu를 써본 사람이라면 <code>apt install XXXXX</code> 이런</p></div>]]></description><link>http://tmmse.xyz/2018/09/27/debian-packaging/</link><guid isPermaLink="false">5bab7e0395309e21a0de4159</guid><category><![CDATA[Linux]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Thu, 27 Sep 2018 05:08:12 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/09/debian.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2018/09/debian.png" alt="Debian Packaging & Policy"><p>본 포스트는 debian packaging과 policy(정책) 일부 대한 기본적인 지식을 소개하도록 함.</p>
+<h1 id="introduction">Introduction</h1>
+<p><a href="https://www.debian.org/index.ko.html">Debian</a> project 는 쉽게 말해 free OS 중 일종이고, 대표적인 예로 Ubutnu 가 debian 계열의 linux 배포판 중 하나이다.<br>
+개인적으로 내가 생각하는 Debian 의 가장 큰 장점은 package managing 이다.<br>
+Ubuntu를 써본 사람이라면 <code>apt install XXXXX</code> 이런 명령어를 필히 엄청 처 보았을 것이다.<br>
+여기서의 이 <code>apt</code> 가 debian 의 package manager 이고, 필요한 소프트웨어들을 아주 쉽게 설치/업그레이드/제거가 가능하다.<br>
+이번 주제는 이 pacakage 가 되겟다. 설명할 내용은 다음과 같다.</p>
+<ul>
+<li>Debian Package는 어떤식으로 구성되고 동작하는가</li>
+<li>Debian Package는 어떻게 만드는가</li>
+<li>Debian Package가 지켜야할 것(Policy, 정책)은 어떤 것들이 있는가.</li>
+<li>Debian Package의 유효성은 어떻게 검사하는가</li>
+</ul>
+<p>여기서, 유효성 검사라 함은 <code>sbuild</code> 러는 tool을 통한 검사를 설명하고자 한다.<br>
+이것 말고도 다른 툴들이 있지만, 내가 안써봐서 모른다.<br>
+<code>sbuild</code>만 해도 충분히 어렵다.</p>
+<h1 id="debianpackage">Debian Package</h1>
+<p>Debian Package 는 기본적으로 .deb file라고 보면 된다.<br>
+<code>dpkg</code> 로 이러저러한 일들을 할 수 있는데, 일반적인 사용자 입장에서는 그냥 .deb file을 다운로드 받아서 압축을 풀고, 지정된 위치에 설치한다.<br>
+이게 <code>apt install XXXX</code> 했을때 일어나는 일이다.</p>
+<h2 id="">서버</h2>
+<p>그렇다면 저 .deb 파일들은 어디서 가져오느냐.<br>
+ubuntu 기준으로는 <code>/etc/apt/sources.list</code> 파일에서 찾을 수 있다.<br>
+ubuntu의 package서버 주소가 서져 있을 것이다.<br>
+그 주소에 있는 패키지들을 받을 수 있고, 다른 서버를 추가하면 거기에 있는 또 다른 패키지들을 추가적으로 설치 할 수 있다.<br>
+주석으로 <code>deb-src</code>로 시작하는 내용이 있을텐데, 이는 &quot;소스 패키지&quot;를 가져올 수 있는 서버 이다.<br>
+이후 정책 파트에서 설명할 내용이지만, 쉽게 얘기해서 각 패키지의 소스 코드를 받을 수 있다.<br>
+이놈은 확장자가 deb 가 아닌 dsc 이다.</p>
+<h1 id="howtomakedebfile">How to make DEB file</h1>
+<p>deb 파일을 만드는 방법은 여러가지이다.<br>
+기본적으로는 debian directory 생성 후에 control file에 필요한 내용을 적고, 설치될 파일 경로 지정해주고... 준비를 한다. 자세한 준비 과정은 debian poicy 세션, 문서를 참조하라.<br>
+그리고, <code>dpkg -b</code> 를 사용해서 만들면 deb file이 생성되는데, <code>dpkg</code> 명령어들로 설치, 삭제가 가능하다. 문제는 이렇게 manualy 작성한 deb 파일은 제대로 작동할리가 없다는 것.<br>
+왜냐하면, 패키지로 만들고자 하는 녀석의 dependancy들을 버전까지 상세히 알 수 없고, 미레에 버전이 올라갈때, 관리가 잘 안되기 마련이다.</p>
+<p>내가 시도한 방법은 첫번째로, <code>cpack</code>이다. <code>cmake</code>로 이미 내 프로젝트가 빌드가 잘 되기 떄문에, 몇 가지만 추가하면 <code>cpack</code>으로 deb file 이 생성가능하다. 자동으로 debpendancy 또한 잡아준다.<br>
+그러나... 여전히 내가 만든 패키지가 어느 환경에서나 정상동작하는지 검증할 방법은 없다. 그래서, 알게 된 것이 <code>sbuild</code> 이다.<br>
+뒤에서 자세히 소개할 것인데, 우선 필요한 것은 deb file이 아니라 &quot;소스 패키지&quot; 이다. 소스로 부터 어느 환경에서나 빌드가 되는지 테스트하고, 그 이후에 deb 파일을 생성해준다.<br>
+Policy와 연관이 깊으니 policy를 먼저 간단히 보고 <code>sbuild</code>에 대해 소개하겠다.</p>
+<h1 id="debianpolicy">Debian Policy</h1>
+<p><a href="https://www.debian.org/doc/debian-policy/">Debian Policy</a> 문서를 링크타고 들어가서 한번 보시라. 너무 많다. 다 읽을수도 없고, 내 개인적인 생각으로는 꼭 다 지켜야 하는 것도 아니다.<br>
+우리에게 필요한 내용만 소개하고자 한다. <s>(필요하지만 몰라서 소개 안하는 것도 있을 수 있다...)</s><br>
+앞서서, &quot;소스 패키지&quot; 없이 deb파일을 만드는 방법들을 소개했는데, 이렇게 만들어진 deb file들 만으로는 debian policy를 모두 지키지 못한 것이다.<br>
+Debian project 은 freeOS 답게, 모든 패키지 역시 오픈소스이고, 어느 시스템에서든지 빌드가 가능하고, 누구나 수정하고 재배포가 가능하기를 바란다.<br>
+이러한 상황을 가정하고 tool 들이 만들어져 있다. <code>sbuild</code>역시 마찬가지 이다.</p>
+<p>간단한 예를 보자. <code>grep</code> 처럼 많이 쓰는 tool 역시 패키지 형태로 제공되고, 소스 또한 받을 수 있다.<br>
+<code>apt source</code>를 이용하면 source package 를 받을 수 있고, 직접 고쳐서 다시 재배포가 가능하다. 물론 debian 서버 관리자가 안받아줘서 debian 공식 서버에는 못 올리겠지만... 어떻게든 배포를 하려면 가능은 하다.</p>
+<p>이 외에도 지켜야 할 것들이 생각보다 많다. 예를 들면, debian package들은 모드 debian directory를 가지고 있어야하고, 그 안에 여러 파일들이 있어야하는데, changelog 같은 변경사항을 기록하는 파일도 필수적으로 있어야한다. control 파일도 있어야하는데, 여기에도 maintainer 와 같은 사람 정보도 꼭 있어야하고, 패키지가 될 root directory이름은 NAME-X.X.X 와 같은 형식으로 버전이 명시 되어 있어야만한다.</p>
+<p>또 중요한 것은 이미 build 가 된 binary 파일이 있으면 안된다. 특정 시스템에서 정상동작 하지 않을 수 있기 때문. 모든 것들은 source code로 부터 빌드되어야 한다.</p>
+<p>게다가, <code>apt</code> (또는 그 외 시스템엥서 쓰이는 패키지매니저)를 써본사람들은 잘 알 겠지만, 패키지들은 개발용 여부에 따라 (주로 header 파일의 포함여부) 패키지가 분리된다.<br>
+freetype library 를 예로 들면, libfreetype / libfreetype-dev 이렇게. dev 버전은 develope 버전으로 헤더가 같이 설치된다. freetype라이브러리를 사용한 프로그램을 개발할 수 있다.<br>
+실행되는 시스템에 따라 (32bit/64bit 혹은 arm 과 같은 다른 architecture), 다른 형태의 패키지도 존재한다.</p>
+<p>자세한 내용들은 debian policy 공식 문서를 참조하시고, 우리에겐 구세주와 같은 <code>sbuild</code> 가 이런 것들을 모두 검사해줄 것이다. 그렇다면, 최소한으로 꼭 지켜야 할 것들을 알려줄 것이고, 고놈들을 지키는 것부터 시작해보면 된다.</p>
+<h1 id="sbuild">sbuild</h1>
+<p>Debian 배포판을 선택해서 sandbox를 만들고 테스트 하는 툴이다. 소스 패키지가 input 이 되고,  생성된 sandbox 환경에서 소스 패키지를 빌드하면서 테스트를 한다. 결과물은 빌드가 완료된 deb 파일과 테스팅 결과 및 데비안 정책 검사 결과 이다.<br>
+실제 실행시키는 과정을 통해 하나하나 설명하겠다.</p>
+<h2 id="">환경설정</h2>
+<ul>
+<li>나는 main machine 으로 64bit fedora 27을 사용하고 있었기 때문에, 여기서 먼저 시도해 보았다. debian 계열이 아니라 그런지 실패.</li>
+<li>Gnome Boxes VM 을 이용해서, Ubuntu 17.10 (artful)을 설치하고 시도하였다. 역시 실패.</li>
+<li>VM 이 아닌 <strong>Native로 Ubuntu 17.10 (artful) 64bit</strong>을 설치하고 시도하니 드디어 <code>sbuild</code>를 끝까지 실행할 수 있었다.</li>
+</ul>
+<p>실패한 내용들은 굳이 설명할 필요 없을 것 같아서 생략함. 그저 삽질일 뿐.</p>
+<h2 id="">실행</h2>
+<p><code>sbuild</code>를 위해서는 debian source package 가 필요하다.</p>
+<p>우선 프로젝트 이름을 debian 형식에 맞게 변경하자.<br>
+가상의 프로젝트 이름을 testp 라고 해보겟다.<br>
+<code>mv testp testp-0.0.1</code><br>
+버전은 테스트용이기 때문에, 0.0.1 로 지정하였다.<br>
+버전에 관한 내용은 따로 뒤에서 설명하겠다.</p>
+<p>그 이후에 tarball을 생성해 주어야 한다.<br>
+<code>tar -cvzf testp-0.0.1.tar.gz testp-0.0.1</code><br>
+그럼 우리 프로젝트의 root directory와 같은 레벨에 압축된 파일이 생성된다.</p>
+<p>이제 <code>debmake</code>를 실행하면 기본적으로 필요한 내용들이 생성된다.<br>
+orig tarball symlink 및 debian directory가 생성된다.<br>
+debian directory 안에는 changelog, control 등의 파일이 생성되고 내용도 저절로 적혀있다.<br>
+우리가 가장 관심있는 control 파일에는, 빌드를 위한 dependancy 와, 실행을 위한 dependancy가 나눠서 적혀있다.<br>
+알아서 소스를 보고 <code>debmake</code>가 찾아주는데, 경험살 잘 찾아주지는 않는다.<br>
+개인적으로 테스트 해 볼때, build는 하지 않는 참고용 code가 포함되어 있었는데, 여기를 뒤져서 필요없는 내용까지 추가되어있었다.<br>
+정작 필요한 내용들은 없어서 <code>sbuild</code>가 실패 했었다. 이럴 떄는 손으로 control 파일에 내용을 적어주어야 한다.</p>
+<p>필요한 준비가 끝났으니, 소스 패키지를 생성할 차례.<br>
+<code>dpkg-source -b testp-0.0.1</code><br>
+이제 .dsc 파일이 생성되었다.<br>
+여기서 dsc 의 format 을 default로 지정해 줄 텐데, 나는 <code>quilt 3.0</code>이었다.<br>
+이것 외에도 다른 format 들이 있는데, 뭐가 다른지는 잘 모르겠다.<br>
+아무거나 해도 되는 것 같아서 신경 안썼는데, 나중에 수정할때는 신경을 써야 하는 것 같다.<br>
+모든 소스 코드와 필요한 내용들이 준비가 되었으니, <code>sbuild</code>를 해 볼 수 있다.</p>
+<p><code>sbuild</code> 를 위해서는 테스팅할 sandbox를 생성해야 한다.<br>
+<code>chroot</code>를 이용해서 테스트해볼 환경을 구성할 수 있는데, debian의 distribution 버전과 architecture 를 선택하여 한번 만들면 여러번 재활용할 수 있다.<br>
+(따로 찾아보세염, 나중에 추가함)</p>
+<p>생성한 환경들중에 테스트 해보고 싶은 dist와 arch 를 넣으면 테스트와 함께 필드가 된다.<br>
+<code>sbuild -d testing testp-0.0.1.dsc</code> (맞나? 확인해바야뎀)<br>
+주루루루륵 로그가 생기면서 내용을 확인을 할 수 있다.<br>
+여기서 testing 이란 debian의 test 용 배포버전인데, debian 이 알아서 버전을 올리면서 test 배포버전을 관리한다.</p>
+<p>적어도 이 버전에서는 잘 동작함을 <code>sbuild</code>를 통해 확인할 수 있는 것이다!!<br>
+나는 내 프로젝트를 테스트해볼때 많은 문제들이 있었다.<br>
+build를 실패하면 terminal 에 로그가 찍히는데 그걸 보고 수정해 나가면 된다.<br>
+나는 다른 사람의 도움을 받아서 debian/control파일의 dependancy를 수정해서 build가 되게 하였다.<br>
+참고로, 내 컴퓨터에서랑 다른 분의 컴퓨터에서랑 로그가 달랐고, 그래서 삽질 꽤나 했는데, 아직도 왜  그런지는 잘 모르겠다.<br>
+로그는 터미널에도 찍히고, debug 옵션을 주면 더 자세하게 찍히고, <code>sbuild</code>를 실행한 곳에 XXX.build 라는 이름의 파일로도 저장된다.</p>
+<p>build는 통과했지만 <a href="https://lintian.debian.org/">lintian</a>은 실패했는데, lintian은 bug나 policy 위반을 검사해주는 것이라고 한다. 나는 정책위반을 좀 했는데, 이를 해결하려면 고민이 필요한 시점이다. 꼭 지켜야 하는지도 사실 잘 모르겠고.</p>
+<p>어쨋든, 완전 깡통의 debian system에서 설치, 빌드는 완벽함을 보증 받은 상태라고 볼 수 있겠다.</p>
+<h1 id="">참고</h1>
+<h2 id="versioning">Versioning</h2>
+<p>버전은 여러가지 의미를 내포한다. 딱 보고 무슨의미인지 알 수 있으면 제일 좋다.<br>
+이런 것들을 위해서 여러 버저닝 정책들이 있는데, 통상적으로 debian 패키지에서 쓰는 버전을 보도록 하겠다.</p>
+<p>형식은 A.B.C 이다. A는 major, B는 minor, C는 patch 버전이다.</p>
+<ul>
+<li>major 버전은 주요 API들의 변화가 있을 수 있음을 암시한다. 하위호환성이 지원안될 수도 있다. python 이 대표적인 예. python2 와 python3는 사용 문법이 조금 다르다.<br>
+또한, major버전이 0 이면 아직 정식 출시가 전임을 의미하고 어떠한 변화들도 있을 수 있다. 1 부터는 같은 major 버전에서 최소 하위호환성을 제공해야하고, API 문서등 사용법도 알려줄수 있어야 한다.</li>
+<li>minor 버전은 의미있는 변화를 의미한다. 주요 업데이트.</li>
+<li>patch 버전은 소소한 변화. 작은 버그 수정 같은 것.</li>
+</ul>
+<p>이 외에도, package이름을 보면 버전처럼 보이는 숫자를 볼 수 있다.<br>
+예를 들면,<br>
+<code>libfreetype6</code>라는 패키지는 6 이 붙어서 버전이 6인거 같다. 하지만 정보를 조회하면 버전이 2.8.X 란다. 저 패키지 이름에 붙은 숫자는 여기서 말하는 버전이 아니며, 패키지 배포상의 숫자이다. 구분할 것.</p>
+<p>또한 버전에는 뒤에 시스템이 붙을 수 있다. 2.8.2_ubuntu1 이런식으로. 뒤에는 주로 시스템에 따라 빌드가 다르게 되니 시스템을 쓰는 것 같은데, 자세히는 잘 모르겠다. <code>dpkg</code> 인가 <code>sbuild</code>인가가 알아서 붙여주긴 하더라.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[C++ 효율 향상 시키기 (feat. 임시 객체)]]></title><description><![CDATA[<div class="kg-card-markdown"><p>본 포스트는 More Effective C++ item 19 ~ 22 를 참고하여 작성함.</p>
+<h1 id="origin">임시 객체의 origin을 이해하자</h1>
+<br>
+<h2 id="temporaries">임시 객체 (Temporaries) ?</h2>
+<pre><code class="language-cpp">template&lt;class T&gt;
+void swap(T&amp; object1, T&amp; object2)
+{
+	T temp = object1;
+	object1 = object2;
+	object2 = temp;
+}
+</code></pre>
+<p>여기에 있는 이 <code>temp</code> 말하는거 아님!!</p>
+<p>HON MONO <mark>임시 객체</mark>는  코드에도</p></div>]]></description><link>http://tmmse.xyz/2018/09/06/c-temp/</link><guid isPermaLink="false">5b908dc795309e21a0de414f</guid><category><![CDATA[c++]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Thu, 06 Sep 2018 06:08:35 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/09/c-plus-plus-logo.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2018/09/c-plus-plus-logo.png" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"><p>본 포스트는 More Effective C++ item 19 ~ 22 를 참고하여 작성함.</p>
+<h1 id="origin">임시 객체의 origin을 이해하자</h1>
+<br>
+<h2 id="temporaries">임시 객체 (Temporaries) ?</h2>
+<pre><code class="language-cpp">template&lt;class T&gt;
+void swap(T&amp; object1, T&amp; object2)
+{
+	T temp = object1;
+	object1 = object2;
+	object2 = temp;
+}
+</code></pre>
+<p>여기에 있는 이 <code>temp</code> 말하는거 아님!!</p>
+<p>HON MONO <mark>임시 객체</mark>는  코드에도 없고, 눈에 보이지 않음<br>
+heap이 아닌 곳에 생기는  un-named object 인데.... 언제 생기냐?</p>
+<h2 id="1whenimplicittypeconversionsareappliedtomakefunctioncallssucceed">1. When <strong>implicit type conversions (암시적 타입 변환)</strong> are applied to make function calls succeed.</h2>
+<pre><code class="language-cpp">size_t countChar(const string&amp; str, char ch);
+
+char buffer[MAX_STRING_LEN];
+countChar(buffer, c)
+</code></pre>
+<p><code>buffer</code> 는 <code>char*</code> -&gt; <code>string</code> 으로 타입 변환이 일어날 때, compiler가 친히 string 임시 객체를 만들어 줌.</p>
+<p>그러나.....</p>
+<pre><code class="language-cpp">void uppercasify(string&amp; str); // str을 전부 대문자로 바꿈
+
+char subtleBookPlug[] = “Effective C++”;
+uppercasify(subtleBookPlug); // ERROR!
+</code></pre>
+<p><code>subtleBookPlug</code> 는 <code>char*</code> -&gt; <code>string</code> 가 안되고 컴파일 에러가 남.<br>
+왜냐하면, 생성된 임시객체에 수정을 가하는 것이 원 객체에 영향을 미쳐야 하기 때문!</p>
+<blockquote>
+<p>reference-to-non-const는 안됨!!</p>
+</blockquote>
+<h2 id="2whenfunctionsreturnobjects">2. When <strong>functions return (함수 반환)</strong> objects.</h2>
+<pre><code class="language-cpp">const Number operator+(const Number&amp; lhs,
+		           const Number&amp; rhs);
+</code></pre>
+<p><code>a+b</code> 결과물이 임시객체로 생성되어서 <code>c</code>로 복사됨.<br>
+반환값이 이름이 없으니 어쩔수 없음</p>
+<blockquote>
+<p>어쨋든 문제는 계속 임시객체가 생기면서 비용이 증가함.<br>
+어디서 생성되는지 통찰하고, 어떻게 최소한으로 할 것인지 이제 소개함!</p>
+</blockquote>
+<p><strong>이게 책의 내용인데..... 실제로는 이러한 임시객체가 생기지 않는 것으로 보임.<br>
+진짜로 생기는지 의문이 들어서 직접 테스트 해본 결과는 맨 아래(테스트 결과)에 있음.</strong></p>
+<h1 id="returnvalueoptimization">Return Value Optimization 활용하기</h1>
+<pre><code class="language-cpp">const Rational operator*(const Rational&amp; lhs,
+		          const Rational&amp; rhs);
+</code></pre>
+<p>이렇게 객체를 값으로 반환하는 것은 효율을 생각하면 개똥임. 맨날 임시객체가 생기니까...<br>
+그럼 어케 최적화하지...</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/t.png" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>흐음....</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/tt.gif" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>ㅠㅠㅠㅠㅠ</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/sadpepe.jpeg" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>포인터?!</p>
+<pre><code class="language-cpp">const Rational* operator*(const Rational&amp; lhs,
+		          const Rational&amp; rhs);
+</code></pre>
+<p><img src="http://tmmse.xyz/content/images/2018/09/happypepe.jpg" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>포인터로 반환하면 임시객체가 안생기지~</p>
+<p>그러나,</p>
+<p>이걸 써서 코딩하면???</p>
+<pre><code class="language-cpp">Rational a = 10;
+Rational b (1,2);
+Rational c = * (a * b); 
+</code></pre>
+<p>부자연스럽네 ㅠㅠ</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/pepepe.gif" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>시무룩....</p>
+<p>그렇다면,</p>
+<p>레퍼런스?!</p>
+<pre><code class="language-cpp">const Rational&amp; operator*(const Rational&amp; lhs,
+		          const Rational&amp; rhs);
+</code></pre>
+<p><img src="http://tmmse.xyz/content/images/2018/09/happypepe.jpg" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>레퍼런스로 반환해도 임시객체가 안생기지~</p>
+<pre><code class="language-cpp">const Rational&amp; operator*(const Rational&amp; lhs, const Rational&amp; rhs)
+{
+	Rational result(lhs.numerator() * rhs.numerator(),
+	lhs.denominator() * rhs.denominator());
+	return result;
+}
+</code></pre>
+<p>문제는 <code>result</code>가 저 함수 끝나고 스택에서 지워져서 못써먹음 ㅠㅠㅠ</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/pepepe.gif" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>value를 리턴하는거는 어쩔수 없구만! 흑흑</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/mpepe.jpg" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>그러면, 그 cost라도 줄여야겟어!</p>
+<pre><code class="language-cpp">const Rational operator*(const Rational&amp; lhs,
+                                const Rational&amp; rhs)
+{
+	return Rational(lhs.numerator() * rhs.numerator(),
+		         lhs.denominator() * rhs.denominator());
+}
+</code></pre>
+<p>이게 정답이라는데 왜 일까요?</p>
+<p><code>Rational c = a * b;</code> 실행시,</p>
+<p><mark>컴파일러</mark>는 <code>operator*</code> 안에서 만드는 임시객체와 반환하는 임시객체를 전부 없애고 <code>return</code> expression을 <code>Rational c</code>에 할당된 메모리 안에 직접 초기화 해줌.</p>
+<p>컴파일러 짱짱맨!</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/happypepe.jpg" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<pre><code class="language-cpp">inline const Rational operator*(const Rational&amp; lhs,
+                                const Rational&amp; rhs);
+</code></pre>
+<p>이렇게 <code>inline</code> 붙이면 call하는 overhead 도 줄일 수 있음!</p>
+<blockquote>
+<p>결론: values return 때에는 constructor를 사용하자</p>
+</blockquote>
+<h1 id="">오버로딩으로 암시적 타입변환을 막아보자</h1>
+<pre><code class="language-cpp">class UPInt { // 무한을 품은 인트
+public:
+	UPInt();
+	UPInt(int value);
+	...
+};
+
+const UPInt operator+(const UPInt&amp; lhs, const UPInt&amp; rhs);
+UPInt upi1, upi2;
+
+...
+
+UPInt upi3 = upi1 + upi2;
+upi3 = upi1 + 10;
+upi3 = 10 + upi2;
+</code></pre>
+<p><code>upi3 = 10 + upi2;</code> 요런데서 10 을 <code>UPInt</code>로 암시적 타입변환을 함.<br>
+<code>const UPInt operator+(const UPInt&amp; lhs, const UPInt&amp; rhs);</code> 이거를 쓰려고, 임시객체가 자꾸자꾸 생기는 현상이 발생 ㅠㅠ</p>
+<pre><code class="language-cpp">const UPInt operator+(const UPInt&amp; lhs, const UPInt&amp; rhs);
+const UPInt operator+(const UPInt&amp; lhs, int rhs);
+const UPInt operator+(int lhs, const UPInt&amp; rhs);
+const UPInt operator+(int lhs, int rhs);
+</code></pre>
+<p>이렇게 다 만들어버리면 임시객체 안생기지롱~~</p>
+<p>신나게 오버로딩하다보니 <mark>주화입마</mark>에 빠져버렷다ㅠㅠ</p>
+<p>저기에는 x맨이 끼어있음.</p>
+<p>누굴까요??</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/podol.jpg" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>잡앗다 요놈!</p>
+<pre><code class="language-cpp">const UPInt operator+(int lhs, int rhs);
+</code></pre>
+<p>컴파일에러임.</p>
+<p>왜냐면, '<strong>오버로딩되는 연산자 함수는 반드시 최소한 한 개의 사용자 정의 타입을 매개변수로 가져야한다</strong>' 라는 규칙이 있음.</p>
+<blockquote>
+<p>어쨌든, 80-20 룰에 따라 많이 불려야 하는 놈이면 이런걸 하는 것도 좋은 방법이다!</p>
+</blockquote>
+<h1 id="">&quot;=&quot; 말고 &quot;+=&quot; 를 고려하자</h1>
+<pre><code class="language-cpp">x = x + y;
+x = x - y;
+</code></pre>
+<p>이게 된다면!</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/rocket1.jpg" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<pre><code class="language-cpp">x += y;
+x -= y;
+</code></pre>
+<p>이것도 되는게 <mark>프지상정</mark>!!<br>
+(<s>책에 있는 표현임. 내가 만든거 아님.</s>)</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/rocket2.jpg" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>구현을 해보자.</p>
+<pre><code class="language-cpp">class Rational {
+public:
+	...
+	Rational&amp; operator+=(const Rational&amp; rhs);
+};
+
+// operator+ 는 operator+=를 이용하여 구현
+const Rational operator+(const Rational&amp; lhs,
+		          const Rational&amp; rhs)
+{
+	return Rational(lhs) += rhs;
+}
+</code></pre>
+<p>이 때,<br>
+<code>Rational&amp; operator+=(const Rational&amp; rhs);</code> 는 레퍼런스로 반환이니까, 임시객체가 안생기고 (!!),<br>
+<code>const Rational operator+(const Rational&amp; lhs, const Rational&amp; rhs)</code> 는 값을 반환하니까 임시객체가 생김.</p>
+<p>그럼, <code>+=</code> 가 좋은거네!</p>
+<p>하지만...</p>
+<p><code>result = a + b + c + d;</code> 이렇게 쓰면 될 놈이,<br>
+<code>result = a; result += b; result += c; result += d;</code> 이렇게 써야함 ㅠㅠㅠㅠ</p>
+<p>장단이 있음.</p>
+<p>그리고, 구현을 할 때는</p>
+<pre><code class="language-cpp">const Rational operator+(const Rational&amp; lhs,
+		          const Rational&amp; rhs)
+{
+	T result(lhs); // lhs를 result에 copy
+	return result += rhs;
+}
+</code></pre>
+<p>이렇게 하지 말고,</p>
+<pre><code class="language-cpp">const Rational operator+(const Rational&amp; lhs,
+		          const Rational&amp; rhs)
+{
+	return Rational(lhs) += rhs;
+}
+</code></pre>
+<p>이렇게 해야 compiler optimization이 잘 된다! 아까 배운거임.</p>
+<blockquote>
+<ol>
+<li>일반적으로 op= 형태가 op 보다 효율적</li>
+<li>라이브러리 설계자는 두 형태 모두 제공해야 하겠다</li>
+<li>효율이 우선인 개발자는 op 형태가 아닌 op= 형태를 쓰는 게 좋다</li>
+</ol>
+</blockquote>
+<p>끝낼라고 했는데, 실제 테스트 해보니 위의 내용이 틀렸다고 생각 됨. 아래 단락 참조할 것!</p>
+<h1 id="">테스트 결과</h1>
+<p>책에서는 value로 return 할 때, 임시객체가 만들어 진다고 하였다. 스택에 있던게 옮겨가니 그런가 보다 했는데, 또 return을 생성자로 하면 optimization 된덴다. 흐음... 이게 좀 이상한거 같아서 테스트를 해보았다. 요즘 컴파일러는 알아서 optimization이 잘 되는 거 같다.</p>
+<h2 id="">테스트 환경</h2>
+<p><code>gcc version 7.3.1 20180303 (Red Hat 7.3.1-5) (GCC)</code></p>
+<h2 id="">테스트 코드</h2>
+<ul>
+<li>class Number 정의</li>
+</ul>
+<pre><code class="language-cpp">class Number{
+public:
+  Number(){
+    n_ = 0;
+  };
+  Number(int n){
+    n_ = n;
+  };
+  ~Number(){
+  };
+  Number(const Number&amp; other){
+    n_ = other.n_;
+  };
+  int get() const {
+    return n_;
+  };
+  Number&amp; operator=(const Number&amp; other){
+    n_ = other.n_;
+  }
+private:
+  int n_;
+};
+</code></pre>
+<ul>
+<li>main 코드.</li>
+</ul>
+<pre><code class="language-cpp">int main(){
+
+  Number a(1);
+  Number b(2);
+  Number c;
+
+  c = a*b;
+
+  cout&lt;&lt;c.get()&lt;&lt;endl;
+
+  return 0;
+}
+</code></pre>
+<ol>
+<li>최적화가 안될 operator. 책에서 말하는 안좋은 예시.</li>
+</ol>
+<pre><code class="language-cpp">const Number operator*(const Number&amp; lhs, const Number&amp; rhs){
+  Number result(lhs.get()*rhs.get());
+  return result;
+};
+</code></pre>
+<ol start="2">
+<li>최적화가 된 operator. 책에서 좋은 예시.</li>
+</ol>
+<pre><code class="language-cpp">const Number operator*(const Number&amp; lhs, const Number&amp; rhs){
+  return Number(lhs.get()*rhs.get());
+};
+</code></pre>
+<p>1번의 경우에 <code>c = a*b;</code> 수행시 <code>a*b</code>의 결과가 <code>c</code>로 복사될때 임시객체가 생겼다가 없어져야 하고, 2번의 경우에는 그렇지 않아야 한다. 실제로 그런지 한번 보자.</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/Screenshot-from-2018-09-06-18-10-49.png" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p>아래 asm 창에서 보다 시피, <code>operator *</code> 이후에 <code>operator =</code>, <code>~Number()</code>가 불린다. <code>operator *</code> 결과 반환을 위해 임시 객체는 생성되지 않는다.</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/Screenshot-from-2018-09-06-18-13-49.png" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<p><code>opeator*</code> 내부에서도 <code>result</code> 객체 생성자 이외에 다른 생성자가 불리지 않는다.<br>
+그렇다면, stack 에 생성된 <code>result</code> 는 어떻게 없어지지 않고 위로 올라갓다가 다시 <code>operator=</code>으로 전달이 되는가??</p>
+<p><code>main</code>의 stack. <code>operator*</code>를 call하는 시점.<br>
+<img src="http://tmmse.xyz/content/images/2018/09/stack1.png" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"><br>
+<code>$rbp = 0x7fffffffdbe0</code>, <code>$rsp = 0x7fffffffdbc0</code> 이다.</p>
+<p>다음은  <code>operator*</code>의 stack. <code>result</code>를 반환하는 시점.<br>
+<img src="http://tmmse.xyz/content/images/2018/09/stack2.png" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"><br>
+<code>$rbp = 0x7fffffffdbb0</code>, <code>$rsp = 0x7fffffffdb80</code> 이다.<br>
+<code>result</code> 객체의 주소는 <code>0x7fffffffdbcc</code>. 이 스택에 생긴다.</p>
+<p>다음은 다시 <code>main</code>  스택. <code>operator=</code> 을 부르는 시점.<br>
+<img src="http://tmmse.xyz/content/images/2018/09/stack3-1.png" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"><br>
+<code>$rbp = 0x7fffffffdbe0</code>, <code>$rsp = 0x7fffffffdbc0</code> 이다.<br>
+여기서, <code>result</code>가 아직 지워지지 않았음. 분명히 스택을 빠져 나왔는데!!</p>
+<p>다음은  <code>operator=</code>의 stack. <code>c</code> 에 <code>result</code>를 대입하는 시점.<br>
+<img src="http://tmmse.xyz/content/images/2018/09/stack4.png" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"><br>
+<code>$rbp = 0x7fffffffdbb0</code>, <code>$rsp = 0x7fffffffdba0</code> 이다.<br>
+<code>result.n_</code>을 <code>$edx</code> 에 로드해서, <code>($rax) = c.n_</code> 에 대입함.</p>
+<p>그리고 나서, <code>result</code>의 destructor 가 호출됨.</p>
+<p><img src="http://tmmse.xyz/content/images/2018/09/stack_figure.png" alt="C++ 효율 향상 시키기 (feat. 임시 객체)"></p>
+<ul>
+<li>참고: 그림 잘 못 그렷네 ㅠㅠ 저 result 는 main stack 안에 잡혀있음. 위치가 틀림.</li>
+</ul>
+<p>이와 같은 상황으로, 중간에 stack을 나가는데도, result를 지우지 않음.</p>
+<blockquote>
+<p>결론은, 1번의 경우에 임시객체가 생성 되지 않음.</p>
+</blockquote>
+<p>신기하구만!</p>
+</div>]]></content:encoded></item><item><title><![CDATA[new / delete overriding]]></title><description><![CDATA[<div class="kg-card-markdown"><p>본 포스트는 Effective C++ item 50,51를 참고하여 작성함.</p>
+<h1 id="newdeleteoverriding">new &amp; delete 는 언제 overriding 할 필요가 있는가?</h1>
+<br>
+<p><strong>1. 잘못된 힙 사용을 탐지</strong></p>
+<ul>
+<li>new 할때 주소 목록을 다 적어두면, leak 이나 double free 찾아내기 쉬움</li>
+<li>over run(할당된 메모리블록을 초과하여 더 뒤에다가 쓰는거), under run(할당된 메모리 주소가 시작하기도 전에</li></ul></div>]]></description><link>http://tmmse.xyz/2018/06/28/new-delete-overriding/</link><guid isPermaLink="false">5b34724195309e21a0de4141</guid><category><![CDATA[c++]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Thu, 28 Jun 2018 07:43:55 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/06/c-plus-plus-logo.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2018/06/c-plus-plus-logo.png" alt="new / delete overriding"><p>본 포스트는 Effective C++ item 50,51를 참고하여 작성함.</p>
+<h1 id="newdeleteoverriding">new &amp; delete 는 언제 overriding 할 필요가 있는가?</h1>
+<br>
+<p><strong>1. 잘못된 힙 사용을 탐지</strong></p>
+<ul>
+<li>new 할때 주소 목록을 다 적어두면, leak 이나 double free 찾아내기 쉬움</li>
+<li>over run(할당된 메모리블록을 초과하여 더 뒤에다가 쓰는거), under run(할당된 메모리 주소가 시작하기도 전에 앞에다가 쓰는 것) 이 발생했는지 알수 있음</li>
+<li>operator new를 오버로딩하여 over run, under run 탐지용 byte pattern(signature)을 적어두면 됨</li>
+</ul>
+<p><strong>2. 효율 향상</strong></p>
+<ul>
+<li>기본적인 new, delete 연산자의 경우, 지극히 일반적인 쓰임새에 맞추어 설계된 것이기 때문에, 특수한 목적에 따라 사용자가 new, delete를 오버로딩하여 효율성을 향상 시킬 수 있음</li>
+<li>일반적인 상황에서 고려해야할 점들을 살펴보면, 실행기간이 짧지 않은 프로그램에서도(ex 웹서버) 잘 돌아가야 하며, 1초안에 끝나는 프로그램에서도 별 문제 없어야 하고, 힙 단편화에 대한 대처방안도 필요 하고 등등</li>
+</ul>
+<p><strong>3. 동적 할당 메모리의 통계 정보를 수집</strong></p>
+<ul>
+<li>할당된 메모리 분포는 어떻게 보이는지, 메모리가 할당되고 해제되는 순서가 FIFO, LIFO 방식인지. 이런 정보들을 알아 낼 수 있음</li>
+</ul>
+<p><strong>4. 할당 및 해제 속력을 높이기 위해</strong></p>
+<ul>
+<li>사용자가 만들 프로그램은 single thread로 동작하는데 컴파일러에서 기본으로 제공하는 메모리 관리 루틴이 multi thread에 맞게 만들어져 있다면 스레드 안정성을 무시한 할당자를 직접만들어서 속력을 높일 수 있음</li>
+</ul>
+<p><strong>5. 기본 메모리 관리자의 공간 오버헤드를 줄이기 위해</strong></p>
+<ul>
+<li>메모리 많이 먹는 경우도 있음. 작게만 쓸꺼면 작게작게 할당해서 쓰도록 하면 좋음</li>
+</ul>
+<p><strong>6. 적당히 타협한 기본 할당자의 바이트 정렬 동작을 보장하기 위해</strong></p>
+<ul>
+<li>x86 아키텍쳐에서는 double이 8바이트로 동작해야 빠른데, 시중에 나온 컴파일러는 아닌 경우도 있다고 함. 8바이트 정렬 맞추도록 만들 수 있음 (이 책이 옛날에 쓰여졋으니 그럴만도.... 지금 죄다 64bit 쓰는데 그럴리 없음!!)</li>
+</ul>
+<p><strong>7. 임의의 관계를 맺고 있는 객체들을 한 군데에 나란히 모아놓기 위해</strong></p>
+<ul>
+<li>같이 많이 쓰이는 것들을 모아놔야 page fault가 적게 발생</li>
+</ul>
+<p><strong>8. 그때 그때 원하는 동작을 수행하기 위해</strong></p>
+<h2 id="">예시</h2>
+<pre><code class="language-cpp">static const int signature = 0xDEADBEEF;
+typedef unsigned char Byte;
+ 
+void* operator new(std::size_t size) throw(std::bad_alloc)
+{ 
+   using namespace std;
+   size_t realSize = size + 2 * sizeof(int);  
+ 
+   void *pMem = malloc(realSize);             
+   if(!pMem) throw bad_alloc();
+ 
+   *(static_cast&lt;int*&gt;(pMem)) = signature;
+   *(reinterpret_cast&lt;int*&gt;(static_cast&lt;Byte*&gt;(pMem)+realSize-sizeof(int))) = signature;
+
+   return static_cast&lt;Byte*&gt;(pMem) + sizeof(int);
+}
+</code></pre>
+<p>위 예제는 앞뒤에 signature를 붙이는 예제임</p>
+<p>문제점은 new 처리자 함수 루틴이 없다는 점(뒤에서 곧 설명), byte alignment가 안맞는 점.</p>
+<p><strong>Byte alignement</strong><br>
+컴퓨터 아키텍쳐마다 특정 타입의 데이터가 특정 종류의 메모리 주소를 시작 주소로 하여 저장될 것을 요구사항으로 두고 있다. 이를테면, 포인터는 4의 배수에 해당하는 주소에 맞추어 저장되어야 하고,(4바이트 단위로 정렬) double의 값은 8의 배수에 해당하는 주소에 맞추어 저장되어야 한다. (8byte 단위로 정렬) 이러한 바이트 정렬 제약을 따르지 않을 경우 프로그램이 실행되다가 하드웨어 예외를 일으킬 수 있다.</p>
+<p>대표적인 예로, 인텔 x86같은 경우 어떤 바이트 단위에 맞추더라도 double 값 정렬이 가능한데, 8바이트 단위로 정렬하면 런타임 접근속도가 훨씬 빨라짐.</p>
+<p>위의 코드에서도 바이트 정렬 문제는 아주 중요한데, 그 이유는, 모든 operator new 함수는 어떤 데이터 타입에도 바이트 정렬을 적절히 만족하는 포인터를 반환해야 하기 때문(C++ 요구사항)</p>
+<p>표준 malloc 함수는 이 요구사항에 맞추어 구현되어있기 때문에, malloc에서 얻은 포인터를 operator new가 바로 반환하는 것은 &quot;안전&quot; 하다.</p>
+<p>하지만 위의 코드에서는 그 포인터를 기준으로 &quot;int 크기만큼 뒤로 어긋난 주소를 포인터로 반환&quot; 하게되서(signature 때문에) 안전하다고 할 수 없다.</p>
+<p>바이트 정렬과 같은 세세한 문제를 어떻게 다루느냐에 따라 메모리 관리자가 달라지게 된다.</p>
+<blockquote>
+<p>정말 잘 돌아가는 메모리 관리자를 만들기란<br>
+개념 상실한 초등학생들을 사람 만드는 것만큼이나 어려우므로,<br>
+꼭 만들어 쓸 이유가 없다면 굳이 들이댈 필요가 없다.</p>
+</blockquote>
+<h1 id="newdeleteoverride">new &amp; delete  를 override 할떄 지켜야할 관례는?</h1>
+<p>앞서서, 언제 new/delete 를 override하는지 알아봤으니, 어떻게 하면 좋을지 알아보자.</p>
+<h2 id="1new">1. new</h2>
+<ul>
+<li>반환값이 제대로 되어있어야함</li>
+<li>가용 메모리가 부족한 경우 new 처리가 함수를 호출해야함</li>
+<li>크기가 0인 요청에 대한 대비가 있어야함</li>
+<li>실수로 기본형태의 new가 가려지지 않도록 해아함 (본 포스트에서는 생략)</li>
+</ul>
+<pre><code class="language-cpp">void* operator new (std::size_t size) throw(std::bad_alloc)
+{
+   using namespace std;
+ 
+   if(size == 0){
+      size = 1;
+   }
+ 
+   while (true) {
+      &quot;size 바이트 할당&quot;
+      if( 할당 성공 )
+         return 할당된 메모리에 대한 포인터;
+ 
+       //할당이 실패했을 경우, 현재의 new 처리자 함수가 어느것으로 설정되어있는지 찾음
+       new_hanlder globalHandler = set_new_handler(0);
+       set_new_handler(globalHandler);
+ 
+       if(globalHandler) (*globalHandler)();
+       else throw std::bad_alloc();
+   }
+}
+</code></pre>
+<p>설명한 관례들을 지킨 간단한 예시. 코드는 좀 이상함.</p>
+<ul>
+<li>size가 0 이면 그냥 1로 박아버림. 어쩃든 유효한 값을 내뱉어야 하니까 이렇게 처리했고, 사실 0으로 요청들어올리가 없음.</li>
+<li><a href="http://www.cplusplus.com/reference/new/set_new_handler/">set_new_handler</a> 를 한번 콜하면 현재의 new handler가 반환되고 이를 다시 셋함. 있는거 가져다 쓰려고 쓸데없이 set_new_handler를 두번이나 콜함.</li>
+<li>무한루프스러운 놈 (<strong>&quot;while(true)&quot;</strong>)이 있음. 이 무한루프가 끝나려면 꼭 성공을 해야함. 실패하면 다시 handler가 메모리 정리를 해서라도 성공을 해야함. 아니면 포기하고 throw하거나. 무한루프가 없다면 new가 직무유기 할 가능성이 있음.</li>
+</ul>
+<pre><code class="language-cpp">class Base{
+public:
+static void *operator new(std::size_t size) throw(std::bad_alloc);
+...
+};
+ 
+class Derived : public Base
+{ ..... };                                  
+ 
+Derived *p = new Derived;            
+</code></pre>
+<p>이렇게, 특정 클래스(Base)의 new 를 만들었는데.... Derived가 그걸 그냥 가져다 써버릴 수가 있음.<br>
+이걸 원치 않는다면,<br>
+전체 설계를 바꾸지 않고 쓸 수 있는 가장 좋은 해결 방법은 &quot;틀린&quot; 메모리 크기가 들어왔을 때를 시작부분에서 확인한 후에, 표준 operator new를 호출하는 쪽으로 살짝 비껴가게 만드는 것이다.</p>
+<pre><code class="language-cpp">void * Base::operator new(std::size_t size) throw(std::bad_alloc)
+{
+  if(size != sizeof(Base))                   
+    return ::operator new(size);             
+
+  .....                                       
+}
+</code></pre>
+<p>이렇게 하면, new Derived는 size가 sizeof(Base)랑 다르니까 표준 new를 사용하게 할 수 있음.</p>
+<h2 id="2delete">2. delete</h2>
+<ul>
+<li>nullptr 에 대해 안전하기만 하면 끝!</li>
+</ul>
+<pre><code class="language-cpp">void operator delete(void *rawMemory) throw()
+{
+  if (rawMemory == 0) return;      
+
+  ....                             
+}
+</code></pre>
+<p>요러면 된당 ㅎㅎ</p>
+</div>]]></content:encoded></item><item><title><![CDATA[Interface / Implementation Inheritance]]></title><description><![CDATA[<div class="kg-card-markdown"><p>본 포스트는 Effective C++ item 34를 참고하여 작성함.</p>
+<h1 id="">인터페이스 상속과 구현 상속의 차이를 네대로 파악하고 구별하자</h1>
+<ul>
+<li>상속은 사실 두가지!<br>
+<strong>인터페이스</strong> 상속 / <strong>구현</strong> 상속<br>
+함수 선언 / 정의 의 관계와 유사함</li>
+</ul>
+<p><strong>예시</strong></p>
+<pre><code class="language-c++">class Shape {
+public:
+    virtual void draw() const =0;
+    virtual void error(const std::string&amp; msg);
+    int objectID() const;
+    ...
+};
+</code></pre>
+<p>순수</p></div>]]></description><link>http://tmmse.xyz/2018/05/10/c-tips-2/</link><guid isPermaLink="false">5af4416695309e21a0de4136</guid><category><![CDATA[c++]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Thu, 10 May 2018 13:33:40 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/05/hqdefault.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2018/05/hqdefault.jpg" alt="Interface / Implementation Inheritance"><p>본 포스트는 Effective C++ item 34를 참고하여 작성함.</p>
+<h1 id="">인터페이스 상속과 구현 상속의 차이를 네대로 파악하고 구별하자</h1>
+<ul>
+<li>상속은 사실 두가지!<br>
+<strong>인터페이스</strong> 상속 / <strong>구현</strong> 상속<br>
+함수 선언 / 정의 의 관계와 유사함</li>
+</ul>
+<p><strong>예시</strong></p>
+<pre><code class="language-c++">class Shape {
+public:
+    virtual void draw() const =0;
+    virtual void error(const std::string&amp; msg);
+    int objectID() const;
+    ...
+};
+</code></pre>
+<p>순수 가상함수인 draw -&gt; Shape는 추상 클래스 -&gt; Shape 자체를 인스턴스화 불가능, public 상속에 의해 상속받은 파생 클래스가 draw를 override 해야 인스턴스화 가능</p>
+<p>인스턴스화 조차 안되는 이 Shape는 (public) 상속을 한 파생 클래스는 기본 클래스에 해당하는 함수를 모두 사용 가능하므로 영향이 가히 절대군주와 맞먹음!!</p>
+<h2 id="1purevirtualfunction">1. pure virtual function</h2>
+<pre><code class="language-c++">    virtual void draw() const =0;
+</code></pre>
+<p>pure virtual function을 선언하는 목적은 파생 클래스에게 함수의 <strong>인터페이스만</strong>을 물려주려고하는 것</p>
+<ul>
+<li>
+<p>순수 가상 함수의 특징 : 상속 받은 파생 클래스가 순수 가상 함수를 반드시 다시 선언해야 하며, 추상 클래스 내부에서는 선언만 있을 뿐 직접적인 구현은 없어도 된다.(있어도 되지만, 호출하려면 반드시 클래스 이름을 한정자로 붙여 주여야함...)</p>
+</li>
+<li>
+<p>순수 가상 함수를 선언하는 목적은 인터페이스만을 상속하고 싶을 때 사용, 즉 같은 기능을 제공해야 하지만 구체적인 구현 행동은 다를 때 사용하면 된다.</p>
+</li>
+<li>
+<p>예시 : 직사각형과 타원의 경우 둘 다 draw 함수를 지원하는 것은 동일하지만 그리는 방법은 전혀 다름</p>
+</li>
+</ul>
+<h2 id="2virtualfunction">2. virtual function</h2>
+<pre><code class="language-c++">    virtual void error(const std::string&amp; msg);
+</code></pre>
+<p>virtual function을 선언 하는 목적은 파생 클래스에게 함수의 <strong>인터페이스뿐만 아니라 기본 구현도</strong> 물려주려고하는 것</p>
+<ul>
+<li>
+<p>가상함수의 특징 : 상속 받은 파생 클래스가 가상 함수를 override해서 구현을 바꿀 수도 있고 그렇지 않다면 기본 클래스가 정의한 함수를 그대로 이용한다.</p>
+</li>
+<li>
+<p>가상 함수를 선언하는 목적은 인터페이스와 기본 구현도 상속하되, 파생 클래스가 기본 구현을 바꿀 수 있는 기회를 준다.</p>
+</li>
+<li>
+<p>예시 : 에러의 경우 파생 클래스마다 다른 에러처리를 할 수도 있지만 굳이 구별할 필요가 없는 경우에는 기본 버전을 그대로 사용하면 된다</p>
+</li>
+</ul>
+<p><strong>가상 함수의 위험성</strong></p>
+<pre><code>    class Airplane {
+    public :
+        virtual void fly(const Airport&amp; destination);
+    };
+ 
+    void Airplane::fly(const Airport&amp; destination) {
+          // 비행기를 날리는 코드
+   }
+</code></pre>
+<p>장점: Airplane을 상속 받은 비슷한 모델의 비행기 A,B가 있다고 했을 때 모델 A와 B가 같은 방식으로 fly를 구현해야 한다면 그대로 Airplane을 상속받고 다시 중복해서 구현할 필요가 없으므로 효율적. (입에 거품 물고 객체 지향을 좋아라 하는 이유!!)</p>
+<p>위험성: fly구현이 전혀 다른 비행기 C 모델을 추가했는데 깜빡하고 fly override를 깜빡했다면 문제가 커지지만 compile시에는 문제가 되지므로 실수를 방지하지 못하는 위험성이 있다. (좀 억지 인듯. <s>걍 프로그래머가 병신인거 아닌가</s>)</p>
+<p><strong>해결 방법 1</strong></p>
+<pre><code>    class Airplane {
+    public :
+        virtual void fly(const Airport&amp; destination) = 0;
+ 
+    protected :
+        void defaultFly(const Airport&amp; destination);
+    };
+ 
+    void Airplane::defaultFly(const Airport&amp; destination) {
+          // 비행기를 날리는 기본 코드
+   }
+</code></pre>
+<pre><code>class ModelA : public Airplance {
+public :
+    virtual void fly(const Airport&amp; destination){
+        defaultFly(destination);
+    }
+};
+class ModelB : public Airplance {
+public :
+    virtual void fly(const Airport&amp; destination){
+        defaultFly(destination);
+    }
+};
+</code></pre>
+<p>pure virtual function 써서 강제로 구현하게하고, default를 call해서 중복은 피함.<br>
+인터페이스(fly)와 기본 구현(defaultFly)을 제공하는데, 이를 싫어하는 사람도 있음. 안 중요한 관계로 얽힌 함수 이름들이 군웅할거 하면서 클래스가 더러워져서...</p>
+<p><strong>해결 방법 1</strong></p>
+<pre><code>    class Airplane {
+    public :
+        virtual void fly(const Airport&amp; destination) = 0;
+    };
+ 
+    void Airplane::fly(const Airport&amp; destination) {
+          // 비행기를 날리는 코드
+   }
+</code></pre>
+<pre><code>class ModelA : public Airplance {
+public :
+    virtual void fly(const Airport&amp; destination){
+        Airplane::fly(destination);  // 기본 클래스의 fly 함수를 가져다 씀. 
+    }
+};
+class ModelB : public Airplance {
+public :
+    virtual void fly(const Airport&amp; destination){
+        Airplane::fly(destination);
+    }
+};
+</code></pre>
+<p>이름 더러워지는게 싫으면, pure virtual function 의 기본 구현을 만들고 이를 쓰면 됨.</p>
+<h2 id="3nonvirtualfunction">3. non virtual function</h2>
+<pre><code class="language-c++">        int objectID() const;
+</code></pre>
+<p>non virtual function을 선언하는 목적은 파생 클래스에게 함수의 <strong>인터페이스와 함수의 mandatory implementation</strong>을 물려주려고하는 것</p>
+<ul>
+<li>파생 클래스의 종류에 상관없이 똑같이 동작해야 하는 경우 인터페이스와 함께 구현을 물려받게 한다. 이 함수는 파생 클래스가 override할 수 없기 때문에 늘 같은 동작을 하게 된다.</li>
+</ul>
+<p><strong>이것만은 기억하기</strong></p>
+<ol>
+<li>인터페이스 상속이랑 구현 상속은 다름.</li>
+<li>pure virtual function은 인터페이스 상속만 허용</li>
+<li>virtual function은 인터페이스 상속과 기본 구현도 상속하도록</li>
+<li>non virtual function은 인터페이스 상속과 필수 구현도 상속하도록.</li>
+</ol>
+<p>결론은, 저 3가지 알아서 잘 쓰자!</p>
+</div>]]></content:encoded></item><item><title><![CDATA[C++ Tips - 1]]></title><description><![CDATA[<div class="kg-card-markdown"><p>본 포스트는 Effective C++ item 9~11 를 참고하여 작성함.</p>
+<h5 id="virtual">객체 생성 및 소멸 과정 중에는 virtual 함수를 부르면 안됨!</h5>
+<ul>
+<li>호출 결과가 생각했던것과 같이 작동하지 않거나, 만약 작동 한다고 하더라도 문제가 생길 여지가 큼</li>
+<li>C++ 만의 특징(자바나 C#이랑 다르게 행동함)</li>
+</ul>
+<p><strong>문제 상황 1: 로깅을 간단히하는 주식 프로그램</strong></p>
+<pre><code class="language-c++">class</code></pre></div>]]></description><link>http://tmmse.xyz/2018/03/29/cpp/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf7707</guid><category><![CDATA[c++]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Thu, 29 Mar 2018 10:15:01 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/03/222208_6617_5.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2018/03/222208_6617_5.jpg" alt="C++ Tips - 1"><p>본 포스트는 Effective C++ item 9~11 를 참고하여 작성함.</p>
+<h5 id="virtual">객체 생성 및 소멸 과정 중에는 virtual 함수를 부르면 안됨!</h5>
+<ul>
+<li>호출 결과가 생각했던것과 같이 작동하지 않거나, 만약 작동 한다고 하더라도 문제가 생길 여지가 큼</li>
+<li>C++ 만의 특징(자바나 C#이랑 다르게 행동함)</li>
+</ul>
+<p><strong>문제 상황 1: 로깅을 간단히하는 주식 프로그램</strong></p>
+<pre><code class="language-c++">class Transaction{ // 모든 거래에 대한 기본 클래스
+public:
+    Transaction(); 
+    virtual void logTransaction() const = 0; // 타입에 따라 달라지는 로그 기록
+    ...
+};
+ 
+Transaction::Transaction(){ // 기본 클래스 생성자의 구현
+    ...
+    logTransaction(); // 해당 거래를 로깅(하기 시작) 함
+}
+ 
+class BuyTransaction: public Transaction{
+public:
+    virtual void logTransaction() const; // Buy 거래 타입에 따른 로깅 구현
+    ...
+};
+ 
+class SellTransaction: public Transaction{
+public:
+    virtual void logTransaction() const; // Sell 거래 타입에 따른 로깅 구현
+    ...
+};
+ 
+BuyTransaction b; // 해당 코드가 실행 될 때, 어떻게 될까?
+</code></pre>
+<ul>
+<li>
+<p>어떻게 될까요???</p>
+</li>
+<li>
+<p>1</p>
+</li>
+<li>
+<p>2</p>
+</li>
+<li>
+<p>3</p>
+</li>
+<li>
+<p>4</p>
+</li>
+<li>
+<p>5</p>
+</li>
+<li>
+<p>6</p>
+</li>
+<li>
+<p>사실 링커에러남... (g++ 7.3.1 기준)</p>
+</li>
+</ul>
+<pre><code> warning: pure virtual ‘virtual void Transaction::logTransaction()’ called from constructor
+ undefined reference to `Transaction::logTransaction()'
+</code></pre>
+<ul>
+<li>이유는 <strong>생성자 호출 순서: Transaction() --&gt; BuyTransaction()</strong></li>
+<li>Transaction() 생성자가 호출 될 때, 가상 함수 logTransaction()의 구현으로 BuyTransaction class의 것이 아니라, Transaction의 것을 사용
+<ul>
+<li>기본 클래스의 생성자가 호출될 동안에는, 가상 함수는 절대 파생 클래스 쪽으로 내려가지 않음</li>
+<li>C++는 초기화 되지 않은 데이터 멤버를 건드릴 수 있는 파생 클래스의 가상함수 호출을 원천 차단함
+<ul>
+<li>초기화 되지 않은 데이터를 건드리는 것 = 갑자기 '미정의 동작'행 직행 열차표가 손에 들려있고, 야근 기본 무한 짜증의 디버깅 모드로 돌입할 수 있음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>중요한 사실: 파생 클래스 객체의 기본 클래스 부분이 생성되는 동안은, 그 객체 타입은 기본 클래스가 됨 (e.g. dynamic_case)</strong></p>
+<p><strong>더 짜증나는 경우: 간접 호출</strong></p>
+<pre><code>class Transaction{ // 모든 거래에 대한 기본 클래스
+public:
+    Transaction(){
+        init(); // 비가상 멤버 함수 호출
+    }
+    virtual void logTransaction() const = 0;
+    ...
+private:
+    void init(){
+        ...
+        logTransacction(); // 비가상 함수에서 가상 함수 호출
+ 
+    }
+};
+</code></pre>
+<ul>
+<li>이전 코드는 컴파일러가 경고 메시지를 발생시키기도 하지만, 해당 코드는 컴파일/링크도 잘 된 후에 순수가상함수가 런타임에 호출 될 때 프로그램을 종료시킴
+<ul>
+<li>이전 코드는 컴파일러에 따라 아예 에러를 발생시키기도 함</li>
+</ul>
+</li>
+<li>만약 Transaction에 logTransaction() 함수가 구현되어 있다면, 프로그램은 잘 돌아가겠지만 문제가 생겼을 때 원인 파악이 매우 힘듬</li>
+</ul>
+<p><strong>해결 방법 예시.</strong></p>
+<pre><code>class Transaction{ // 모든 거래에 대한 기본 클래스
+public:
+    explicit Transaction(const std::string&amp; logInfo);
+    void logTransaction(const std::string&amp; logInfo) const; // 비가상 함수
+    ...
+};
+Transaction::Transaction(const std::string&amp; logInfo){
+    ...
+    logTransaction(logInfo); // 비가상 함수 호출
+}
+ 
+class BuyTansaction: public Transaction{
+public:
+    BuyTransaction( parameters )
+        : Transaction(createLogString( parameters) )
+    { ... }
+    ...
+private:
+    static std::string createLogString( parameters );
+};
+</code></pre>
+<ul>
+<li>여러 방법 중 하나임 - 기본 클래스의 생성자에 가상 함수를 사용하지 않고, 직접 정보를 전달하기
+<ul>
+<li>기본 클래스의 생성자는 비가상 함수를 안전하게 호출할 수 있게 됨</li>
+<li>대신 필요한 초기화 정보를 파생 클래스 쪽에서 기본 클래스 생성자로 '올려' 주도록 만들기</li>
+<li>createLogString: static함수이기 때문에, 생성이 끝나지 않은 객체의 미초기화된 데이터 멤버를 건드릴 위험이 없음</li>
+</ul>
+</li>
+<li>이것만은 기억 하기: 생성자 혹은 소멸자 안에서 가상 함수를 호출하지 말자. 가상 함수라고 해도, 현재 실행 중인 생성자나 소멸자에 해당하는 클래스의 파생 클래스 쪽으로는 내려가지 않음.</li>
+</ul>
+<h5 id="this">대입 연산자는 *this의 참조자를 반환하게 하자</h5>
+<pre><code>int x, y, z;
+x = y = z = 15; 
+x = (y = (z = 15)); // 위 코드와 동일
+</code></pre>
+<ul>
+<li>C++의 대입 연산의 특성: 우측 연관(right-associative) 연산</li>
+<li>이런 구현은 일종의 관례(convention) 이지만, 새로 만드는 클래스 에서도 해당 관례를 지키는 것이 좋음</li>
+</ul>
+<pre><code>class Widget{
+public:
+    ...
+    Widget&amp; operator=(const Widget&amp; rhs){ // +=, -=, *= 등에도 동일한 convention이 적용
+        ...
+        return *this; // 좌변 객체의 참조자를 반환
+    }
+    Widget&amp; operator=(const int rhs){ // 매개변수 타입이 일반적이지 않은 경우에도 동일한 규약을 적용
+        ...
+        return *this; // 좌변 객체의 참조자를 반환
+    }
+    ...
+};
+</code></pre>
+<ul>
+<li><strong>이것만은 기억하기</strong>: 대입 연산자는 *this의 참조자를 반환하도록 만들기</li>
+</ul>
+<h5 id="operator">operator= 에서는 자기대입에 대한 처리가 빠지지 않도록 하자</h5>
+<pre><code>class Widget { ... };
+ 
+Widget w;
+...
+ 
+w = w; // 자기대입(self assignment)
+------------
+a[i] = a[j]; // 자기대입의 가능성이 있는 문장 1
+*px = *py; // 자기대입의 가능성이 있는 문장 2
+</code></pre>
+<ul>
+<li>여러 곳에서 하나의 객체를 참조하는 중복참조(aliasing)으로 인해 자기대입이 발생함</li>
+</ul>
+<p><strong>자기대입 문제 상황과 전통적인 대책</strong></p>
+<pre><code>class Bitmap { ... };
+ 
+class Widget{
+public:
+    ...
+    Widget&amp; operator=(const Widget&amp; rhs);
+private:
+    Bitmap *pb; // Heap에 할당된 객체를 가리키는 포인터
+};
+ 
+Widget&amp; Widget::operator=(const Widget&amp; rhs){
+    delete pb;
+    pb = new Bitmap(*rhs.pb);
+ 
+    return *this;
+}
+</code></pre>
+<ul>
+<li>만약 대입되는 대상(*this)와 rhs가 같은 객체라면, delete 연산자가 rhs 객체까지 적용됨</li>
+<li>전통적인 대책은 operator=의 첫머리에서 일치성 검사(identity test)를 통해 자기대입을 점검하는 것</li>
+</ul>
+<pre><code>Widget&amp; Widget::operator=(const Widget&amp; rhs){
+    if (this == &amp;rhs) return *this; // 자기대입이라면 아무것도 하지 않음
+ 
+    delete pb;
+    pb = new Bitmap(*rhs.pb);
+ 
+    return *this;
+}
+</code></pre>
+<ul>
+<li>하지만 위의 코드는 예외에 대해서 안전하지 않음 (예외 안전성은 item 29에서 다시 나옴)</li>
+<li>'new Bitmap' 에서 예외가 생긴다면, Widget 객체는 결국 삭제된 Bitmap을 가리키는 포인터를 가지게 됨</li>
+<li>좋은소식은 operator= 을 예외에 안전하게 구현하면 대개 자기대입에도 안전한 코드가 나옴</li>
+</ul>
+<p><strong>순서바꾸기: 예외에 안전한 operator=</strong></p>
+<pre><code>Widget&amp; Widget::operator=(const Widget&amp; rhs){
+    Bitmap *pOrig = pb;
+    pb = new Bitmap(*rhs.pb);
+    delete pOrig;
+ 
+    return *this;
+}
+</code></pre>
+<ul>
+<li>예외에 안전하면서도, 자기대입 문제가 발생하지 않음</li>
+<li>효율? 일치성 검사 vs. 순서 바꾸기
+<ul>
+<li>일치성테스트가 new &amp; delete 보다 반드시 효율이 좋다고 할 수 없음: code size, branch, instruction prefetch, cash, pipelining <s>(어차피 얼마 차이 없어서 그게 그거인거 같은데 책에 이렇게 언급되어있음)</s></li>
+</ul>
+</li>
+</ul>
+<p><strong>순서바꾸기: 예외에 안전한 operator=</strong></p>
+<pre><code>class Widget{
+    ...
+    void swap(Widget&amp; rhs);
+    ...
+};
+Widget&amp; Widget::operator=(const Widget&amp; rhs){
+    Widget temp(rhs); // rhs 사본 생성
+    swap(temp); // *this의 데이터를 사본과 맞바꿈
+    return *this;
+}
+</code></pre>
+<ul>
+<li>operator= 작성에 아주 자주 쓰이는 방식</li>
+<li>자기대입은 물론 예외에 안전함 (예외 안정성과 관련이 있어서 항목 29에 자세히 나와있음)</li>
+</ul>
+<pre><code>Widget&amp; Widget::operator=(Widget rhs){
+    swap(rhs); // *this의 데이터를 사본과 맞바꿈
+    return *this;
+}
+</code></pre>
+<ul>
+<li>C++의 두가지 특징을 활용한 약간 다른 구현
+<ul>
+<li>(1) 클래스의 복사 대입 연산자는 인자를 값으로 취하도록 선언하는것이 가능</li>
+<li>(2) 값에 의한 전달(call by value)을 수행하면 사본이 생김</li>
+</ul>
+</li>
+</ul>
+<p><strong>이것만은 기억하기</strong></p>
+<ol>
+<li>operator= 을 구현할 때 자기대입이 발생하는 경우를 제대로 처리하도록 만들기</li>
+<li>두 개 이상의 객체에 대해 동작하는 함수가 있다면, 이 함수에 넘겨지는 객체들이 같은 객체인 경우에도 정확하게 동작하는지 확인하기</li>
+</ol>
+</div>]]></content:encoded></item><item><title><![CDATA[Pseudo Terminal (유사? 터미널)]]></title><description><![CDATA[<div class="kg-card-markdown"><p>본 포스트는 APUE chap.19 을 참고하여 작성함.</p>
+<p><strong>Pseudo Terminal</strong>은 application 이 보기에는 터미널로 보이지만, 사실 진짜 터미널이 아닌 것이다.<br>
+Pseudo Terminal의 구조, 예시, 사용법에 대해 설명하도록 함.</p>
+<h5 id="pseudoterminal">Pseudo Terminal 개요</h5>
+<p>Pseudo terminal 을 사용하는 프로세스들의 전형적인 구조는 아래와 같다.</p>
+<p><img src="http://tmmse.xyz/content/images/2018/02/19.1.png" alt="19.1"></p>
+<ul>
+<li>부모 프로세스가 pseudo terminal master를 open 하고 fork -&</li></ul></div>]]></description><link>http://tmmse.xyz/2018/02/22/pseudoterminal/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf7702</guid><category><![CDATA[Linux]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Thu, 22 Feb 2018 12:30:32 GMT</pubDate><content:encoded><![CDATA[<div class="kg-card-markdown"><p>본 포스트는 APUE chap.19 을 참고하여 작성함.</p>
+<p><strong>Pseudo Terminal</strong>은 application 이 보기에는 터미널로 보이지만, 사실 진짜 터미널이 아닌 것이다.<br>
+Pseudo Terminal의 구조, 예시, 사용법에 대해 설명하도록 함.</p>
+<h5 id="pseudoterminal">Pseudo Terminal 개요</h5>
+<p>Pseudo terminal 을 사용하는 프로세스들의 전형적인 구조는 아래와 같다.</p>
+<p><img src="http://tmmse.xyz/content/images/2018/02/19.1.png" alt="19.1"></p>
+<ul>
+<li>부모 프로세스가 pseudo terminal master를 open 하고 fork -&gt; 자식 프로세스는 session을 새로 만듬 -&gt; pseudo terminal slave를 open -&gt; standard input, output, error를 pseudo terminal에 연결 -&gt; exec 실행</li>
+<li>Pseudo terminal slave에 연결된 자식 프로세스는 real terminal에 연결된거처럼 terminal I/O function을 사용할 수 있음</li>
+<li>부모 프로세스의 output은 자식 프로세스는 input, 자식 프로세스의 output은 부모 프로세스의 input</li>
+</ul>
+<p>이렇게만보면 부모가 뭔지, 자식이 뭔지 잘 이해가 안가니 예시를 보자.</p>
+<p><strong>1. Network Login Servers</strong></p>
+<p><img src="http://tmmse.xyz/content/images/2018/02/19.3.png" alt="19.3"></p>
+<ul>
+<li>원격 호스트에서 로그인 쉘이 실행되면 위와 같은 구조가 됨</li>
+<li>exec가 두번인 이유는 중간에 login 프로세스가 있어서...</li>
+<li>rlogind는 I/O 멀티플레싱 필요로 함.
+<ul>
+<li>rlogin 서버는 다른 입출력 스트림(TCP/IP)도 함께 읽고 씀</li>
+<li>rlogin이 어떤식으로든 select나 poll 같은 입출력 다중화 사용 혹은 두 프로세스 or 스레드로 나눠져야 함을 의미</li>
+</ul>
+</li>
+</ul>
+<p><strong>2. Windowing System Terminal Emulation</strong></p>
+<p><img src="http://tmmse.xyz/content/images/2018/02/19.4.png" alt="19.4"></p>
+<ul>
+<li>터미널 에뮬레이터는 shell과 Window manager사이에서 중재자 역할로, 각 shell은 각자의 window에서 실행됨</li>
+<li>터미널 에뮬레이터 창의 크기를 바꾸게 되면, 터미널 에뮬레이터에 알려주고 PTY master에 ioctl의 TIOCSWINSZ 명령을 실행해 부장치쪽 창 크기 변경
+<ul>
+<li>ioctl(fd, termios.TIOCSWINSZ, struct.windowsize)</li>
+<li>이때 입력받은 크기가 다르면 커널은 SIGWINCH 신호를 PTY slave로 보냄<br>
+화면을 다시 그려야 하는 응용프로그램은 해당 SIGWINCH를 캐치해 ioctl의 TIOCSWINSZ 명령을 통해 새 크기를 얻은 후 화면을 다시 그림</li>
+</ul>
+</li>
+</ul>
+<p><strong>3. Script Program</strong></p>
+<p>대부분 Unix 시스템에서 제공되며 터미널 세션 도중의 모든 input, output를 file에 저장하는 프로그램<br>
+<img src="http://tmmse.xyz/content/images/2018/02/19.5.png" alt="19.5"></p>
+<ul>
+<li>shell과 터미널 사이에 자신을 끼워 넣음</li>
+<li>script 실행중에는 PTY slave위에 terminal line discipline에서 나오는 모든 내용을 스크립트 파일에 복사 (typescript)
+<ul>
+<li>사용자가 누른 키들 역시 terminal line discipline을 거처 echo -&gt; 스크립트 파일에 사용자 입력도 기록</li>
+<li>password는 echo되지 않으므로 스크립트 파일에 패스워드기록은 없음</li>
+</ul>
+</li>
+</ul>
+<p>그 외 책에는 몇가지 예시가 더 있는데, 생략함.</p>
+<h5 id="pseudoterminal">Pseudo Terminal 열기</h5>
+<p><strong>PTY Master Open</strong></p>
+<pre><code>#include &lt;stdlib.h&gt;
+#include &lt;fcntl.h&gt;
+
+int posix_openpt(int oflag);
+  Returns: file descriptor of next available PTY master if OK, −1 on error
+</code></pre>
+<ul>
+<li>oflag : open함수에 사용되는 bitmask
+<ul>
+<li>O_RDWR : readable-and-writable</li>
+<li>O_NOCTTY : 컨트롤링 터미널이 되는것을 방지</li>
+</ul>
+</li>
+</ul>
+<p><strong>PTY Slave 권한 변경 함수</strong></p>
+<pre><code>#include &lt;stdlib.h&gt;
+int grantpt(int fd);
+int unlockpt(int fd);
+  Both return: 0 on success, −1 on error
+</code></pre>
+<ul>
+<li>fd : master fd</li>
+<li>grantpt(fd)
+<ul>
+<li>slave 노드의 user ID를 호출자의 real user ID로 설정, 노드 그룹ID를 unspecified 값으로 설정</li>
+<li>permission은 읽기 및 쓰기를 허용하고 그룹소유자의 쓰기를 허용하는 접근권한설정</li>
+</ul>
+</li>
+<li>unlockpt 함수는 pseudo-terminal의 slave 에 대한 접근을 허용하는데 사용</li>
+</ul>
+<p><strong>PTY Slave 이름을 가져오는 함수</strong></p>
+<pre><code>#include &lt;stdlib.h&gt;
+char *ptsname(int fd);
+  Returns: pointer to name of PTY slave if OK, NULL on error
+</code></pre>
+<ul>
+<li>fd : master fd</li>
+<li>해당 fd에 대응되는 slave 의 경로 이름을 돌려줌</li>
+</ul>
+<p><strong>위 함수를 편하게 사용하게 APUE에서 만든 함수</strong></p>
+<pre><code>#include &quot;apue.h&quot;
+int ptym_open(char *pts_name, int pts_namesz);
+  Returns: file descriptor of PTY master if OK, −1 on error
+int ptys_open(char *pts_name);
+  Returns: file descriptor of PTY slave if OK, −1 on error
+</code></pre>
+<ul>
+<li>ptym_open : 사용 가능한 pty master open, 호출 성공 시 대응되는 slave 이름을 pts_name을 통해 알려줌</li>
+<li>ptys_open : ptym_open 이후 얻어진 pts_name을 통해 호출하면 slave 생성
+<ul>
+<li>ptym_open 함수가 버퍼보다 긴 문자열을 복사하는 일이 없도록 하기 위해, 호출자는 버퍼의 길이를 pts_namesz 인수로 제공해야 함</li>
+</ul>
+</li>
+</ul>
+<p><strong>구현체</strong></p>
+<ul>
+<li>ptym_open 함수를 이용해 pty master를 찾아 열고 얻어진 pts_name을 통해 ptys_open으로 pty slave를 오픈</li>
+</ul>
+<pre><code>#include &quot;apue.h&quot;
+#include &lt;errno.h&gt;
+#include &lt;fcntl.h&gt;
+#if defined(SOLARIS)
+#include &lt;stropts.h&gt;
+#endif
+ 
+int ptym_open(char *pts_name, int pts_namesz)
+{
+  char *ptr;
+  int fdm, err;
+  if ((fdm = posix_openpt(O_RDWR)) &lt; 0)
+    return(-1);
+  if (grantpt(fdm) &lt; 0) /* grant access to slave */
+    goto errout;
+  if (unlockpt(fdm) &lt; 0) /* clear slave’s lock flag */
+    goto errout;
+  if ((ptr = ptsname(fdm)) == NULL) /* get slave’s name */
+    goto errout;
+ 
+  /*
+  * Return name of slave. Null terminate to handle
+  * case where strlen(ptr) &gt; pts_namesz.
+  */
+  strncpy(pts_name, ptr, pts_namesz);
+  pts_name[pts_namesz - 1] = ’\0’;
+  return(fdm); /* return fd of master */
+ 
+errout:
+  err = errno;
+  close(fdm);
+  errno = err;
+  return(-1);
+}
+ 
+int ptys_open(char *pts_name)
+{
+  int fds;
+ 
+#if defined(SOLARIS)
+  int err, setup;
+#endif
+ 
+  if ((fds = open(pts_name, O_RDWR)) &lt; 0)
+    return(-1);
+ 
+#if defined(SOLARIS)
+/*
+* Check if stream is already set up by autopush facility.
+*/
+  if ((setup = ioctl(fds, I_FIND, &quot;ldterm&quot;)) &lt; 0)
+    goto errout;
+  if (setup == 0) {
+    if (ioctl(fds, I_PUSH, &quot;ptem&quot;) &lt; 0)
+      goto errout;
+    if (ioctl(fds, I_PUSH, &quot;ldterm&quot;) &lt; 0)
+      goto errout;
+ 
+    if (ioctl(fds, I_PUSH, &quot;ttcompat&quot;) &lt; 0) {
+errout:
+      err = errno;
+      close(fds);
+      errno = err;
+      return(-1);
+    }
+  }
+#endif
+  return(fds);
+}
+</code></pre>
+<h5 id="pty_forkfunction">pty_fork Function</h5>
+<p>fork를 통해 자식 프로세스를 만들고 앞의 두 함수를 이용하여 자식 프로세스는 session leader이며 controlling terminal를 가지게 하는 함수</p>
+<pre><code>#include &lt;termios.h&gt;
+pid_t pty_fork(int *ptrfdm, char *slave_name, int slave_namesz,
+               const struct termios *slave_termios,
+               const struct winsize *slave_winsize);
+  Returns: 0 in child, process ID of child in parent, −1 on error
+</code></pre>
+<ul>
+<li>
+<p>ptrfdm : PTY master의 file descriptor</p>
+</li>
+<li>
+<p>slave_name : slave device name</p>
+</li>
+<li>
+<p>slave_namesz : slave name size</p>
+</li>
+<li>
+<p>slave_termios : 값이 있으면 slave PTY의 line discipline를 해당 구조체로 초기화</p>
+</li>
+<li>
+<p>slave_winsize : 값이 있으면 slave 의 window 사이즈를 해당 구조체로 초기화</p>
+</li>
+<li>
+<p>pty_fork 루틴 (책에 코드 있음. 아래 설명으로 대체)</p>
+<ul>
+<li>pty_master를 오픈한 후 fork를 호출</li>
+<li>자식은 ptys_open 호출전 먼저 setsid를 호출해 새로운 세션을 만들어야 함
+<ul>
+<li>setsid 호출 시점에서 자식은 프로세스 그룹 리더가 아니므로 다음 세 단계가 수행
+<ul>
+<li>자식을 세션리더로 하는 새 세션이 생성</li>
+<li>자식에 대한 새로운 프로세스 그룹 생성</li>
+<li>자식과 이전 제어 터미널 사이의 모든 관계가 끊어짐</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>이후 자식은 termios 구조체와 winsize 구조체를 초기화</li>
+<li>표준 input, output, error 복제</li>
+<li>부모 프로세스는 pty_master와 자식 프로세스의 ID를 돌려줌</li>
+</ul>
+</li>
+</ul>
+<h5 id="ptyprogram">pty Program</h5>
+<p>APUE는 앞의 pty_fork 함수를 이용하여 pty프로그램을 만듦. (역시 코드는 책에 있음)</p>
+<p><strong>&quot;pty prog arg1 arg2&quot;</strong> 형태로 실행하여, pseudo terminal에연결된 자신만의 세션에서 실행되도록<br>
+함</p>
+<p>pty 프로그램의 코드를 보면,</p>
+<ul>
+<li>pty_fork 호출 후 자식 프로세스는 필요에 따라 pty-slave echo를 끄고 (set_noecho()) execvp 호출</li>
+<li>이후 나머지 모든 argument 들을 자식 프로세스에 넘겨줌</li>
+<li>부모 프로세스는 필요 시 exit 호출 시 터미널 상태를 복원하는 종료 처리부 등록</li>
+<li>부모는 표준 입력에서 받은 모든 내용을 pty-master에 복사하고 pty-master에서 온 모든 내용을 표준출력으로 복사</li>
+<li>하나의 프로세스 내부에서 select와 poll을 사용하거나 여러 Thread를 사용하는것도 가능</li>
+</ul>
+<h5 id="usingtheptyprogram">Using the pty Program</h5>
+<p>pty 프로그램을 사용하는 예제</p>
+<p><strong>대화식 프로그램 작업제어</strong></p>
+<pre><code>pty cat
+</code></pre>
+<p>위 명령을 실행하면, 아래와 같은 구조로 실행된다고 함<br>
+<img src="http://tmmse.xyz/content/images/2018/02/19.13.gif" alt="19.13"></p>
+<p>pty_fork 하고 exec 해서 cat 만들고, pty부모가 또 fork 해서 pty 자식이 생김.<br>
+이때, cat은 고아 이므로 ctrl+z 가 전달이 되지 않음. 아마 pty 가 먹어버리는 듯??<br>
+이런 작업제어가 잘 되게 하려면, pty에 로직이 따로 필요함.</p>
+<p><strong>script</strong></p>
+<pre><code>pty &quot;${SHELL:-/bin/sh}&quot; | tee typescript
+</code></pre>
+<p>위 명령을 실행하면 아래와 같은 구조로 실행 됨.</p>
+<p><img src="http://tmmse.xyz/content/images/2018/02/19.14.gif" alt="19.14"></p>
+<p>이해가 안감... ㅠㅠ 해보니까 되긴 되는데</p>
+<p><strong>그 외</strong></p>
+<p>이 외에도 몇가지 예제가 있는데, 다 똑같음.</p>
+<h5 id="advancedfeatures">Advanced Features</h5>
+<ul>
+<li>Packet Mode
+<ul>
+<li>PTY master가 PTY slave의 상태 변화를 알게함</li>
+<li>특정 이벤트가 발생할때 PTY master위에 프로세스가 PTY master를 읽게 만드는데 사용</li>
+</ul>
+</li>
+<li>Remote Mode
+<ul>
+<li>PTY master는 PTY slave에 remote mode를 설정할 수 있음</li>
+<li>remote mode가 되면 line discipline이 어떤 작업도 수행하지 않음</li>
+<li>자체적으로 line editing을 사용하는 프로그램에 사용</li>
+</ul>
+</li>
+<li>Window Size Changes
+<ul>
+<li>PTY master 위에 있는 프로세스는 윈도우 사이즈 변경을 PTY slave의 foreground 프로세스 그룹에게 알려줄 수 있음</li>
+</ul>
+</li>
+<li>Signal Generation
+<ul>
+<li>PTY master 위에 있는 프로세스는 PTY slave의 프로세스 그룹에게 signal를 전송할 수 있음</li>
+</ul>
+</li>
+</ul>
+</div>]]></content:encoded></item><item><title><![CDATA[Uniscribe vs Pango]]></title><description><![CDATA[<div class="kg-card-markdown"><p>기본적인 과정</p>
+<ul>
+<li>Itemize (item 분리)</li>
+<li>Shape (item 별 glyph 추출)</li>
+<li>Place (?)</li>
+<li>Render</li>
+</ul>
+<h1 id="1itemize">1. Itemize</h1>
+<h5 id="auniscribe">a. Uniscribe</h5>
+<pre><code>HRESULT ScriptItemize(
+_In_     const WCHAR          *pwcInChars,
+_In_           int            cInChars,
+_In_           int            cMaxItems,
+_In_opt_ const SCRIPT_CONTROL *psControl,
+_In_opt_ const SCRIPT_STATE   *psState,
+_Out_          SCRIPT_ITEM    *pItems,
+_Out_          int            *pcItems
+);
+</code></pre>
+<p>pItems 이 떨어지는</p></div>]]></description><link>http://tmmse.xyz/2018/01/11/uniscribe-vs-pango/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf7701</guid><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Thu, 11 Jan 2018 07:10:41 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/01/Pango-name.svg.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2018/01/Pango-name.svg.png" alt="Uniscribe vs Pango"><p>기본적인 과정</p>
+<ul>
+<li>Itemize (item 분리)</li>
+<li>Shape (item 별 glyph 추출)</li>
+<li>Place (?)</li>
+<li>Render</li>
+</ul>
+<h1 id="1itemize">1. Itemize</h1>
+<h5 id="auniscribe">a. Uniscribe</h5>
+<pre><code>HRESULT ScriptItemize(
+_In_     const WCHAR          *pwcInChars,
+_In_           int            cInChars,
+_In_           int            cMaxItems,
+_In_opt_ const SCRIPT_CONTROL *psControl,
+_In_opt_ const SCRIPT_STATE   *psState,
+_Out_          SCRIPT_ITEM    *pItems,
+_Out_          int            *pcItems
+);
+</code></pre>
+<p>pItems 이 떨어지는 Item 들이고,<br>
+반환해주는 정보들인 <code>SCRIPT_ITEM</code> , <code>SCRIPT_ANALYSIS</code>, <code>SCRIPT_STATE</code> 은 아래와 같다.</p>
+<pre><code>typedef struct tag_SCRIPT_ITEM {
+  int             iCharPos;
+  SCRIPT_ANALYSIS a;
+} SCRIPT_ITEM;
+</code></pre>
+<pre><code>typedef struct tag_SCRIPT_ANALYSIS {
+  WORD         eScript  :10;
+  WORD         fRTL  :1;
+  WORD         fLayoutRTL  :1;
+  WORD         fLinkBefore  :1;
+  WORD         fLinkAfter  :1;
+  WORD         fLogicalOrder  :1;
+  WORD         fNoGlyphIndex  :1;
+  SCRIPT_STATE s;
+} SCRIPT_ANALYSIS;
+</code></pre>
+<pre><code>typedef struct tag_SCRIPT_STATE {
+  WORD uBidiLevel  :5;
+  WORD fOverrideDirection  :1;
+  WORD fInhibitSymSwap  :1;
+  WORD fCharShape  :1;
+  WORD fDigitSubstitute  :1;
+  WORD fInhibitLigate  :1;
+  WORD fDisplayZWG  :1;
+  WORD fArabicNumContext  :1;
+  WORD fGcpClusters  :1;
+  WORD fReserved  :1;
+  WORD fEngineReserved  :2;
+} SCRIPT_STATE;
+</code></pre>
+<h5 id="bpango">b. Pango</h5>
+<pre><code>GList *pango_itemize                (PangoContext      *context,
+                                      const char        *text,
+                                      int                start_index,
+                                      int                length,
+                                      PangoAttrList     *attrs,
+                                      PangoAttrIterator *cached_iter);
+</code></pre>
+<p>return 값이 PangoItem 으로 떨어지고, GList 를 상속받은 놈임.</p>
+<pre><code>struct _PangoItem
+{
+  gint offset;
+  gint length;
+  gint num_chars;
+  PangoAnalysis analysis;
+};
+</code></pre>
+<ul>
+<li><code>PangoItem</code></li>
+<li>@offset: byte offset of the start of this item in text.</li>
+<li>@length: length of this item in bytes.</li>
+<li>@num_chars: number of Unicode characters in the item.</li>
+<li>@analysis: analysis results for the item.<br>
+The <code>PangoItem</code> structure stores information about a segment of text.</li>
+</ul>
+<pre><code>struct _PangoAnalysis
+{
+  PangoEngineShape *shape_engine;
+  PangoEngineLang  *lang_engine;
+  PangoFont *font;
+
+  guint8 level;
+  guint8 gravity; /* PangoGravity */
+  guint8 flags;
+
+  guint8 script; /* PangoScript */
+  PangoLanguage *language;
+
+  GSList *extra_attrs;
+};
+</code></pre>
+<ul>
+<li><code>PangoAnalysis</code></li>
+<li>@shape_engine: the engine for doing rendering-system-dependent processing.</li>
+<li>@lang_engine: the engine for doing rendering-system-independent processing.</li>
+<li>@font: the font for this segment.</li>
+<li>@level: the bidirectional level for this segment.</li>
+<li>@gravity: the glyph orientation for this segment (A #PangoGravity).</li>
+<li>@flags: boolean flags for this segment (currently only one) (Since: 1.16).</li>
+<li>@script: the detected script for this segment (A #PangoScript) (Since: 1.18).</li>
+<li>@language: the detected language for this segment.</li>
+<li>@extra_attrs: extra attributes for this segment.<br>
+The <code>PangoAnalysis</code> structure stores information about the properties of a segment of text.</li>
+</ul>
+<h5 id="cmapping">c. Mapping 여부</h5>
+<ul>
+<li>escript -&gt; script (pango script 가 1024개 보다 적어서 mapping 가능)</li>
+<li>fRTL -&gt; level을 이해하면 될듯?</li>
+<li>fLayoutRTL -&gt; 숫자의 rtl 인데 이것도 level을 이해하면 가능하려나..</li>
+<li>fLinkBefore &amp; fLinkAfter -&gt; 불가능: item의 처음이나 마지막 글자가 이어진 item과 linking 이 되는지. pango에 정보가 없고, 어떤 언어에서 발생하는지도 모르겟음.</li>
+<li>fLogicalOrder -&gt; glyphString을 만들 때(shaping)에서 logical order로 할껀지, visual order로 할껀지. pango에서는 테스트 필요.</li>
+<li>fNoGlyphIndex -&gt; use of glyph 켜기/끄기. true면 complex script shaping도 꺼짐. bitmap, vector and device font에 사용됨. pango 에서 불가능한듯?? pangofont에서 속성을 알아보자.</li>
+<li>uBidiLevel -&gt; level</li>
+<li>fOverrideDirection -&gt; script 가 override 하는 경우도 있나보네.... 하...</li>
+<li>fInhibitSymSwap -&gt; unicode mirrored glyphs &quot;&quot; 이런거?<br>
+그 외, 몇개 더 있음. 추가 할 것!<br>
+<a href="https://msdn.microsoft.com/ko-kr/library/windows/desktop/dd374043(v=vs.85).aspx">msdn - SCRIPT_STATE</a> 참조.</li>
+</ul>
+<h5 id="dwine">d. wine은?</h5>
+<p>분기를 엄청 태우면서, unicode 에 따라 하드코딩이 되어있는 것으로 보임. 참고 가능할 듯.</p>
+<h1 id="2shape">2. Shape</h1>
+<h5 id="auniscribe">a. uniscribe</h5>
+<pre><code>HRESULT ScriptShape(
+  _In_          HDC             hdc,
+  _Inout_       SCRIPT_CACHE    *psc,
+  _In_    const WCHAR           *pwcChars,
+  _In_          int             cChars,
+  _In_          int             cMaxGlyphs,
+  _Inout_       SCRIPT_ANALYSIS *psa,
+  _Out_         WORD            *pwOutGlyphs,
+  _Out_         WORD            *pwLogClust,
+  _Out_         SCRIPT_VISATTR  *psva,
+  _Out_         int             *pcGlyphs
+);
+</code></pre>
+<ul>
+<li>script cache</li>
+</ul>
+<ul>
+<li>font metric cache,<br>
+<a href="https://msdn.microsoft.com/ko-kr/library/windows/desktop/dd317726(v=vs.85).aspx">msdn - uniscribe cache</a> 참조</li>
+<li>hdc가 없어도 cache 로 동작. ScriptShape, ScriptPlace, ScriptTextOut 에 해당 하는 내용.</li>
+</ul>
+<ul>
+<li>script analysis
+<ul>
+<li>구조는 위에 있음. 이게 어케 out 이 될 수 있는가. shape 에서 어떤걸 건드리길래?</li>
+</ul>
+</li>
+<li>Glyphs
+<ul>
+<li>이게 주 목적이고.</li>
+</ul>
+</li>
+<li>logical clust
+<ul>
+<li>주변 unicode character 에 따라 glyph 가 영향 받을 수 있는 것들.</li>
+<li>application이 cluster 만보고도 그런 것들을 처리 할수 있게 함.</li>
+</ul>
+</li>
+<li>script visual attribute</li>
+</ul>
+<pre><code>typedef struct tag_SCRIPT_VISATTR {
+  WORD uJustification  :4;
+  WORD fClusterStart  :1;
+  WORD fDiacritic  :1;
+  WORD fZeroWidth  :1;
+  WORD fReserved  :1;
+  WORD fShapeReserved  :8;
+} SCRIPT_VISATTR;
+</code></pre>
+<pre><code>typedef enum tag_SCRIPT_JUSTIFY { 
+  SCRIPT_JUSTIFY_NONE            = 0,
+  SCRIPT_JUSTIFY_ARABIC_BLANK    = 1,
+  SCRIPT_JUSTIFY_CHARACTER       = 2,
+  SCRIPT_JUSTIFY_RESERVED1       = 3,
+  SCRIPT_JUSTIFY_BLANK           = 4,
+  SCRIPT_JUSTIFY_RESERVED2       = 5,
+  SCRIPT_JUSTIFY_RESERVED3       = 6,
+  SCRIPT_JUSTIFY_ARABIC_NORMAL   = 7,
+  SCRIPT_JUSTIFY_ARABIC_KASHIDA  = 8,
+  SCRIPT_JUSTIFY_ARABIC_ALEF     = 9,
+  SCRIPT_JUSTIFY_ARABIC_HA       = 10,
+  SCRIPT_JUSTIFY_ARABIC_RA       = 11,
+  SCRIPT_JUSTIFY_ARABIC_BA       = 12,
+  SCRIPT_JUSTIFY_ARABIC_BARA     = 13,
+  SCRIPT_JUSTIFY_ARABIC_SEEN     = 14,
+  SCRIPT_JUSTIFY_ARABIC_SEEN_M   = 15
+} SCRIPT_JUSTIFY;
+</code></pre>
+<h5 id="bpango">b. pango</h5>
+<pre><code>void pango_shape (const gchar      *text,
+                  gint              length,
+                  const PangoAnalysis *analysis,
+                  PangoGlyphString *glyphs);
+
+</code></pre>
+<h1 id="3place">3. Place</h1>
+<h5 id="auniscribe">a. uniscribe</h5>
+<pre><code>HRESULT ScriptPlace(
+  _In_          HDC             hdc,
+  _Inout_       SCRIPT_CACHE    *psc,
+  _In_    const WORD            *pwGlyphs,
+  _In_          int             cGlyphs,
+  _In_    const SCRIPT_VISATTR  *psva,
+  _Inout_       SCRIPT_ANALYSIS *psa,
+  _Out_         int             *piAdvance,
+  _Out_         GOFFSET         *pGoffset,
+  _Out_         ABC             *pABC
+);
+</code></pre>
+<ul>
+<li>SCRIPT_ANALYSIS
+<ul>
+<li>psa 는 ScriptPlace 에서 일부 정보를 채워주는 것 같음. 어떤 놈들을?? 실제 ms 에서 한글과 영어 테스트 결과 변화가 없는 걸 보니, 특정 언어에 필요한 정보들인 것으로 파악 됨.</li>
+</ul>
+</li>
+<li>Advance
+<ul>
+<li>advance width: glyph의 rendering 시작부터 다음 glyph의 rendering 시작점</li>
+</ul>
+</li>
+<li>GOFFSET
+<ul>
+<li>실제로 돌려보니, du, dv 모두 0 나오는데... 뭐지. 설명에는 &quot;x, y offset of combining glyphs&quot;라고 되어있음</li>
+</ul>
+</li>
+<li>ABC
+<ul>
+<li>ABC width 반환.<br>
+<a href="https://msdn.microsoft.com/ko-kr/library/windows/desktop/dd374094(v=vs.85).aspx">Uniscribe Glossary</a> 참조.</li>
+</ul>
+</li>
+</ul>
+<h5 id="bpango">b. pango</h5>
+<pre><code>void   pango_glyph_string_extents  (PangoGlyphString *glyphs,
+                                     PangoFont        *font,
+                                     PangoRectangle   *ink_rect,
+                                     PangoRectangle   *logical_rect);
+</code></pre>
+<p>ink_rect와 logical_rect 들로 ABCwidth, advance width랑 비슷한 개념일 듯?<br>
+설명이 없어서 파악이 잘 안됨.. ㅠ</p>
+<h1 id="4rendering">4. Rendering</h1>
+<h5 id="auniscribe">a. uniscribe</h5>
+<pre><code>HRESULT ScriptTextOut(
+  _In_     const HDC             hdc,
+  _Inout_        SCRIPT_CACHE    *psc,
+  _In_           int             x,
+  _In_           int             y,
+  _In_           UINT            fuOptions,
+  _In_opt_ const RECT            *lprc,
+  _In_     const SCRIPT_ANALYSIS *psa,
+  _In_     const WCHAR           *pwcReserved,
+  _In_           int             iReserved,
+  _In_     const WORD            *pwGlyphs,
+  _In_           int             cGlyphs,
+  _In_     const int             *piAdvance,
+  _In_opt_ const int             *piJustify,
+  _In_     const GOFFSET         *pGoffset
+);
+</code></pre>
+<h5 id="bpango">b. pango</h5>
+<p>pango는 여러 backend를 사용 가능함. freetype / cairo 등등.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[IOTA 리뷰]]></title><description><![CDATA[<div class="kg-card-markdown"><p>많은 사람들이 관심을 가지고 좋아하는 코인이다.<br>
+(2017.12.28 기준 <a href="https://coinmarketcap.com/currencies/volume/monthly/">monthly trading 순위</a> 8등 ㄷㄷ)<br>
+시장에 나온지 이제 반년되었는데 벌써 8등.<br>
+어떤 장점이 있길래 이렇게나 인기가 좋은지 한번 알아보자.</p>
+<p>스압을 싫어하는 분들을 위해 개인적인 총평부터 적음.</p>
+<h2 id="summary">Summary</h2>
+<ol>
+<li>IOT에 정말 잘 쓰일 수 있는가? - 진짜 소형기기만 아니면 가능할지도...</li>
+<li>IOT에 특화된</li></ol></div>]]></description><link>http://tmmse.xyz/2017/12/24/gasanghwapye-seuteodi-iota/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf7700</guid><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Sun, 24 Dec 2017 08:13:02 GMT</pubDate><content:encoded><![CDATA[<div class="kg-card-markdown"><p>많은 사람들이 관심을 가지고 좋아하는 코인이다.<br>
+(2017.12.28 기준 <a href="https://coinmarketcap.com/currencies/volume/monthly/">monthly trading 순위</a> 8등 ㄷㄷ)<br>
+시장에 나온지 이제 반년되었는데 벌써 8등.<br>
+어떤 장점이 있길래 이렇게나 인기가 좋은지 한번 알아보자.</p>
+<p>스압을 싫어하는 분들을 위해 개인적인 총평부터 적음.</p>
+<h2 id="summary">Summary</h2>
+<ol>
+<li>IOT에 정말 잘 쓰일 수 있는가? - 진짜 소형기기만 아니면 가능할지도...</li>
+<li>IOT에 특화된 점이 있는가? - ㄴㄴ 아님</li>
+<li>수수료가 없다고? - ㅇㅇ 진짜 없음. 하지만 다른 거래를 한번 확인하는 일을 해야함</li>
+<li>보안은? - 이슈들이 제기되고 있으나 괜찮은 것으로 추정</li>
+<li>장기적 포텐? - 아주 우수함 (이러니 그렇게 인기가 많겠지...)</li>
+<li>코드 품질? - 여러 의견을 종합한 결과, 현재 상태는 부정적임...</li>
+</ol>
+<h2 id="abstract">Abstract</h2>
+<p>IOTA는 어떻게 돌아가는지 부터 살펴보자.<br>
+<a href="https://iota.org/">IOTA 공홈</a> 과 수많은 youtube 영상들 (<a href="https://www.youtube.com/channel/UCQaOR_QLI2tGceGAp3ZWfQw">everything tangle</a>, <a href="https://www.youtube.com/watch?v=UwEp5cexTJE">boxmining</a>) 에서 쉽게 자료들을 접할 수 있다.</p>
+<p>기본적으로 IOTA는 blockchain 이 아니다.<br>
+대신에, <strong>Directed Acyclic Graph (DAG)</strong> 를 사용하는데 IOTA 에서는 이를 tangle 이라고 지칭한다.<br>
+IOTA 외에도 <a href="https://byteball.org/">ByteBall</a> 이라는 코인도 DAG를 사용한다.<br>
+<img src="http://tmmse.xyz/content/images/2017/12/DQmRcnpndwHUU9ver7W6m5dS3enftRdrjG4kYunk3nT1h9D_1680x8400.png" alt=""></p>
+<p>그렇다면, tangle 의 장점이 무엇이냐?  (<a href="https://steemit.com/cryptocurrency/@jimmco/byteball-vs-iota-battle-of-two-dag-cryptocurrencies">byteball &amp; iota</a> 참조)</p>
+<blockquote>
+<p><strong>거래 딜레이가 없다!! 수수료가 없다!!</strong></p>
+</blockquote>
+<p>기존의 bitcoin-like blockchain의 경우, 거래가 승인되려면 최소한 하나의 block 이 생성되어야 한다.  tangle은? 곧 바로 가능하다! IOTA whitepaper에 따르면, heterogeneous nature of system (issue tx != approve tx)을 bitcoin의 문제로 꼽고 있다.</p>
+<p>그렇다면, 거래를 어떻게 보장하느냐.<br>
+내 거래를 통과시키려면, 이전에 있었던 남의 거래를 검증해야한다.  bitcoin 에서는 miner 들이 거래를 보장해주지만, tangle은 거래자 각각이 서로의 거래를 보장한다. 개개인이 ledger 이다. 따라서, miner들에게 제공해야하는 수수료가 없다. 대신 남의 거래를 보장하는 행위가 필요하고, 이게 곧 수수료이다.</p>
+<h2 id="discussion">Discussion</h2>
+<h6 id="1iot">1. IOT랑 무슨 상관??</h6>
+<p>이름에서도 드러나고, 공홈에 들어가면 &quot;The backbone of IOT&quot;가 대문에 걸려있을 만큼 IOT를 강조한다.    개개인이 ledger인 특성. 즉, &quot;tx를 만드는 사람 = tx를 승인하는 사람&quot; 이라는 사실이 IOT에 접목시킬 명분이다. 그러나, 개인적으로는 <strong>IOT는 그냥 마케팅 포인트</strong>라고 본다.<br>
+Scalable, decentralized, modular, no fees. 모두 좋은 장점이다.  그러나, 이런 장점들이 IOT에 사용되기에 꼭 필요한 특징들은 아니다. 오히려, 수수료를 지불하는 대신, 직접 거래를 보장하는 연산을 해야하기 때문에, 전력이 한정적이거나, cpu가 열악한 IOT 일부 기기에서는 거래가 더 느리거나 불가능할 수도 있다.<br>
+(이는 거래를 보장하는 연산이 얼마나 무겁고, 어느정도의 전력을 잡아먹는지 알아야 하지만 직접 실험해 보지 않았으므로 패스함... ㅠㅠ 친구 말에 따르면 라즈베리파이에서도 버겁다카더라...)</p>
+<h6 id="2tangle">2. tangle의 장점</h6>
+<p>앞서서 tangle로 인해서 거래의 딜레이가 없고, 수수료가 없다는 장점이 있다고 했지만, 거시적인 관점에서의 장점도 있다.  bitcoin의 경우, 엄청난 hashpower가 block하나를 붙이기 위해 미친듯이 돌아간다.  difficulty가 낮으면 이렇게 까지 세계적으로 전기를 낭비할 필요가 없다.<br>
+tangle은 각각이 ledger 이기 때문에, 네트워크에 동시에 블럭을 붙일 가능성이 없고, difficulty를 높일 필요가 없다. 따라서, 거래의 검증 과정에서 낭비되는 연산 (전기에너지...)가 적다.</p>
+<h6 id="3">3. 장기적인 포텐</h6>
+<p>tangle이 여러 장점이 있는 것은 알겠다. 그럼 어디에 활용될 수 있을까??<br>
+<a href="https://fog.sh/">fog.sh</a>의 예시를 보자. 아직 개발 중이라서 써볼 수 없지만, IOTA의 포텐을 깨닫기에는 개요만 봐도 충분하다.<br>
+<strong>FOG</strong>는 IOTA ledger 위에서 content를 publishing 하기 위한 툴이다.<br>
+딜레이와 수수료가 없기 때문에, IOTA ledger에 올려 data를 자유롭고 빠르게 퍼뜨릴 수 있다.</p>
+<h2 id="links">Links</h2>
+<p><a href="https://iota.org/">IOTA 공홈</a><br>
+<a href="http://https://news.ycombinator.com/item?id=15944112">hn tread 1: a iota tangled mess</a><br>
+<a href="https://news.ycombinator.com/item?id=15980675">hn tread 2: MIT vs IOTA - concern</a><br>
+<a href="https://news.ycombinator.com/item?id=15977639">hn tread 3: Fog.sh – decentralized content publishing on the IOTA ledger</a><br>
+<a href="https://www.youtube.com/channel/UCQaOR_QLI2tGceGAp3ZWfQw">youtube channel - everything tangle</a><br>
+<a href="https://www.youtube.com/watch?v=UwEp5cexTJE">youtube - IOTA explanation (boxmining)</a></p>
+</div>]]></content:encoded></item><item><title><![CDATA[데몬 프로세스 (daemon process)]]></title><description><![CDATA[<div class="kg-card-markdown"><p>본 포스트는 APUE chap.13 을 참고하여 작성함.</p>
+<p><strong>데몬</strong>은 오래사는 프로세스를 말하고, 보통은 시스템이 부팅될 때 같이 켜지고 종료될 때 같이 끝남.<br>
+Controlling 터미널이 없어서 background에서 돈다라고 표현한다.<br>
+데몬의 구조, 작성법, 오류 로깅에 대해 설명하려고 함!</p>
+<h5 id="">데몬의 특징</h5>
+<p><code>ps -efj</code> 와 같은 명령어로 확인 controlling 터미널이 없는 프로세스 (데몬)</p></div>]]></description><link>http://tmmse.xyz/2017/10/19/daemon/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76ff</guid><category><![CDATA[Linux]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Thu, 19 Oct 2017 13:08:00 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2017/10/linux-daemon-600-1.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2017/10/linux-daemon-600-1.png" alt="데몬 프로세스 (daemon process)"><p>본 포스트는 APUE chap.13 을 참고하여 작성함.</p>
+<p><strong>데몬</strong>은 오래사는 프로세스를 말하고, 보통은 시스템이 부팅될 때 같이 켜지고 종료될 때 같이 끝남.<br>
+Controlling 터미널이 없어서 background에서 돈다라고 표현한다.<br>
+데몬의 구조, 작성법, 오류 로깅에 대해 설명하려고 함!</p>
+<h5 id="">데몬의 특징</h5>
+<p><code>ps -efj</code> 와 같은 명령어로 확인 controlling 터미널이 없는 프로세스 (데몬)을 확인할 수 있다.</p>
+<p><img src="http://tmmse.xyz/content/images/2017/10/1.jpg" alt="데몬 프로세스 (daemon process)"></p>
+<p>보통 parent pid 가 0 이면 커널 프로세스임. (참고, <em>init</em>은 예외. 부팅때 커널이 시작한 user level commane 이다.)<br>
+위에 캡쳐된 화면에서 대괄호에 있는 애들 모두 커널프로세스. 해당 버전에서는 kthreadd 가 다 생성하기 때문에 parent pid 가 2임.<br>
+이러한 커널프로세스들은 시스템과 lifetime 이 같고, 수퍼유저 권한으로 실행되고, controlling 터미널과 command line 이 없다.</p>
+<p>커널의 component 중에서, process context 에서 수행되어야 하지만, user-level process가 invoke 하지 않을 component 들은 보통 kernel daemon을 가지고 있다. linux의 예를 보면,</p>
+<ul>
+<li><strong>kswapd</strong> : pageout 데몬. dirty page나 free page를 swapping out 해서 회수(reclaim)되도록 함.</li>
+<li><strong>flush</strong> , <strong>sync_supers</strong>, <strong>jbd</strong> 등의 page 관리, file system 관리하는 데몬들.</li>
+</ul>
+<p>이 외에도 많은 데몬들이 있음. 커널 프로세스가 아닌 것들의 예로는 rpcbind, inetd, cron, atd, cupsd, sshd 등등.</p>
+<p>데몬의 특성을 정리하면,</p>
+<ul>
+<li>대부분의 데몬은 superuser 권한으로 실행됨.</li>
+<li>controlling 터미널을 가진 데몬은 없음. 위의 캡처에서 확인하면, tty 항목이 ? 로 표시된 것을 볼수 있음. (아마도 setsid 를 호출했을 것)</li>
+<li>대부분의 user-level 데몬은 <em>프로세스 그룹 리더</em> 이자 <em>세션 리더</em> 이고, 그룹과 세션에 혼자 있음.</li>
+<li>user-level 데몬의 부모는 init 프로세스임.</li>
+</ul>
+<p>참고로, controlling terminal를 가진다면 아래와 같은 문제가 발생할 수 있음.</p>
+<ul>
+<li>사용자가 터미널 escape 문자를 써서 (대표적으로 CONTROL-c, CONTROL-z 등) 원치 않게 프로세스를 끝내 버리거나, suspend시킬 수 있다.</li>
+<li>원격 터미널 연결이 끊길 경우, 원치 않게 프로세스가 종료될 수 있다.</li>
+</ul>
+<h5 id="codingrules">Coding Rules</h5>
+<p>기본 규칙들을 지켜서 코딩하면 &quot;unwanted interactions from happening&quot; 을 막을 수 있음.</p>
+<ol>
+<li>
+<p><code>unmask</code> 를 호출해서 파일 모드 생성값 (보통은 0, 생성된 파일은 777)을 지정하자. 데몬이 상속받은 mask는 특정 권한이 막혀있을 수 있으니, 풀어두자. 필요하면 막아 두는 것도 가능 (ex. 007로 생성되도록)</p>
+</li>
+<li>
+<p><code>fork</code>를 호출하고 부모가 <code>exit</code>을 호출한다. 데몬이 셸 명령어로 실행된 경우, 부모가 종료되면 셸은 끝났다고 생각함. 자식은 해당 그룹의 리더가 아니게 되는데, <code>setsid</code>를 호출해서 성공하려면 리더가 아니어야 함.</p>
+</li>
+<li>
+<p><code>setsid</code>를 호출해서 새 세션을 생성한다. 그러면, 새 세션의 리더가 되고, 프로세스 그룹의 리더가 되고, controlling 터미널과 끊어진다.</p>
+</li>
+</ol>
+<blockquote>
+<p>이 상태에서 한 번 더 <code>fork⁠</code>를 하고, 이 때 부모 프로세스를 종료하면 현재 프로세스는 (sid != pid) 세션 리더가 아니기 때문에, (혹시 실수로라도) controlling 터미널을 얻을 수 없는 상태가 됨</p>
+</blockquote>
+<ol start="4">
+<li>
+<p>현재 working directory를 root로 변경. 부모로 부터 물려받은 working directory는 mount된 file system일 수 있기 때문에, (해당 file system은 unmount할 수 없음) 특정 작업 디렉토리로 working directory 변경</p>
+</li>
+<li>
+<p>불필요한 fd들을 다 닫자. 부모로부터 상속받은 fd를 계속 들고 있는 것을 방지하도록</p>
+</li>
+<li>
+<p>어떤 데몬은 fd 0,1,2를 /dev/null로 open할 것. 특정 library routine에서 standard in/out/error를 사용해도 영향 받지 않도록</p>
+</li>
+</ol>
+<pre><code>#include &quot;apue.h&quot;
+#include &lt;syslog.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/resource.h&gt;
+ 
+void
+daemonize(const char *cmd)
+{
+    int                 i, fd0, fd1, fd2;
+    pid_t               pid;
+    struct rlimit       rl;
+    struct sigaction    sa;
+    /*
+     * Clear file creation mask.
+     */
+    umask(0);
+ 
+    /*
+     * Get maximum number of file descriptors.
+     */
+    if (getrlimit(RLIMIT_NOFILE, &amp;rl) &lt; 0)
+        err_quit(&quot;%s: can't get file limit&quot;, cmd);
+ 
+    /*
+     * Become a session leader to lose controlling TTY.
+     */
+    if ((pid = fork()) &lt; 0)
+        err_quit(&quot;%s: can't fork&quot;, cmd);
+    else if (pid != 0) /* parent */
+        exit(0);
+    setsid();
+ 
+    /*
+     * Ensure future opens won't allocate controlling TTYs.
+     */
+    sa.sa_handler = SIG_IGN;
+    sigemptyset(&amp;sa.sa_mask);
+    sa.sa_flags = 0;
+    if (sigaction(SIGHUP, &amp;sa, NULL) &lt; 0)
+        err_quit(&quot;%s: can't ignore SIGHUP&quot;);
+    if ((pid = fork()) &lt; 0) /* 한번 더 fork해서 제어터미널을 아예 갖지 못하도록 만들어 버림 */
+        err_quit(&quot;%s: can't fork&quot;, cmd);
+    else if (pid != 0) /* parent */
+        exit(0);
+ 
+    /*
+     * Change the current working directory to the root so
+     * we won't prevent file systems from being unmounted.
+     */
+    if (chdir(&quot;/&quot;) &lt; 0)
+        err_quit(&quot;%s: can't change directory to /&quot;);
+ 
+    /*
+     * Close all open file descriptors.
+     */
+    if (rl.rlim_max == RLIM_INFINITY)
+        rl.rlim_max = 1024;
+    for (i = 0; i &lt; rl.rlim_max; i++)
+        close(i);
+ 
+    /*
+     * Attach file descriptors 0, 1, and 2 to /dev/null.
+     */
+    fd0 = open(&quot;/dev/null&quot;, O_RDWR);
+    fd1 = dup(0);
+    fd2 = dup(0);
+ 
+    /*
+     * Initialize the log file.
+     */
+    openlog(cmd, LOG_CONS, LOG_DAEMON);
+    if (fd0 != 0 || fd1 != 1 || fd2 != 2) {
+        syslog(LOG_ERR, &quot;unexpected file descriptors %d %d %d&quot;,
+          fd0, fd1, fd2);
+        exit(1);
+    }
+}
+</code></pre>
+<p>이거 main에서 call 하고 sleep 하는거 만들어서 돌려보면,</p>
+<p><img src="http://tmmse.xyz/content/images/2017/10/3.JPG" alt="데몬 프로세스 (daemon process)"></p>
+<p>잘 나옴. 9054는 없어져서 세션리더가 없는 데몬이 되었음을 알 수 있다.</p>
+<h5 id="errorlogging">Error Logging</h5>
+<p>데몬이 가지고 있는 문제 중 하나는 error message를 다룰 방법이 없음<br>
+각자 파일에 따로쓰면 볼때 머리아픔<br>
+4.2BSD로 부터 사용된 BSD syslog facility가 널리 쓰임.</p>
+<p>BSD syslog facility 구조<br>
+<img src="http://tmmse.xyz/content/images/2017/10/4.JPG" alt="데몬 프로세스 (daemon process)"></p>
+<p>로그 메세지를 남기는 데에는 3가지 방법이 있음.</p>
+<ul>
+<li>kernel routine에서 log 함수 호출</li>
+<li>user process에서 syslog 함수 호출</li>
+<li>이 host나 연결된 다른 host의 user process에서 UDP port 514로 log message를 send</li>
+</ul>
+<p>이 메세지들은 <strong>syslogd</strong> 데몬이 읽어주는데, 부팅될때 conf 파일 (보통은 /etc/syslog.conf)를 통해서 어디로 메세지를 보낼지 결정함. (tos는 &quot;local7.info /var/log/tos.log&quot; 라고 써있음) 보통 시스템은 admin한테 급한메세지는 보내도록 한다던지, 콘솔에 출력되도록 한다던지 써져있다고 함.</p>
+<pre><code>#include &lt;syslog.h&gt; 
+void openlog(const char *ident,int option,i nt facility); 
+void syslog(int priority,const char *format,...); 
+void closelog(void); 
+int setlogmask(int maskpri);
+</code></pre>
+<p>위 인터페이스들을 통해서 로깅 시스템을 사용할 수 있음.</p>
+<ul>
+<li><strong>openlog</strong>: 호출은 optional. 호출되지 않았으면 최초 syslog 호출시 openlog가 자동 호출 됨<br>
+ident : 각각의 log msg에 추가할 문장 (보통 program 이름)<br>
+option : 471쪽의 표 13.3에 있는 option중에 하나를 선택 가능<br>
+facility : 472쪽의 표 13.4 에 있는 것중 선택 가능. facility (출처라고 보면 됨...) 마다 log가 다뤄지는 방법을 다르게 할 수 있음 (config file을 통해)</li>
+<li><strong>syslog</strong><br>
+priority : facility + level(472쪽의 표 13.5에서 선택가능)<br>
+format  : vsprintf로 전달될 인자<br>
+format에서 처음 만난 %m으로 errno에 해당되는 error message string이 들어감</li>
+<li><strong>closelog</strong> 호출은 optional. 이 함수는 단지 syslogd daemon과 통신에 사용한 fd를 닫음</li>
+<li><strong>setlogmask</strong> : maskpri에 set된 priority만 logging됨<br>
+maskpri에 0을 넣으면 아무 영향 없음<br>
+기존 mask를 return</li>
+</ul>
+<p>예시. 프린터 스풀러 데몬 (lpd) 에서 볼 수 있을 만한 코드.</p>
+<pre><code>openlog(&quot;lpd&quot;, LOG_PID, LOG_LPR);
+syslog(LOG_ERR, &quot;open error for %s: %m&quot;, filename);
+</code></pre>
+<p>위와 같은 코드</p>
+<pre><code>syslog(LOG_ERR|LOG_LPR, &quot;open error for %s: %m&quot;, filename);
+</code></pre>
+<p>참고, 실제로 cups에 있는 비슷한 코드  ㄷㄷㄷ</p>
+<pre><code>openlog(&quot;cups-lpd&quot;, LOG_PID, LOG_LPR);
+syslog(LOG_ERR, &quot;Unable to open temporary control file \&quot;%s\&quot; - %s&quot;, control, strerror(errno));
+</code></pre>
+<p>이 외에도, 많은 시스템에서 logger 프로그램을 제공. 구현에 따라 추가적인 기능이 있음 (vsyslog 등)</p>
+<p>대부분의 <strong>syslogd</strong> 구현은 짧은 시간동안 msg를 queue 해서, 같은 message가 그 사이에 중복으로 오면 기록하지 않는 기능이 있음 (대신 &quot;last message repeated N times.&quot; 같은걸 찍어줌)</p>
+<h5 id="singleinstance">Single-Instance 데몬</h5>
+<p>어떤 데몬들은 혼자 있어야 잘 동작하는 애들이 있음.<br>
+예를 들어, (1) exclusive access to a device가 필요한 경우 (2) cron daemon (주기적으로 특정 프로그램을 실행시키는 daemon) 같은 경우 여러개가 있을 경우 중복적으로 program을 수행시킴.<br>
+데몬이 driver 단에서 다중 접근이 막힌 특정 device에 접근해야 한다면 자동으로 데몬이 하나만 떠 있게 됨.</p>
+<p>직접 구현하는 방법<br>
+file-locking 이나 record-locking을 통해 한번에 하나만 돌아가게 구현가능<br>
+daemon이 특정 위치에 file을 만들고 전체에 대해 write lock을 잡음<br>
+두번째 실행된 daemon은 fail, 이미 daemon이 존재함을 알 수 있음<br>
+daemon이 종료되면 자동적으로 lock이 풀림.</p>
+<pre><code>#define LOCKFILE &quot;/var/run/daemon.pid&quot;
+#define LOCKMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
+ 
+extern int lockfile(int);
+
+int
+already_running(void)
+{
+    int     fd;
+    char    buf[16];
+ 
+    fd = open(LOCKFILE, O_RDWR|O_CREAT, LOCKMODE);
+    if (fd &lt; 0) {
+        syslog(LOG_ERR, &quot;can't open %s: %s&quot;, LOCKFILE, strerror(errno));
+        exit(1);
+    }
+    if (lockfile(fd) &lt; 0) {
+        if (errno == EACCES || errno == EAGAIN) {
+            close(fd);
+            return(1);
+        }
+        syslog(LOG_ERR, &quot;can't lock %s: %s&quot;, LOCKFILE, strerror(errno));
+        exit(1);
+    }
+    ftruncate(fd, 0);
+    sprintf(buf, &quot;%ld&quot;, (long)getpid());
+    write(fd, buf, strlen(buf)+1);
+    return(0);
+}
+</code></pre>
+<p>lockfile 은 파일이 잠겨있을 경우, 에러 설정하고 끝나도록 되어있음.</p>
+<h5 id="conventions">데몬의 관례 (Conventions)</h5>
+<p>많은 Unix system의 daemon관련 관례</p>
+<ol>
+<li>
+<p>daemon이 lock file을 이용하면, 그 file은 /var/run 폴더 아래에 저장<br>
+여기에 file 만들라면 superuser permission이 필요<br>
+file 이름은 일반적으로 name.pid</p>
+</li>
+<li>
+<p>만약 daemon이 configuration options을 제공하면, 그 파일은 /etc 폴더에 저장<br>
+configure file 이름은 name.conf<br>
+ex) /etc/syslog.conf</p>
+</li>
+<li>
+<p>daemon이 command line에서 시작될 수 있지만 일반적으로 initialize script중 하나에서 시작<br>
+/etc/rc* or /etc/init.d/*<br>
+종료시 자동시작 되야 한다면, /etc/inittab의 respawn entry에 추가</p>
+</li>
+<li>
+<p>보통 configure file이 있다면 시작할 때만 확인<br>
+그래서 다시읽을려면 daemon을 재시작해야하는데<br>
+이게 싫으면 SIGHUP signal을 catch하여 config file을 다시 읽게 함<br>
+(SIGHUP : 터미널 인터페이스의 연결이 종료되면 받는 시그널.)</p>
+</li>
+</ol>
+<h5 id="">예제</h5>
+<ul>
+<li>multi-thread 데몬에서 configuration 파일을 다시 읽는 경우</li>
+</ul>
+<pre><code>#include &quot;apue.h&quot;
+#include &lt;pthread.h&gt;
+#include &lt;syslog.h&gt;
+ 
+sigset_t    mask;
+ 
+extern int already_running(void);
+ 
+void
+reread(void)
+{
+    /* ... */
+}
+ 
+void *
+thr_fn(void *arg)
+{
+    int err, signo;
+ 
+    for (;;) {
+        err = sigwait(&amp;mask, &amp;signo);
+        if (err != 0) {
+            syslog(LOG_ERR, &quot;sigwait failed&quot;);
+            exit(1);
+        }
+ 
+        switch (signo) {
+        case SIGHUP:
+            syslog(LOG_INFO, &quot;Re-reading configuration file&quot;);
+            reread();
+            break;
+ 
+        case SIGTERM:
+            syslog(LOG_INFO, &quot;got SIGTERM; exiting&quot;);
+            exit(0);
+ 
+        default:
+            syslog(LOG_INFO, &quot;unexpected signal %d\n&quot;, signo);
+        }
+    }
+    return(0);
+}
+ 
+int
+main(int argc, char *argv[])
+{
+    int                 err;
+    pthread_t           tid;
+    char                *cmd;
+    struct sigaction    sa;
+ 
+    if ((cmd = strrchr(argv[0], '/')) == NULL)
+        cmd = argv[0];
+    else
+        cmd++;
+ 
+    /*
+     * Become a daemon.
+     */
+    daemonize(cmd);
+ 
+    /*
+     * Make sure only one copy of the daemon is running.
+     */
+    if (already_running()) {
+        syslog(LOG_ERR, &quot;daemon already running&quot;);
+        exit(1);
+    }
+ 
+    /*
+     * Restore SIGHUP default and block all signals.
+     */
+    sa.sa_handler = SIG_DFL;
+    sigemptyset(&amp;sa.sa_mask);
+    sa.sa_flags = 0;
+    if (sigaction(SIGHUP, &amp;sa, NULL) &lt; 0)
+        err_quit(&quot;%s: can't restore SIGHUP default&quot;);
+    sigfillset(&amp;mask);
+    if ((err = pthread_sigmask(SIG_BLOCK, &amp;mask, NULL)) != 0)
+        err_exit(err, &quot;SIG_BLOCK error&quot;);
+ 
+    /*
+     * Create a thread to handle SIGHUP and SIGTERM.
+     */
+    err = pthread_create(&amp;tid, NULL, thr_fn, 0);
+    if (err != 0)
+        err_exit(err, &quot;can't create thread&quot;);
+    /*
+     * Proceed with the rest of the daemon.
+     */
+    /* ... */
+    exit(0);
+}
+</code></pre>
+<p>돌려보면 아래처럼 두 process 가 죽고 세번째 프로세스가 데몬이 잘 되어있음.<br>
+그리고, pthread를 통해 thread가 2개가 되어 sigwait 하고 있음.</p>
+<p><img src="http://tmmse.xyz/content/images/2017/10/5.JPG" alt="데몬 프로세스 (daemon process)"></p>
+<p>kill 명령어를 통해 sighup을 직접 줘보니 thread3.2 에 reread 가 호출됨을 알 수 있다.</p>
+<p><img src="http://tmmse.xyz/content/images/2017/10/6.JPG" alt="데몬 프로세스 (daemon process)"></p>
+<h5 id="clientserver">Client - Server 모델</h5>
+<p>일반적으로 데몬은 server역할이고, 이때 server라 함은 client의 연결을 기다리는 프로세스이다.<br>
+위에서 본 <strong>syslogd</strong> process도 서버로 log msg를 기다림<br>
+하지만 msg를 받기만 하지 뭔가 돌려주거나 하진 않음<br>
+뒷 chapter 에서 server client의 양방향 통신 모델이 많이 나올 것임</p>
+</div>]]></content:encoded></item><item><title><![CDATA[Uniscribe]]></title><description><![CDATA[<div class="kg-card-markdown"><p>Uniscribe는 복잡한 언어를 처리하고, 글씨를 아주 잘 (high degree of control) 조절할 수 있는 API 모음이다.</p>
+<h4 id="layouttextwithuniscribe">Layout Text with Uniscribe</h4>
+<p>( <a href="https://msdn.microsoft.com/ko-kr/library/windows/desktop/dd317792(v=vs.85).aspx">MSDN page</a>의 내용을 번역. )</p>
+<p>아래의 순서대로 uniscribe call들을 사용하면 layout 이 가능하다. 문단은 run들로 이미 나눠져있다고 가정하고.</p>
+<ol>
+<li>
+<p>첫 시작이나 <code>WM_SETTINGCHANGE</code>메세지를 받았을 때, <code>ScriptRecordDigitSubstitution</code>호출.</p>
+</li>
+<li>
+<p>(Optional) complex processing</p></li></ol></div>]]></description><link>http://tmmse.xyz/2017/06/13/uniscribe/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76fb</guid><category><![CDATA[font]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Tue, 13 Jun 2017 09:24:46 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2017/06/editor1403.gif" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2017/06/editor1403.gif" alt="Uniscribe"><p>Uniscribe는 복잡한 언어를 처리하고, 글씨를 아주 잘 (high degree of control) 조절할 수 있는 API 모음이다.</p>
+<h4 id="layouttextwithuniscribe">Layout Text with Uniscribe</h4>
+<p>( <a href="https://msdn.microsoft.com/ko-kr/library/windows/desktop/dd317792(v=vs.85).aspx">MSDN page</a>의 내용을 번역. )</p>
+<p>아래의 순서대로 uniscribe call들을 사용하면 layout 이 가능하다. 문단은 run들로 이미 나눠져있다고 가정하고.</p>
+<ol>
+<li>
+<p>첫 시작이나 <code>WM_SETTINGCHANGE</code>메세지를 받았을 때, <code>ScriptRecordDigitSubstitution</code>호출.</p>
+</li>
+<li>
+<p>(Optional) complex processing 이 필요한지 확인하기 위해 <code>ScriptIsComplex</code>호출.</p>
+</li>
+<li>
+<p>(Optional) bidirectional text 나 digit substitution을 처리할 때, <code>ScriptApplyDigitSubstitution</code>를 호출하여 <code>SCRIPT_CONTROL</code>과 <code>SCRIPT_STATE</code>구조체를 <code>ScriptItemize</code>의 입력으로 넣을 수 있게 준비.</p>
+</li>
+<li>
+<p>paragraph를 item들로 나누기 위해 <code>ScriptItemize</code> 호출.</p>
+</li>
+</ol>
+<blockquote>
+<p>[참고] 대부분 left-to-right scripts 와 digit substitution이 없는 경우, <code>SCRIPT_CONTROL</code> 와 <code>SCRIPT_STATE</code> 구조체는 null 포인터 임.</p>
+</blockquote>
+<ol start="5">
+<li>
+<p>range를 만들기위해, item 정보와 run 정보를 합침.</p>
+</li>
+<li>
+<p>cluster들을 확인하고, glyph들을 만들기위해  <code>ScriptShape</code> 호출.</p>
+</li>
+<li>
+<p><code>ScriptShape</code> 가 missing glyphs를 포함한채로 <code>USP_E_SCRIPT_NOT_IN_FONT</code> 나 <code>S_OK</code> 를 반환하면, 다른  font에서 글자를 찾음. <a href="https://msdn.microsoft.com/ko-kr/library/windows/desktop/dd374105(v=vs.85).aspx">Using Font Fallback</a> 참조</p>
+</li>
+<li>
+<p>연이은 range에 있는 glyph의 advance widths 와 x, y positions을 만들기 위해 <code>ScriptPlace</code> 호출. text의 사이즈가 고려되기 시작하는 첫 단계이다.</p>
+</li>
+<li>
+<p>Line이 overflow되기 전까지 range들의 크기를 합한다.</p>
+</li>
+<li>
+<p>logical attributes의 <code>fSoftBreak</code>and <code>fWhiteSpace</code> 멤버들을 사용해서, word boundary에 있는 range를 break한다. To break a single character cluster off the run, <code>ScriptBreak</code>호출에서 반환되는 정보를 사용하자.</p>
+</li>
+</ol>
+<blockquote>
+<p>[참고] Decide if the first code point of a range should be a word break point because the last character of the previous range requires it. For example, if one range ends in a comma, consider the first character of the next range to be a word break point.</p>
+</blockquote>
+<ol start="11">
+<li>6 ~ 10 단계를 매 line마다 반복. line의 마지막 run을 break 하면, <code>ScriptShape</code>를 호출해서 run 의 남은 부분이고, 다음 line의 첫 run인 부분을 reshape한다.</li>
+</ol>
+<h4 id="uniscribeglossary">Uniscribe Glossary</h4>
+<p><a href="https://msdn.microsoft.com/ko-kr/library/windows/desktop/dd374094(v=vs.85).aspx">MSDN page</a>의 내용을 번역.</p>
+<h6 id="abcwidth">ABC width</h6>
+<p>GDI ABC structure 에 정의되어있는 character 혹은 run의 width 값들. (MSDN page의 그림 참조, 전체 width랑 삐져나온 width들이다.)</p>
+<h6 id="advancewidth">advance width</h6>
+<p>glyph의 rendering 시작점부터 다음 glyph의 rendering 시작점.</p>
+<h6 id="bidirectionalstack">bidirectional stack</h6>
+<p>5-bit integer 로 LTR 인지 RTL 인지 기록해둠. LTR을 나타내는 0에서 시작하기 때문에, 짝수는 LTR 이고 RTL은 홀수. uBidiLevel이라는 멤버로 SCRIPT_STATE structure 안에 있음.</p>
+<h6 id="bidirectionaltext">bidirectional text</h6>
+<p>양방향 글씨, 보통 LTR 이기 때문에 RTL을 지칭하기도 함. RTL 언어는 bidirectional stack 이 필요함.</p>
+<h6 id="cellwidth">cell width</h6>
+<p>양쪽 정렬 (justification)을 위해서 조절 가능한 glyph의 넓이. 양쪽 정렬이 안된 (unjustified) 글에 대해서는 cell width가 advance width랑 똑같음.</p>
+<h6 id="cluster">cluster</h6>
+<p>shaped 가능한 가장 작은 linguistic 단위. Arabic이나 Indic 언어에서는 각 글자 (unicode code point)는 주변의 code points 들에 따라 달라지고, 이것들이 cluster.<br>
+자세한 내용은 <a href="https://www.microsoft.com/typography/Glyph%20Processing/overview.mspx">Microsoft Glyph Processing</a> 페이지 참조.</p>
+<h6 id="complexscript">complex script</h6>
+<p>다음의 특징을 하나라도 가지는 script(문자를 기준으로 한 언어, ex. latin script.)</p>
+<ul>
+<li>Bidirectional rendering</li>
+<li>Has contextual Shaping</li>
+<li>Has combining characters</li>
+<li>Has specialized word-breaking and justification rules</li>
+<li>Filters out illegal charater combinations</li>
+<li>Is not supported in the core Windows fonts and therefore might require font fallback</li>
+</ul>
+<h6 id="embeddinglevel">embedding level</h6>
+<p>bidirectional stack의 index.</p>
+<h6 id="fontfallback">font fallback</h6>
+<p>사용자가 설정한 font말고 다른 font가 자동으로 설정되는 것. ScriptStringAnalyse 에서 되고, 일부 텍스트에서 사용자가 선택한 font가 지원불가능한 경우 발생.</p>
+<h6 id="glyph">glyph</h6>
+<p>Display 되는 하나의 단위 (보통은 글자 한개). OpenType 기준으로는 outline으로 정의되고, 나머지 fonts에서는 bitmap이나 graphic command 모음으로 정의됨. 특정 경우에는 보통 한 글자가 아닌 경우가 있음 (출처 참조).</p>
+<h6 id="item">item</h6>
+<p>하나의 script와 direction. run 일 필요는 없음. 여러 스타일의 글자들을 포함.</p>
+<h6 id="lrm">LRM</h6>
+<p>Left-To-Right Mark.</p>
+<h6 id="ltr">LTR</h6>
+<p>Left-To-Right</p>
+<h6 id="range">range</h6>
+<p>run의 special case. 하나의 item이 하나의 run으로 잘리면 그 run이 range 임.</p>
+<h6 id="rlm">RLM</h6>
+<p>Right-To-Left Mark.</p>
+<h6 id="rtl">RTL</h6>
+<p>Right-To-Left</p>
+<h6 id="run">run</h6>
+<p>Uniscribe에서 렌더하기 위한 text들. 하나의 스타일, 글꼴, 사이즈, 색깔을 가져야함. script는 다양할 수 있고,  LTR, RTL이 동시에 있을 수 있음.</p>
+<h6 id="overhang">overhang</h6>
+<p>glyph의 잉크 중에서 advance width를 넘어가는 부분. italic &quot;f&quot; 가 overhang 이 있는 glyph의 대표적인 예.</p>
+<h6 id="underhangpadding">underhang (=padding)</h6>
+<p>overhang의 반대로 넘어가지 않고, 남은 white space 의 width.</p>
+<h6 id="script">script</h6>
+<p>system of written language. 언어의 글자 세트. Latin script, arabic script 가 그 예. 하나의 script는 여러 언어를 나타낼 수 있음.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[AMD의 CPU: ZEN의 마케팅 포인트를알아보자]]></title><description><![CDATA[<div class="kg-card-markdown"><p>AMD의 새로운 CPU, ZEN의 출시가 다가왔다.<br>
+작년부터 수 많은 발표(<s>설레발?</s>)이 있었는데, AMD가 내세우는 항목들을 살펴보고자 한다.<br>
+과연 이번에는 AMD가 제대로 일을 했을지...</p>
+<h5 id="amdsensemitechnology">AMD SenseMI technology</h5>
+<p>이번에 새로운 기술들의 이름이 <strong>SenseMI</strong>랜다.<br>
+이름이야 그렇다고 치고, 5가지로 구성되어있는데 한번 알아보자. (Pure Power, Precision Boost, Extended Frequency Range, Neural Net Prediction,</p></div>]]></description><link>http://tmmse.xyz/2017/02/05/amdyi-cpu-zenyi-maketing-pointeureulalaboja/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76f8</guid><category><![CDATA[CPU]]></category><category><![CDATA[AMD]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Sun, 05 Feb 2017 14:31:47 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2017/02/AMD-Zen-December-2016-Update_Final-For-Distribution-page-022_678x452.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2017/02/AMD-Zen-December-2016-Update_Final-For-Distribution-page-022_678x452.jpg" alt="AMD의 CPU: ZEN의 마케팅 포인트를알아보자"><p>AMD의 새로운 CPU, ZEN의 출시가 다가왔다.<br>
+작년부터 수 많은 발표(<s>설레발?</s>)이 있었는데, AMD가 내세우는 항목들을 살펴보고자 한다.<br>
+과연 이번에는 AMD가 제대로 일을 했을지...</p>
+<h5 id="amdsensemitechnology">AMD SenseMI technology</h5>
+<p>이번에 새로운 기술들의 이름이 <strong>SenseMI</strong>랜다.<br>
+이름이야 그렇다고 치고, 5가지로 구성되어있는데 한번 알아보자. (Pure Power, Precision Boost, Extended Frequency Range, Neural Net Prediction, Smart Prefetch)<br>
+어쨋든 AMD에서 마케팅 포인트로 잡은 것들이니 살펴볼 가치는 있다.</p>
+<p>필자의 개인적인 생각을 먼저 얘기하자면, 이 외에 발표된 많은 detail들은 살펴볼 가치가 없다고 생각한다.<br>
+Trade-off가 있는 cache 사이즈라던가, 숫자가 곧 성능인 공정이라던가 하는 detail들은 위키에도 많이 있고, 궁금하지도 않다.<br>
+우리가 궁금한 것은 <strong>&quot;그래서 Intel 대신 살만해?&quot;</strong> 이고, 실제 성능이 중요한데, 사소한 숫자들은 그냥 그런가보다 할 뿐이다.</p>
+<p>아직 제품이 안나왔으니, 성능에 대한 예측은 데모로 보여준 것들로 추측할 수 밖에 없다.<br>
+벤치마크 수치들은 사실 큰 의미가 없다고 생각하기 때문에 패스하고, 배필1을 Titan X 달고 돌린게 있는데, 뭐 Intel 꺼랑 큰 차이 없었다고 한다.<br>
+(<s>그래도 나라면 가격이 싸지 않는 이상 AMD 안 살꺼다...</s>)</p>
+<h5 id="sensemistage1purepower">SenseMI Stage 1: Pure Power</h5>
+<p>말은 Pure Power라고 거창하게 써져있지만, 그냥 DVFS로 파워 아끼는 것이다.<br>
+중요한 것은 chip에 내장된 센서<strong>들</strong>을 통해 온도, 파워 등을 모니터 하여 DVFS 잘 한다는 것.<br>
+사실 DVFS라는 것이 발전해 오던 흐름이다. Off-chip에 있던 clock generation이 chip안으로 들어오고, clock frequency를 더 빠르게 변경이 가능해지고, 최적의 frequency를 빠르게 찾고... 이런 것들을 잘 하겠다는 것이다.<br>
+학계에서 말하던 내용들이 AMD CPU에 구현이 되고 실제로 잘 되나보다.</p>
+<p>AMD CPU 써본 사람들은 알겠지만, 대체적으로 전력 무지하게 먹고 fan 때문에 시끄럽다.<br>
+이런 상황에서 power control을 잘 하게 되었다니, 다행이다.<br>
+진짜로 잘 되는지는 나와봐야 아는 것이지만... 이렇게 광고하는 걸 보면 그래도 어느 정도는 되나보다.</p>
+<h5 id="sensemistage2precisionboost">SenseMI Stage 2: Precision Boost</h5>
+<p>첫번째랑 비슷하다. clock이 boost 가 가능하다.<br>
+기존의 CPU들도 다 boost 가능한데 뭐가 다르냐 하면,<br>
+첫째로 25MHz 단위로 움직일 수 있다는 것. (현재 존재하는 것들은 대부분 100MHz.)<br>
+둘째는 halt 나 queue drain없이 재빠르게 변경이 가능하다는 것.<br>
+종합하면 빠르게, 정확하게 optimal point를 찾아간다는 것이다.<br>
+뭐.. 좋다. 사실 경험적으로 거창한 이름의 신기술 보다는 이런 것들이 실제 제품에서 탁월한 효과를 보기 때문에, 이런 별 것 아닌 것들을 마케팅 포인트로 내세운 것에 대해 필자는 긍정적인 기대를 한다. (<s>내세울게 그렇게 없는 가... 싶기도하고</s>)</p>
+<h5 id="sensemistage3extendedfrequencyrange">SenseMI Stage 3: Extended Frequency Range</h5>
+<p>Boost 된 clock 보다도 더 clock을 더 높일 수 있덴다. Cooling 만 잘 된다면.<br>
+공냉이나 수냉이나 냉각 플랫폼이 달라질 수 있는데, 이에 따라 자동으로 overclock을 할 수 있다.<br>
+손으로 오버클락 하는 게 쉽지 않으니 일반 유저들한테는 좋은 것 같다. (<s>그런 일반유저가 AMD를 싸니까 살수도 있지, 암 그렇고 말고.</s>)</p>
+<h5 id="sensemistage4neuralnetprediction">SenseMI Stage 4: Neural Net Prediction</h5>
+<p>음... 개인적으로 상당히 사기꾼의 냄새가 난다...<br>
+요즘에 딥러닝이 대세니까 포인트랍시고 낸거 같다.<br>
+하드웨어로 구현해야하니 딥러닝은 당연히 아니고, 간단한 artificial network인데, 들리는 소문에 의하면 간단한 perceptron 모델이라고 한다.<br>
+사실 Zen 이전에도 들어갔었던 기술이기도 하다.<br>
+그럼, Neural net으로 무엇을 예측하느냐....인데 정확하게 알려진 바는 없다.<br>
+아마도 branch prediction이나 instruction pre-load 정도로 추정된다. (<a href="http://www.anandtech.com/show/10907/amd-gives-more-zen-details-ryzen-34-ghz-nvme-neural-net-prediction-25-mhz-boost-steps">Anadtech 기사</a>)</p>
+<p>내가 상당히 의문스러워 하는 점은.. 과연 이것이 도움이 될까하는 것이다.<br>
+Branch prediction의 경우, neural net 없이도 너무 잘되서 쓸필요가 없다. 실제로 20년보다도 더 전부터 neural net을 이용한 연구가 있었으나, 다른 방법들이 성능 및 효율 측면에서 좋다는 것이 정설이다.<br>
+Instruction Preload의 경우도 비슷하다. Neural net을 이용했을 경우의 장점이 무엇이 있을지 의문스럽다. 실제로 간단한 network를 사용하면 linear regression 같은 기법과 크게 다르지 않다고도 생각이 되고.<br>
+결론은 광고를 위한 항목이라고 필자는 조심스럽게 추측한다.</p>
+<h5 id="sensemistage5smartprefetch">SenseMI Stage 5: Smart Prefetch</h5>
+<p>이 항목은 반반이라고 생각한다.<br>
+광고용일수도 있고, 실제로 잘 될 수도 있고.<br>
+Prefetch 기법은 오랫동안 그리고 지금도 활발이 연구되고 있는 기법이다.<br>
+잘만 된다면 잠재적인 성능향상폭이 높기 때문이다.<br>
+현재까지는 완벽하지 않기 때문에 잘 될 여지가 있다. 그러나.... 해도해도 잘 안되니 지금 이상태겠지...</p>
+<p>과연 AMD가 잘 해냈으려나?!<br>
+이 prefetch 기법이 얼마나 잘 되는지에 대한 AMD의 자료가 없기 때문에 알 수는 없다.<br>
+Prefetch라는 것이 예측이 잘되면 좋지만 aggressive하게 적용했을시, 안되면 penalty가 있다.<br>
+때문에 많은 기사들의 의견은 부정적인편이다.....</p>
+<h5 id="">결론</h5>
+<p>개인적인 생각: <strong>기대 할 것이 없다.</strong><br>
+결국 내세운건 별 거 없다.<br>
+기술적으로 특별한 혁신 같은 것은 없어 뵈이나, <strong>Intel과의 공정기술 차이가 줄었기</strong> 때문에 그 정도의 성능차이를 줄일 것으로 예상된다.<br>
+결론은 아직 인텔 발목도 못 잡을 것으로 예상된다.<br>
+최상위 모델이 i3라도 뛰어넘으면 다행이지 않을까. 그럼 데스크탑 구성에 있어서 선택의 폭이 생겨 가격이라도 싸질테니.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[구글의 인공지능을 위한 하드웨어 TPU]]></title><description><![CDATA[<div class="kg-card-markdown"><p>구글이 <strong>Tensor Processing Unit (TPU)</strong> 를 공개했다. <s>(솔직히 충격적이다....)</s><br>
+이는 custom ASIC (특수 목적을 위한 하드웨어 칩)으로, TensorFlow랑 물려 사용하는 인공지능을 위한 칩이다.<br>
+이번에 공개된 내용에 대해 설명을 하고자 한다.<br>
+본 포스트는 <a href="https://cloudplatform.googleblog.com/2016/05/Google-supercharges-machine-learning-tasks-with-custom-chip.html">구글의 공식 블로그 글</a>을 바탕으로 작성하였으니, 궁금하신 분은 옆 링크를 참조 하시길.</p>
+<p><img src="http://tmmse.xyz/content/images/2016/05/tpu.png" alt=""></p>
+<h5 id="tpu">TPU는 어디에 쓰나요?</h5>
+<p>TPU는</p></div>]]></description><link>http://tmmse.xyz/2016/05/30/tpu/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76f0</guid><category><![CDATA[Deep Learning]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Mon, 30 May 2016 12:50:36 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2016/05/tpu-1.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2016/05/tpu-1.png" alt="구글의 인공지능을 위한 하드웨어 TPU"><p>구글이 <strong>Tensor Processing Unit (TPU)</strong> 를 공개했다. <s>(솔직히 충격적이다....)</s><br>
+이는 custom ASIC (특수 목적을 위한 하드웨어 칩)으로, TensorFlow랑 물려 사용하는 인공지능을 위한 칩이다.<br>
+이번에 공개된 내용에 대해 설명을 하고자 한다.<br>
+본 포스트는 <a href="https://cloudplatform.googleblog.com/2016/05/Google-supercharges-machine-learning-tasks-with-custom-chip.html">구글의 공식 블로그 글</a>을 바탕으로 작성하였으니, 궁금하신 분은 옆 링크를 참조 하시길.</p>
+<p><img src="http://tmmse.xyz/content/images/2016/05/tpu.png" alt="구글의 인공지능을 위한 하드웨어 TPU"></p>
+<h5 id="tpu">TPU는 어디에 쓰나요?</h5>
+<p>TPU는 이름에서도 알 수 있듯이 TensorFlow를 돌리는 데 쓰인다고 한다.<br>
+TensorFlow는 그래프 프로세싱을 위한 오픈소스 프레임워크로 딥러닝을 위해서도 많이 쓰이는 도구(?)이다.<br>
+이를 이용한 코드들을 매우 효율적으로 돌린다고 한다.<br>
+출처에 따르면 전력효율이 약 10배 (an order of magnitude)나 된다고 한다.<br>
+이는 Moore's law 상으로 약 7년정도 앞선 효능이다. <s>(이건 사실상 광고...)</s></p>
+<p>실제 구글의 어플리케이션으로는 구글 투데이, 스트리트 뷰, 음성 검색, 알파고(!) 등에 쓰인다고 한다.<br>
+모두 인공지능 알고리즘의 기반으로 구글 내부에서는 이런 것들이 TensorFlow를 통해서 구현 된 것인가 보다. (필자의 개인적인 추측)</p>
+<h5 id="">왜 이렇게 좋지?</h5>
+<p>우선 ASIC 이다. CPU는 프로그래머블하여 범용적으로 쓸 수 있다. ASIC은 이와 비교하여 범용성이 떨어지지만 효율이 좋다.<br>
+CPU에서는 보통 소수점 연산을 32bit를 사용하지만 TPU는 훨씬 더 적은 bit수를 사용하여 효율적으로 연산 한다고 한다. (최근 NVIDIA 에서 발표한 pascal GPU의 경우 16bit 연산을 지원하기는 한다.)<br>
+적은 bit수로 인한 부정확성은 인공지능 분야에서는 괜찮다. 그러니 효율이 좋을 수 밖에...</p>
+<p>그리고, Norm Jouppi 가 만들었다..... ㄷㄷㄷ 공개된 블로그 글의 글쓴이인데, 필자의 연구 분야(Microarchitecture)에서 아주 유명한 사람이다... 구글이 하드웨어 설계의 대장급 인물을 데려가서 만든 것이니 진짜 좋을 수 밖에. 공개된 글에 따르면 시험적으로 칩을 찍고 22일 만에 데이터센터에서 사용되었다고 한다.</p>
+<h5 id="tpu">필자가 생각하는 TPU의 의의</h5>
+<p>맨 앞에 말했지만, 가히 충격적이다. 내가 요 근래 접한 소식 중 가장.<br>
+첫번째 이유는 <strong>인공지능을 위한 칩</strong>이 드디어(!) 나왔다는 것.<br>
+뭐 예상은 하고 있었다. NVIDIA는 GPU를 딥러닝 연산에 맞게 밀고 있었고, IBM도 만들었고, 학계에서도 많은 연구진들이 딥러닝을 위한 칩을 제작하고 있었다.<br>
+그런데, 구글이(!) 그것도 Norm Jouppi를 영입해서(!) 만들었다.<br>
+일부러 인공지능과 딥러닝이라는 용어를 구분해서 사용하고 있었는데, 게다가 TPU는 딥러닝 뿐만 아니라 다른 알고리즘도 잘 돌리는 것으로 추정된다.</p>
+<p>두번째 이유는 칩만 덩그러니 나온 것이 아니라 <strong>1년도 넘도록 실제로 사용되고 있었다</strong><br>
+이세돌이랑 붙었던 알파고에서 부터 스트리트 뷰, 음성 검색 등등이 이미 여기서 돌아가고 있었다니. 학계의 소문에 의하면 Norm Jouppi는 약 2년전부터 구글에 들어가서 이걸 만들고 이었다고 한다.</p>
+<p>아마도 앞으로 구글이 이 TPU를 클라우드로 돌려서 TensorFlow 코드들은 아무나 사용할 수 있게 되지 않을까 싶다.<br>
+대부분 GPU를 사서 딥러닝 연구들을 하고 있을 텐데, 어쩌면 GPU도 없이 쉽게 구글 클라우드 플랫폼으로 쉽게 연구를 하게 될 수 있을 날이 곧 올 것 같다.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[Deep Learning 위해서는 어떤 GPU를 사야 할까요?]]></title><description><![CDATA[<div class="kg-card-markdown"><p>많은 사람들이 deep learning에 관심을 가지고, 이를 위해 GPU를 사서 쓴다.<br>
+GPU computing 및 architecture를 전공하는 사람으로, 뿌듯(?)하기도 하다.<br>
+그래서, deep learning을 위해 GPU를 사고자 하는 사람들을 위한 글을 쓴다.<br>
+조금이라도 도움이 되시길... (<a href="http://timdettmers.com/2014/08/14/which-gpu-for-deep-learning/">Blog</a>에 있는 글과 내 개인적인 지식을 바탕으로 작성함.)</p>
+<h5 id="amdnvidia">AMD? NVIDIA?</h5>
+<p><strong>NVIDIA 것을 사라.</strong> 이견의 여지</p></div>]]></description><link>http://tmmse.xyz/2016/05/02/gpureccom/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76e6</guid><category><![CDATA[GPGPU]]></category><category><![CDATA[Deep Learning]]></category><category><![CDATA[GPU]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Mon, 02 May 2016 09:31:00 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2016/05/deep-learning-logo.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2016/05/deep-learning-logo.jpg" alt="Deep Learning 위해서는 어떤 GPU를 사야 할까요?"><p>많은 사람들이 deep learning에 관심을 가지고, 이를 위해 GPU를 사서 쓴다.<br>
+GPU computing 및 architecture를 전공하는 사람으로, 뿌듯(?)하기도 하다.<br>
+그래서, deep learning을 위해 GPU를 사고자 하는 사람들을 위한 글을 쓴다.<br>
+조금이라도 도움이 되시길... (<a href="http://timdettmers.com/2014/08/14/which-gpu-for-deep-learning/">Blog</a>에 있는 글과 내 개인적인 지식을 바탕으로 작성함.)</p>
+<h5 id="amdnvidia">AMD? NVIDIA?</h5>
+<p><strong>NVIDIA 것을 사라.</strong> 이견의 여지 조차없다. AMD에서는 OpenCL만 돌지 CUDA는 안돈다. 많은 deep learning framework가 CUDA로 되어있다. 성능이고 발열이고 다 떠나서 무조건 NVIDIA GPU를 쓰는 것이 좋다. AMD GPU를 샀다가는 나중에 누가 개쩌는 net을 공개 했는데, CUDA로 만들어져 있어서 직접 OpenCL 포팅을 해야할 수도 있다.</p>
+<p>아래 작성한 글은 NVIDIA GPU를 기준으로 작성하였다.<br>
+참고로, 나는 절대 NVIDIA를 좋아하지 않으니, 편향된 시각이라고 생각하지 말아주었으면...</p>
+<h5 id="gpu">GPU 한 개? 여러 개?</h5>
+<p>돈이 많아서 제일 좋은 GPU (예를 들면 TESLA 모델)을 사고도 더 빠르게 돌리고 싶다면 여러 개 사도 된다. 실제로 Alex net의 경우는 GPU 2개를 썼다고 한다. 하지만 그런 경우가 아니라면 그냥 1개를 좋은 것으로 사시길. GPU 여러 개 셋팅하기도 쉽지 않고, GPU 간의 메모리도 따로 박혀있어서 관리 하기 쉽지 않다. Caffe 나 TensorFlow 같은 경우 비교적 쉽게 여러 GPU를 쓸 수 있다고는 한다.</p>
+<p>성능적인 측면서에도, GPU 둘 간의 통신을 해야할 경우에 엄청 느리다. 분명히 코어수가 두배가 되어도 두배만큼 빠르지 않을테다... 정말 큰 net을 학습시켜야 하는 경우에나 유용하지, 그 외에는 별로 쓸일이 없을 것이다.</p>
+<h5 id="">학습 속도는 코어 수를 보면 되나요?</h5>
+<p>음... 아니다. 코어 수가 곧 성능이라고 오해하기 쉬워서 제목을 이렇게 달았다. 코어수가 연산자원의 수이기 때문에 대충 비례하는 것은 맞지만, deep learning 연산에서의 병목은 보통 메모리 대역폭이라고 한다. (그래서 cuDNN의 경우 연산을 추가로 더 하면서 까지 메모리 통신량을 줄이는 노력을 했다.) 그렇다면 무엇을 봐야 하느냐.</p>
+<ul>
+<li>세대 수 (무조건 새삥이 좋다.)</li>
+<li>브랜드</li>
+<li><s>코어 수, clock, 메모리 대역폭 등등의 하드웨어 스펙</s></li>
+</ul>
+<p>왜 코어수, clock, 메모리 대역폭 등의 스펙을 지웠냐 하면, 어차피 쓸데없다고 필자는 생각한다. 왜냐하면, 학습할 네트워크, 프레임워크 종류 및 버전에 따라 가장 중요한 하드웨어 스펙이 달라진다. 예를 들어, Caffe를 컴파일 할때 CUDA 버전 또는 cuDNN버전을 어떻게 설정했느냐에 따라 다를 수 있다.</p>
+<p>그래서 가장 <strong>확실하게 높으면 좋은 것은 세대이다</strong>. CUDA를 필두로 시작된 GPU computing이라는 것은 생긴지 10년도 안된 기술이다. 아직까지도 엄청난 격변이 매 세대마다 진행되고 있다. (ISA도 microarchitecture도 매번 달라진다.) 따라서, 세대가 올라가면 코어수가 같고 메모리 대역폭이 같아도 효율이 팍팍 달라지기 때문에 무조건 세대가 높은게 좋다.</p>
+<p><img src="http://tmmse.xyz/content/images/2016/05/NVIDIA-2016-Roadmap-Pascal-GPU.jpg" alt="Deep Learning 위해서는 어떤 GPU를 사야 할까요?"></p>
+<p>세대는 architecture를 기준으로 크게 바뀌니 이것을 보면 된다 (<a href="http://tmmse.xyz/pascal/">전 post 참고</a>).<br>
+같은 브랜드에서는 모델명에서 쉽게 알아 볼 수 있는 데, GeForce GTX980 에서 9가 세대 이다. 참고로 뒤의 80은 급을 나타낸다.<br>
+그래서 앞으로 나올 GPU가 GeForce GTX1080 이고, 예전 모델이 780 이었다.</p>
+<p>그리고 <strong>꼭 고려해야 할 것이 브랜드</strong>이다. 모든 제품이 그렇듯, NVIDIA GPU도 라인업이 있다. 대충 보면 GeForce GTX, Quadro, Tesla 정도가 있다.<br>
+Quadro는 전문가용 그래픽 카드로 용도가 다르니 무조건 패스. 가성비가 똥망이다. (자세한 설명은 <a href="http://tmmse.xyz/jeonmungayong-geuraepigkadeuneun-mweoga-dareungayo/">전 post 참조</a>)<br>
+Tesla 계열은 computing용이라 용도는 어울리지만 주로 슈퍼컴퓨터에 들어가는 모델로 비싸다. 정말 돈이 많은 것이 아니면 패스.<br>
+남은 건 GeForce GTX 계열인데, 여기에는 750 ti, 960, 980, Titan X등 여러가지 모델들이 있다.<br>
+사실 GeForce GTX 계열이 게임용으로 나온 모델이지만, deep learning을 하기에도 무난하다. Titan 계열이 비싸지만, 그나마 computing 을 고려하여 만든 모델들이기 때문에, 메모리 사이즈도 크고 가장 좋다. 다른 브랜드랑 다르게 deep learning을 위해서는 쓸데없이 비싼것이 아니니 돈이 있다면 고민없이 지르시길.<br>
+참고로 Titan X를 제외한 다른 Titan들은 한세대 뒤쳐지니 Titan Z보다는 980 ti를 추천한다.</p>
+<h5 id="">메모리 크기가 가끔 문제가 되는데....</h5>
+<p>Deep learning 알고리즘을 연구하는 친구의 말을 들어보니, 메모리 사이즈가 문제가 되는 경우가 꽤나 있다고 한다.<br>
+Net이 너무 커지고, batch 사이즈가 커지면 메모리가 꽉차면서 돌지 않는다고 한다.<br>
+그러니, 큰 모델을 학습하고 싶으신 분들은 메모리 사이즈를 고려하시길.<br>
+(Titan 계열이 역시 메모리가 크다.)</p>
+<p>미래에는 이런 문제를 해결한 framework 이 있을 수도 있으니, 이게 걱정이라면 한 번 찾아보길 바란다.<br>
+내 지식에 따르면 사실 메모리 크기는 이론적으로 문제가 아니다. 그냥 코딩을 잘 하면 되는데, 아직까지 이것을 해결한 framework이 없다고 한다.</p>
+<h5 id="">예외</h5>
+<p>GTX 970이 여기저기서 뻗는 문제가 있다고 하던데...<br>
+Minor 하게 돌리고 싶은 사람들은 큰 문제 없을테니 그냥 사도 되지만, 우려가 되면 970은 피하시는게 좋을 듯하다.</p>
+<h5 id="">다음 세대를 기다리는 건?</h5>
+<p>이 글이 쓰인 2016.5.2를 기준으로 보면, 다음 세대는 무조건 기다려야 한다.<br>
+다음 세대라 하면 Pascal를 말한다. (GTX 1080이 가장 대표적인 예가 될 것이다.)<br>
+Tesla계열의 GPU가 발표되었고, 소비자 제품이 몇달내로 곧 출시될 것이다.<br>
+Deep learning을 위해서 half-precision 연산이 지원될 것으로 발표가 되었고, 공정도 몇세대만에 내려갔으니, 성능 차이가 확연히 날 것으로 예상된다.<br>
+무조건 기다리는게 좋다.</p>
+<h5 id="">그래서 뭐 살지 추천 좀?!</h5>
+<ul>
+<li>나는 돈이 엄청 많다! --&gt; TESLA 최신 모델 ㄱㄱ.</li>
+<li>한 백만원 정도는 쓸 수 있지 --&gt; 몇달만 기다려서 GTX1080, 지금 당장은 Titan X</li>
+<li>엄청 큰 네트워크를 학습할래 --&gt; Titan X</li>
+<li>돈이 별로 없어... --&gt; 750 ti</li>
+<li>Deep Learning 재미로 한번 해볼까? --&gt; GTX 680 또는 GTX 980로 시작한 후 Pascal GPU가 나오면 GTX 1080으로.</li>
+</ul>
+</div>]]></content:encoded></item><item><title><![CDATA[Pascal - NVIDIA의 새로운 GPU architecture 발표]]></title><description><![CDATA[<div class="kg-card-markdown"><p>드디어 NVIDIA 에서 새로운 Pascal GPU를 발표했다.<br>
+이미 몇 달전에 일부(?) 공개가 되었고, 루머들도 많아서 관심있는 사람들은 미리 좀 알았겠지만 까보니 흥미로운 것들이 좀 있다.<br>
+개인적으로 가장 놀라운 것은 <strong>half-precision!</strong> <s>(Deep learning 시장을 어지간히도 먹고 싶긴 하나보다.)</s><br>
+자 그럼, 주목할만한 것들을 살펴보자.</p>
+<h5 id="pascal">Pascal 이 뭔가요?</h5>
+<p>NVIDIA는 2000년대 중반부터 자사의 GPU</p></div>]]></description><link>http://tmmse.xyz/2016/04/07/pascal/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76eb</guid><category><![CDATA[GPGPU]]></category><category><![CDATA[Deep Learning]]></category><category><![CDATA[GPU]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Wed, 06 Apr 2016 15:14:37 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2016/04/3.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2016/04/3.jpg" alt="Pascal - NVIDIA의 새로운 GPU architecture 발표"><p>드디어 NVIDIA 에서 새로운 Pascal GPU를 발표했다.<br>
+이미 몇 달전에 일부(?) 공개가 되었고, 루머들도 많아서 관심있는 사람들은 미리 좀 알았겠지만 까보니 흥미로운 것들이 좀 있다.<br>
+개인적으로 가장 놀라운 것은 <strong>half-precision!</strong> <s>(Deep learning 시장을 어지간히도 먹고 싶긴 하나보다.)</s><br>
+자 그럼, 주목할만한 것들을 살펴보자.</p>
+<h5 id="pascal">Pascal 이 뭔가요?</h5>
+<p>NVIDIA는 2000년대 중반부터 자사의 GPU architecture에 이름을 과학자 이름들을 붙이기 시작했다.(Tesla --&gt; Fermi --&gt; Kepler --&gt; Maxwell --&gt; Pascal)<br>
+변천사는 아래 그림과 같고 이번이 Pascal, 다음이 Volta라고 예정되어있다.<br>
+<img src="http://tmmse.xyz/content/images/2016/04/1.JPG" alt="Pascal - NVIDIA의 새로운 GPU architecture 발표"></p>
+<p>NVIDIA GPU의 브랜드인 Geforce (게임용), Quadro (전문가용), Tesla (슈퍼컴퓨팅용, 저 위에 있는 Tesla architecture 랑 이름만 같고 다른거다.)에 시간순으로 GPU architecture 가 적용되어 있다.<br>
+예를 들면, Geforce GTX 480,580은 Fermi architecture이고, GTX 680은 Kepler, GTX 980은 Maxwell 이다.<br>
+앞으로 나올 GTX 1080은 Pascal 일 것이고, 이번에 발표한 것은 Tesla p100 GPU 이다.<br>
+보면 알겠지만 당연히 시간이 갈수록 CUDA core 는 많아 지고, TFLOPS는 들어난다.</p>
+<h5 id="">그래서 달라진 점?</h5>
+<p>한 페이지에 요약이 잘 되어있는 표를 anandtech에서 퍼왔다.<br>
+<img src="http://tmmse.xyz/content/images/2016/04/2.JPG" alt="Pascal - NVIDIA의 새로운 GPU architecture 발표"></p>
+<p>자주 보던 사람들이 아니면 보기 어려우니 내가 보기에 중요한 것들을 list up 해보겠다.</p>
+<p>우선 루머 및 각종 정보들을 통해 알려진 것들 부터 보면.</p>
+<ul>
+<li>
+<p>공정이 28nm 에서 <strong>16nm FinFET</strong>으로. 이는 물리적으로 훨씬 많은 트랜지스터를 박아 넣을 수 있음을 의미하며 그래서 M40에 비해 약 2배가 늘었다. (8B --&gt; 15.3B, B는 billion 이다.)</p>
+</li>
+<li>
+<p>GDDR5 에서 <strong>HBM2</strong>으로. 잘 아는 사람 아니면 어려울 수 있는데, 대충 설명하자면 메모리의 세대(?)가 변했다. 그 결과로 Memory bandwidth가 288GB/sec 에서 720GB/sec로 늘어났다. Memory bandwidth는 GPU 에서 성능 향상의 발목을 잡는 주요 원인으로 꼽혀 있던 요인이다.</p>
+</li>
+</ul>
+<p>그리고, 다소 눈에 띄는 점을 찝어보면.</p>
+<ul>
+<li>
+<p>Stream Processors 가 <strong>고작</strong> 3072개에서 <strong>3584개</strong>로. 위에서 말했듯이 트랜지스터가 2배가 되었는데, Stream Processor (CUDA core 이자 ALU 라고 보면 된다.)가 조금밖에 안늘었다. 추가된 트랜지스터를 딴 곳에 투자했다는 이야기. 이제까지 변화했던 추세랑은 많이 다르다. 어떻게 해석해야할지 다음 섹션에서 조금 더 자세히 다루겠다.</p>
+</li>
+<li>
+<p>Clock이 948MHz에서 1328MHz로. 공정이 내려갔으니 당연히 구동 power 가 줄어들었고, 이는 클럭의 상승으로 나타났다. 하지만 TDP는 300W.... <s>불나겠다 이놈들아.</s></p>
+</li>
+<li>
+<p>Double Precision 연산이 <strong>213GFLOPS 에서 5.3TFLOPS</strong>로. 엄청 늘었다. 무려 25배?. 사실 Kepler때 double precision이 높았는데, Maxwell 에서 대폭 깎았었다. 이를 Kepler때보다도 더 올렸다. 이유가 궁금하다. 슈퍼컴퓨팅 시장에서 double precision 수요가 있다고 판단하는가 보다.</p>
+</li>
+</ul>
+<p><strong>마지막으로 가장 눈에 띄는 점!</strong></p>
+<ul>
+<li><strong>Half precision 지원!!</strong> 내생각에는 이게 가장 신박한점이다. NVIDIA 에서 주장하는 Deep learning 성능이 눈에 띄게 증가했다는 점 중 하나가 이 것이다. <s>(컴퓨팅 관점에서는 반쯤 사기라고해도 무방한 것 같은데...)</s><br>
+이것 또한 다음섹션에서 자세히 설명하겠다.</li>
+</ul>
+<h5 id="">논의 할 만한 점</h5>
+<p>위에서 설명한 점들 중 Stream Processor 갯수와 Half precision 에 대한 이야기를 좀 자세히 하고자 한다.</p>
+<p>우선 Stream Processor 가 많이 증가하지 않은 이유.에 대해서 이야기 하고자 한다. 상식적(?)으로 가장 기본적인 연산자원이 많아 지면 성능이 증가할 것이라고 생각하는 것이 일반적인데, 왜 그렇게 stream processor를 늘리지 않았을까?</p>
+<p>첫째 이유는 stream processor를 늘려봤자 성능이 다른 요소들 (대표적인 예가 memory bandwidth)에 의해 올라가지 못할 것이라는 것이다. 실제로 많은 연구들이 이런 문제를 지적했고, stream processor 가 상당시간 동안 놀고 있다는 것이 증명되었다. 특히, 슈퍼컴퓨팅 분야에서는 그런 상황이 많은 것으로 보고 되고 있다. 위에서는 언급하지는 않았지만, register file 사이즈도 더 커졌는데 (무려 14MB....) 같은 이유에서 일 것 이다.</p>
+<p>두번째 이유는 아마도 dark silicon 문제가 아닐까 싶다. dark silicon 문제는 이 쪽 분야에서 심각(?)하게 받아들이고 있는 문제인데, 대충 말하자면 stream processor가 많아봤자 발열 때문에 다 돌릴수도 없고, 돌려봤자 이득도 없다는 것이다. 그래서 남는 트랜지스터를 double precision 유닛으로 돌린 것이 아닌가 싶다. 실제로 이러한 이유로 CPU에 내장 GPU가 끼어 들어간지 5년정도 되었다.</p>
+<p>그리고, <strong>가장 중요하다고 생각되는 half precision 이야기</strong>를 하고자 한다.</p>
+<p>우선 half precision 이 무엇인지 부터 설명하자.<br>
+컴퓨터에서는 소수를 제한된 데이터로 나타내야하기 때문에 완벽히 정확할 수 없다.<br>
+그래서 32bit의 데이터로 소수를 나타낸 것이 single precision이다 (C언어에서 float). 64bit의 데이터를 써서 더 정확하게 표현하는 것이 double precision 이다 (c언어에서 double). 그렇다면 half precision은 16bit만을 이용하여 덜 정확하게 표현한 것이다.</p>
+<p>Half precision이 어디에 쓰일 수 있길래 만들었을까? 당연히 <strong>deep learning 이 타겟</strong>인 것 같다. 실제로 NVIDIA 발표자료에서도 이렇게 이야기 하고 있다. deep learning 관련해서는 이 블로그에 글도 많으니 따로 설명은 안하겠다. 중요한 것은 deep learning의 연산이 half precision으로도 충분하다는 것이다. 애초에 정확한 연산이 필요없는 것이니 말이다.</p>
+<p>하드웨어적으로 어떻게 한 것이냐? Stream processor는 기본적으로 ALU랑 비슷하다고 볼 수 있다. 따라서 각 precision 마다 연산기 회로가 필요한데, 여기에 <strong>half-precision path를 추가</strong>한 것 일테다. 이 때까지는 half precision 연산을 쓰는 일이 거의 없었기 때문에 하드웨어적인 지원이 없었고, 위의 표에서 알 수 있듯이 single precision의 성능과 같다 (이는 32bit 연산을 다하고 16bit를 버린다는 것).</p>
+<p>첨언을 좀 하자면, 연산 결과의 정확성을 조금 버리더라도 더 좋은 성능을 내는 기법 (<strong>Approximate computing</strong>, 근사 컴퓨팅)이 최근 몇년간 연구가 활발히 진행되어왔다. 그래서 기술적으로 아주 특별한 것은 아니다.</p>
+<p>추가로, NVIDIA에서 배포하는 deep learning 라이브러리인 cuDNN 도 새로 발표했다. 당연히 이 half precision을 열심히 써서 엄청 빨라졌겠지. deep learning 하시는 분들 신나겠네..</p>
+<p>Deep learning을 위해 이렇게 까지? NVIDIA 입장에서는 이제 <strong>graphics 시장외의 다른 시장을 더 찾고 있는 상황</strong>이다. 그 첫번째 노력이 GPGPU이다. CUDA를 만들고 그래픽스 이외의 컴퓨팅시장에 뛰어 든 것. 매우 성공적으로 잘 나가고 있다. 이런 상황에서 deep learning은 GPGPU에 힘입어, 아주 가파르게 분야가 발달하고 있다. 여러 정황상 VR, 자율주행자동차 등을 주요 타겟으로 하고 있는 것으로 보이는데, 앞으로 자동차에 GPU를 한대씩 팔아먹는다고 생각해보자. NVIDIA 는 더 부자가 되겠지... 실제로 몇년 전부터 NVIDIA는 deep learning 관련 연구진에 후원을 아주 적극적으로 진행해 왔다.</p>
+<h5 id="">결론 및 요약</h5>
+<p><s>어머! 이건 사야해!</s></p>
+<p>처음 발표한 것이 슈퍼컴퓨팅용 GPU이지만 Geforce 계열도 별반 차이는 없을 것이다.<br>
+예고된 대로, 이제까지의 변화들보다 훨씬 큰 변화가 많았다. 대표적인 것이 공정과 메모리. 거기에 deep learning을 위한 half precision 까지.<br>
+<s>(하.. AMD야 일 좀해라...)</s></p>
+<p>점점 더 게임보다는 컴퓨팅에 초점을 맞춰 나가는 것 같다. 앞으로도 이렇게 계속 발전 할 것으로 보인다. 조만간 컴퓨터, 핸드폰 이외의 기계 (아마도 자동차)들에 GPU가 들어갈 것으로 예상된다.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[전문가용 그래픽카드는 뭐가 다른가요?]]></title><description><![CDATA[<div class="kg-card-markdown"><p>이번 포스트는 전문가용 그래픽카드에 대한 설명을 하고자 한다.</p>
+<p>아래 그림은 다나와에서 &quot;전문가용 VGA&quot; 탭을 클릭했을 때 나오는 상품인데, 무려 790만원....<br>
+이 놈들은 뭐하는 놈들이길래 이렇게 비싼지 쉽게 설명하고자 한다.</p>
+<p><img src="http://tmmse.xyz/content/images/2016/03/quadro.JPG" alt=""></p>
+<p>우선 GPU 계의 양대 산맥 라인업에서 전문가용 그래픽카드를 칭하는 브랜드명부터 얘기하고자 한다.<br>
+NVIDIA 에서는 일반 소비자용 그래픽카드는 Geforce 시리즈(</p></div>]]></description><link>http://tmmse.xyz/2016/03/19/jeonmungayong-geuraepigkadeuneun-mweoga-dareungayo/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76e9</guid><category><![CDATA[GPU]]></category><dc:creator><![CDATA[park jong hyun]]></dc:creator><pubDate>Sat, 19 Mar 2016 08:01:06 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2016/03/5.JPG" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2016/03/5.JPG" alt="전문가용 그래픽카드는 뭐가 다른가요?"><p>이번 포스트는 전문가용 그래픽카드에 대한 설명을 하고자 한다.</p>
+<p>아래 그림은 다나와에서 &quot;전문가용 VGA&quot; 탭을 클릭했을 때 나오는 상품인데, 무려 790만원....<br>
+이 놈들은 뭐하는 놈들이길래 이렇게 비싼지 쉽게 설명하고자 한다.</p>
+<p><img src="http://tmmse.xyz/content/images/2016/03/quadro.JPG" alt="전문가용 그래픽카드는 뭐가 다른가요?"></p>
+<p>우선 GPU 계의 양대 산맥 라인업에서 전문가용 그래픽카드를 칭하는 브랜드명부터 얘기하고자 한다.<br>
+NVIDIA 에서는 일반 소비자용 그래픽카드는 Geforce 시리즈(ex. GTX980)이지만 전문가용 그래픽카드에는 Quadro 라는 이름이 붙는다.<br>
+AMD 에는 Firepro 가 전문가용 그래픽카드이다.</p>
+<p>필자는 NVIDIA 빠돌이니까 Geforce와 Quadro의 차이를 기준으로 설명하고자 한다.<br>
+AMD 계열에서의 차이도 크게 다르지는 않다.</p>
+<h5 id="">타겟 프로그램(워크로드)</h5>
+<p>그래픽카드는 당연히 그래픽 처리를 위한 놈인데 일반인이 하는 그래픽처리는 대부분 게임이라고 할 수 있겠다. (많은 사람들이 헷갈리는 것이 동영상인데 이건 그래픽을 만드는 것이 아니기 때문에 그래픽 처리를 하지 않는다.)<br>
+그렇다면 전문가용은 어디에 쓰는 놈일까?<br>
+바로 CAD랑 DCC가 주요 타겟이라 할 수 있겠다.<br>
+CAD는 computer-aided design 이고, DCC는 digital content creation이다.<br>
+이름 보면 알겠지만 뭔가를 만드는 것들 이다.<br>
+예시를 하나 들자면 아래와 같은 놈들..<br>
+<img src="http://tmmse.xyz/content/images/2016/03/2.JPG" alt="전문가용 그래픽카드는 뭐가 다른가요?"></p>
+<h5 id="">추가 기능</h5>
+<p>일반 그래픽카드랑 비교했을 때, 추가적인 기능들은 생각보다 엄청 많다.<br>
+직접 NVIDIA에서 밝힌 자료들이 많으니 &quot;Geforce vs Quadro&quot; 라고 구글에 검색하면 무수히 많은 자료들이 나온다.<br>
+Antialased Points and Lines, Logic Operations, Clip Regions, Hardware-Accelerated Clip Planes 등등.<br>
+이번 포스트의 목적은 이런 것들을 하나하나 설명하는 것이 아니고, 대충 이런 차이들이 있구나 하는 것들을 소개하는 것이기 때문에 대표적인 두가지만 소개하고자 한다.</p>
+<ul>
+<li>
+<p><strong>Line Antialiased</strong>: 가장 쉽게 이해할 수 있는 것은 안티앨리어싱.<br>
+이과 출신이라면 누구나 알고있을 것이다. 아래 그림 예제가 있는데 줄이 깨지는 것을 방지해준다.<br>
+중요한 것은 이것을 하드웨어로 해준 다는 사실.<br>
+소프트웨어로도 처리가 가능하지만 그럼 성능이 떨어지기 때문에 하드웨어로 빠르게 해준다.<br>
+<img src="http://tmmse.xyz/content/images/2016/03/3.JPG" alt="전문가용 그래픽카드는 뭐가 다른가요?"></p>
+</li>
+<li>
+<p><strong>Overlay Plane Support</strong>: 커서나 팝업 창과 같이 그래픽위에 독립적인 다른 그래픽처리가 필요한 일들을 말한다. 이거 뭐 그냥 하면 되는거 아니냐?고 할 수 있겠지만, 그래픽 연산 관점에서 보면 상당한 오버헤드가 된다고 한다. 왜냐하면 하나의 그래픽카드에서 한번에 처리해야할 화면이 두개가 되어 소프트웨어적으로 두개의 루트가 필요하기 때문. 팝업 창이 여러개가 되면, 실시간으로 화면에 업데이트가 되어야하는 그래픽처리의 질이 툭툭 떨어지게 된다. 그래서 하드웨어적으로 독립된 처리를 한방에 탁 합쳐줄수있는 OpenGL XOR 논리 연산을 지원한다!</p>
+</li>
+</ul>
+<p><img src="http://tmmse.xyz/content/images/2016/03/4.JPG" alt="전문가용 그래픽카드는 뭐가 다른가요?"></p>
+<h5 id="">그 외 장점들</h5>
+<p>위의 추가 기능들은 하드웨어적으로 성능을 올리기위해 지원하는 기능들이고, 그 외에도 잡다한 장점들이 있다.</p>
+<ul>
+<li>
+<p>~~빵빵한 ~~<strong>드라이버 지원!</strong>: 당연히 비싼 놈들이고 많이 팔리기 때문에 드라이버 지원을 잘 해준다. 최적화는 물론이고 호환성까지 잘 책임져 주는 데, 놀라운 것은 특정 어플리케이션을 위한 드라이버 플러그인 까지 있다. (POWERdraft, MAXtreme, NVIDIA Quadro View 등)</p>
+</li>
+<li>
+<p><strong>프로그램 최적화</strong>: 많이 쓰는 어플리케이션들을 위한 최적화 지원 들이 있다. 일반인이 알만한 것은 어도비 프리미어나 솔리드웤스. 그 외 CAD나 DCC 툴들은 쿼드로들을 대부분 같이 쓰기 때문에 회사단위로 직접 최적화를 많이 해준다.</p>
+</li>
+</ul>
+<h5 id="">결론</h5>
+<p>딱 보면 알 수 있는 것은 일반인이 쓸일이 없다...<br>
+게임용으로는 가성비가 월등히 안 좋다...<br>
+CAD나 DCC 등을 하는 전문가(!)라면 어차피 다 알만한 내용들이고, 전문가가 아니라면 궁금하지도 않을 테니 자세히 기능들을 설명하지는 않았다.<br>
+전문가라면 나에게 필요한 기능들을 알아서 잘 찾고 선택하면 된다.<br>
+일반인은 그냥 거들떠도 보지 말자...</p>
+</div>]]></content:encoded></item></channel></rss>

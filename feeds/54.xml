@@ -1,0 +1,1610 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="https://gwonsungjun.github.io/atom.xml" rel="self" type="application/atom+xml" /><link href="https://gwonsungjun.github.io/" rel="alternate" type="text/html" /><updated>2019-04-18T08:37:58+00:00</updated><id>https://gwonsungjun.github.io/atom.xml</id><title type="html">Sungjun .Dev</title><subtitle>Software Engineer blog</subtitle><author><name>SungjunGwon</name></author><entry><title type="html">5) Jenkins Tutorial - Registering Jenkins items using pipeline</title><link href="https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_5" rel="alternate" type="text/html" title="5) Jenkins Tutorial - Registering Jenkins items using pipeline" /><published>2019-04-18T00:00:00+00:00</published><updated>2019-04-18T00:00:00+00:00</updated><id>https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_5</id><content type="html" xml:base="https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_5">&lt;p&gt;&lt;strong&gt;Jenkins pipeline을 이용해 아이템 등록 하기.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;이번 시간에는 Jenkins Web UI가 아닌 Jenkins pipeline을 이용해서 item을 등록해보도록 하겠습니다. &lt;br /&gt;
+전체적인 흐름은 저번 시간과 같습니다. 참고해주시기 바랍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_flow.png&quot; alt=&quot;jenkins_flow&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;contents&quot;&gt;Contents&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_1&quot;&gt;Installing Jenkins and GitLab with Docker&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_2&quot;&gt;Jenkins, GitLab initial setting&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_3&quot;&gt;Create AWS EC2 Instance&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_4&quot;&gt;Registering Jenkins items using web ui&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_5&quot;&gt;Registering Jenkins items using pipeline&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;5-registering-jenkins-items-using-pipeline&quot;&gt;5. Registering Jenkins items using pipeline&lt;/h2&gt;
+
+&lt;h3 id=&quot;5-1-ssh-agent-plugin-설치&quot;&gt;5-1. SSH Agent Plugin 설치&lt;/h3&gt;
+
+&lt;p&gt;Jenkins 관리 &amp;gt; 플러그인 관리로 이동해서 아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;SSH Agent&lt;/code&gt; 플러그인을 설치합니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;‘지금 다운로드하고 재시작 후 설치하기’ &amp;gt; ‘설치가 끝나고 실행 중인 작업이 없으면 Jenkins 재시작’ 버튼 체크&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_ssh_agent.png&quot; alt=&quot;jenkins_ssh_agent&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;5-2-새로운-item-등록&quot;&gt;5-2. 새로운 Item 등록&lt;/h3&gt;
+
+&lt;p&gt;Jenkins &amp;gt; 새로운 Item을 클릭하고 아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;item 이름&lt;/code&gt; 지정, &lt;code class=&quot;highlighter-rouge&quot;&gt;Pipeline&lt;/code&gt;를 선택한 뒤 &lt;code class=&quot;highlighter-rouge&quot;&gt;OK&lt;/code&gt; 버튼을 누릅니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_new_item_pipeline.png&quot; alt=&quot;jenkins_new_item_pipeline&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;5-3-pipeline-설정&quot;&gt;5-3. Pipeline 설정&lt;/h3&gt;
+
+&lt;p&gt;item 설정 화면 맨 밑 &lt;code class=&quot;highlighter-rouge&quot;&gt;Pipeline&lt;/code&gt; 부분부터 설정해보겠습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Definition&lt;/code&gt; : Pipeline script from SCM 선택&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;SCM&lt;/code&gt; : Git 선택&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Repository URL&lt;/code&gt; : GitLab project http URL을 입력합니다.
+    &lt;ul&gt;
+      &lt;li&gt;현재는 gitlab URL을 docker private ip로 등록해야 합니다. (이전 편에서 말씀드린 것 처럼 실제 상용에서는 이렇게 사용하시면 안됩니다!)&lt;/li&gt;
+      &lt;li&gt;gitlab.example.com 부분을 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect gitlab | grep &quot;IPAddress&quot;&lt;/code&gt; 명령을 통해 나오는 IP로 바꿔줍니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Credentials&lt;/code&gt;
+    &lt;ul&gt;
+      &lt;li&gt;혹시 &lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_4&quot;&gt;4. Registering Jenkins items using web ui&lt;/a&gt;에서 등록하신분들은 이전에 등록한 Credentials를 선택해줍니다.&lt;/li&gt;
+      &lt;li&gt;등록 안하신 분들은 아래의 순서로 등록해줍니다.
+        &lt;ul&gt;
+          &lt;li&gt;(1) Add 버튼 클릭 &amp;gt; jenkins 선택&lt;/li&gt;
+          &lt;li&gt;(2) Credentials 생성
+            &lt;ul&gt;
+              &lt;li&gt;Domain : Global credentials&lt;/li&gt;
+              &lt;li&gt;Kind : Username with password&lt;/li&gt;
+              &lt;li&gt;Scope : Global&lt;/li&gt;
+              &lt;li&gt;Username : gitlab id&lt;/li&gt;
+              &lt;li&gt;password : gitlab password&lt;/li&gt;
+              &lt;li&gt;ID : 젠킨스 내 식별 ID&lt;/li&gt;
+              &lt;li&gt;Description : Credentials 부연 설명&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;(3) 생성한 Credentials 선택 &amp;gt; Error 없어지는 것을 확인합니다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Branch Specifier (blank for 'any')&lt;/code&gt; : &lt;code class=&quot;highlighter-rouge&quot;&gt;*/**&lt;/code&gt; 입력 (모든 브랜치로부터 event를 받게됩니다.)&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Repository browser&lt;/code&gt; : 자동&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Script Path&lt;/code&gt; : &lt;code class=&quot;highlighter-rouge&quot;&gt;Jenkinsfile.groovy&lt;/code&gt; 입력 &lt;code class=&quot;highlighter-rouge&quot;&gt;(.groovy를 입력해주셔야 합니다!)&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Lightweight checkout&lt;/code&gt; : 체크 해제&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_pipeline_setting.png&quot; alt=&quot;jenkins_pipeline_setting&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;5-4-general-설정&quot;&gt;5-4. General 설정&lt;/h3&gt;
+
+&lt;p&gt;General에는 해당 item을 간단하게 설명해줍니다. &lt;br /&gt;
+그리고 &lt;code class=&quot;highlighter-rouge&quot;&gt;이 빌드는 매개변수가 있습니다&lt;/code&gt;를 체크해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_pipeline_general.png&quot; alt=&quot;jenkins_pipeline_general&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;5-5-매개변수-추가&quot;&gt;5-5. 매개변수 추가&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;매개변수 추가&lt;/code&gt; 버튼을 눌러 아래와 같이 3개의 &lt;code class=&quot;highlighter-rouge&quot;&gt;String Parameter&lt;/code&gt;를 추가해줍니다. &lt;br /&gt;
+프로젝트별 상이한 정보들을 매개변수로 추출해서 등록하는 과정입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;GIT_URL&lt;/code&gt; : 깃 저장소 주소
+    &lt;ul&gt;
+      &lt;li&gt;위 5-3에서 등록했던 git 주소를 똑같이 입력합니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;CREDENTIALIS_ID&lt;/code&gt; : 바로 위 Username with password로 등록한 credentials의 &lt;code class=&quot;highlighter-rouge&quot;&gt;ID&lt;/code&gt;를 입력합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;SLACK_CHANNEL&lt;/code&gt; : 슬랙 채널명을 입력합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_pipeline_parameter.png&quot; alt=&quot;jenkins_pipeline_parameter&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;5-6-build-triggers-설정&quot;&gt;5-6. Build Triggers 설정&lt;/h3&gt;
+
+&lt;p&gt;빌드 유발은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Build when a change is pushed to GitLab&lt;/code&gt; 을 선택해줍니다.    &lt;br /&gt;
+그리고 고급 버튼을 눌러 Secret token의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Generate 버튼&lt;/code&gt;을 클릭합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_build_trigger.png&quot; alt=&quot;jenkins_build_trigger&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;잠깐 GitLab에 접속해서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Admin area &amp;gt; settings &amp;gt; network &amp;gt; Outbound requests&lt;/code&gt;로 이동하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;Allow request to the local network from hooks and services&lt;/code&gt;를 체크해준 뒤 저장합니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;이 설정을 해주지 않으면 아래 Integrations 설정 시 “Requests to the local network are not allowed” 에러가 발생합니다. (로컬 테스트 시만 체크하시고 상용환경에서는 생략하시고 넘어가면 됩니다.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/gitlab_outbound.png&quot; alt=&quot;gitlab_outbound&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;다음, Gitlab 해당 Project &amp;gt; settings &amp;gt; Integrations로 이동하겠습니다. &lt;br /&gt;
+그리고 URL은 위에서 체크했던 &lt;code class=&quot;highlighter-rouge&quot;&gt;Build when a change is pushed to GitLab. GitLab webhook URL:&lt;/code&gt; 부분의 url 부분만 복사해서 넣습니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;url에서 localhost 부분은 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect jenkins | grep &quot;IPAddress&quot;&lt;/code&gt;를 입력해서 나오는 IP로 바꿔줍니다.
+secret token 역시 젠킨스에서 생성한 token을 입력합니다.  &lt;br /&gt;
+적절한 Trigger를 선택해주면 되는데 현재는 Push events만 선택하겠습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/gitlab_integrations.png&quot; alt=&quot;gitlab_integrations&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;여기까지가 item 등록 끝이고 이대로 저장을 하시면 pipeline item 등록이 완료됩니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;5-7-jenkinsfilegroovy-파일-생성&quot;&gt;5-7. Jenkinsfile.groovy 파일 생성&lt;/h3&gt;
+
+&lt;p&gt;먼저 아래와 같이 demo 프로젝트 루트에 Jenkinsfile.groovy 파일을 생성해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/intellij_jenkinsfile.png&quot; alt=&quot;intellij_jenkinsfile&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;5-8--젠킨스-파이프라인-문법&quot;&gt;5-8. (+) 젠킨스 파이프라인 문법&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;젠킨스 파이프라인의 경우 2가지 문법을 지원합니다.
+    &lt;ul&gt;
+      &lt;li&gt;Scripted : Groovy 문법을 사용하고 Declarative 문법보다 더 유연하게 사용 가능.&lt;/li&gt;
+      &lt;li&gt;Declarative : 간단하지만 고정된 방식.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;저희는 Scripted 문법을 사용해서 Jenkinsfile을 작성할 것입니다. 따라서, Groovy SDK를 설치하고 intellij에 설정하는 것을 권합니다.&lt;/li&gt;
+  &lt;li&gt;파이프라인 문법에 대해 조금 더 상세한 내용은 &lt;a href=&quot;https://jojoldu.tistory.com/356?category=777282&quot;&gt;젠킨스 파이프라인 정리 - 2. Scripted 문법 소개&lt;/a&gt;를 참조해주시기 바랍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;MacOS 기준 groovy sdk 설치 및 intellij 설정법입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;brew install groovysdk
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;GROOVY_HOME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/local/opt/groovy/libexec
+Point IntelliJ to the installed directory, e.g.:/usr/local/Cellar/groovysdk/2.4.7/libexec
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;5-9-ssh-agent-설정&quot;&gt;5-9. SSH Agent 설정&lt;/h3&gt;
+
+&lt;p&gt;Remote Server SSH Private key를 등록합니다. &lt;br /&gt;
+먼저, 이전에 생성해둔 AWS EC2 Instance 키페어가 저장된 위치로 이동합니다.
+아래와 같이 cat 명령을 통해 pem file을 출력하고 출력된 문자열을 복사합니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;복사하실 때는 —–BEGIN RSA PRIVATE KEY—–부터 —–END RSA PRIVATE KEY—–까지 모두 복사해야 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/cat_pem.png&quot; alt=&quot;cat_pem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;왼쪽 메뉴에서 Credentials &amp;gt; System &amp;gt; Global credentials &amp;gt; Add Credentials를 클릭해서 복사한 pem file을 등록해줍니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Kind&lt;/code&gt; : SSH Username with private key&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Scope&lt;/code&gt; : Global&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ID&lt;/code&gt; : 젠킨스 내 식별 ID (잘 기억해둡니다! jenkinsfile 작성 시 사용할 것 입니다.)&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Description&lt;/code&gt; : 부연 설명&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Username&lt;/code&gt; : ssh 접속 아이디&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;private key &amp;gt; Enter directly &amp;gt; key&lt;/code&gt; : 복사한 pem file 문자열 붙여넣기&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_pipeline_credentials.png&quot; alt=&quot;jenkins_pipeline_credentials&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;5-10-jenkinsfilegroovy-작성&quot;&gt;5-10. Jenkinsfile.groovy 작성&lt;/h3&gt;
+
+&lt;p&gt;5-7에서 생성한 groovy 파일에 아래 스크립트를 작성해줍니다. &lt;br /&gt;
+각 단계별로 간단하게 설명을 써놨는데 혹시 이해안가거나 부족한 부분이 있으면 질문 부탁드립니다!&lt;/p&gt;
+
+&lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;scmVars&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;checkout&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;scm&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;values&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;scmVars&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GIT_BRANCH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;tokenize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'/'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;branchName&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;values&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Gitlab으로 Push한 branch의 이름을 얻어 올 수 있습니다.&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;gitCheckout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;branchName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;srcBuild&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;unitTest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;deploy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;notifySlack&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'SUCCESS'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;env&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;notifySlack&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'FAIL'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;env&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// gitlab으로 부터 Source를 checkout 해옵니다.&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// {CREDENTIALIS_ID}, ${GIT_URL}은 jenkins item 등록 시 추가해줬던 매개변수들이 대입됩니다.&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;gitCheckout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;branch&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Git Checkout'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'Checkout '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;branch&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;git&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;branch:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;branch&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;credentialsId:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;${CREDENTIALIS_ID}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;url:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;${GIT_URL}&quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// build를 진행합니다.&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;srcBuild&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Build'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;./gradlew clean build&quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 단위 테스트를 진행합니다.&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;unitTest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Unit tests'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;./gradlew test&quot;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;currentBuild&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;UNSTABLE&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;notifySlack&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'UNSTABLE'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;exit 1&quot;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// SSH Agent 플러그인을 통해 배포를 진행합니다.&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// credentials는 5-9에서 설정한 ID를 넣어줍니다.&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;deploy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Deploy'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;sshagent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;credentials:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'aws-ec2-key'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'ssh -o StrictHostKeyChecking=no ubuntu@15.164.104.228 uptime'&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'scp -r build/libs/*.jar ubuntu@15.164.104.228:/home/ubuntu/demo'&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'ssh ubuntu@15.164.104.228 &quot;sh /home/ubuntu/start.sh&quot;'&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 슬랙으로 노티를 보낼때 사용되는 함수입니다.&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;notifySlack&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;buildStatus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;kt&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;color&lt;/span&gt;
+
+    &lt;span class=&quot;nf&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buildStatus&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'SUCCESS'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;color&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'#1a9367'&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buildStatus&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'UNSTABLE'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;color&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'#FFFE89'&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;color&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'#ff0000'&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kt&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;${buildStatus}: `${env.JOB_NAME}` #${env.BUILD_NUMBER}:\n${env.BUILD_URL}&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;slackSend&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;channel:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;${SLACK_CHANNEL}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;color:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;message:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;5-11-deploy-serveraws-ec2-설정&quot;&gt;5-11. Deploy server(aws ec2) 설정&lt;/h3&gt;
+
+&lt;p&gt;잠깐 배포할 서버인 aws ec2로 ssh 접속해서 /home/ubuntu 밑에 &lt;code class=&quot;highlighter-rouge&quot;&gt;테스트 sh 파일&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;demo 디렉토리&lt;/code&gt;만 생성하겠습니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;sh 파일은 &lt;code class=&quot;highlighter-rouge&quot;&gt;echo &quot;test&quot;&lt;/code&gt;만 작성한 의미 없는 shell 파일입니다.&lt;/li&gt;
+  &lt;li&gt;이번 시간에는 jenkins에서 빌드 후 결과물이 배포할 서버에 제대로 delivery 되는지만 체크하기 위해 의미 없는 값을 넣었습니다.&lt;/li&gt;
+  &lt;li&gt;실제 상용에서는 실행 중인 프로세스를 멈추고 새 빌드 결과물로 기동을 하는 등의 스크립트 파일을 넣어 줄 수 있을 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/ec2_mkdir.png&quot; alt=&quot;ec2_mkdir&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;5-12-git-push&quot;&gt;5-12. Git Push&lt;/h3&gt;
+
+&lt;p&gt;Jenkinsfile.goorvy 파일이 생성 및 작성된 상태로 gitlab으로 push하면 jenkins에서 자동으로 빌드를 수행하는 것을 확인할 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;(테스트하느라 빌드 번호가 6번인데 원래는 1번일 것입니다!)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_pipeline_build_ing.png&quot; alt=&quot;jenkins_pipeline_build_ing&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;5-13-result&quot;&gt;5-13. Result&lt;/h3&gt;
+
+&lt;p&gt;빌드가 성공하고 해당 인스턴스로 ssh 접속해보면 빌드 결과물인 jar 파일이 있는 것을 확인 하실 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/build_result_file_pipeline.png&quot; alt=&quot;build_result_file_pipeline&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;또한, 슬랙으로 성공 메시지가 전송될 것 입니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;마무리&quot;&gt;마무리&lt;/h2&gt;
+
+&lt;p&gt;이번 시간에는 파이프라인 스크립트를 이용해서 젠킨스 item을 등록해보았습니다. &lt;br /&gt;
+Web UI를 통해 item을 등록하는 방식에 비해 훨씬 간단하지 않으셨나요? &lt;br /&gt;
+이렇게 공통 매개 변수를 빼고 동일한 Jenkinsfile.groovy 파일을 사용한다면 수정 및 추가 사항이 있을 때 UI를 이용해 등록하는 방식보다 훨씬 간단할 것입니다. &lt;br /&gt;
+또한, 최근에는 인프라에 관한 설정들이 소스 코드 단으로 내려오는 추세이기도 하고 젠킨스에서도 pipeline을 이용한 방식을 추천하고 있기 때문에 파이프라인 사용을 적극 추천드립니다. &lt;br /&gt;
+Jenkinsfile.groovy 파일은 각자의 요구사항에 맞게끔 수정해서 사용하면 될 것 같은데 소스에 대한 설명이 조금 빈약해서 혹시 궁금하신 점이 있으면 댓글 남겨주시기 바랍니다. &lt;br /&gt;
+지금까지 총 5편의 Jenkins tutorial을 작성해보았는데 제가 한 방식이 정답은 아니라고 생각합니다. 더 좋고 유연한 방식이 많을 것인데 그중 하나라고 봐주시면 좋을 것 같습니다. &lt;br /&gt;
+읽어주셔서 감사합니다 :)&lt;/p&gt;</content><author><name>sungjun</name></author><category term="jenkins" /><category term="jenkins" /><summary type="html">Jenkins pipeline을 이용해 아이템 등록 하기.</summary></entry><entry><title type="html">4) Jenkins Tutorial - Registering Jenkins items using web ui</title><link href="https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_4" rel="alternate" type="text/html" title="4) Jenkins Tutorial - Registering Jenkins items using web ui" /><published>2019-04-16T00:00:00+00:00</published><updated>2019-04-16T00:00:00+00:00</updated><id>https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_4</id><content type="html" xml:base="https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_4">&lt;p&gt;&lt;strong&gt;Jenkins UI를 이용해 아이템 등록 하기.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;이번 시간에는 Jenkins Web UI를 이용해서 실제 item을 등록해보도록 하겠습니다. &lt;br /&gt;
+전체적인 흐름은 다음과 같습니다. 참고해주시기 바랍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_flow.png&quot; alt=&quot;jenkins_flow&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;contents&quot;&gt;Contents&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_1&quot;&gt;Installing Jenkins and GitLab with Docker&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_2&quot;&gt;Jenkins, GitLab initial setting&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_3&quot;&gt;Create AWS EC2 Instance&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_4&quot;&gt;Registering Jenkins items using web ui&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_5&quot;&gt;Registering Jenkins items using pipeline&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;4-registering-jenkins-items-using-web-ui&quot;&gt;4. Registering Jenkins items using web ui&lt;/h2&gt;
+
+&lt;h3 id=&quot;4-1-publish-over-ssh-plugin-설치&quot;&gt;4-1. Publish Over SSH Plugin 설치&lt;/h3&gt;
+
+&lt;p&gt;Jenkins 관리 &amp;gt; 플러그인 관리로 이동해서 아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;Publish Over SSH&lt;/code&gt; 플러그인을 설치합니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;‘지금 다운로드하고 재시작 후 설치하기’ &amp;gt; ‘설치가 끝나고 실행중인 작업이 없으면 Jenkins 재시작’ 버튼 체크&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_publish-over-ssh.png&quot; alt=&quot;jenkins_publish-over-ssh&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;4-2-jenkins-publish-over-ssh-설정&quot;&gt;4-2. Jenkins Publish Over SSH 설정&lt;/h3&gt;
+
+&lt;p&gt;먼저, 이전에 생성해둔 AWS EC2 Instance 키페어가 저장된 위치로 이동합니다.     &lt;br /&gt;
+아래와 같이 cat 명령을 통해 pem file을 출력하고 출력된 문자열을 복사합니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;복사하실 때는 —–BEGIN RSA PRIVATE KEY—–부터 —–END RSA PRIVATE KEY—–까지 모두 복사해야 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/cat_pem.png&quot; alt=&quot;cat_pem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;다음, Jenkins 관리 &amp;gt; 시스템 설정 &amp;gt; Publish Over SSH 항목으로 이동합니다.   &lt;br /&gt;
+Key에는 방금 복사한 문자열(pem file)을 붙여넣고 &lt;code class=&quot;highlighter-rouge&quot;&gt;추가&lt;/code&gt; 버튼을 눌러 아래와 같이 자신에게 맞는 정보를 입력합니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;실제 상용에서는 지금처럼 사용하면 키값을 그대로 노출할 수 있어 많이 취약한 방법입니다.&lt;/li&gt;
+  &lt;li&gt;해당 키를 적절한 디렉토리(/var/lib/jenkins/.ssh/)에 이동시키고 path 설정을 통해 키를 읽도록 하는 것이 가장 안전합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins-over-ssh-setting.png&quot; alt=&quot;jenkins-over-ssh-setting&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Name: Job에서 표시될 이름 지정&lt;/li&gt;
+  &lt;li&gt;Hostname: IP Address&lt;/li&gt;
+  &lt;li&gt;Username: SSH 접근 계정&lt;/li&gt;
+  &lt;li&gt;Remote Directory: 업로드될 디렉토리 (여러개가 있다면 상위만 지정)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Test Configuration을 눌러 &lt;code class=&quot;highlighter-rouge&quot;&gt;Success&lt;/code&gt;가 떨어지면 저장버튼을 눌러 적용시킵니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;4-3-새로운-item-등록&quot;&gt;4-3. 새로운 Item 등록&lt;/h3&gt;
+
+&lt;p&gt;Jenkins &amp;gt; 새로운 Item을 클릭하고 아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;item 이름&lt;/code&gt; 지정, &lt;code class=&quot;highlighter-rouge&quot;&gt;Freestyle project&lt;/code&gt;를 선택한 뒤 &lt;code class=&quot;highlighter-rouge&quot;&gt;OK&lt;/code&gt; 버튼을 누릅니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_new_item.png&quot; alt=&quot;jenkins_new_item&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;4-4-general-설정&quot;&gt;4-4. General 설정&lt;/h3&gt;
+
+&lt;p&gt;General에는 해당 item을 간단하게 설명해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_general.png&quot; alt=&quot;jenkins_general&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;4-5-소스-코드-관리-설정&quot;&gt;4-5. 소스 코드 관리 설정&lt;/h3&gt;
+
+&lt;p&gt;소스 코드 관리는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Git&lt;/code&gt;을 선택해줍니다.    &lt;br /&gt;
+그리고 Credentials 셀렉트박스 옆에 &lt;code class=&quot;highlighter-rouge&quot;&gt;Add&lt;/code&gt; 버튼을 클릭하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;jenkins&lt;/code&gt;를 선택합니다.    &lt;br /&gt;
+아래와 같이 Kind는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Username with password&lt;/code&gt;를 선택하고 Username과 Password에 gitlab 아이디 패스워드를 입력합니다.    &lt;br /&gt;
+ID는 Jenkins 내에서 식별할 아이디, Description은 해당 ID에 대한 설명을 입력해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_add_credential.png&quot; alt=&quot;jenkins_add_credential&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Credentials를 추가하였다면 해당 Credentials를 선택해주고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Reposiroty URL&lt;/code&gt;에는 gitlab 프로젝트 주소를 입력합니다. &lt;br /&gt;
+현재는 gitlab URL을 docker private ip로 등록해야 합니다. (실제 상용에서는 이렇게 사용하시면 안됩니다!)&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;2편에서 보셨던것 처럼 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect gitlab | grep &quot;IPAddress&quot;&lt;/code&gt; 명령을 통해 나오는 IP를 입력합니다.&lt;/li&gt;
+  &lt;li&gt;프로젝트 URL의 gitlab.example.com 부분을 172.18.0.2와 같은 Docker private IP로 변경해줍니다.
+또한, 현재 브랜치는 master 브랜치 밖에 없기 때문에 기본 설정(*/master) 그대로 유지합니다. (여러 브랜치에서의 설정은 나중에 설명드리도록 하겠습니다.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_source_code.png&quot; alt=&quot;jenkins_source_code&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;4-6-빌드-유발-설정&quot;&gt;4-6. 빌드 유발 설정&lt;/h3&gt;
+
+&lt;p&gt;빌드 유발은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Build when a change is pushed to GitLab&lt;/code&gt; 을 선택해줍니다.    &lt;br /&gt;
+그리고 고급 버튼을 눌러 Secret token의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Generate 버튼&lt;/code&gt;을 클릭합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_build_trigger.png&quot; alt=&quot;jenkins_build_trigger&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;잠깐 GitLab에 접속해서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Admin area &amp;gt; settings &amp;gt; network &amp;gt; Outbound requests&lt;/code&gt;로 이동하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;Allow request to the local network from hooks and services&lt;/code&gt;를 체크해준 뒤 저장합니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;이 설정을 해주지 않으면 아래 Integrations 설정 시 “Requests to the local network are not allowed” 에러가 발생합니다. (로컬 테스트 시만 체크하시고 상용환경에서는 생략하시고 넘어가면 됩니다.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/gitlab_outbound.png&quot; alt=&quot;gitlab_outbound&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;다음, Gitlab 해당 Project &amp;gt; settings &amp;gt; Integrations로 이동하겠습니다. &lt;br /&gt;
+그리고 URL은 위에서 체크했던 &lt;code class=&quot;highlighter-rouge&quot;&gt;Build when a change is pushed to GitLab. GitLab webhook URL:&lt;/code&gt; 부분의 url 부분만 복사해서 넣습니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;url에서 localhost 부분은 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect jenkins | grep &quot;IPAddress&quot;&lt;/code&gt;를 입력해서 나오는 IP로 바꿔줍니다. (매번 수정해 넣기 불편하긴 하네요. 테스트하기 쉽게 젠킨스와 깃랩을 로컬에서 도커로 띄워서 어쩔 수 없을 것 같습니다. 😥)
+secret token 역시 젠킨스에서 생성한 token을 입력합니다.  &lt;br /&gt;
+적절한 Trigger를 선택해주면 되는데 현재는 Push events만 선택하겠습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/gitlab_integrations.png&quot; alt=&quot;gitlab_integrations&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;4-7-빌드-환경-설정&quot;&gt;4-7. 빌드 환경 설정&lt;/h3&gt;
+
+&lt;p&gt;다시 젠킨스로 돌아와 빌드 환경의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Send files or execute commands over SSH after the build runs&lt;/code&gt;를 선택합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Name: Jenkins 시스템 설정에서 등록한 SSH 서버 중 배포할 서버를 선택합니다.&lt;/li&gt;
+  &lt;li&gt;Sources files	: jar 혹은 war가 빌드된 위치를 적습니다. ex) build/libs/*.jar&lt;/li&gt;
+  &lt;li&gt;Remove prefix	: 파일 앞부분에 경로부분을 적습니다. ex) build/libs&lt;/li&gt;
+  &lt;li&gt;Remote directory : 업로드될 경로입니다.
+    &lt;ul&gt;
+      &lt;li&gt;주의할 것은 위의 4-2 Publish Over SSH 설정에서 Remote Directory 내의 디렉토리를 적어야 합니다.&lt;/li&gt;
+      &lt;li&gt;예를들어, 최종 경로가 /hom/ubuntu/demo 라면 =&amp;gt; 이미 위에서 /home/ubuntu를 적었기에 여기에는 demo 만 적어야 합니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Exec command : 실행할 명령어를 적으면 됩니다. ex) sh start.sh&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_build_env.png&quot; alt=&quot;jenkins_build_env&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;4-8-빌드-설정&quot;&gt;4-8. 빌드 설정&lt;/h3&gt;
+
+&lt;p&gt;빌드는 Add build step &amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;Execute shell&lt;/code&gt;을 선택하고 command에 &lt;code class=&quot;highlighter-rouge&quot;&gt;./gradlew build&lt;/code&gt;를 넣어줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_build.png&quot; alt=&quot;jenkins_build&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;4-9-빌드-후-조치-설정&quot;&gt;4-9. 빌드 후 조치 설정&lt;/h3&gt;
+
+&lt;p&gt;빌드 결과를 슬랙으로 전송받기 위해 마지막으로 빌드 후 조치 추가 &amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;Slack notifications&lt;/code&gt;를 선택해 설정을 해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/slack_notify.png&quot; alt=&quot;slack_notify&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;슬랙 Noti 설정까지 끝내고 저장을 하시면 드디어 하나의 item 등록이 완료 되었습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;4-10-deploy-serveraws-ec2-설정&quot;&gt;4-10. Deploy server(aws ec2) 설정&lt;/h3&gt;
+
+&lt;p&gt;잠깐 배포할 서버인 aws ec2로 ssh 접속해서 /home/ubuntu 밑에 &lt;code class=&quot;highlighter-rouge&quot;&gt;테스트 sh 파일&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;demo 디렉토리&lt;/code&gt;만 생성하겠습니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;sh 파일은 &lt;code class=&quot;highlighter-rouge&quot;&gt;echo &quot;test&quot;&lt;/code&gt;만 작성한 의미 없는 shell 파일입니다.&lt;/li&gt;
+  &lt;li&gt;이번 시간에는 jenkins에서 빌드 후 결과물이 배포할 서버에 제대로 delivery 되는지만 체크하기 위해 의미 없는 값을 넣었습니다.&lt;/li&gt;
+  &lt;li&gt;실제 상용에서는 실행 중인 프로세스를 멈추고 새 빌드 결과물로 기동을 하는 등의 스크립트 파일을 넣어 줄 수 있을 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/ec2_mkdir.png&quot; alt=&quot;ec2_mkdir&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;4-11-git-push&quot;&gt;4-11. Git Push&lt;/h3&gt;
+
+&lt;p&gt;소스를 조금 수정하고 push하면 jenkins에서 자동으로 빌드를 수행하는 것을 확인할 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;(여러 번 테스트하느라 빌드 번호가 12번인데 원래는 1번일 것입니다!)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_build_ing.png&quot; alt=&quot;jenkins_build_ing&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;4-12-result&quot;&gt;4-12. Result&lt;/h3&gt;
+
+&lt;p&gt;빌드가 성공하고 해당 인스턴스로 ssh 접속해보면 빌드 결과물인 jar 파일이 있는 것을 확인 하실 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/build_result_file.png&quot; alt=&quot;build_result_file&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;또한, 슬랙으로 아래와 같이 성공 메시지가 전송될 것 입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/success_slack_message.png&quot; alt=&quot;success_slack_message&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;마무리&quot;&gt;마무리&lt;/h2&gt;
+
+&lt;p&gt;이번 시간에는 실제 젠킨스 item을 등록해보았습니다. &lt;br /&gt;
+실제 item을 등록해보니 어떤 신가요? 사용하는데 번거롭거나 불편하진 않으셨나요?             &lt;br /&gt;
+Web UI를 통해 item을 등록하는 방식은 사용자가 배포할 서버를 추가하거나 빌드 스크립트에 수정 사항이 있는 등 변경 사항이 있을 때 마다 웹에 접속하여 일일이 바꿔줘야 합니다. 여러 item이 공통적인 내용을 담고 있다면 더 곤란해질 것입니다. &lt;br /&gt;
+이를 해결하고자 jenkins pipeline을 사용해볼 것 인데요. 자세한 것은 다음 시간에 소개하도록 하겠습니다. &lt;br /&gt;
+감사합니다. 궁금한 점이 있으시거나 잘못된 점이 있다면 댓글 남겨 주시기 바랍니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;links&quot;&gt;Links&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://hreeman.tistory.com/m/136&quot;&gt;https://hreeman.tistory.com/m/136&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://yookeun.github.io/tools/2018/04/14/jenkins-remote/&quot;&gt;https://yookeun.github.io/tools/2018/04/14/jenkins-remote/&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>sungjun</name></author><category term="jenkins" /><category term="jenkins" /><summary type="html">Jenkins UI를 이용해 아이템 등록 하기.</summary></entry><entry><title type="html">2) Jenkins Tutorial - Jenkins, GitLab initial setting</title><link href="https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_2" rel="alternate" type="text/html" title="2) Jenkins Tutorial - Jenkins, GitLab initial setting" /><published>2019-04-12T00:00:00+00:00</published><updated>2019-04-12T00:00:00+00:00</updated><id>https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_2</id><content type="html" xml:base="https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_2">&lt;p&gt;&lt;strong&gt;젠킨스, 깃랩 초기 설정.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;지난 &lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_1&quot;&gt;1편&lt;/a&gt;에서 젠킨스와 깃랩을 설치해보았습니다.    &lt;br /&gt;
+이번 시간에는 젠킨스와 깃랩의 기본 설정 작업을 진행해보도록 하겠습니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;contents&quot;&gt;Contents&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_1&quot;&gt;Installing Jenkins and GitLab with Docker&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_2&quot;&gt;Jenkins, GitLab initial setting&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_3&quot;&gt;Create AWS EC2 Instance&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_4&quot;&gt;Registering Jenkins items using web ui&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_5&quot;&gt;Registering Jenkins items using pipeline&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;2-jenkins-gitlab-initial-setting&quot;&gt;2. Jenkins, GitLab initial setting&lt;/h2&gt;
+
+&lt;h3 id=&quot;2-1-jenkins-로그인&quot;&gt;2-1. Jenkins 로그인&lt;/h3&gt;
+
+&lt;p&gt;젠킨스를 설치 후 처음 접속하게 되면 지난 1편 마지막에 보인 이미지처럼 Unlock Jnekins 화면이 보입니다. &lt;br /&gt;
+따라서, lock 해제를 위해 젠킨스 컨테이너 안의 bash 셸로 연결하고 아래 cat 명령을 통해 Administrator password를 확인합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker &lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; jenkins /bin/bash
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /var/jenkins_home/secrets/initialAdminPassword
+6a85c6fa37644529a7426863a701784d
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;출력되는 password를 jnekins password 입력창에 copy &amp;amp; paste 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이다음 절차는 이전에 제가 작성한 &lt;a href=&quot;https://gwonsungjun.github.io/articles/2018-04/jenkinsInstall&quot;&gt;Ubuntu 16.04 Jenkins 설치&lt;/a&gt; 글을 참조하여 플러그인 설치 및 계정 생성을 통해 로그인하도록 합니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;2-2-jenkins-플러그인-설치&quot;&gt;2-2. Jenkins 플러그인 설치&lt;/h3&gt;
+
+&lt;p&gt;Jenkins 첫 메인 화면에서 Jenkin 관리 &amp;gt; 플러그인 관리로 이동합니다. &lt;br /&gt;
+설치 가능 탭을 선택하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;gitlab&lt;/code&gt;을 검색한 뒤 아래 그림과 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;GitLab&lt;/code&gt;을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_plugin_gitlab.png&quot; alt=&quot;jenkins_plugin_gitlab&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;다음 &lt;code class=&quot;highlighter-rouge&quot;&gt;slack&lt;/code&gt;을 검색해서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Slack Notification&lt;/code&gt;을 선택한 뒤 “지금 다운로드하고 재시작 후 설치하기”를 클릭합니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Slack Notification은 차후에 젠킨스 빌드 결과를 slack으로 전송할 것이기 때문에 미리 설치합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_plugin_slack.png&quot; alt=&quot;jenkins_plugin_slack&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;마지막으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;설치가 끝나고 실행 중인 작업이 없으면 Jenkins 재시작&lt;/code&gt;을 체크한 뒤 설치가 완료되면 jenkins가 재시작되도록 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_plugin_installing.png&quot; alt=&quot;jenkins_plugin_installing&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;젠킨스에 재접속한 뒤 플러그인 관리의 설치된 플러그인 목록을 보면 GitLab와 Slack Notification 플러그인이 설치되어 있을 것입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;2-3-jenkins-jenkins-ci-apps-설치&quot;&gt;2-3. Jenkins Jenkins CI Apps 설치&lt;/h3&gt;
+
+&lt;p&gt;slack worksapce는 테스트로 생성해준 뒤 채널 목록부분 아래 Apps 옆에 +를 클릭합니다. &lt;br /&gt;
+jenkins를 검색하고 Install를 눌려주면 Jenkins CI 설치를 위한 브라우저 창이 열립니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/slack_jenkins_install_1.png&quot; alt=&quot;slack_jenkins_install_1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/slack_jenkins_install_2.png&quot; alt=&quot;slack_jenkins_install_2&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Jenkins 빌드 결과 받을 채널을 생성해준 뒤 선택하고 “Add Jenkins CI integration” 버튼을 클릭합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/slack_jenkins_install_3.png&quot; alt=&quot;slack_jenkins_install_3&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;마지막으로 “Setup Instr/uctions” 페이지를 확인할 수 있는데 잠시 켜둔 채 다시 젠킨스로 이동합니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;2-4-jenkins-slack-연동&quot;&gt;2-4. Jenkins Slack 연동&lt;/h3&gt;
+
+&lt;p&gt;Jenkins 관리 &amp;gt; 시스템 설정 &amp;gt; 맨 아래 &lt;code class=&quot;highlighter-rouge&quot;&gt;Global Slack Notifier Settings&lt;/code&gt;으로 이동합니다. &lt;br /&gt;
+Integration Token Credential ID 옆에 &lt;code class=&quot;highlighter-rouge&quot;&gt;Add&lt;/code&gt; 버튼을 클릭해서 2-3 마지막에 켜둔 Setup Instr/uctions 페이지의 Step 3 Integration Token을 아래와 같이 secret 부분에 입력합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_slack_integration_1.png&quot; alt=&quot;jenkins_slack_integration_1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Step 3 Base URL을 Slack compatible app URL에 입력하고 Channel or Slack ID는 젠킨스 빌드 결과를 받기 위해 생선한 slack 채널명을 입력합니다. &lt;br /&gt;
+Test Connection 버튼을 클릭했을 때 success가 떨어지면 저장하도록 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_slack_integration_2.png&quot; alt=&quot;jenkins_slack_integration_2&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;(+) 여러개의 슬랙 채널을 사용하는 방법 : comma separated(,)를 이용해서 등록 가능합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;2-5-gitlab-로그인-및-프로젝트-생성&quot;&gt;2-5. GitLab 로그인 및 프로젝트 생성&lt;/h3&gt;
+
+&lt;p&gt;GitLab으로 접속하여 패스워드를 설정해주고 로그인합니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;default ID는 root입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/gitlab_login.png&quot; alt=&quot;gitlab_login&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;“Create a project”를 클릭하여 프로젝트를 새롭게 생성합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/gitlab_create_project.png&quot; alt=&quot;gitlab_create_project&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;프로젝트 이름 등 정보를 입력하고 “Create project”를 클릭합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/gitlab_new_project.png&quot; alt=&quot;gitlab_new_project&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;데모 프로젝트는 &lt;a href=&quot;https://github.com/gwonsungjun/demo-springboot&quot;&gt;GitHub Sample project&lt;/a&gt;를 내려받아서 사용하시면 됩니다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;간단하게 hello world를 출력하는 spring boot로 작성된 프로젝트입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;데모 프로젝트를 내려받고 아래 명령을 통하여 GitLab에 Push를 합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;existing_folder
+git init
+git remote add origin http://localhost/root/test.git
+git add &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+git commit &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Initial commit&quot;&lt;/span&gt;
+git push &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt; origin master
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;아래와 같이 프로젝트 소스가 정상적으로 올라오면 성공입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/gitlab_project.png&quot; alt=&quot;gitlab_project&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;2-6-gitlab-access-token-생성&quot;&gt;2-6. GitLab Access Token 생성&lt;/h3&gt;
+
+&lt;p&gt;Gitlab &amp;gt; User settings &amp;gt; Access Tokens로 이동합니다. &lt;br /&gt;
+Name, Expires at, Scopes를 선택 및 입력하고 Create personal access token 클릭하여 상단에 생성된 토큰을 복사합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/gitlab_accesstoken.png&quot; alt=&quot;gitlab_accesstoken&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;2-7-jenkins-credentials-등록&quot;&gt;2-7. Jenkins Credentials 등록&lt;/h3&gt;
+
+&lt;p&gt;왼쪽 메뉴에서 Credentials &amp;gt; System &amp;gt; Global credentials &amp;gt; Add Credentials를 클릭해서 2-6에서 복사한 GitLab API token을 등록해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_credential.png&quot; alt=&quot;jenkins_credential&quot; /&gt;
+&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_credential_gitlab.png&quot; alt=&quot;jenkins_credential_gitlab&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Kind : GitLab API token&lt;/li&gt;
+  &lt;li&gt;Scope : Global&lt;/li&gt;
+  &lt;li&gt;방금 위에서 GitLab에서 복사한 Access Token, API token에 붙여넣기&lt;/li&gt;
+  &lt;li&gt;ID, Description 입력 후 OK&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;2-8-jenkins-gitlab-connection&quot;&gt;2-8. Jenkins GitLab Connection&lt;/h3&gt;
+
+&lt;p&gt;왼쪽 메뉴 Jenkins 관리 &amp;gt; 시스템 설정 &amp;gt; GitLab에서 GitLab connections를 설정합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins_gitlab_connect.png&quot; alt=&quot;jenkins_gitlab_connect&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Connection name : 식별할 수 있는 값 입력&lt;/li&gt;
+  &lt;li&gt;GitLab Host URL
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect gitlab | grep &quot;IPAddress&quot;&lt;/code&gt; 명령을 입력해서 나오는 IP를 입력한다.&lt;/li&gt;
+      &lt;li&gt;도커 컨테이너의 private IP는 유동적으로 바뀌기 때문에 매번 바꿔줘야 하는 불편함이 있다. 따라서 로컬 테스트일 경우만 사용하고 실제 상용 서비스일 경우 gitlab의 도메인 주소를 입력해주면 된다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Credentials : 위 2-7에서 생성한 Credentials를 등록&lt;/li&gt;
+  &lt;li&gt;Test Connection &amp;gt; Success 확인되면 SAVE&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;마무리&quot;&gt;마무리&lt;/h2&gt;
+
+&lt;p&gt;이번 시간에는 젠킨스와 깃랩의 기본 설정을 해보았습니다. &lt;br /&gt;
+젠킨스와 깃랩을 처음 접하시는 분들은 조금 복잡해 보일 수도 있다고 생각합니다. 궁금한 점이 있으면 언제나 댓글에 질문을 남겨주세요. &lt;br /&gt;
+다음 시간에는 배포할 서버(AWS EC2)를 생성해보도록 하겠습니다.
+감사합니다.&lt;/p&gt;</content><author><name>sungjun</name></author><category term="jenkins" /><category term="jenkins," /><category term="docker," /><category term="gitlab" /><summary type="html">젠킨스, 깃랩 초기 설정.</summary></entry><entry><title type="html">3) Jenkins Tutorial - Create AWS EC2 Instance</title><link href="https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_3" rel="alternate" type="text/html" title="3) Jenkins Tutorial - Create AWS EC2 Instance" /><published>2019-04-12T00:00:00+00:00</published><updated>2019-04-12T00:00:00+00:00</updated><id>https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_3</id><content type="html" xml:base="https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_3">&lt;p&gt;&lt;strong&gt;AWS EC2 Instance 생성.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;이번 시간에는 배포할 서버를 AWS EC2로 생성해보겠습니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;contents&quot;&gt;Contents&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_1&quot;&gt;Installing Jenkins and GitLab with Docker&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_2&quot;&gt;Jenkins, GitLab initial setting&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_3&quot;&gt;Create AWS EC2 Instance&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_4&quot;&gt;Registering Jenkins items using web ui&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_5&quot;&gt;Registering Jenkins items using pipeline&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;3-create-aws-ec2-instance&quot;&gt;3. Create AWS EC2 Instance&lt;/h2&gt;
+
+&lt;h3 id=&quot;3-1-리전-변경&quot;&gt;3-1. 리전 변경&lt;/h3&gt;
+
+&lt;p&gt;먼저, AWS Console에 로그인해서 리전을 아시아 태평양(서울)로 변경해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/aws_1.png&quot; alt=&quot;aws_1&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;3-2-ec2-인스턴스-생성&quot;&gt;3-2. EC2 인스턴스 생성&lt;/h3&gt;
+
+&lt;p&gt;서비스 &amp;gt; EC2를 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/aws_2.png&quot; alt=&quot;aws_2&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;인스턴스 시작 버튼을 눌러줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/aws_3.png&quot; alt=&quot;aws_3&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;3-3-amiamazon-machine-image-선택&quot;&gt;3-3. AMI(Amazon Machine Image) 선택&lt;/h3&gt;
+
+&lt;p&gt;저는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Ubuntu Server 18.04 LTS&lt;/code&gt;를 선택하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/aws_4.png&quot; alt=&quot;aws_4&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;3-4-인스턴스-유형-선택&quot;&gt;3-4. 인스턴스 유형 선택&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;프리티어 사용 가능 표시&lt;/code&gt;가 있는 t2.micro를 선택하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;다음:인스턴스 세부 정보 구성&lt;/code&gt; 버튼을 클릭합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/aws_5.png&quot; alt=&quot;aws_5&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;3-5-보안-그룹-구성-및-검토&quot;&gt;3-5. 보안 그룹 구성 및 검토&lt;/h3&gt;
+
+&lt;p&gt;인스턴스 구성, 스토리지 추가, 태그 추가, 보안 그룹 구성은 다음 버튼을 눌러 SKIP 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/aws_6.png&quot; alt=&quot;aws_6&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;3-5-새-키-페어-생성&quot;&gt;3-5. 새 키 페어 생성&lt;/h3&gt;
+
+&lt;p&gt;인스턴스 시작을 위해 키 페어를 생성해야합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/aws_7.png&quot; alt=&quot;aws_7&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;3-6-인스턴스-생성-완료&quot;&gt;3-6. 인스턴스 생성 완료&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/aws_8.png&quot; alt=&quot;aws_8&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;3-7-인스턴스-원격-접속&quot;&gt;3-7. 인스턴스 원격 접속&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;다운로드한 키 파일(.pem)을 적당한 디렉토리로 이동시킨 후 권한 변경을 해줍니다.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$ chmod 400 jenkins-demo.pem&lt;/code&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;$ ssh -i pem경로 user-name@public-dns-name 명령을 통해 원격 접속을 합니다.
+    &lt;ul&gt;
+      &lt;li&gt;Ubuntu AMI의 경우, user-name은 ubuntu 입니다.&lt;/li&gt;
+      &lt;li&gt;public-dns-name은 aws ec2 퍼블릭 DNS(IPv4) 값을 가져옵니다.&lt;/li&gt;
+    &lt;/ul&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/aws_9.png&quot; alt=&quot;aws_9&quot; /&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ssh -i jenkins-demo.pem ubuntu@ec2-13-125-216-1.ap-northeast-2.compute.amazonaws.com&lt;/code&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/aws_welcome.png&quot; alt=&quot;aws_welcome&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;windows 운영체제의 경우 putty를 이용하여 접속 할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;마무리&quot;&gt;마무리&lt;/h2&gt;
+&lt;p&gt;이번 시간에는 간단하게 AWS EC2 인스턴스를 생성해보았습니다.   &lt;br /&gt;
+다음 시간에는 실제 Jenkins item을 등록해보도록 하겠습니다. &lt;br /&gt;
+감사합니다.&lt;/p&gt;</content><author><name>sungjun</name></author><category term="jenkins" /><category term="aws," /><category term="ec2" /><summary type="html">AWS EC2 Instance 생성.</summary></entry><entry><title type="html">1) Jenkins Tutorial - Installing Jenkins and GitLab with Docker</title><link href="https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_1" rel="alternate" type="text/html" title="1) Jenkins Tutorial - Installing Jenkins and GitLab with Docker" /><published>2019-04-09T00:00:00+00:00</published><updated>2019-04-09T00:00:00+00:00</updated><id>https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_1</id><content type="html" xml:base="https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_1">&lt;p&gt;&lt;strong&gt;도커 컴포즈를 이용해 젠킨스, 깃랩 설치하기.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;이번 시리즈 글은 수많은 삽질을 통해 젠킨스를 사내에 구축하며 얻은 유용한 팁을 젠킨스를 처음 접하는 분들께 도움이 되고자 작성하게 되었습니다. &lt;br /&gt;
+Tutorial은 블로그에 단계별로 나눠 포스팅할 예정이고 pipeline script 외 기타 필요한 코드들을 &lt;a href=&quot;https://github.com/gwonsungjun/jenkins_tutorial&quot;&gt;GitHub Repo&lt;/a&gt;에 커밋할 것입니다. &lt;br /&gt;
+Git Hosting service는 깃헙이 아닌 깃랩을 직접 설치해서 사용할 것입니다. (깃헙과 깃랩은 거의 유사하기 때문에 필요한 호스팅 서비스를 사용하면 될 것 같습니다.)&lt;/p&gt;
+
+&lt;h2 id=&quot;개발환경&quot;&gt;개발환경&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;IDE : Intellij IDEA Ultimate&lt;/li&gt;
+  &lt;li&gt;OS : Mac OS X&lt;/li&gt;
+  &lt;li&gt;Spring boot 2.1.3.RELEASE&lt;/li&gt;
+  &lt;li&gt;Java8&lt;/li&gt;
+  &lt;li&gt;Gradle&lt;/li&gt;
+  &lt;li&gt;docker 18.09.2&lt;/li&gt;
+  &lt;li&gt;docker-compose 1.23.2&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;contents&quot;&gt;Contents&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_1&quot;&gt;Installing Jenkins and GitLab with Docker&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_2&quot;&gt;Jenkins initial setting&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_3&quot;&gt;Create AWS EC2 Instance&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_4&quot;&gt;Registering Jenkins items using web ui&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gwonsungjun.github.io/articles/2019-04/jenkins_tutorial_5&quot;&gt;Registering Jenkins items using pipeline&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;1-installing-jenkins-and-gitlab-with-docker&quot;&gt;1. Installing Jenkins and GitLab with Docker&lt;/h2&gt;
+
+&lt;h3 id=&quot;1-1-docker-설치&quot;&gt;1-1. Docker 설치&lt;/h3&gt;
+
+&lt;p&gt;운영체제별로 설치 방법이 다르므로 자신의 환경에 맞게 설치합니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;windows&quot;&gt;Windows&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.docker.com/docker-for-mac/install/&quot;&gt;Windows 10 : Pro, Enterprise or Education&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Windows 10 : Home
+    &lt;ul&gt;
+      &lt;li&gt;이전에 작성한 &lt;a href=&quot;https://gwonsungjun.github.io/articles/2018-01/DockerInstall&quot;&gt;Windows 10 Home에서 Docker 설치 하기&lt;/a&gt; 글을 참조&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;macos&quot;&gt;MacOS&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.docker.com/docker-for-mac/install/&quot;&gt;https://docs.docker.com/docker-for-mac/install/&lt;/a&gt; 참고&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;linux&quot;&gt;Linux&lt;/h4&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;-fsSL&lt;/span&gt; https://get.docker.com/ | &lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;sh
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;usermod &lt;span class=&quot;nt&quot;&gt;-aG&lt;/span&gt; docker &lt;span class=&quot;nv&quot;&gt;$USER&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# sudo 없이 사용, 현재 접속중인 사용자에게 권한주기&lt;/span&gt;
+    
+&lt;span class=&quot;c&quot;&gt;# 재로그인 시 적용됨&lt;/span&gt;
+docker &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;1-2-docker-compose-설치&quot;&gt;1-2. Docker compose 설치&lt;/h3&gt;
+&lt;p&gt;Windows와 Mac의 경우는 docker 설치 시 docker compose가 기본적으로 포함되어 있을 것입니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;linux-1&quot;&gt;Linux&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/docker/compose/releases&quot;&gt;https://github.com/docker/compose/releases&lt;/a&gt; 접속하여 Latest release 버전을 확인합니다.&lt;/li&gt;
+  &lt;li&gt;2019.04.09 기준 1.24.0 최신 버전 (최신 버전 확인 후 아래 curl 명령 download 뒤에 버전을 변경)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;-L&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://github.com/docker/compose/releases/download/1.24.0/docker-compose-&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;uname &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;uname &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; /usr/local/bin/docker-compose
+
+&lt;span class=&quot;c&quot;&gt;# Access 권한 설정&lt;/span&gt;
+chmod +x /usr/local/bin/docker-compose
+    
+&lt;span class=&quot;c&quot;&gt;# test&lt;/span&gt;
+docker-compose version
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;1-3-jenkins-dockerfile-작성&quot;&gt;1-3. Jenkins Dockerfile 작성&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;dockerfile과 docker-compose 차이는 간단하게 설명하면 아래와 같고 자세한 설명은 &lt;a href=&quot;https://docs.docker.com/compose/overview/&quot;&gt;docker compose 공식 문서&lt;/a&gt;를 참고합니다.
+    &lt;ul&gt;
+      &lt;li&gt;dockerfile : 이미지를 만드는 도구&lt;/li&gt;
+      &lt;li&gt;docker-compose : 컨테이너를 만드는 도구&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;나중에 설명할 것이지만 배포를 위해 zip, aws 명령이 필요합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;vi Dockerfile-jenkins&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-dockerfile highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 1. Jenkins Long Term Support(LTS) 이미지 생성&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; jenkins/jenkins:lts&lt;/span&gt;
+    
+&lt;span class=&quot;c&quot;&gt;# 2. 명령을 실행할 사용자 설정&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;USER&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; root&lt;/span&gt;
+    
+&lt;span class=&quot;c&quot;&gt;# 3. Jenkins build 시 필요한 zip command install&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RUN &lt;/span&gt;apt-get update
+&lt;span class=&quot;k&quot;&gt;RUN &lt;/span&gt;apt-get install &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; zip
+    
+&lt;span class=&quot;c&quot;&gt;# 4.Jenkins build 시 필요한 awscli command install&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RUN &lt;/span&gt;apt-get install &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; python-pip
+&lt;span class=&quot;k&quot;&gt;RUN &lt;/span&gt;pip install awscli
+&lt;span class=&quot;k&quot;&gt;RUN &lt;/span&gt;pip install &lt;span class=&quot;nt&quot;&gt;--upgrade&lt;/span&gt; pip
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;1-4-docker-composeyml-작성&quot;&gt;1-4. docker-compose.yml 작성&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;version : &lt;a href=&quot;https://docs.docker.com/compose/compose-file/&quot;&gt;https://docs.docker.com/compose/compose-file/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;image : 도커 컨테이너의 기반이 되는 베이스 이미지를 지정&lt;/li&gt;
+  &lt;li&gt;build : Dockerfile에 이미지 구성을 저장하고 이를 자동으로 build 하여 베이스 이미지로 지정&lt;/li&gt;
+  &lt;li&gt;port : YAML은 xx:yy형식을 시간으로 인식하므로 포트 번호를 설정할 때 다음과 같이 꼭 쌍따옴표(““)안에서 문자열을 입력해야 함&lt;/li&gt;
+  &lt;li&gt;volumes : 컨테이너의 볼륨을 마운트&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Dockerfile-jenkins와 동일 디렉토리에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;vi docker-compose.yml&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-yml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3.7&quot;&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;services&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;jenkins&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;			&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;.&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;			&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;dockerfile&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Dockerfile-jenkins&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;container_name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;jenkins&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;restart&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;always&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;user&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;root&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;			&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;8080:8080&quot;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;			&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/home/jenkins/jenkins_home:/var/jenkins_home&quot;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;gitlab&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;gitlab/gitlab-ce:latest&quot;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;container_name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gitlab&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;restart&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;always&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;hostname&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;gitlab.example.com&quot;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;		&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;environment&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;			&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GITLAB_OMNIBUS_CONFIG&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;			external_url = &quot;gitlab.example.com&quot;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;	ports:&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;		- &quot;80:80&quot;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;		- &quot;443:443&quot;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;		- &quot;22:22&quot;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;	volumes:&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;		- &quot;/srv/gitlab/config:/etc/gitlab&quot;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;		- &quot;/srv/gitlab/logs:/var/log/gitlab&quot;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;		- &quot;/srv/gitlab/data:/var/opt/gitlab&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;1-5-docker-compose-실행&quot;&gt;1-5. docker-compose 실행&lt;/h3&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker-compose up &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# 백그라운드로 실행&lt;/span&gt;
+...
+docker ps &lt;span class=&quot;c&quot;&gt;# 컨테이너 정상 구동 확인&lt;/span&gt;
+    
+&lt;span class=&quot;c&quot;&gt;# +) 각 서비스 버전 업데이트&lt;/span&gt;
+docker-compose pull &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;service...] &lt;span class=&quot;c&quot;&gt;# update&lt;/span&gt;
+docker-compose up &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;service...] &lt;span class=&quot;c&quot;&gt;# 재실행&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;1-6-jenkins--gitlab-접속&quot;&gt;1-6. Jenkins &amp;amp; GitLab 접속&lt;/h3&gt;
+
+&lt;p&gt;아래와 같은 화면이 보이면 설치 성공!&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Jenkins 접속 : &lt;a href=&quot;http://localhost:8080&quot;&gt;http://localhost:8080&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/jenkins-main.png&quot; alt=&quot;jenkins-main&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;gitlab 접속 : &lt;a href=&quot;http://localhost:80&quot;&gt;http://localhost:80&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/jenkins_tutorial/gitlab-main.png&quot; alt=&quot;gitlab-main&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;마무리&quot;&gt;마무리&lt;/h2&gt;
+
+&lt;p&gt;docker-compose를 이용해 간편하게 Jenkins와 GitLab을 설치하고 실행시켜 보았습니다. &lt;br /&gt;
+다음 시간에는 Jenkins, GitLab login 및 기본적인 Jenkins Setting에 대해 진행하겠습니다. &lt;br /&gt;
+감사합니다.&lt;/p&gt;</content><author><name>sungjun</name></author><category term="jenkins" /><category term="jenkins," /><category term="docker," /><category term="gitlab" /><summary type="html">도커 컴포즈를 이용해 젠킨스, 깃랩 설치하기.</summary></entry><entry><title type="html">Gradle Multi Module Project 구성하기</title><link href="https://gwonsungjun.github.io/articles/2019-04/gradle_multi_module" rel="alternate" type="text/html" title="Gradle Multi Module Project 구성하기" /><published>2019-04-03T00:00:00+00:00</published><updated>2019-04-03T00:00:00+00:00</updated><id>https://gwonsungjun.github.io/articles/2019-04/gradle_multi_module</id><content type="html" xml:base="https://gwonsungjun.github.io/articles/2019-04/gradle_multi_module">&lt;p&gt;&lt;strong&gt;Gradle Multi Module Project 구성 방법을 알아본다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;환경&quot;&gt;환경&lt;/h2&gt;
+
+&lt;p&gt;spring boot 버전별로 설정 시 약간의 차이가 있으므로 주의.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;spring boot 2.1.3 (2019.04.03 기준 최신 버전)&lt;/li&gt;
+  &lt;li&gt;gradle 4.10.3&lt;/li&gt;
+  &lt;li&gt;jdk 1.8&lt;/li&gt;
+  &lt;li&gt;intellij&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;1-create-root-project&quot;&gt;1. Create Root Project&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;(1) New Project &amp;gt; Gradle &amp;gt; Additional Libraries and Frameworks &amp;gt; java 선택 &amp;gt; Next&lt;/li&gt;
+  &lt;li&gt;(2) GroupId, ArtifactId 입력 &amp;gt; Next&lt;/li&gt;
+  &lt;li&gt;(3) Use auto-import 체크 해제되어있는지 확인 &amp;gt; Next &amp;gt; Finish&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;2-create-sub-project&quot;&gt;2. Create Sub Project&lt;/h2&gt;
+
+&lt;p&gt;필요한 서브 프로젝트 개수만큼 생성&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;(1) File &amp;gt; New &amp;gt; Module&lt;/li&gt;
+  &lt;li&gt;(2) Gradle &amp;gt; Additional Libraries and Frameworks &amp;gt; java 선택 &amp;gt; Next&lt;/li&gt;
+  &lt;li&gt;(3) Group, Version Inherit 체크 되어있는지 확인&lt;/li&gt;
+  &lt;li&gt;(4) ArtifactId 입력 &amp;gt; Next&lt;/li&gt;
+  &lt;li&gt;(5) Sub Project는 Root Project 바로 아래에 모듈이 생성되어야 함. Content root 경로 잘 확인하기 &amp;gt; Finish&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;3-project-기본-골격&quot;&gt;3. Project 기본 골격&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;프로젝트 루트 밑에 src 폴더가 생성되었다면 Delete&lt;/li&gt;
+  &lt;li&gt;빌드는 항상 root 프로젝트를 기준으로 할 것이기 때문에 sub project의 gradle 폴더, gradlew, gradlew.bat, settings.gradle 등의 파일은 필요 없다. src 폴더와 build.gradle만 존재하도록 한다.
+    &lt;ul&gt;
+      &lt;li&gt;서브 프로젝트를 Gradle project로 생성하였다면 build.gradle만 존재하지만 spring Initializr로 생성하면 gradle 폴더, gradlew 등이 존재.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Project 기본 골격은 아래 그림과 같다. (admin, api, common 서브 프로젝트 생성)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/gradle-multi-module/gradle-multi-module-scaffolding.png&quot; alt=&quot;gradle-multi-module-scaffolding&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;4-root-project와-sub-project-관계-설정&quot;&gt;4. Root Project와 Sub Project 관계 설정&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;(자동으로 등록되어 있지 않다면) Root Project의 settings.gradle에 아래와 같은 형식으로 sub project name을 include.&lt;/li&gt;
+  &lt;li&gt;sample-multi-module 프로젝트가 하위 프로젝트들을 관리하겠다는 의미.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-gradle highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;rootProject&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'sample-multi-module'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'sample-api'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'sample-admin'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'sample-common'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;5-root-buildgradle-수정&quot;&gt;5. Root build.gradle 수정&lt;/h2&gt;
+
+&lt;div class=&quot;language-gradle highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;buildscript&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ext&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;springBootVersion&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'2.1.3.RELEASE'&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;repositories&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;mavenCentral&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;dependencies&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;classpath&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;classpath&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE&quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;allprojects&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;group&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'com.sungjun'&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;version&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'1.0-SNAPSHOT'&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;subprojects&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;apply&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;plugin:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'java'&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;apply&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;plugin:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'org.springframework.boot'&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;apply&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;plugin:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'io.spring.dependency-management'&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;sourceCompatibility&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1.8&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;repositories&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;mavenCentral&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;dependencies&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;testCompile&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;group:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'junit'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'junit'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;version:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'4.12'&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;project&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;':sample-api'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;dependencies&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;project&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;':sample-common'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;project&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;':sample-admin'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;dependencies&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;project&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;':sample-common'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;6-각-sub-프로젝트의-buildgradle-수정&quot;&gt;6. 각 Sub 프로젝트의 build.gradle 수정&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/gwonsungjun/gradle-multi-module/blob/master/sample-api/build.gradle&quot;&gt;각 프로젝트 별&lt;/a&gt; 필요한 dependencies만 설정하면 된다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-gradle highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;dependencies&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;compile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'org.springframework.boot:spring-boot-starter-web'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;testCompile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'org.springframework.boot:spring-boot-starter-test'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;7-common-프로젝트-buildgradle-설정&quot;&gt;7. common 프로젝트 build.gradle 설정&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;예제 project » &lt;a href=&quot;https://github.com/gwonsungjun/gradle-multi-module&quot;&gt;깃헙&lt;/a&gt; 확인&lt;/li&gt;
+  &lt;li&gt;위의 예제 project의 Common 프로젝트처럼 main 메소드가 없는 경우
+    &lt;ul&gt;
+      &lt;li&gt;아래와 같이 bootJar, jar enabled 설정을 해야한다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-gradle highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;bootJar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;enabled&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;jar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;enabled&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;dependencies&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;compile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'org.springframework.boot:spring-boot-starter-data-jpa'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;runtime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'com.h2database:h2'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;testCompile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'org.springframework.boot:spring-boot-starter-test'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;8-다른-project에서-common-project를-사용-할-경우&quot;&gt;8. 다른 Project에서 common project를 사용 할 경우&lt;/h2&gt;
+
+&lt;p&gt;다른 project에서 common project의 Entity 클래스와 Repsoitory를 사용하기 위해서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;@EntityScan(&quot;com.sungjun.*&quot;)&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;@EnableJpaRepositories(&quot;com.sungjun.*&quot;)&lt;/code&gt; 2개의 어노테이션을 설정해 줘야 한다. (Common Project에 Entity 클래스와 Repository만 있는 경우에 한하여)&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/gwonsungjun/gradle-multi-module/blob/master/sample-api/src/main/java/com/sungjun/api/SampleApiApplication.java&quot;&gt;예제 project의 API Module SampleApiApplication class&lt;/a&gt; 참조&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;마무리&quot;&gt;마무리&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;위와 같이 그래들 멀티 모듈 기본 설정이 완료되면 실제 개발을 하는 데 큰 문제가 없을 것이다.&lt;/li&gt;
+  &lt;li&gt;방법만 제시하고 각각의 상세한 설명은 생략하였는데 &lt;a href=&quot;https://jojoldu.tistory.com/123&quot;&gt;Gradle 멀티 프로젝트(모듈) 관리&lt;/a&gt; 글과 같이 보면 이해가 조금 쉬울 것이다.(예제 프로젝트도 해당 블로그를 참고해서 작성하였다.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;links&quot;&gt;Links&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://jojoldu.tistory.com/123&quot;&gt;Gradle 멀티 프로젝트(모듈) 관리&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/hantomato/gradle-multi-proj&quot;&gt;gradle로 멀티 프로젝트 구성하기&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://yookeun.github.io/java/2017/10/07/gradle-multi/&quot;&gt;Gradle 에서 Multi 프로젝트 만들기&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>sungjun</name></author><category term="java" /><category term="java," /><category term="gradle," /><category term="springboot" /><summary type="html">Gradle Multi Module Project 구성 방법을 알아본다.</summary></entry><entry><title type="html">2018년 회고</title><link href="https://gwonsungjun.github.io/articles/2018-12/2018Review" rel="alternate" type="text/html" title="2018년 회고" /><published>2018-12-31T00:00:00+00:00</published><updated>2018-12-31T00:00:00+00:00</updated><id>https://gwonsungjun.github.io/articles/2018-12/2018Review</id><content type="html" xml:base="https://gwonsungjun.github.io/articles/2018-12/2018Review">&lt;p&gt;&lt;strong&gt;2018년 한 해를 되돌아본다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;2018년-회고&quot;&gt;2018년 회고&lt;/h1&gt;
+
+&lt;p&gt;올해 1월 “이번 해 만큼은 뒤돌아봤을 때 후회 없을 만큼 최선을 다하자” 다짐하고 시작했는데 만족할 만큼은 아니지만 나름 부지런하게 보냈던 한해였던 것 같아 감히 처음으로 회고를 작성해본다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;올해 나는 무엇을 하고 보냈을까? 뒤돌아보니 크게 아래와 같이 나눌 수 있었다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;#1&quot;&gt;회사&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#2&quot;&gt;TIL / 블로그 / 1일 1커밋&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#3&quot;&gt;주간회고&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#4&quot;&gt;세미나 / 컨퍼런스&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#5&quot;&gt;Study&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#6&quot;&gt;무엇을 공부했나?&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#7&quot;&gt;아쉬웠던 점&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#8&quot;&gt;2019년 목표&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;1-회사-&quot;&gt;1. 회사 &lt;a id=&quot;1&quot;&gt;&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;2017년 9월에 입사를 했고 6개월 뒤인 2018년 3월 팀원 4명 중 2분이 퇴사하였다. 입사한 지 얼마나 됐다고..? &lt;br /&gt;
+처음에는 나도 그만둬야 하나 정말 많은 고민을 했었다. 사수의 부재로 내가 많은 것을 배우지 못하리라 생각했었다. &lt;br /&gt;
+많은 고민을 한 끝에 일단 해보고 아니다 싶으면 그때 돼서 다시 생각해보기로 결정을 내렸다. &lt;br /&gt;
+새로운 자리에서 일이 시작되면서 알아야 할 것이 기하급수적으로 증가하기 시작했고 혹여나 해결하지 못 하는 일이 생길까봐 두려워하기도 했었다. 특히, 이때부터 이제 믿을 건 나 자신밖에 없다는 생각으로 알게 된 내용을 에버노트에 하나씩 기록해 나가기 시작했고, 이게 쌓이고 쌓여 이제는 웬만한 업무 관련 지식은 에버노트 검색으로 다 찾을 수 있게 되었다. (현재는 이것을 정리해서 사내 위키로 옮기는 작업을 진행 중이다.)&lt;/p&gt;
+
+&lt;h3 id=&quot;그래서-무슨-일을-해봤나&quot;&gt;그래서 무슨 일을 해봤나?&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;기존 사내 프로젝트 운영 및 레거시 코드 개선
+    &lt;ul&gt;
+      &lt;li&gt;Admin 사이트, Batch, API Server&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;로그 모니터링, 트러블 슈팅, 서버 운영, 소스 관리, 배포&lt;/li&gt;
+  &lt;li&gt;DevOps 도입을 위해 연구 및 테스트 진행
+    &lt;ul&gt;
+      &lt;li&gt;Jenkins, Docker, ELK Stack&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;최신 기술 서칭 및 테스트 프로젝트 진행
+    &lt;ul&gt;
+      &lt;li&gt;특히, 블록체인을 집중적으로 (Geth)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;외부 프로젝트 API Server 개발
+    &lt;ul&gt;
+      &lt;li&gt;Springboot, JPA, Gradle …&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;팀 내 Wiki 사이트 구축&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;주 업무는 기존 서비스의 유지보수 였고 이를 통해 서비스 운영에 있어 적잖은 노하우를 쌓게 되었다. 아쉬운 점이라면 개발과 운영의 비중이 내가 바라는 바와는 조금 달랐다는 것이다. 이외에도 GitLab, Trello, Slack 도입 및 적극 사용으로 조금 더 좋은 환경에서 개발할 수 있도록 노력하기도 했었다.&lt;/p&gt;
+
+&lt;h2 id=&quot;2-블로그--til--1일-1커밋-&quot;&gt;2. 블로그 / TIL / 1일 1커밋 &lt;a id=&quot;2&quot;&gt;&lt;/a&gt;&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Jekyll을 이용해서 깃헙 블로그를 생성하였다. 기존 테마에서 조금 커스터마이징해서 나름 깔끔한 모습으로 사용 중이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/2018Review/2018Review_blog.png&quot; alt=&quot;2018Review_blog&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;블로그 생성 당시에는 기술 관련 글을 작성하려고 시작했는데 현재는 주간회고의 글로 가득 차 있다.&lt;/li&gt;
+  &lt;li&gt;대부분의 개발 관련 지식을 &lt;a href=&quot;https://github.com/gwonsungjun/TIL&quot;&gt;GitHub TIL Repository&lt;/a&gt;에 작성하였고 이게 지속되다보니 블로그는 주간회고, TIL은 개발 관련 내용으로 나눠 사용하게 되었다. 블로그에 주간회고만 작성하기에는 아깝다고 생각되어 내년에는 조금씩 기술 글을 작성해 나갈 생각이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/2018Review/2018Review_TIL.png&quot; alt=&quot;2018Review_TIL&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;1일 1커밋도 도전해봤었다. 1일 1커밋에 대한 이런저런 얘기가 많지만, 개인적으로는 도움이 되었다. 물론 처음에는 너무 깃 그래프에만 신경을 써서 잘못된 방향으로 흘러갈 뻔했지만 무조건 커밋을 해야 된다는 생각을 버리고 그날 배운걸 정리할 수 있으면 최대한 정리해서 커밋하자는 생각으로 하니 나름 만족도가 높았다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/2018Review/2018Review_GitGraph.png&quot; alt=&quot;2018Review_GitGraph&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이러한 꾸준함 덕분인지 개발자라면 다 아는 HR 컨설팅 회사로부터 연락을 받게 되었고 계속 인연을 이어 나가고 있다. 나에게도 이런 행운이 찾아올 줄은 예상도 못 했다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;3-주간회고-&quot;&gt;3. 주간회고 &lt;a id=&quot;3&quot;&gt;&lt;/a&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://blog.devjoshua.me/&quot;&gt;Joshua&lt;/a&gt; 님의 블로그를 접하고 처음 시작하게 된 주간 회고. 처음에는 그냥 한번 해보자는 생각으로 시작했는데 1년 동안 한 주도 빠짐없이 꾸준히 작성하게 되었다. 
+하나둘 쌓여 주간 회고 포스트만 무려 49개가 되었고 최근에는 &lt;a href=&quot;https://www.facebook.com/devbeginner/?__tn__=kC-R&amp;amp;eid=ARDLB37dwQ0Gp8vw4nUddINv1xI8gA6wd679BUCybaze_epi0EVibA639er33OycA-RbExrg-Lh3sxCt&amp;amp;hc_ref=ARSykpAPmOIpuYRiJ217Abcx3KsWuAWAXEYJzeJ-3RcSHM2qRTXsOhQwStmAA_I0my0&amp;amp;fref=nf&amp;amp;__xts__[0]=68.ARCKEnnV5WIS5q7J4MpRjKSDkbHq6mIecbXmS66B5dUchHZqbDisNq0V8Gwn_gmHP7tNiFA8FobTAP5sZGRUEG4z3SsOnuC7ffhpbd8_PERJlWeI8qBXO2qeqXsmDSn8PBgSPk26sm2cQY-R7dIRKoUh2egu51JS79tZ0Mf1DkXYLRniHc4kuTXBTZDcuiwMAjvyGNdyXIi_qsP_p_A7lTVnuA6RxDSdm64pu0hhrgzLUB0GEZTwgLo8vjpwG0cnHvCDCCwrJEut_HeBN8RA83ZBRfI82nu-OkEsR3XrJA7IGRW0z935-Gnr1zwpLZUqqilwYdpsrMnSLuJredUjLk2yj_PMc1_jZGq7ZSYoTQysOiD8DFvebQ8&quot;&gt;Facebook 초보 개발자 모임&lt;/a&gt;에 소개가 되었다. 처음 공개 되었을 때 조금 부끄러운 마음도 있었지만 직접 찾아서 읽어봐 줬다는 것에 너무 감사했다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/usingimages/2018Review/2018Review_facebook.jpeg&quot; alt=&quot;2018Review_facebook&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;주간회고를-작성하며-느낀-점&quot;&gt;주간회고를 작성하며 느낀 점&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;글쓰기 능력이라 하면 아직 턱없이 부족하지만, 글을 요약하는 능력은 전보다 많이 좋아졌다고 느꼈다. 특히 회사 메일을 쓸 때 많이 느꼈다.&lt;/li&gt;
+  &lt;li&gt;매주 스스로 성찰할 수 있는 시간을 가지게 되었다.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;https://mindscale.kr/course/how-to-learn-prg&quot;&gt;프로그래밍, 어떻게 공부할 것인가&lt;/a&gt;, &lt;a href=&quot;https://www.youtube.com/watch?v=Xcy2Pq6LABk&amp;amp;feature=youtu.be&quot;&gt;프로그래밍 학습 방법 &lt;/a&gt;, &lt;a href=&quot;http://woowabros.github.io/experience/2017/12/11/how-to-study.html&quot;&gt;학습에 실패한 이야기&lt;/a&gt;에서 설명하는 의식적인 연습 “집중하고 고치고 반복하기” 즉, 지속적인 피드백을 주간회고를 통해 어느 정도 실천을 할 수 있었지 않았나 싶다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;출퇴근길에 읽었던 블로그들을 매주 정리했는데 이게 아주 도움이 된다. 사람은 망각의 동물이라고 특히 책이 아닌 블로그는 일회성 글로 좋은 글이라도 쉽게 잊어버리는 것 같았다. 그래서 괜찮았던 블로그들을 아카이빙 할 수 있는 방법으로 블로그를 읽고 요약해서 정리해놓았다.&lt;/li&gt;
+  &lt;li&gt;시간이 지나 같은 블로그를 또 한 번 접했을 때 언제 한번 읽어 봤던 것 같은데? 라는 생각이 들면 블로그의 검색 기능을 이용해서 해당 블로그를 찾고 또 한 번 읽을 필요 없이 요약한 내용으로 쉽게 파악할 수 있었다.
+    &lt;ul&gt;
+      &lt;li&gt;전날 저녁 그리고 당일 아침에 읽은 블로그들을 &lt;a href=&quot;https://www.pushbullet.com/&quot;&gt;pushbullet&lt;/a&gt; 으로 옮기고 출근을 조금 일찍 해서 pushbullet에 옮겨진 블로그들을 에버노트에 정리 요약을 해놓는다. 그리고 주간회고를 작성하는 일요일에는 에버노트에 정리된 내용을 덮어씌우기만 하면 되었다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;4-세미나--컨퍼런스-&quot;&gt;4. 세미나 / 컨퍼런스 &lt;a id=&quot;4&quot;&gt;&lt;/a&gt;&lt;/h2&gt;
+
+&lt;p&gt;올해 목표는 한 달에 한 번 이상 세미나 및 컨퍼런스에 참석하는 것이었다. 한 달에 한 번이면 그렇게 많다고 생각이 들지 않아서 잡은 목표였는데 12월 한 달 빼고는 모두 다녀왔다. &lt;br /&gt;
+다녀온 세미나 / 컨퍼런스 / Hands-on은 아래 목록과 같다.&lt;/p&gt;
+
+&lt;h3 id=&quot;community-activities&quot;&gt;Community Activities&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;2018.11.10 &lt;a href=&quot;http://www.ksug.org/seminar/20181110/&quot;&gt;KSUG 스프링 기반 REST API 개발 - 백기선님의 특별강연&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.10.18 &lt;a href=&quot;http://www.okkycon.com/&quot;&gt;OKKYCON:2018 - The Real TDD&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.10.11  &lt;a href=&quot;https://deview.kr/2018/pick/6731&quot;&gt;Deview 2018&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.09.04  &lt;a href=&quot;https://if.kakao.com/&quot;&gt;if Kakao 개발자 컨퍼런스&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.08.31  &lt;a href=&quot;https://festa.io/events/70&quot;&gt;Popit 멘토링 데이&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.07.28  &lt;a href=&quot;https://festa.io/events/45&quot;&gt;하시코프 한국 사용자 밋업(HashiCorp Korea User Group MeetUp)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.06.27  &lt;a href=&quot;https://gwonsungjun.github.io/seminar/2018/06/27/codesquadSeminar/#&quot;&gt;제 5회 마스터즈 오픈 세미나, 코드 스쿼드&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.06.21 &lt;a href=&quot;https://gwonsungjun.github.io/seminar/2018/06/25/okkyTddSeminar/#&quot;&gt;OKKY, TDD 잘알못을 위한 돌직구 세미나&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.06.10 Google I/O Extended 2018 Seoul&lt;/li&gt;
+  &lt;li&gt;2018.05.19 &lt;a href=&quot;https://gwonsungjun.github.io/seminar/2018/05/20/6th_oracle_kafka/&quot;&gt;Oracle Developer Meetup - Understanding Kafka&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.04.28 &lt;a href=&quot;https://gwonsungjun.github.io/seminar/2018/04/29/ubuntuRelaseParty/&quot;&gt;Ubuntu 18.04 Release Party in Seoul&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.04.21 &lt;a href=&quot;https://gwonsungjun.github.io/seminar/2018/04/22/springCamp2018/&quot;&gt;SPRING CAMP 2018 (with Coupang)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.04.13 &lt;a href=&quot;https://gwonsungjun.github.io/seminar/2018/04/15/9xd11meeting/&quot;&gt;9XD: Young, Wild Coders - Hello! New Face; The eleventh meeting&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.03.18 &lt;a href=&quot;https://gwonsungjun.github.io/seminar/2018/03/22/4th_oracle_meetup/&quot;&gt;Oracle Developer Meetup - Future Java and the Microservice in Your Hands!&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.02.11 &lt;a href=&quot;https://gwonsungjun.github.io/seminar/2018/02/22/GdgCampusKoreaMeetup/&quot;&gt;GDG Campus 2018 Meetup&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;2018.01.27 &lt;a href=&quot;https://gwonsungjun.github.io/seminar/2018/01/27/3rd_oracle_meetup/&quot;&gt;Oracle Developer Meetup - Serverless Computing&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;hands-on&quot;&gt;Hands-On&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;2018.07.14 AWSKRUG Hands-on Lab 2018 : Container #3, Kubernetes on AWS&lt;/li&gt;
+  &lt;li&gt;2018.06.30 AWSKRUG Hands-on Lab 2018 : Serverless #1, 손쉽게 시작하는 Serverless Architecture&lt;/li&gt;
+  &lt;li&gt;2018.06.16 AWSKRUG Hands-on Lab 2018 :  Container #2, 아마존 ECS에 자바 마이크로 서비스 구축하기&lt;/li&gt;
+  &lt;li&gt;2018.06.02 &lt;a href=&quot;https://gwonsungjun.github.io/seminar/2018/06/02/awsDocker/&quot;&gt;AWSKRUG Hands-on Lab 2018 : Container #1 - Docker&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;느낀-점&quot;&gt;느낀 점&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;많이 참석했을 수도 있고 아닐 수도 있다. 생각 없이 그저 가면 좋다니깐 간 건 아니다. 목적은 회사 내에 정체되어있기 싫어서였다. 최대한 직접 나가서 최신 동향이나 키워드를 파악하고 싶었다. 그리고 배워온 것을 직접 써보고 익혀보고 좋다고 생각이 들면 사내에 전파하고 싶은 마음이었다.&lt;/li&gt;
+  &lt;li&gt;여러 개발자분을 만나서 얘기도 나누고 이런저런 활동을 하다 보니 재미도 있었고 한두 개씩 듣다 보니 시야가 조금씩 넓어지고 있다는 것도 느꼈다.&lt;/li&gt;
+  &lt;li&gt;한가지 간과해서는 안 되는 건 발표를 들었다 해서 그것을 내가 아는 것이 아니라는 것이다. 키워드만 알게 된 것이다. 들은 내용을 바탕으로 직접 학습하고 익혀야 내 것이 될 수 있다는 것을 느꼈다.&lt;/li&gt;
+  &lt;li&gt;그리고 나는 백엔드 기술에 관심이 많아서 프론트 관련 발표는 흥미가 없다는 것을 알게 되었다. 여러 분야의 지식들을 들어 놓으면 도움은 되겠지만, 당장은 귀에 들어오지 않아 당분간은 백엔드 관련 세미나에만 참석할 생각이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;5-study-&quot;&gt;5. Study &lt;a id=&quot;5&quot;&gt;&lt;/a&gt;&lt;/h2&gt;
+
+&lt;p&gt;올해는 총 3개의 스터디를 진행하였는데 2개는 성공적이었고 하나는 조금 흐지부지하게 끝났다. 독서 모임도 잠깐 했었다.&lt;/p&gt;
+
+&lt;h4 id=&quot;알고리즘-스터디&quot;&gt;알고리즘 스터디&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;알고리즘에 대해 감을 잡고 싶어 시작하게 되었다. 처음에는 &lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=7058764&quot;&gt;알고리즘 문제 해결 전략&lt;/a&gt; 책으로 시작했는데 입문하기에는 조금 어려운 감이 있어서 &lt;a href=&quot;https://www.codility.com/&quot;&gt;Codility&lt;/a&gt;에서 문제 풀고 공유하는 시간을 가지기로 중간에 변경하기도 했다. 4명에서 진행했는데 2분이 스터디 도중 이직 성공으로 하차 하셔서 흐지부지하게 끝났다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;자바카페-커뮤니티-스프링5-레시피-스터디&quot;&gt;&lt;a href=&quot;https://www.facebook.com/groups/javacafe/?ref=br_rs&quot;&gt;자바카페 커뮤니티&lt;/a&gt; 스프링5 레시피 스터디&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;자바카페 커뮤니티는 오래전부터 스터디를 계속 진행해오던 터라 운영 방식이나 규칙들이 너무 잘 갖춰져 있었다. 스터디 당일 발표자를 랜덤으로 뽑아 진행했기 때문에 항상 발표를 한다는 마음으로 평소보다 더 깊게 공부할 수 있었다. 올해 진행했던 스터디 중에서 가장 만족하고 스프링을 다시 한번 공부할 수 있었던 좋은 기회였다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;스프링-부트-스터디&quot;&gt;스프링 부트 스터디&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;스프링을 조금 공부해봤으니 스프링부트도 학습을 해봐야겠다고 생각하던 찰나에 Facebook 친구인 대희님께서 스프링부트 스터디원을 모집하고 있었다. 잘됬다 싶어 스터디 신청을 하였고 약 1달 반 정도 스터디를 진행하였다. 첫 모임을 제외하고 모두 온라인(행아웃)으로 진행하였는데 오프라인과 온라인 각각이 장단점이 있겠지만 개인적으로 온라인 스터디도 매우 만족스러운 방식이었다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;트레바리-독서-모임-보통의-존재-1809-시즌&quot;&gt;&lt;a href=&quot;https://trevari.co.kr/&quot;&gt;트레바리 독서 모임&lt;/a&gt; 보통의 존재 1809 시즌&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;1회 참여하고 2회 때 개인적인 사정으로 참석을 못 했는데 그때부터 의욕이 확 떨어져서 중간에 포기하였다. 분명 끝까지 했으면 도움이 되긴 했을 텐데 다음에 시간적으로 여유로울 때 꼭 신청을 해볼 것이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;6-무엇을-공부했나-&quot;&gt;6. 무엇을 공부했나? &lt;a id=&quot;6&quot;&gt;&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;올해 상반기에는 기초부터 잡자는 생각에 Servlet부터 다시 공부했었다.&lt;/li&gt;
+  &lt;li&gt;Servlet 공부를 마친 후에는 실제로 당장 개발하는데 필요한 Spring이 부족하다는 것을 느껴 Spring 위주의 학습을 했었다.&lt;/li&gt;
+  &lt;li&gt;따지고 보면 주로 Java, Spring, JPA 위주의 학습이었다.&lt;/li&gt;
+  &lt;li&gt;강의를 들을 때는 인프런을 적극적으로 활용해서 들었고 여러 기술의 이해를 도와주었다.&lt;/li&gt;
+  &lt;li&gt;아래 읽은 책 목록들은 꼭 완독하지는 않았다. 필요한 부분을 찾아 읽으려고 노력했다.&lt;/li&gt;
+  &lt;li&gt;책을 읽고 느낀 점이나 생각들은 주간회고나 TIL에 작성이 되어있어서 필요하면 검색해서 참고해도 좋을 듯하다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;읽은-책-목록&quot;&gt;읽은 책 목록&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=5902081&quot;&gt;Head First Servlets &amp;amp; JSP&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=7317474&quot;&gt;코딩을 지탱하는 기술&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=13316548&quot;&gt;블록체인 무엇인가?&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=9685493&quot;&gt;비트코인, 블록체인과 금융의 혁신&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=9738902&quot;&gt;SQL 첫걸음&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=7058764&quot;&gt;알고리즘 문제 해결 전략&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=11823284&quot;&gt;Hello Coding 그림으로 개념을 이해하는 알고리즘&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=10995037&quot;&gt;만화로 배우는 리눅스 시스템 관리 1&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=4529127&quot;&gt;Java 언어로 배우는 디자인 패턴 입문&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=4441100&quot;&gt;자바 성능을 결정짓는 코딩 습관과 튜닝 이야기&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=8883567&quot;&gt;Java 8 in Action&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=8920762&quot;&gt;스프링 입문을 위한 자바 객체 지향의 원리와 이해&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=13911953&quot;&gt;스프링5 레시피&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=14031681&quot;&gt;처음 배우는 스프링 부트2&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=9252528&quot;&gt;자바 ORM 표준 JPA 프로그래밍&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=12692342&quot;&gt;프로그래밍의 정석&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=13256615&quot;&gt;Do it! vue.js 입문&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=11091521&quot;&gt;완벽한 it 인프라 구축을 위한 docker&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;들은-강의들&quot;&gt;들은 강의들&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/intellij-guide/&quot;&gt;IntelliJ를 시작하시는 분들을 위한 IntelliJ 가이드&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/spring/&quot;&gt;백기선님의 스프링 프레임워크 입문&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81%EB%B6%80%ED%8A%B8/&quot;&gt;백기선님의 스프링 부트 개념과 활용&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%8D%B0%EC%9D%B4%ED%84%B0-jpa/&quot;&gt;백기선님의 스프링 데이터 JPA&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/elk-%EC%8A%A4%ED%83%9D-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%B6%84%EC%84%9D/&quot;&gt;ELK 스택 (ElasticSearch, Logstash, Kibana) 으로 데이터 분석&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/blockchain-%EC%9D%B4%EB%8D%94%EB%A6%AC%EC%9B%80-dapp/&quot;&gt;블록체인 이더리움 부동산 댑(Dapp) 만들기 – 기본편&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;기타-서적&quot;&gt;기타 서적&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=6332442&quot;&gt;프로그래머의 길, 멘토에게 묻다&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=13318425&quot;&gt;책 잘 읽는 방법&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=1877597&quot;&gt;죽음의 수용소에서&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=5186&quot;&gt;데미안&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;내년에는-꼭-읽고-싶은-책들-이미-사놓은-책들&quot;&gt;내년에는 꼭 읽고 싶은 책들 (이미 사놓은 책들)&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Clean Code&lt;/li&gt;
+  &lt;li&gt;켄트백의 구현 패턴&lt;/li&gt;
+  &lt;li&gt;객체지향의 사실과 오해&lt;/li&gt;
+  &lt;li&gt;클린 코더&lt;/li&gt;
+  &lt;li&gt;리팩토링&lt;/li&gt;
+  &lt;li&gt;이팩티브 자바&lt;/li&gt;
+  &lt;li&gt;익스트림 프로그래밍&lt;/li&gt;
+  &lt;li&gt;레거시 코드 활용 전략&lt;/li&gt;
+  &lt;li&gt;읽기 좋은 코드가 좋은 코드다&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;7-아쉬웠던-점-&quot;&gt;7. 아쉬웠던 점 &lt;a id=&quot;7&quot;&gt;&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;위에서 읽은 책 목록과 들은 강의들을 나열해보니 대부분의 시간을 Java, Spring 프레임워크에만 집중한 것 같아 아쉬웠다.&lt;/li&gt;
+  &lt;li&gt;개인 프로젝트 (사이드 프로젝트)를 해보겠다고 했지만, 막상 제대로 한 게 없다. 계획만 새우고 항상 뒷전이었다.&lt;/li&gt;
+  &lt;li&gt;집중력이 부족하다는 것을 느껴 뽀모도로 기법을 사용해야지 생각만 해놓고 실천을 못 했다. 조금 더 나은 퍼포먼스를 낼 수 있었을 것 같은데 아쉽다.&lt;/li&gt;
+  &lt;li&gt;성장을 위해 나 자신을 너무 억압하지 않았나 싶다. 항상 최선을 다해서 열심히 하는 것도 좋지만 적당한 휴식과 여유도 필요함을 느꼈다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;8-2019년-목표-&quot;&gt;8. 2019년 목표 &lt;a id=&quot;8&quot;&gt;&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;도구나 프레임워크 학습보다는 기본기에 더 집중하기 위해 노력하자.&lt;/li&gt;
+  &lt;li&gt;운동 부족. 매일 아침 헬스장에 들려 운동을 하고 출근하자.&lt;/li&gt;
+  &lt;li&gt;사이드 프로젝트 2개 이상을 꼭 진행해보자.&lt;/li&gt;
+  &lt;li&gt;영어 공부를 게을리하지 않는다.&lt;/li&gt;
+  &lt;li&gt;항상 “의도적 수련”을 실천하기 위해 노력한다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;조금 추상적이긴 하지만 내년 목표 설정까지 마무리하였다. &lt;br /&gt;
+다사다난한 한 해가 지나가고 또다시 새로운 시작을 맞이한다. 이 글을 읽는 모든 분들 건강하고 행복한 새해가 되었으면 한다.&lt;/p&gt;</content><author><name>sungjun</name></author><category term="yearly review" /><category term="yearly" /><category term="review" /><summary type="html">2018년 한 해를 되돌아본다.</summary></entry><entry><title type="html">181217_181223</title><link href="https://gwonsungjun.github.io/articles/2018-12/181217_181223" rel="alternate" type="text/html" title="181217_181223" /><published>2018-12-23T00:00:00+00:00</published><updated>2018-12-23T00:00:00+00:00</updated><id>https://gwonsungjun.github.io/articles/2018-12/181217_181223</id><content type="html" xml:base="https://gwonsungjun.github.io/articles/2018-12/181217_181223">&lt;p&gt;&lt;strong&gt;2018년 12월 17일 ~ 2018년 12월 23일 주간 회고&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;181217_181223-주간회고&quot;&gt;181217_181223 주간회고&lt;/h1&gt;
+
+&lt;h3 id=&quot;weekly-review&quot;&gt;Weekly Review&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;매일 아침 일찍 출근해서 1~2강씩 꼬박 들었던 &lt;a href=&quot;https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%8D%B0%EC%9D%B4%ED%84%B0-jpa/&quot;&gt;백기선의 스프링 데이터 JPA&lt;/a&gt; 강의를 마무리 지었다.
+    &lt;ul&gt;
+      &lt;li&gt;생각보다 강의가 많아서 언제 다 듣지 고민했었는데 아침에 일찍 출근해서 한두 개씩 꼬박 듣고 올해 안에 마무리 돼서 뿌듯했다.&lt;/li&gt;
+      &lt;li&gt;강의 들은 것을 바탕으로 &lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=9252528&quot;&gt;자바 ORM 표준 JPA 프로그래밍&lt;/a&gt; 책을 읽었는데 이해가 한결 쉬워졌다.&lt;/li&gt;
+      &lt;li&gt;나처럼 JPA를 시작할 때 책으로 바로 시작하지 않고 강의로 한번 훑고 책을 읽는 것도 좋은 방법인 것 같다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;창천향로님의 &lt;a href=&quot;https://jojoldu.tistory.com/324?category=635883&quot;&gt;Spring Batch 가이드&lt;/a&gt;를 학습하였다.
+    &lt;ul&gt;
+      &lt;li&gt;처음 배우는 스프링 부트2와 병행해서 학습 하니 이해가 조금 되기 시작하는 것 같다.&lt;/li&gt;
+      &lt;li&gt;내년에 사내 배치 고도화 작업에 Sprinboot batch를 적용해야 되므로 계속 반복하면서 익숙해져야겠다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;올해 4분기쯤부터 알고리즘 문제 풀이를 하지 않고 있는데 확실히 멈추니깐 감을 잃어버리는 것 같다. 내년부터는 다시 꼬박 풀기 시작해야겠다.&lt;/li&gt;
+  &lt;li&gt;연말이고 크리스마스도 있는 만큼 다음 주 목표를 너무 빡빡하게 잡지 않았지만, 회고도 써야 하고 올해 마무리 지어야 할 일이 꽤 많다.
+    &lt;ul&gt;
+      &lt;li&gt;조금 놀고 싶고 풀어지는 시기이지만 다음 주만 힘내서 잘 마무리 지어야겠다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;학습&quot;&gt;학습&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%8D%B0%EC%9D%B4%ED%84%B0-jpa/&quot;&gt;백기선의 스프링 데이터 JPA&lt;/a&gt; 듣고 &lt;a href=&quot;https://github.com/gwonsungjun/TIL/blob/master/JPA/Whiteship-JPA.md&quot;&gt;TIL에 요약 정리&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;강의를 마무리 지었다. 너무 유익했고 이제 본격적으로 JPA 학습을 시작해야겠다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=14031681&quot;&gt;처음 배우는 스프링 부트2&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;7장 스프링 부트 배치 복습. 사내 스프링 부트 배치 개발을 위해 다시 한번 복습.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=9252528&quot;&gt;자바 ORM 표준 JPA 프로그래밍&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;3장 영속성 관리 학습. 백기선님의 JPA 강의를 듣고 책을 읽으니 확실히 이해가 잘 된다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=11091521&quot;&gt;완벽한 it 인프라 구축을 위한 docker&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;1장 알아두어야 할 시스템, 인프라 지식 학습. 인프라 기초 개념에 대해서 정리를 할 수 있어 좋았다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;다음-주-목표&quot;&gt;다음 주 목표&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=9252528&quot;&gt;자바 ORM 표준 JPA 프로그래밍&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;4장 엔티티 매핑&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=11091521&quot;&gt;완벽한 it 인프라 구축을 위한 docker&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;2장 컨테이너 가상화 기술과 Docker&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=12692342&quot;&gt;프로그래밍의 정석&lt;/a&gt; 읽고 &lt;a href=&quot;https://github.com/gwonsungjun/TIL/blob/master/Book-Review/Development/principles-of-programming.md&quot;&gt;TIL 정리&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;전체를 기록하지 않고 중요한 것만 부분적으로 정리한다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.codility.com/&quot;&gt;Codility&lt;/a&gt; 5문제&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;이번-주에-읽었던-좋은-글출퇴근지하철&quot;&gt;이번 주에 읽었던 좋은 글(출퇴근지하철)&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://jojoldu.tistory.com/360&quot;&gt;오늘의 질문 2018.12.16 : 창천향로님&lt;/a&gt; 창천향로님이 블로그를 운영하며 받은 질문들을 정리한 글로 3개의 질문 중 마지막 질문에 대한 답변이 인상 깊었다. &lt;code class=&quot;highlighter-rouge&quot;&gt;먼저 배운 건 실력이 아니다. 당장의 실력보다는 어떤 마음가짐을 갖고 있는지가 중요한 것 같다. 사냥개와 같은 끈질김. 아무리 어려운 문제라도 이 친구라면 해결해낼 거라는 믿음? 저는 이런 마음가짐을 갖고 있는 사람과 같이 일하고 싶다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://jojoldu.tistory.com/363&quot;&gt;오늘의 질문 2018.12.18 : 창천향로님&lt;/a&gt; 1년차 백엔드 개발자가 된다면 어떤 것에 더 집중할 것인지에 대한 답변 글이다. 격리된 테스트 환경 구축 반복과 사용하는 시스템의 디버깅 방법 2가지를 연습할 것이라고 얘기하고 있다. 즉, 회사 코드가 아닌, 나만의 코드로 문제 상황을 재연해보는 연습(백지 상태에서 문제상황만 재연) 그리고 사용하는 시스템의 문제를 해결 하는 능력(어떻게 디버깅 할 것인가)을 길러야 한다는 의미.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=ouZrwXjusBA&quot;&gt;마소콘 2018 - 개발자와 블로그&lt;/a&gt; 창천향로님의 마소콘 발표 영상으로 꾸준한 블로깅을 통해 이직, 컨퍼런스 발표, 강의 글 기재 등 많은 기회가 주어졌다고 소개하고 있다. 내 생각에는 대상이 꼭 블로그가 아니더라도 하겠다는 의지와 열정 그리고 꾸준함이 가장 중요하다고 생각이 든다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://readtrend.com/archive&quot;&gt;Readtrend&lt;/a&gt;. &lt;a href=&quot;https://devnews.kr/&quot;&gt;devnews&lt;/a&gt;와 같이 국내 블로거들이 작성한 좋은 아티클을 소개하는 사이트이다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://jolggu.tistory.com/77&quot;&gt;나는 어떻게 1년에 300권을 읽었나?&lt;/a&gt; 우리의 뇌는 독서하는 뇌가 아니기 때문에 어렵다. 하지만 뇌의 가소성으로 독서하는 뇌로 변할 수 있다. 먼저 양서를 정독하려 하지 말고 다독을 하라. 꾸준히 매일 한 시간 이상. 이것이 습관이 되면 독서가 삶의 일부분처럼 서서히 느껴지게 된다. 이후에 정독하고 서평 쓰고 계독, 남독 등을 통해 비판적 사고, 창의성, 겸손을 배우도록 한다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://brunch.co.kr/@yudong/10&quot;&gt;#2 한달에 한권부터 읽는 독서법&lt;/a&gt; ‘연간 독서 목록’을 만들고 매달 한 권씩 빠짐없이 채워나가도록 한다. 올해는 실패했지만, 내년에는 꼭 실천해보자!&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://brunch.co.kr/@topasvga/384&quot;&gt;AWS 기초를 배우는 사이트들&lt;/a&gt; AWS 기초를 학습하는 데 있어 도움이 되는 사이트들을 모아놓은 글이다. 대부분 아마존 공홈에 있는 글이긴 하다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://johngrib.github.io/wiki/links-2018/&quot;&gt;2018년 링크 모음&lt;/a&gt; 기계인간 종립님의 아이폰 사파리에 열려 있던 탭을 모두 기록한 글이다. 이미 읽어본 글도 많았지만 읽어보지 못한 좋은 글들도 많았다. 당분간 여기서 하나씩 꺼내서 읽어봐야겠다 !&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://ryan-han.com/post/2018/essay/memoirs2018/&quot;&gt;체대 출신 개발자의 2018년 회고&lt;/a&gt; 출퇴근길 개발 읽기와 고퀄리티 개발 컨텐츠 모임 만드신 분이였구나.. 글 정말 잘 쓰셨다. 엄청난 열정에 많은 자극이 되었고 글의 마지막 말이 인상 깊어서 아직은 아니라고 생각했던 회고를 쓰고 싶어 졌다. &lt;code class=&quot;highlighter-rouge&quot;&gt;거만한 자는 자기 발밑을 내려다 보고, 겸손한 자는 자기 발자취를 되돌아본다.&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://jhleed.tistory.com/123&quot;&gt;스타트업에서 대규모 서비스 기업으로 이직한 주니어 개발자의 2018년 회고&lt;/a&gt; 이 글에서 소개하는 레거시를 대하는 태도의 변화, 과도한 책임감의 폐해 등은 그동안 나는 어떻게 해왔는지 다시 한번 돌아보게끔 해주는 좋은 주제였다. 다른 개발자들의 회고를 읽으면 이렇게 나 자신도 돌아볼 수 있는 시간을 가질 수 있어서 너무 좋은 것 같다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.slideshare.net/arload/devops-125948933&quot;&gt;DevOps 오픈소스 트랜드 (클라우드, 모바일 중심)&lt;/a&gt; 처음 들어보는 오픈소스들이 많이 등장한다. 이해 안 가는 부분이 많은데 DevOps에 조금 더 익숙해진 뒤에 읽어보면 더 도움 되지 않을까?&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://meetup.toast.com/posts/173&quot;&gt;DB도 형상관리를 해보자!&lt;/a&gt; DB 형상 관리 오픈소스 도구 FlyWay를 소개하는 글이다. 어떻게 동작하는지 실제로 한번 써봐야 감이 올 듯한데 개인 프로젝트에 도입해서 테스트를 먼저 해봐야겠다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://jojoldu.tistory.com/361&quot;&gt;SpringBoot에서 날짜 타입 JSON 변환에 대한 오해 풀기&lt;/a&gt; 궁금했던 내용인데 깔끔하게 정리되어있다. 또한  삽질하는 시간을 줄일 수 있게 되었다. :)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://victorydntmd.tistory.com/210&quot;&gt;(Spring JPA) 프로젝시(proxy)와 지연로딩&lt;/a&gt; 한동안 지연로딩과 같은 동작 원리도 이해하지 못하고 JPA를 썼었는데 조금씩 눈에 들어오기 시작했다. Fetching 전략과 지연로딩, 프록시에 대해 궁금하다면 읽어보자.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.insightbook.co.kr/13169&quot;&gt;의도적 수련 1 - 고수, 무술과 프로그래밍에 대한 소고&lt;/a&gt; 엄청난 인사이트를 얻었다. 이번에 출간된 김창준님의 ‘함께 자라기’를 최대한 빨리 읽어 보고싶다.
+    &lt;ul&gt;
+      &lt;li&gt;뛰어난 프로그래머를 관찰하면 흥이 난다. 리듬감이 있다. 옆에서“얼쑤!”라고 추임새를 해주고 싶을 때도 있다. 필자도 프로그래밍이 잘 될 때에는 박자가 잘 맞고 흥이 난다. 하지만 그렇지 않을 때에는 박자가 어긋나고 흥이 없고 살아 있는 느낌이 나질 않는다.&lt;/li&gt;
+      &lt;li&gt;하루 종일 의자에 앉아서 일해야 하는 직업의 특성상 허리, 눈, 다리, 팔, 손목 등에 병이 걸리기 쉽다. 꾸준히 하는 운동이 있으면 그런 병 걱정이 없다.&lt;/li&gt;
+      &lt;li&gt;그들(고수)을 주의 깊게 관찰하고, 분석하라. 그리고 무엇이 그들을 그렇게 ‘특별하게’ 하는지 알아내고 그걸 배워라. 또 그들이 어떻게 그렇게 특별해질 수 있었는지 배워라. 조만간 당신도 그들이 하는 것을 할 수 있을 것이다.&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;고수가 하는 것을 배우거나 따라하려고 하지 말고, 그들이 어떻게 고수가 되었는지를 배우고 따라하라. (아마도 우리가 배워야 할 것은 그들이 전문가에 도달하기 위해 밟았던 과정일지도 모른다.)&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;문제의 해결법만 달달 외운 사람은 세상의 모든 문제가 그 해결법을 적용할 대상으로 보인다. 또 새로운 문제에 직면했을 때 창의적이고 상황에 맞는 전문가적 해결안을 제시하지 못한다. 컴퓨터 프로그래밍에서 좋은 해결안들만 사전처럼 모아둔 디자인 패턴을 공부하는 사람들의 병폐가 대부분 여기에서 온다.&lt;/li&gt;
+      &lt;li&gt;단순한 반복 연습은 아무 도움이 안 된다고 강조한다. 자기 자신을 관찰하는 것, 그리고 피드백을 통해 재조정하는 것, 특별히 현재의 기량 증진을 위해 설계된 훈련 등이 중요하다. 에릭슨은 이런 수련을 특별히 의도적 수련(deliberate practice)이라고 부른다.&lt;/li&gt;
+      &lt;li&gt;전문성 연구에 따르면 한 분야의 세계적 수준의 고수가 되려면 10년의 수련, 혹은 도합 일만 시간 이상의 의도적 수련이 필요하다고 한다. 문가와 준전문가(semi-expert)의 경우 수련 시간이 일주일에 최소 두 배 이상(43시간 대 17시간)의 차이가 있었다. 나는 일주일에 몇 시간을 의도적 수련에 할애하는가?&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.insightbook.co.kr/13171&quot;&gt;의도적 수련 2 - 프로그래머에게 적합한 의도적 수련&lt;/a&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;고수가 되기 위해서는 구체적인 몇가지 규칙이라기보다는 현재 자신의 상태에서 관심과 애정을 가지고 노력하는 습관 같은 것이었다.&lt;/code&gt;
+    &lt;ul&gt;
+      &lt;li&gt;내가 컴퓨터를 시작한 게 언제부터인가? 일주일에 대충 몇 시간이나 프로그래밍 수련을 했나? 예를 들어 프로그래밍 경력 10년에, 그동안 늘 일주일에 10시간씩 수련해 온(이 정도면 대단하지 않나?) 사람이라고 치자. 계산하면 약 5,000시간이 나온다. 연주자와 비교하자면(꼭 정확한 비교는 아니지만) 전문가 수준에 속한다. 세계수준은 아닐지언정. 좀 더 정확히 말하자면, 전문가의 싹이 보이는 음악아카데미학생과 비견할 만하다. ‘ 에이 이거밖에안돼?’라고 생각할지도 모르겠지만, 1만 시간은 엄청난 양이다.&lt;/li&gt;
+      &lt;li&gt;고수 프로그래머가 빨리 되는 방법은 없을까? 있다. 지난 회에 밝혔듯이 지속적인 의도적 수련을 통해 고수되기는 가능하다. 코드 시각화하기, 같은 코드를 정해진 시간(예컨대 한 시간)동안 할 수 있는 데까지 매일 리팩토링 해보기, 같은 장난감 문제를 여러 번 풀기, 새로운 언어 배우기 등이 그러한 방법이다.&lt;/li&gt;
+      &lt;li&gt;이런 의도적 수련의 공통점은 반복적이라는 것(전문가일수록 일주일 중 공휴일까지도 하루에 투입하는 의도적 수련의 양이 일정했다), 그리고 피드백을 거의 즉각적으로 받을 수 있다는 것, 나중에 오류 수정이 가능하다는 것, 실수에 대한 부담이 크지 않다는 것, 자신이 한 것에 대해 생각해볼 여유가 주어진다는 것 등이 있을 것이다. 필자 생각에는 전문가일수록 스스로 이런 의도적 수련을 계획, 설계해서 하는 것 같다. 자기만을 위한 특수훈련을 만들어 실험해 본다는 것은 참 즐거운 경험이 되기도 한다.&lt;/li&gt;
+      &lt;li&gt;어떻게 일(work)을 하면서 동시에 수련(practice)할 수 있을까가 된다. 일도 되면서 수련도 되는, 생활수련의 방법은 없을까?  앞서 말했던 실험, 피드백, 실패 허용, 오류 수정 등이 핵심 키워드다. 뭔가 실험적인 것을 안심하고 시도해 볼 수 있어야 하며, 거기에서 의도적으로 피드백을 얻고, 그 피드백을 통해 자신의 오류를 수정해서 다음번에는 더 나은 시도를 할 수 있어야 한다.&lt;/li&gt;
+      &lt;li&gt;테스트 주도 개발을 하면 일하는 도중 수련을 하게 된다. 피드백뿐만이 아니다. 테스트가 있기 때문에 사람이 과감해진다. 여러 가지 실험을 해보게 된다. 뭔가 잘못 건드리면 테스트가 곧바로 알려줄 것이기 때문에 무서움이 없다. 테스트 주도 개발과 리팩토링을 짝을 이뤄 작업하다 보면 하루 중에 학습하는 것이 참 많다. 프로그래머가 나날이 퇴근을 하면서 “오늘은 또 이런 걸 깨달았군” 하면서 가슴 뿌듯하게 집으로 돌아가는 경우는 흔하지 않다. 하지만 이런 방법을 사용하면 매일 깨달음이 있고 매일 새롭다.&lt;/li&gt;
+      &lt;li&gt;전문가들일수록 일정 수준에 오른 이후에도 꾸준히 수련을 계속하며, 그 활동 자체에서 큰 즐거움을 얻는 것으로 알려져 있다. 고수가 되는 길은 오히려 ‘고수’보다 ‘길’에 대한 집착에서 나오는 것일지도 모르겠다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</content><author><name>sungjun</name></author><category term="weekly review" /><category term="weekly" /><category term="review" /><summary type="html">2018년 12월 17일 ~ 2018년 12월 23일 주간 회고</summary></entry><entry><title type="html">181210_181216</title><link href="https://gwonsungjun.github.io/articles/2018-12/181210_181216" rel="alternate" type="text/html" title="181210_181216" /><published>2018-12-16T00:00:00+00:00</published><updated>2018-12-16T00:00:00+00:00</updated><id>https://gwonsungjun.github.io/articles/2018-12/181210_181216</id><content type="html" xml:base="https://gwonsungjun.github.io/articles/2018-12/181210_181216">&lt;p&gt;&lt;strong&gt;2018년 12월 10일 ~ 2018년 12월 16일 주간 회고&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;181210_181216-주간회고&quot;&gt;181210_181216 주간회고&lt;/h1&gt;
+
+&lt;h3 id=&quot;weekly-review&quot;&gt;Weekly Review&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;사내 팀에서 개발하고 유지보수 하고 있는 관리자(Admin) 사이트의 가이드 문서가 필요해졌다.
+    &lt;ul&gt;
+      &lt;li&gt;이전에 작성된 ppt 문서가 있는데 너무 오래된 문서였다. 수정만 해서 전달하면 되는 거긴 하지만 또 이렇게 ppt로 작성하고 나면 관리가 안 될 것이라는 걸 느꼈다.&lt;/li&gt;
+      &lt;li&gt;따라서 팀 위키를 만들기로 마음먹었다. 처음에는 문서를 작성하는데 시간을 꽤 투자해야겠지만 앞으로 유지보수 하는 데 있어 필수라고 생각이 되었다.&lt;/li&gt;
+      &lt;li&gt;Confluence, GitBook과 같은 유료 소프트웨어를 사용하면 참 좋겠지만, 설득할 자신이 없었다. 그래서 무료 위키를 찾기 시작했고…&lt;/li&gt;
+      &lt;li&gt;가장 적절하다고 생각하는 &lt;a href=&quot;https://www.dokuwiki.org/dokuwiki&quot;&gt;dokuwiki&lt;/a&gt;를 찾게 되었다.&lt;/li&gt;
+      &lt;li&gt;생태계도 꽤 오래전부터 잘 구축되어 있는 느낌이었고 php로 되어있지만 관리하는 데 큰 어려움이 없다고 판단되어 선택하게 되었다.&lt;/li&gt;
+      &lt;li&gt;plugin도 생각보다 정말 많다. markdown에 익숙하니 markdown plugin을 적용해서 신나게 위키를 쓰고 있다.&lt;/li&gt;
+      &lt;li&gt;팀뿐만 아니라 사내 전체에 전파되어서 편리함을 모두가 느꼈으면 하는 바람이다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;젠킨스와 도커를 열심히 학습 중이다.
+    &lt;ul&gt;
+      &lt;li&gt;스터디원들과 하는 팀 프로젝트에 적용해보기 위해 조금씩 공부하고 있는데 궁극적으로는 사내 프로젝트에도 적용하는 것이 목표다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;학습&quot;&gt;학습&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%8D%B0%EC%9D%B4%ED%84%B0-jpa/&quot;&gt;백기선의 스프링 데이터 JPA&lt;/a&gt; 듣고 &lt;a href=&quot;https://github.com/gwonsungjun/TIL/blob/master/JPA/Whiteship-JPA.md&quot;&gt;TIL에 요약 정리&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;이번 주에 다 듣고 정리하려 했는데, 시간이 없어서 마무리 짓지 못했다. 다음 주에는 이제 강의를 끝낼 수 있을 것 같다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=14031681&quot;&gt;처음 배우는 스프링 부트2&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;전체 내용 복기&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=12692342&quot;&gt;프로그래밍의 정석&lt;/a&gt; 읽고 &lt;a href=&quot;https://github.com/gwonsungjun/TIL/blob/master/Book-Review/Development/principles-of-programming.md&quot;&gt;TIL 정리&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;다음-주-목표&quot;&gt;다음 주 목표&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%8D%B0%EC%9D%B4%ED%84%B0-jpa/&quot;&gt;백기선의 스프링 데이터 JPA&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;강의 마무리하고 복습하기&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=11091521&quot;&gt;완벽한 it 인프라 구축을 위한 docker&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=14031681&quot;&gt;처음 배우는 스프링 부트2&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;스프링 부트 배치부분만 다시 한번 복습&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=12692342&quot;&gt;프로그래밍의 정석&lt;/a&gt; 읽고 &lt;a href=&quot;https://github.com/gwonsungjun/TIL/blob/master/Book-Review/Development/principles-of-programming.md&quot;&gt;TIL 정리&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;전체를 기록하지 않고 중요한 것만 부분적으로 정리한다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.codility.com/&quot;&gt;Codility&lt;/a&gt; 5문제&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;이번-주에-읽었던-좋은-글출퇴근지하철&quot;&gt;이번 주에 읽었던 좋은 글(출퇴근지하철)&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://justhackem.wordpress.com/2016/05/19/getting-hired-by-a-startup/&quot;&gt;스타트업에 취업하기&lt;/a&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;당신이 Java 프로그래머라면 Java를 더 깊이 공부해보라.&lt;/code&gt;
+    &lt;ul&gt;
+      &lt;li&gt;즉, 당장 현장에서 하루 이틀 사이에 써먹을 도구나 팁에만 너무 집중하지 말고 낮은 수준에서 내 코드를 지탱하고 있는 원리에 대해서도 관심을 가지라는 의미.&lt;/li&gt;
+      &lt;li&gt;StackOverflow만 방문하지 말고 최근 Java 언어 명세에 추가된 내용들의 근원이 되는 프로그래밍 이론이나 JVM 동작 원리를 설명하는 문서도 읽어봐라.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://guruble.com/%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C%EC%84%9C%EB%B9%84%EC%8A%A4microservice-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-%EA%B7%B8%EA%B2%83%EC%9D%B4-%EB%AD%A3%EC%9D%B4-%EC%A4%91%ED%97%8C%EB%94%94/&quot;&gt;마이크로서비스 아키텍처&lt;/a&gt; 마이크로서비스 아키텍처를 이해하기 쉽게 아주 잘 정리한 글이다. 마이크로서비스 아키텍처의 개념과 장/단점, API Gateway에 대해서 주로 다루고 있다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://jojoldu.tistory.com/68&quot;&gt;“그 연차치곤 잘하네”의 함정&lt;/a&gt; 조건형 칭찬들(~~치곤 잘하네)에서 벗어나야 한다. 5년, 7년, 10년이 지나면 본인이 칭찬을 받을 수 있었던 조건들은 더이상 칭찬의 조건에 해당되지 않는다. 결국은 &lt;code class=&quot;highlighter-rouge&quot;&gt;개발을 잘하냐 못하냐로 판단&lt;/code&gt;을 하게 된다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://okky.kr/article/523155&quot;&gt;«족집게 질문 리스트»로 글로벌 IT 회사의 입사 인터뷰를 제대로 통과하기&lt;/a&gt; 여기서 나오는 질문 리스트들에 대한 답변이 꼭 글로벌 IT 회사에만 국한된 것이 아니라고 생각한다. 핵심은 어떤 질문이든 간에 그 질문의 의도를 잘 파악할 수 있도록 노력해야 한다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=F4Y-NYdwgLI&quot;&gt;스프링캠프 2017 (Day1 B1) : Booting Spring Data REST&lt;/a&gt; 깔끔하고 군더더기 없는 발표인 것 같다. (나도 이렇게 발표하고 싶다..!) Spring Data REST에 대해 학습하고 있다면 꼭 한번은 듣길 추천한다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://medium.com/@sryu99/product-manager-%EA%B4%80%EC%A0%90%EC%97%90%EC%84%9C-%EB%B0%94%EB%9D%BC-%EB%B3%B8-tdd-3ae25512c5d7&quot;&gt;Product Manager 관점에서 바라본 TDD&lt;/a&gt; “세상은 계속 변한다. 점점 빠르게…”
+    &lt;ul&gt;
+      &lt;li&gt;급변하는 세상을 살아가며 제품을 만들어가는 입장에서 빠른 개발에만 집중하여 일단 만들고 다시 들여다 보기 두려운 제품을 만들어 하루하루 살얼음판을 걸을지, 아니면 초반 스피드는 다소 늦더라도 빠르게 변화에 대응해가며 안정적인 제품을 만들어 갈 것인지. &lt;code class=&quot;highlighter-rouge&quot;&gt;선택은 자유다.&lt;/code&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=ybRg282RECs&quot;&gt;창천향로님 - 클린코드 2장 의미 있는 이름(Youtube)&lt;/a&gt; 클린코드 책 일부분을 설명해주는 영상이다. 클린코드 책과 병행하면 좋은 결과를 얻을 수 있을 것 같다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://jolggu.tistory.com/76&quot;&gt;왜 나는 책을 읽어도 남는 게 없나?&lt;/a&gt; 무작정 읽기만 하는 독서는 남지 않는다. 생각하고 요약하고 인출하는 등 여러 가지 방법으로 읽은 책을 정리할 수 있어야 한다. 그래서 이 글의 핵심은 올바른 독서를 위해 알려진 많은 과학적인 방법들을 잘 융합해서 자신만의 독서법을 구축해 나가자 인 것 같다.
+    &lt;ul&gt;
+      &lt;li&gt;내가 책을 제대로 읽고 있는지 아닌지를 가장 확실히 판단할 수 있는 방법은 내가 책을 요약할 수 있거나 혹은 책 내용을 나만의 언어로 설명할 수 있는지를 확인해봐야 한다. 이런 점검의 과정 없이 무턱대고 책만 읽는 것은 사실 대부분 내가 책을 읽고 있으므로 생산적인 일을 하고 있다는 지적 안도감에 빠지고 싶은 경우이다. 그러니 &lt;code class=&quot;highlighter-rouge&quot;&gt;읽고 생각하라. 생각이 잘 안되면 꼭 다시 읽어라!&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;핵심을 파악할 수 있어야 한다. 서평(독후감, 책의 내용을 보지 않고 기억을 더듬어 쓰려 노력), 토론 등이 핵심을 파악하고 기억하는데 많은 도움이 된다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</content><author><name>sungjun</name></author><category term="weekly review" /><category term="weekly" /><category term="review" /><summary type="html">2018년 12월 10일 ~ 2018년 12월 16일 주간 회고</summary></entry><entry><title type="html">181203_181209</title><link href="https://gwonsungjun.github.io/articles/2018-12/181203_181209" rel="alternate" type="text/html" title="181203_181209" /><published>2018-12-09T00:00:00+00:00</published><updated>2018-12-09T00:00:00+00:00</updated><id>https://gwonsungjun.github.io/articles/2018-12/181203_181209</id><content type="html" xml:base="https://gwonsungjun.github.io/articles/2018-12/181203_181209">&lt;p&gt;&lt;strong&gt;2018년 12월 03일 ~ 2018년 12월 09일 주간 회고&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;181203_181209-주간회고&quot;&gt;181203_181209 주간회고&lt;/h1&gt;
+
+&lt;h3 id=&quot;weekly-review&quot;&gt;Weekly Review&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;연말이 다가와서 그런지 집중력이 자꾸 흐트러진다. 그래서 집중 안될 때는 가벼운 책이라도 읽어야겠다는 생각이 들어 &lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=12692342&quot;&gt;프로그래밍의 정석&lt;/a&gt;을 읽기 시작하였다.
+    &lt;ul&gt;
+      &lt;li&gt;읽는 사람에 따라 다르겠지만 나에겐 가볍지 않은 책이었다.&lt;/li&gt;
+      &lt;li&gt;한 챕터씩 읽을 때마다 각 상황에서 나는 지금까지 어떻게 해왔고 무엇이 잘 못 됐었고 그래서 앞으로 어떻게 해야 할지 깊게 생각을 가지게 된다.&lt;/li&gt;
+      &lt;li&gt;아직 많이 읽지는 않았지만 기대가 되는 책이다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;스프링 부트 스터디원들과 토이 프로젝트를 진행한다.
+    &lt;ul&gt;
+      &lt;li&gt;연말이기에 크게 부담되지 않을 정도로 진행을 시작하기로 했다.&lt;/li&gt;
+      &lt;li&gt;그동안 한 번씩 사용해보고 싶었던 기술들을 다 사용해보려고 조금 무리하게 스펙을 정하긴 했다.&lt;/li&gt;
+      &lt;li&gt;일단 다음 주는 Docker 공부를 시작해 볼 것이다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;학습&quot;&gt;학습&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%8D%B0%EC%9D%B4%ED%84%B0-jpa/&quot;&gt;백기선의 스프링 데이터 JPA&lt;/a&gt; 듣고 &lt;a href=&quot;https://github.com/gwonsungjun/TIL/blob/master/JPA/Whiteship-JPA.md&quot;&gt;TIL에 요약 정리&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=14031681&quot;&gt;처음 배우는 스프링 부트2&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;7장 스프링 부트 배치&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=12692342&quot;&gt;프로그래밍의 정석&lt;/a&gt; 읽고 &lt;a href=&quot;https://github.com/gwonsungjun/TIL/blob/master/Book-Review/Development/principles-of-programming.md&quot;&gt;TIL 정리&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;다음-주-목표&quot;&gt;다음 주 목표&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%8D%B0%EC%9D%B4%ED%84%B0-jpa/&quot;&gt;백기선의 스프링 데이터 JPA&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;강의 마무리하기.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=14031681&quot;&gt;처음 배우는 스프링 부트2&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;전체 내용 복기&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://book.naver.com/bookdb/book_detail.nhn?bid=12692342&quot;&gt;프로그래밍의 정석&lt;/a&gt; 읽고 &lt;a href=&quot;https://github.com/gwonsungjun/TIL/blob/master/Book-Review/Development/principles-of-programming.md&quot;&gt;TIL 정리&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.codility.com/&quot;&gt;Codility&lt;/a&gt; 5문제&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;이번-주에-읽었던-좋은-글출퇴근지하철&quot;&gt;이번 주에 읽었던 좋은 글(출퇴근지하철)&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://okky.kr/article/408595&quot;&gt;작은 오픈소스 프로그램을 분석해서 실력을 쌓아 나간 사례&lt;/a&gt; 많은 깨우침을 주고 공감이 가는 글이었다. 요약하면 쓸데없는 잡생각 하지 말고 늘 자신을 관찰하는 시간을 가지자. (나는 이것을 메타인지라고 알고 있다.) 그리고 이것을 “실천”하지 않으면 말짱 도루묵이다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://brunch.co.kr/@hyungsukkim/20&quot;&gt;A급 인재를 떠나게 하는 7가지 방법&lt;/a&gt; 글의 마지막 한 마디가 매우 인상 깊었다. &lt;code class=&quot;highlighter-rouge&quot;&gt;연봉을 깨짝하고 올려주는 것보다는, 정말로 일을 하고 싶은 환경을 만들어주고, 누구나 인정하는 큰 성과를 냈을 때 정말로 확실한 보상을 받을 수 있다는 믿음을 주는 것이 더 중요하다.&lt;/code&gt;
+    &lt;ul&gt;
+      &lt;li&gt;(1) Why없이 What만 설명한다.&lt;/li&gt;
+      &lt;li&gt;(2) 문제를 해결하게 두지 않는다.&lt;/li&gt;
+      &lt;li&gt;(3) 어디까지 진행되었는지 계속 묻는다.&lt;/li&gt;
+      &lt;li&gt;(4) 업무 외적으로 괴롭힌다.&lt;/li&gt;
+      &lt;li&gt;(5) 회사의 비전과 반대되는 현상을 묵인한다.&lt;/li&gt;
+      &lt;li&gt;(6) 평가를 강조한다.&lt;/li&gt;
+      &lt;li&gt;(7) A급 동료가 떠난 자리를 B급으로 채운다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://brunch.co.kr/@cleancode/37&quot;&gt;어떤 일을 하고 싶은가?&lt;/a&gt; 좋아하는 일을 하며 살아야 한다고 했다고 한다. 그러면 여기서 좋아한다는 것의 정의는? 이 글을 작성하신 백명석 님은 “어렵지만 수행했을 때 가치가 큰일” 좋아하는 것을 알게 되었다고 한다. 많은 개발자들이 공감하리라 생각한다. 수많은 고민과 삽질 끝에 만족할 만한 결과물(?)과 함께 찾아오는 쾌감. 그럼 나는? 나는 어떤 일을 하고 싶은 걸까?&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://medium.com/@zuyoungmin/youtubefirst2018-a3b26fd74eca&quot;&gt;왜 “유튜브 퍼스트” 인가?&lt;/a&gt; 다양한 컨텐츠들은 쏟아져 나오고 있고 서점에 가면 유튜브 관련된 책을 심심치 않게 볼 수 있다. 이를 통해 수많은 트래픽이 유튜브로 몰리고 있다는 것을 알 수 있다. 나 역시 유튜브를 접하는 시간이 점점 늘고 있지만 아직은(?) 추천 영상을 보는 정도다. 뭔가 좀 더 유튜브를 잘 활용할 수 있을 법도 한데. 무엇이 있을까?&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://medium.com/@ghilbut/%ED%86%A0%EC%8A%A4%EC%9D%98-%EB%B0%B1%EC%97%94%EB%93%9C%EB%8A%94-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%9E%90%EB%8F%99%ED%99%94%EB%90%98%EB%8A%94%EA%B0%80-6042e6bd110d&quot;&gt;토스의 백엔드는 어떻게 자동화되는가?&lt;/a&gt; 자세하게 설명하고 있지는 않지만 토스의 백엔드 자동화는 어떻게 구성되어 있는지 알 수 있는 글이다.  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.slipp.net/questions/350&quot;&gt;(코드리뷰) Exception 처리 - Java&lt;/a&gt; 예외처리를 어떻게 하면 잘할 수 있을지 항상 고민하는데 먼저 이 글의 권고사항을 숙지하고 개발해 나갈 수 있도록 노력해야겠다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://tinkerbellbass.tistory.com/24&quot;&gt;JPA (Java Persistence API) 기본 개념&lt;/a&gt; , &lt;a href=&quot;https://www.slideshare.net/ssusere4d67c/jpa-53004111&quot;&gt;JPA 잘 (하는 척) 하기&lt;/a&gt; JPA 기본 개념들을 다시 한번 정리하기에 좋았던 글과 발표 자료이다. 핵심은 영속성(Persistence)이다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://blog.outsider.ne.kr/1412&quot;&gt;GitHub Actions 소개&lt;/a&gt; 아직 private 저장소에서만 제공하고 있지만 앞으로 추가될 기능인 GitHub Action에 대한 소개 글이다. &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://jinson.tistory.com/190&quot;&gt;Richardson 성숙도 모델(Richardson Maturity Model)&lt;/a&gt;, &lt;a href=&quot;http://wiki.pchero21.com/wiki/Rest_architecture&quot;&gt;Rest architecture&lt;/a&gt; 최근에 Hateoas를 조금 더 집중적으로 공부하기 위해 REST 관련 글을 찾던 중 괜찮았던 2개의 글이다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://velog.io/@rudwnok123/%EC%97%85%EB%AC%B4-%EC%8B%9C-%EC%9C%A0%EC%9A%A9%ED%95%9C-%ED%88%B4-%EC%86%8C%EA%B0%9Cfeat.-window&quot;&gt;업무 시 유용한 툴 소개(feat.widnows)&lt;/a&gt; 대부분 그동안 윈도우를 써오면서 몰랐던 툴들이었다. deskpin, q-dir, treesizefreeportable은 특히 유용하게 사용할 수 있을 것 같다.&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>sungjun</name></author><category term="weekly review" /><category term="weekly" /><category term="review" /><summary type="html">2018년 12월 03일 ~ 2018년 12월 09일 주간 회고</summary></entry></feed>

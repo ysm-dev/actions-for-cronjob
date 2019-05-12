@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+	<channel>
+		<title>thswave</title>
+		<description>Try hard Try Hard!</description>
+		<link>/</link>
+		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
+		
+			<item>
+				<title>ssh login without password</title>
+				<description>&lt;h3 id=&quot;비밀번호-없이-ssh-로그인&quot;&gt;비밀번호 없이 ssh 로그인&lt;/h3&gt;
+
+&lt;p&gt;로컬(A로 지칭)에서 특정 서버(B로 지칭)로 ssh 원격접속하기 위해 매 번 비밀번호를 입력하는 것이 불편하여 비밀번호 없이 접속하기&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Hot to do it&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;a@A:~&amp;gt; ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/a/.ssh/id_rsa):
+Created directory '/home/a/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/a/.ssh/id_rsa.
+Your public key has been saved in /home/a/.ssh/id_rsa.pub.
+The key fingerprint is:
+3e:4f:05:79:3a:9f:96:7c:3b:ad:e9:58:37:bc:37:e4 a@A
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;B 서버의 b유저로 ssh 접속하여  ~/.ssh 디렉토리 생성(이미 해당 디렉토리가 존재한다면 패스):&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;a@A:~&amp;gt; ssh b@B mkdir -p .ssh
+b@B's password:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;A에서 생성한 id_rsa.pub(public_key)를 B의 .ssh/authorized_keys 파일에 입력.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;a@A:~&amp;gt; cat .ssh/id_rsa.pub | ssh b@B 'cat &amp;gt;&amp;gt; .ssh/authorized_keys'
+b@B's password:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이제부터 password 없이 A에서 B로 ssh 로그인 할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;a@A:~&amp;gt; ssh b@B
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h5 id=&quot;참고&quot;&gt;참고&lt;/h5&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.linuxproblem.org/art_9.html&quot;&gt;http://www.linuxproblem.org/art_9.html&lt;/a&gt;&lt;/p&gt;
+</description>
+				<pubDate>Thu, 14 Jan 2016 00:00:00 +0000</pubDate>
+				<link>/linux/2016/01/14/ssh-without-password.html</link>
+				<guid isPermaLink="true">/linux/2016/01/14/ssh-without-password.html</guid>
+			</item>
+		
+			<item>
+				<title>ruby simple httpd (similar python SimpleHTTPServer)</title>
+				<description>&lt;h4 id=&quot;특정-디렉토리의-파일들을-다른-서버컴퓨터-등에서-다운로드접근-하고-싶을-경우&quot;&gt;특정 디렉토리의 파일들을 다른 서버/컴퓨터 등에서 다운로드/접근 하고 싶을 경우&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://thswave.github.io/ruby/sinatra/2015/05/26/introduce-sinatra.html&quot;&gt;sinatra를 활용한 간단한 서버 구축&lt;/a&gt; 과는 별도로 파일을 다른 위치(다른 서버)에서 접근하고 싶은 경우 보통은 다운로드 받아 해당 서버로 &lt;code class=&quot;highlighter-rouge&quot;&gt;scp&lt;/code&gt;를 통해 넣어주곤 했는데 빠르게 전달하기 불편한 상황이 있을 수 있습니다.(예를 들어 각 서버에 접근하기 위해 여러 단계의 인증을 거쳐야만 접근할 수 있는 경우)&lt;/p&gt;
+
+&lt;p&gt;이럴 때 ftp를 열어준다거나 파일 전송을 위해 아파치를 띄워 특정 경로 파일을 지정해주는 등 여러가지 방법이 있을 수 있지만 빠르고 쉽게 하는 방법을 찾았습니다.(혹시 더 간단한 방법이 있다면 제보 부탁드립니다.)&lt;/p&gt;
+
+&lt;p&gt;공유할 파일이 위치한 디렉토리로 이동 한 뒤 ruby/python으로 서버를 띄웁니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;ruby&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ruby -run -e httpd . -p &amp;lt;port번호&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;python&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;python -m SimpleHTTPServer &amp;lt;port번호&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;브라우저로 접근할 경우 해당 디렉토리의 파일 리스트를 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl http://&amp;lt;serverIp&amp;gt;:&amp;lt;port&amp;gt;/&amp;lt;filename&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;참고
+** &lt;a href=&quot;http://stackoverflow.com/questions/3108395/serve-current-directory-from-command-line&quot;&gt;http://stackoverflow.com/questions/3108395/serve-current-directory-from-command-line&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Thu, 14 Jan 2016 00:00:00 +0000</pubDate>
+				<link>/ruby/2016/01/14/simple-file-server.html</link>
+				<guid isPermaLink="true">/ruby/2016/01/14/simple-file-server.html</guid>
+			</item>
+		
+			<item>
+				<title>java detect encoding</title>
+				<description>&lt;p&gt;프로그램을 짜면서 온갖 한글 깨짐 현상을 경험해 보셨을겁니다. 
+한글이 깨지는 곳은 많지만 웹 개발을 하면서 자주 경험하는 곳은 &lt;code class=&quot;highlighter-rouge&quot;&gt;tomcat&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;html 페이지&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;DB&lt;/code&gt; 정도 같습니다. 하지만 비교적 간단한 설정으로 해결할 수 있는것 같습니다.
+(ex&amp;gt; tomcat은 Connector에서 URIEncoding, DB 스키마/테이블 인코딩 설정, DB connection url에서의 인코딩 명시 등등)
+오늘 알아볼 인코딩 탐지는 조금 특수한 케이스라 할 수 있습니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;파일에서-읽어들인-byte의-인코딩을-탐지하는-방법&quot;&gt;&lt;em&gt;파일에서 읽어들인 byte[]의 인코딩을 탐지하는 방법&lt;/em&gt;&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;사실 java 8 에서(이전 버전은 동일하지 않을 수 있습니다) 인코딩을 굳이 탐지 하지 않아도 자동으로 처리해 줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;String 생성자로 charset을 명시적으로 넘겨주기도 하지만 &lt;code class=&quot;highlighter-rouge&quot;&gt;String(byte[] bytes, Charset charset)&lt;/code&gt;, byte[]만 넘겨줘도 내부적으로 인코딩을 탐지 해 줍니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;String(byte[] bytes)&lt;/code&gt;
+하지만 이렇게 생성된 String은 어떤 인코딩으로 처리되었는지 알수 없습니다.(알 수 있는 방법이 있다면 댓글 부탁드리겠습니다.)&lt;/p&gt;
+
+&lt;p&gt;인코딩인지 탐지 라이브러리를 사용해서 알 수 있습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;참조: &lt;a href=&quot;http://mvnrepository.com/artifact/com.googlecode.juniversalchardet/juniversalchardet&quot;&gt;http://mvnrepository.com/artifact/com.googlecode.juniversalchardet/juniversalchardet&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;예제.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;private String detectCharset(byte[] bytes) {
+		UniversalDetector detector = new UniversalDetector(null);
+		detector.handleData(bytes, 0, bytes.length);
+		detector.dataEnd();
+		String detectedCharset = detector.getDetectedCharset();
+		if (detectedCharset != null &amp;amp;&amp;amp; detector.isDone() &amp;amp;&amp;amp; Charset.isSupported(detectedCharset)) {
+           return detectedCharset;
+		}
+	}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;아주 간단한 예제로 작성되었지만 쉽게 이해하실 수 있습니다.&lt;/p&gt;
+
+&lt;h4 id=&quot;참고&quot;&gt;참고&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;encoding? charset? 무슨 차이인가?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;charset&lt;/code&gt; is the set of characters you can use&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;encoding&lt;/code&gt; is the way these characters are stored into memory&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://stackoverflow.com/questions/2281646/whats-the-difference-between-encoding-and-charset&quot;&gt;http://stackoverflow.com/questions/2281646/whats-the-difference-between-encoding-and-charset&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;위 링크의 답변 중 특별한 사항이 있다면 javadoc에서 encoding을 charset로 잘못사용했다는 의견입니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Note that javadoc wrongly uses &quot;charset&quot; instead of &quot;encoding&quot;, for example in InputStreamReader, we read &quot;An InputStreamReader is a bridge from byte streams to character streams: It reads bytes and decodes them into characters using a specified charset. The charset that it uses may be specified by name or may be given explicitly, or the platform's default charset may be accepted.&quot;. However, what they mean is &quot;encoding&quot;. –
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Q. UTF-8은 encoding? charset?
+A. Encoding입니다. unicode를 표현하는 여러 인코딩 중 하나입니다.(UTF-16, UTF-8 등등)&lt;/p&gt;
+
+</description>
+				<pubDate>Fri, 08 Jan 2016 00:00:00 +0000</pubDate>
+				<link>/java/2016/01/08/java-detect-encoding.html</link>
+				<guid isPermaLink="true">/java/2016/01/08/java-detect-encoding.html</guid>
+			</item>
+		
+			<item>
+				<title>jenkins에서 fabric을 활용한 원격 배포 remote deploy</title>
+				<description>&lt;ul&gt;
+  &lt;li&gt;Makefile&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nl&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+
+&lt;span class=&quot;nl&quot;&gt;deploy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;build&lt;/span&gt;
+	fab &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$(PROFILE)&lt;/span&gt; deploy:&lt;span class=&quot;nv&quot;&gt;$(PROFILE)&lt;/span&gt;
+
+&lt;span class=&quot;nl&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;check-profile clean&lt;/span&gt;
+	sbt clean stage
+
+&lt;span class=&quot;nl&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;check-profile&lt;/span&gt;
+	fab &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$(PROFILE)&lt;/span&gt; init
+
+&lt;span class=&quot;nl&quot;&gt;check-profile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;ifndef&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;PROFILE&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;$(error&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;PROFILE&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;undefined)&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;endif&lt;/span&gt;
+
+&lt;span class=&quot;nl&quot;&gt;clean&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;clean-target&lt;/span&gt;
+
+&lt;span class=&quot;nl&quot;&gt;clean-target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+	rm &lt;span class=&quot;nt&quot;&gt;-rf&lt;/span&gt; target
+
+&lt;span class=&quot;nl&quot;&gt;.PHONY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;clean-deploy clean-target check-profile&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# vim:noet
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+</description>
+				<pubDate>Tue, 17 Nov 2015 00:00:00 +0000</pubDate>
+				<link>/server/2015/11/17/jenkins-deploy-remote-server.html</link>
+				<guid isPermaLink="true">/server/2015/11/17/jenkins-deploy-remote-server.html</guid>
+			</item>
+		
+			<item>
+				<title>linux 에서 java 프로그램 시작 시 pid 알아내기</title>
+				<description>&lt;h3 id=&quot;상황&quot;&gt;상황&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;웹 서비스가 아닌 일반 자바 프로그램을 CI 서버에 연동하는 과정에서 tomcat이나 play framework 처럼 start, stop으로 프로세스를 정지, 실행 시켜야 했습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;grep&lt;/code&gt; 으로 pid를 찾을 수 도 있지만 이는 100% 정확하다고 보장할 수 없기 때문에 프로그램이 시작되고 할당 받는 pid를 알아낼 방법이 필요했습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;해결&quot;&gt;해결&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;자바 프로그램 실행 직후 &lt;code class=&quot;highlighter-rouge&quot;&gt;echo &quot;$!&quot; &amp;gt; test.pid&lt;/code&gt; 를 통해 pid를 알아낼 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;start, stop이 되도록 shell script 작성.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/bash&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;PID_FILE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;pwd&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/test.pid&quot;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$1&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in
+&lt;/span&gt;start&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  nohup java &lt;span class=&quot;nt&quot;&gt;-jar&lt;/span&gt; test.jar &amp;amp;
+  &lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$!&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$PID_FILE&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;echo &lt;/span&gt;STARTED
+  &lt;span class=&quot;p&quot;&gt;;;&lt;/span&gt;
+stop&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$PID_FILE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;kill&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$PID_FILE&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;STOPPED&quot;&lt;/span&gt;
+    rm &lt;span class=&quot;nv&quot;&gt;$PID_FILE&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;else
+    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;It seems that the process isn't running.&quot;&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;esac&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+</description>
+				<pubDate>Tue, 17 Nov 2015 00:00:00 +0000</pubDate>
+				<link>/java/linux/2015/11/17/how-to-know-java-pid-when-start.html</link>
+				<guid isPermaLink="true">/java/linux/2015/11/17/how-to-know-java-pid-when-start.html</guid>
+			</item>
+		
+			<item>
+				<title>git hook 을 활용한 pre commit, pre push</title>
+				<description>&lt;h3 id=&quot;git-hook&quot;&gt;git hook&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Git 디렉토리 밑에 hooks라는 디렉토리에 저장한다. 기본 훅 디렉토리는 .git/hooks이다. 이 디렉토리에 가보면 Git이 자동으로 넣어준 매우 유용한 스크립트 예제가 몇 개 있다. 그리고 스크립트가 입력받는 값이 어떤 값인지 파일 안에 자세히 설명돼 있다. 모든 예제는 쉘과 Perl 스크립트로 작성돼 있지만 실행할 수만 있으면 되고 Ruby나 Python같은 다른 스크립트 언어로 만들어도 된다.예제 스크립트의 파일 이름에는 .sample이라는 확장자가 붙어 있다. 그래서 이름만 바꿔주면 그 훅을 사용할 수 있다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;참조 :&lt;a href=&quot;https://git-scm.com/book/ko/v1/Git%EB%A7%9E%EC%B6%A4-Git-%ED%9B%85&quot;&gt;https://git-scm.com/book/ko/v1/Git%EB%A7%9E%EC%B6%A4-Git-%ED%9B%85&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;git hook에 대한 설명 만으로는 무엇을 할 수 있는지 감이 안올 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;hook이라는 용어에서 알 수 있듯 git 작업에 후킹 메소드를 걸어 두고 이 메소드의 동작을 정의하면 자연스럽게 동작됩니다.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;예를 들어 &lt;code class=&quot;highlighter-rouge&quot;&gt;push 후 slack 이나 기타 메신저로 동료에게 알림&lt;/code&gt; 을 걸어 준다거나 &lt;code class=&quot;highlighter-rouge&quot;&gt;commit 전/후 unit test 실행하여 성공할 경우만 commit&lt;/code&gt; 하고 싶을 때! 이 때 적합한게 git hook이라 할 수 있습니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;git에서 기본적으로 정의된 sample hook&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ cd .git/hook/
+$ ls
+applypatch-msg.sample     pre-applypatch.sample     pre-rebase.sample
+commit-msg.sample         pre-commit.sample         prepare-commit-msg.sample
+post-update.sample        pre-push.sample           update.sample
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;hook을 적용하기 위해서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;pre-commit.sample&lt;/code&gt; -&amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;pre-commit&lt;/code&gt; 파일 명에 sample을 지워주시면 됩니다.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;hook 은 기본적으로 쉘 스크립트로 구성되어 있는데 다른 스크립트 언어를 쓰실 수도 있습니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;저의 경우 unit test 를 성실하게 실행하지 않아 빌드 서버에서 빌드 결과로 unit test fail을 자주 만나는데 이럴 때 참.. 민망한 순간입니다. Unit Test가 자연스럽게 개발 과정에 녹아들어야 하는데…&lt;/li&gt;
+  &lt;li&gt;그래서 저는 push 전 자동 maven test를 실행하는 hook으로 설정했습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;echo &quot;mvn test befero push&quot;
+
+CWD=`pwd`
+MAIN_DIR=&quot;$( cd &quot;$( dirname &quot;${BASH_SOURCE[0]}&quot; )&quot; &amp;amp;&amp;amp; pwd )&quot;
+echo $MAIN_DIR
+cd $MAIN_DIR/../../
+MVN_RESULT=$(mvn clean test 2&amp;gt;&amp;amp;1)
+    if [ $? -ne 0 ]; then
+    echo
+    echo &quot;${MVN_RESULT}&quot; | ((tee /dev/fd/5 | grep -A 10 -B 2 &quot;Reactor Summary:&quot; &amp;gt;/dev/fd/4) 5&amp;gt;&amp;amp;1 | sed -n -e '/^Failed tests:/,/Tests run:.*$/ p' ) 4&amp;gt;&amp;amp;1
+    echo
+    echo &quot;Error while testing the code&quot;
+    # go back to current working dir
+    cd $CWD
+    exit 1
+fi
+cd $CWD
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+</description>
+				<pubDate>Wed, 28 Oct 2015 00:00:00 +0000</pubDate>
+				<link>/git/2015/10/28/git-hook.html</link>
+				<guid isPermaLink="true">/git/2015/10/28/git-hook.html</guid>
+			</item>
+		
+			<item>
+				<title>Spring RequestMapping url with digit, string 구분 방법.</title>
+				<description>&lt;h3 id=&quot;상황&quot;&gt;상황&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;rest api 로 &lt;code class=&quot;highlighter-rouge&quot;&gt;@RequestMapping&lt;/code&gt; uri를 설계 중 동일한 형태지만 숫자와 문자를 서로 다른 매핑을 적용하고 싶을 경우.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;GET /abc/123
+GET /abc/hi
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;위와 같은 형태의 uri를 &lt;code class=&quot;highlighter-rouge&quot;&gt;@RequestMapping(&quot;/abc/{id}&quot;)&lt;/code&gt; 로 매핑할 경우 id가 숫자인지 문자인지 구분할 수 없어 적합한 매퍼로 연결할 수 없습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-java&quot; data-lang=&quot;java&quot;&gt;&lt;span class=&quot;nd&quot;&gt;@RequestMapping&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/abc/{id}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;method&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RequestMethod&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GET&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nd&quot;&gt;@PathVariable&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@RequestMapping&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/abc/{name}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;method&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RequestMethod&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GET&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nd&quot;&gt;@PathVariable&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;해결&quot;&gt;해결&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;정규식&lt;/code&gt;!&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-java&quot; data-lang=&quot;java&quot;&gt;&lt;span class=&quot;nd&quot;&gt;@RequestMapping&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/abc/{id:[\\d]+}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;method&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RequestMethod&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GET&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nd&quot;&gt;@PathVariable&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@RequestMapping&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/abc/{name:[\\w]+}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;method&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RequestMethod&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GET&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nd&quot;&gt;@PathVariable&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;id:[\\d]+&lt;/code&gt; : 숫자.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;name:[\\w]+&lt;/code&gt; : 문자.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Thu, 22 Oct 2015 00:00:00 +0000</pubDate>
+				<link>/spring/java/2015/10/22/spring-requestmapping.html</link>
+				<guid isPermaLink="true">/spring/java/2015/10/22/spring-requestmapping.html</guid>
+			</item>
+		
+			<item>
+				<title>CollectionUtils object list subtract</title>
+				<description>&lt;h3 id=&quot;상황&quot;&gt;상황&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;String이나 primitive 타입이 아닌 리스트 &lt;code class=&quot;highlighter-rouge&quot;&gt;List&amp;lt;A&amp;gt;&lt;/code&gt; 간 subtract가 필요했습니다.&lt;/li&gt;
+  &lt;li&gt;리스트 A와 리스트 B는 서로 다른 객체이지만 필드들이 같은 값을 가지고 있고 &lt;code class=&quot;highlighter-rouge&quot;&gt;equals()&lt;/code&gt; 메소드도 Override&lt;/li&gt;
+  &lt;li&gt;인터넷에 나와있는 대부분의 예시는 String이나 Primitive 타입(Integer, etc..)이라 &lt;code class=&quot;highlighter-rouge&quot;&gt;CollectionUtils.subtract(a, b)&lt;/code&gt; 로 제거가 가능했지만 Object list는 제대로 차집합을 구하지 못해 여러차례 다른 방법 시도했습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;해결&quot;&gt;해결&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;List c = CollectionUtils.removeAll(listA, listB)&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;removeAll()&lt;/code&gt;의 경우 내부적으로 같은 아이템인지 확인하는 과정에 내부적으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;equals()&lt;/code&gt; 호출.&lt;/li&gt;
+  &lt;li&gt;removeAll 이란 이름에서 혹시 listA 에서 중복이 제거되지 않을까 싶지만 실제로는 &lt;code class=&quot;highlighter-rouge&quot;&gt;new ArrayList&amp;lt;&amp;gt;()&lt;/code&gt; 로 새 리스트를 반환&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-java&quot; data-lang=&quot;java&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// package org.apache.commons.collections4.ListUtils&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;removeAll&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;?&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;remove&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;list&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ArrayList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;();&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;collection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;remove&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;contains&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+</description>
+				<pubDate>Wed, 21 Oct 2015 00:00:00 +0000</pubDate>
+				<link>/java/2015/10/21/list-subtract.html</link>
+				<guid isPermaLink="true">/java/2015/10/21/list-subtract.html</guid>
+			</item>
+		
+			<item>
+				<title>Java Exception 생성 비용이 비싸다.</title>
+				<description>&lt;h3 id=&quot;creating-an-exception-in-java-is-very-slow&quot;&gt;Creating an exception in Java is very slow&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Exception이 성능에 영향을 주는 것에 대해 살펴보겠습니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;예외를 적절하게 쓰면 비지니스 명확성을 높여주기 때문에 각 서비스 성격에 맞게 Custom Exception 클래스를 만들게 됩니다. 저 역시 웹 서비스를 개발하면서 Controller나 Service Layer 입력 값을 검사 할 때 조건에 맞는지 확인하기 위해 if 문으로 검사하고 비정상 입력 값일 경우 더이상 하위 로직을 수행하지 않고 벗어나기 위해 예외 클래스를 만들고 이를 활용했습니다. 스프링의 경우 어디에서 Exception을 던지더라도 전역적으로 잡아주는 &lt;code class=&quot;highlighter-rouge&quot;&gt;@ControllerAdvice&lt;/code&gt;가 유용했습니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;비지니스 로직이 커짐에 따라 상황에 따른 예외 케이스가 많아지고 Exception 발생 횟수도 점점 많아졌는데 딱히 문제는 없어 보였는데 시니어 분께서 &lt;code class=&quot;highlighter-rouge&quot;&gt;예외 생성 비용이 비싸다&lt;/code&gt; 고 조언해 주셔서 이와 관련된 포스팅을 읽어보게 되었습니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href=&quot;http://java-performance.info/throwing-an-exception-in-java-is-very-slow/&quot;&gt;http://java-performance.info/throwing-an-exception-in-java-is-very-slow/&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;위 포스팅에서 성능에 영향을 미치는 큰 요소로  예외의 발생 경로&lt;code class=&quot;highlighter-rouge&quot;&gt;trace&lt;/code&gt;가 성능에 영향을 미친다는 걸 알 수 있습니다. 예외를 만들면서 1~5 ms를 소비한다고 하니 이는 매우 큰 수치라고 생각이 들었습니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Filling in the stack trace is slow&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;at java.lang.Throwable.fillInStackTrace(Throwable.java:-1)
+at java.lang.Throwable.fillInStackTrace(Throwable.java:782)
+- locked &amp;lt;0x6c&amp;gt; (a sun.misc.CEStreamExhausted)
+at java.lang.Throwable.&amp;lt;init&amp;gt;(Throwable.java:250)
+at java.lang.Exception.&amp;lt;init&amp;gt;(Exception.java:54)
+at java.io.IOException.&amp;lt;init&amp;gt;(IOException.java:47)
+at sun.misc.CEStreamExhausted.&amp;lt;init&amp;gt;(CEStreamExhausted.java:30)
+at sun.misc.BASE64Decoder.decodeAtom(BASE64Decoder.java:117)
+at sun.misc.CharacterDecoder.decodeBuffer(CharacterDecoder.java:163)
+at sun.misc.CharacterDecoder.decodeBuffer(CharacterDecoder.java:194)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h5 id=&quot;overriding-fillinstacktrace-method&quot;&gt;Overriding &lt;code class=&quot;highlighter-rouge&quot;&gt;fillInStackTrace&lt;/code&gt; method&lt;/h5&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;예외라는 것은 NullPointException이나 OutOfMemory 와 같은 예외나 비정상적인 상태나 값에 대한  예외가 있지만 우리가 만든 Custom Exception은 값을 검사해 하위 비지니스 로직을 수행할 수 없어 이를 방지하기 위한 용도로 만들었기 때문에 사실 현재 값이 어떤 call stack을 가지는지에 대한 trace는 필요하지 않았습니다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;exception stack trace는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Throwable.fillInStackTrace&lt;/code&gt; 메소드를 통해 생성되므로 이를  아무런 trace도 가지지 않게 Override해둘 수 있습니다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-java&quot; data-lang=&quot;java&quot;&gt;&lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt; 
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;synchronized&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Throwable&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;fillInStackTrace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h5 id=&quot;caching-an-exception&quot;&gt;Caching an exception&lt;/h5&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;stack trace를 가지지 않도록 Overriding 해둔 Exception이라면 &lt;code class=&quot;highlighter-rouge&quot;&gt;static final&lt;/code&gt; 로 선언하고 일종의 상수 값 형태로 예외를 캐싱해두고 쓰는것이 매번 new로 생성하는 것보다 효율적입니다. new 로 매번 같은 종류의 예외를 생성하는건 비효율적이니까요.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-java&quot; data-lang=&quot;java&quot;&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CustomException&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RuntimeException&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CustomException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;INVALID_NICKNAME&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CustomException&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ResponseType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;INVALID_NICKNAME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CustomException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;INVALID_PARAMETER&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CustomException&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ResponseType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;INVALID_PARAMETER&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CustomException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;INVALID_TOKEN&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CustomException&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ResponseType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;INVALID_TOKEN&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;c1&quot;&gt;//생략&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Exception 클래스에 예외 상황에 대한 적당한 응답 메세지나 코드를 담도록 한 뒤 예외 발생 상황에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;new&lt;/code&gt; 키워드 없이 &lt;code class=&quot;highlighter-rouge&quot;&gt;throw&lt;/code&gt; 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-java&quot; data-lang=&quot;java&quot;&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;StringUtils&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;isBlank&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;parameter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;WebtoonCoreException&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;INVALID_PARAMETER&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이렇게 던진 예외를 프레임워크에서 핸들링 해주는 영역에서 처리하거나 호출 클래스로 넘겨 처리할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sun, 28 Jun 2015 00:00:00 +0000</pubDate>
+				<link>/java/exception/2015/06/28/exceptions-are-bad.html</link>
+				<guid isPermaLink="true">/java/exception/2015/06/28/exceptions-are-bad.html</guid>
+			</item>
+		
+			<item>
+				<title>mybatis string parameter를 if문(test)에서 사용하는 방법</title>
+				<description>&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;mybatis로 개발하면서 알게 된 팁을 공유하고자 합니다. &lt;em&gt;주의: ibatis와 동작이 다를 수 있습니다.&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;select 문 파라미터로 String을 매개변수로 넘기는 경우가 있습니다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;return selectList(&quot;A.selectXXX&quot;, &quot;StringParame&quot;);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이 때 쿼리에서 이 String 파라미터를 지칭/레펀런스 할 경우 임의의 이름으로 붙여도 정상동작 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;select id=&quot;selectXXX&quot; parameterType=&quot;String&quot; resultType=&quot;resultType&quot;&amp;gt;
+	SELECT a, b, c
+	FROM table
+	WHERE condition = #{anyName}
+&amp;lt;/select&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이 외에 추가적인 if 문(test)이 필요할 경우가 있는데 이 때는 넘어온 파라미터를 임의의 이름으로 지칭할 경우 예외가 발생합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;There is no getter for property named 'abc' in 'class java.lang.String'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;해결책: &lt;code class=&quot;highlighter-rouge&quot;&gt;_parameter&lt;/code&gt; 로 파라미터를 지칭할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;select id=&quot;selectXXX&quot; parameterType=&quot;String&quot; resultType=&quot;resultType&quot;&amp;gt;
+	SELECT a, b, c 
+	FROM table
+	&amp;lt;where&amp;gt;
+		&amp;lt;if test = “ _parameter != null and _parameter.equals('aaa') &quot;&amp;gt;
+		AND d = #{_parameter}
+		&amp;lt;/if&amp;gt;
+	&amp;lt;/where&amp;gt;
+&amp;lt;/select&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;여기저기 찾아보니 &lt;code class=&quot;highlighter-rouge&quot;&gt;_parameter&lt;/code&gt; is undocumented. MyBatis is a nice framework but, sadly, lacks on the documentation part 설명처럼 문서화가 부족한 부분이 있어 쉽게 해법을 찾지 못하고 헤멧던 것 같네요.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Thu, 18 Jun 2015 00:00:00 +0000</pubDate>
+				<link>/spring/2015/06/18/mybatis-test-string-parameter.html</link>
+				<guid isPermaLink="true">/spring/2015/06/18/mybatis-test-string-parameter.html</guid>
+			</item>
+		
+	</channel>
+</rss>

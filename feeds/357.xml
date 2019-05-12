@@ -1,0 +1,1188 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="https://hongsii.github.io/atom.xml" rel="self" type="application/atom+xml" /><link href="https://hongsii.github.io/" rel="alternate" type="text/html" /><updated>2019-02-14T10:13:49+00:00</updated><id>https://hongsii.github.io/atom.xml</id><title type="html">기록하기</title><subtitle>블로그</subtitle><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><entry><title type="html">JPA Property Expressions 쿼리 생성시 참조타입 탐색 경로 지정하기</title><link href="https://hongsii.github.io/2019/01/06/jpa-query-creation-with-underscore/" rel="alternate" type="text/html" title="JPA Property Expressions 쿼리 생성시 참조타입 탐색 경로 지정하기" /><published>2019-01-06T18:33:23+00:00</published><updated>2019-01-06T18:33:23+00:00</updated><id>https://hongsii.github.io/2019/01/06/jpa-query-creation-with-underscore</id><content type="html" xml:base="https://hongsii.github.io/2019/01/06/jpa-query-creation-with-underscore/">&lt;blockquote&gt;
+  &lt;p&gt;테스트 코드는 &lt;a href=&quot;https://github.com/hongsii/blog-code/tree/master/jpa-underscore-test&quot;&gt;GitHub&lt;/a&gt;에서 확인할 수 있습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;커뮤니티에서 JPA 관련 질문글에 답변하면서 알게된 내용을 테스트하고 정리해보려고 합니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“스네이크 표기법인 컬럼으로 Repository에서 쿼리를 생성하는데 에러가 발생한다.”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;자바에서는 카멜 표기법이 네이밍 컨벤션이지만, 질문 작성자는 스네이크 표기법인 프로퍼티로 쿼리를 생성할 때, 에러가 발생하고 있었습니다. 아래는 질문글에 작성된 엔티티의 일부 내용입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@Entity&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;App&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Id&lt;/span&gt;
+	&lt;span class=&quot;nd&quot;&gt;@GeneratedValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strategy&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;GenerationType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;IDENTITY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Column&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;project_id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 에러가 나는 프로퍼티&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;아래와 같이 Repository를 만들고 애플리케이션을 실행해 조회 메소드를 호출하게 되면 에러가 발생합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AppRepository&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;JpaRepository&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;App&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Integer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;{&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;App&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;findByProject_id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;project_id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 실행시 에러&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;원인을 찾기 위해 글에 첨부된 로그를 확인해보니 눈에 띄는게 하나 있었습니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Failed to create query for method AppRepository.findByProject_id(int)!
+No property id found for type Project! Traversed path: App.project.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;해당 메소드의 쿼리를 생성하는데 실패하면서 &lt;code class=&quot;highlighter-rouge&quot;&gt;No property id found for type Project! Traversed path: App.project.&lt;/code&gt;가 발생했습니다. 로그 그대로 해석하면 Project 타입의 id 프로퍼티를 찾을 수 없다고 합니다.&lt;/p&gt;
+
+&lt;p&gt;위와 같은 에러가 왜 발생햇는지 검색해보니 관련된 내용을 &lt;a href=&quot;https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-property-expressions&quot;&gt;Spring Data JPA Doc&lt;/a&gt;에서 찾을 수 있었습니다. 로그와 같은 에러가 발생한 이유는 Spring-Data-JPA에서 언더스코어(_)가 &lt;strong&gt;프로퍼티을 찾기 위한 탐색 경로를 지정하는 예약어&lt;/strong&gt;*이기 때문입니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;jpa의-예약어-언더스코어_&quot;&gt;JPA의 예약어 언더스코어(_)&lt;/h2&gt;
+
+&lt;h3 id=&quot;jpa-쿼리-생성---property-expressions-로직&quot;&gt;JPA 쿼리 생성 - Property Expressions 로직&lt;/h3&gt;
+
+&lt;p&gt;Property Expressions으로 쿼리를 생성할 때, 조건에 해당하는 프로퍼트를 찾을 수 없으면 카멜 표기법으로 머리와 꼬리를 구분해 프로퍼티를 찾아가는 로직이 존재합니다.예를 들어, &lt;code class=&quot;highlighter-rouge&quot;&gt;Person&lt;/code&gt;이 &lt;code class=&quot;highlighter-rouge&quot;&gt;Address&lt;/code&gt;를 프로퍼티로 가지고, &lt;code class=&quot;highlighter-rouge&quot;&gt;Address&lt;/code&gt;가 &lt;code class=&quot;highlighter-rouge&quot;&gt;ZipCode&lt;/code&gt;를 프로퍼티로 가지고 있다고 가정하겠습니다.&lt;br /&gt;
+그럼 &lt;code class=&quot;highlighter-rouge&quot;&gt;Address&lt;/code&gt;의 &lt;code class=&quot;highlighter-rouge&quot;&gt;ZipCode&lt;/code&gt; 프로퍼티로 조회하고 싶을 때, &lt;code class=&quot;highlighter-rouge&quot;&gt;findByAddressZipCode&lt;/code&gt;라고 메소드명을 짓는다면 쿼리가 실행될 때 &lt;code class=&quot;highlighter-rouge&quot;&gt;Person&lt;/code&gt;의 &lt;code class=&quot;highlighter-rouge&quot;&gt;AddressZipCode&lt;/code&gt; 라는 프로퍼티를 찾습니다. 해당 프로퍼티가 없다면 카멜 표기법의 끝부터 대문자를 기준으로 머리 부분과 꼬리 부분으로 나눠 머리에 해당하는 프로퍼티를 찾고 그 객체에서 꼬리 프로퍼티를 찾습니다. 
+프로퍼티를 찾지 못했기 때문에 다음 로직에서 머리는 &lt;code class=&quot;highlighter-rouge&quot;&gt;AddressZip&lt;/code&gt;가 되고 꼬리는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Code&lt;/code&gt;가 됩니다. 그럼 &lt;code class=&quot;highlighter-rouge&quot;&gt;Person&lt;/code&gt; 의 &lt;code class=&quot;highlighter-rouge&quot;&gt;AddressZip&lt;/code&gt;을 찾아서 &lt;code class=&quot;highlighter-rouge&quot;&gt;AddressZip&lt;/code&gt;의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Code&lt;/code&gt; 프로퍼티를 찾습니다. 그래도 없다면 카멜표기법이 끝날 때 까지 계속 앞의 내용을 반복합니다. 다음 머리는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Address&lt;/code&gt;, 꼬리는 &lt;code class=&quot;highlighter-rouge&quot;&gt;ZipCode&lt;/code&gt;가 됩니다. 이후에는 카멜 표기법이 존재하지 않기 때문에 쿼리 생성이 실패합니다.&lt;br /&gt;
+앞의 로직으로 쿼리를 만들기 위해 객체를 탐색할 때, 혹시나 &lt;code class=&quot;highlighter-rouge&quot;&gt;addressZip&lt;/code&gt;이라는 프로퍼티가 &lt;code class=&quot;highlighter-rouge&quot;&gt;Person&lt;/code&gt; 객체에 존재한다면 &lt;code class=&quot;highlighter-rouge&quot;&gt;addressZip&lt;/code&gt;을 탐색 경로로 설정해 원치 않는 경로가 설정돼 실패하게 됩니다. 이러한 &lt;strong&gt;모호성을 해결하기 위해 언더스코어를 사용&lt;/strong&gt;할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;생성 로직을 확인하기 위해 테스트를 위해 &lt;code class=&quot;highlighter-rouge&quot;&gt;Person&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;Address&lt;/code&gt; 객체를 만듭니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@Entity&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Person&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Id&lt;/span&gt;
+	&lt;span class=&quot;nd&quot;&gt;@GeneratedValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strategy&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GenerationType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;AUTO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Column&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;addressZip&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 모호성을 확인하기 위한 프로퍼티&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Embedded&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Address&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Person&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Address&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;address&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Address&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getAddress&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@Embeddable&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Address&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zipCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zipCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;zipCode&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zipCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// ... equals and hashcode ...&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이제 Repository를 만들고 실행하기 위한 테스트코드를 작성합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// Repository&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PersonRepository&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;JpaRepository&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Person&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;Person&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;findByAddressZipCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zipCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Property Expressions 로직 확인을 위한 메소드&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 테스트 코드&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@RunWith&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SpringRunner&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@DataJpaTest&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PersonRepositoryTest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Autowired&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PersonRepository&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;personRepository&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Test&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ZipCode&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;로&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;사람&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;조회&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;personRepository&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;saveAll&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;asList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+				&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Person&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;11111&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)),&lt;/span&gt;
+				&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Person&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;99999&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+		&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+
+		&lt;span class=&quot;n&quot;&gt;Person&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;savedPerson&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;personRepository&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;findByAddressZipCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;99999&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+		&lt;span class=&quot;n&quot;&gt;assertThat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;savedPerson&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAddress&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;isEqualTo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;99999&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;테스트를 실행하게 되면 &lt;code class=&quot;highlighter-rouge&quot;&gt;addressZipCode&lt;/code&gt;를 먼저 검색하고 없다면 로직에 따라 &lt;code class=&quot;highlighter-rouge&quot;&gt;addressZip&lt;/code&gt;을 찾는데 &lt;code class=&quot;highlighter-rouge&quot;&gt;Person.addressZip&lt;/code&gt; 프로퍼티가 존재하기 때문에 해당 프로퍼티가 탐색 경로로 선택돼 에러가 발생합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/jpa-underscore-test-fail.png&quot; alt=&quot;test-fail&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이제 명시적으로 탐색 경로를 나타내서 모호성을 해결해보겠습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PersonRepository&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;JpaRepository&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Person&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;Person&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;findByAddress_ZipCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zipCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 언더스코어로 탐색 경로 지정&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;탐색경로를 지정한 메소드로 테스트를 실행하면 정상적으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;Address&lt;/code&gt;의 &lt;code class=&quot;highlighter-rouge&quot;&gt;zipCode&lt;/code&gt;를 조건으로 선택하는 것을 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/jpa-underscore-test-success.png&quot; alt=&quot;test-success&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;결론&quot;&gt;결론&lt;/h3&gt;
+
+&lt;p&gt;언더스코어는 이미 &lt;code class=&quot;highlighter-rouge&quot;&gt;Spring Data JPA&lt;/code&gt;의 &lt;strong&gt;탐색 경로를 설정하는 예약어&lt;/strong&gt;이기 때문에 Property Expressions에 사용하면 안됩니다. 스네이크 표기법을 사용하기보단 자바의 네이밍 컨벤션인 카멜 표기법을 사용하는 것을 추천합니다.&lt;br /&gt;
+객체 그래프를 탐색하는 조건의 경우 &lt;code class=&quot;highlighter-rouge&quot;&gt;_&lt;/code&gt;를 사용하면 객체 그래프 탐색 경로를 지정할 수 있습니다. (사용하지 않아도 탐색 경로 설정 로직에 따라 객체 그래프를 탐색하겠지만, 모호한 경우가 있을 수 있으니 명시적으로 탐색 경로를 지정해주는게 좋다고 생각합니다.)&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;참고&quot;&gt;참고&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-property-expressions&quot;&gt;Spring Data JPA - 4.4.3. Property Expressions&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><category term="JPA" /><category term="Java" /><summary type="html">테스트 코드는 GitHub에서 확인할 수 있습니다.</summary></entry><entry><title type="html">JVM 메모리 구조 정리</title><link href="https://hongsii.github.io/2018/12/20/jvm-memory-structure/" rel="alternate" type="text/html" title="JVM 메모리 구조 정리" /><published>2018-12-20T12:12:00+00:00</published><updated>2018-12-20T12:12:00+00:00</updated><id>https://hongsii.github.io/2018/12/20/jvm-memory-structure</id><content type="html" xml:base="https://hongsii.github.io/2018/12/20/jvm-memory-structure/">&lt;h1 id=&quot;jvm-메모리-구조-run-time-data-areas&quot;&gt;JVM 메모리 구조 (Run-Time Data Areas)&lt;/h1&gt;
+
+&lt;p&gt;JVM의 메모리는 크게 &lt;strong&gt;쓰레드별로 생성되는 데이터 영역&lt;/strong&gt;과 &lt;strong&gt;전체 쓰레드가 공유하는 데이터 영역&lt;/strong&gt;으로 나뉘며, &lt;code class=&quot;highlighter-rouge&quot;&gt;Run-Time Data Areas&lt;/code&gt; 라고 부릅니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/post/jvm-memory-structure.jpg&quot; alt=&quot;JVM 메모리 구조&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;쓰레드별-데이터-영역&quot;&gt;쓰레드별 데이터 영역&lt;/h2&gt;
+
+&lt;p&gt;쓰레드의 데이터 영역은 쓰레드가 생성될 때 생성되며, 쓰레드가 종료되면 해제됩니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;pcprogram-counter-register&quot;&gt;PC(Program Counter) Register&lt;/h3&gt;
+
+&lt;p&gt;쓰레드마다 PC Register가 존재합니다. 하나의 메소드 코드를 JVM의 쓰레드라고 하며, 쓰레드가 실행되면 이 메소드가 실행됩니다. 현재 실행된 쓰레드의 메소드가 네이티브 메소드가 아니면 PC Resiter에 &lt;strong&gt;JVM 명령 주소가 저장&lt;/strong&gt;됩니다. (JVM 명령은 1 byte의 opcode와 0개 이상의 피연산자로 구성되어 있으며, 바이트 코드 내에서 볼 수 있는 aload_0 과 같은 형태)&lt;br /&gt;
+만약 실행 중인 쓰레드의 메소드가 네이티브 메소드면 바이트 코드의 명령어가 없기 때문에  PC Register가 비어있거나 정의되지 않습니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;jvm-stacks&quot;&gt;JVM Stacks&lt;/h3&gt;
+
+&lt;p&gt;쓰레드마다 JVM Stack이 존재하며, 쓰레드가 생성될 때 같이 생성됩니다. 일반적인 스택과 동일한 구조와 동작을 하며, Stack Frame을 저장합니다. Stack Frame은 로컬 변수, 일부 실행 결과, 메소드 호출 또는 반환 등을 저장합니다. Frame을 push(저장)하거나 pop(제거)하는 동작만 수행합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;쓰레드가 허락된 스택 용량보다 많은 계산을 필요로 하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;StackOverflowError&lt;/code&gt;가 발생합니다.&lt;/li&gt;
+  &lt;li&gt;실행 중인 쓰레드의 스택을 확장할 만큼 충분한 메모리가 없거나, 새로 생성될 쓰레드에게 메모리가 부족해 스택을 할당할 수 없는 경우 &lt;code class=&quot;highlighter-rouge&quot;&gt;OutOfMemoryError&lt;/code&gt;가 발생합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;native-method-stacks&quot;&gt;Native Method Stacks&lt;/h3&gt;
+
+&lt;p&gt;자바 이외의 언어(C, C++, 어셈블리 등)로 작성된 코드를 실행할 때, Native Method Stack이 할당되며, 일반적인 C 스택을 사용합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;JVM Stacks과 동일한 기준으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;StackOverflowError&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;OutOfMemoryError&lt;/code&gt;가 발생합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;전체-쓰레드가-공유하는-데이터-영역&quot;&gt;전체 쓰레드가 공유하는 데이터 영역&lt;/h2&gt;
+
+&lt;p&gt;전체 쓰레드가 공유하는 데이터 영역은 JVM이 시작될 때 생성되고, JVM이 종료되면 해제됩니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;heap&quot;&gt;Heap&lt;/h3&gt;
+
+&lt;p&gt;Heap은 클래스의 인스턴스와 배열이 할당되는 영역입니다. 할당된 객체는 직접 해제가 불가능 하며, 오직 가비지 컬렉터에 의해 해제됩니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;가비지 컬렉터가 사용할 수 있는 것보다 많은 Heap이 필요하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;OutOfMemoryError&lt;/code&gt;가 발생합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;method-area&quot;&gt;Method Area&lt;/h3&gt;
+
+&lt;p&gt;Method Area는 클래스의 필드, 메소드 정보, static 변수, 메소드와 생성자의 바이트코드, 각 클래스, 인터페이스에 관련된 런타임 상수풀이 저장됩니다. &lt;br /&gt;
+Method Area는 논리적으로 힙의 일부분이지만, 일반적으로 가바지 컬렉션 대상이 아니지만, JVM 벤더가 가비지 컬렉션 여부를 선택할 수 있습니다.&lt;br /&gt;
+Method Area는 JVM 벤더마다 다르지만, HotSpot에선 Permanent Generation 이라고 불립니다. Java 8 부터는 HotSpot에서 JRockit과 일치시키는 과정으로 PermGen 영역을 삭제하고, Heap에 interned String과 static 변수를 저장하도록 변경했습니다. 그리고 Metaspace라는 새로운 네이티브 메모리 영역을 만들고 해당 영역에 클래스 메타데이터를 저장합니다.&lt;/p&gt;
+
+&lt;h1 id=&quot;참고&quot;&gt;참고&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.11&quot;&gt;Java Virtual Machine Specification- Chapter 2. The Structure of the Java Virtual Machine&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://javapapers.com/core-java/java-jvm-run-time-data-areas/&quot;&gt;Java JVM Run-time Data Areas&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://blog.jamesdbloom.com/JVMInternals.html#constant_pool&quot;&gt;JVM Internals - Run-time Constant Pool&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://stackoverflow.com/questions/38672839/what-is-a-native-pointer-and-returnaddress&quot;&gt;StackOverflow - What is a native pointer and returnAddress?&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://stackoverflow.com/questions/8387989/where-are-static-methods-and-static-variables-stored-in-java&quot;&gt;StackOverflow - Where are static methods and static variables stored in Java?&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://stackoverflow.com/questions/10209952/what-is-the-purpose-of-the-java-constant-pool&quot;&gt;StackOverflow - What is the purpose of the Java Constant Pool?&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://openjdk.java.net/jeps/122&quot;&gt;JEP 122: Remove the Permanent Generation&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://d2.naver.com/helloworld/1230&quot;&gt;JVM Internal&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><category term="Java" /><category term="JVM" /><summary type="html">JVM 메모리 구조 (Run-Time Data Areas)</summary></entry><entry><title type="html">자바 어노테이션</title><link href="https://hongsii.github.io/2018/12/12/java-annotation/" rel="alternate" type="text/html" title="자바 어노테이션" /><published>2018-12-12T22:30:00+00:00</published><updated>2018-12-12T22:30:00+00:00</updated><id>https://hongsii.github.io/2018/12/12/java-annotation</id><content type="html" xml:base="https://hongsii.github.io/2018/12/12/java-annotation/">&lt;h1 id=&quot;어노테이션annotation&quot;&gt;어노테이션(Annotation)&lt;/h1&gt;
+
+&lt;p&gt;어노테이션은 &lt;strong&gt;메타데이터(Metadata)&lt;/strong&gt;입니다. 여기서 메타데이터란 &lt;strong&gt;다른 데이터를 설명하기 위한 데이터&lt;/strong&gt;입니다. 그래서 어노테이션은 &lt;strong&gt;코드를 설명하기 위한 데이터&lt;/strong&gt;라고 정의할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;아래는 자바에서 제공하는 기본 어노테이션인 &lt;code class=&quot;highlighter-rouge&quot;&gt;@Override&lt;/code&gt;를 사용한 코드입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;재정의된 메소드&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;흔히 클래스를 상속받거나 인터페이스를 구현하여 메소드를 재정의할 때 붙이는 어노테이션입니다. 이 것을 지운다고 해서 컴파일 에러가 나거나 프로그램이 정상적으로 동작하거나 하지 않습니다. 실행에는 전혀 영향을 미치지 않죠. 단지 메소드가 재정의되었다는 것만 알려주는 용도로만 사용됩니다.&lt;/p&gt;
+
+&lt;p&gt;그럼 어노테이션을 붙임으로써 얻을 수 있는 장점은 무엇일까요?
+이 경우는 컴파일러에게 메소드가 재정의된 것을 알려주면 컴파일러는 사용자가 잘못된 오버라이드 (메소드명에 오타가 있다던가 메소드 시그니쳐를 다르다던가)를 했을 때, 컴파일 에러를 발생시켜 사용자가 이를 고칠 수 있게 도와줍니다.&lt;br /&gt;
+이처럼 어노테이션은 클래스, 필드, 메소드 등등에 &lt;strong&gt;코드에 대한 부가설명&lt;/strong&gt; 및 &lt;strong&gt;컴파일 단계에서 도움&lt;/strong&gt;을 주는 역할로 사용됩니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;내장-어노테이션&quot;&gt;내장 어노테이션&lt;/h2&gt;
+
+&lt;p&gt;자바에서는 몇가지 어노테이션을 기본적으로 제공합니다.&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;java.lang&lt;/code&gt; 패키지에 속하며, 총 5개의 어노테이션이 있습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;@Override&lt;/code&gt; : 상위 타입에 정의된 메소드를 재정의했다는 것을 알리기 위해 사용합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;@Deprecated&lt;/code&gt; : 사용하면 위험한 코드임을 표시하거나 해당 코드보다 개선된 코드가 존재하기 때문에 사용하지말 것을 알리기 위해 사용합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;@SuppressWarnings&lt;/code&gt; : 이미 인지한 컴파일러의 경고를 제거하기 위해 사용합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;@SafeVarargs&lt;/code&gt; : 자바 7부터 추가되었으며, 생성자나 메소드의 가변인자 파라미터가 안전하게 사용된다는 것을 나타내기 위해 사용합니다.  (String… values와 같은 형태를 가변인자라고 함)&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;@FunctionalInterface&lt;/code&gt; : 자바 8부터 추가되었으며, 인터페이스를 함수형 프로그래밍인 람다 방식으로 사용하기를 추천하는 용도로 사용합니다. (자바 8부터 추가)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;위의 내장 어노테이션뿐만 아니라 &lt;strong&gt;사용자가 원하는 형태의 다양한 어노테이션을 만들 수 있습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;커스텀-어노테이션&quot;&gt;커스텀 어노테이션&lt;/h2&gt;
+
+&lt;p&gt;커스텀 어노테이션와 관련된 소스는 &lt;code class=&quot;highlighter-rouge&quot;&gt;java.lang.annotation&lt;/code&gt; &lt;a href=&quot;https://docs.oracle.com/javase/8/docs/api/java/lang/annotation/package-summary.html&quot;&gt;패키지&lt;/a&gt;에 속해있습니다.&lt;br /&gt;
+커스텀 어노테이션을 정의하려면 &lt;code class=&quot;highlighter-rouge&quot;&gt;@interface&lt;/code&gt;로 선언해주면 됩니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;@&lt;/code&gt;는 인터페이스와 어노테이션을 구분하기 위한 기호입니다. interface에 기호를 붙여주는 방식이라서 공백을 넣어 &lt;code class=&quot;highlighter-rouge&quot;&gt;@ interface&lt;/code&gt;도 가능하지만, 표준 스타일을 맞추기 위해 공백없이 붙여주는게 좋습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyAnnotation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;어노테이션 타입은 컴파일시 항상 &lt;code class=&quot;highlighter-rouge&quot;&gt;java.lang.annotation.Annotation&lt;/code&gt;을 슈퍼인터페이스로 상속받아서 인터페이스가 어노테이션 타입임을 나타냅니다. 아래는 컴파일된 class 파일의 내용입니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MyAnnotation&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;java&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;lang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;annotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;Annotation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;어노테이션-내용-정의&quot;&gt;어노테이션 내용 정의&lt;/h3&gt;
+
+&lt;p&gt;어노테이션 타입은 다음과 같은 내용을 인터페이스 내에 작성할 수 있습니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;일반 선언 : [추상메소드선언자]  타입 명칭() [DefaultValue];&lt;br /&gt;
+배열 선언 : [추상메소드선언자]  타입 명칭() [] [DefaultValue];&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;[…]와 같은 내용은 옵션으로 생략할 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;여러 값을 하나의 선언에 넣기 위해선 명칭() []와 같이 배열 선언을 해줘야 합니다.&lt;/li&gt;
+  &lt;li&gt;내용 작성시 public abstract 키워드를 붙여줄 수 있지만, class로 컴파일될 때 컴파일러가 붙여 주기 때문에 선언하지 않아도 됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;위와 같은 내용 정의 외에도 상수, enum, class, interface, annotation를 선언할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyCustom&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// 내용 정의&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Custom annotation&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// 상수&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CONSTANT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// enum&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;enum&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;STOP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RUNNING&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FINISHED&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// class&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;InnerClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// interface&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;interface&lt;/span&gt;  &lt;span class=&quot;nc&quot;&gt;InnerInterface&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// annotation&lt;/span&gt;
+  &lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;InnerAnnotation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;    
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;어노테이션의 내용으로 1가지의 내용만 정의하는 경우에는 관례적으로 명칭을 &lt;code class=&quot;highlighter-rouge&quot;&gt;value()&lt;/code&gt; 라고 사용합니다.&lt;br /&gt;
+그리고 &lt;code class=&quot;highlighter-rouge&quot;&gt;default&lt;/code&gt; 옵션을 생략할 경우에는 &lt;strong&gt;반드시 어노테이션 사용시 값을 입력&lt;/strong&gt;하도록 할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// default를 생략해 어노테이션 사용시 입력 필요&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SingleElement&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@SingleElement&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 잘못된 사용 - 컴파일 에러&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MyClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@SingleElement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;foo&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 올바른 사용&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MyClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// default로 선언할 경우 어노테이션 사용시 값을 입력하지 않으면 default로 설정된 값 사용&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SingleElement&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;foo&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;잘못된-내용-정의&quot;&gt;잘못된 내용 정의&lt;/h3&gt;
+
+&lt;p&gt;자기 자신을 타입으로 받는 경우 컴파일 에러 &lt;code class=&quot;highlighter-rouge&quot;&gt;&quot;Cyclic annotation element type&quot;&lt;/code&gt; 발생&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SelfRef&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SelfRef&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;그리고 어노테이션끼리 서로를 타입으로 받는 경우에도 컴파일 에러가 발생합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ping&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pong&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pong&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ping&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;미리-정의된-메타-어노테이션&quot;&gt;미리 정의된 메타 어노테이션&lt;/h3&gt;
+
+&lt;p&gt;커스텀 어노테이션 작성시 어노테이션을 설명하기 위한 메타 어노테이션이 있습니다.&lt;br /&gt;
+메타 어노테이션은 아래와 같이 5개가 존재합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;@Documented&lt;/code&gt; : javadoc 및 기타 문서툴에 의해 문서화될 때, 해당 어노테이션이 문서에 표시됩니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;@Target&lt;/code&gt; : 어노테이션 적용 가능한 대상을 지정할 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;@Retention&lt;/code&gt; : 어노테이션 유지 범위를 지정할 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;@Inherited&lt;/code&gt; : 자식클래스에서 부모클래스에 선언된 어노테이션을 상속받을 수 있습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;@Repeatable&lt;/code&gt; : 동일한 위치에 같은 어노테이션을 여러 개 선언할 수 있게 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;target&quot;&gt;@Target&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;어노테이션을 적용할 수 있는 대상(위치)를 나타내는 어노테이션&lt;/strong&gt;입니다. 만약, Target에 선언된 대상과 다른 대상에 어노테이션을 적용할 경우 컴파일 에러가 발생합니다.&lt;br /&gt;
+타입으로 enum인 &lt;code class=&quot;highlighter-rouge&quot;&gt;ElementType[]&lt;/code&gt;을 받습니다. 아래는 ElementType에 정의된 대상입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;TYPE&lt;/code&gt; : class, interface, annotation, enum 에만 적용 가능&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;FIELD&lt;/code&gt; : 필드, enum 상수에만 적용 가능&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;METHOD&lt;/code&gt; : 메소드에만 적용 가능&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PARAMETER&lt;/code&gt; : 파라미터에만 적용 가능&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;CONSTRUCTOR&lt;/code&gt; : 생성자에만 적용 가능&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;LOCAL_VARIABLE&lt;/code&gt; : 지역변수에만 적용 가능&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ANNOTATION_TYPE&lt;/code&gt; : 어노테이션에만 적용 가능&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PACKAGE&lt;/code&gt; : 패키지에만 적용 가능&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;TYPE_PARAMETER&lt;/code&gt; : 자바 8부터 추가되었으며, 타입 파라미터(T, E와 같은)에만 적용 가능&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;TYPE_USE&lt;/code&gt; : 자바 8부터 추가되었으며, &lt;a href=&quot;https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.11&quot;&gt;JLS의 15가지 타입&lt;/a&gt;과 타입 파라미터에 적용 가능&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// 필드에만 MyCustom 어노테이션 적용 가능&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@Target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ElementType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;FIELD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyCustom&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 필드와 메소드에만 MyCustom 어노테이션 적용 가능&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@Target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ElementType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;FIELD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ElementType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;METHOD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyCustom&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;retention&quot;&gt;@Retention&lt;/h4&gt;
+
+&lt;p&gt;어노테이션이 어느 시점까지 유지되는지를 나타낼 수 있습니다. 
+enum &lt;code class=&quot;highlighter-rouge&quot;&gt;RetentionPolicy&lt;/code&gt;에 3가지의 정책이 있습니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;@Retention&lt;/code&gt;을 생략한다면 &lt;code class=&quot;highlighter-rouge&quot;&gt;RetentionPolicy.CLASS&lt;/code&gt;가 적용됩니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;SOURCE : 컴파일 시점에 컴파일러에 의해 제거됩니다. 즉, java파일내에서만 적용됩니다.&lt;/li&gt;
+  &lt;li&gt;CLASS : SOURCE 범위뿐만 아니라 class 파일까지 적용됩니다.&lt;/li&gt;
+  &lt;li&gt;RUNTIME : SOURCE, CLASS 범위뿐만 아니라 JVM에서 실행될 때도 적용돼 &lt;strong&gt;리플렉션&lt;/strong&gt;으로 어노테이션을 조회할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// 클래스 파일에 어노테이션이 기록됨&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@Retention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RetentionPolicy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;CLASS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyAnnotation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 어노테이션이 적용된 클래스의 바이트 코드에 RuntimeInvisibleAnnotations이 기록되어 실행시 무시됨.&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;javap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyClass&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;중략&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Constant&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;pool:&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;중략&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;RuntimeInvisibleAnnotations&lt;/span&gt; 
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;11&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;LMyAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;중략&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// 클래스 파일에 기록될 뿐만 아니라 실행시에도 JVM에 적재돼 유지됨&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@Retention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RetentionPolicy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;RUNTIME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyAnnotation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 런타임시 유지될 수 있도록 어노테이션이 적용된 클래스의 바이트 코드에 RuntimeVisibleAnnotations이 기록되어 있습니다.&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;javap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyClass&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;중략&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Constant&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;pool:&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;중략&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;RuntimeVisibleAnnotations&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;11&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;LMyAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;중략&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;inherited&quot;&gt;@Inherited&lt;/h4&gt;
+
+&lt;p&gt;해당 어노테이션을 적용하면 &lt;strong&gt;부모클래스에 선언된 어노테이션이 자식클래스에 상속&lt;/strong&gt;됩니다.&lt;br /&gt;
+테스트를 위해 아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;@NonInheritedAnnotation&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;@InheritedAnnotation&lt;/code&gt; 어노테이션을 만듭니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@Retention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RetentionPolicy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;RUNTIME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NonInheritedAnnotation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@Inherited&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@Retention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RetentionPolicy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;RUNTIME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;InheritedAnnotation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;다음과 같이 A, B, C 클래스를 만듭니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@NonInheritedAnnotation&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@InheritedAnnotation&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;C&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;A, B, C를 리플렉션을 통해 &lt;code class=&quot;highlighter-rouge&quot;&gt;@NonInheritedAnnotation을&lt;/code&gt; 조회하면 해당 어노테이션이 적용된 A만 어노테이션을 가지고 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Non inherited A : &quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NonInheritedAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Non inherited B : &quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NonInheritedAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Non inherited C : &quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NonInheritedAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;Non&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inherited&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nd&quot;&gt;@NonInheritedAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Non&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inherited&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Non&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inherited&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;C&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이번엔 &lt;code class=&quot;highlighter-rouge&quot;&gt;@InheritedAnnotation&lt;/code&gt;을 조회하면 B, C만 어노테이션이 출력됩니다. C는 선언된 어노테이션이 없지만, 상속 받은 B 클래스에 적용된 어노테이션이 C에도 동일하게 적용됩니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;inherited A : &quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;InheritedAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;inherited B : &quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;InheritedAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;inherited C : &quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;InheritedAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;inherited&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;inherited&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nd&quot;&gt;@InheritedAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;inherited&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;C&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nd&quot;&gt;@InheritedAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;repeatable&quot;&gt;@Repeatable&lt;/h4&gt;
+
+&lt;p&gt;동일한 어노테이션을 여러 개 선언할 경우 컴파일 에러가 발생하지만, &lt;code class=&quot;highlighter-rouge&quot;&gt;@Repeatable&lt;/code&gt;을 적용하면 여러 개의 동일한 어노테이션을 선언할 수 있게 됩니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@Repeatable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Roles&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 컴파일시 Roles에 여러 개의 Role을 컴파일러가 저장&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Role&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Roles&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;Role&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@Role&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Role1&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@Role&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Role2&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Repeat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;동일한 어노테이션이 여러 개 적용된 Repeat 클래스의 바이트 코드 출력하면 Roles에 어노테이션이 저장되는 것을 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;err&quot;&gt;❯&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;javap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Repeat&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Classfile&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Users&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hong&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Repeat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;중략&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Constant&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;pool:&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;중략&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+   &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;9&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;MyClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;java&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;RuntimeInvisibleAnnotations&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;11&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;LRoles&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;13&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;LRole&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;14&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;Role1&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;Role2&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;16&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NameAndType&lt;/span&gt;        &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;          &lt;span class=&quot;c1&quot;&gt;// &quot;&amp;lt;init&amp;gt;&quot;:()V&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;17&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;Repeat&lt;/span&gt;
+  &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Utf8&lt;/span&gt;               &lt;span class=&quot;n&quot;&gt;java&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;중략&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;SourceFile:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;MyClass.java&quot;&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;RuntimeInvisibleAnnotations:&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// Roles(#11)의 value(#12)값에 Role(#13) 어노테이션인 Role1(#14), Role2(#15)가 배열로 저장됨&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;11&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=[&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;@#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;13&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;14&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;@#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;13&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;커스텀-어노테이션-적용&quot;&gt;커스텀 어노테이션 적용&lt;/h3&gt;
+
+&lt;p&gt;위의 내용을 토대로 커스텀 어노테이션을 만들어 사용해보겠습니다.&lt;br /&gt;
+유저를 생성할 때, 자동으로 생성일시를 설정해주는 어노테이션을 만들겠습니다.&lt;br /&gt;
+런타임시 필드에 사용할 수 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;@CreatedTime&lt;/code&gt; 어노테이션을 아래와 같이 만들어줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@Target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ElementType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;FIELD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@Retention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RetentionPolicy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;RUNTIME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@interface&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CreatedTime&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;User&lt;/code&gt; 클래스에 &lt;code class=&quot;highlighter-rouge&quot;&gt;createdTime&lt;/code&gt; 이라는 필드를 만들고 어노테이션을 적용합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+  &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;nd&quot;&gt;@CreatedTime&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LocalDateTime&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;createdTime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;User{&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;&quot;name='&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;sc&quot;&gt;'\''&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;&quot;, password='&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;sc&quot;&gt;'\''&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
+            &lt;span class=&quot;s&quot;&gt;&quot;, createdTime=&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;createdTime&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
+            &lt;span class=&quot;sc&quot;&gt;'}'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;setCreatedTime&lt;/code&gt; 메소드에서 리플렉션을 통해 &lt;code class=&quot;highlighter-rouge&quot;&gt;User&lt;/code&gt; 클래스의 필드를 조회해 &lt;code class=&quot;highlighter-rouge&quot;&gt;@CreatedTime&lt;/code&gt;이 있는 필드에 현재 시간을 설정해줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AnnotationTest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;User&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;newUser&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;이름&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;비밀번호&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 유저 생성&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;before : &quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;newUser&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;setCreatedTime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;newUser&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 생성일시 설정&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot; after : &quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;newUser&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;setCreatedTime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Exception&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;?&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clazz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Arrays&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clazz&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getDeclaredFields&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 클래스의 필드 조회&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;field&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Objects&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;nonNull&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;field&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getDeclaredAnnotation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CreatedTime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)))&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// @CreatedTime이 적용된 필드만 필터&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;forEach&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;field&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;field&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setAccessible&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// private 필드에 접근하기 위해 Accessible을 true로 설정&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;field&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LocalDateTime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 필드에 현재 시간 설정&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IllegalAccessException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;printStackTrace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;});&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;코드를 실행하면 생성일시가 설정되는 것을 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;before&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'이름'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'비밀번호'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;createdTime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;after&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'이름'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;'비밀번호'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;createdTime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2018&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;T23:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;31&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;06.172&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;참고&quot;&gt;참고&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://dzone.com/articles/how-annotations-work-java&quot;&gt;How Do Annotations Work in Java?&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://ko.wikipedia.org/wiki/%EC%9E%90%EB%B0%94_%EC%96%B4%EB%85%B8%ED%85%8C%EC%9D%B4%EC%85%98&quot;&gt;위키백과 - 자바 어노테이션&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.oracle.com/javase/specs/jls/se7/html/jls-9.html#jls-9.6&quot;&gt;The Java™ Language Specification - Section 9.6&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><category term="Java" /><category term="문법" /><summary type="html">어노테이션(Annotation)</summary></entry><entry><title type="html">숫자 리터럴 구분자</title><link href="https://hongsii.github.io/2018/11/20/java-underscore-in-number-literal/" rel="alternate" type="text/html" title="숫자 리터럴 구분자" /><published>2018-11-20T22:00:00+00:00</published><updated>2018-11-20T22:00:00+00:00</updated><id>https://hongsii.github.io/2018/11/20/java-underscore-in-number-literal</id><content type="html" xml:base="https://hongsii.github.io/2018/11/20/java-underscore-in-number-literal/">&lt;h1 id=&quot;숫자-리터럴의-가독성을-올려주는-구분자-언더스코어_&quot;&gt;숫자 리터럴의 가독성을 올려주는 구분자 언더스코어(_)&lt;/h1&gt;
+
+&lt;p&gt;자바7부터 추가된 기능으로 숫자 리터럴에서 정해진 구분자(&lt;code class=&quot;highlighter-rouge&quot;&gt;_&lt;/code&gt;)를 &lt;strong&gt;숫자 사이에 사용&lt;/strong&gt;해 의미 있는 숫자끼리 그룹화 할 수 있습니다.
+실제로는 &lt;code class=&quot;highlighter-rouge&quot;&gt;_&lt;/code&gt;가 인식되지 않은 상태로 사용됩니다. 구분자를 사용하면 숫자를 읽을 때, &lt;strong&gt;코드의 가독성을 올려준다&lt;/strong&gt;는 장점이 있습니다.&lt;/p&gt;
+
+&lt;p&gt;아래처럼 숫자를 표시할 때 3자리마다 구분자를 사용해주면 한눈에 파악하기 쉽습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;thousand&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1_000&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 1000&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;million&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1_000_000&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 1000000&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;진수 표기법 또한 구분자로 표시할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bytes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mb&quot;&gt;0b00000001_00000100&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 260&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hex&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x10_FF_FE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 1114110&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;예외&quot;&gt;예외&lt;/h2&gt;
+
+&lt;p&gt;구분자는 &lt;strong&gt;정해진 위치(숫자와 숫자 사이)에만 사용&lt;/strong&gt;할 수 있습니다.&lt;br /&gt;
+아래의 경우에는 구분자를 사용할 수 없습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;숫자의 시작과 끝&lt;/li&gt;
+  &lt;li&gt;소수점 양 옆&lt;/li&gt;
+  &lt;li&gt;float의 접미사(F), long의 접미사(L)의 앞&lt;/li&gt;
+  &lt;li&gt;진수를 표시하는 문자 위치 (0b, 0x …)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// 숫자의 시작과 끝&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;startOfNumber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_12&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 불가능&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endOfNumber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 불가능&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 소수점 양 옆&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;float&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pi1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1415&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 불가능&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;float&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pi2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;_1415F&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 불가능&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 접미사 앞&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;longNumber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1234&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_L&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 불가능&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;float&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;floatNumber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1.23&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_F&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 불가능&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 진수를 표시하는 문자 위치&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hexValue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_x52&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 불가능&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;참고-자료&quot;&gt;참고 자료&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.oracle.com/javase/7/docs/technotes/guides/language/underscores-literals.html&quot;&gt;Oracle docs - Underscores in Numeric Literals&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><category term="Java" /><category term="문법" /><summary type="html">숫자 리터럴의 가독성을 올려주는 구분자 언더스코어(_)</summary></entry><entry><title type="html">Git push/fetch 내부 동작 정리</title><link href="https://hongsii.github.io/2018/11/08/git-push-fetch/" rel="alternate" type="text/html" title="Git push/fetch 내부 동작 정리" /><published>2018-11-08T01:11:00+00:00</published><updated>2018-11-08T01:11:00+00:00</updated><id>https://hongsii.github.io/2018/11/08/git-push-fetch</id><content type="html" xml:base="https://hongsii.github.io/2018/11/08/git-push-fetch/">&lt;h1 id=&quot;시작&quot;&gt;시작&lt;/h1&gt;
+
+&lt;p&gt;git push와 관련된 질문에 답변하기 위해 찾아보던 중 알게된 내용에 대해 정리해보려고 합니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;error: src refspec master does not match any.
+error: failed to push some refs to ‘저장소 URL’&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;이러한 오류가 발생한 이유에 대해 이해하기 위해선 &lt;code class=&quot;highlighter-rouge&quot;&gt;git push --help&lt;/code&gt;에 나온 push 사용법부터 시작해야합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git push [option...] [&amp;lt;repository&amp;gt; [&amp;lt;refspec&amp;gt;...]]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;흔히 &lt;code class=&quot;highlighter-rouge&quot;&gt;git push [리모트 저장소명] [푸시할 브랜치명]&lt;/code&gt;으로 사용을 하는데요. 여기선 푸시할 브랜치명이 &lt;strong&gt;refspec&lt;/strong&gt; 이라고 표시가 되어있습니다.&lt;br /&gt;
+refspec은 그럼 무엇일까요?&lt;/p&gt;
+
+&lt;h2 id=&quot;refs&quot;&gt;Refs&lt;/h2&gt;
+
+&lt;p&gt;Refspec을 알기 위해선 먼저 Refs가 무엇인지를 알아야 합니다. git은 모든 커밋을 &lt;strong&gt;Key-Value&lt;/strong&gt; 형태로 관리하며, key는 &lt;strong&gt;SHA-1으로 만들어진 40자리의 해시값&lt;/strong&gt;입니다.&lt;br /&gt;
+이러한 해시값만 알면 저장된 커밋을 조회할 수 있지만, 사람이 일일이 해시값을 기억하기 어렵기 때문에 외우기 쉬운 이름의 파일에 해시값이 저장되어있습니다. 이런 파일을 &lt;code class=&quot;highlighter-rouge&quot;&gt;References&lt;/code&gt;라고 부르며 약자로 &lt;code class=&quot;highlighter-rouge&quot;&gt;Refs&lt;/code&gt;라고 합니다.&lt;br /&gt;
+모든 refs는 &lt;code class=&quot;highlighter-rouge&quot;&gt;.git/refs&lt;/code&gt;에 저장됩니다. 그리고 하위에는 heads, remotes, tags 디렉토리가 존재합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ pwd
+test-repo/.git/refs
+$ ls
+heads remotes tags
+$ ls test-repo/.git/refs/heads
+master
+$ cat test-repo/.git/refs/heads/master
+4c009fbb5847d4b4d3a32984a1004259c15c8ada
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;.git/refs/heads 디렉토리 내에는 master 라는 파일만 존재합니다. 파일을 읽어보면 해시값이 출력되는데 이 파일이 바로 refs 입니다.&lt;br /&gt;
+master 라는 이름이 친숙하게 느껴지시죠? 우리가 흔히 아는 master 브랜치가 바로 이 refs입니다. git에서는 어떤 특정한 작업을 가리키는 refs를 &lt;strong&gt;브랜치&lt;/strong&gt; 라고 부릅니다.&lt;/p&gt;
+
+&lt;p&gt;확인을 위해 브랜치 명령어를 사용하지 않고 branch1을 직접 만들어 보겠습니다. 아래의 명령어로 해시값의 refs를 생성할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git update-ref refs/heads/branch1 4c009fbb5847d4b4d3a32984a1004259c15c8ada
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;master 밖에 없었지만 명령어가 실행되면 branch1 이라는 refs가 생성됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://hongsii.github.io/assets/images/post/2018/11/git-push1.png&quot; alt=&quot;manual-branch&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그리고 &lt;code class=&quot;highlighter-rouge&quot;&gt;git branch -a&lt;/code&gt; 명령어로 조회해보면 branch1이 생성된 것을 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://hongsii.github.io/assets/images/post/2018/11/git-push2.png&quot; alt=&quot;2manual-branch&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;refspec&quot;&gt;Refspec&lt;/h2&gt;
+
+&lt;p&gt;이제 간단한 예와 함께 refspec을 설명하겠습니다. 리모트 저장소를 추가하는 명령어를 실행하고 나면 &lt;code class=&quot;highlighter-rouge&quot;&gt;.git/config&lt;/code&gt; 파일 하단에 추가한 리모트 저장소의 정보가 추가됩니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git remote add origin https://github.com/hongsii/test-repo.git
+$ cat .git/config
+[core]
+...(생략)...
+[remote &quot;origin&quot;]
+    url = https://github.com/hongsii/test-repo.git
+    fetch = +refs/heads/*:refs/remotes/origin/*
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이 정보에는 저장소의 url과 fetch 규칙이 추가되어있습니다. fetch 규칙에 사용된 &lt;code class=&quot;highlighter-rouge&quot;&gt;+refs/heads/*:refs/remotes/origin/*&lt;/code&gt;가 바로 &lt;strong&gt;refspec&lt;/strong&gt; 입니다.&lt;/p&gt;
+
+&lt;p&gt;refspec은 저장소의 refs를 매핑하는 방법을 나타내며, &lt;code class=&quot;highlighter-rouge&quot;&gt;+&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;src&amp;gt;:&amp;lt;dst&amp;gt;&lt;/code&gt;로 구성됩니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;+&lt;/code&gt;는 &lt;strong&gt;fetch가 적용될 방식&lt;/strong&gt;이라고 생각하면 됩니다. +가 있다면 fast-forward 상태가 아니여도 리모트로부터 업데이트(이 경우는 merge commit이 발생)를 받아올 수 있습니다. 생략 가능하며, 생략한다면 fast-forward 상태가 아닐 때는 업데이트를 받을 수 없습니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;src&amp;gt;&lt;/code&gt;는 source 패턴으로 git은 패턴과 일치하는 리모트 저장소의 references만 fetch 받을 수 있습니다.
+    &lt;ul&gt;
+      &lt;li&gt;기본적으로 refs/heads/* 로 설정되며, 모든 로컬 저장소의 refs로 리모트 저장소의 fetch를 받아옵니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;dst&amp;gt;&lt;/code&gt;는 destination 패턴으로 리모트 저장소에 매핑된 로컬 저장소의 refs가 저장됩니다.
+    &lt;ul&gt;
+      &lt;li&gt;리모트 저장소는 로컬 저장소의 refs를 매핑해 refs/remotes/리모트저장소명/*으로 refs를 저장해둡니다. (로컬 저장소의 refs와 동일한 해시값을 가집니다.)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;로컬 저장소의 커밋 히스토리를 보고 싶다면 아래의 명령어를 입력하면 모두 동일하게 로컬 저장소의 히스토리를 보여줍니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# 로컬 저장소 커밋 히스토리 조회
+$ git log master
+$ git log heads/master
+$ git log refs/heads/master
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;원격 저장소의 히스토리 또한, 동일한 방식으로 조회할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git log origin/master
+$ git log remotes/origin/master
+$ git log refs/remotes/origin/master
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이제 어느정도 refspec이 무엇인지 감이 좀 오시나요? 다시 push로 돌아가보겠습니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git push origin master
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;우리가 위와 같은 명령어를 입력하면 git이 master를 &lt;code class=&quot;highlighter-rouge&quot;&gt;refs/heads/master:refs/heads/master&lt;/code&gt; 로 확장합니다.
+콜론을 기준으로 왼쪽(src)은 푸시하기를 원하는 브랜치의 refs이며, 오른쪽(dst)은 리모트에 푸시가 될 때 업데이트될 브랜치의 refs입니다.&lt;br /&gt;
+이처럼 dst는 생략이 가능하며, 생략한 경우는 git이 src에 맞춰 푸시합니다.
+여기서 &lt;code class=&quot;highlighter-rouge&quot;&gt;+&lt;/code&gt;를 앞쪽에 붙여줄 경우 fast-forward가 아니더라도 리모트의 refs를 업데이트하게 만들 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;만약 src를 생략할 경우에는 리모트 저장소에 있는 브랜치가 삭제됩니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# 리모트의 master 브랜치 삭제
+git push origin :master
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;오류-원인-및-해결&quot;&gt;오류 원인 및 해결&lt;/h2&gt;
+
+&lt;p&gt;이제 오류가 난 원인에 대해서 다시 한번 보겠습니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;error: src refspec master does not match any.
+error: failed to push some refs to ‘저장소 URL’&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;.git/refs/heads 디렉토리에 master라는 refs가 존재하지 않기 때문에 푸시를 할 수가 없다고 나는 에러입니다. 지금 같은 상황을 해결하기 위해선
+다른 refs로 푸시를 하거나 원하는 커밋으로 refs를 생성해야 합니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git push origin HEAD:master
+
+또는
+
+$ git update-ref refs/heads/{브랜치명} {원하는 커밋 해시값}
+$ git push origin {생성한 refs}:master
+
+만약 refs 자체가 존재하지 않는 경우에는 새로운 커밋을 하나 만들어주면 됩니다.
+$ git show-ref
+$ touch README.md
+$ git add .
+$ git commit -m &quot;Initial commit&quot;
+$ git push origin master
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위와 같은 명령어를 수행하면 문제를 해결할 수 있습니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;head&quot;&gt;HEAD&lt;/h2&gt;
+
+&lt;p&gt;문제를 해결하면서 HEAD를 사용했는데 HEAD는 사용자의 활성화된 브랜치를 가리키고 있는 &lt;strong&gt;symbolic refs&lt;/strong&gt;입니다.&lt;br /&gt;
+HEAD 파일의 위치는 &lt;code class=&quot;highlighter-rouge&quot;&gt;.git&lt;/code&gt; 디렉토리 아래에 위치하고 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ cat test-repo/.git/HEAD
+ref: refs/heads/master
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;HEAD는 해시값을 직접 저장하지 않고 해시값이 저장된 refs를 간접 참조하고 있습니다. 그렇기 때문에 사용자가 checkout으로 브랜치를 활성화시킬 때마다 HEAD의 참조가 변경됩니다.&lt;/p&gt;
+
+&lt;h1 id=&quot;참고&quot;&gt;참고&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git-scm.com/book/en/v2/Git-Internals-The-Refspec&quot;&gt;Git - Refspec&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://stackoverflow.com/questions/44333437/git-what-is-refspec&quot;&gt;Stack Overflow - What is “Refspec”&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><category term="Git" /><summary type="html">시작</summary></entry><entry><title type="html">Linux 표준 스트림과 리다이렉션</title><link href="https://hongsii.github.io/2018/06/25/linux-standard-streams/" rel="alternate" type="text/html" title="Linux 표준 스트림과 리다이렉션" /><published>2018-06-25T02:48:00+00:00</published><updated>2018-06-25T02:48:00+00:00</updated><id>https://hongsii.github.io/2018/06/25/linux-standard-streams</id><content type="html" xml:base="https://hongsii.github.io/2018/06/25/linux-standard-streams/">&lt;h1 id=&quot;리눅스-표준-스트림&quot;&gt;리눅스 표준 스트림&lt;/h1&gt;
+
+&lt;p&gt;리눅스의 리다이렉션에 대해 궁금해져서 이를 정리하기 위해 글을 작성합니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;표준-스트림&quot;&gt;표준 스트림&lt;/h2&gt;
+
+&lt;p&gt;위키피디아에 따르면 표준 스트림을 다음과 같이 정의하고 있습니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;유닉스 및 유닉스 계열 운영 체제에서 프로그램(프로세스)과 환경(&lt;a href=&quot;https://ko.wikipedia.org/wiki/%EB%8B%A8%EB%A7%90%EA%B8%B0&quot;&gt;주변기기&lt;/a&gt;) 사이에 미리 연결된 입출력 통로&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://upload.wikimedia.org/wikipedia/commons/7/70/Stdstreams-notitle.svg&quot; alt=&quot;위키백과 - Standard stream&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;리눅스에서 프로그램(프로세스) 실행시 기본적으로 3개의 스트림이 자동적으로 열립니다.&lt;br /&gt;
+입력을 위한 스트림 (Standard input, stdin), 출력을 위한 스트림 (Standard output, stdout), 오류 메시지 출력을 위한 스트림 (Standard error, stderr)이며, 이를 표준 스트림이라고 부릅니다.&lt;/p&gt;
+
+&lt;p&gt;사용자가 터미널에 접속해 로그인하면 대화형 Shell이 실행되면서 터미널의 표준 스트림을 상속받습니다. 그리고 Shell을 통해 프로세스가 실행되면 프로세스는 Shell의 스트림을 상속받아서 사용합니다. 즉, &lt;strong&gt;모든 프로세스는 실행될 때, 자신을 실행한 부모 프로세스의 스트림을 상속받습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;프로세스가 실행되면 기본적으로 표준 입력 스트림은 키보드와 연결됩니다. 그래서 프로세스는 표준 입준 스트림을 통해 사용자의 입력을 받으며, 입력 받은 내용을 처리합니다.&lt;br /&gt;
+프로세스에서 출력 될 때에는 표준 출력 스트림을 사용하며, 기본적으로 터미널과 연결됩니다.&lt;br /&gt;
+마지막 표준 오류 스트림은 프로세스에서 출력 스트림 외에도 오류 메시지나 기타 등등의 내용을 출력하기 위해 존재하는 스트림입니다. 표준 오류 스트림도 기본적으로 터미널과 연결됩니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;파일-디스크립터-file-descriptor&quot;&gt;파일 디스크립터 (File descriptor)&lt;/h2&gt;
+
+&lt;p&gt;파일 디스크립터(FD)는 프로세스가 파일에 접근하기 위해 제공되는 고유 식별자입니다. UNIX에서는 모든 객체를 파일로 관리합니다. 프로세스가 특정 파일에 접근하기 위해서 특정 파일의 디스크립터를 이용하면 해당 파일에 접근할 수 있게 됩니다.&lt;br /&gt;
+예를 들어, 특정 파일에 접근하거나 새로운 파일을 만들면 커널에서 프로세스에게 파일 디스크립터를 반환해줍니다. 그리고 커널은 사용되고 있는 파일의 디스크립터를 테이블의 형태로 관리합니다.&lt;/p&gt;
+
+&lt;p&gt;파일 디스크립터는 ‘Non-negative Integer’이며, 0부터 순차적으로 번호가 부여됩니다. 기본적으로 프로세스가 실행될 때, 표준 입력/출력/오류 스트림를 할당합니다. 그리고 순서대로 0/1/2로 파일 디스크립터 정수가 부여됩니다. 그리고 사용자가 추가로 파일 디스크립터를 사용하는 경우에는 3부터 부여됩니다. 사용하는 플랫폼마다 정해진 OPEN_MAX값까지 디스크립터 정수를 부여할 수 있습니다.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;스트림명&lt;/th&gt;
+      &lt;th&gt;약어&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;파일 디스크립터&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;표준 입력 스트림&lt;/td&gt;
+      &lt;td&gt;stdin&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;표준 출력 스트림&lt;/td&gt;
+      &lt;td&gt;stdout&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;1&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;표준 오류 스트림&lt;/td&gt;
+      &lt;td&gt;stderr&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&quot;리다이렉션&quot;&gt;리다이렉션&lt;/h2&gt;
+
+&lt;p&gt;각 스트림은 리다이렉션을 통해 다른 스트림으로 방향을 지정할 수 있습니다.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;방향&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;기호&lt;/th&gt;
+      &lt;th&gt;방법&lt;/th&gt;
+      &lt;th&gt;설명&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;표준 출력&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&amp;gt;&lt;/td&gt;
+      &lt;td&gt;명령어 &amp;gt; 파일&lt;/td&gt;
+      &lt;td&gt;명령어의 표준 출력 스트림을 파일로 설정 (파일로 내용을 출력)&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;표준 출력(추가)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;»&lt;/td&gt;
+      &lt;td&gt;명령어 » 파일&lt;/td&gt;
+      &lt;td&gt;명령어의 표준 출력 스트림을 파일로 설정하지만,&lt;br /&gt; 파일의 내용에 덮어쓰는게 아닌 추가하는 형태&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;표준 입력&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&amp;lt;&lt;/td&gt;
+      &lt;td&gt;명령어 &amp;lt; 파일&lt;/td&gt;
+      &lt;td&gt;명령어의 표준 입력 스트림을 파일로 설정 (파일로 부터 입력 받음)&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&quot;표준-출력&quot;&gt;표준 출력&lt;/h3&gt;
+
+&lt;p&gt;표준 출력은 기본적으로 터미널로 설정된 출력 스트림의 방향을 파일로 변경해 터미널에 출력되던 내용이 파일에 출력되게 됩니다.
+예를 들어 아래의 이미지와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;test.txt&lt;/code&gt;라는 텍스트 파일이 존재하고 해당 텍스트 파일에는 &lt;code class=&quot;highlighter-rouge&quot;&gt;표준 출력테스트&lt;/code&gt; 라는 내용이 저장되어있습니다.
+&lt;code class=&quot;highlighter-rouge&quot;&gt;cat&lt;/code&gt; 명령어는 파일의 내용을 순차적으로 읽어서 표준 출력 스트림을 통해 출력합니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;cat test.txt&lt;/code&gt;라는 명령어를 입력하면 텍스트 파일을 읽어서 해당 내용을 출력합니다.
+기본적으로 출력 스트림은 터미널이랑 연결되어있기 때문에 터미널에 내용이 표시되지만, &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;gt;&lt;/code&gt; 리다이렉션 기호를 통해 표준 출력 스트림의 방향을 변경해줍니다.
+&lt;code class=&quot;highlighter-rouge&quot;&gt;cat test.txt &amp;gt; stdout.txt&lt;/code&gt;라고 입력하면 cat test.txt의 출력 스트림이 stdout.txt 파일과 연결되어서 출력 되는 내용이 텍스트 파일에 쓰여지게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://hongsii.github.io/assets/images/post/2018/06/stdout_test.png&quot; alt=&quot;stdout test&quot; width=&quot;50%&quot; height=&quot;30%&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;표준-출력-추가&quot;&gt;표준 출력 (추가)&lt;/h3&gt;
+&lt;p&gt;표준 출력과 동일한 내용이지만, 출력될 때의 방식이 다릅니다. 표준 출력(&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;gt;&lt;/code&gt;)과 동일하게 출력 스트림의 방향을 변경하는 것은 동일하나, 변경된 출력 스트림으로 출력시 존재하는 파일이 있다면 내용을 덮어씁니다.
+&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;gt;&amp;gt;&lt;/code&gt;을 사용하게 되면 기존의 내용을 지우지 않고 뒤에 추가하는 방식으로 동작합니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;cat test.txt &amp;gt;&amp;gt; stdout_add.txt&lt;/code&gt;를 처음 실행하면 출력 스트림을 통해 텍스트 파일에 내용이 쓰여집니다. 동일한 명령어를 한번 더 실행하게 되면 이전 내용을 지우지 않고 마지막에 추가되어 동일한 내용이 두 번 나오는 것을 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://hongsii.github.io/assets/images/post/2018/06/stdout_add_test.png&quot; alt=&quot;stdout add test&quot; width=&quot;50%&quot; height=&quot;30%&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;리다이렉션과-파일-디스크립터&quot;&gt;리다이렉션과 파일 디스크립터&lt;/h2&gt;
+
+&lt;p&gt;출력과 오류를 다르게 파일로 출력하고 싶다면 리다이렉션과 파일 디스크립터를 함께 활용할 수 있습니다.&lt;br /&gt;
+사용 방법은 &lt;code class=&quot;highlighter-rouge&quot;&gt;명령어 [방향을 바꿀 FD]&amp;gt;[방향으로 설정될 파일의 FD] 파일&lt;/code&gt;으로 리다이렉션 기호를 중심으로 좌측에는 스트림의 방향을 바꿀 파일 디스크립터를 명시하고 우측에는 방향으로 지정될 파일의 파일 디스크립터를 명시하면 됩니다. 만약 파일 디스크립터를 생략한다면 기본적으로 파일의 출력 스트림으로 지정됩니다. 예를 들어, myscript.sh를 실행시 출력은 stdout.txt라는 파일에 쓰고 오류는 stderr.txt라는 파일에 쓰고 싶다면 아래와 같이 사용하면 됩니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./myscript.sh &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; stdout.txt 2&amp;gt; stderr.txt
+&lt;span class=&quot;o&quot;&gt;(=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./myscript.sh 1&amp;gt; stdout.txt 2&amp;gt; stderr.txt&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;만약 오류만 출력하고 싶다면 표준 오류 스트림의 방향만 지정해주면 됩니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./myscript.sh 2&amp;gt; stderr.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;하지만, 표준 출력 스트림은 터미널에 출력되기 때문에 출력을 하고 싶지 않다면 &lt;code class=&quot;highlighter-rouge&quot;&gt;/dev/null&lt;/code&gt;로 표준 출력 스트림을 보내면 됩니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./myscript 2&amp;gt; stderr.txt &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; /dev/null
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;/dev/null&lt;/code&gt;은 아무 것도 존재하지 않는 특별한 파일입니다. 이 파일에 쓰여지는 데이터는 모두 버려지지만, 정상적으로 쓰기 작업이 종료됐다고 인식됩니다. 이러한 빈 파일을 &lt;strong&gt;비트 버킷&lt;/strong&gt; 또는 &lt;strong&gt;블랙홀&lt;/strong&gt;이라고 부릅니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;스트림의-방향으로-여러-스트림을-설정할-수-있는-기호-&quot;&gt;스트림의 방향으로 여러 스트림을 설정할 수 있는 기호 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;amp;&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;지금까지 알아본 내용으로는 표준 출력 스트림과 표준 오류 스트림의 방향을 변경하려면 각 스트림의 방향에 대해 명시해야했습니다. 동일한 파일로 두 개의 스트림을 설정하고 싶다면 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;amp;&lt;/code&gt; 기호를 사용하면 됩니다. 예를 들어, myscript.sh가 실행될 때, 표준 출력/오류 스트림을 result.log라는 파일에 내용을 쓰고 싶다면 기존에는 아래와 같이 두 개의 스트림 모두 result.log에 쓰라고 명시해야했습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./myscript &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; result.log 2&amp;gt; result.log
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;amp;&lt;/code&gt; 기호를 사용한다면 조금 더 간편하게 명시할 수 있습니다. 사용 방법은 &lt;code class=&quot;highlighter-rouge&quot;&gt;명령어 [방향을 바꿀 FD]&amp;gt; 파일 [추가로 방향을 바꿀 FD]&amp;gt;&amp;amp;[방향으로 설정될 파일의 FD]&lt;/code&gt; 라고 사용하면 됩니다. 아래는 myscript.sh가 실행될 때, 출력 되는 내용을 result.log 파일에 쓰고, 추가로 표준 오류 스트림을 표준 출력 스트림을 통해 출력하겠다라는 의미가 됩니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./myscript &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; result.log 2&amp;gt;&amp;amp;1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;amp;&lt;/code&gt; 기호를 사용할 경우 띄어쓰기를 사용하면 문법 에러가 발생합니다.
+    &lt;ul&gt;
+      &lt;li&gt;2 &amp;gt; &amp;amp;1 (X)&lt;/li&gt;
+      &lt;li&gt;2 &amp;gt;&amp;amp;1  (X)&lt;/li&gt;
+      &lt;li&gt;2&amp;gt; &amp;amp;1  (X)&lt;/li&gt;
+      &lt;li&gt;2&amp;gt;&amp;amp; 1  (X)&lt;/li&gt;
+      &lt;li&gt;2&amp;gt;&amp;amp;1   (O)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;참고&quot;&gt;참고&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://ko.wikipedia.org/wiki/%ED%91%9C%EC%A4%80_%EC%8A%A4%ED%8A%B8%EB%A6%BC&quot;&gt;위키백과 - 표준 스트림&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Null_device&quot;&gt;Wikipedia - Null device&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.computerhope.com/jargon/f/file-descriptor.htm&quot;&gt;Computer Hop - File descriptor&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><category term="Linux" /><category term="문법" /><summary type="html">리눅스 표준 스트림</summary></entry><entry><title type="html">Ubuntu Timezone 설정</title><link href="https://hongsii.github.io/2018/04/25/linux-timezone-%EC%84%A4%EC%A0%95/" rel="alternate" type="text/html" title="Ubuntu Timezone 설정" /><published>2018-04-25T02:05:00+00:00</published><updated>2018-04-25T02:05:00+00:00</updated><id>https://hongsii.github.io/2018/04/25/linux-timezone-%EC%84%A4%EC%A0%95</id><content type="html" xml:base="https://hongsii.github.io/2018/04/25/linux-timezone-%EC%84%A4%EC%A0%95/">&lt;p&gt;AWS EC2 서버의 시간대가 한국 시간대와 맞지 않아서 타임존을 변경한 내용을 정리했습니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;타임존-조회&quot;&gt;타임존 조회&lt;/h2&gt;
+&lt;p&gt;서버의 설정된 타임존 및 시간을 조회하고 싶다면 다음과 같이 입력합니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;more /etc/timezone
+Etc/UTC
+
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;date
+Tue Apr 24 16:58:10 UTC 2018
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;타임존-설정&quot;&gt;타임존 설정&lt;/h2&gt;
+
+&lt;p&gt;타임존을 새롭게 설정하는 방법은 간단합니다. 아래의 명령어를 입력하면 타임존 설정 화면이 나옵니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;dpkg-reconfigure tzdata
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;설정 화면에서 설정할 지역을 선택합니다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Asia&lt;/code&gt;를 선택해줍니다.
+&lt;img src=&quot;/assets/images/post/timezone-1.png&quot; alt=&quot;timezone-1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;다음 화면에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;S&lt;/code&gt;를 입력 후, &lt;code class=&quot;highlighter-rouge&quot;&gt;Seoul&lt;/code&gt;을 찾아서 선택해줍니다.
+&lt;img src=&quot;/assets/images/post/timezone-2.png&quot; alt=&quot;timezone-2&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그리고 다시 타임존을 조회하면 정상적으로 시간대가 나오는 것을 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;more /etc/timezone
+Asia/Seoul
+
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;date
+Wed Apr 25 01:58:32 KST 2018
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;참고&quot;&gt;참고&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://askubuntu.com/questions/323131/setting-timezone-from-terminal/323163&quot;&gt;Setting timezone from terminal&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><category term="Linux" /><category term="Ubuntu" /><summary type="html">AWS EC2 서버의 시간대가 한국 시간대와 맞지 않아서 타임존을 변경한 내용을 정리했습니다.</summary></entry><entry><title type="html">Github 아이디 변경으로 인한 권한 문제</title><link href="https://hongsii.github.io/2018/04/19/github-%EC%95%84%EC%9D%B4%EB%94%94-%EB%B3%80%EA%B2%BD/" rel="alternate" type="text/html" title="Github 아이디 변경으로 인한 권한 문제" /><published>2018-04-19T03:53:00+00:00</published><updated>2018-04-19T03:53:00+00:00</updated><id>https://hongsii.github.io/2018/04/19/github-%EC%95%84%EC%9D%B4%EB%94%94-%EB%B3%80%EA%B2%BD</id><content type="html" xml:base="https://hongsii.github.io/2018/04/19/github-%EC%95%84%EC%9D%B4%EB%94%94-%EB%B3%80%EA%B2%BD/">&lt;h2 id=&quot;문제&quot;&gt;문제&lt;/h2&gt;
+&lt;p&gt;GitHub 아이디를 변경하게 되면서 변경한 아이디로 블로그 설정을 변경한 뒤, remote 설정을 다시하여 커밋한 내역을 원격 저장소에 푸쉬하려고했더니 다음과 같은 에러가 발생했습니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-github&quot;&gt;$ git push
+remote: Permission to hongsii/hongsii.github.io.git denied to sihong12.
+fatal: unable to access 'https://github.com/hongsii/hongsii.github.io.git/': The requested URL returned error: 403
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;원인은-git-credential&quot;&gt;원인은 Git Credential&lt;/h2&gt;
+&lt;p&gt;Git은 원격 저장소에 접근을 위해 SSH 프로토콜을 사용하며, 원격 저장소에서 데이터를 받으려면 사용자명과 비밀번호를 입력해야합니다. 원격 저장소와 데이터를 교환할 때마다 사용자명과 비밀번호를 입력하면 번거롭기 때문에 Git에서는 매번 입력하지 않도록 &lt;strong&gt;Credential&lt;/strong&gt; 기능을 제공합니다. Credential 기능에서 사용할 수 있는 옵션은 아래와 같습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;기본적으로 아무 옵션을 설정하지 않는다면 원격 저장소에 접근할 때마다 인증정보를 입력해야 합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;cache&lt;/code&gt; 모드를 사용하면 인증정보를 메모리에 일정시간 저장합니다. 유효기간은 기본 15분이며, 변경 가능합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;store&lt;/code&gt; 모드는 인증정보를 Disk에 텍스트파일로 저장합니다. 사용자의 홈 디렉토리에 일반 텍스트파일로 저장되기 때문에 인증정보가 노출될 위험이 있습니다.&lt;/li&gt;
+  &lt;li&gt;Mac을 사용한다면 &lt;code class=&quot;highlighter-rouge&quot;&gt;osxkeychain&lt;/code&gt; 모드를 사용할 수 있습니다. 이 옵션은 Mac의 Keychain 시스템을 이용해 인증정보를 저장합니다. store모드처럼 계속해서 인증정보가 유지되지만, 암호화하여 저장되기 때문에 훨씬 안전합니다.&lt;/li&gt;
+  &lt;li&gt;Windows에서도 &lt;code class=&quot;highlighter-rouge&quot;&gt;wincred&lt;/code&gt; 시스템을 이용해 Mac의 osxkeychain처럼 인증정보를 암호화하여 저장합니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;모드 설정은 git config 옵션으로 원하는 모드를 설정하면 됩니다. 모든 저장소에서 동일한 설정 사용을 위해 global로 설정합니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-github&quot;&gt;$ git config --global credential.helper [mode]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;저는 Mac을 사용 중이라 설정을 확인해보니 &lt;code class=&quot;highlighter-rouge&quot;&gt;osxkeychain&lt;/code&gt; 모드로 설정되어있었습니다. 그렇기 때문에 변경 전 GitHub 아이디의 인증정보로 변경된 아이디의 원격 저장소에 푸쉬하려고 하니 권한이 없어서 에러가 났습니다…&lt;br /&gt;
+해결하기 위해서 변경된 아이디의 인증정보를 초기화하고 다시 설정하면 됩니다. 초기화를 위해 &lt;code class=&quot;highlighter-rouge&quot;&gt;credential.helper&lt;/code&gt; 옵션을 삭제해줍니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-github&quot;&gt;$ git config --global --unset credential.helper
+$ git config --system --unset credential.helper
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;특정 저장소의 인증정보만 변경하고 싶다면 –local 옵션을 사용하면 됩니다. &lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;osxkeychain&lt;/code&gt;모드는 위 명령어로는 인증정보가 초기화되지 않았습니다. 더 찾아보니 삭제 명령어(git credential-osxkeychain erase)를 사용하면 삭제할 수 있다고 하는데 제 맥북에서는 삭제되질 않아서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Keychain Access.app&lt;/code&gt;을 실행해 &lt;strong&gt;github.com&lt;/strong&gt; 항목을 삭제해주었습니다. github.com의 위, 아래 항목은 소스트리에서 사용하는 인증정보이기 때문에 추가로 삭제해줬습니다.
+&lt;img src=&quot;/assets/images/post/키체인-제거.png&quot; alt=&quot;키체인 제거&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Credential을 초기화해주고 나면 원격 저장소에 접근할 때, 다시 인증정보를 입력받으며 입력한 인증정보가 저장되어서 다음에는 인증정보의 입력없이 접근할 수 있습니다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;참고&quot;&gt;참고&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git-scm.com/book/ko/v2/Git-%EB%8F%84%EA%B5%AC-Credential-%EC%A0%80%EC%9E%A5%EC%86%8C&quot;&gt;Git 도구 - Credential 저장소&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><category term="GitHub" /><category term="Git" /><summary type="html">문제 GitHub 아이디를 변경하게 되면서 변경한 아이디로 블로그 설정을 변경한 뒤, remote 설정을 다시하여 커밋한 내역을 원격 저장소에 푸쉬하려고했더니 다음과 같은 에러가 발생했습니다.</summary></entry><entry><title type="html">자바 AES256 암호화 관련 에러</title><link href="https://hongsii.github.io/2018/04/05/java-aes256-error/" rel="alternate" type="text/html" title="자바 AES256 암호화 관련 에러" /><published>2018-04-05T23:04:00+00:00</published><updated>2018-04-05T23:04:00+00:00</updated><id>https://hongsii.github.io/2018/04/05/java-aes256-error</id><content type="html" xml:base="https://hongsii.github.io/2018/04/05/java-aes256-error/">&lt;h2 id=&quot;발생-원인&quot;&gt;발생 원인&lt;/h2&gt;
+&lt;p&gt;Java에서 Cipher 클래스를 이용해 AES256 암호화를 사용할 때, &lt;code class=&quot;highlighter-rouge&quot;&gt;java.security.InvalidKeyException: Illegal key size&lt;/code&gt;라는 예외가 발생했습니다. 해당 예외는 Java에서 기본적으로 128bit(16byte)로 키 길이를 제한해두어서 길이를 초과할 경우 발생합니다.
+Java는 기본적으로 JCE(Java Cryptography Extension)를 사용하기 위한 정책이 제한적으로 제공됩니다.
+기본 정책은 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;JAVA_HOME&amp;gt;/jre/lib/security/local_policy.jar&lt;/code&gt; 안의 &lt;code class=&quot;highlighter-rouge&quot;&gt;default_local.policy&lt;/code&gt;를 열어보면 확인할 수 있습니다. 아래는 해당 내용입니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-Java&quot;&gt;grant {
+    permission javax.crypto.CryptoPermission &quot;DES&quot;, 64;
+    permission javax.crypto.CryptoPermission &quot;DESede&quot;, *;
+    permission javax.crypto.CryptoPermission &quot;RC2&quot;, 128,
+                                     &quot;javax.crypto.spec.RC2ParameterSpec&quot;, 128;
+    permission javax.crypto.CryptoPermission &quot;RC4&quot;, 128;
+    permission javax.crypto.CryptoPermission &quot;RC5&quot;, 128,
+          &quot;javax.crypto.spec.RC5ParameterSpec&quot;, *, 12, *;
+    permission javax.crypto.CryptoPermission &quot;RSA&quot;, *;
+    permission javax.crypto.CryptoPermission *, 128;
+};
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;해당 언급된 키를 제외하고는 최대 128bit의 키 길이만 가능합니다.
+길이에 제한을 둔 이유는 나라별로 수입 정책에 의해 사용 가능한 암호화 키 길이가 다르기 때문에 이처럼 제한해두었다고 합니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;unlimited-strength&quot;&gt;Unlimited Strength&lt;/h2&gt;
+&lt;p&gt;Oracle에서는 길이 제한을 해제하고 싶은 사용자를 위해 JCE Unlimited Strength 정책 파일을 번들로 제공합니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;방법&quot;&gt;방법&lt;/h3&gt;
+&lt;p&gt;현재 사용 중인 Java버전에 맞춰 Unlimited Strength 정책 파일을 다운받습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html&quot;&gt;Java 6&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html&quot;&gt;Java 7&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html&quot;&gt;Java 8&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;다운 받은 파일안의 &lt;code class=&quot;highlighter-rouge&quot;&gt;local_policy.jar&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;US_export_policy.jar&lt;/code&gt; 파일을 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;JAVA_HOME&amp;gt;/jre/lib/security/&lt;/code&gt; 폴더로 옮겨 기존 정책을 덮어씌웁니다. 그러면 JCE로 사용 가능한 모든 암호화의 키 길이에 제한이 해제됩니다. &lt;br /&gt;
+추가로 &lt;a href=&quot;http://www.oracle.com/technetwork/java/javase/8u151-relnotes-3850493.html&quot;&gt;8u151 Release Notes&lt;/a&gt;에서는 해당 버전부터 별도의 다운로드없이 Unlimited Strength 정책을 설정할 수 있게 추가 번들이 같이 제공됩니다.
+&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;JAVA_HOME&amp;gt;/jre/lib/security/policy&lt;/code&gt; 경로에 &lt;code class=&quot;highlighter-rouge&quot;&gt;limited&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;unlimited&lt;/code&gt; 폴더로 구성되며, unlimited 설정은 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;JAVA_HOME&amp;gt;/jre/lib/security/java.security&lt;/code&gt; 파일을 열어 아래와 같은 부분을 찾아 주석 처리(&lt;code class=&quot;highlighter-rouge&quot;&gt;#&lt;/code&gt;)를 지워주면 제한 해제된 정책을 사용할 수 있습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-Java&quot;&gt;crypto.policy=unlimited
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&quot;변경된-기본-정책&quot;&gt;변경된 기본 정책&lt;/h3&gt;
+&lt;p&gt;2018년 1월 업데이트된 &lt;a href=&quot;http://www.oracle.com/technetwork/java/javase/8u161-relnotes-4021379.html#JDK-8170157&quot;&gt;Java8u161 Release Notes&lt;/a&gt;에 따르면 Java8u161 버전부터는 JCE 기본 정책이 Unlimited이며, 길이를 제한하고 싶다면 위에서 언급한 &lt;code class=&quot;highlighter-rouge&quot;&gt;java.security&lt;/code&gt;파일에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;crypto.policy&lt;/code&gt;를 주석 처리하면 됩니다.
+Unlimited를 기본으로 사용하는 Java 버전은 &lt;a href=&quot;https://bugs.java.com/view_bug.do?bug_id=JDK-8170157&quot;&gt;JDK-8170157 : Enable unlimited cryptographic policy by default in Oracle JDK builds&lt;/a&gt;에서 확인할 수 있습니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;참고&quot;&gt;참고&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Export_of_cryptography_from_the_United_States&quot;&gt;Wikipedia - 미국 암호 수출&lt;/a&gt;&lt;/p&gt;</content><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><category term="Programming" /><category term="Java" /><category term="암호화" /><summary type="html">발생 원인 Java에서 Cipher 클래스를 이용해 AES256 암호화를 사용할 때, java.security.InvalidKeyException: Illegal key size라는 예외가 발생했습니다. 해당 예외는 Java에서 기본적으로 128bit(16byte)로 키 길이를 제한해두어서 길이를 초과할 경우 발생합니다. Java는 기본적으로 JCE(Java Cryptography Extension)를 사용하기 위한 정책이 제한적으로 제공됩니다. 기본 정책은 &amp;lt;JAVA_HOME&amp;gt;/jre/lib/security/local_policy.jar 안의 default_local.policy를 열어보면 확인할 수 있습니다. 아래는 해당 내용입니다. grant { permission javax.crypto.CryptoPermission &quot;DES&quot;, 64; permission javax.crypto.CryptoPermission &quot;DESede&quot;, *; permission javax.crypto.CryptoPermission &quot;RC2&quot;, 128, &quot;javax.crypto.spec.RC2ParameterSpec&quot;, 128; permission javax.crypto.CryptoPermission &quot;RC4&quot;, 128; permission javax.crypto.CryptoPermission &quot;RC5&quot;, 128, &quot;javax.crypto.spec.RC5ParameterSpec&quot;, *, 12, *; permission javax.crypto.CryptoPermission &quot;RSA&quot;, *; permission javax.crypto.CryptoPermission *, 128; }; 해당 언급된 키를 제외하고는 최대 128bit의 키 길이만 가능합니다. 길이에 제한을 둔 이유는 나라별로 수입 정책에 의해 사용 가능한 암호화 키 길이가 다르기 때문에 이처럼 제한해두었다고 합니다.</summary></entry><entry><title type="html">리눅스 파일 권한 및 소유 변경</title><link href="https://hongsii.github.io/2018/03/23/%EB%A6%AC%EB%88%85%EC%8A%A4-%ED%8C%8C%EC%9D%BC-%EA%B6%8C%ED%95%9C-%EB%B0%8F-%EC%86%8C%EC%9C%A0-%EB%B3%80%EA%B2%BD/" rel="alternate" type="text/html" title="리눅스 파일 권한 및 소유 변경" /><published>2018-03-23T01:41:00+00:00</published><updated>2018-03-23T01:41:00+00:00</updated><id>https://hongsii.github.io/2018/03/23/%EB%A6%AC%EB%88%85%EC%8A%A4-%ED%8C%8C%EC%9D%BC-%EA%B6%8C%ED%95%9C-%EB%B0%8F-%EC%86%8C%EC%9C%A0-%EB%B3%80%EA%B2%BD</id><content type="html" xml:base="https://hongsii.github.io/2018/03/23/%EB%A6%AC%EB%88%85%EC%8A%A4-%ED%8C%8C%EC%9D%BC-%EA%B6%8C%ED%95%9C-%EB%B0%8F-%EC%86%8C%EC%9C%A0-%EB%B3%80%EA%B2%BD/">&lt;h2 id=&quot;chmod-change-file-mode&quot;&gt;chmod (&lt;u&gt;ch&lt;/u&gt;ange file &lt;u&gt;mod&lt;/u&gt;e)&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;chmod&lt;/code&gt;는 대상의 파일 모드를 변경할 때 사용합니다. 여기서 파일 모드는 파일을 수정, 변경이나 실행, 또는 읽기 권한 등을 뜻합니다. 파일 모드에는 문자열 모드와 8진수로 이루어진 숫자 모드가 있습니다.&lt;/p&gt;
+
+&lt;p&gt;파일 모드를 확인은 &lt;code class=&quot;highlighter-rouge&quot;&gt;ls -l&lt;/code&gt; 명령어를 사용합니다.&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ ls -l
+drwxrwxrwx user group 255 dir1
+-rw-r----x user group  50 example.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;파일 모드는 가장 앞에 있는 문자 10개로 표시됩니다. 첫 번째칸은 파일의 종류를 표시하며, 디렉토리면 &lt;code class=&quot;highlighter-rouge&quot;&gt;d&lt;/code&gt; 파일이면 &lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt;로 표시됩니다. &lt;br /&gt;
+그 다음 9개의 문자는 3개씩 3묶음으로 이루어집니다. 각 자리에는 &lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;r&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;w&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;x&lt;/code&gt; 로 표시됩니다. 각 문자가 무슨 뜻인지 간략하게 알아보고 아래에서 자세히 다루겠습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; : 권한 없음&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;r&lt;/code&gt; : 읽기 권한&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;w&lt;/code&gt; : 쓰기 권한&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;x&lt;/code&gt; : 실행 권한&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;첫 번째 묶음은 소유자의 권한, 소유자의 그룹의 권한, 다른 사용자의 권한을 뜻합니다. &lt;br /&gt;
+그래서 ls 명령어로 조회한 내용을 확인해보면 dir1은 디렉토리이며, 사용자인 user와 사용자의 그룹인 group과 다른 사용자들 모두 읽고 쓰고 실행할 수 있다는 의미입니다. &lt;br /&gt;
+다음 example.txt는 파일이고, 사용자는 읽고 쓰기가 가능하고, 그룹은 조회만 가능하며, 다른 사용자들은 실행만 가능합니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;문자열-모드&quot;&gt;문자열 모드&lt;/h3&gt;
+&lt;p&gt;문자열 모드는 알파벳과 기호를 이용하여 파일 모드를 변경할 수 있습니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;chmod [options] [references][operator][permissions] file1 [file2 …]&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;options : 명령어가 실행될 때 적용될 옵션을 나열하면 됩니다.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-R&lt;/code&gt; : 폴더일 때, 폴더의 하위까지 모두 적용됩니다.&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-v&lt;/code&gt; : 변경되고 있는 모든 파일을 표시합니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;references : 권한을 가질 대상을 지정합니다.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;u&lt;/code&gt; : 파일의 소유자&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;g&lt;/code&gt; : 파일을 소유한 그룹&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;o&lt;/code&gt; : 파일의 소유자나 소유한 그룹이 아닌 사용자&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;a&lt;/code&gt; : 모두 (=ugo)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;operator : 대상에게 권한을 추가하거나 제거할 수 있습니다.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;+&lt;/code&gt; : 대상에게 권한을 추가&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; : 대상의 권한을 제거&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;=&lt;/code&gt; : 대상의 권한을 전부 제거한 뒤, 지정한 권한을 추가&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;permissions : 특정 파일에 대상이 할 수 있는 행동을 나타냅니다.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;r&lt;/code&gt; : 파일을 읽거나 디렉토리 조회 가능&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;w&lt;/code&gt; : 파일에 쓰거나 디렉토리를 변경 가능&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;x&lt;/code&gt; : 파일을 실행하거나 디렉토리 조회 가능&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;example 파일 소유자에게 읽기, 쓰기 권한 부여
+$ chmod u+rw example.txt
+
+example 파일 소유자와 소유 그룹의 쓰기 권한 제거
+$ chmod ug-w example.txt
+
+example 파일 소유자의 권한을 모두 제거한 뒤, 쓰기 권한만 부여
+$ chmod u=w example.txt
+
+모든 사용자에게 example 파일 실행 권한 부여
+$ chmod +x example.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;8진수-숫자-모드&quot;&gt;8진수 숫자 모드&lt;/h3&gt;
+&lt;p&gt;숫자 모드는 3, 4자리의 8진수를 이용해 파일 모드를 변경할 수 있습니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;chmod [options] [x]xxx file1 [file2 …]&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;options : 명령어가 실행될 때 적용될 옵션을 나열하면 됩니다.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-R&lt;/code&gt; : 폴더일 때, 폴더의 하위까지 모두 적용됩니다.&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-v&lt;/code&gt; : 변경되고 있는 모든 파일을 표시합니다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;첫 번째는 특별한 모드를 적용할 때 사용하며, 보통은 0이나 생략합니다.&lt;/li&gt;
+  &lt;li&gt;두 번째부터 순서대로 &lt;strong&gt;사용자, 사용자의 그룹, 다른 사용자들의 권한을 설정&lt;/strong&gt;할 수 있습니다. (각 자리는 권한은 8진수로 표현하며 &lt;code class=&quot;highlighter-rouge&quot;&gt;4=r&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;2=w&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;1=x&lt;/code&gt; 입니다.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;example 파일에 대해서 사용자에게 읽기, 쓰기, 실행 권한을 부여하고, 그룹과 다른 사용자는 실행 권한만 부여
+$ chmod 711 example.txt (= chmod u+rwx, go=x example.txt)
+
+example 파일에 사용자에게만 쓰기 권한 부여
+$ chmod 200 example.txt (= chmod u+w, go= example.txt)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;chown-change-the-owner-of-a-file&quot;&gt;chown (&lt;u&gt;ch&lt;/u&gt;ange the &lt;u&gt;own&lt;/u&gt;er of a file)&lt;/h2&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;chown&lt;/code&gt;은 파일의 소유권을 바꿀 때 사용합니다. 해당 명령어는 &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt;계정이나 관리자 계정으로 실행 가능합니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;chown [options] [user][:group] target1 [target2 …]&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;options :&lt;/li&gt;
+  &lt;li&gt;user : 소유권을 가질 사용자 지정&lt;/li&gt;
+  &lt;li&gt;group : &lt;code class=&quot;highlighter-rouge&quot;&gt;:&lt;/code&gt;을 접두사로 가지며, 소유권을 가질 그룹 지정&lt;/li&gt;
+  &lt;li&gt;target : 소유권을 바꿀 대상 지정 (하나는 필수이며, 여러 파일의 소유권을 한 번에 변경할 수도 있습니다.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;error.log 파일 소유권을 user1로 변경
+$ chown user1 error.log
+
+error.log 파일 소유권을 group1로 변경
+$ chown :group1 error.log
+
+dir1의 소유권을 root로 변경 (해당 디렉토리의 소유권만 root로 지정)
+$ chown root dir1
+
+dir1 및 하위의 소유권까지 모두 root로 변경
+$ chown -R root dir1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;참고&quot;&gt;참고&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://ko.wikipedia.org/wiki/Chmod&quot;&gt;Wiki - chmod&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://ko.wikipedia.org/wiki/Chown&quot;&gt;Wiki - chown&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>박시홍&lt;br/&gt;(@hongsii)</name></author><category term="Linux" /><category term="명령어" /><summary type="html">chmod (change file mode)</summary></entry></feed>

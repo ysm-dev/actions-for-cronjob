@@ -1,0 +1,1103 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	xmlns:georss="http://www.georss.org/georss" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" xmlns:media="http://search.yahoo.com/mrss/"
+	>
+
+<channel>
+	<title>Wraithkim의 지식공방</title>
+	<atom:link href="https://wraithkim.wordpress.com/feed/" rel="self" type="application/rss+xml" />
+	<link>https://wraithkim.wordpress.com</link>
+	<description></description>
+	<lastBuildDate>
+	Wed, 20 Mar 2019 19:39:10 +0000	</lastBuildDate>
+	<language>ko-KR</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>http://wordpress.com/</generator>
+<cloud domain='wraithkim.wordpress.com' port='80' path='/?rsscloud=notify' registerProcedure='' protocol='http-post' />
+<image>
+		<url>https://s0.wp.com/i/buttonw-com.png</url>
+		<title>Wraithkim의 지식공방</title>
+		<link>https://wraithkim.wordpress.com</link>
+	</image>
+	<atom:link rel="search" type="application/opensearchdescription+xml" href="https://wraithkim.wordpress.com/osd.xml" title="Wraithkim의 지식공방" />
+	<atom:link rel='hub' href='https://wraithkim.wordpress.com/?pushpress=hub'/>
+	<item>
+		<title>Nginx를 사용한 대용량 업로드/다운로드 구현</title>
+		<link>https://wraithkim.wordpress.com/2018/10/15/nginx%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%9c-%eb%8c%80%ec%9a%a9%eb%9f%89-%ec%97%85%eb%a1%9c%eb%93%9c-%eb%8b%a4%ec%9a%b4%eb%a1%9c%eb%93%9c-%ea%b5%ac%ed%98%84/</link>
+				<comments>https://wraithkim.wordpress.com/2018/10/15/nginx%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%9c-%eb%8c%80%ec%9a%a9%eb%9f%89-%ec%97%85%eb%a1%9c%eb%93%9c-%eb%8b%a4%ec%9a%b4%eb%a1%9c%eb%93%9c-%ea%b5%ac%ed%98%84/#comments</comments>
+				<pubDate>Sun, 14 Oct 2018 16:23:03 +0000</pubDate>
+		<dc:creator><![CDATA[wraithkim]]></dc:creator>
+				<category><![CDATA[Django]]></category>
+		<category><![CDATA[NGINX]]></category>
+
+		<guid isPermaLink="false">http://wraithkim.wordpress.com/?p=1011</guid>
+				<description><![CDATA[개요 캡스톤디자인 과목에서 수행한 동영상 웹 서비스 프로젝트에서 웹을 통해 대용량 업로드/다운로드를 구현하는 과정을 소개합니다. 개인적으로 공유하려고 했던 자료를 약간 수정한거라 이후 말투가 불편하고 내용이 불친절할 수 있습니다. 이 점 양해바랍니다. 이 글은 또한 대부분 제가 조사한 자료의 링크들도 읽어봐야 이해가 더 쉬울 것이라 생각되기 때문에 정말 이 글을 참조하려면 이 글을 읽는 것 이상의 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<h1><span style="font-weight:400;">개요</span></h1>
+<p>캡스톤디자인 과목에서 수행한 동영상 웹 서비스 프로젝트에서 웹을 통해 대용량 업로드/다운로드를 구현하는 과정을 소개합니다. 개인적으로 공유하려고 했던 자료를 약간 수정한거라 이후 말투가 불편하고 내용이 불친절할 수 있습니다. 이 점 양해바랍니다.</p>
+<p>이 글은 또한 대부분 제가 조사한 자료의 링크들도 읽어봐야 이해가 더 쉬울 것이라 생각되기 때문에 정말 이 글을 참조하려면 이 글을 읽는 것 이상의 시간이 소요될 수 있습니다.</p>
+<p>웹 서버는 NGINX v1.14.0, 웹 어플리케이션 프레임워크는 Django v2.1를 사용했으며, 클라이언트에서도 업로드에 관여하는 부분이 있기 때문에 Javascript에 대해서도 알고는 있어야 이 구현 방법을 어느정도 이해할 수 있을거라 생각합니다.</p>
+<p>또한 저도 nginx나 django, javascript에 대해서는 지식이 별로 없습니다. 따라서 만약 잘못된 점이 있다면 알려주시면 감사하겠습니다.</p>
+<h1><span style="font-weight:400;">업로드</span></h1>
+<h2><span style="font-weight:400;">업로드 구현 방법</span></h2>
+<ol>
+<li style="font-weight:400;"><span style="font-weight:400;">폼 데이터를 받아서 단순히 저장하기: 가장 간단하게 구현할 수 있지만, 업로드 중인 파일을 전부 메모리에 올리기 때문에 용량이 크면 메모리 오버플로우 발생</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">Django에서 청크 단위로 분해하여 업로드: 위의 메모리 오버플로우를 방지할 수 있음. 하지만 요청을 나눠서 보내기 때문에 매번 요청이 올 때 마다, 다음과 과정을 거침. 따라서 성능이 느림.</span>
+<ol>
+<li style="font-weight:400;"><span style="font-weight:400;">웹 서버가 사용자로부터 전송된 청크를 디스크에 임시로 저장함.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">웹 어플리케이션이 디스크에 임시로 저장된 청크를 다시 읽음.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">웹 어플리케이션이 읽어낸 청크를 최종적으로 저장할 파일에 이어붙임.</span></li>
+</ol>
+</li>
+<li style="font-weight:400;"><span style="font-weight:400;">Nginx에서 업로드를 처리함: 매 요청마다 디스크에 저장했다가 다시 읽어내서 최종본에 이어붙이는 작업이 필요 없음. 성능이 빠름.</span>
+<ol>
+<li style="font-weight:400;"><span style="font-weight:400;">웹 서버가 사용자로부터 전송된 청크를 직접 이어붙이면서 디스크에 모든 파일을 저장함.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">모든 파일이 디스크에 저장되면 웹 어플리케이션에 저장된 파일 위치를 넘겨줌</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">웹 어플리케이션은 넘겨받은 파일 위치만으로 업로드 이후 과정을 처리함.</span></li>
+</ol>
+</li>
+</ol>
+<p><span style="font-weight:400;">⇒ 위의 조사를 통해 Nginx에서 업로드를 처리하는 방법을 선택함. </span><a href="https://github.com/fdintino/nginx-upload-module"><span style="font-weight:400;">nginx-upload-module</span></a><span style="font-weight:400;">이라는 3rd party module을 사용함.</span></p>
+<h2><span style="font-weight:400;">업로드 구현 과정</span></h2>
+<p><span style="font-weight:400;">3rd party module이기 때문에 서버에 적용하려면 이 모듈과 함께 서버를 컴파일해서 설치하는 방법밖에 없음. 따라서 서버를 다시 컴파일함. Nginx 컴파일 방법은 다음 자료를 참고해서 진행함.</span></p>
+<ul>
+<li><a href="https://brunch.co.kr/@elijah17/19">(한글) Nginx 설정</a> &#8211; pcre2가 아닌 pcre를 설치해야된다.</li>
+<li><a href="https://opentutorials.org/module/384/4511">(한글) 오픈튜토리얼에서 소개하는 Nginx 컴파일</a></li>
+<li><a href="https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/">(영어) Nginx 문서에 소개된 Nginx 컴파일</a></li>
+<li>./configure 과정에서 내가 사용한 모듈 세팅 &#8211; nginx-upload-progress는 유지보수가 진행되지 않는 모듈이고 나도 실제로 사용하지 않았기 때문에 제외해도 상관없다. 아무튼 아래의 요지는 nginx-upload-module을 &#8211;add-module 구문을 통해 같이 컴파일 해야된다는 것이다.</li>
+</ul>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;">./configure <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--user<span style="color:#333333;">=</span>www-data <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--group<span style="color:#333333;">=</span>www-data <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--prefix<span style="color:#333333;">=</span>/usr/local/nginx <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--sbin-path<span style="color:#333333;">=</span>/usr/local/sbin/nginx <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--conf-path<span style="color:#333333;">=</span>/usr/local/nginx/nginx.conf <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--pid-path<span style="color:#333333;">=</span>/var/run/nginx.pid <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--error-log-path<span style="color:#333333;">=</span>/var/log/error.log <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--http-log-path<span style="color:#333333;">=</span>/var/log/access.log <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-zlib<span style="color:#333333;">=</span>../zlib-1.2.11 <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-pcre<span style="color:#333333;">=</span>../pcre-8.42 <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-openssl<span style="color:#333333;">=</span>../openssl-1.1.1 <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-http_ssl_module <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-http_auth_request_module <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-http_v2_module <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-http_gzip_static_module <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-http_geoip_module <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-http_image_filter_module <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-http_xslt_module <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-mail <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-mail_ssl_module <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-stream<span style="color:#333333;">=</span>dynamic <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-stream_ssl_module <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--with-debug <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--add-module<span style="color:#333333;">=</span>../nginx-upload-module-2.3.0/ <span style="color:#666666;font-weight:bold;background-color:#fff0f0;">\</span>
+--add-module<span style="color:#333333;">=</span>../nginx-upload-progress-module-0.9.2</pre>
+</div>
+<p>컴파일 후에 OS 부팅 시 자동 시작이 되게 하기 위해 <a href="https://www.nginx.com/resources/wiki/start/topics/examples/systemd/">systemd 설정</a>을 하자. (본인의 서버는 Ubuntu 라서 이걸 씀)</p>
+<p><span style="font-weight:400;">서버 컴파일 후 서버 설정 파일에서 업로드 후 처리해주는 콜백 위치, 파일 권한, 업로드 요청 시 전달해줄 헤더 설정 등을 함. 아래 Nginx 설정에 대한 자세한 내용은 <a href="https://vsoch.github.io/2018/django-nginx-upload/">여기</a> 또는 <a href="https://jiripudil.cz/blog/blazing-fast-file-upload-through-nginx">여기</a>서 참고 바람. (두번째 링크의 저자의 추신에 의하면 nginx-upload-module이 더 이상 유지보수 되지 않는댔는데, 2018년 지금은 다시 관리되고 있으니 써도 괜찮다.)</span></p>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;">    <span style="color:#888888;"># 최대 업로드 크기</span>
+    <span style="color:#008800;font-weight:bold;">client_max_body_size</span> <span style="background-color:#fff0f0;">4G</span>;
+    <span style="color:#888888;"># 최대 body 버퍼 크기</span>
+    <span style="color:#888888;"># jquery-file-upload의 maxChunkSize와 관련있음</span>
+    <span style="color:#008800;font-weight:bold;">client_body_buffer_size</span> <span style="color:#0000dd;font-weight:bold;">256k</span>;
+
+    <span style="color:#888888;"># 업로드를 처리하는 곳</span>
+    <span style="color:#008800;font-weight:bold;">location</span> <span style="background-color:#fff0f0;">/upload/progress/</span> {
+        <span style="color:#888888;"># 재개 가능한 업로드는 form-data가 아니기 때문에 field_name이 전송되지 않음.</span>
+        <span style="color:#888888;"># 따라서 직접 지정해주어야 함.</span>
+        <span style="color:#008800;font-weight:bold;">set</span> <span style="color:#996633;">$upload_field_name</span> <span style="background-color:#fff0f0;">"uploaded_file"</span>;
+
+        <span style="color:#888888;">## 아래 내용은 nginx-upload-module이 기존에 request에 있던
+        ## 폼을 가지고 새로운 폼을 생성해서 웹 어플리케이션에 전달하기 때문에 설정한다
+        # 파일과 관련된 form field를 설정한다.
+        # 이 부분은 nginx-upload-module에도 나와있는 예시다.</span>
+        <span style="color:#008800;font-weight:bold;">upload_set_form_field</span> <span style="color:#996633;">$upload_field_name.name</span> <span style="background-color:#fff0f0;">"</span><span style="color:#996633;">$upload_file_name"</span>;
+        <span style="color:#008800;font-weight:bold;">upload_set_form_field</span> <span style="color:#996633;">$upload_field_name.content_type</span> <span style="background-color:#fff0f0;">"</span><span style="color:#996633;">$upload_content_type"</span>;
+        <span style="color:#008800;font-weight:bold;">upload_set_form_field</span> <span style="color:#996633;">$upload_field_name.path</span> <span style="background-color:#fff0f0;">"</span><span style="color:#996633;">$upload_tmp_path"</span>;
+
+        <span style="color:#888888;"># 파일이 전부 업로드되면 집계해서 생성할 form field를 설정한다.
+</span>        <span style="color:#888888;"># 이 부분은 nginx-upload-module에도 나와있는 예시다.</span>
+        <span style="color:#888888;"># 재개 가능한 업로드에서는 hash값을 계산하지 않는다. 따라서 이 값은 언제나 0이다.</span>
+        <span style="color:#008800;font-weight:bold;">upload_aggregate_form_field</span> <span style="background-color:#fff0f0;">"</span><span style="color:#996633;">$upload_field_name.md5"</span> <span style="background-color:#fff0f0;">"</span><span style="color:#996633;">$upload_file_md5"</span>;
+        <span style="color:#008800;font-weight:bold;">upload_aggregate_form_field</span> <span style="background-color:#fff0f0;">"</span><span style="color:#996633;">$upload_field_name.size"</span> <span style="background-color:#fff0f0;">"</span><span style="color:#996633;">$upload_file_size"</span>;
+
+        <span style="color:#888888;"># 파일 이외에 기존의 폼에서 그대로 같이 전달할 form field를 정의한다. </span>
+        <span style="color:#008800;font-weight:bold;">upload_pass_form_field</span> <span style="background-color:#fff0f0;">"^submit</span><span style="color:#996633;">$|^description$"</span>;
+        <span style="color:#008800;font-weight:bold;">upload_pass_form_field</span> <span style="background-color:#fff0f0;">"csrfmiddlewaretoken"</span>;
+        <span style="color:#888888;"># 재개 가능한 업로드에서는 연결이 끊어질 경우 400 또는 499 오류가 발생함.</span>
+        <span style="color:#888888;"># 이 경우에는 업로드 중이던 파일을 삭제해선 안됨. 따라서 cleanup에서 제외함.</span>
+        <span style="color:#008800;font-weight:bold;">upload_cleanup</span> <span style="color:#0000dd;font-weight:bold;">404</span> <span style="color:#0000dd;font-weight:bold;">500</span><span style="background-color:#fff0f0;">-505</span>;
+
+        <span style="color:#888888;"># 업로드가 끝나면 해당 위치에 form을 전달한다.</span>
+        <span style="color:#008800;font-weight:bold;">upload_pass</span>   <span style="background-color:#fff0f0;">/upload/complete/</span>;
+
+        <span style="color:#888888;"># 업로드 된 파일을 저장하는 위치</span>
+        <span style="color:#888888;"># 이 디렉토리는 hash를 사용해서 파일을 구분해서 저장한다.
+        # 따라서 0 1 2 3 4 5 6 7 8 9 가 하위 디렉토리에 존재해야 한다.</span>
+        <span style="color:#008800;font-weight:bold;">upload_store</span> <span style="background-color:#fff0f0;">/path/to/media/</span> <span style="color:#0000dd;font-weight:bold;">1</span>;
+        # 재개 가능한 업로드에서 파일의 업로드 상황을 저장하는 state 파일의 저장 위치
+        <span style="color:#888888;"># state 파일 디렉토리의 경우 하위 디렉토리가 존재해서는 안됨.
+</span>        # 하나의 디렉토리에 모든 state 파일을 저장하기 때문.
+        <span style="color:#008800;font-weight:bold;">upload_state_store</span> <span style="background-color:#fff0f0;">/path/to/media/state/</span>;
+        # 업로드된 파일에 어떤 권한을 적용할 지 설정한다.
+        <span style="color:#008800;font-weight:bold;">upload_store_access</span> <span style="background-color:#fff0f0;">user:rw</span> <span style="background-color:#fff0f0;">group:rw</span> <span style="background-color:#fff0f0;">all:r</span>;
+
+        # 업로드 재개 가능하게 하려면 이 옵션을 켠다.
+        # upload_state_store는 이 옵션에 영향을 받는다.
+        <span style="color:#008800;font-weight:bold;">upload_resumable</span> <span style="color:#003366;font-weight:bold;">on</span>;
+    }
+</pre>
+</div>
+<p><span style="font-weight:400;">업로드 후에 /upload/complete에서는 upload_store 안에 저장된 파일을 업로드 완료된 파일들을 모아놓은 디렉토리로 옮기고, DB에 이 파일에 대한 내용을 테이블에 추가함. 아래는 /upload/complete를 처리하는 Django 코드의 예시다.</span></p>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;"><span style="color:#555555;font-weight:bold;">@require_POST</span>
+<span style="color:#008800;font-weight:bold;">def</span> <span style="color:#0066bb;font-weight:bold;">upload_complete</span>(request):
+    <span style="color:#008800;font-weight:bold;">if</span> is_valid_file_request(request<span style="color:#333333;">.</span>POST):
+        path <span style="color:#333333;">=</span> request<span style="color:#333333;">.</span>POST<span style="color:#333333;">.</span>get(<span style="background-color:#fff0f0;">'uploaded_file.path'</span>)
+        size <span style="color:#333333;">=</span> request<span style="color:#333333;">.</span>POST<span style="color:#333333;">.</span>get(<span style="background-color:#fff0f0;">'uploaded_file.size'</span>)
+        <span style="color:#888888;"># Filename is encoded to url when jQuery-File-Upload send the file.</span>
+        filename <span style="color:#333333;">=</span> urllib<span style="color:#333333;">.</span>parse<span style="color:#333333;">.</span>unquote(request<span style="color:#333333;">.</span>POST<span style="color:#333333;">.</span>get(<span style="background-color:#fff0f0;">'uploaded_file.name'</span>))
+
+        <span style="color:#888888;"># maybe authentication here</span>
+
+        upload_file(name<span style="color:#333333;">=</span>filename, path<span style="color:#333333;">=</span>path, size<span style="color:#333333;">=</span>size)
+        <span style="color:#008800;font-weight:bold;">return</span> HttpResponse(status<span style="color:#333333;">=</span><span style="color:#0000dd;font-weight:bold;">200</span>)
+    <span style="color:#888888;"># if validation failed, remove uploaded file</span>
+    path <span style="color:#333333;">=</span> request<span style="color:#333333;">.</span>POST<span style="color:#333333;">.</span>get(<span style="background-color:#fff0f0;">'uploaded_file.path'</span>)
+    <span style="color:#008800;font-weight:bold;">if</span> path <span style="color:#000000;font-weight:bold;">and</span> os<span style="color:#333333;">.</span>path<span style="color:#333333;">.</span>isfile(path):
+        os<span style="color:#333333;">.</span>remove(path)
+    <span style="color:#008800;font-weight:bold;">return</span> HttpResponse(status<span style="color:#333333;">=</span><span style="color:#0000dd;font-weight:bold;">400</span>)
+</pre>
+</div>
+<h2><span style="font-weight:400;">발생한 이슈: CSRF 문제</span></h2>
+<p><span style="font-weight:400;">CSRF란 공격자가 심어놓은 위조된 url을 숨겨서 피해자가 모르고 열다가 url을 통해 공격자가 원하는 요청을 하게 하는 공격이다.  이 공격을 막는 하나의 방법이 위와 같은 중요한 request는 정상적인 입력 폼에서만 발급해주는 token을 가지고 있을 때만 허가하게 하는 방법이 있다.</span></p>
+<p><span style="font-weight:400;">Django에서도 기본적으로 CSRF 공격을 막기 위해 CSRF-Token을 전달하도록 되어있고 <a href="https://docs.djangoproject.com/en/2.1/ref/csrf/#how-it-works">구현 방법</a>이 매우 간단하다.</span></p>
+<p><span style="font-weight:400;">하지만 nginx-upload-module이 이 토큰이 담긴 폼을 전송하지 않아서 업로드 완료 후에 Django가 csrf 검증 에러를 출력한다. 따라서 csrf-token이 담긴 폼을 전송하도록 서버 설정을 수정해서 해결했다.</span></p>
+<p>이 내용에 대해서는 이후 재개 가능한 업로드에서 청크 단위 업로드를 구현할 때, 쿠키에서 토큰 값을 읽어서 header를 통해 전송하도록 수정했다.</p>
+<h2><span style="font-weight:400;">추가 구현: 재개 가능한 업로드</span></h2>
+<p><span style="font-weight:400;">실제로 큰 파일은 업로드가 오래 걸리기 때문에, 중간에 네트워크 오류로 끊어질 때도 있어서 이 기능을 지원하는 경우가 있음. </span><span style="font-weight:400;">따라서 재개 가능한 업로드를 구현해야 됨.</span></p>
+<p><span style="font-weight:400;">재개 가능한 업로드 구현을 위해선 반드시 청크 단위 업로드를 클라이언트에서 구현해야 됨. (기존 업로드의 경우 nginx가 알아서 버퍼에 맞춰 저장하기 때문에 굳이 구현하지 않아도 되었음.)</span></p>
+<p><span style="font-weight:400;">클라이언트의 청크 단위 업로드는</span><a href="https://github.com/blueimp/jQuery-File-Upload"><span style="font-weight:400;"> jQuery-File-Upload </span></a><span style="font-weight:400;">라는 플러그인을 사용함. 그 외에도 </span><a href="http://www.resumablejs.com/"><span style="font-weight:400;">resumable.js</span></a><span style="font-weight:400;"> 나 </span><a href="https://tus.io/"><span style="font-weight:400;">tus</span></a><span style="font-weight:400;">라는 것도 찾았는데 이걸 선택한 이유는…</span></p>
+<ol>
+<li style="font-weight:400;"><span style="font-weight:400;">JS를 모르는 상태에서 구현해야 되서 예제나 참고 문서가 많은 라이브러리가 적합함.</span>
+<ol>
+<li style="font-weight:400;"><span style="font-weight:400;">resumable.js는 API에 대한 문서만 있었음.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">tus는 자세히 찾아보니 자체 프로토콜로 구현된 거라 go나 node.js에 tus server를 설치해야 됨. 하지만 우리는 python 기반 백엔드임.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">jQuery-File-Upload는 nginx-upload-module과 함께 써서 구현한 예제가 있었고, 그 외에도 API나 Option, 기본 세팅 등 다양한 내용의 문서가 있었음. (<a href="https://bclennox.com/extremely-large-file-uploads-with-nginx-passenger-rails-and-jquery">예제1</a>)(<a href="https://github.com/blueimp/jQuery-File-Upload/wiki/Uploading-to-nginx-using-the-nginx-upload-module">예제2</a>)</span></li>
+</ol>
+</li>
+<li style="font-weight:400;"><span style="font-weight:400;">jQuery-File-Upload가 최근까지 커밋이 있던걸로 보아 리포지터리가 지금도 관리되고 있다고 생각하고 호환성 문제가 발생할 일이 적을 것이라 생각함.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">추가적으로 jQuery-File-Upload 로 쉽게 progress bar를 구현할 수 있음.</span></li>
+</ol>
+<p><span style="font-weight:400;">따라서 jQuery-File-Upload를 적용해서 재개 가능한 업로드를 구현함. 방식은 다음과 같음.</span></p>
+<ol>
+<li style="font-weight:400;"><span style="font-weight:400;">jQuery-File-Upload가 파일을 업로드하면서 ‘Session-ID’라는 헤더를 전송한다. Session-ID는 Nginx가 어떤 파일을 업로드하는지 구분하기 위한 ID값이며, 업로드 재개시에도 이 ID를 통해서 어떤 파일을 다시 업로드 하고 있는지 확인한다.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">Nginx는 매번 청크를 받을 때마다, 제대로 받았다면, 자신이 어디까지 데이터를 받았는지 content-range라는 헤더에 담아서 201 response를 보낸다.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">jQuery-File-Upload는 response에 온 content-range를 보고 다음에 보낼 청크를 보내준다.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">모든 업로드가 끝나면 Nginx는 200 response를 보내준다. 이후 과정은 기존의 업로드 방식처럼 지정된 웹 어플리케이션에 파일 정보를 넘겨서 처리하게 한다.</span></li>
+</ol>
+<p><span style="font-weight:400;">업로드를 재개할 때는, nginx-upload-module은 다음과 같이 동작한다. 자세한 내용은 <a href="http://www.grid.net.ru/nginx/resumable_uploads.en.html">여기</a>서 확인 가능하다.</span></p>
+<ol>
+<li style="font-weight:400;"><span style="font-weight:400;">jQuery-File-Upload는 업로드 재개되는 상황인지 모르기 때문에 파일의 첫번째 청크를 보냄.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">Nginx는 session-ID를 보고 state 파일이 존재한다면, 마지막으로 어디까지 받았는지 content-range 헤더에 담아서 response함.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">jQuery-File-Upload는 content-range 이후의 청크를 전송하기 시작함.</span></li>
+</ol>
+<p><span style="font-weight:400;">이를 사용해서 재개 가능한 업로드를 구현함. jQuery-3.2.1를 사용함. 아래 코드에서 주의할 사항은 다음과 같다.</span><!-- HTML generated using hilite.me --></p>
+<ul>
+<li>nginx-upload-module에서 재개 가능한 업로드 옵션을 켜면, multipart/form-data를 받지 못한다. 따라서 multipart 옵션을 false로 설정하고 dataType을 text로 설정했다.</li>
+<li>maxChunkSize는 다음 <a href="https://gist.github.com/3920385">벤치마크</a>를 통해 설정했다. 이 글에서 결론적으로 경고한 것은 nginx설정의 client_body_buffer_size가 maxChunkSize보다 크거나 같아야 된다는 것이다.</li>
+<li>sequentialUpload를 true로 설정한 건 다음 <a href="https://github.com/fdintino/nginx-upload-module/issues/106">이슈</a>에 의해서 전송되는 청크 순서를 지키기 위해서다.</li>
+</ul>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;">$(<span style="color:#008800;font-weight:bold;">function</span> () {
+  <span style="color:#008800;font-weight:bold;">var</span> hash, sessionId;
+
+  <span style="color:#888888;">/*</span>
+<span style="color:#888888;">  * Hash function for generate 'session-id' header</span>
+<span style="color:#888888;">  */</span>
+  hash <span style="color:#333333;">=</span> <span style="color:#008800;font-weight:bold;">function</span> (s, tableSize) {
+    <span style="color:#008800;font-weight:bold;">var</span> a, b, h, i, j, ref;
+    b <span style="color:#333333;">=</span> <span style="color:#0000dd;font-weight:bold;">27183</span>;
+    h <span style="color:#333333;">=</span> <span style="color:#0000dd;font-weight:bold;">0</span>;
+    a <span style="color:#333333;">=</span> <span style="color:#0000dd;font-weight:bold;">31415</span>;
+    <span style="color:#008800;font-weight:bold;">for</span> (i <span style="color:#333333;">=</span> j <span style="color:#333333;">=</span> <span style="color:#0000dd;font-weight:bold;">0</span>, ref <span style="color:#333333;">=</span> s.length;
+      (<span style="color:#0000dd;font-weight:bold;">0</span> <span style="color:#333333;">&lt;=</span> ref <span style="color:#333333;">?</span> j <span style="color:#333333;">&lt;</span> ref <span style="color:#333333;">:</span> j <span style="color:#333333;">&gt;</span> ref); i <span style="color:#333333;">=</span> <span style="color:#0000dd;font-weight:bold;">0</span> <span style="color:#333333;">&lt;=</span> ref <span style="color:#333333;">?</span> <span style="color:#333333;">++</span>j <span style="color:#333333;">:</span> <span style="color:#333333;">--</span>j) {
+      h <span style="color:#333333;">=</span> (a <span style="color:#333333;">*</span> h <span style="color:#333333;">+</span> s[i].charCodeAt()) <span style="color:#333333;">%</span> tableSize;
+      a <span style="color:#333333;">=</span> ((a <span style="color:#333333;">%</span> tableSize) <span style="color:#333333;">*</span> (b <span style="color:#333333;">%</span> tableSize)) <span style="color:#333333;">%</span> tableSize;
+    }
+    <span style="color:#008800;font-weight:bold;">return</span> h;
+  };
+
+  <span style="color:#888888;">/*</span>
+<span style="color:#888888;">  * Generate session-id using hash function</span>
+<span style="color:#888888;">  */</span>
+  sessionId <span style="color:#333333;">=</span> <span style="color:#008800;font-weight:bold;">function</span> (filename) {
+    <span style="color:#008800;font-weight:bold;">return</span> hash(filename, <span style="color:#0000dd;font-weight:bold;">16384</span>);
+  };
+
+  <span style="color:#008800;font-weight:bold;">var</span> calculateProgress, cancelUpload, setProgressBar, startUpload, uploaded_data;
+  <span style="color:#888888;">/*</span>
+<span style="color:#888888;">   * A simple method to calculate the progress for a file upload.</span>
+<span style="color:#888888;">   */</span>
+  calculateProgress <span style="color:#333333;">=</span> <span style="color:#008800;font-weight:bold;">function</span> (data) {
+    <span style="color:#008800;font-weight:bold;">var</span> value;
+    value <span style="color:#333333;">=</span> <span style="color:#007020;">parseInt</span>(data.loaded <span style="color:#333333;">/</span> data.total <span style="color:#333333;">*</span> <span style="color:#0000dd;font-weight:bold;">100</span>, <span style="color:#0000dd;font-weight:bold;">10</span>) <span style="color:#333333;">||</span> <span style="color:#0000dd;font-weight:bold;">0</span>;
+    <span style="color:#008800;font-weight:bold;">if</span> (value <span style="color:#333333;">&gt;</span> <span style="color:#0000dd;font-weight:bold;">100</span>) <span style="color:#008800;font-weight:bold;">return</span> <span style="color:#0000dd;font-weight:bold;">100</span>;
+    <span style="color:#008800;font-weight:bold;">else</span> <span style="color:#008800;font-weight:bold;">if</span>(value <span style="color:#333333;">&lt;</span> <span style="color:#0000dd;font-weight:bold;">0</span>) <span style="color:#008800;font-weight:bold;">return</span> <span style="color:#0000dd;font-weight:bold;">0</span>;
+    <span style="color:#008800;font-weight:bold;">return</span> value;
+  };
+
+  <span style="color:#888888;">/*</span>
+<span style="color:#888888;">   * Starts the upload for a file in uploaded_data container.</span>
+<span style="color:#888888;">   */</span>
+  startUpload <span style="color:#333333;">=</span> <span style="color:#008800;font-weight:bold;">function</span> () {
+    <span style="color:#008800;font-weight:bold;">if</span> (uploaded_data) {
+      <span style="color:#888888;">// reset, if upload process has interrupted. (can resume soon cause nginx-upload-module will respond with where to resume.)</span>
+      uploaded_data.data <span style="color:#333333;">=</span> <span style="color:#008800;font-weight:bold;">null</span>;
+      uploaded_data.submit();
+    }
+  };
+
+
+  <span style="color:#888888;">/*</span>
+<span style="color:#888888;">  * Set progress bar with given progress(number)</span>
+<span style="color:#888888;">  */</span>
+  setProgressBar <span style="color:#333333;">=</span> <span style="color:#008800;font-weight:bold;">function</span> (progress) {
+    $(<span style="background-color:#fff0f0;">'#progress'</span>).css(<span style="background-color:#fff0f0;">"width"</span>, <span style="color:#ff0000;background-color:#ffaaaa;">`</span>${progress}<span style="color:#ff0000;background-color:#ffaaaa;">\</span><span style="color:#333333;">%</span><span style="color:#ff0000;background-color:#ffaaaa;">`</span>);
+    $(<span style="background-color:#fff0f0;">'#progress'</span>).text(<span style="color:#ff0000;background-color:#ffaaaa;">`</span>${progress}<span style="color:#ff0000;background-color:#ffaaaa;">\</span><span style="color:#333333;">%</span><span style="color:#ff0000;background-color:#ffaaaa;">`</span>);
+  }
+
+  <span style="color:#888888;">/*</span>
+<span style="color:#888888;">  * Get cookie from user.</span>
+<span style="color:#888888;">  * Use this function to get csrf token.</span>
+<span style="color:#888888;">  */</span>
+  <span style="color:#008800;font-weight:bold;">function</span> getCookie(name) {
+    <span style="color:#008800;font-weight:bold;">var</span> cookieValue <span style="color:#333333;">=</span> <span style="color:#008800;font-weight:bold;">null</span>;
+    <span style="color:#008800;font-weight:bold;">if</span> (<span style="color:#007020;">document</span>.cookie <span style="color:#333333;">&amp;&amp;</span> <span style="color:#007020;">document</span>.cookie <span style="color:#333333;">!=</span> <span style="background-color:#fff0f0;">''</span>) {
+        <span style="color:#008800;font-weight:bold;">var</span> cookies <span style="color:#333333;">=</span> <span style="color:#007020;">document</span>.cookie.split(<span style="background-color:#fff0f0;">';'</span>);
+        <span style="color:#008800;font-weight:bold;">for</span> (<span style="color:#008800;font-weight:bold;">var</span> i <span style="color:#333333;">=</span> <span style="color:#0000dd;font-weight:bold;">0</span>; i <span style="color:#333333;">&lt;</span> cookies.length; i<span style="color:#333333;">++</span>) {
+            <span style="color:#008800;font-weight:bold;">var</span> cookie <span style="color:#333333;">=</span> jQuery.trim(cookies[i]);
+            <span style="color:#888888;">// Does this cookie string begin with the name we want?</span>
+            <span style="color:#008800;font-weight:bold;">if</span> (cookie.substring(<span style="color:#0000dd;font-weight:bold;">0</span>, name.length <span style="color:#333333;">+</span> <span style="color:#0000dd;font-weight:bold;">1</span>) <span style="color:#333333;">==</span> (name <span style="color:#333333;">+</span> <span style="background-color:#fff0f0;">'='</span>)) {
+                cookieValue <span style="color:#333333;">=</span> <span style="color:#007020;">decodeURIComponent</span>(cookie.substring(name.length <span style="color:#333333;">+</span> <span style="color:#0000dd;font-weight:bold;">1</span>));
+                <span style="color:#008800;font-weight:bold;">break</span>;
+            }
+        }
+    }
+    <span style="color:#008800;font-weight:bold;">return</span> cookieValue;
+  } 
+
+  <span style="color:#888888;">// Start/Resume this specific upload when this button is clicked</span>
+  $(<span style="background-color:#fff0f0;">'#start_upload'</span>).click(<span style="color:#008800;font-weight:bold;">function</span> () {
+    startUpload();
+  });
+
+  $(<span style="background-color:#fff0f0;">'#resumable-upload'</span>).fileupload({
+    <span style="color:#888888;">// nginx's upload module responds to these requests with a simple</span>
+    <span style="color:#888888;">// byte range value (like "0-2097152/3892384590"), so we shouldn't</span>
+    <span style="color:#888888;">// try to parse that response as the default JSON dataType</span>
+    dataType<span style="color:#333333;">:</span> <span style="background-color:#fff0f0;">'text'</span>,
+    <span style="color:#888888;">// upload  bytes at a time, by the benchmark, 256KB may be best.</span>
+    maxChunkSize<span style="color:#333333;">:</span> <span style="color:#0000dd;font-weight:bold;">256</span> <span style="color:#333333;">*</span> <span style="color:#0000dd;font-weight:bold;">1024</span>,
+    <span style="color:#888888;">// very importantly, the nginx upload module *does not allow*</span>
+    <span style="color:#888888;">// resumable uploads for a Content-Type of "multipart/form-data"</span>
+    multipart<span style="color:#333333;">:</span> <span style="color:#008800;font-weight:bold;">false</span>,
+
+    maxNumberOfFiles<span style="color:#333333;">:</span> <span style="color:#0000dd;font-weight:bold;">1</span>,
+    maxFileSize<span style="color:#333333;">:</span> <span style="color:#0000dd;font-weight:bold;">4</span> <span style="color:#333333;">*</span> <span style="color:#0000dd;font-weight:bold;">1000</span> <span style="color:#333333;">*</span> <span style="color:#0000dd;font-weight:bold;">1000</span> <span style="color:#333333;">*</span> <span style="color:#0000dd;font-weight:bold;">1000</span>,
+    sequentialUploads<span style="color:#333333;">:</span> <span style="color:#008800;font-weight:bold;">true</span>,
+    <span style="color:#888888;">// acceptFileTypes: /(\.|\/)(gif|jpe?g|png)$/i</span>
+
+    add<span style="color:#333333;">:</span> <span style="color:#008800;font-weight:bold;">function</span> (e, data) {
+      $(<span style="background-color:#fff0f0;">'#filename'</span>).text(data.files[<span style="color:#0000dd;font-weight:bold;">0</span>].name);
+      <span style="color:#888888;">// Cancel this specific upload when this button is clicked</span>
+
+      <span style="color:#888888;">// add headers you need</span>
+      data.headers <span style="color:#333333;">||</span> (data.headers <span style="color:#333333;">=</span> {});
+      data.headers[<span style="background-color:#fff0f0;">'Session-ID'</span>] <span style="color:#333333;">=</span> sessionId(data.files[<span style="color:#0000dd;font-weight:bold;">0</span>].name);
+      data.headers[<span style="background-color:#fff0f0;">'X-CSRFToken'</span>] <span style="color:#333333;">=</span> getCookie(<span style="background-color:#fff0f0;">'csrftoken'</span>);
+
+      <span style="color:#008800;font-weight:bold;">var</span> progress <span style="color:#333333;">=</span> calculateProgress(data);
+      setProgressBar(progress);
+      uploaded_data <span style="color:#333333;">=</span> data;
+    },
+
+    done<span style="color:#333333;">:</span> <span style="color:#008800;font-weight:bold;">function</span> (e, data) {
+      setProgressBar(<span style="color:#0000dd;font-weight:bold;">100</span>);
+    },
+
+    progress<span style="color:#333333;">:</span> <span style="color:#008800;font-weight:bold;">function</span> (e, data) {
+      setProgressBar(calculateProgress(data))
+    }
+  });
+});</pre>
+</div>
+<p>추가적으로 UI는 <a href="https://gist.github.com/WraithKim/2762b2f56dba6b3d8923a02cfc5791b0">다음</a>과 같다. (WordPress 엔진 오류로 인해 html의 경우 표시가 어려워서 링크로 대체함)</p>
+<h2><span style="font-weight:400;">발생한 이슈: 403 오류</span></h2>
+<p><span style="font-weight:400;">파일이 업로드되지 않고 403 오류가 계속 출력되었는데 로그에도 제대로 된 이유가 설명되어 있지 않아서 한참을 찾아보다가 서버 설정에 다음과 같은 오류가 있었다는 걸 알게 됨.</span></p>
+<p><span style="font-weight:400;">nginx-upload-module은 업로드 되는 파일에 대해서는 hash에 따라 하위 디렉토리 중 하나에 저장하게 되어있음. 하지만 한 session-id의 업로드 상태를 저장하는 state파일에 대해서는 하위 디렉토리 구분을 하지 않고 한 디렉토리에 모아서 저장하기 때문에 하위 디렉토리 구분 설정을 해주면 안됨. </span></p>
+<p><span style="font-weight:400;">공식 문서에는 하위 디렉토리 설정이 된다고 되어있는데, 실제 사용자들의 예시에서는 그렇지 않아서 오류 원인이라는걸 찾는데 한참 걸림. 어쨌거나 이 부분에 대해서 서버 설정을 수정함.</span></p>
+<h2><span style="font-weight:400;">발생한 이슈: URL 인코딩 오류</span></h2>
+<p><span style="font-weight:400;">파일이 업로드되면 파일명이 URL방식으로 인코딩 되어서 들어와서 다운로드 할 때 보니 한글이나 특수문자가 URL 인코딩 된 상태로 나오는 것을 깨달음. (즉, %20%32%43… 이런식으로 나옴) </span></p>
+<p><span style="font-weight:400;">따라서 업로드 된 파일을 저장할 때, 파일명을 URL 디코딩해서 저장함으로써 해결함.</span></p>
+<h2><span style="font-weight:400;">발생한 이슈: 업로드 재개 이후 불완전한 파일 생성</span></h2>
+<p><span style="font-weight:400;">업로드 재개를 한 파일은 불완전한 파일이 생성됨. 예시로 동영상을 업로드하면 앞부분이 잘린 채로 업로드 됨. </span></p>
+<p><span style="font-weight:400;">확인해보니 업로드 중단 시에 때때로 서버가 400(잘못된 요청)이나 499(Nginx에서의 사용자가 연결을 닫음)을 발생시키는데, 서버 설정에서 이 오류가 발생했을 때, upload-cleanup 설정으로 인해 업로드 중인 파일을 서버에서 전부 삭제하도록 되어있었음. 따라서 업로드 재개한 이후의 청크만 파일에 저장되었던 것.</span></p>
+<p><span style="font-weight:400;">따라서 서버 설정에서 임시방편으로 400과 499에 대해서는 삭제하지 않도록 수정했지만, 업로드 중단 이외에 다른 오류에 대해서도 400이나 499가 발생한다면 좋지 않은 해결법이라 생각해서 더 좋은 방법을 찾는 중.</span></p>
+<h2><span style="font-weight:400;">발생한 이슈: 폼 검증(Validation) 직접 구현</span></h2>
+<p><span style="font-weight:400;">원래 Django의 html 입력 폼 생성을 사용하면 이 입력 폼 객체를 검증하는 것도 함수 호출 한번으로 알아서 되는 거였다. 하지만 Nginx가 업로드 처리를 하면서 Django의 폼 객체 생성이 불가능하고 폼 검증 함수도 호출하지 못한다. 그래서 비어있는 파일을 업로드하면 오류가 발생했다. </span></p>
+<p><span style="font-weight:400;">따라서 간단하게나마 비어있는 값이나 잘못된 이름을 확인하는 폼 검증 함수를 직접 구현했다.</span></p>
+<h1><span style="font-weight:400;">다운로드</span></h1>
+<h2><span style="font-weight:400;">다운로드 방법</span></h2>
+<p><span style="font-weight:400;">업로드와 비슷함. 이 내용은 <a href="http://voorloopnul.com/blog/serving-large-and-small-files-with-django/">여기</a>서 확인한 내용임.</span></p>
+<ol>
+<li style="font-weight:400;"><span style="font-weight:400;">메모리에 파일을 읽어들여서 response를 통해 전달: 업로드 때와 같음. 메모리 오버플로우 발생 가능함.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">청크 단위로 다운로드: 역시 메모리 오버플로우를 방지할 순 있지만, 웹 어플리케이션에 부담이 많이 가고, CPU/IO 성능도 비효율적임.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">웹 서버에게 맡기기: 파일 전달에 최적화된 웹 서버를 활용하면 위의 성능 문제도 어느정도 해결됨.</span></li>
+</ol>
+<h2><span style="font-weight:400;">Nginx에게 맡기는 방법</span></h2>
+<p><span style="font-weight:400;">간단하게 response에 다음 내용을 담으면, response를 사용자에게 전달하기 전에 Nginx가 읽어보고 적절한 파일을 다운로드하게 해준다.</span></p>
+<ol>
+<li style="font-weight:400;"><span style="font-weight:400;">content-disposition: 사용자에게 보여줄 파일명 (다운로드 버튼을 누르면서 나오는 파일탐색기에 적혀있는 기본 파일명이 이 헤더에서 전달된 값이다.)</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">x-accel-redirect: 실제 파일이 저장된 위치인데, 실제 서버 안의 절대 경로를 넣지 않고, 웹 서버의 media 파일을 저장하는 media root를 기준으로 상대경로로 지정함. Nginx가 이 헤더를 읽고 실제 파일을 사용자에게 전달해준다.</span></li>
+</ol>
+<p>Django 코드</p>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;"><span style="color:#008800;font-weight:bold;">def</span> <span style="color:#0066bb;font-weight:bold;">download_file</span>(request, pk):
+    file_to_download <span style="color:#333333;">=</span> get_object_or_404(UploadedFile, pk<span style="color:#333333;">=</span>pk)
+    response <span style="color:#333333;">=</span> HttpResponse()
+    response[<span style="background-color:#fff0f0;">'Content-Disposition'</span>] <span style="color:#333333;">=</span> <span style="background-color:#fff0f0;">'attachment; filename={0}'</span><span style="color:#333333;">.</span>format(urllib<span style="color:#333333;">.</span>parse<span style="color:#333333;">.</span>quote(file_to_download<span style="color:#333333;">.</span>uploaded_filename))
+    response[<span style="background-color:#fff0f0;">'X-Accel-Redirect'</span>] <span style="color:#333333;">=</span> <span style="background-color:#fff0f0;">'/media/{0}'</span><span style="color:#333333;">.</span>format(file_to_download<span style="color:#333333;">.</span>uploaded_file<span style="color:#333333;">.</span>name)
+    <span style="color:#008800;font-weight:bold;">return</span> response
+</pre>
+</div>
+<p><!-- HTML generated using hilite.me -->Nginx 설정코드</p>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;">    <span style="color:#888888;"># Django media</span>
+    <span style="color:#008800;font-weight:bold;">location</span> <span style="background-color:#fff0f0;">/media</span> {
+        <span style="color:#008800;font-weight:bold;">internal</span>;
+        <span style="color:#008800;font-weight:bold;">alias</span> <span style="background-color:#fff0f0;">/path/to/media</span>;
+    }
+</pre>
+</div>
+<p><span style="font-weight:400;">추가적으로 서버 설정에서 media에 접근하는 URL에 internal 옵션을 적용한다. 이 옵션은 오직 서버 내부에서만 이 URL에 접근할 수 있다는 옵션이다. (파일을 외부에서 media를 통해 직접 얻어내는 걸 방지함.)</span></p>
+<h2><span style="font-weight:400;">발생한 이슈: URL 디코딩 오류</span></h2>
+<p><span style="font-weight:400;">업로드와 반대다. 다운로드할 파일명을 content-disposition을 통해 사용자의 브라우저에 표시해줘야 하는데 그냥 전달하면 한글, 특수문자가 포함된 파일명은 브라우저가 읽지 못하고 기본 파일명으로 바꿔버린다.(크롬의 경우 ‘다운로드&#8217; 라고 뜰 것이다) </span></p>
+<p><span style="font-weight:400;">이를 해결하기 위해 content-disposition 헤더에 추가할 때, URL 인코딩을 해서 전송하도록 수정했다.</span></p>
+<h2><span style="font-weight:400;">추가 구현: 업로드 된 파일 삭제</span></h2>
+<p><span style="font-weight:400;">테스트 페이지를 구현하면서 다운로드 파일 목록 옆에 삭제 버튼이 있어서 다운로드와 같이 구현했다.</span></p>
+<p><span style="font-weight:400;">업로드 된 파일을 삭제하려면 Django를 통해 DB에서 파일 내용을 삭제해야 하고, 실제 디스크에 저장된 파일을 삭제해야 한다. 이를 구현하는 방법은 두 가지가 있다.</span></p>
+<ol>
+<li style="font-weight:400;"><span style="font-weight:400;">Django의 models.delete() 메서드를 오버라이드 한다: Django에서 DB에 저장된 레코드를 삭제하는 delete() 메서드를 오버라이드 해서 실제 디스크의 파일도 삭제하는 코드를 추가하면 된다. 하지만 <a href="https://docs.djangoproject.com/ko/2.1/topics/db/models/#overriding-predefined-model-methods">Django에서 권장하지 않는데,</a> 왜냐하면 Django에서 여러 개의 모델 객체를 한번에 삭제하는 경우에는 오버라이드 된 delete()를 호출하지 않기 때문이다.</span></li>
+<li style="font-weight:400;"><span style="font-weight:400;">Django signal 이용하기: Django에서 권장하는 방법은 파일 삭제 시 발생하는 pre_delete, post_delete라는 signal이다. signal은 Django에서 제공하는 일종의 이벤트 객체다. 이 signal이 발생 했을 때, 디스크에서 파일을 삭제하는 함수를 호출하도록 지정해주면 된다.</span></li>
+</ol>
+<p><span style="font-weight:400;">따라서 2번째 방법으로 구현했다. DB에서 파일을 삭제하기 전에 디스크에서 파일을 삭제하는 함수를 구현하고 이 함수를  Django app 설정에 등록했다. 참고한 자료는 다음과 같다.</span></p>
+<ul>
+<li><a href="https://dgkim5360.tistory.com/entry/django-signal-example"><span style="font-weight:400;">시그널 넣는 법</span></a></li>
+<li><a href="https://simpleisbetterthancomplex.com/tutorial/2016/07/28/how-to-create-django-signals.html"><span style="font-weight:400;">시그널 넣는 법(영문)</span></a></li>
+</ul>
+<p><!-- HTML generated using hilite.me -->signal의 경우 app 내에 signals.py라는 파일을 생성해서 관리한다. 다음은 signals.py의 예제다.</p>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;"><span style="color:#008800;font-weight:bold;">from</span> <span style="color:#0e84b5;font-weight:bold;">.models</span> <span style="color:#008800;font-weight:bold;">import</span> UploadedFile
+<span style="color:#008800;font-weight:bold;">from</span> <span style="color:#0e84b5;font-weight:bold;">django.db.models.signals</span> <span style="color:#008800;font-weight:bold;">import</span> pre_delete
+<span style="color:#008800;font-weight:bold;">from</span> <span style="color:#0e84b5;font-weight:bold;">django.dispatch</span> <span style="color:#008800;font-weight:bold;">import</span> receiver
+<span style="color:#008800;font-weight:bold;">import</span> <span style="color:#0e84b5;font-weight:bold;">os</span>
+
+<span style="color:#555555;font-weight:bold;">@receiver</span>(pre_delete, sender<span style="color:#333333;">=</span>UploadedFile, dispatch_uid<span style="color:#333333;">=</span><span style="background-color:#fff0f0;">'uploadedfile_delete_signal'</span>)
+<span style="color:#008800;font-weight:bold;">def</span> <span style="color:#0066bb;font-weight:bold;">delete_uploaded_file</span>(sender, instance, <span style="color:#333333;">*</span>args, <span style="color:#333333;">**</span>kwargs):
+    <span style="color:#dd4422;">"""delete the file from filesystem</span>
+<span style="color:#dd4422;">    """</span>
+    path <span style="color:#333333;">=</span> instance<span style="color:#333333;">.</span>uploaded_file<span style="color:#333333;">.</span>path
+    <span style="color:#008800;font-weight:bold;">if</span> os<span style="color:#333333;">.</span>path<span style="color:#333333;">.</span>isfile(path):
+        os<span style="color:#333333;">.</span>remove(path)
+</pre>
+</div>
+<p>apps.py에 만든 signal 함수를 등록한다. <span style="font-weight:400;">(그리고 반드시 자기 app의 __init__에 가서 default_app_config를 설정하자. 그렇지 않으면 signal에 등록되지 않는다.)</span></p>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;"><span style="color:#008800;font-weight:bold;">from</span> <span style="color:#0e84b5;font-weight:bold;">django.apps</span> <span style="color:#008800;font-weight:bold;">import</span> AppConfig
+
+
+<span style="color:#008800;font-weight:bold;">class</span> <span style="color:#bb0066;font-weight:bold;">VideosrConfig</span>(AppConfig):
+    name <span style="color:#333333;">=</span> <span style="background-color:#fff0f0;">'videosr'</span>
+    
+    <span style="color:#008800;font-weight:bold;">def</span> <span style="color:#0066bb;font-weight:bold;">ready</span>(<span style="color:#007020;">self</span>):
+        <span style="color:#008800;font-weight:bold;">import</span> <span style="color:#0e84b5;font-weight:bold;">videosr.signals</span>
+</pre>
+</div>
+]]></content:encoded>
+							<wfw:commentRss>https://wraithkim.wordpress.com/2018/10/15/nginx%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%9c-%eb%8c%80%ec%9a%a9%eb%9f%89-%ec%97%85%eb%a1%9c%eb%93%9c-%eb%8b%a4%ec%9a%b4%eb%a1%9c%eb%93%9c-%ea%b5%ac%ed%98%84/feed/</wfw:commentRss>
+		<slash:comments>1</slash:comments>
+						
+		<media:content url="https://0.gravatar.com/avatar/9d964669caf6cd5a1f22ab5f8aa56a4d?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">wraithkim</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>hilite.me &#8211; Source code를 HTML로 변환해주는 사이트</title>
+		<link>https://wraithkim.wordpress.com/2018/08/07/hilite-me-source-code%eb%a5%bc-html%eb%a1%9c-%eb%b3%80%ed%99%98%ed%95%b4%ec%a3%bc%eb%8a%94-%ec%82%ac%ec%9d%b4%ed%8a%b8/</link>
+				<comments>https://wraithkim.wordpress.com/2018/08/07/hilite-me-source-code%eb%a5%bc-html%eb%a1%9c-%eb%b3%80%ed%99%98%ed%95%b4%ec%a3%bc%eb%8a%94-%ec%82%ac%ec%9d%b4%ed%8a%b8/#respond</comments>
+				<pubDate>Tue, 07 Aug 2018 04:49:20 +0000</pubDate>
+		<dc:creator><![CDATA[wraithkim]]></dc:creator>
+				<category><![CDATA[미분류]]></category>
+
+		<guid isPermaLink="false">http://wraithkim.wordpress.com/?p=970</guid>
+				<description><![CDATA[워드프레스 무료 호스팅을 쓰면서 막히는 건, syntax highlight 된 소스 코드를 올리기 힘들다는 점입니다. 무료기 때문에 code syntax highlight 같은 플러그인도 설치 불가능하고, 워드프레스는 script tag를 막아두기 때문에 결국 syntax highlight 된 코드를 올리고 싶으면 직접 html 폼으로 변환해야 합니다. 그래서 제가 선택한 방법은 http://hilite.me/ 라는 사이트입니다. 이 사이트는 소스 코드를 넣고 언어와 스킨을 선택하면 html로 변환해주는 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<p>워드프레스 무료 호스팅을 쓰면서 막히는 건, syntax highlight 된 소스 코드를 올리기 힘들다는 점입니다.</p>
+<p>무료기 때문에 code syntax highlight 같은 플러그인도 설치 불가능하고, 워드프레스는 script tag를 막아두기 때문에 결국 syntax highlight 된 코드를 올리고 싶으면 직접 html 폼으로 변환해야 합니다.</p>
+<p>그래서 제가 선택한 방법은 <a href="http://hilite.me/">http://hilite.me/</a> 라는 사이트입니다. 이 사이트는 소스 코드를 넣고 언어와 스킨을 선택하면 html로 변환해주는 웹 앱입니다.</p>
+<p>만약 코드를 남이 수집할까봐 의심스러우면 개발자 깃허브로 가서 hilite.me 소스를 받아서 직접 호스팅 하면 됩니다. 소스가 공개되어 있기 때문입니다.</p>
+<p>그 외에 <a href="https://tohtml.com/">https://tohtml.com/</a> 라는 사이트도 찾긴 했는데 알아낸 건 hilite.me은 2014년에 마지막으로 커밋되었고, tohtml은 2017년에 마지막으로 업데이트 되었다는 점 밖에 없어서 그 외에는 직접 찾아보시고 따져보는게 좋을 듯 합니다.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://wraithkim.wordpress.com/2018/08/07/hilite-me-source-code%eb%a5%bc-html%eb%a1%9c-%eb%b3%80%ed%99%98%ed%95%b4%ec%a3%bc%eb%8a%94-%ec%82%ac%ec%9d%b4%ed%8a%b8/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://0.gravatar.com/avatar/9d964669caf6cd5a1f22ab5f8aa56a4d?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">wraithkim</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>정렬 알고리즘</title>
+		<link>https://wraithkim.wordpress.com/2018/07/08/%ec%a0%95%eb%a0%ac-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98/</link>
+				<comments>https://wraithkim.wordpress.com/2018/07/08/%ec%a0%95%eb%a0%ac-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98/#respond</comments>
+				<pubDate>Sat, 07 Jul 2018 15:04:15 +0000</pubDate>
+		<dc:creator><![CDATA[wraithkim]]></dc:creator>
+				<category><![CDATA[알고리즘]]></category>
+
+		<guid isPermaLink="false">http://wraithkim.wordpress.com/2018/07/08/%ec%a0%95%eb%a0%ac-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98/</guid>
+				<description><![CDATA[출처: 영리한 프로그래밍을 위한 알고리즘 강좌 버블 정렬 bublesort(A[], n) { for last &#60;- n downto 2 for i A[i+1]) then swap(A[i], A[i+1]); } 평균, 최악 O(n²) 선택 정렬 selectionsort(A[], n) { for last &#60;- n downto 2 { k = getIndexOfMaxElem(A[1...last]); swap(A[k], A[last]); } } 평균, 최악 O(n²) 삽입 정렬 insertionsort(A[], n) { for i [&#8230;]]]></description>
+								<content:encoded><![CDATA[<blockquote><p>출처: <a href="https://www.inflearn.com/course/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-%EA%B0%95%EC%A2%8C/">영리한 프로그래밍을 위한 알고리즘 강좌</a></p></blockquote>
+<h1>버블 정렬<!-- HTML generated using hilite.me --></h1>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;">bublesort(A[], n)
+{
+    <span style="color:#008800;font-weight:bold;">for</span> last <span style="color:#333333;">&lt;-</span> n downto <span style="color:#0000dd;font-weight:bold;">2</span>
+    <span style="color:#008800;font-weight:bold;">for</span> i A[i<span style="color:#333333;">+</span><span style="color:#0000dd;font-weight:bold;">1</span>]) then swap(A[i], A[i<span style="color:#333333;">+</span><span style="color:#0000dd;font-weight:bold;">1</span>]);
+}
+</pre>
+</div>
+<p>평균, 최악 O(n²)</p>
+<h1>선택 정렬</h1>
+<p><!-- HTML generated using hilite.me --></p>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;">selectionsort(A[], n)
+{
+    <span style="color:#008800;font-weight:bold;">for</span> last <span style="color:#333333;">&lt;-</span> n downto <span style="color:#0000dd;font-weight:bold;">2</span>
+    {
+        k <span style="color:#333333;">=</span> getIndexOfMaxElem(A[<span style="color:#6600ee;font-weight:bold;">1.</span>..last]);
+        swap(A[k], A[last]);
+    }
+}</pre>
+</div>
+<p>평균, 최악 O(n²)</p>
+<h1>삽입 정렬<!-- HTML generated using hilite.me --></h1>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;">insertionsort(A[], n)
+{
+    <span style="color:#008800;font-weight:bold;">for</span> i <span style="color:#333333;">&lt;-</span> <span style="color:#0000dd;font-weight:bold;">2</span> to n
+        insert(A[<span style="color:#6600ee;font-weight:bold;">1.</span>.i], A[i])
+}
+</pre>
+</div>
+<p>최악은 O(n²) 이지만 정렬된 부분에서 삽입할 위치를 찾기 때문에 전부 탐색을 하기 전에 삽입할 자리를 찾을 수도 있음. 따라서 평균은 위의 두 알고리즘보다 빠름.</p>
+<h1>분할정복법</h1>
+<p>분할: 해결하고자 하는 문제를 작은 크기의 동일한 문제들로 분할</p>
+<p>정복: 각각의 작은 문제를 순환적으로 해결</p>
+<p>합병: 작은 문제의 해를 합하여 원래 문제에 대한 해를 구함</p>
+<h1>합병 정렬<!-- HTML generated using hilite.me --></h1>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;">mergesort(A[], p, r)
+{
+    <span style="color:#008800;font-weight:bold;">if</span> (p <span style="color:#333333;">&lt;</span> r) then
+    {
+        q <span style="color:#333333;">&lt;-</span> (p <span style="color:#333333;">+</span> q) <span style="color:#333333;">/</span> <span style="color:#0000dd;font-weight:bold;">2</span>;
+        mergesort(A, p, q);
+        mergesort(A, q<span style="color:#333333;">+</span><span style="color:#0000dd;font-weight:bold;">1</span>, r);
+        mergeTwoSortedArrays(A, p, q, r);
+    }
+}
+</pre>
+</div>
+<p>평균, 최악: O(n log n)</p>
+<h1>퀵소트<!-- HTML generated using hilite.me --></h1>
+<div style="background:#ffffff;overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+<pre style="margin:0;line-height:125%;">quicksort(A[], p, r)
+{
+    <span style="color:#008800;font-weight:bold;">if</span>(p <span style="color:#333333;">&lt;</span> r) then
+    {
+        q <span style="color:#333333;">=</span> partition(A, p, r);
+        quicksort(A, p, q<span style="color:#333333;">-</span><span style="color:#0000dd;font-weight:bold;">1</span>);
+        quicksort(A, q<span style="color:#333333;">+</span><span style="color:#0000dd;font-weight:bold;">1</span>, r);
+    }
+}
+partition(A[], p, r)
+{
+    x <span style="color:#333333;">&lt;-</span> A[r];
+    i <span style="color:#333333;">&lt;-</span> p<span style="color:#333333;">-</span><span style="color:#0000dd;font-weight:bold;">1</span>; <span style="color:#888888;">// i is end of smaller than pivot x</span>
+    <span style="color:#008800;font-weight:bold;">if</span> a[j] <span style="color:#333333;">&gt;=</span> x then 
+        j <span style="color:#333333;">&lt;-</span> j<span style="color:#333333;">+</span><span style="color:#0000dd;font-weight:bold;">1</span>;
+    <span style="color:#008800;font-weight:bold;">else</span> then
+    {
+        i <span style="color:#333333;">&lt;-</span> i<span style="color:#333333;">+</span><span style="color:#0000dd;font-weight:bold;">1</span>;
+        swap(A[i], A[j]);
+        j <span style="color:#333333;">&lt;-</span> j<span style="color:#333333;">+</span><span style="color:#0000dd;font-weight:bold;">1</span>;
+    }
+    <span style="color:#008800;font-weight:bold;">return</span> x;
+}
+</pre>
+</div>
+<p>시간복잡도는 피벗 선택에 달려있음.</p>
+<p>만약, 피벗 선택을 잘못 해서 분할 후에는 항상 한 쪽은 0개, 다른 쪽은 n-1개로 분할되면 O(n²)이다.</p>
+<p>피벗 선택을 잘 한 경우에는 분할 후에 항상 절반으로 분할되기 때문에 O(n log n)이다.</p>
+<p>평균 시간복잡도는 I를 어떤 입력이라 할 때, 모든 I에 대한 p(I)T(I)의 합이다. (여기서 p(I)는 I가 입력으로 들어올 확률이고 T(I)는 I를 정렬하는데 걸리는 시간이다.)</p>
+<p>따라서 퀵소트의 평균 시간복잡도가 O(n log n)인 이유는 모든 I가 똑같이 p(I) = 1/n이고, T(I)의 합은 {A(0)+A(n-1)}+{A(1)+A(n-2)}+&#8230;+{A(n-1)+A(0)}이므로</p>
+<p>2*(n/2)*(n log n) = n² log n 이다. 따라서 p(I)T(I) = n log n</p>
+<p>피벗의 선택</p>
+<ol>
+<li>첫번째나 마지막 값을 피벗으로 선택: 정렬된 데이터의 경우, 위에서 언급한 0:n-1로 분할될 수 있음</li>
+<li>첫번째 마지막, 가운데 중에 중간값을 피봇으로 선택: 여전히 위의 편중된 분할이 발생할 수 있지만 1번보단 나음.</li>
+<li>랜덤으로 피벗 선택: 이 또한 2번과 비슷한 상황이 발생할 수 있지만 그래도 1, 2번처럼 최악의 경우가 생길 확률이 적음.</li>
+</ol>
+<h1>힙 소트</h1>
+<ul>
+<li>최악의 경우 시간복잡도 O(n log n)</li>
+<li>합병 정렬 같은 추가 배열이 필요하지 않음<br />
+(새로운 힙을 만들어서 넣었다가 꺼내는건 메모리가 필요하지만, 데이터셋 자체를 힙으로 만든다면 필요 없음)</li>
+<li>이진 힙을 자료구조로 사용</li>
+</ul>
+<h2>Heap</h2>
+<ul>
+<li>complete binary tree</li>
+<li>heap property 만족(ex. max heap property: 부모는 자식보다 크거나 같다)</li>
+<li>동일한 데이터 셋을 가지더라도 각각의 데이터가 힙에서 있는 위치는 다를 수 있음.</li>
+</ul>
+<h2>Full, Complete Binary Tree</h2>
+<ul>
+<li>full binary tree: 모든 레벨에 노드들이 꽉 차있는 형태</li>
+<li>complete binary tree: 마지막 레벨을 제외하면 완전히 꽉 차있고, 마지막 레벨에는 가장 오른쪽부터 연속된 몇 개의 노드가 비어있을 수 있음</li>
+</ul>
+<h2>HEAPIFY</h2>
+<p>어떤 노드의 왼쪽과 오른쪽 서브트리가 Heap이라는 가정 하에 이 노드와 자식 사이에서 부모가 자식보다 (크/작)거나 같게 만드는 것</p>
+<h2>힙 정렬 방법(오름차순)</h2>
+<ul>
+<li>주어진 데이터를 힙으로 만듦(leaf node 부터 root node까지 heapify를 수행해야 하므로 len(A)/2부터 0까지 수행) O(n)</li>
+<li>힙에서 최대값을 가장 마지막 값과 바꾸고 힙에서 제외함</li>
+<li>남은 데이터셋에서 맨 마지막부터 루트까지 HEAPIFY함 O(log n) * n-1 times loop</li>
+</ul>
+<h1>정렬 알고리즘의 유형</h1>
+<ul>
+<li>Comparison sort
+<ul>
+<li>데이터들간의 상대적 크기관계만을 이용해서 정렬하는 알고리즘</li>
+<li>따라서 데이터들간의 크기 관계가 정의되어 있으면 어떤 데이터에든 적용 가능(문자열, 알파벳, 사용자 정의 객체 등)</li>
+</ul>
+</li>
+<li>Non-comparison sort
+<ul>
+<li>정렬할 데이터에 대한 사전지식을 이용 &#8211; 적용에 제한적</li>
+<li>Ex. Bucket sort, Radix sort</li>
+</ul>
+</li>
+</ul>
+<h1>정렬 문제의 하한선</h1>
+<ul>
+<li>입력된 데이터를 한번씩 다 보기 위해서 최소 Θ(n)의 시간복잡도가 필요</li>
+<li>합병정렬과 힙정렬 알고리즘들의 시간복잡도는 Θ(n log n)</li>
+<li>어떤 comparison sort 알고리즘도 Θ(n log n)보다 나을 수 없다.</li>
+</ul>
+<h2>Decision Tree를 통한 증명</h2>
+<ul>
+<li>어떤 comparison sort 알고리즘에 대해서 나올 수 있는 모든 노드들로 Decision Tree를 만든다. (ex. a &lt;= b 이고 b &lt;= c 인 노드)</li>
+<li>이 트리의 leaf node 개수는 n! 개. 왜냐하면 모든 순열에 해당하기 때문.</li>
+<li>최악의 경우, 시간복잡도는 트리의 높이</li>
+<li>트리의 높이는 height &gt;= log n! = Θ(n log n) (∵ 스털링 근사)</li>
+<li>따라서 어떤 comparison sort 알고리즘도 Θ(n log n) 보다 나을 수 없다.</li>
+</ul>
+<h1>선형시간 정렬</h1>
+<p>당연히, 이 정렬 알고리즘들은 Non-comparison sort이다.</p>
+<h2>Counting sort</h2>
+<p>데이터의 범위가 사전지식으로 주어진 데이터셋을 정렬하는 알고리즘</p>
+<p>기본적인 개념: k = 5, 즉 데이터셋이 0~5인 정수로 이루어져 있다면, 0~5까지 각각의 counter를 만든 후에, 데이터셋을 한번 순회하면서 각각 몇 개 나왔는지 세어본 후, 순서대로 나타냄.</p>
+<p>문제점: 실제로 데이터셋의 각각의 데이터는 어떤 레코드의 key값일 경우가 많음. 하지만 단순히 counter로 세고 출력하면 실제 레코드와 정렬된 키값의 연결고리가 없기 때문에 사용할 수 없음.</p>
+<p>실제 적용: 위의 counter들을 통해 누적합을 구하면, 누적합을 통해 각각의 데이터의 상한선을 알 수 있으니 그에 맞춰서 실제 데이터를 삽입함.</p>
+<h3>시간 복잡도</h3>
+<ul>
+<li>Θ(n + k), 또는 k = O(n)이라고 간주하면, Θ(n)</li>
+<li>n보다 k가 클 경우, 사용되지 않는 카운터가 많아지므로 비실용적</li>
+<li>stable 정렬 알고리즘에 해당됨
+<ul>
+<li>입력에 동일한 값이 있을 때, 입력에 먼저 나오는 값이 출력에서도 먼저 나온다.</li>
+</ul>
+</li>
+</ul>
+<h2>Radix sort</h2>
+<ul>
+<li>n개의 d자리 정수들</li>
+<li>가장 낮은 자리수부터 정렬, 낮은 자리수부터 정렬하면 이전 단계에서 정렬한 자리수들은 다음 단계에서도 순서가 보장되기 때문에 결론적으로 지금까지 본 자리수들을 가지고 정렬한 것과 같은 결과를 가져다 줌.</li>
+<li>각각의 자리수에 대해서는 stable sort를 적용해서 정렬함. 보통은 각 자리수는 0~9의 정수이므로 가장 적합하고 빠른 counting sort를 사용함.</li>
+<li>따라서 시간복잡도는 O(d(n+k)) = O(n) (d와 k는 상수이기 때문)</li>
+</ul>
+<p>&nbsp;</p>
+<p><em>이후의 내용은 비공개입니다. 저도 공부한 내용을 정리한 거고, 모든 권리는 권오흠 교수님께 있으니 더 보고 싶다면, <a href="https://www.inflearn.com/">인프런</a> 에서 보는 걸 권장합니다.</em></p>
+]]></content:encoded>
+							<wfw:commentRss>https://wraithkim.wordpress.com/2018/07/08/%ec%a0%95%eb%a0%ac-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://0.gravatar.com/avatar/9d964669caf6cd5a1f22ab5f8aa56a4d?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">wraithkim</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>좋은 주석을 쓰는 기준 세 가지</title>
+		<link>https://wraithkim.wordpress.com/2018/01/04/%ec%a2%8b%ec%9d%80-%ec%a3%bc%ec%84%9d%ec%9d%84-%ec%93%b0%eb%8a%94-%ea%b8%b0%ec%a4%80-%ec%84%b8-%ea%b0%80%ec%a7%80/</link>
+				<comments>https://wraithkim.wordpress.com/2018/01/04/%ec%a2%8b%ec%9d%80-%ec%a3%bc%ec%84%9d%ec%9d%84-%ec%93%b0%eb%8a%94-%ea%b8%b0%ec%a4%80-%ec%84%b8-%ea%b0%80%ec%a7%80/#respond</comments>
+				<pubDate>Thu, 04 Jan 2018 05:19:41 +0000</pubDate>
+		<dc:creator><![CDATA[wraithkim]]></dc:creator>
+				<category><![CDATA[C/C++]]></category>
+		<category><![CDATA[프로그래밍방법론]]></category>
+
+		<guid isPermaLink="false">http://wraithkim.wordpress.com/?p=895</guid>
+				<description><![CDATA[출처: learncpp 의 c++ 튜토리얼 1. 라이브러리이나 프로그램, 함수 단위에서는 &#8216;무엇&#8217;인지 설명한다. // 이 프로그램은 학생들의 최종 점수를 시험 점수와 과제 점수에 기반해서 계산한다. // 이 함수는 주어진 등식의 근을 추정하기 위해 뉴턴의 방법을 사용한다. // 다음 행들은 임의의 아이템을 희소도와 레벨, 무게에 기반해서 생성한다. 이러한 주석들은 읽는 사람에게 하여금 실제 코드를 보지 않고도 이 프로그램이 무엇을 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<blockquote><p>출처: <a href="http://www.learncpp.com/cpp-tutorial/12-comments/" target="_blank" rel="noopener">learncpp 의 c++ 튜토리얼</a></p></blockquote>
+<h1>1. 라이브러리이나 프로그램, 함수 단위에서는 &#8216;<strong>무엇&#8217;인지</strong> 설명한다.</h1>
+<blockquote><p>// 이 프로그램은 학생들의 최종 점수를 시험 점수와 과제 점수에 기반해서 계산한다.</p>
+<p>// 이 함수는 주어진 등식의 근을 추정하기 위해 뉴턴의 방법을 사용한다.</p>
+<p>// 다음 행들은 임의의 아이템을 희소도와 레벨, 무게에 기반해서 생성한다.</p></blockquote>
+<p>이러한 주석들은 읽는 사람에게 하여금 실제 코드를 보지 않고도 이 프로그램이 무엇을 하려고 하는 건지 알 수 있게 해주는 좋은 방법이다.</p>
+<h1>2. 라이브러리나 프로그램, 함수 안에서는 맨 처음에 이 코드가 &#8216;어떻게&#8217; 동작하는지 설명한다.</h1>
+<blockquote><p>/* 최종 점수를 계산하는데 있어서, 우리는 모든 중간 점수들과 과제 점수를 더한 후, 백분율을 내기 위해 점수들의 수로 나눈다. 이 백분율은 성적을 내기 위해 쓰인다. */</p>
+<p>// 임의의 아이템을 생성하기 위해, 우리는 다음과 같은 과정을 거친다.<br />
+// 1) 원하는 희소도에 해당되는 아이템들을 리스트에 넣는다.<br />
+// 2) 레벨과 무게에 기반해서 각각의 아이템의 확률을 계산한다.<br />
+// 3) 임의의 숫자를 고른다.<br />
+// 4) 임의의 숫자에 대응되는 아이템을 알아낸다.<br />
+// 5) 해당되는 아이템을 반환한다.</p></blockquote>
+<p>이러한 주석들은 유저에게 코드를 세세하게 읽어보지 않아도 어떻게 작동하는 건지 알려준다.</p>
+<h1>3. 실행문에 달아두는 주석은 코드가 &#8216;왜&#8217; 이렇게 동작하는지 설명한다.</h1>
+<p><em>주의할 것은, 실행문에 달아두는 주석에 이 코드가 &#8216;무엇&#8217;을 하는 것인지 설명하는 것은 안 좋은 방법이다. 만약, 너무 실행문이 복잡해서 이 코드가 &#8216;무엇&#8217;인지 주석으로 반드시 적어놔야 한다면, 그건 실행문을 잘못 적은 거지 주석을 적어야 되는 경우가 아니다. 코드를 고쳐라.</em></p>
+<p>나쁜 주석:</p>
+<blockquote><p>// 시야를 0으로 만든다.<br />
+sight = 0;</p></blockquote>
+<p>(코드만 봐도 sight 값에 0을 대입하는 코드란 걸 아는데 굳이 주석으로 적어놨다.)</p>
+<p>좋은 주석:</p>
+<blockquote><p>// 플레이어는 방금 눈가림의 물약을 마셨고 아무것도 보이지 않는다.<br />
+sight = 0;</p></blockquote>
+<p>(이제 우리는 왜 플레이어의 시야가 0이 되었는지 알 수 있다.)</p>
+<p>나쁜 주석:</p>
+<blockquote><p>// 아이템들의 값을 계산한다<br />
+cost = items / 2 * storePrice;</p></blockquote>
+<p>(아이템의 값을 계산하는 코드인건  알았는데 왜 아이템들에서 2를 나누는 거지?)</p>
+<p>좋은 주석:</p>
+<blockquote><p>// 아이템을 짝수로 샀기 때문에 여기선 반드시 아이템을 2로 나눠야 한다.<br />
+cost = items / 2 * storePrice;</p></blockquote>
+<p>(이제 왜 2로 나누는지 알았다!)</p>
+<h1>4. 요약</h1>
+<ol>
+<li>라이브러리나 프로그램, 함수 단계에서는 무엇인지 설명하자.</li>
+<li>라이브러리나 프로그램, 함수 안에서는 어떻게 실행되는지 설명하자.</li>
+<li>실행문 단계에서는 왜 그렇게 적혀있는지 설명하자.</li>
+</ol>
+<h1>5. 이 외에도 알아두면 좋은 주석 적는 법</h1>
+<ol>
+<li>여러 가지 방법으로 해결이 되는 상황이라서 그 중 하나를 골라 적용을 했을 경우, 이 방법을 고른 이유를 상기시켜주는 주석을 달아두면 좋다.</li>
+<li>주석은 최대한 이 코드를 모르는 사람의 입장에서도 알아볼 수 있도록 적어야 한다. 왜냐하면 작성자 본인도 시간이 지나면 금방 자신의 의도를 생각해내기 힘든게 코드기 때문이다.</li>
+<li>보통 식별자(Identifier)는 짧게 쓰는 것 보다 누구나 알아볼 수 있도록 충분하게 적는게 좋지만, 만약 알기 쉽도록 적기에 식별자가 너무 길다면, 식별자를 조금 줄이고 대신 주석으로 자세하게 설명해도 된다. (<em>numberOfCharsIncludingWhitespaceAndPunctuation ==&gt; numberOfChars //텍스트 내의 글자 수 &#8211; 공백과 구두점을 포함해서)</em></li>
+</ol>
+<p>&nbsp;</p>
+]]></content:encoded>
+							<wfw:commentRss>https://wraithkim.wordpress.com/2018/01/04/%ec%a2%8b%ec%9d%80-%ec%a3%bc%ec%84%9d%ec%9d%84-%ec%93%b0%eb%8a%94-%ea%b8%b0%ec%a4%80-%ec%84%b8-%ea%b0%80%ec%a7%80/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://0.gravatar.com/avatar/9d964669caf6cd5a1f22ab5f8aa56a4d?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">wraithkim</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>당신의 게임에 블랙박스가 붙었어요!</title>
+		<link>https://wraithkim.wordpress.com/2017/04/28/%eb%8b%b9%ec%8b%a0%ec%9d%98-%ea%b2%8c%ec%9e%84%ec%97%90-%eb%b8%94%eb%9e%99%eb%b0%95%ec%8a%a4%ea%b0%80-%eb%b6%99%ec%97%88%ec%96%b4%ec%9a%94/</link>
+				<comments>https://wraithkim.wordpress.com/2017/04/28/%eb%8b%b9%ec%8b%a0%ec%9d%98-%ea%b2%8c%ec%9e%84%ec%97%90-%eb%b8%94%eb%9e%99%eb%b0%95%ec%8a%a4%ea%b0%80-%eb%b6%99%ec%97%88%ec%96%b4%ec%9a%94/#respond</comments>
+				<pubDate>Thu, 27 Apr 2017 16:28:20 +0000</pubDate>
+		<dc:creator><![CDATA[wraithkim]]></dc:creator>
+				<category><![CDATA[NDC2017]]></category>
+
+		<guid isPermaLink="false">http://wraithkim.wordpress.com/?p=621</guid>
+				<description><![CDATA[당신의 게임에 블랙박스가 붙었어요! &#8211; 후킹하지 않는 실시간 게임 레코더 개발 사례 소개 소개 블랙박스-게임 상시 레코더 사전 등록된 게임에만 됨 구동시 작동 별개의 어플리케이션 로그와 같이 전송됨 용도 영상을 통해 버그를 직접 봄 버그 발생 증거로써 사용됨 크래시 보고용 개발 목적 시중에도 상사 레코딩 프로그램이 있지만 사용하지 않은 이유는 응용할 가능성을 늘리기 위해서 사용 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<h1>당신의 게임에 블랙박스가 붙었어요! &#8211; 후킹하지 않는 실시간 게임 레코더 개발 사례 소개</h1>
+<h1>소개</h1>
+<p>블랙박스-게임 상시 레코더</p>
+<ul>
+<li>사전 등록된 게임에만 됨</li>
+<li>구동시 작동</li>
+<li>별개의 어플리케이션</li>
+<li>로그와 같이 전송됨</li>
+</ul>
+<h3>용도</h3>
+<ul>
+<li>영상을 통해 버그를 직접 봄</li>
+<li>버그 발생 증거로써 사용됨</li>
+<li>크래시 보고용</li>
+</ul>
+<h3>개발 목적</h3>
+<p>시중에도 상사 레코딩 프로그램이 있지만 사용하지 않은 이유는 응용할 가능성을 늘리기 위해서</p>
+<h3>사용 방법</h3>
+<p>버그가 보이면 단축키를 누름. JIRA 리포트 창이 생성되면서 영상이 자동으로 추가됨. 스크린샷을 편집 후 첨부도 가능함.</p>
+<h2>비디오 캡쳐</h2>
+<p>캡쳐 과정: 화면 캡쳐-&gt;인코딩-&gt;동영상</p>
+<p>여러가지 동영상 포멧이 있음.</p>
+<h3>코덱</h3>
+<p>큰 데이터를 대역폭에 맞게 압축해서 보냄. 코덱 중에서 h.264가 호환성이 좋음</p>
+<h3>레코딩을 위한 라이브러리</h3>
+<p>ffmpeg나 마이크로소프트의 라이브러리가 있음</p>
+<p>초기에는 xp가 지원되는 Media For Windows를 썼지만 오래된 라이브러리라 확장성이 부족해서 Media Foundation를 사용함.</p>
+<h3>캡쳐 소스</h3>
+<p>GDI 사용하기엔 비트맵으로 영상 만들 순 없음</p>
+<p>Direct3D9은 그래픽카드를 읽기 때문에 성능이 느리고 다른 창이 게임창을 덮으면 사용 불가(readback)</p>
+<p>게임에 직접 연동해서 백버퍼 취득하면 다른 프로젝트의 비용 증가</p>
+<p>윈도우 미디어 9 sdk는 wmv가 결과물임</p>
+<p>데스크톱 듀플리케이션 API은 여전히 전체화면 방식이라 다른창이 덮으면 안됨</p>
+<p>DirectX 버전마다 후킹하는 것은 성능은 좋으나 에러메세지 같은 게임 외적인 부분은 캡쳐가 안됨</p>
+<p>데스크탑 원도우 매니저(DWM)는 윈도우 에어로를 작동시키는 윈도우 매니저인데 화면전환 효과에서 썸네일 형태로 게임 화면을 가져오는 것을 봄. 따라서 어딘가에 다이렉트엑스를 받아오는 것 같다고 생각했고 이를 가져올 수 있을지 고민함.</p>
+<p>DXGI의 화면이 DWM을 통해서 들어오기 때문</p>
+<p>단, 섬네일을 가져올 순 있지만 레코딩 기능은 없음.</p>
+<p>그래도 빠른 속도로 처리하고 에러메세지 같은 부가적인 것과 다이렉트엑스 오류 시 나오는 화면 오류도 캡쳐 가능.</p>
+<p>따라서 문서화 되지 않은 함수 프로토타입을 불러와서 캡쳐해야 할 게임 윈도우 핸들을 넘긴 후 이를 D3D를 통해 텍스쳐를 그려냄. 에러 메세지 캡쳐 같은 일부 DWM 기능이 구현되지 않지만 그래도 게임화면을 빠르고 열화없이 받아올 수 있었음.</p>
+<p>테스트 용으로는 적합함.(유니티, 언리얼, 심지어 오래된 DX7 까지 뭐든 간에 잘 됐음)</p>
+<h2>오디오 캡쳐</h2>
+<p>짧은 지연, 음챗도 캡쳐되어야 함, 스테레오믹스에 종속되면 안됨.</p>
+<p>윈도우 오디오 세션 API 사용</p>
+<p>호환성 높은 AAC 코덱을 사용함.</p>
+<h2>동영상 생성</h2>
+<p>이제 비디오 오디오 둘 다 준비되었으니 먹싱을 해야 함.</p>
+<p>먹싱은 영상 안에 비디오와 오디오를 구분해서 하나의 파일로 합치는 것.</p>
+<p>미디어 파운데이션을 사용한 동영상 writer 구현</p>
+<h3>염두해둬야 할 문제</h3>
+<ul>
+<li>해상도 변경</li>
+<li>다운 스케일링으로 성능 향상</li>
+<li>영상 비율과 크기 제한</li>
+<li>finalize로 닫아야 영상 재생이 가능</li>
+<li>영상 용량 감소</li>
+</ul>
+<h2>JIRA 리포트 띄우기</h2>
+<p>JIRA는 내장 크로미움 브라우저로 띄움</p>
+<p>자동 로그인 후 이슈 작성으로 이동</p>
+<p>영상과 스크린샷을 업로드 후 링크를 HTML 태그로 감쌈, 시스템 정보도 HTML로 기록함.</p>
+<p>자바 스크립트, JQuery를 이용한 오토 네이게이터 개발로 자연스러운 인앱 리포트 UX 만듦</p>
+<p>자동으로 이슈 작성으로 넘기고 다른 링크로 못 가게 막음</p>
+<h2>기타 기능</h2>
+<p>윈도우 실행시 트레이 형태로 실행, 주기적으로 새로운 창 생성을 수집함</p>
+<p>윈도우즈 조작을 위해 발생한 키보드 이벤트 또한 API로 수집 가능</p>
+<p>윈도우 내장 기능으로 시스템 정보를 꺼냄 JIRA에 첨부</p>
+<h2>결론</h2>
+<p>그 외 여러가지 기능을 추가할 수도 있었지만 유저에게 배포되지 않는 테스팅 툴이기 때문에 해당 환경 내에서는 이 정도 기능으로도 충분히 잘 작동함.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://wraithkim.wordpress.com/2017/04/28/%eb%8b%b9%ec%8b%a0%ec%9d%98-%ea%b2%8c%ec%9e%84%ec%97%90-%eb%b8%94%eb%9e%99%eb%b0%95%ec%8a%a4%ea%b0%80-%eb%b6%99%ec%97%88%ec%96%b4%ec%9a%94/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://0.gravatar.com/avatar/9d964669caf6cd5a1f22ab5f8aa56a4d?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">wraithkim</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>데이터분석 기반 게임봇과 작업장 탐지</title>
+		<link>https://wraithkim.wordpress.com/2017/04/28/%eb%8d%b0%ec%9d%b4%ed%84%b0%eb%b6%84%ec%84%9d-%ea%b8%b0%eb%b0%98-%ea%b2%8c%ec%9e%84%eb%b4%87%ea%b3%bc-%ec%9e%91%ec%97%85%ec%9e%a5-%ed%83%90%ec%a7%80/</link>
+				<comments>https://wraithkim.wordpress.com/2017/04/28/%eb%8d%b0%ec%9d%b4%ed%84%b0%eb%b6%84%ec%84%9d-%ea%b8%b0%eb%b0%98-%ea%b2%8c%ec%9e%84%eb%b4%87%ea%b3%bc-%ec%9e%91%ec%97%85%ec%9e%a5-%ed%83%90%ec%a7%80/#respond</comments>
+				<pubDate>Thu, 27 Apr 2017 16:12:21 +0000</pubDate>
+		<dc:creator><![CDATA[wraithkim]]></dc:creator>
+				<category><![CDATA[NDC2017]]></category>
+
+		<guid isPermaLink="false">http://wraithkim.wordpress.com/?p=620</guid>
+				<description><![CDATA[데이터분석 기반 게임봇과 작업장 탐지 &#8211; 행위분석 및 프로파일링 기법을 중심으로 게임봇 제재정책의 역사 2010년: 악의 축, 전부 지워야 함 2012년: 게임봇을 적정 수준만 제거, 기업형 작업장을 정밀하게 제거하는 방법 연구 2014년: PC기반 MMO 쇠락 2016년: 봇 잡는 비용이 많이 들어서 개발사도 반쯤 포기함 2017년: 새로운 윤리와 철학이 제공, 모바일 게임 자동전투때문에 유저들의 인식이 달라짐 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<h1>데이터분석 기반 게임봇과 작업장 탐지 &#8211; 행위분석 및 프로파일링 기법을 중심으로</h1>
+<h2>게임봇 제재정책의 역사</h2>
+<p>2010년: 악의 축, 전부 지워야 함<br />
+2012년: 게임봇을 적정 수준만 제거, 기업형 작업장을 정밀하게 제거하는 방법 연구<br />
+2014년: PC기반 MMO 쇠락<br />
+2016년: 봇 잡는 비용이 많이 들어서 개발사도 반쯤 포기함<br />
+2017년: 새로운 윤리와 철학이 제공, 모바일 게임 자동전투때문에 유저들의 인식이 달라짐</p>
+<h2>게임봇의 영원한 난제</h2>
+<ul>
+<li>게임봇은 처음부터 잡아야 하는가 심해질때 잡아야 하는가</li>
+<li>기업형 작업장만 잡아야 하는가 전부 잡아야 하는가</li>
+<li>너무 많은 제제를 해버려서 사업부와 갈등이 생김</li>
+<li>전담보안조직에서 게임봇을 잡아야 하는가 개별 스튜디오마다 대응을 해야하는가</li>
+<li>pc기반 mmorpg는 로그도 풍부해서 분석이 어느정도 가능하지만 모바일은 어떻게 하는가</li>
+<li>가성비가 좋은 탐지 알고리즘은 뭐가 있나요</li>
+</ul>
+<h2>게임봇&amp;작업장(GFG)</h2>
+<p>게임봇: 사람을 대신해서 자동으로 플레이함. 게임에 미치는 악영향으로 컨텐츠 소모가 빨라지는 것과 공정한 경쟁이 이루어지지 않는 것이 있음.</p>
+<p>특히 모바일게임의 경우에는 핵, 매크로 탐지가 쉽지 않음. 왜냐하면 로그 디자인 문제도 있고 통신 과금때문에 풍부한 로그를 받아올 수 없기 때문.</p>
+<h3>거래방법</h3>
+<ul>
+<li>유튜브 등의 다양한 판매 채널</li>
+<li>개인 거래 방식</li>
+<li>거래 사이트를 이용한 거래 방식</li>
+</ul>
+<h3>사용방법</h3>
+<p>친절한 설명이 포함됨, 방화벽 해제나 백신 종료 등의 과정도 필요</p>
+<h3>유저들의 인식</h3>
+<p><em>게임봇이 저렇게 많은데 막지 못하는가</em></p>
+<p>신고시스템으로도 갱신이 안됨 등등 개발사에 대한 불신만 쌓임.</p>
+<h3>게임회사를 위한 변명</h3>
+<p>현실적인 한계가 많음.</p>
+<ul>
+<li>오탐 문제나 봇 유저들의 법적 대응</li>
+<li>GM조직 역할 및 구조 변화</li>
+<li>기술적으로 막기 어려움</li>
+<li>소모전</li>
+</ul>
+<h3>게임봇이 존재하는 이유</h3>
+<ul>
+<li>시간을 벌 수 있음</li>
+<li>현실의 재화가 연결되어 있음</li>
+<li>BM의 문제로 볼 것인지 윤리 문제로 볼 것인지 모름</li>
+<li>대리 육성은 어떻게 하는가(사람이 하는 것이기 때문에 탐지할 수 없음)</li>
+</ul>
+<h2>서버의 봇 감지</h2>
+<p>장점: 원하는 만큼 제제 가능, 작업장 운영자에게 탐지 기법 노출 최소화, 클라이언트 단 탐지의 한계 극복, 빅데이터 같은 인프라 마련됨</p>
+<p>게임 행동 로그를 기반으로 데이터 마이닝을 통해 봇 감지</p>
+<p>실제로 작업장의 경우 거래가 특이하게 크게 보이고, 봇의 경우 일반 유저보다 소셜관계가 짧고 단순함</p>
+<p>위의 패턴을 관측하기 위해 <strong>parallel coordinate chart</strong>라는 시각화 툴을 사용</p>
+<p>유저의 행동 과정을 일련의 추상화된 문자열로 기록하는 <strong>행동 순열 분석</strong>을 사용하기도 하는데 이런 분석 방법은 봇 탐지 외에도 고객 경험 분석이나 이탈 분석 등에도 활용됨<br />
+(문자열에서 동일한 부분을 찾아야 하기 때문에 LCS 같은 알고리즘 활용)</p>
+<h2>검은 돈 흔적 분석</h2>
+<h3>기초 작업</h3>
+<p>평균 거래 횟수나 거래 좌표, 아이템 등 다양한 정보를 수집해야 함<br />
+(단, 이 많은 정보를 id화 시켜서 검색 속도를 높혀야 함)</p>
+<h3>이상한 거래 정의 필요</h3>
+<p>일방적으로 받거나 주는 경우 또는 정기적으로 거래하는 경우<br />
+(free money trading을 파악해야함)</p>
+<h3>누구를 타겟으로 할 지 정하는 기준</h3>
+<ul>
+<li>게임봇을 박멸하는 것</li>
+<li>통장계정을 선별적으로 박멸하는 것</li>
+<li>대형작업장만을 노림</li>
+<li>탐지 알고리즘을 숨김</li>
+<li>제제시점을 정함</li>
+</ul>
+<h3>탐지 과정</h3>
+<p>탐지 규칙을 설정할 때는 언제나 수많은 시도가 필요함. 예로 들어 다음과 같이 할 수 있음.</p>
+<ol>
+<li>여러 유저가 가장 가까이에서 팔고 있는 유저를 찾는 알고리즘을 사용</li>
+<li>이 유저의 ip를 통해 ip-account combination analysis를 사용</li>
+<li>해당 작업장을 운영정책에 따라 제제함</li>
+</ol>
+<h2>유저 프로파일링 기반의 분석</h2>
+<p>데이터 마이닝을 통해 게임봇 탐지 정확성 향상하는 것이 목적</p>
+<ol>
+<li>캐릭터 피쳐를 추출함<br />
+(게임에서 봇과 사람을 구분할만한 행동)</li>
+<li>일반유저와 다른 봇만의 행동 패턴을 얻어냄-&gt;일반유저와 봇 간의 차이가 확실히 나는 행동비율을 찾아냄<br />
+(일반 유저는 주로 소셜활동에 능하고 봇은 반복작업에 능하다는 것을 앎)</li>
+<li>랜덤 포레스트 같은 알고리즘을 통해 accuracy, precision, recall 값을 얻어내서 평가함</li>
+</ol>
+<h2>결론</h2>
+<p>작업장과의 전쟁은 장기전이며 수익보단 고객 만족도 면에서 우위를 얻기 위해선 꾸준한 제제가 필요. 따라서 게임 런칭 단계부터 로그 디자인이나 분석 인프라 마련, 제제 정책을 준비하는 것이 좋음.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://wraithkim.wordpress.com/2017/04/28/%eb%8d%b0%ec%9d%b4%ed%84%b0%eb%b6%84%ec%84%9d-%ea%b8%b0%eb%b0%98-%ea%b2%8c%ec%9e%84%eb%b4%87%ea%b3%bc-%ec%9e%91%ec%97%85%ec%9e%a5-%ed%83%90%ec%a7%80/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://0.gravatar.com/avatar/9d964669caf6cd5a1f22ab5f8aa56a4d?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">wraithkim</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>유저의 몰입과 재미를 돕는 메카니컬 콘트롤의 이해</title>
+		<link>https://wraithkim.wordpress.com/2017/04/28/%ec%9c%a0%ec%a0%80%ec%9d%98-%eb%aa%b0%ec%9e%85%ea%b3%bc-%ec%9e%ac%eb%af%b8%eb%a5%bc-%eb%8f%95%eb%8a%94-%eb%a9%94%ec%b9%b4%eb%8b%88%ec%bb%ac-%ec%bd%98%ed%8a%b8%eb%a1%a4%ec%9d%98-%ec%9d%b4%ed%95%b4/</link>
+				<comments>https://wraithkim.wordpress.com/2017/04/28/%ec%9c%a0%ec%a0%80%ec%9d%98-%eb%aa%b0%ec%9e%85%ea%b3%bc-%ec%9e%ac%eb%af%b8%eb%a5%bc-%eb%8f%95%eb%8a%94-%eb%a9%94%ec%b9%b4%eb%8b%88%ec%bb%ac-%ec%bd%98%ed%8a%b8%eb%a1%a4%ec%9d%98-%ec%9d%b4%ed%95%b4/#respond</comments>
+				<pubDate>Thu, 27 Apr 2017 15:55:41 +0000</pubDate>
+		<dc:creator><![CDATA[wraithkim]]></dc:creator>
+				<category><![CDATA[NDC2017]]></category>
+
+		<guid isPermaLink="false">http://wraithkim.wordpress.com/?p=783</guid>
+				<description><![CDATA[유저의 몰입과 재미를 돕는 메카니컬 콘트롤의 이해 개요 컴퓨터 게임은 정신적이고 육체적인 활동 정신적인 요소가 강하다고 생각하지만 육체적인 요소도 존재함 ex) 바둑의 경우 자세를 유지하는 체력이 필요 알파고의 경우 대리인을 두고 플레이를 했는데 이처럼 정정당당한 게임을 원한다면 육체적인 요소도 공평해야 할 정도로 게임에서 육체적 요소는 중요하다. 게임에서 육체적인 요소의 대표가 인터페이스. 따라서 프로게이머들은 특히 이러한 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<h1>유저의 몰입과 재미를 돕는 메카니컬 콘트롤의 이해</h1>
+<h2>개요</h2>
+<p>컴퓨터 게임은 정신적이고 육체적인 활동<br />
+정신적인 요소가 강하다고 생각하지만 육체적인 요소도 존재함<br />
+ex) 바둑의 경우 자세를 유지하는 체력이 필요</p>
+<p>알파고의 경우 대리인을 두고 플레이를 했는데 이처럼 정정당당한 게임을 원한다면 육체적인 요소도 공평해야 할 정도로 게임에서 육체적 요소는 중요하다.</p>
+<p>게임에서 육체적인 요소의 대표가 인터페이스.<br />
+따라서 프로게이머들은 특히 이러한 인터페이스를 자신에게 최적화 하려고 노력함.</p>
+<p>요즘 대세인 모바일 게임도 정신적인 요소보다 육체적인 요소가 더 중요함.</p>
+<p>몰입이론: 플레이어의 능력에 적정한 난이도를 유지해야 몰입이 된다(특히 실시간 게임에서 중요함)</p>
+<p>이러한 난이도 요소는 육체적인 요소와 많은 관련이 있다.<br />
+(단순한 게임에서 난이도를 높히는 방법이 어려운 컨트롤을 소화하게 하는 것임)</p>
+<h2>게임에서 메카니컬한 요소 살리기</h2>
+<p>컴퓨터 마우스로 그리기 어려운 이유: 마우스로 움직이는 것과 커서에 반영되는 움직임이 다르기 때문.<br />
+따라서 마우스 센서에 회전보정을 줘서 유저에게 괴리감을 줄여주도록 구현된 스테레오 마우스를 사용하기도 함.</p>
+<p>실시간 인간-컴퓨터 상호작용에서 메카니컬한 느낌에 대한 연구는 걸음마 수준. 그나마 개발되고 있는 분야가 게임에서는 경험적으로 얻을 수 있는 부분들임.</p>
+<h2>메카니컬 콘트롤 설계 가이드라인</h2>
+<h3>1.터치 스크린</h3>
+<p>시간 정확도가 매우 중요한 게임에서 터치 스크린에 대한 연구가 중요함.</p>
+<p>유저들은 버튼 입력인 닌텐도 ds보다 터치스크린에서 이런 게임에서 더 어려워 하는 사례가 있기 때문.</p>
+<p>이러한 현상의 이유는 일반적인 터치 방식 게임에서 입력을 구현할 때 터치한 타이밍에 입력 신호를 보내도록 구현했는데 유저들이 자주 하던 버튼 게임에선 버튼에 닿은 채로 꾹 눌렀을 때 입력 신호가 전해지기 때문에 괴리감이 느끼기 때문이다. 따라서 괴리감을 줄이기 위해선 최대로 터치했을 때 입력 신호가 전해져야 함.</p>
+<p>안드로이드의 경우에는 닿은 면적이나 위치 등을 받아올 순 있지만 IOS에선 단순히 터치 인식이라고만 API가 공개되어 있어서 많이 연구가 부족하다는 것을 알 수 있음.</p>
+<h3>2.마우스 가속 기능</h3>
+<p>마우스의 움직임은 움직인 거리 * 게인 함수(마우스 속도에 따라 커서의 속도를 바꾸는 함수)</p>
+<p>원래는 os에 기본 설정에서 설정함. 실제로는 게임 장르마다 요구되는 게인 함수가 다르다.</p>
+<p><a href="https://github.com/SunjunKim/AutoGain" target="_blank" rel="noopener noreferrer">AutoGain</a>: 사용자의 행동 패턴을 분석해서 각 멈춤점에서 남은 거리를 계산해서 최적의 게인 함수를 찾아줌.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://wraithkim.wordpress.com/2017/04/28/%ec%9c%a0%ec%a0%80%ec%9d%98-%eb%aa%b0%ec%9e%85%ea%b3%bc-%ec%9e%ac%eb%af%b8%eb%a5%bc-%eb%8f%95%eb%8a%94-%eb%a9%94%ec%b9%b4%eb%8b%88%ec%bb%ac-%ec%bd%98%ed%8a%b8%eb%a1%a4%ec%9d%98-%ec%9d%b4%ed%95%b4/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://0.gravatar.com/avatar/9d964669caf6cd5a1f22ab5f8aa56a4d?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">wraithkim</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>게임플레이를 바라보는 세 가지 시점 : 실력, 운, 노력</title>
+		<link>https://wraithkim.wordpress.com/2017/04/27/%ea%b2%8c%ec%9e%84%ed%94%8c%eb%a0%88%ec%9d%b4%eb%a5%bc-%eb%b0%94%eb%9d%bc%eb%b3%b4%eb%8a%94-%ec%84%b8-%ea%b0%80%ec%a7%80-%ec%8b%9c%ec%a0%90-%ec%8b%a4%eb%a0%a5-%ec%9a%b4-%eb%85%b8%eb%a0%a5/</link>
+				<comments>https://wraithkim.wordpress.com/2017/04/27/%ea%b2%8c%ec%9e%84%ed%94%8c%eb%a0%88%ec%9d%b4%eb%a5%bc-%eb%b0%94%eb%9d%bc%eb%b3%b4%eb%8a%94-%ec%84%b8-%ea%b0%80%ec%a7%80-%ec%8b%9c%ec%a0%90-%ec%8b%a4%eb%a0%a5-%ec%9a%b4-%eb%85%b8%eb%a0%a5/#respond</comments>
+				<pubDate>Thu, 27 Apr 2017 01:51:28 +0000</pubDate>
+		<dc:creator><![CDATA[wraithkim]]></dc:creator>
+				<category><![CDATA[NDC2017]]></category>
+
+		<guid isPermaLink="false">http://wraithkim.wordpress.com/?p=622</guid>
+				<description><![CDATA[게임플레이를 바라보는 세 가지 시점 : 실력, 운, 노력 개요 운과 실력과 노력은 서로서로 반대라고 생각됨. 따라서 게임에서의 관점으로 서술. 게임은 기본적으로 경쟁 요소가 있음. 심지어 보이지 않는 누군가와 경쟁을 함. (비쥬얼노벨같은 건 제외함) 따라서 게임은 누가 하든 같은 결과를 낳는 게임은 즐기지 않는다는 것을 알 수 있음. 이런 경쟁요소가 있는 게임이 재밌는 이유는 승리에서 쾌감을 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<h1>게임플레이를 바라보는 세 가지 시점 : 실력, 운, 노력</h1>
+<h2>개요</h2>
+<p>운과 실력과 노력은 서로서로 반대라고 생각됨. 따라서 게임에서의 관점으로 서술.</p>
+<p>게임은 기본적으로 경쟁 요소가 있음.</p>
+<p>심지어 보이지 않는 누군가와 경쟁을 함. (비쥬얼노벨같은 건 제외함)</p>
+<p>따라서 게임은 누가 하든 같은 결과를 낳는 게임은 즐기지 않는다는 것을 알 수 있음.</p>
+<p>이런 경쟁요소가 있는 게임이 재밌는 이유는 승리에서 쾌감을 느끼는 게 본능이기 때문.</p>
+<p>따라서 위의 세 요소가 게임의 경쟁요소에 어떻게 작용하는 지 알아봄.</p>
+<h2>실력겜</h2>
+<p>실력게임은 실력이 있는 사람이 이기기 때문에 경쟁에서 승리하기 위해 실력을 올리는 과정을 즐거워함</p>
+<h3>실력의 기준</h3>
+<p>1. 육체능력: 반응속도, 빠르기, 정확도<br />
+2. 두뇌능력: 탐색, 지식, 멀티태스킹, 문제해결능력</p>
+<p>이런 실력들은 하다보면 늘고 이 과정에서 쾌감이 실력게임의 제공요소</p>
+<h2>운겜</h2>
+<p>운게임은 운이 좋아야 이기기 때문에 이길 수 있는 전략이 없음</p>
+<p>따라서 운게임에서 스릴을 느끼려면 보상이 필요함. 그리고 같은 게임이라도 보상이 클 수록 더 재밌음</p>
+<h2>노력겜</h2>
+<p>노력게임은 자산이 많은 쪽이 이기기 때문에 지금까지 쌓아온 시간과 노력을 비교함.</p>
+<p>자산이 쌓이는 걸 보며 느끼는 뿌듯함 또한 인간의 본능인데, 이유는 자산을 늘리는 걸 즐기는 사람이 생존에 유리하기 때문.</p>
+<p>시간과 돈의 가치가 유사한 경우도 있음.</p>
+<h2>실력겜, 노력겜, 운겜의 성장 차이점</h2>
+<p>실력겜 노력겜 운겜은 서로 다 다른 성장양상을 띰</p>
+<p>실력겜은 가파르게 오르다가 어느순간 멈추는 양상이고 사람마다 얼마나 빨리 올라갈 지, 어디까지 올라갈 지, 어디에서 멈출 지 모두 다름. 유저들의 실력분포가 정규분포가 나올 순 있으나 상향평준화인지 하향평준화인지는 예측하기 어려움. 그리고 실력의 증가속도에 따라 재미의 지속력이 달라짐.</p>
+<p>운겜은 시간에 영향을 받지 않고 확률면에선 모두가 같음. 따라서 개발자가 원하는 상위 유저 분포도를 만들 수 있음.</p>
+<p>노력겜은 일정하게 상승하고 어느 순간에 딱 멈춤(이런 경우 대부분 컨텐츠를 전부 소모한 경우). 사람마다 컨텐츠 소모 속도 또한 다름. 노력겜은 시간이 지나면 상향평준화 때문에 경쟁구도가 무너지기 때문에 반드시 업데이트를 해줘야 함.</p>
+<h2>실력겜, 노력겜, 운겜의 한계점, 그리고 해결방안</h2>
+<h3>실력겜</h3>
+<p>실력겜은 수명이 짧다는 단점이 있음. 왜냐하면 성장이 더뎌지면 재미가 없어지고 상위권의 그들만의 리그가 되기 때문.</p>
+<p>그래서 수명을 늘리고 싶으면 실력적인 요소를 늘리거나 노력이나 운 적인 요소를 넣음.<br />
+(숙련해야 되는 컨텐츠 수를 늘림, 캐릭터 숫자 늘리기)</p>
+<p>특히 후발주자일 수록 주의해야 할 것이 실력겜은 동종의 다른 게임으로 가더라도 소진된 재미는 복구되지 않기 때문에 노력적인 요소를 섞어서라도 차별화를 꾀해야 함.<br />
+(노력겜인 경우, 다른 게임을 가더라도 처음부터 시작하므로 재미가 복구됨)</p>
+<h3>운겜</h3>
+<p>순수한 운게임은 성립하리 힘듬. 왜냐하면 컴퓨터게임에서는 현실의 다양한 보상을 제공할 수 없기 때문. 따라서 게임이 줄 수 있는 보상인 노력 게임의 보상을 줄 수 있게 해야함.</p>
+<p>운적인 요소는 실력에 대한 착각을 유발함. 운과 실력이 구분이 안되기 때문. 이를 심리전이라 포장하기도 하는데 이런 실력같은 운을 유저에게 잘 속이는 것이 개발자의 소양.<br />
+(단 개발자가 착각하면 안됨)</p>
+<h3>노력겜</h3>
+<p>게임에 엔딩이 있으면 많은 문제가 해결됨. 끝이 있기 때문에 게임을 유지하려는 고민이 필요없음.</p>
+<h2>
+결론</h2>
+<p>실력이 오르는 것도 무작위의 무언가도 쌓여가는 것도 모두 즐거운 것은 본능.</p>
+<p>하지만 현실에서 이런 걸 하는 건 힘들어하기 때문에 게임에서 이런 걸 배워나가는 게 즐거운 운 것.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://wraithkim.wordpress.com/2017/04/27/%ea%b2%8c%ec%9e%84%ed%94%8c%eb%a0%88%ec%9d%b4%eb%a5%bc-%eb%b0%94%eb%9d%bc%eb%b3%b4%eb%8a%94-%ec%84%b8-%ea%b0%80%ec%a7%80-%ec%8b%9c%ec%a0%90-%ec%8b%a4%eb%a0%a5-%ec%9a%b4-%eb%85%b8%eb%a0%a5/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://0.gravatar.com/avatar/9d964669caf6cd5a1f22ab5f8aa56a4d?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">wraithkim</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>UX 분석을 통한 유저 알아보기</title>
+		<link>https://wraithkim.wordpress.com/2017/04/27/%ea%b7%b8%ea%b2%83%ec%9d%b4-%ec%95%8c%ea%b3%a0-%ec%8b%b6%eb%8b%a4/</link>
+				<comments>https://wraithkim.wordpress.com/2017/04/27/%ea%b7%b8%ea%b2%83%ec%9d%b4-%ec%95%8c%ea%b3%a0-%ec%8b%b6%eb%8b%a4/#respond</comments>
+				<pubDate>Thu, 27 Apr 2017 01:25:41 +0000</pubDate>
+		<dc:creator><![CDATA[wraithkim]]></dc:creator>
+				<category><![CDATA[NDC2017]]></category>
+
+		<guid isPermaLink="false">http://wraithkim.wordpress.com/?p=623</guid>
+				<description><![CDATA[그것이 알고 싶다 &#60;유저의 속마음 편&#62; &#8211; UX 분석을 통한 유저 알아보기 개요 유저의 마음은 빙산처럼 표면적인 부분과 속마음이 있음 이를 파악하기 위해 설문조사, FGT(Focus Group Test), FGI(Focus Group Interview), Usability Test shadowing(UT), UX 로그 분석이라는 방법을 사용. 사례로 알아보는 UX 분석 1. 메이플스토리 M 유저들이 초반 흐름을 잘 따라가는가는지 확인하기 위해 UT 진행. 기존 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<h1>그것이 알고 싶다 &lt;유저의 속마음 편&gt; &#8211; UX 분석을 통한 유저 알아보기</h1>
+<h2>개요</h2>
+<p>유저의 마음은 빙산처럼 표면적인 부분과 속마음이 있음</p>
+<p>이를 파악하기 위해 설문조사, FGT(Focus Group Test), FGI(Focus Group Interview), Usability Test shadowing(UT), UX 로그 분석이라는 방법을 사용.</p>
+<h2>사례로 알아보는 UX 분석</h2>
+<h3>1. 메이플스토리 M</h3>
+<p>유저들이 초반 흐름을 잘 따라가는가는지 확인하기 위해 UT 진행.</p>
+<p>기존 흐름에서 유저가 의도대로 따라가지 않거나 건너뛰는 부분, 사망하는 부분을 도식화함으로써 유저가 어디를 이해하지 못하는 지 알 수 있었음.</p>
+<p>인터뷰를 통해 조작감 문제를 인식하고 퀘스트 상세 내용이 부족하다는 것을 알아냄.</p>
+<h3>2. 테라</h3>
+<p>공성전 컨텐츠 검증을 위해 만렙 유저 그룹을 대상으로 FGT 진행.</p>
+<p>플레이 과정과 대화 로그를 도식화 후 분석함. 이를 통해 기존의 설문조사보다 유저들이 어떻게 판단하는 지 자세히 알 수 있었음.</p>
+<p>설문 조사와 FGI를 통해 유저들이 생각하는 승리에 중요한 요소와 불필요한 요소들을 알 수 있었음.</p>
+<h3>3. 마비노기 영웅전</h3>
+<p>유저들이 첫 전투도 하기 전에 갑자기 떠나는 현상.</p>
+<p>UT를 통해 이 현상을 관찰함. 원인은 길을 못 찾는다던가 전투 종료 버튼을 모른다던가 하는 현상이었음.</p>
+<p>던전 진행속도가 유저마다 차이가 남. 설문조사를 통해 마비노기를 경험한 적이 있는지에 따라 스킬 이해도가 달라서 차이가 나는 것을 확인. (심층적으로 FGT나 UT 등을 통해 확인함)</p>
+<h3>4. LEGO Q&amp;C</h3>
+<p>연령별에 따른 만족도 조사를 다르게 진행함. 왜냐하면 성인에 비해 아동이 의견이 명확하지 않고 복잡한 설문지를 이해하지 못하기 때문.</p>
+<p>또한 아동들은 쉽게 피로를 느끼기 때문에 긴 플레이 시간 후 나오는 설문조사보단 부모님과 함께 하는 플레이를 관찰하면서 나오는 즉각적인 반응을 수집하는 것이 도움이 됨.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://wraithkim.wordpress.com/2017/04/27/%ea%b7%b8%ea%b2%83%ec%9d%b4-%ec%95%8c%ea%b3%a0-%ec%8b%b6%eb%8b%a4/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://0.gravatar.com/avatar/9d964669caf6cd5a1f22ab5f8aa56a4d?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">wraithkim</media:title>
+		</media:content>
+	</item>
+		<item>
+		<title>진화심리학으로 풀어 본 게임의 몰입 요소</title>
+		<link>https://wraithkim.wordpress.com/2017/04/27/%ec%a7%84%ed%99%94%ec%8b%ac%eb%a6%ac%ed%95%99%ec%9c%bc%eb%a1%9c-%ed%92%80%ec%96%b4-%eb%b3%b8-%ea%b2%8c%ec%9e%84%ec%9d%98-%eb%aa%b0%ec%9e%85-%ec%9a%94%ec%86%8c/</link>
+				<comments>https://wraithkim.wordpress.com/2017/04/27/%ec%a7%84%ed%99%94%ec%8b%ac%eb%a6%ac%ed%95%99%ec%9c%bc%eb%a1%9c-%ed%92%80%ec%96%b4-%eb%b3%b8-%ea%b2%8c%ec%9e%84%ec%9d%98-%eb%aa%b0%ec%9e%85-%ec%9a%94%ec%86%8c/#respond</comments>
+				<pubDate>Thu, 27 Apr 2017 01:11:25 +0000</pubDate>
+		<dc:creator><![CDATA[wraithkim]]></dc:creator>
+				<category><![CDATA[NDC2017]]></category>
+
+		<guid isPermaLink="false">http://wraithkim.wordpress.com/?p=624</guid>
+				<description><![CDATA[진화심리학으로 풀어 본 게임의 몰입 요소 &#8211; 우리의 원시적 뇌는 무엇을 욕망하는가? 게임을 할 때의 뇌 속 매커니즘-원시 시대의 생활 패턴과 같음. (현대인의 뇌는 이미 원시시대에 형성되었고, 인류역사에서 산업혁명 이후의 시대는 매우 작기 때문에 원시시대의 생활 패턴에 최적화 된 뇌다.) 개요 사람들은 다들 게임은 &#8220;그냥 재밌다.&#8221; 라고 말하는데 여기에는 이유가 필요함. 놀이 본능은 기본적인 욕망이고 [&#8230;]]]></description>
+								<content:encoded><![CDATA[<h1>진화심리학으로 풀어 본 게임의 몰입 요소 &#8211; 우리의 원시적 뇌는 무엇을 욕망하는가?</h1>
+<p><strong>게임을 할 때의 뇌 속 매커니즘-원시 시대의 생활 패턴과 같음.</strong><br />
+(현대인의 뇌는 이미 원시시대에 형성되었고, 인류역사에서 산업혁명 이후의 시대는 매우 작기 때문에 원시시대의 생활 패턴에 최적화 된 뇌다.)</p>
+<h2>개요</h2>
+<p>사람들은 다들 게임은 &#8220;그냥 재밌다.&#8221; 라고 말하는데 여기에는 이유가 필요함.</p>
+<p>놀이 본능은 기본적인 욕망이고 여기에 복잡한 룰이 가미된 게임도 비슷한 욕망일 것.</p>
+<h2>진화심리학의 바탕인 진화론</h2>
+<p>과학적인 진화론은 원숭이에서 사람으로 진화가 아닌 원숭이와 사람이 조상이 같다는 것.<br />
+(종이 분화한 것임)</p>
+<p>생물은 태어나면 개체마다 속성 차이가 남. 그리고 개체의 속성 차이에 따라 생존과 번식 성공 확률이 다름.</p>
+<p>생존과 번식에 성공한 개체의 유전자가 자식에게 더 많이 전달됨. 이를 자연선택이라 부름.<br />
+그리고 오랜 시간동안 진화하면서 환경에 적합하게 바뀌는 것을 적응이라고 함</p>
+<p>따라서 진화심리학은 인간의 심리를 진화적 관점의 적응에 연관시켜 이해하는 학문.</p>
+<p>단, 진화의 결과에는 적응 말고 부산물이나 임의효과도 있음. 그래서 인간 심리가 적응이 아닌 부산물일 수도 있음.<br />
+(뼈가 흰것은 단단해지다 보니 칼슘이 많아져서 흰것임)</p>
+<h2>진화심리학과 게임 이론의 접점</h2>
+<p>진화심리학에 따르면 생존에 필요없는 고칼로리 음식 섭취나 뱀 공포증, 건강한 몸 등은 적응의 산물이다.</p>
+<p>진화심리학에서는 특정 문제를 개별적으로 잘 푸는 영역 특수한 모듈의 합이 적응으로 형성된 인간 심리라고 말함.</p>
+<p>예시로 <a href="https://en.wikipedia.org/wiki/Wason_selection_task" target="_blank" rel="noopener noreferrer">wason 선택 작업</a>을 통해 사기꾼 탐지 모듈이 작용함을 알 수 있음.<br />
+(조건을 충족하지 않지만 혜택을 받는 것을 찾는데 능함)</p>
+<p>그래서 진화심리학와 재미/몰입이론을 접목해봄으로써 배우지 않아도 계속 하고 싶어하는 이유를 설명해보자.</p>
+<p>게임 기획자들은 이런 현상을 경험적으로나마 알고 있다. 하지만 게임 기획자에게 이러한 이론이 필요한 이유는 만약 사례가 없는 경우라도이론 기반의 추론이 가능하기 때문이다.</p>
+<p>자기결정성 이론, 스키너의 강화 이론 등이 게임에 적용될 수 있음. 단, 이론 하나로는 설명할 수 없음. 그리고 완벽하게 인간 심리를 파악한 것은 아니고 단지 왜 재미를 느끼는 지 조금 더 근접하게 생각할 수 있음</p>
+<h2>왜 사람들은 게임을 좋아하는가? &#8211; 진화심리학적 관점</h2>
+<p>게임에서 일어나는 행동을 원시시대의 생활패턴과 이어볼 수 있음.</p>
+<p>단, 실제 원시시대 사냥의 대부분은 사냥감의 위치 정보 수집이 대부분이지만 게임에선 이 부분이 많이 간소화되긴 함.</p>
+<p>원시시대의 생활패턴을 통해 알 수 있는 여러 현상들: 손놀이 욕망 가설, 늙어서도 숨바꼭질 가설, 무한 냉장고 욕망 가설</p>
+<h2>결론</h2>
+<p>기획자는 이런 연구된 이론을 바탕으로 전부는 모르더라도 자기 나름대로 해석해서 만들면 됨. 단지 기획자들이 유저들이 왜 그런지 파고드는 습관이 생기기 바람.</p>
+]]></content:encoded>
+							<wfw:commentRss>https://wraithkim.wordpress.com/2017/04/27/%ec%a7%84%ed%99%94%ec%8b%ac%eb%a6%ac%ed%95%99%ec%9c%bc%eb%a1%9c-%ed%92%80%ec%96%b4-%eb%b3%b8-%ea%b2%8c%ec%9e%84%ec%9d%98-%eb%aa%b0%ec%9e%85-%ec%9a%94%ec%86%8c/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+						
+		<media:content url="https://0.gravatar.com/avatar/9d964669caf6cd5a1f22ab5f8aa56a4d?s=96&#38;d=identicon&#38;r=G" medium="image">
+			<media:title type="html">wraithkim</media:title>
+		</media:content>
+	</item>
+	</channel>
+</rss>

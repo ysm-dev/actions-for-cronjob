@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" media="screen" href="/~d/styles/atom10full.xsl"?><?xml-stylesheet type="text/css" media="screen" href="http://feeds.feedburner.com/~d/styles/itemcontent.css"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:openSearch="http://a9.com/-/spec/opensearchrss/1.0/" xmlns:blogger="http://schemas.google.com/blogger/2008" xmlns:georss="http://www.georss.org/georss" xmlns:gd="http://schemas.google.com/g/2005" xmlns:thr="http://purl.org/syndication/thread/1.0" xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0"><id>tag:blogger.com,1999:blog-8178555509824201287</id><updated>2019-04-10T01:36:26.332+09:00</updated><title type="text">방준영의 블로그</title><subtitle type="html" /><link rel="alternate" type="text/html" href="http://bangjunyoung.blogspot.com/" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><generator version="7.00" uri="http://www.blogger.com">Blogger</generator><openSearch:totalResults>13</openSearch:totalResults><openSearch:startIndex>1</openSearch:startIndex><openSearch:itemsPerPage>25</openSearch:itemsPerPage><atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="self" type="application/atom+xml" href="http://feeds.feedburner.com/junyoung" /><feedburner:info uri="junyoung" /><atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="hub" href="http://pubsubhubbub.appspot.com/" /><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-1789431733938074434</id><published>2014-06-24T16:48:00.000+09:00</published><updated>2014-06-24T21:38:03.168+09:00</updated><title type="text">Java ArrayList&lt;Integer&gt; 대 C# List&lt;int&gt; 정렬 성능 비교</title><summary type="html">인터넷을 둘러 보다가 C++와 C#, Java, 그리고 Node.js 정렬 성능 비교란 흥미로운 글을 발견했다. 글에서는 크기가 1백만인 int[] 배열로 벤치마크를 하고 있었는데, 소스를 약간 고쳐서 자바 ArrayList&amp;lt;Integer&amp;gt;와 C# List&amp;lt;int&amp;gt; 간에는 얼마 만큼의 성능차가 나는지 알아 보았다.
+
+자바
+
+static void quicksort(ArrayList&amp;lt;Integer&amp;gt; a, int start, int end) {
+    if (end - start &amp;lt; 2) {
+      return;
+    }
+    int p = a.get(start + (end - start) / 2);
+    int l = start;
+    int r = end - 1;
+    while (l &amp;lt;= r)&lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/43oEkB_zxKQ" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/1789431733938074434/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/java-arraylist-vs-csharp-list-quicksort-benchmark.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/1789431733938074434" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/1789431733938074434" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/43oEkB_zxKQ/java-arraylist-vs-csharp-list-quicksort-benchmark.html" title="Java ArrayList&amp;lt;Integer&amp;gt; 대 C# List&amp;lt;int&amp;gt; 정렬 성능 비교" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="http://2.bp.blogspot.com/-KlXagFnb-N4/U6knLBGbO-I/AAAAAAAAAk4/KEuLJpBblGE/s72-c/%EC%9E%90%EB%B0%94+C%23+List+%EB%B2%A4%EC%B9%98%EB%A7%88%ED%81%AC.PNG" height="72" width="72" /><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/java-arraylist-vs-csharp-list-quicksort-benchmark.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-7132531629807446852</id><published>2014-06-23T20:51:00.000+09:00</published><updated>2014-06-23T20:51:00.647+09:00</updated><title type="text">자바/안드로이드 초성 검색: API 디자인</title><summary type="html">자바/안드로이드 초성 검색 
+자바/안드로이드 초성 검색 2.0
+
+에 이어 이번 글은 API를 디자인하면서 얻은 교훈에 관한 것이다.
+
+버전 1
+
+KoreanChar
+
+최초의 버전에서는 KoreanChar를 아래와 같이 쓰도록 했었다:
+
+public class KoreanChar {
+    public KoreanChar(char c, boolean useCompatibilityJamo) {
+        _value = c;
+        _useCompatibilityJamo = useCompatibilityJamo;
+    }
+}
+...
+KoreanChar c = new KoreanChar('한', false);
+char choseong = c.getChoseong(); // 'ㅎ'
+
+C# 버전을 &lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/RdjPPz64Hr4" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/7132531629807446852/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/koreantextmatcher-api-design.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/7132531629807446852" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/7132531629807446852" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/RdjPPz64Hr4/koreantextmatcher-api-design.html" title="자바/안드로이드 초성 검색: API 디자인" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="http://3.bp.blogspot.com/-aekteodXpfo/U41hkX2lFlI/AAAAAAAAAf0/lrpdw05Jkv0/s72-c/%25EC%2595%2584+%25EC%2595%2588%25EB%258F%25BC.jpg" height="72" width="72" /><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/koreantextmatcher-api-design.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-8345247276375662474</id><published>2014-06-21T22:29:00.000+09:00</published><updated>2014-06-22T02:07:05.514+09:00</updated><title type="text">자바/안드로이드 초성 검색 2.0</title><summary type="html">지난번 자바/안드로이드 초성 검색에서
+
+
+  가비지 컬렉션을 최소화함과 동시에 단순 불리언 매칭 대신 매칭된 문자열의 실제값과 위치까지 제공하는 새 API는 다음편에서 다루도록 하겠다.
+
+
+고 했었는데, 다음편이 생각보다 너무 늘어져 버렸다. ^^ 일단 요즘 대세에 발맞춰 GitHub에 저장소를 만들었다. 소스는 필요없고 JAR 파일만 라이브러리로 쓸 분들은 여기를 눌러 받으면 된다. 아래는 안드로이드에서 초성 검색후 찾은 검색어만 하일라이트해주는 예:
+
+
+
+KoreanTextMatcher
+
+KoreanTextMatcher는 자바/안드로이드에서 한글 초성 매칭 검색을 가능하게 해주는 라이브러리다. 주요 기능과 특징은 다음과 같다:
+
+
+오픈 소스: 수정, 배포, 2차 저작 등 어떤 프로그램에도 자유롭게 사용&lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/mHvuYxi__EE" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/8345247276375662474/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/koreantextmatcher.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/8345247276375662474" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/8345247276375662474" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/mHvuYxi__EE/koreantextmatcher.html" title="자바/안드로이드 초성 검색 2.0" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="http://1.bp.blogspot.com/-r1ITSvRWYwQ/U6WAg14ZHXI/AAAAAAAAAkk/sQATmsMaoJc/s72-c/2014-06-21+KoreanTextMatcher+Demo.png" height="72" width="72" /><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/koreantextmatcher.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-9195314512921926662</id><published>2014-06-14T23:01:00.000+09:00</published><updated>2014-06-14T23:52:08.881+09:00</updated><title type="text">학실하게 읽어주세요</title><summary type="html">The Daily WTF이라고 종종 가는 사이트가 있는데, 웃음이 절로 나오는 코드, 개발 일화, 짤방들이 많다. 주말 기념으로 몇가지를 골라 보았다.
+
+
+
+현재 작업을 취소할까요? "OK", "취소", "도움말"
+(취소 누르면 되는 거죠?)
+
+
+
+
+
+만료일자: 2014년 2월 30일 (옛날에 12월 32일이란 노래를 불렀던 별이란 가수가 생각난다.)
+
+
+
+
+
+"CUPS 서버 에러: 성공"...?!
+
+
+
+
+
+배송 가능 지역: 아메리카 대륙, 유럽, 아시아, 호주
+이 제품은 호주로 배송이 불가능합니다.
+
+
+
+
+
+본 스티커 훼손시 A/S 불가
+
+
+
+
+
+알 수 없는 에러.
+이 정보가 도움이 되었습니까?
+
+
+
+
+
+종료하시겠습니까?
+
+
+
+
+
+로딩이 완료되었습니다. 진행하려면 취소를 누르세요.
+
+
+
+
+
+UI 체계도를&lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/hwijW_zhMWE" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/9195314512921926662/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/my-favorite-wtfs.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/9195314512921926662" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/9195314512921926662" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/hwijW_zhMWE/my-favorite-wtfs.html" title="학실하게 읽어주세요" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="http://3.bp.blogspot.com/-jO17EXavWwM/U5xJBYSS1FI/AAAAAAAAAhk/uzy0XoZE-oU/s72-c/Pic-3+%25281%2529.png" height="72" width="72" /><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/my-favorite-wtfs.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-3561559169216221</id><published>2014-06-13T09:24:00.000+09:00</published><updated>2014-06-13T09:24:33.133+09:00</updated><title type="text">10억 달러 짜리 해결책</title><summary type="html">10억 달러 짜리 실수편에 이어 이번 글에서는 10억 달러 짜리 실수의 해결책에 관해 알아보기로 한다.
+
+지난번 글에서는 비슷한 프로젝트를 C#과 F#으로 짰었는데 F#으로 짠 쪽은 null 체크를 27번 했던 반면 C#으로 짠 쪽은 3036번(오타 아님) 했었다는 사례를 소개했었다. 사실 F#에서 null 체크가 별로 필요치 않은 이유는…간단하다:
+
+
+  F# 타입의 변수/상수에는 null을 대입할 수 없다.
+
+
+null 키워드가 있기는 있는데, C# 같은 다른 .NET 언어로 만든 타입을 쓸 때만  필요할 뿐 순수하게 F#으로 만든 타입에는 대입하지 못한다. null을 대입하지 못하니까 당연히 null 체크도 필요없는 것이다1. 어찌 보면 좀 컬럼버스의 달걀 같은 얘긴데…
+
+처음 F#을 알았을 때는 &lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/pa4303anjj4" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/3561559169216221/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/the-billion-dollar-solution.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/3561559169216221" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/3561559169216221" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/pa4303anjj4/the-billion-dollar-solution.html" title="10억 달러 짜리 해결책" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/the-billion-dollar-solution.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-7819909471160741404</id><published>2014-06-10T23:15:00.000+09:00</published><updated>2014-06-11T02:49:34.303+09:00</updated><title type="text">10억 달러 짜리 실수</title><summary type="html">만약 여러분이 C/C++/C#/자바 프로그래머라면 이 질문의 답을 한번 구해 보자: “null이 필요한 이유가 뭐지?” 너무 당연한 질문인가? 정답은 아래 있으나 일단 30초간 생각할 시간.
+
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+.
+
+null이 필요한 첫번째 이유는 변수가 아직 초기화되지 않았음을 표시하기 위해서다. 예를 들어
+
+Object obj;
+
+라는 문장이 있을 때 우리는 obj가 아직 초기화되지 않았다는 사실을 바로 알 수 있다. 그런데 이 문장 만으로는 우리가 일부러 초기화를 안하기로 한 건지 아니면 실수로 빼먹은 건지 헷갈릴 경우가 있다. 그래서
+
+Object obj = null;
+
+처럼 null을 대입해 주면 일부러 초기화를 안했다는 점을 확실히 할 수 있다.
+
+그리고 null을&lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/-8eaQDmo8Fg" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/7819909471160741404/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/the-billion-dollar-mistake.html#comment-form" title="2개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/7819909471160741404" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/7819909471160741404" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/-8eaQDmo8Fg/the-billion-dollar-mistake.html" title="10억 달러 짜리 실수" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="http://4.bp.blogspot.com/-W7tyDZgOUwc/U5cQXc54AkI/AAAAAAAAAhI/Hd1wzbfQAc0/s72-c/%EB%86%80%EB%9E%80%EA%B3%A0%EC%96%91%EC%9D%B4.JPG" height="72" width="72" /><thr:total>2</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/the-billion-dollar-mistake.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-7486511511492254240</id><published>2014-06-09T21:21:00.000+09:00</published><updated>2014-06-10T14:11:19.328+09:00</updated><title type="text">C# using vs. Java try-with-resources</title><summary type="html">C/C++1와 달리 C#이나 자바는 가비지 컬렉션이 있어서 사용한 메모리를 일일히 수동으로 반환해야 하는—지옥에 가까운—번거로움 없이도 프로그램을 쉽게 짤 수 있다2. 그렇지만 파일이나 네트워크 같은 외부 자원은 가비지 컬렉션 대상이 아니기 때문에 여전히 사용후 수동 반환 과정이 꼭 필요하다. 예를 들어 아래와 같이 말이다:
+
+var fs = new FileStream("SomeFile", FileMode.Open, FileAccess.Read);
+// ...
+fs.Close();
+
+그런데 이 코드는 문제가 있다. 파일을 열거나 입출력하는 과정에서 예외가 발생할 수 있기 때문이다. 그래서 대부분의 경우 아래처럼 try 블럭으로 전체를 감싸 주어야 한다:
+
+FileStream fs = null;
+try {
+&lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/e5XkfWg6mTg" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/7486511511492254240/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/csharp-using-vs-java-try-with-resources.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/7486511511492254240" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/7486511511492254240" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/e5XkfWg6mTg/csharp-using-vs-java-try-with-resources.html" title="C# using vs. Java try-with-resources" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/csharp-using-vs-java-try-with-resources.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-633317880056314496</id><published>2014-06-07T17:29:00.000+09:00</published><updated>2014-06-09T21:33:59.308+09:00</updated><title type="text">자바/안드로이드 초성 검색</title><summary type="html">몇해전 예기치 않게 안드로이드 앱을 만들게 되었던 때의 일이다. 주소록을 검색할 때 초성으로도 가능하게—빨리—만들어 달라는 고객의 요구가 들어왔다. 예를 들어 “ㅈㅇ”을 치면 “정우성”과 “정엽”이 리스트에 뜨는 식으로 말이다1. 일단 한글 음절에서 초성을 뽑아내기는 쉬울 것 같았다. 마침 이전에 한글 관련 C# 라이브러리를 만들어 둔 게 있었기 때문이다. .cs 파일을 .java로 이름 바꾸고 초성 관련 코드만 남긴 다음 몇군데를 살짝 고쳤더니 기대했던대로 잘 돌아갔다. 아래는 그때 만든 KoreanChar 타입의 전체 소스다2:
+
+package com.mogua.international;
+
+public class KoreanChar {
+    private final char _value;
+    &lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/U5VS3sNQzy4" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/633317880056314496/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/java-android-hangul-choseong-matching.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/633317880056314496" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/633317880056314496" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/U5VS3sNQzy4/java-android-hangul-choseong-matching.html" title="자바/안드로이드 초성 검색" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="http://3.bp.blogspot.com/-aekteodXpfo/U41hkX2lFlI/AAAAAAAAAf0/lrpdw05Jkv0/s72-c/%25EC%2595%2584+%25EC%2595%2588%25EB%258F%25BC.jpg" height="72" width="72" /><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/java-android-hangul-choseong-matching.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-8788479805175379626</id><published>2014-06-06T22:20:00.002+09:00</published><updated>2014-06-07T04:58:22.456+09:00</updated><title type="text">다언어 프로그래밍 2014</title><summary type="html">예전에 다언어 프로그래밍이란 주제로 블로그에 글을 쓴 적이 있다. 그 글에서는 같은 일을 하는 프로그램을 세 가지 언어로 짠 것을 비교했었다1:
+
+그루비:
+
+def number=0
+new File (args[0]).eachLine { line -&amp;gt;
+    number++
+    println "$number: $line"
+}
+
+C#:
+
+using System;
+using System.IO;
+
+class LineNumbers {
+    static void Main(string[] args) {
+        int number = 1;
+        Array.ForEach(File.ReadAllLines(args[0]),
+                      line =&amp;gt; &lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/nUAD-iLA7Qw" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/8788479805175379626/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/polyglot-programming-2014.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/8788479805175379626" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/8788479805175379626" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/nUAD-iLA7Qw/polyglot-programming-2014.html" title="다언어 프로그래밍 2014" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="http://3.bp.blogspot.com/-aekteodXpfo/U41hkX2lFlI/AAAAAAAAAf0/lrpdw05Jkv0/s72-c/%25EC%2595%2584+%25EC%2595%2588%25EB%258F%25BC.jpg" height="72" width="72" /><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/polyglot-programming-2014.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-2470102662694037660</id><published>2014-06-05T22:25:00.000+09:00</published><updated>2014-06-07T04:53:44.536+09:00</updated><title type="text">내가 이 코드를 평소보다 길게 짠 이유는</title><summary type="html">프로그래밍 언어의 발전은 어떻게 보면 상당 부분이 보일러플레이트 코드를 제거하려는 노력의 결과라고 할 수 있다. 몇십년에 걸친 연구와 노력의 결과 인류는 마침내 보일러플레이트로 가득찬 아래의 자바 코드를
+
+public class Pet {
+    private String name;
+    private Person owner;
+
+    public Pet(String name, Person owner) {
+        this.name = name;
+        this.owner = owner;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        &lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/MV-PanV7l-s" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/2470102662694037660/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/i-have-made-this-code-longer-than-usual.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/2470102662694037660" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/2470102662694037660" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/MV-PanV7l-s/i-have-made-this-code-longer-than-usual.html" title="내가 이 코드를 평소보다 길게 짠 이유는" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/i-have-made-this-code-longer-than-usual.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-6936263155390960218</id><published>2014-06-04T22:28:00.000+09:00</published><updated>2014-06-14T21:52:06.245+09:00</updated><title type="text">Swift - 첫 인상</title><summary type="html">애플이 어제 WWDC에서 iOS 8을 발표하면서 Swift라는 새 프로그래밍 언어도 함께 발표했다. The Swift Programming Language라는 책도 함께 배포했길래 받아서 첫부분을 읽어 보았다. 그런데 한 중간 정도까지 읽고 딱 든 느낌은
+
+
+  이거 그냥 C#과 F#을 합쳐논 거잖아?
+
+
+그런데 다르게 본 사람도 있었나 보다. 이 분에 따르면 Swift의 몇몇 문법이 Groovy와 매우 유사하다.
+
+아무튼 여기서는 C#, F#과 얼마나 유사한지 몇가지를 비교해 보기로 한다.
+
+기본 타입
+
+Swift에도 struct와 class가 있는데 C#처럼 전자는 밸류 타입이고 후자는 레퍼런스 타입이다.
+
+정수는 Int8, UInt8, Int16, UInt16, …, Int64, UInt64까지 있다&lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/EauNVYLB8R8" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/6936263155390960218/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/swift-first-impression.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/6936263155390960218" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/6936263155390960218" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/EauNVYLB8R8/swift-first-impression.html" title="Swift - 첫 인상" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/swift-first-impression.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-7919107953191810446</id><published>2014-06-03T15:48:00.002+09:00</published><updated>2014-06-03T17:00:44.916+09:00</updated><title type="text">5년 동안 바뀐 것</title><summary type="html">블로그를 잠시 쉰다고 생각했었는데 5년이란 시간이 정말 빠르게 흘러버렸다. 그 사이 일어났던 꽤 많은 일들을 블로그 주제로 적당한 것으로 국한해서 찾아 보았다.
+
+
+내가 나이를 5살 더 먹었다. 아...
+
+
+
+
+이용자가 많이 줄었다는 이유로 구글 리더가 작년 이맘때쯤 서비스를 종료했다. 요즘은 사람들이 블로그를 구독해서 보는 것보다 그때그때 검색해서 또는 트위터/페이스북 링크로 방문하는 경우가 많아진 모양이다. Feedly가 대안으로 많이 쓰이고 있지만 2% 부족한 느낌이다.
+
+
+마이크로소프트가 2012년 야심차게 내놓은 Windows 8이 한껏 욕을 먹고 나서 2013년 8.1을 새로 내놓았다. 아직도 여기저기서 욕을 많이 먹고 있는 중인데 실제로 써보면 의외로 좋다.
+
+
+10여년만에(!) C++의 최신&lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/hun41fh3Onw" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/7919107953191810446/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/whats-changed-in-last-5-years.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/7919107953191810446" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/7919107953191810446" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/hun41fh3Onw/whats-changed-in-last-5-years.html" title="5년 동안 바뀐 것" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="http://2.bp.blogspot.com/-aekteodXpfo/U41hkX2lFlI/AAAAAAAAAfw/o29VuQmWANI/s72-c/%EC%95%84+%EC%95%88%EB%8F%BC.jpg" height="72" width="72" /><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/whats-changed-in-last-5-years.html</feedburner:origLink></entry><entry><id>tag:blogger.com,1999:blog-8178555509824201287.post-8364376582730786969</id><published>2014-06-02T14:45:00.000+09:00</published><updated>2014-06-03T03:41:48.292+09:00</updated><title type="text">new Blog().Post("Hello world");</title><summary type="html">static void Main() {
+    var blog = new Blog("Bang Jun-young's Blog 2014");
+    var topics = new[] {
+        "C", "C++", "C#", "Java", "Python", "x86 assembly language",
+        ".NET", "Android", "Compiler design", "Development tools", "OS internals" 
+    };
+    var rand = new Random();
+    for (;;) {
+        int index = rand.Next(topics.Length);
+        blog.Post(topics[index]);
+    }
+}
+&lt;img src="http://feeds.feedburner.com/~r/junyoung/~4/oHmUfUBcWEw" height="1" width="1" alt=""/&gt;</summary><link rel="replies" type="application/atom+xml" href="http://bangjunyoung.blogspot.com/feeds/8364376582730786969/comments/default" title="댓글" /><link rel="replies" type="text/html" href="http://bangjunyoung.blogspot.com/2014/06/welcome-to-my-blog-2014.html#comment-form" title="0개의 덧글" /><link rel="edit" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/8364376582730786969" /><link rel="self" type="application/atom+xml" href="http://www.blogger.com/feeds/8178555509824201287/posts/default/8364376582730786969" /><link rel="alternate" type="text/html" href="http://feedproxy.google.com/~r/junyoung/~3/oHmUfUBcWEw/welcome-to-my-blog-2014.html" title="new Blog().Post(&quot;Hello world&quot;);" /><author><name>방준영</name><uri>http://www.blogger.com/profile/17556489770077305754</uri><email>noreply@blogger.com</email><gd:image rel="http://schemas.google.com/g/2005#thumbnail" width="16" height="16" src="https://img1.blogblog.com/img/b16-rounded.gif" /></author><thr:total>0</thr:total><feedburner:origLink>http://bangjunyoung.blogspot.com/2014/06/welcome-to-my-blog-2014.html</feedburner:origLink></entry></feed>
