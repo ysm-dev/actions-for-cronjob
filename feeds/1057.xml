@@ -421,4 +421,46 @@ $ kubectl expose deployment/kubernetes-bootcamp &#8211;type=&#8221;NodePort&#822
 <p class="p4"><span class="s2">웜에</span> <span class="s2">가입시키기</span> <span class="s2">위해</span> Swarm init<span class="s2">하기</span></p>
 <p class="p4">$ docker-machine ssh myvm1 &#8220;docker swarm init &#8211;advertise-addr &lt;myvm1 ip&gt;&#8221;</p>
 <p class="p1">실행하면<span class="s1"> swarm</span>에<span class="s1"> join</span>하는 명령어를 만들어서 보여준다<span class="s1">. </span></p>
-<p class="p4">$ docker-machine ssh myvm2 “<span class="s2">도커가</span> <span
+<p class="p4">$ docker-machine ssh myvm2 “<span class="s2">도커가</span> <span class="s2">만들어준</span> <span class="s2">명렁어</span>“</p>
+<p class="p1">스웜의 노드 확인해보기</p>
+<p class="p4">$ docker-machine ssh myvm1 &#8220;docker node ls&#8221;</p>
+<p class="p1"><span class="s1">myvm1</span>의 환경 확인해보기</p>
+<p class="p4">$ docker-machine env myvm1</p>
+<p class="p4">myvm1<span class="s2">을</span> <span class="s2">명령</span> active <span class="s2">상태로</span> <span class="s2">만든다</span></p>
+<p class="p4">$ eval $(docker-machine env myvm1)</p>
+<p class="p4">Active<span class="s2">에</span> <span class="s2">별표있는지</span> <span class="s2">확인</span></p>
+<p class="p4">$ docker-machine ls</p>
+<p class="p4">myvm1<span class="s2">에</span> <span class="s2">앱배포</span></p>
+<p class="p4">$ docker stack deploy -c docker-compose.yml getstartedlab</p>
+<p class="p1">잘 올라갔는지 확인</p>
+<p class="p4">$ docker stack ps getstartedlab</p>
+<p class="p1"><span class="s1">vm</span>리스트에서 확인한<span class="s1"> ip</span>로 접속하면 위에서 띄운 앱이 들어가지겠지만<span class="s1">, </span>네트워크 포트 오픈 문제인지 들어가지지 않는다<span class="s1">.</span></p>
+<p class="p4">$ docker-machine ls</p>
+<p class="p1">어떻게하는진 알았으니 스웜에서 다시 떼어내자</p>
+<p class="p4">$ docker stack rm getstartedlab</p>
+<p class="p4">machine active<span class="s2">처리한것도</span> <span class="s2">다시</span> <span class="s2">해제하자</span></p>
+<p class="p4">$ eval $(docker-machine env -u)</p>
+<p class="p1">머신 시작시키는 명령어</p>
+<p class="p4">$ docker-machine start &lt;machine-name&gt;</p>
+<p class="p1">새 서비스를 추가시켜보기 위해</p>
+<p class="p2"><span class="s3">yml </span><span class="s4">수정</span><span class="s3"> <a href="https://docs.docker.com/get-started/part5/#recap-optional">https://docs.docker.com/get-started/part5/#recap-optional</a> </span></p>
+<p class="p1">머신 다시 러닝 및 활성화 시키고</p>
+<p class="p4">$ eval $(docker-machine env myvm1)</p>
+<p class="p1">다시 앱 배포</p>
+<p class="p4">$ docker stack deploy -c docker-compose.yml getstartedlab</p>
+<p class="p1">서비스 떠있는거 확인하고</p>
+<p class="p4">$ docker service ls</p>
+<p class="p4"><span class="s2">머신</span>ip:80/8080 <span class="s2">포트로</span> <span class="s2">들어가봤는데</span> <span class="s2">안떠</span></p>
+<p class="p1">좋아 그럼 다시 해본다<span class="s1">.</span></p>
+<p class="p2"><a href="https://stackoverflow.com/questions/53451285/connection-refused-on-docker-tutorial-get-started-part-4">https://stackoverflow.com/questions/53451285/connection-refused-on-docker-tutorial-get-started-part-4</a></p>
+<p class="p1">아래 링크의<span class="s1"> iso</span>이미지를 받는다</p>
+<p class="p2"><a href="https://github.com/boot2docker/boot2docker/releases/tag/v18.06.1-ce">https://github.com/boot2docker/boot2docker/releases/tag/v18.06.1-ce</a></p>
+<p class="p1">우선 스택오버플로에 있는 이미지로 머신을 다시 생성해줬음<span class="s1"> (</span>영향이 있는지는 모르겠으나<span class="s1">)</span></p>
+<p class="p4">$ docker-machine rm myvm1</p>
+<p class="p4">$ docker-machine rm myvm2</p>
+<p class="p4">$ docker-machine create &#8211;driver virtualbox &#8211;virtualbox-boot2docker-url ./boot2docker.iso myvm1</p>
+<p class="p4">$ docker-machine create &#8211;driver virtualbox &#8211;virtualbox-boot2docker-url ./boot2docker.iso myvm2</p>
+<p class="p1">생성된거 확인하고</p>
+<p class="p4">$ docker-machine ls</p>
+<p class="p1">활성화 해주고</p>
+<p class="p4">$ 
