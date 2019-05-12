@@ -5,7 +5,7 @@
 <link>https://chancethecoder.tistory.com/</link>
 <description></description>
 <language>ko</language>
-<pubDate>Sun, 12 May 2019 16:11:39 +0900</pubDate>
+<pubDate>Sun, 12 May 2019 16:36:45 +0900</pubDate>
 <generator>TISTORY</generator>
 <managingEditor>chancethecoder</managingEditor>
 <item>
@@ -70,220 +70,207 @@
 &lt;li&gt;CircleCI에 가상머신 SSH 키 등록하기&lt;/li&gt;
 &lt;li&gt;Azure 배포하기&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4&gt;시작에 앞서&lt;/h4&gt;
+&lt;h4 id=&quot;%EC%8B%9C%EC%9E%91%EC%97%90-%EC%95%9E%EC%84%9C&quot;&gt;시작에 앞서&lt;/h4&gt;
 &lt;p&gt;CircleCI를 이용한 것은 저의 기존 프로젝트를 활용하기 위해서인데, 꼭 이와 동일하게 구성할 필요는 없습니다. 만약 선호하는 솔루션이 있거나 기존 사용하던 것이 있다면 다른 것을 사용하는 것도 무방합니다.&lt;/p&gt;
 &lt;p&gt;CI 구성이 처음인 분들을 위해 다른 옵션을 소개드리면 Travis CI, Jenkins 등이 있습니다. 장단점이 있는데, 복잡한 것이 싫고 간단하게 해결하고싶은 분들은 Travis CI 또는 CircleCI를 사용하시고 본인이 CI용 서버를 별도 구축하여 세부적인 컨트롤 및 최적화를 하고싶은 분들은 Jenkins를 사용해보시길 추천드립니다.&lt;/p&gt;
-&lt;h3&gt;CircleCI 빌드하기&lt;/h3&gt;
+&lt;h3 id=&quot;circleci-%EB%B9%8C%EB%93%9C%ED%95%98%EA%B8%B0&quot;&gt;CircleCI 빌드하기&lt;/h3&gt;
 &lt;ol&gt;
-&lt;li&gt;&lt;p&gt;CircleCI 대시보드에 접속합니다. 처음이라면 회원가입을 해줍시다.&lt;/p&gt;
+&lt;li&gt;CircleCI 대시보드에 접속합니다. 처음이라면 회원가입을 해줍시다.&lt;/li&gt;
+&lt;li&gt;우상단 클릭 &amp;gt; User Settings &amp;gt; Account Integration에서 Github 계정과 연동하여 access permission이 있는지 확인합니다. 없다면 연결해줍니다.&lt;/li&gt;
+&lt;li&gt;좌측 ADD PROJECTS를 클릭합니다. 본인의 Github 프로젝트 리스트를 볼 수 있습니다. 이 중에 배포하기 위한 프로젝트를 찾아 Set Up Project를 누릅니다.&lt;/li&gt;
+&lt;li&gt;환경은 Linux, Node를 선택합니다.&lt;/li&gt;
+&lt;li&gt;CircleCI에서는 설정을 읽어오기 위해 프로젝트 내의 .circleci/config.yml 파일을 참조합니다. 아래 내용을 복사하여 프로젝트의 .circleci/config.yml 파일에 붙여넣습니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-built_in&quot;&gt;cd&lt;/span&gt; /path/to/project
+mkdir -p .circleci
+vi .circleci/config.yml
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-attr&quot;&gt;version:&lt;/span&gt; &lt;span class=&quot;hljs-number&quot;&gt;2&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;jobs:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;build:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;  docker:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;    - image:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;circleci/node:7.10&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;  working_directory:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;~/repo&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;  steps:&lt;/span&gt;
+&lt;span class=&quot;hljs-bullet&quot;&gt;    -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;checkout&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;    - restore_cache:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;        keys:&lt;/span&gt;
+&lt;span class=&quot;hljs-bullet&quot;&gt;        -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;v1-dependencies-{{&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;checksum&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;&quot;package.json&quot;&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;}}&lt;/span&gt;
+&lt;span class=&quot;hljs-bullet&quot;&gt;        -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;v1-dependencies-&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;yarn&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;install&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;    - save_cache:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;        paths:&lt;/span&gt;
+&lt;span class=&quot;hljs-bullet&quot;&gt;          -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;node_modules&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;        key:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;v1-dependencies-{{&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;checksum&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;&quot;package.json&quot;&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;}}&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;yarn&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;test&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;yarn&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;build&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;        command:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;|
+          tar cvf application.tar.gz -C build .
+
+&lt;/span&gt;&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;        command:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;|
+          mkdir -p /tmp/artifacts
+          mv application.tar.gz /tmp/artifacts
+
+&lt;/span&gt;&lt;span class=&quot;hljs-attr&quot;&gt;    - store_artifacts:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;        path:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;/tmp/artifacts&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;deploy:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;  machine:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;    enabled:&lt;/span&gt; &lt;span class=&quot;hljs-literal&quot;&gt;true&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;  steps:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;        command:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;|
+          echo &quot;Deploy Over SSH&quot;
+
+&lt;/span&gt;&lt;span class=&quot;hljs-attr&quot;&gt;workflows:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;  version:&lt;/span&gt; &lt;span class=&quot;hljs-number&quot;&gt;2&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;  build-and-deploy:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;    jobs:&lt;/span&gt;
+&lt;span class=&quot;hljs-bullet&quot;&gt;      -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;build&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;      - deploy:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;        requires:&lt;/span&gt;
+&lt;span class=&quot;hljs-bullet&quot;&gt;          -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;build&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;        filters:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;          branches:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;            only:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;master&lt;/span&gt;
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;우상단 클릭 &amp;gt; User Settings &amp;gt; Account Integration에서 Github 계정과 연동하여 access permission이 있는지 확인합니다. 없다면 연결해줍니다.&lt;/p&gt;
+&lt;li&gt;변경사항을 커밋하고 github에 푸시합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;git commit -a -m &lt;span class=&quot;hljs-string&quot;&gt;&quot;Add CircleCI configuration file&quot;&lt;/span&gt;
+git push
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;좌측 ADD PROJECTS를 클릭합니다. 본인의 Github 프로젝트 리스트를 볼 수 있습니다. 이 중에 배포하기 위한 프로젝트를 찾아 Set Up Project를 누릅니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;환경은 Linux, Node를 선택합니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;CircleCI에서는 설정을 읽어오기 위해 프로젝트 내의 .circleci/config.yml 파일을 참조합니다. 아래 내용을 복사하여 프로젝트의 .circleci/config.yml 파일에 붙여넣습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; cd /path/to/project
- mkdir -p .circleci
- vi .circleci/config.yml&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt; version: 2
- jobs:
- build:
-   docker:
-     - image: circleci/node:7.10
-
-   working_directory: ~/repo
-
-   steps:
-     - checkout
-
-     - restore_cache:
-         keys:
-         - v1-dependencies-{{ checksum &amp;quot;package.json&amp;quot; }}
-         - v1-dependencies-
-
-     - run: yarn install
-
-     - save_cache:
-         paths:
-           - node_modules
-         key: v1-dependencies-{{ checksum &amp;quot;package.json&amp;quot; }}
-
-     - run: yarn test
-
-     - run: yarn build
-
-     - run:
-         command: |
-           tar cvf application.tar.gz -C build .
-
-     - run:
-         command: |
-           mkdir -p /tmp/artifacts
-           mv application.tar.gz /tmp/artifacts
-
-     - store_artifacts:
-         path: /tmp/artifacts
-
- deploy:
-   machine:
-     enabled: true
-
-   steps:
-     - run:
-         command: |
-           echo &amp;quot;Deploy Over SSH&amp;quot;
-
- workflows:
-   version: 2
-   build-and-deploy:
-     jobs:
-       - build
-       - deploy:
-         requires:
-           - build
-         filters:
-           branches:
-             only: master&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;변경사항을 커밋하고 github에 푸시합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; git commit -a -m &amp;quot;Add CircleCI configuration file&amp;quot;
- git push&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Start building을 누릅니다. config.yml에 정의한 과정대로 첫 번째 build가 수행되는 것을 볼 수 있습니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;jobs 탭을 확인합니다. success로 초록색 표시가 있다면 성공입니다. 이제 Artifacts 탭을 보면 application.tar.gz 파일이 생성된 것을 볼 수 있습니다. 다음으로 이 파일을 가상머신으로 가지고 와서 서버 기동까지 이어지는 작업을 해보겠습니다.&lt;/p&gt;
-&lt;/li&gt;
+&lt;li&gt;Start building을 누릅니다. config.yml에 정의한 과정대로 첫 번째 build가 수행되는 것을 볼 수 있습니다.&lt;/li&gt;
+&lt;li&gt;jobs 탭을 확인합니다. success로 초록색 표시가 있다면 성공입니다. 이제 Artifacts 탭을 보면 application.tar.gz 파일이 생성된 것을 볼 수 있습니다. 다음으로 이 파일을 가상머신으로 가지고 와서 서버 기동까지 이어지는 작업을 해보겠습니다.&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h3&gt;API로 Artifact 가져오기&lt;/h3&gt;
+&lt;h3 id=&quot;api%EB%A1%9C-artifact-%EA%B0%80%EC%A0%B8%EC%98%A4%EA%B8%B0&quot;&gt;API로 Artifact 가져오기&lt;/h3&gt;
 &lt;ol&gt;
-&lt;li&gt;&lt;p&gt;위에서 생성된 Artifacts를 CircleCI API를 통해 가져오기 위해서는 &lt;a href=&quot;https://circleci.com/docs/2.0/managing-api-tokens/#creating-a-personal-api-token&quot;&gt;Personal Token&lt;/a&gt;이 필요합니다. 우상단 아이콘 &amp;gt; User settings로 이동합니다.&lt;/p&gt;
+&lt;li&gt;위에서 생성된 Artifacts를 CircleCI API를 통해 가져오기 위해서는 &lt;a href=&quot;https://circleci.com/docs/2.0/managing-api-tokens/#creating-a-personal-api-token&quot;&gt;Personal Token&lt;/a&gt;이 필요합니다. 우상단 아이콘 &amp;gt; User settings로 이동합니다.&lt;/li&gt;
+&lt;li&gt;Personal API Tokens를 클릭합니다.&lt;/li&gt;
+&lt;li&gt;Create New Token 버튼을 클릭합니다.&lt;/li&gt;
+&lt;li&gt;Token name에 적당한 이름을 입력하고 Add API Token을 클릭합니다.&lt;/li&gt;
+&lt;li&gt;생성된 토큰값을 복사하여 적당한 곳에 메모 해둡시다. &lt;strong&gt;한 번 보여준 뒤로 다시 볼 수 없기 때문에, 분실할 경우 복구가 불가능&lt;/strong&gt;합니다. 만약 분실한 경우 삭제 및 재생성을 하시기 바랍니다.&lt;/li&gt;
+&lt;li&gt;가상머신에 접속합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;ssh chancethecoder@52.141.36.128
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Personal API Tokens를 클릭합니다.&lt;/p&gt;
+&lt;li&gt;생성된 토큰 값을 환경변수로 저장합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-built_in&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;'export CIRCLE_TOKEN=&quot;your_token&quot;'&lt;/span&gt; &amp;gt;&amp;gt; ~/.bashrc
+&lt;span class=&quot;hljs-built_in&quot;&gt;source&lt;/span&gt; ~/.bashrc
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Create New Token 버튼을 클릭합니다.&lt;/p&gt;
+&lt;li&gt;curl로 API호출을 해봅시다. 예제에서 각각 vcs_type에 github, bitbucket 등 사용하는 VCS를, username에 CircleCI의 좌상단 유저 닉네임을, project에 VCS의 타겟 프로젝트 이름을, build_num에 호출하고자 하는 빌드 번호를 넣어주면 됩니다. 성공적으로 호출된다면 아래와 같은 값이 출력됩니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-comment&quot;&gt;# example&lt;/span&gt;
+curl https://circleci.com/api/v1.1/project/:vcs_type/:username/:project/:build_num/artifacts?circle-token=&lt;span class=&quot;hljs-variable&quot;&gt;$CIRCLE_TOKEN&lt;/span&gt;
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt;&lt;div&gt;[ {
+&amp;quot;path&amp;quot; : &amp;quot;tmp/artifacts/application.tar.gz&amp;quot;,
+&amp;quot;pretty_path&amp;quot; : &amp;quot;tmp/artifacts/application.tar.gz&amp;quot;,
+&amp;quot;node_index&amp;quot; : 0,
+&amp;quot;url&amp;quot; : &amp;quot;https://52-131691113-gh.circle-artifacts.com/0/tmp/artifacts/application.tar.gz&amp;quot;
+} ]
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Token name에 적당한 이름을 입력하고 Add API Token을 클릭합니다.&lt;/p&gt;
+&lt;li&gt;이제 artifact를 가져와봅시다. curl 명령어 결과와 wget을 조합해 아래와 같이 입력합니다. application.tar.gz 파일이 생성된다면 정상 호출 된 것입니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;curl https://circleci.com/api/v1.1/project/github/chancethecoder/playground/52/artifacts?circle-token=&lt;span class=&quot;hljs-variable&quot;&gt;$CIRCLE_TOKEN&lt;/span&gt; | grep -o &lt;span class=&quot;hljs-string&quot;&gt;'https://[^&quot;]*'&lt;/span&gt; | xargs -P4 -I % wget %?circle-token=&lt;span class=&quot;hljs-variable&quot;&gt;$CIRCLE_TOKEN&lt;/span&gt;
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;ls -al | circle-token
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt;&lt;div&gt;application.tar.gz?circle-token=...
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;생성된 토큰값을 복사하여 적당한 곳에 메모 해둡시다. &lt;strong&gt;한 번 보여준 뒤로 다시 볼 수 없기 때문에, 분실할 경우 복구가 불가능&lt;/strong&gt;합니다. 만약 분실한 경우 삭제 및 재생성을 하시기 바랍니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;가상머신에 접속합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; ssh chancethecoder@52.141.36.128&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;생성된 토큰 값을 환경변수로 저장합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; echo &amp;#39;export CIRCLE_TOKEN=&amp;quot;your_token&amp;quot;&amp;#39; &amp;gt;&amp;gt; ~/.bashrc
- source ~/.bashrc&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;curl로 API호출을 해봅시다. 예제에서 각각 vcs_type에 github, bitbucket 등 사용하는 VCS를, username에 CircleCI의 좌상단 유저 닉네임을, project에 VCS의 타겟 프로젝트 이름을, build_num에 호출하고자 하는 빌드 번호를 넣어주면 됩니다. 성공적으로 호출된다면 아래와 같은 값이 출력됩니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; # example
- curl https://circleci.com/api/v1.1/project/:vcs_type/:username/:project/:build_num/artifacts?circle-token=$CIRCLE_TOKEN&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; [ {
- &amp;quot;path&amp;quot; : &amp;quot;tmp/artifacts/application.tar.gz&amp;quot;,
- &amp;quot;pretty_path&amp;quot; : &amp;quot;tmp/artifacts/application.tar.gz&amp;quot;,
- &amp;quot;node_index&amp;quot; : 0,
- &amp;quot;url&amp;quot; : &amp;quot;https://52-131691113-gh.circle-artifacts.com/0/tmp/artifacts/application.tar.gz&amp;quot;
- } ]&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;이제 artifact를 가져와봅시다. curl 명령어 결과와 wget을 조합해 아래와 같이 입력합니다. application.tar.gz 파일이 생성된다면 정상 호출 된 것입니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; curl https://circleci.com/api/v1.1/project/github/chancethecoder/playground/52/artifacts?circle-token=$CIRCLE_TOKEN | grep -o &amp;#39;https://[^&amp;quot;]*&amp;#39; | xargs -P4 -I % wget %?circle-token=$CIRCLE_TOKEN&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; ls -al | circle-token&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; application.tar.gz?circle-token=...&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;이제 빌드 결과 파일을 구동시켜봅시다. 이 부분은 각자의 리액트 프로젝트 구성에 따라 다르겠습니다만, 저는 빌드를 통해 생성된 static 파일만을 서빙하도록 구성했기 때문에 pm2의 serve 명령어를 사용하겠습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;mkdir -p myapp
+&lt;li&gt;이제 빌드 결과 파일을 구동시켜봅시다. 이 부분은 각자의 리액트 프로젝트 구성에 따라 다르겠습니다만, 저는 빌드를 통해 생성된 static 파일만을 서빙하도록 구성했기 때문에 pm2의 serve 명령어를 사용하겠습니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;mkdir -p myapp
 tar xvf application.tar.gz?circle-token=... -C myapp
 
 pm2 delete all
 
-# myapp은 static 파일 디렉토리 경로, 3000은 포트번호 지정입니다.
-pm2 serve myapp 3000&lt;/code&gt;&lt;/pre&gt;
+&lt;span class=&quot;hljs-comment&quot;&gt;# myapp은 static 파일 디렉토리 경로, 3000은 포트번호 지정입니다.&lt;/span&gt;
+pm2 serve myapp 3000
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;이제 브라우저에서 본인의 도메인 혹은 공용아이피로 접속해봅시다. 본인이 작성한 리액트 앱이 보인다면 잘 따라오신 것입니다.&lt;/p&gt;
+&lt;li&gt;이제 브라우저에서 본인의 도메인 혹은 공용아이피로 접속해봅시다. 본인이 작성한 리액트 앱이 보인다면 잘 따라오신 것입니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&quot;circleci%EC%97%90-%EA%B0%80%EC%83%81%EB%A8%B8%EC%8B%A0-ssh-%ED%82%A4-%EB%93%B1%EB%A1%9D%ED%95%98%EA%B8%B0&quot;&gt;CircleCI에 가상머신 SSH 키 등록하기&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;빌드 타임에 CircleCI에서 가상머신에 배포 및 구동까지 하도록 하기 위해서는 SSH 통신이 가능해야 합니다. 따라서 SSH 설정을 먼저 해줍시다. 먼저 가상머신에 접속합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;ssh chancethecoder@52.141.36.128
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;ssh 키를 생성합시다. ssh-keygen 옵션은 본인에 맞게 변경하셔도 무방합니다. 엔터키를 계속 눌러주면 기본값으로 생성됩니다. 주의할점으로, &lt;strong&gt;passphrase는 빈 값&lt;/strong&gt;으로 두어야 합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;ssh-keygen -t rsa -b 4096 -C &lt;span class=&quot;hljs-string&quot;&gt;&quot;chancethecoder@gmail.com&quot;&lt;/span&gt;
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt;&lt;div&gt;Generating public/private rsa key pair.
+Enter file in which to save the key (/home/chancethecoder/.ssh/id_rsa):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/chancethecoder/.ssh/id_rsa.
+Your public key has been saved in /home/chancethecoder/.ssh/id_rsa.pub.
+...
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;public 키를 authorized_keys에 추가합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;cat ~/.ssh/id_rsa.pub &amp;gt;&amp;gt; ~/.ssh/authorized_keys
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;private 키파일을 복사합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;cat ~/.ssh/id_rsa
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;CircleCI에서 대시보드 &amp;gt; 프로젝트 설정(기어 버튼) &amp;gt; PERMISSIONS &amp;gt; SSH Permisions로 이동합니다.&lt;/li&gt;
+&lt;li&gt;Add SSH Key 버튼을 클릭합니다.&lt;/li&gt;
+&lt;li&gt;Hostname을 빈칸으로 두고 Private Key에 복사한 내용을 붙여넣습니다. 정상적으로 등록되면 Fingerprint가 보이는데, 해당 값을 복사합니다.&lt;/li&gt;
+&lt;li&gt;리액트 프로젝트의 .circleci/config.yml에 아래 코드를 추가합니다. your_fingerprints 부분에 복사한 값을 넣으시면 됩니다.&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-string&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;  deploy:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;    machine:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;      enabled:&lt;/span&gt; &lt;span class=&quot;hljs-literal&quot;&gt;true&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;    steps:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;      - add_ssh_keys:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;          fingerprints:&lt;/span&gt;
+&lt;span class=&quot;hljs-bullet&quot;&gt;            -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;&quot;your_fingerprints&quot;&lt;/span&gt;
+
+&lt;span class=&quot;hljs-attr&quot;&gt;      - run:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;          command:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;|
+            echo &quot;Deploy Over SSH&quot;
+...
+&lt;/span&gt;&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;h3&gt;CircleCI에 가상머신 SSH 키 등록하기&lt;/h3&gt;
+&lt;h3 id=&quot;azure-%EB%B0%B0%ED%8F%AC%ED%95%98%EA%B8%B0&quot;&gt;Azure 배포하기&lt;/h3&gt;
 &lt;ol&gt;
-&lt;li&gt;&lt;p&gt;빌드 타임에 CircleCI에서 가상머신에 배포 및 구동까지 하도록 하기 위해서는 SSH 통신이 가능해야 합니다. 따라서 SSH 설정을 먼저 해줍시다. 먼저 가상머신에 접속합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; ssh chancethecoder@52.141.36.128&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;ssh 키를 생성합시다. ssh-keygen 옵션은 본인에 맞게 변경하셔도 무방합니다. 엔터키를 계속 눌러주면 기본값으로 생성됩니다. 주의할점으로, &lt;strong&gt;passphrase는 빈 값&lt;/strong&gt;으로 두어야 합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; ssh-keygen -t rsa -b 4096 -C &amp;quot;chancethecoder@gmail.com&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; Generating public/private rsa key pair.
- Enter file in which to save the key (/home/chancethecoder/.ssh/id_rsa):
- Enter passphrase (empty for no passphrase):
- Enter same passphrase again:
- Your identification has been saved in /home/chancethecoder/.ssh/id_rsa.
- Your public key has been saved in /home/chancethecoder/.ssh/id_rsa.pub.
- ...&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;public 키를 authorized_keys에 추가합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; cat ~/.ssh/id_rsa.pub &amp;gt;&amp;gt; ~/.ssh/authorized_keys&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;private 키파일을 복사합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; cat ~/.ssh/id_rsa&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;CircleCI에서 대시보드 &amp;gt; 프로젝트 설정(기어 버튼) &amp;gt; PERMISSIONS &amp;gt; SSH Permisions로 이동합니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Add SSH Key 버튼을 클릭합니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Hostname을 빈칸으로 두고 Private Key에 복사한 내용을 붙여넣습니다. 정상적으로 등록되면 Fingerprint가 보이는데, 해당 값을 복사합니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;리액트 프로젝트의 .circleci/config.yml에 아래 코드를 추가합니다. your_fingerprints 부분에 복사한 값을 넣으시면 됩니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt; ...
-   deploy:
-     machine:
-       enabled: true
+&lt;li&gt;마지막으로 CircleCI에서 가상머신 배포까지 구성해봅시다. 마찬가지로 .circleci/config.yml에 아래 코드를 추가합니다.&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-string&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;  deploy:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;    machine:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;      enabled:&lt;/span&gt; &lt;span class=&quot;hljs-literal&quot;&gt;true&lt;/span&gt;
 
-     steps:
-       - add_ssh_keys:
-           fingerprints:
-             - &amp;quot;your_fingerprints&amp;quot;
+&lt;span class=&quot;hljs-attr&quot;&gt;    steps:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;      - add_ssh_keys:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;          fingerprints:&lt;/span&gt;
+&lt;span class=&quot;hljs-bullet&quot;&gt;            -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;&quot;your_fingerprints&quot;&lt;/span&gt;
 
-       - run:
-           command: |
-             echo &amp;quot;Deploy Over SSH&amp;quot;
- ...&lt;/code&gt;&lt;/pre&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;      - run:&lt;/span&gt;
+&lt;span class=&quot;hljs-attr&quot;&gt;          command:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;|
+            echo &quot;Deploy Over SSH&quot;
+            ssh $SSH_USER@$SSH_HOST &amp;lt;&amp;lt; EOF
+              rm -f application.tar.gz*
+              curl https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_PREVIOUS_BUILD_NUM/artifacts?circle-token=$CIRCLE_TOKEN | grep -o 'https://[^&quot;]*' | xargs -P4 -I % wget %?circle-token=$CIRCLE_TOKEN
+              pm2 delete all
+              rm -rf myapp/*
+              tar xvf application.tar.gz?circle-token=$CIRCLE_TOKEN -C playground
+              pm2 serve myapp 3000
+            EOF
+&lt;/span&gt;&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;/ol&gt;
-&lt;h3&gt;Azure 배포하기&lt;/h3&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;마지막으로 CircleCI에서 가상머신 배포까지 구성해봅시다. 마찬가지로 .circleci/config.yml에 아래 코드를 추가합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt; ...
-   deploy:
-     machine:
-       enabled: true
-
-     steps:
-       - add_ssh_keys:
-           fingerprints:
-             - &amp;quot;your_fingerprints&amp;quot;
-
-       - run:
-           command: |
-             echo &amp;quot;Deploy Over SSH&amp;quot;
-             ssh $SSH_USER@$SSH_HOST &amp;lt;&amp;lt; EOF
-               rm -f application.tar.gz*
-               curl https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_PREVIOUS_BUILD_NUM/artifacts?circle-token=$CIRCLE_TOKEN | grep -o &amp;#39;https://[^&amp;quot;]*&amp;#39; | xargs -P4 -I % wget %?circle-token=$CIRCLE_TOKEN
-               pm2 delete all
-               rm -rf myapp/*
-               tar xvf application.tar.gz?circle-token=$CIRCLE_TOKEN -C playground
-               pm2 serve myapp 3000
-             EOF&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;CircleCI에서 대시보드 &amp;gt; 프로젝트 설정(기어 버튼) &amp;gt; BUILD SETTINGS &amp;gt; Environment Variables로 이동합니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Add Variable 버튼을 누릅니다. Name과 Value가 있는데, 각각 아래의 값으로 추가해줍시다.&lt;/p&gt;
+&lt;li&gt;CircleCI에서 대시보드 &amp;gt; 프로젝트 설정(기어 버튼) &amp;gt; BUILD SETTINGS &amp;gt; Environment Variables로 이동합니다.&lt;/li&gt;
+&lt;li&gt;Add Variable 버튼을 누릅니다. Name과 Value가 있는데, 각각 아래의 값으로 추가해줍시다.
 &lt;ol&gt;
 &lt;li&gt;SSH_USER: 가상머신 접속 계정&lt;/li&gt;
 &lt;li&gt;SSH_HOST: 가상머신 아이피 주소&lt;/li&gt;
 &lt;li&gt;CIRCLE_TOKEN: Personal Token&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;리액트 프로젝트의 .circleci/config.yml 변경사항을 푸시합니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;소스 커밋 &amp;gt; CircleCI 워크플로우 실행 &amp;gt; 가상머신 ssh 배포 (다운로드, 재기동) 까지 일련의 과정이 잘 진행되는 지 확인합니다.&lt;/p&gt;
-&lt;/li&gt;
+&lt;li&gt;리액트 프로젝트의 .circleci/config.yml 변경사항을 푸시합니다.&lt;/li&gt;
+&lt;li&gt;소스 커밋 &amp;gt; CircleCI 워크플로우 실행 &amp;gt; 가상머신 ssh 배포 (다운로드, 재기동) 까지 일련의 과정이 잘 진행되는 지 확인합니다.&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;여기까지 잘 오셨다면 CI/CD 구성까지 완료된 것입니다. 이제 본인만의 어플리케이션을 구축해보시기 바랍니다. 저의 경우 리액트도 공부할 겸 &lt;a href=&quot;https://chancethecoder.me/&quot;&gt;이력서용 사이트&lt;/a&gt;를 만들어 두었는데요, Azure를 활용해 1년 동안 무료 호스팅이 가능하기 때문에 이를 잘 활용해서 본인만의 사이트를 만들어보시길 바랍니다.&lt;/p&gt;
 &lt;/div&gt;</description>
@@ -308,75 +295,76 @@ pm2 serve myapp 3000&lt;/code&gt;&lt;/pre&gt;
 &lt;li&gt;React 어플리케이션 생성&lt;/li&gt;
 &lt;li&gt;Github 등록&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;React 어플리케이션 생성&lt;/h3&gt;
+&lt;h3 id=&quot;react-%EC%96%B4%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98-%EC%83%9D%EC%84%B1&quot;&gt;React 어플리케이션 생성&lt;/h3&gt;
 &lt;ol&gt;
-&lt;li&gt;&lt;p&gt;react app을 생성합니다. 로컬 머신의 nvm을 통해 &lt;strong&gt;Node 8.10.0 버전 이상&lt;/strong&gt;을 설치하고 진행하시기 바랍니다. 만약 하위 버전을 사용해야 한다면, create-react-app 모듈을 별도 설치해 진행해주셔도 무방합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; node --version # v8.10.0 이상
- npx create-react-app my-react-app&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;react app을 생성합니다. 로컬 머신의 nvm을 통해 &lt;strong&gt;Node 8.10.0 버전 이상&lt;/strong&gt;을 설치하고 진행하시기 바랍니다. 만약 하위 버전을 사용해야 한다면, create-react-app 모듈을 별도 설치해 진행해주셔도 무방합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;node --version &lt;span class=&quot;hljs-comment&quot;&gt;# v8.10.0 이상&lt;/span&gt;
+npx create-react-app my-react-app
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;react app을 실행해봅니다. 브라우저에 정상적으로 뜬다면 성공입니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; cd my-react-app
- npm start&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; Compiled successfully!
+&lt;li&gt;react app을 실행해봅니다. 브라우저에 정상적으로 뜬다면 성공입니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-built_in&quot;&gt;cd&lt;/span&gt; my-react-app
+npm start
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt;&lt;div&gt;Compiled successfully!
 
- You can now view my-react-app in the browser.
+You can now view my-react-app in the browser.
 
-   Local:            http://localhost:3000/
-   On Your Network:  http://xxx.xxx.xxx.xxx:3000/
+  Local:            http://localhost:3000/
+  On Your Network:  http://xxx.xxx.xxx.xxx:3000/
 
- Note that the development build is not optimized.
- To create a production build, use npm run build.&lt;/code&gt;&lt;/pre&gt;
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;빌드를 해봅시다. 생성된 결과물은 추후 가상머신 웹서버에서 서빙할 예정입니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; npm run build&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; &amp;gt; playground@0.1.0 build /Users/a1101041/Workspace/playground
- &amp;gt; react-scripts build
+&lt;li&gt;빌드를 해봅시다. 생성된 결과물은 추후 가상머신 웹서버에서 서빙할 예정입니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;npm run build
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt;&lt;div&gt;&amp;gt; playground@0.1.0 build /Users/a1101041/Workspace/playground
+&amp;gt; react-scripts build
 
- Creating an optimized production build...
- Compiled successfully.
+Creating an optimized production build...
+Compiled successfully.
 
- File sizes after gzip:
+File sizes after gzip:
 
-   34.71 KB  build/static/js/1.fa92c112.chunk.js
-   763 B     build/static/js/runtime~main.229c360f.js
-   713 B     build/static/js/main.52fd3884.chunk.js
-   510 B     build/static/css/main.d4a37200.chunk.css
+  34.71 KB  build/static/js/1.fa92c112.chunk.js
+  763 B     build/static/js/runtime~main.229c360f.js
+  713 B     build/static/js/main.52fd3884.chunk.js
+  510 B     build/static/css/main.d4a37200.chunk.css
 
- The project was built assuming it is hosted at the server root.
- You can control this with the homepage field in your package.json.
- For example, add this to build it for GitHub Pages:
+The project was built assuming it is hosted at the server root.
+You can control this with the homepage field in your package.json.
+For example, add this to build it for GitHub Pages:
 
-   &amp;quot;homepage&amp;quot; : &amp;quot;http://myname.github.io/myapp&amp;quot;,
+  &amp;quot;homepage&amp;quot; : &amp;quot;http://myname.github.io/myapp&amp;quot;,
 
- The build folder is ready to be deployed.
- You may serve it with a static server:
+The build folder is ready to be deployed.
+You may serve it with a static server:
 
-   npm install -g serve
-   serve -s build
+  npm install -g serve
+  serve -s build
 
- Find out more about deployment here:
+Find out more about deployment here:
 
-   http://bit.ly/CRA-deploy&lt;/code&gt;&lt;/pre&gt;
+  http://bit.ly/CRA-deploy
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;h3&gt;Github 등록&lt;/h3&gt;
+&lt;h3 id=&quot;github-%EB%93%B1%EB%A1%9D&quot;&gt;Github 등록&lt;/h3&gt;
 &lt;ol&gt;
-&lt;li&gt;&lt;p&gt;git log를 실행해봅니다. create-react-app v2.1.3 기준으로 커밋이 자동 생성됩니다. 만약 git 프로젝트 생성되지 않았다면, git init을 해줍시다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; git log&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; commit c9f306ff948b94a3d34d35d42868a852dc76754c (HEAD -&amp;gt; master)
- Author: Youngkyun Kim &amp;lt;yg.kim@sk.com&amp;gt;
- Date:   Sun Jan 27 13:07:15 2019 +0900
+&lt;li&gt;git log를 실행해봅니다. create-react-app v2.1.3 기준으로 커밋이 자동 생성됩니다. 만약 git 프로젝트 생성되지 않았다면, git init을 해줍시다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;git &lt;span class=&quot;hljs-built_in&quot;&gt;log&lt;/span&gt;
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt;&lt;div&gt;commit c9f306ff948b94a3d34d35d42868a852dc76754c (HEAD -&amp;gt; master)
+Author: Youngkyun Kim &amp;lt;yg.kim@sk.com&amp;gt;
+Date:   Sun Jan 27 13:07:15 2019 +0900
 
-     Initial commit from Create React App&lt;/code&gt;&lt;/pre&gt;
+    Initial commit from Create React App
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;github에 새 프로젝트를 생성합니다.&lt;/p&gt;
+&lt;li&gt;github에 새 프로젝트를 생성합니다.&lt;/li&gt;
+&lt;li&gt;생성된 프로젝트로 remote 설정을 한 뒤 소스를 푸시합니다. github 계정에 SSH 설정이 되어있지 않은 경우 미리 해주도록 합시다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;git remote add origin git@github.com:chancethecoder/my-react-app.git
+git push -u origin master
+&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;생성된 프로젝트로 remote 설정을 한 뒤 소스를 푸시합니다. github 계정에 SSH 설정이 되어있지 않은 경우 미리 해주도록 합시다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; git remote add origin git@github.com:chancethecoder/my-react-app.git
- git push -u origin master&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;github 세팅이 완료됐습니다. 이제 본인이 개발하고자 하는 react 어플리케이션을 개발하면 됩니다.&lt;/p&gt;
-&lt;/li&gt;
+&lt;li&gt;github 세팅이 완료됐습니다. 이제 본인이 개발하고자 하는 react 어플리케이션을 개발하면 됩니다.&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;</description>
 <category>Cloud</category>
