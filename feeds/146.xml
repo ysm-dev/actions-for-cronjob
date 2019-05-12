@@ -1879,4 +1879,18 @@ Parallel Collector와 다른 점은 Old 영역 GC에서 새로운 알고리즘�
 
 &lt;p&gt;그 이유는 DirectByteBuffer의 생성자 때문이다. 이 생성자는 java.nio 에 아무런 접근 제어자가 없이 선언된(package private) Bits라는 클래스의 reserveMemory() 메서드를 호출한다. 이 reserveMemory 메서드에서는 JVM에 할당되어 있는 메모리보다 더 많으 메모리를 요구할 경우 System.gc() 메서드를 호출하도록 되어 있다.&lt;/p&gt;
 
-&lt;p&gt;JVM에 있는 코드에 System.gc() 메서드가 있기 때문에 해당 생성자가 무차별적으로 생성될 경우 GC가 자주 발생하고 성능에 영향을 줄 수 밖에 없다. 따라서, 이 Dire
+&lt;p&gt;JVM에 있는 코드에 System.gc() 메서드가 있기 때문에 해당 생성자가 무차별적으로 생성될 경우 GC가 자주 발생하고 성능에 영향을 줄 수 밖에 없다. 따라서, 이 DirectByteBuffer 객체를 생성할 때는 매우 신중하게 접근해야만 하며, 가능하다면 singleton 패턴을 사용하여 해당 JVM에는 하나의 객체만 생성하도록 하는 것을 권장한다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;10-로그는-반드시-필요한-내용만-찍자&quot;&gt;10. 로그는 반드시 필요한 내용만 찍자&lt;/h1&gt;
+
+&lt;h3 id=&quot;systemoutprintln의-문제점&quot;&gt;System.out.println()의 문제점&lt;/h3&gt;
+&lt;p&gt;파일이나 콘솔에 로그를 남길 경우 애플리케이션에서는 대기 시간이 발생한다. 이 대기 시간은 시스템의 속도에 의존적이다. 만약 디스크에 로그를 남긴다면, 서버 디스크의 RPM이 높을수록 로그의 처리 속도는 빨라질 것이다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;개션율이란 튜닝 전과 후의 차이를 수치로 나타낸 것이다. 다음의 공식으로 구한다&lt;br /&gt;
+(튜닝 전 응답 속도 - 튜닝 후 응답 속도) * 100 / 튜닝 후 응답 속도 = 개선율(%)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;의미 없는 디버그용 로그를 프린트하기 위해서 아까운 서버의 리소스와 디스크가 낭비될 수 있다. 별다른 튜닝도 필요 없는 로그 제거 작업이 성능을 얼마나 많이 향상 시킬 수 있을지 다시 한 번 생각해 보고, 운영 서버의 소스에 있는 모든 시스템 로그를 제거하기 바란�
