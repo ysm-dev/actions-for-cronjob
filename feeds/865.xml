@@ -1,0 +1,1554 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>아리수</title>
+<link>https://arisu1000.tistory.com/</link>
+<description></description>
+<language>ko</language>
+<pubDate>Sun, 12 May 2019 16:11:59 +0900</pubDate>
+<generator>TISTORY</generator>
+<managingEditor>arisu1000</managingEditor>
+<image>
+<title>아리수</title>
+<url>http://cfile2.uf.tistory.com/image/2170D3465308BFC12A7225</url>
+<link>https://arisu1000.tistory.com</link>
+<description></description>
+</image>
+<item>
+<title>쿠버네티스 pod 구성 패턴</title>
+<link>https://arisu1000.tistory.com/27863</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;사이드카 패턴(Sidecar)&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;사이드카 패턴은 원래 사용하려고 했던 기본컨테이너의 기능을 확장하거나 강화하는 용도의 컨테이너를 추가하는 패턴입니다. 기본 컨테이너에는 원래 목적의 기능에만 충실하고 나머지 부가적인 공통 기능들은 사이드카 컨테이너를 추가해서 사용할 수 있습니다. 일반적인 웹서버의 예를 생각해 보면 다음 그림처럼 웹서버 컨테이너는 웹서버로서의 역할에 충실하고 자신의 로그는 포드의 파일로 남깁니다. 그러면 사이드카 역할인 로그수집 컨테이너가 파일시스템에 쌓이는 로그를 수집해서 외부의 로그수집 시스템으로 보내는 역할을 합니다.&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/VtbpV/btqtwyIRTtn/z66yWWgD7u5GO9NHdONhu1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/VtbpV/btqtwyIRTtn/z66yWWgD7u5GO9NHdONhu1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FVtbpV%2FbtqtwyIRTtn%2Fz66yWWgD7u5GO9NHdONhu1%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;이렇게 구성하게 되면 웹서버 컨테이너만 다른 역할을 하는 컨테이너로 변경하게 되면 로그수집 컨테이너는 그대로 사용할 수 있습니다. 그래서 이런 공통역할을 하는 컨테이너의 재사용성을 끌어 올릴 수 있습니다.&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;앰배서더 패턴(Ambassador)&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;앰배서더 패턴은 포드내에 프록시 역할을 하는 컨테이너를 추가하는 패턴입니다. 포드내에서 외부 서버에 접근할때 내부의 프록시에 접근하도록 설정하고 실제로 외부로의 연결은 프록시에서 알아서 처리하는 방식입니다. 다음 그림과 같은 구조입니다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/XIcPQ/btqtxn1n7Gi/p9T5KOrVmkBf7aOBWiAeJk/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/XIcPQ/btqtxn1n7Gi/p9T5KOrVmkBf7aOBWiAeJk/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FXIcPQ%2Fbtqtxn1n7Gi%2Fp9T5KOrVmkBf7aOBWiAeJk%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;웹서버 컨테이너는 캐시에 접근하기 위해서 localhost로만 접근하고 실제 외부 캐시중 어디로 접근할지는 프록시 컨테이너에서 처리합니다.&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;이런 방식으로 포드의 트래픽을 보다 세밀하게 제어하는 것도 가능합니다. 트래픽을 세밀하게 제어하기 위한 서비스 메시(service mesh)용 오픈소스인 이스티오(istio)를 보면 다음처럼 포드마다 프록시를 추가해서 트래픽을 처리하도록 구성되어 있는걸 확인할 수 있습니다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/SD895/btqtALHeZ8B/4IwyICnEjziz4JW2vVjdk1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/SD895/btqtALHeZ8B/4IwyICnEjziz4JW2vVjdk1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FSD895%2FbtqtALHeZ8B%2F4IwyICnEjziz4JW2vVjdk1%2Fimg.png' width=&quot;630&quot; height=&quot;481&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;어댑터 패턴(Adapter)&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;어댑터 컨테이너는 포드 외부로 노출되는 정보를 표준화하는 역할을 합니다. 주로 포드의 모니터링 지표를 어댑터 컨테이너를 통해서 표준화된 형식으로 노출시키고, 외부의 모니터링 시스템에서 그 데이터를 주기적으로 가져가서 모니터링하는데 이용할 수 있습니다. 다음과 같은 구조입니다.&lt;/p&gt;
+&lt;p&gt;&lt;figure class='imageblock alignCenter'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/WmeIk/btqttEpIWp5/1k0ckx3dMZoqJm4nLkrkX1/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/WmeIk/btqttEpIWp5/1k0ckx3dMZoqJm4nLkrkX1/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FWmeIk%2FbtqttEpIWp5%2F1k0ckx3dMZoqJm4nLkrkX1%2Fimg.png' &gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;참조&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/&quot;&gt;https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://vitalflux.com/container-design-patterns-kubernetes-pods-design/&quot;&gt;https://vitalflux.com/container-design-patterns-kubernetes-pods-design/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://istio.io/docs/concepts/what-is-istio/&quot;&gt;https://istio.io/docs/concepts/what-is-istio/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://arisu1000.tistory.com/27863&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Kubernetes</category>
+<category>container</category>
+<category>docker</category>
+<category>kubernetes</category>
+<category>도커</category>
+<category>컨테이너</category>
+<category>쿠버네티스</category>
+<author>arisu1000</author>
+<guid>https://arisu1000.tistory.com/27863</guid>
+<comments>https://arisu1000.tistory.com/27863#entry27863comment</comments>
+<pubDate>Tue, 19 Mar 2019 16:06:27 +0900</pubDate>
+</item>
+<item>
+<title>쿠버네티스 커스텀 리소스(kubernetes Custom Resources)</title>
+<link>https://arisu1000.tistory.com/27862</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div&gt;쿠버네티스는 api 구조 들이 잘 정의되어 있습니다. 그래서 뛰어난 확장성을 가지고 있습니다. 쿠버네티스에서 제공하는 내장된 리소스 뿐만 아니라 사용자가 필요한 리소스를 쿠버네티스 내부에 정의해서 사용할 수 있습니다. 이렇게 커스텀리소스(CustomResource)를 정의해 놓으면 쿠버네티스 시스템 내부에 녹아들어서 kubectl같은 &amp;nbsp;쿠버네티스 기본 명령어들과 함께 사용하는 것이 가능해 집니다. 그리고 그런 리소스들을 이용하는 자신만의 api 컨트롤러들을 만들어서 사용하는 것이 가능합니다. 쿠버네티스에서 사용자가 원하는 모든 기능들을 기본 기능으로 제공하려 하기 보다는 자신들에게 필요한 기능들은 직접 추가해서 사용할 수 있도록 커스텀 리소스 관련 기능들을 제공하고 있습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;커스텀 컨트롤러&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;커스텀 리소스 자체는 구조화된 데이터일 뿐입니다. 커스텀리소스를 이용해서 원하는 동작을 하기위해서는 커스텀컨트롤러를 이용해야 합니다. 커스텀 리소스를 이용해서 사용자가 원하는 상태를 선언해 두면 커스텀컨트롤러가 그 상태를 맞추기위해 필요한 처리들을 하도록 합니다. 이렇게 쿠버네티스를 확장해서 사용하는 방법중 유명한 것으로는 코어OS사의 오퍼레이터(Operator)패턴과 구글에서 개발하기 시작한 서버리스 플랫폼인 Knative등이 있습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;그럼 언제 커스텀컨트롤러를 이용해서 API를 만들어서 해야 할까요? 다음 몇가지 요건들을 생각해 볼 수 있습니다.&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;div&gt;추가하려는 API가 선언적(Declarative) 형식이다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;추가한 타입을 kubectl을 이용해서 사용할 수 있어야 한다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;추가한 타입을 쿠버네티스 대시보드 같은 UI에서 볼 수 있어야 한다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;기존에 동작중인 API를 쿠버네티스에 추가하려는게 아니라 새로운 API를 개발중이다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;쿠버네티스 스타일의 API 그룹과 네임스페이스 형식을 맞춰서 개발하는게 가능하다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;추가하려는 리소스가 쿠버네티스 클러스터내부에서 동작하거나 특정 네임스페이스 내부에서만 동작해야 한다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;쿠버네티스가 제공하는 기본 API지원 기능들을 활용한다.&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;커스텀 리소스를 사용할려 할때 주의해야 할 점으로는 커스텀 리소스를 위한 저장공간이 추가로 필요하다는 점입니다. 그리고 커스텀 컨트롤러에 버그가 있어서 예상치 못한 장애가 발생할 수도 있다는 점입니다. 이런 점들을 주의해야 합니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;선언적(declarative) API란 어떤 형태일까요?&amp;nbsp;&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;API들이 관련된 작은 객체(리소스)들의 조합으로 이루어져 있어야 합니다. 객체들의 조합으로 쉽게 모델링할수 없는 API는 보통 특정 동작을 해야하는걸 의미하기 때문에 선언적이 아닙니다. 무언가를 하는 동작으로 이루어 지는게 아닙니다. 객체들은 애플리케이션이나 인프라의 설정을 정의합니다. 특정 동작을 하도록 하도록 요청하지 않습니다. 객체들을 다루는 주된 동작은 CRUD(creating-생성, reading-읽기, updating-업데이트, deleting-삭제)입니다. 트랜잭션을 엄수해야하는 정확한 상태를 지정하는 형식은 안됩니다.&amp;nbsp;객체들이 어떤 상태일지를 바라는 상태만 나타내야합니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;커스텀 리소스와 컨피그맵&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;커스텀 리소스도 객체의 조합일 뿐이라면 컨피그맵을 사용하면 되는것 아닌가라고 생각할 수도 있습니다. 컨피그 맵을 사용하는 경우와 커스텀 리소스를 사용해야 하는 경우를 생각해보면 다음과 같습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;컨피그맵을 사용할 경우&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;div&gt;기존에 잘 정리된 포맷의 설정 파일인 경우 예) mysql.cnf, pom.xml&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;전체 설정 파일 내용을 컨피그맵에 하나의 키로 등록해서 사용하려는 경우&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;설정파일의 주용도가 포드내의 프로그램을 실행하는데 필요한 설정들인 경우&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;쿠버네티스 API를 통하기 보다는 포드내의 파일이나 환경변수 형태로 파일을 사용하려는 경우.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;파일이 업데이트되면 디플로이먼트를 통한 롤링업데이트를 하고 싶을때.&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;커스텀 리소스를 사용할 경우&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;div&gt;새 리소스를 만들거나 업데이트할때 쿠버네티스 클라이언트 라이브러리와 CLI를 사용하고 싶을 때&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;kubectl을 이용해서 리소스를 사용하고 싶을때&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;객체의 업데이트를 지켜보고 있다가 다른 객체들을 CRUD하거나 반대의 경우에 대한 자동화를 만들고 싶을때.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;객체를 업데이트하는 자동화를 만들고 싶을때&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;쿠버네티스 API에서 제공하는 .spec, .status, .metadata등의 정보를 사용하고 싶을때&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;관리하는 리소스들이나 다른 리소스들의 모음을 추상화한 객체를 사용하고 싶을때&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;CustomResourceDefinition 사용해서 커스텀 리소스 등록하기&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;커스텀리소스를 정의하기 위해서는 CRD(CustomResourceDefinitions)을 이용해야 하는 방법과 Aggregated API를 이용하는 방법이 있습니다.&lt;/div&gt;
+&lt;div&gt;각각의 특징은 다음과 같습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;CRD(CustomResourceDefinitions)&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;div&gt;프로그래밍이 필요 없습니다. 사용자는 CRD컨트롤러를 만들기위해 원하는 언어를 이용할 수 있습니다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;추가 서비스가 없어도 됩니다. 커스텀리소스는 API서버가 관리합니다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;CRD는 별도 관리를 하지 않더라도 기본 쿠버네티스 업그레이드와 버그픽스등을 함께 적용받아서 관리가 됩니다.&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;Aggregated API&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;div&gt;GO로 개발해서 바이너리와 이미지를 만들어야 합니다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;추가 서비스를 만들어야 합니다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;주기적으로 업스트림의 소스를 가져와서 변경사항을 반영하고 새로운 API서버 바이너리를 만드는 작업을 직접 진행해야 합니다.&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;CustomResourceDefinition을 활용한 Custom Controller 사용하기&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;CustomResourceDefinition은 다른 것들과 마찬가지로 yaml파일을 이용하면 됩니다. &amp;nbsp;아래처럼 파일 내용을 만든 후에 적용합니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;crd-mypod-spec.yaml&lt;/div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 685px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 685px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;apiVersion: apiextensions.k8s.io/v1beta1&lt;/div&gt;
+&lt;div&gt;kind: CustomResourceDefinition&lt;/div&gt;
+&lt;div&gt;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;# name : 아래의 spec 필드와 맞아야 한다. spec의 plural와 group를 조합한 값이와야 한다. &amp;lt;plural&amp;gt;.&amp;lt;group&amp;gt;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;name: &lt;a href=&quot;http://mypods.crd.example.com/&quot;&gt;mypods.crd.example.com&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;# REST API 용 그룹 이름: /apis/&amp;lt;group&amp;gt;/&amp;lt;version&amp;gt;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;group: &lt;a href=&quot;http://crd.example.com/&quot;&gt;crd.example.com&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;# API 버전&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;version: v1&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;# 이 CustomResourceDefinition이 지원하는 버전 정보&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;versions:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: v1&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# 버전이 사용가능한지 아닌지를 표시&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;served: true&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# 스토리지 버전으로 지정되어야 하는 버전&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;storage: true&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;# Namespaced/Cluster 범위 표시&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;scope: Namespaced&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;names:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# api URL에서 사용할 복수형 이름 : /apis/&amp;lt;group&amp;gt;/&amp;lt;version&amp;gt;/&amp;lt;plural&amp;gt;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;plural: mypods&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# CLI에서 사용할 단수형 이름&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;singular: mypod&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# kind에 사용할 단수형 단어. 카멜케이스 형식.&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;kind: MyPod&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# CLI에서 사용할 줄인 단어&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;shortNames:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- mpod&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;kubectl apply -f&amp;nbsp;crd-mypod-spec.yaml&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;앞의 파일내용을 살펴보면 mypod라는 새로운 리소스를 정의한걸 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;커스텀리소스 스펙을 정의했으니 이제 실제로 커스텀리소스를 만들어 보겠습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;div&gt;crd-mypod-sample.yaml&lt;/div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 589px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 589px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;apiVersion: &quot;&lt;a href=&quot;http://crd.example.com/v1&quot;&gt;crd.example.com/v1&lt;/a&gt;&quot;&lt;/div&gt;
+&lt;div&gt;kind: MyPod&lt;/div&gt;
+&lt;div&gt;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;name: my-new-pod-object&lt;/div&gt;
+&lt;div&gt;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;image: my-awesome-cron-image:latest&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;ports:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- containerPort: 8080&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;kubectl apply -f crd-mypod-sample.yaml&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;crd-mypod-sample.yaml 파일 내용을 확인해 보면 앞의 crd에서 정의했던 group에 있는 crd.example.com과 version에 있는 v1이 조합되서 apiVersion을 지정하고 있는걸 확인할 수 있습니다. kind에는 MyPod라는 새로운 리소스를 지정한걸 확인할 수 있습니다. spec부분에는 MyPod에서 사용할 리소스를 정의할 수 있습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;이제 이 리소스를 kubectl을 이용해서 확인할 수 있습니다. get을 이용해서 확인할 수도 있고 describe를 이용해서 상세내용을 확인할 수도 있습니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9973FB4A5C372E500A&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_1.png&quot; height=&quot;219&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;mpod로 설정한 단축 리소스명도 잘 동작하는걸 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;validation&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;그런데 spec에 사용한 image와 ports를 MyPod의 CustomResourceDefinition 에 지정하지 않고 사용한걸 알 수 있습니다. 네, CustomResourceDefinition에는 spec을 명시하지는 않습니다. spec은 커스텀리소스에 설정하는대로 자유롭게 등록이 가능합니다. 쿠버네티스 1.13 버전부터는 spec에 어떤 내용을 설정할 수 있는지 검증할 수 있는 validation기능이 베타기능으로 추가되었습니다. crd-mypod-spec.yaml의 spec부분에 다음 내용을 추가하면 MyPod 커스텀리소를 추가할 때 image에 들어오는 정보가 지정한 패턴에 맞는지를 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 589px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 589px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;validation:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;# openAPIV3Schema is the schema for validating custom objects.&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;openAPIV3Schema:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;properties:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;properties:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;image:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;type: string&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;pattern: '^[a-zA-Z0-9_.-]*$'&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;additionalPrinterColumns&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;div&gt;커스텀리소스에 대한 정보를 kubectl get으로 확인하면 NAME과 AGE정보만 보입니다. 이 정보만으로는 불충분하기 때문에 필요한 컬럼들을 추가해서 볼 수 있는 기능이 쿠버네티스 1.11 버전부터 추가되었습니다. 다음 내용을 spec에 추가하면 추가 정보를 볼 수 있습니다.&lt;/div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 588px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 588px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;additionalPrinterColumns:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: Image&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;type: string&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;description: MyPod에서 사용할 image 정보&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;JSONPath: .spec.image&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: Age&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;type: date&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;JSONPath: .metadata.creationTimestamp&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;additionalPrinterColumns에 올 수 있는 속성에는&amp;nbsp;Priority, Type, JSONPath등이 있습니다.&amp;nbsp;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;Priority를 0으로 하면 일반적인 kubectl get을 했을때 보입니다. Priority를 0보다 크게 설정하면 -o wide 옵션을 주었을때 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;Type은 컬럼의 데이터형을 지정하는데 다음과 같은 값이 올 수 있습니다.&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;div&gt;integer – 정수형 숫자&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;number – 실수형 숫자&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;string – 문자열&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;boolean – true 또는 false&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;date – 생성된 시간&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://arisu1000.tistory.com/27862&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Kubernetes</category>
+<category>container</category>
+<category>docker</category>
+<category>k8s</category>
+<category>kubernetes</category>
+<category>컨테이너</category>
+<category>쿠버네티스</category>
+<author>arisu1000</author>
+<guid>https://arisu1000.tistory.com/27862</guid>
+<comments>https://arisu1000.tistory.com/27862#entry27862comment</comments>
+<pubDate>Fri, 11 Jan 2019 09:00:00 +0900</pubDate>
+</item>
+<item>
+<title>helm 차트 사용하기</title>
+<link>https://arisu1000.tistory.com/27861</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;helm 차트 구조&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;helm에서 사용하는 차트는 디렉토리 하나에 들어가 있는 파일들의 집합입니다. 디렉토리 이름을 차트이름으로 지정하고 그 안에 필요한 파일들을 넣습니다. &amp;nbsp;디렉토리안의 파일들은 대략 다음과 같은 구조를 가집니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 618px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 618px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;wordpress/&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;Chart.yaml&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# 차트에 대한 정보를 가지고 있음.&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;LICENSE&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# 옵션 : 차트 라이센스에 대한 정보를 가지고 있음.&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;README.md&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# 옵션 : 차트에 대한 설명 파일&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;requirements.yaml&amp;nbsp;&amp;nbsp;&amp;nbsp;# 옵션 : 차트의 의존성을 명시한 파일&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;values.yaml&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# 이 차트에서 사용하는 기본 설정 값&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;charts/&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# 이 차트에 관련되어 있는 차트들&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;templates/&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;# &amp;nbsp;쿠버네티스 매니페스트 파일들로 변환될 YAML템플릿 파일들&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;templates/NOTES.txt # 옵션 : 짧은 사용법 설명&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;helm create 명령을 사용하면 기본 구조를 가진 차트를 만들 수 있습니다. 다음 처럼 차트를 만들고 살펴보면 디렉토리 구조가 어떻게 구성되어 있는지 보입니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:606px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99B700465C1B8E2F34&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_1.png&quot; height=&quot;472&quot; width=&quot;606&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;helm chart 만들어서 사용하기&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;일반적으로는 잘 만들어진 차트를 바로 가져와서 사용할 수 있습니다. 하지만 차트를 고쳐서 사용해야 하거나 원하는 앱의 차트가 없다면 직접 만들어서 사용해야 할수도 있습니다. 이럴때는 어떻게 해야 하는지 알아보겠습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;우선 helm fetch를 이용해서 redis 차트를 다운받아 보겠습니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 454px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 454px; padding: 8px; border: 1px solid;&quot;&gt;&lt;div&gt;helm fetch stable/redis&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;다운받은 파일은 tgz확장자를 가진 압축파일 하나입니다. 다음처럼 이 파일의 압축을 풀면 차트 내용을 볼 수 있습니다.&lt;/div&gt;&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 542px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 542px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;$ tar zxvf redis-4.3.0.tgz&lt;/div&gt;
+&lt;div&gt;x redis/Chart.yaml&lt;/div&gt;
+&lt;div&gt;x redis/values.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/NOTES.txt&lt;/div&gt;
+&lt;div&gt;x redis/templates/_helpers.tpl&lt;/div&gt;
+&lt;div&gt;x redis/templates/configmap.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/health-configmap.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/metrics-deployment.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/metrics-prometheus.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/metrics-svc.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/networkpolicy.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/redis-master-statefulset.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/redis-master-svc.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/redis-role.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/redis-rolebinding.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/redis-serviceaccount.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/redis-slave-deployment.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/redis-slave-svc.yaml&lt;/div&gt;
+&lt;div&gt;x redis/templates/secret.yaml&lt;/div&gt;
+&lt;div&gt;x redis/.helmignore&lt;/div&gt;
+&lt;div&gt;x redis/README.md&lt;/div&gt;
+&lt;div&gt;x redis/values-production.yaml&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;$ tree redis&lt;/div&gt;
+&lt;div&gt;redis&lt;/div&gt;
+&lt;div&gt;├── Chart.yaml&lt;/div&gt;
+&lt;div&gt;├── README.md&lt;/div&gt;
+&lt;div&gt;├── templates&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── NOTES.txt&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── _helpers.tpl&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── configmap.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── health-configmap.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── metrics-deployment.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── metrics-prometheus.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── metrics-svc.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── networkpolicy.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── redis-master-statefulset.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── redis-master-svc.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── redis-role.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── redis-rolebinding.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── redis-serviceaccount.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── redis-slave-deployment.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; ├── redis-slave-svc.yaml&lt;/div&gt;
+&lt;div&gt;│&amp;nbsp;&amp;nbsp; └── secret.yaml&lt;/div&gt;
+&lt;div&gt;├── values-production.yaml&lt;/div&gt;
+&lt;div&gt;└── values.yaml&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;1 directory, 20 files&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;여기서 values.yaml파일을 열어서 변경해 보겠습니다. 본래 values.yaml의 내용은 이런 방식이 아니라 차트를 설치할때 옵션으로 주도록 되어 있습니다. 그러나 여기서는 차트를 변경하고 사용하는걸 연습해 보기위해 직접 values.yaml파일을 고치고 다시 패키지해서 차트로 만들어서 사용해 보도록 하겠습니다. &amp;nbsp;values.yaml의&amp;nbsp;images.password 부분을 mypassword로 변경합니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99ED5E3A5C1B8E3010&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_2.png&quot; height=&quot;140&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;차트를 패키지하기위해 버전도 변경해 주도록 합니다. Chart.yaml파일에 있는 version을 0.1.0로 변경합니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/998AFC335C1B8E3130&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_3.png&quot; height=&quot;251&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;이 차트를 설치하려면 다음처럼 helm install 명령어로 간단하게 설치할 수 있습니다. 작업했던 디렉토리 경로를 명시해 주면 됩니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 551px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 551px; padding: 8px; border: 1px solid;&quot;&gt;&lt;div&gt;helm install ./redis&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;설치되고나서 helm ls로 확인해 보면 chart버전이 0.1.0로 변경된걸 볼 수 있습니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/998B03435C1B8E312A&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_4.png&quot; height=&quot;52&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;변경한 패스워드가 정상적으로 적용됐는지 확인해 보기 위해서 helm 설치 후 나오는 안내문구의 명령어를 참고해서 redis 패스워드를 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;$ kubectl get secret --namespace default mean-lambkin-redis -o jsonpath=&quot;{.data.redis-password}&quot; | base64 —decode&lt;/div&gt;
+&lt;div&gt;mypassword%&lt;/div&gt;
+&lt;div&gt;mypassword라고 우리가 변경했던 값이 나오는걸 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;helm chart 저장소 직접 만들어서 사용하기&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;차트를 만들어서 혼자만 사용하는게 아니라 다른 사람들과 공유해서 사용하려면 어떻게 해야 할까요? 우선 수정한 차트를 업스트림에 반영시키도록 코드를 제출해서 사용하는 방법을 생각해 볼 수 있습니다. 하지만 사내에서만 사용하거나 특정 조직내부에서만 사용해야하는 차트 같은 경우는 그렇게 사용할 수 없습니다. 그런 경우에 helm 저장소를 직접 운영하는걸 생각해 볼 수 있습니다. 이런 경우를 위해서 helm에서는 chartmesuem(&lt;a href=&quot;https://github.com/helm/chartmuseum&quot;&gt;https://github.com/helm/chartmuseum&lt;/a&gt;) 이라는 오픈소스 차트 저장소를 제공하고 있습니다. 차트뮤지엄(chartmesuem)을 이용해서 helm 저장소를 만들어 보도록 하겠습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;div&gt;차트뮤지엄은 운영체제별 실행파일을 다음 명령어를 이용해서 받을 수 있습니다. 파일을 다운 받은 다음에 실행 권한을 주고 실행경로에 옮겨 줍니다.&lt;/div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 620px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 620px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;# on Linux&lt;/div&gt;
+&lt;div&gt;curl -LO https://s3.amazonaws.com/chartmuseum/release/latest/bin/linux/amd64/chartmuseum&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;# on macOS&lt;/div&gt;
+&lt;div&gt;curl -LO https://s3.amazonaws.com/chartmuseum/release/latest/bin/darwin/amd64/chartmuseum&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;# on Windows&lt;/div&gt;
+&lt;div&gt;curl -LO https://s3.amazonaws.com/chartmuseum/release/latest/bin/windows/amd64/chartmuseum&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;chmod +x ./chartmuseum&lt;/div&gt;
+&lt;div&gt;mv ./chartmuseum /usr/local/bin&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;이제 차트뮤지엄을 실행해 보겠습니다. 차트뮤지엄은 차트저장소 역할을 하기 때문에 차트를 저장할 스토리지를 실행할때 지정해 주어야 합니다. AWS S3, 구글 클라우드 스토리, 애저 Blob 스토리지, 알리바바 클라우드 OSS 스토리지, 오픈스택 오브젝트 스토리지등 다양한 클라우드 저장소를 사용할 수 있습니다. 여기서는 테스트 용도이기 때문에 로컬디스크에 차트를 저장하도록 하고 실행해 보겠습니다. 다음 명령으로 간단하게 차트뮤지엄을 실행할 수 있습니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 509px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 509px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;chartmuseum --debug --port=8080 \&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;--storage=&quot;local&quot; \&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;--storage-local-rootdir=&quot;./chartstorage&quot;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;차트뮤지엄을 실행한 후에 localhost:8080으로 접속해보면 다음같은 화면을 볼 수 있습니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9974CA435C1B8E3233&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_5.png&quot; height=&quot;284&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;차트뮤지엄에서 제공하는 api를 통해서 다음처럼 현재 저장된 차트들을 확인할 수 있습니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 480px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 480px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;$ curl &lt;a href=&quot;http://localhost:8080/api/charts&quot;&gt;http://localhost:8080/api/charts&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;{}&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;현재는 등록한 차트가 없기 때문에 빈 값인 {} 만 보입니다. 이제 차트를 등록해 보겠습니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;이제 앞에서 수정했던 redis 차트를 다시 패키지 합니다. 버전명을 고쳤기 때문에 redis-0.1.0.tgz라는 파일명으로 패키지가 만들어진걸 확인할 수 있습니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 614px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 614px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;helm package redis&lt;/div&gt;
+&lt;div&gt;Successfully packaged chart and saved it to: /Users/wonchon/test/redis-0.1.0.tgz&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;차트뮤지엄의 /api/charts api를 이용하도록 다음처럼 요청하면 차트가 차트뮤지엄에 등록됩니다.&lt;/div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 587px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 587px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;$ curl --data-binary &quot;@redis-0.1.0.tgz&quot; &lt;a href=&quot;http://localhost:8080/api/charts&quot;&gt;http://localhost:8080/api/charts&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;{&quot;saved&quot;:true}&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;이제 다시 차트목록을 확인하면 등록한 차트가 나오는걸 확인할 수 있습니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 624px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 624px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;curl &lt;a href=&quot;http://localhost:8080/api/charts&quot;&gt;http://localhost:8080/api/charts&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;{&quot;redis&quot;:[{&quot;name&quot;:&quot;redis&quot;,&quot;home&quot;:&quot;&lt;a href=&quot;http://redis.io/&quot;&gt;http://redis.io/&quot;,&quot;sources&lt;/a&gt;&quot;:[&quot;&lt;a href=&quot;https://github.com/bitnami/bitnami-docker-redis&quot;&gt;https://github.com/bitnami/bitnami-docker-redis&lt;/a&gt;&quot;],&quot;version”:”0.1.0&quot;,&quot;description&quot;:&quot;Open source, advanced key-value store. It is often referred to as a data structure server since keys can contain strings, hashes, lists, sets and sorted sets.&quot;,&quot;keywords&quot;:[&quot;redis&quot;,&quot;keyvalue&quot;,&quot;database&quot;],&quot;maintainers&quot;:[{&quot;name&quot;:&quot;Bitnami&quot;,&quot;email&quot;:&quot;&lt;a href=&quot;mailto:containers@bitnami.com&quot;&gt;containers@bitnami.com&lt;/a&gt;&quot;},{&quot;name&quot;:&quot;desaintmartin&quot;,&quot;email&quot;:&quot;&lt;a href=&quot;mailto:cedric@desaintmartin.fr&quot;&gt;cedric@desaintmartin.fr&lt;/a&gt;&quot;}],&quot;engine&quot;:&quot;gotpl&quot;,&quot;icon&quot;:&quot;&lt;a href=&quot;https://bitnami.com/assets/stacks/redis/img/redis-stack-220x234.png&quot;&gt;https://bitnami.com/assets/stacks/redis/img/redis-stack-220x234.png&quot;,&quot;appVersion&quot;:&quot;4.0.11&quot;,&quot;urls&lt;/a&gt;&quot;:[&quot;charts/redis-0.1.0.tgz&quot;],&quot;created&quot;:&quot;2018-12-19T21:56:48.743240162+09:00&quot;,&quot;digest&quot;:&quot;63ba4d1973df5b77cc7429506710a9031bae5d6fd005f3631f1e81a265c65ee7&quot;}]}&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;차트뮤지엄으로 실행한 차트 저장소를 이용해서 redis차트를 설치하려면 다음처럼 하면 됩니다. helm repo add 명령으로 우리가 실행한 차트뮤지엄을 새로운 helm 저장소로 추가해 줍니다. 그런 다음 helm search를 통해서 저장소가 제대로 등록됐는지 확인할 수 있습니다. 여기서는 chartmuseum/redis 라는 이름으로 차트가 보이는걸 확인할 수 있습니다. 이 차트를 설치하려면 helm install chartmuseum/redis 명령을 통해서 설치할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/993F22355C1B8E3301&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_6.png&quot; height=&quot;215&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://arisu1000.tistory.com/27861&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Kubernetes</category>
+<category>container</category>
+<category>docker</category>
+<category>helm</category>
+<category>k8s</category>
+<category>kubernetes</category>
+<category>컨테이너</category>
+<category>쿠버네티스</category>
+<author>arisu1000</author>
+<guid>https://arisu1000.tistory.com/27861</guid>
+<comments>https://arisu1000.tistory.com/27861#entry27861comment</comments>
+<pubDate>Mon, 24 Dec 2018 09:00:00 +0900</pubDate>
+</item>
+<item>
+<title>helm 기본</title>
+<link>https://arisu1000.tistory.com/27860</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;helm 소개&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;helm은 쿠버네티스 패키지 매니저 입니다. 쿠버네티스를 사용하다보면 결국 수많은 YAML파일들을 관리해야 됩니다. helm에서는 이런 YAML파일들의 집합을 차트(chart)라고하고, 이 차트를 관리할 수 있게 해주는 도구가 helm입니다. helm은 쿠버네티스의 하위 프로젝트로 시작되었다가 2018년 6월에 CNCF재단의 정식 프로젝트로 승격되었습니다. Helm은 차트를 만들고, 차트 압축 파일(tgz)를 만들수 있습니다. 그리고 차트들이 저장되어 있는 차트 저장소(chart repository)와 연계해서 쿠버네티스 클러스터에 차트를 설치하거나 삭제할 수 있습니다. helm으로 설치된 차트들의 배포 주기를 관리할 수도 있습니다.&lt;/div&gt;
+&lt;div&gt;helm을 이용하면 잘 정리된 차트들을 이용해서 필요한 애플리케이션들을 빠르게 설치할 수 있습니다.&amp;nbsp;&lt;a href=&quot;https://github.com/helm/charts&quot;&gt;https://github.com/helm/charts&lt;/a&gt;&amp;nbsp;에 보면 incubator와 stable 하위에 수많은 차트들이 준비되어 있는걸 확인할 수 있습니다. mysql, redis, 젠킨스, 하둡, 엘라스틱서치등 많은 애플리케이션들을 쉽게 설치해서 사용할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;helm 개념&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;helm을 사용하기 위해서 알아야 하는 3가지 주요 개념이 있습니다.&lt;/div&gt;
+&lt;div&gt;차트(chart) : 쿠버네티스 애플리케이션을 만들기위해 필요한 정보들의 묶음입니다.&lt;/div&gt;
+&lt;div&gt;컨피그(config) : 배포 가능한 객체들을 만들기 위해 패키지된 차트에 넣어서 사용할 수 있는 설정들을 가지고 있습니다.&lt;/div&gt;
+&lt;div&gt;릴리즈(release) : 특정 컨피그를 이용해서 실행중인 차트의 인스턴스 입니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;helm 구성요소&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;helm은 실질적으로 2개의 요소로 구성되어 있습니다. 사용자가 직접 사용할 수 있는 명령줄 도구인 helm 클라이언트(helm client)와 쿠버네티스 클러스터 내부에서 실행되어서 helm 클라이언트에서 오는 명령을 받아서 쿠버네티스 api와 통신하는 역할을 하는 틸러 서버(Tiller Server)입니다.&lt;/div&gt;
+&lt;div&gt;helm 클라이언트를 사용하면 로컬에서 차트를 개발할 수 있고 차트 저장소들을 관리할 수 있습니다. 틸러 서버와 통신해서 쿠버네티스 클러스터에 설치하기 위한 차트를 보낼수 있습니다. 현재 클러스터에서 실행중인 릴리즈에 대한 정보를 요청할수도 있습니다. 실행중인 릴리즈를 업그레이드하거나 삭제하라는 요청을 틸러서버로 보냅니다. helm 클라이언트는 GO언어로 개발되어 있고 틸러서버와는 gRPC를 이용해서 통신합니다.&lt;/div&gt;
+&lt;div&gt;틸러서버는 주로 helm 클라이언트에서 오는 요청을 처리하기위해 대기하고 있습니다.클러스터에 실행할 릴리즈를 만들기 위해서 차트와 설정을 조합하는 일을 합니다.&amp;nbsp; 쿠버네티스 클러스터에 차트를 설치하고 릴리즈를 관리합니다. 쿠버네티스 클러스터에서 실제로 차트를 업그레이드하거나 삭제하는 역할을 합니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;helm 설치 및 사용하기&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;Mac OS X에서는 brew를 이용해서 helm클라이언트를 설치할 수 있습니다. 다음 명령을 이용해 간단하게 설치할 수 있습니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 262px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 262px; padding: 8px; border: 1px solid;&quot;&gt;&lt;div&gt;brew install kubernetes-helm&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;helm 클라이언트가 설치됐으면 쿠버네티스 클러스터에 틸러서버를 설치해야 합니다. 간단하게 아래 명령을 이용해서 틸러서버를 쿠버네티스 클러스터에 설치할 수 있습니다. 이때, 쿠버네티스에 접근하기 위한 kubeconfig 설정은 로컬 환경에 미리 되어 있어야 합니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 254px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 254px; padding: 8px; border: 1px solid;&quot;&gt;&lt;div&gt;helm init&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;kubectl 명령으로 kube-system 네임스페이스를 확인하면 틸러용 포드가 실행중인걸 확인할 수 있습니다.&lt;/div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 737px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 737px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;$ kubectl get pods -n kube-system&lt;/div&gt;
+&lt;div&gt;NAME&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;READY&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;STATUS&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;RESTARTS&amp;nbsp;&amp;nbsp;&amp;nbsp;AGE&lt;/div&gt;
+&lt;div&gt;etcd-docker-for-desktop&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1/1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Running&amp;nbsp;&amp;nbsp;&amp;nbsp;0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1d&lt;/div&gt;
+&lt;div&gt;kube-apiserver-docker-for-desktop&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1/1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Running&amp;nbsp;&amp;nbsp;&amp;nbsp;0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1d&lt;/div&gt;
+&lt;div&gt;kube-controller-manager-docker-for-desktop&amp;nbsp;&amp;nbsp;&amp;nbsp;1/1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Running&amp;nbsp;&amp;nbsp;&amp;nbsp;0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1d&lt;/div&gt;
+&lt;div&gt;kube-dns-86f4d74b45-65hk4&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;3/3&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Running&amp;nbsp;&amp;nbsp;&amp;nbsp;0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1d&lt;/div&gt;
+&lt;div&gt;kube-proxy-vdhbs&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1/1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Running&amp;nbsp;&amp;nbsp;&amp;nbsp;0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1d&lt;/div&gt;
+&lt;div&gt;kube-scheduler-docker-for-desktop&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1/1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Running&amp;nbsp;&amp;nbsp;&amp;nbsp;0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1d&lt;/div&gt;
+&lt;div&gt;tiller-deploy-6fd8d857bc-cbjfr&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1/1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Running&amp;nbsp;&amp;nbsp;&amp;nbsp;0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;23h&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;그런 다음 아래 명령으로 helm에서 사용할 저장소 정보를 업데이트 합니다. 별도의 저장소를 운영중이지 않다면 stable용 저장소가 추가된걸 확인할 수 있습니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 767px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 767px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;$ helm repo update&lt;/div&gt;
+&lt;div&gt;Hang tight while we grab the latest from your chart repositories...&lt;/div&gt;
+&lt;div&gt;...Skip local chart repository&lt;/div&gt;
+&lt;div&gt;helm r...Successfully got an update from the &quot;stable&quot; chart repository&lt;/div&gt;
+&lt;div&gt;Update Complete. ⎈ Happy Helming!⎈&lt;/div&gt;
+&lt;div&gt;$ helm repo list&lt;/div&gt;
+&lt;div&gt;NAME&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;URL&lt;/div&gt;
+&lt;div&gt;stable&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;a href=&quot;https://kubernetes-charts.storage.googleapis.com/&quot;&gt;https://kubernetes-charts.storage.googleapis.com&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;local &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;a href=&quot;http://127.0.0.1:8879/charts&quot;&gt;http://127.0.0.1:8879/charts&lt;/a&gt;
+&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;이 상태에서 사용가능한 차트들을 확인하려면 search 명령을 이용 하면 됩니다. 수많은 차트가 있는걸 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99F37C4E5C1B8DC135&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_1.png&quot; height=&quot;185&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;이중에서 redis를 설치해 보겠습니다. 아래처럼 helm install명령을 이용해서 redis를 설치할 수 있습니다. 정상적으로 redis가 설치되면 redis 관련 포드가 쿠버네티스 클러스터에 실행된 걸 확인할 수 있습니다. redis실행에 사용된 암호를 확인하는 부분은 helm install 명령의 마지막 출력으로 나옵니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 814px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 814px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;$ helm install stable/redis&lt;/div&gt;
+&lt;div&gt;…&lt;/div&gt;
+&lt;div&gt;To get your password run:&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;export REDIS_PASSWORD=$(kubectl get secret --namespace default erstwhile-quail-redis -o jsonpath=&quot;{.data.redis-password}&quot; | base64 --decode)&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;To connect to your Redis server:&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;1. Run a Redis pod that you can use as a client:&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;kubectl run --namespace default erstwhile-quail-redis-client --rm --tty -i \&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;--env REDIS_PASSWORD=$REDIS_PASSWORD \&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;--image docker.io/bitnami/redis:4.0.11 -- bash&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;2. Connect using the Redis CLI:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;redis-cli -h erstwhile-quail-redis-master -a $REDIS_PASSWORD&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;redis-cli -h erstwhile-quail-redis-slave -a $REDIS_PASSWORD&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;To connect to your database from outside the cluster execute the following commands:&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;kubectl port-forward --namespace default svc/erstwhile-quail-redis 6379:6379 &amp;amp;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;redis-cli -h 127.0.0.1 -p 6379 -a $REDIS_PASSWORD&lt;/div&gt;
+&lt;div&gt;# kubectl get pods&lt;/div&gt;
+&lt;div&gt;NAME&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;READY&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;STATUS&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;RESTARTS&amp;nbsp;&amp;nbsp;&amp;nbsp;AGE&lt;/div&gt;
+&lt;div&gt;erstwhile-quail-redis-master-0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1/1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Running&amp;nbsp;&amp;nbsp;&amp;nbsp;0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;46s&lt;/div&gt;
+&lt;div&gt;erstwhile-quail-redis-slave-7b669b445d-mvg47&amp;nbsp;&amp;nbsp;&amp;nbsp;1/1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Running&amp;nbsp;&amp;nbsp;&amp;nbsp;0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;46s&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;kubectl 뿐만 아니라 helm명령을 통해서도 다음처럼 현재 실행중인 차트의 상태를 확인할 수 있습니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 800px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 800px; padding: 8px; border: 1px solid;&quot;&gt;
+&lt;div&gt;$ helm ls&lt;/div&gt;
+&lt;div&gt;NAME&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;REVISION&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;UPDATED&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;STATUS&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;CHART&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;APP VERSION&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;NAMESPACE&lt;/div&gt;
+&lt;div&gt;erstwhile-quail&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Thu Nov 29 20:39:34 2018&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;DEPLOYED&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;redis-4.3.0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;4.0.11&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;default&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;여기 나오는 차트 이름을 이용해서 실행중인 차트를 삭제할 수 있습니다.&amp;nbsp;&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 740px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;width: 740px; padding: 8px; border: 1px solid;&quot;&gt;&lt;div&gt;$ helm del erstwhile-quail&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://arisu1000.tistory.com/27860&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Kubernetes</category>
+<category>container</category>
+<category>docker</category>
+<category>helm</category>
+<category>k8s</category>
+<category>kubernetes</category>
+<category>컨테이너</category>
+<category>쿠버네티스</category>
+<author>arisu1000</author>
+<guid>https://arisu1000.tistory.com/27860</guid>
+<comments>https://arisu1000.tistory.com/27860#entry27860comment</comments>
+<pubDate>Fri, 21 Dec 2018 09:00:00 +0900</pubDate>
+</item>
+<item>
+<title>쿠버네티스 DNS(kubernetes dns)</title>
+<link>https://arisu1000.tistory.com/27859</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div&gt;쿠버네티스에서는 클러스터 내부에서만 사용가능한 DNS를 설정해 놓고 사용할 수 있습니다. 그래서 포드간 통신을 할때나 IP가 아닌 도메인을 설정해 두고 사용할 수 있습니다. 그렇게해서 한 클러스터에서 사용하던 yaml파일에서 포드간 통신을 도메인으로 설정해 둔다면 그걸 별다른 수정 없기 그대로 다른 클러스터로 가져가서 사용하는 것도 가능합니다. ip로 통신하도록 되어 있다면 한곳에서 세팅해놨던 yaml파일을 다른곳으로 옮겨 가져가서 사용하려고 할때 그 클러스터에서 사용하는 ip 대역이 다른 것이라면 그대로 사용할 수가 없게 됩니다. 이럴때 설정이 도메인을 사용하도록 되어 있다면 별다른 수정없이 그대로 사용할 수가 있습니다.&lt;/div&gt;
+&lt;div&gt;그 뿐만 아니라 일부의 경우에는 서비스디스커버리(service discovery)용도로 사용할 수도 있습니다. 전문적인 서비스디스커버리를 사용하려면 dns가 아니라 다른 솔루션들을 사용해야 하겠지만 간단한 경우라면 dns를 이용해서 할 수도 있습니다. 특정 포드들에 접근할때 도메인을 통해서 접근하도록 설정되어 있다면 포드에 문제가 생겨서 재생성되거나 배포때문에 재생성될때 IP가 변경되더라도 자동으로 도메인에 변경된 포드의 IP가 등록되기 때문에 자연스레 새로 시작된 포드 쪽으로 연결하는 것이 가능합니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;클러스터내에서 도메인 사용해보기&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;쿠버네티스에서 사용하는 내부 도메인은 서비스와 포드에 대해서 사용할 수 있고 일정한 패턴을 가지고 있습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;특정 서비스에 접근하는 도메인은 다음처럼 구성됩니다. aname 이라는 네임스페이스에 속한 bservice 가 있다고 했을때 이 서비스에 접근하는 도메인은 bservice.aname.svc.cluster.local입니다. bservice.aname 순으로 서비스와 네임스페이스를 연결한 다음에 마지막에 svc.cluster.local을 붙이면 됩니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;특정 포드에 접근하는 도메인은 다음처럼 구성됩니다. default 네임스페이스에 속한 cpod(10.10.10.10)라는 이름의 포드에 대한 도메인은 다음처럼 구성됩니다. 10-10-10-10.default.pod.cluster.local cpod의 IP인 10.10.10.10에서 .을 -로 변경해서 사용하고 네임스페이스 이름인 default와 연결한 다음 뒤에 pod.cluster.local을 붙여주면 됩니다. 하지만 이렇게 하면 포드의 ip를 그대로 사용해야 하니까 도메인 네임을 사용하는 장점이 많이 사라지게 됩니다. 그래서 다른 방법을 사용할 수도 있습니다. 포드를 실행할때 spec에 hostname과 subdomain을 지정해서 사용할 수 있습니다. 다음처럼 예제 yaml을 보도록 하겠습니다. spec에 hostname과 subdomain을 지정했습니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 543px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 543px; padding: 8px;&quot;&gt;
+&lt;div&gt;apiVersion: apps/v1&lt;/div&gt;
+&lt;div&gt;kind: Deployment&lt;/div&gt;
+&lt;div&gt;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;name: kubernetes-simple-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;labels:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;app: kubernetes-simple-app&lt;/div&gt;
+&lt;div&gt;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;replicas: 1&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;selector:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;matchLabels:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;app: kubernetes-simple-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;template:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;labels:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;app: kubernetes-simple-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;hostname: appname&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;subdomain: default-subdomain&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;containers:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: kubernetes-simple-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;image: arisu1000/simple-container-app:latest&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;ports:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- containerPort: 8080&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;이런경우 이 포드에 접근할수 있는 도메인은&amp;nbsp;appname.default-subdomain.default.svc.cluster.local으로 생성됩니다. hostname인 appname과 subdomain인 default-subdomain을 앞에 사용하고 네임스페이스인 default를 붙여준 다음에&amp;nbsp;.svc.cluster.local을 붙여줍니다. 여기서 눈여겨봐야할 점은 마지막에 붙인&amp;nbsp;.svc.cluster.local이 pod가 아니라 svc로 시작한다는 점입니다.&amp;nbsp;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;실제로 이 도메인 이름을 이용해서 접근이 가능한지 확인하기 위해서는 위의 예제를 실행한 후 다음처럼 확인해 볼 수 있습니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 736px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 736px; padding: 8px;&quot;&gt;
+&lt;div&gt;$ kubectl apply -f dns-deployment.yaml&lt;/div&gt;
+&lt;div&gt;$ kubectl get pods -o wide&lt;/div&gt;
+&lt;div&gt;NAME&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;READY&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;STATUS&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;RESTARTS&amp;nbsp;&amp;nbsp;&amp;nbsp;AGE&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;IP&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;NODE&lt;/div&gt;
+&lt;div&gt;kubernetes-simple-app-67894b6df5-2rc5f&amp;nbsp;&amp;nbsp;&amp;nbsp;1/1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Running&amp;nbsp;&amp;nbsp;&amp;nbsp;0&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1m&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;10.1.0.162&amp;nbsp;&amp;nbsp;&amp;nbsp;docker-for-desktop&lt;/div&gt;
+&lt;div&gt;$ kubectl exec kubernetes-simple-app-67894b6df5-2rc5f nslookup appname.default-subdomain.default.svc.cluster.local&lt;/div&gt;
+&lt;div&gt;nslookup: can't resolve '(null)': Name does not resolve&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;Name:&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;appname.default-subdomain.default.svc.cluster.local&lt;/div&gt;
+&lt;div&gt;Address 1: 10.1.0.162 appname.default-subdomain.default.svc.cluster.local&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;kubectl apply로 앱을 실행한 다음에 kubectl get pods로 포드가 실행됐는지와 이 포드의 IP를 확인해 봅니다. 그런 다음 kubectl exec 명령으로 포드내에서 nslookup 명령으로 설정한&amp;nbsp;appname.default-subdomain.default.svc.cluster.local 도메인에 대한 IP를 확인할 수 있는지 보면 됩니다. 여기서는 포드의 IP인&amp;nbsp;10.1.0.162 이 정상적으로 확인되는걸 마지막에 확인할 수 있습니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;DNS 구조&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;dns역할을 하는 kube-dns역시 클러스터내에서 포드로 실행되고 있습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;포드내에서 DNS에 질의를 할때 어떤 순서로 할것인지 개별 포드마다 지정해 줄 수 있습니다. 포드의 spec에 dnsPolicy를 이용해서 지정할 수 있습니다. 사용가능한 옵션은 다음 4가지 입니다.&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;div&gt;Default : dns 설정을 포드가 실행중인 노드의 설정을 가져와서 사용합니다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;ClusterFirst : cluster.local같은 미리 지정된 클러스터내부 도메인과 일치하지 않는 “www.example.com” 같은 도메인의 경우에는 클러스터 외부 DNS인 upstream DNS에 질의합니다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;ClusterFirstWithHostNet : 포드를 hostNetwork옵션으로 실행할때 반드시 사용해야 하는 옵션입니다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;None : 포드가 쿠버네티스 클러스터 내부의 DNS 설정을 무시하도록 하는 설정입니다. 이 경우에는 포드의 spec에 dnsConfig으로 별도 DNS설정을 해줘야 합니다.&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;다른 포드들에서 도메인 네임을 조회하면 kube-dns쪽으로 질의를해서 해당 도메인의 IP를 확인합니다. 이 때 kube-dns 포드 내부의 DNS 캐시인 dnsmasq를 통해서 질의가 이뤄지게 됩니다. dnsmasq는 kube-dns를 질의하고 거기에서 원하는 결과를 찾을 수 없으면 custom DNS 쪽으로 질의를 하고 거기에도 없으면 다시 upstream DNS쪽으로 질의를 하도록 되어 있습니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:400px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99C5594A5B9DF9E62D&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_1.png&quot; height=&quot;252&quot; width=&quot;400&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;b&gt;DNS 직접 설정하기&lt;/b&gt;&lt;/div&gt;
+&lt;div&gt;포드내의 dns설정을 사용자가 직접하는 것도 가능합니다. spec에 dnsConfig를 설정해 주면 됩니다. dnsConfig설정은 dnsPolicy와 함께 쓸수도 있습니다. 앞에도 있지만 dnsPolicy가 none일때는 dnsConfig가 꼭 있어야 합니다.&lt;/div&gt;
+&lt;div&gt;dnsConfig에는 다음 3가지 속성들을 설정할 수 있습니다.&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;div&gt;nameservers : 포드에서 사용할 dns의 ip들입니다. dnsPolicy가 None일때는 이 값을 필수로 1개이상 넣어줘야 합니다. 최대 3개까지 입력할 수 있습니다.&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;searches : DNS를 검색할때 사용하는 기본 도메인 이름입니다. 여기에 svc.cluster.local라고 명시해 두면 a.b.svc.cluster.local이라는 도메인을 사용할때 a.b까지만 입력해도 svc.cluster.local 를 포함해서 검색을 해 줍니다. 최대 6개까지 사용할 수 있습니다.&amp;nbsp;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;options: name과 value 를 이용해서 원하는 값을 설정할 수 있습니다. name은 필수로 있어야 하고 value는 없어도 되는 값입니다.&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div&gt;dnsConfig에 설정된 값은 포드의 /etc/resolv.conf에 추가됩니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;다음 pod 설정을 dns-test.yaml로 저장한 다음에 적용하고 포드내부의 resolv.conf파일 내용을 확인하면 설정이 어떻게 적용되는지 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;기본설정외에 dnsConfig 로 추가할 설정이 들어가 있는걸 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;dns-test.yaml&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 496px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 496px; padding: 8px;&quot;&gt;
+&lt;div&gt;apiVersion: v1&lt;/div&gt;
+&lt;div&gt;kind: Pod&lt;/div&gt;
+&lt;div&gt;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;namespace: default&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;name: dns-test&lt;/div&gt;
+&lt;div&gt;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;containers:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: dns-test&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;image: arisu1000/simple-container-app:latest&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;dnsPolicy: ClusterFirst&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;dnsConfig:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;nameservers:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- 8.8.8.8&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;searches:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- default.svc.cluster.local&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- &lt;a href=&quot;http://example.com&quot;&gt;example.com&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;options:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: name01&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;value: value01&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: name02&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;
+&lt;br /&gt;&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 561px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 561px; padding: 8px;&quot;&gt;
+&lt;div&gt;$ kubectl apply -f addon/dnsconfig-pod.yaml&lt;/div&gt;
+&lt;div&gt;pod &quot;dns-test&quot; created&lt;/div&gt;
+&lt;div&gt;$ kubectl exec dns-test cat /etc/resolv.conf&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;nameserver 10.96.0.10&lt;/div&gt;
+&lt;div&gt;nameserver 8.8.8.8&lt;/div&gt;
+&lt;div&gt;search default.svc.cluster.local svc.cluster.local cluster.local &lt;a href=&quot;http://example.com&quot;&gt;example.com&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;options ndots:5 name01:value01 name02&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;참조&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/&quot;&gt;https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/&quot;&gt;https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/&quot;&gt;https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://arisu1000.tistory.com/27859&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Kubernetes</category>
+<category>container</category>
+<category>docker</category>
+<category>k8s</category>
+<category>kubernetes</category>
+<category>컨테이너</category>
+<category>쿠버네티스</category>
+<author>arisu1000</author>
+<guid>https://arisu1000.tistory.com/27859</guid>
+<comments>https://arisu1000.tistory.com/27859#entry27859comment</comments>
+<pubDate>Mon, 17 Sep 2018 09:00:00 +0900</pubDate>
+</item>
+<item>
+<title>쿠버네티스 오토스케일링(kubernetes autoscaling)</title>
+<link>https://arisu1000.tistory.com/27858</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div&gt;클라우드를 사용하면서 유용한 기능으로 언급하는 것중에 가장 많이이야기하는게 오토스케일링이 아닐까 싶습니다. 컨테이너 오케스트레이션 쪽에서는 컨테이너만 잘 준비되어 있으면 오토스케일링이 더욱 쉬워지게 되었습니다. 쿠버네티스에서도 HPA(Horizontal Pod Autoscaler)라는 기본 오토스케일링 기능이 내장되어 있습니다. HPA는 CPU 사용률 기반으로 디플로이먼트로 실행된 포드의 개수를 개수를 늘리거나 줄이는 역할을 해줍니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;b&gt;HPA 설정하기&lt;/b&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;div&gt;오토스케일링 설정을 해보도록 하겠습니다. 다음 파일을 autoscaling.yaml로 저장한 다음에 kubectl apply -f autosclinging.yaml로 적용시키면 됩니다.&lt;/div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 458px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 458px; padding: 8px;&quot;&gt;
+&lt;div&gt;apiVersion: autoscaling/v1&lt;/div&gt;
+&lt;div&gt;kind: HorizontalPodAutoscaler&lt;/div&gt;
+&lt;div&gt;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;name: kubernetes-simple-app-hpa&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;namespace: default&lt;/div&gt;
+&lt;div&gt;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;maxReplicas: 10&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;minReplicas: 1&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;scaleTargetRef:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;apiVersion: extensions/v1beta1&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;kind: Deployment&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;name: kubernetes-simple-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;targetCPUUtilizationPercentage: 30&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;kind에 보면 HorizontalPodAutoscaler이 있어서 이 설정이 HPA에 대한 설정인걸 확인할 수 있습니다. metadata부분에는 이 HPA의 이름을&amp;nbsp;kubernetes-simple-app-hpa로 적용했고 네임스페이스는 default인걸 알 수 있습니다. 실제 HPA 관련 옵션 설정은 spec영역에 있습니다.&amp;nbsp;maxReplicas은 오토스케일링이 적용되서 포드 개수를 증가시킬때 최대 몇개까지 증가시킬 것인지에 대한 옵션입니다. 반대로&amp;nbsp;minReplicas은 포드 개수가 줄어들때 최소한 여기 지정된 개수 만큼은 포드가 실행되고 있게 지정한 값입니다. 실제 어떤 대상을 오토스케일링 할 것인지는&amp;nbsp;scaleTargetRef옵션에 있습니다. kubernetes-simple-app이라는 디플로이먼트가 대상입니다. 그리고&amp;nbsp;targetCPUUtilizationPercentage은 CPU 사용률이 30%가 됐을때 오토스케일링을 적용하라는 내용입니다. 이런 내용들을 이렇게 yaml파일이 아니라 다음처럼 kubectl로 한번에 적용할 수도 있습니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 719px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 719px; padding: 8px;&quot;&gt;&lt;div&gt;kubectl autoscale deployment kubernetes-simple-app --cpu-percent=30 --min=1 --max=10&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;hpa를 생성한 다음 kubectl get hpa 명령으로 hpa상태를 확인할 수 있습니다. 혹시 TARGETS 부분에 cpu 사용률이 &amp;lt;unknown&amp;gt;으로 나온다면 metrics-server가 제대로 실행중인지 kubectl top pods 명령으로 포드 cpu 사용률 모니터링이 정상적으로 되는지 확인해 줘야 합니다. kubectl top이 정상적으로 출력이 되는데도 hpa 상태에서 cpu사용률을 확인하지 못하고 있다면 디플로이먼트의 컨테이너쪽 옵션에 cpu request옵션이 제대로 걸려 있는지 확인해 주면 됩니다. cpu request옵션이 없으면 hpa가 cpu사용량에 필요한 계산을 할 수 없어서 상태가 &amp;lt;unknown&amp;gt;으로 나오기도 합니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 753px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 753px; padding: 8px;&quot;&gt;
+&lt;div&gt;$&amp;nbsp; kubectl get hpa&lt;/div&gt;
+&lt;div&gt;NAME&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;REFERENCE&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;TARGETS&amp;nbsp;&amp;nbsp;&amp;nbsp;MINPODS&amp;nbsp;&amp;nbsp;&amp;nbsp;MAXPODS&amp;nbsp;&amp;nbsp;&amp;nbsp;REPLICAS&amp;nbsp;&amp;nbsp;&amp;nbsp;AGE&lt;/div&gt;
+&lt;div&gt;kubernetes-simple-app-hpa&amp;nbsp;&amp;nbsp;&amp;nbsp;Deployment/kubernetes-simple-app&amp;nbsp;&amp;nbsp;&amp;nbsp;0%/30%&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;10&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;25s&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;b&gt;오토스케일링 테스트하기&lt;/b&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;div&gt;오토스케일링이 되는지 확인하려면 앱에 부하를 걸어야 하는데, 아래처럼 간단한 스크립트를 실행해서 계속해서 요청을 보내도록 하면 됩니다.&amp;nbsp;&lt;/div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 606px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 606px; padding: 8px;&quot;&gt;&lt;div&gt;while true;do curl localhost:30080;done&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;요청을 시작하고 cpu사용률이 갱신될때까지 조금 기다려 줘야 합니다. 아래처림 watch를 통해서 포드 개수와 hpa상태를 모니터링해보면 TARGETS의 사용률이 올라가고 포드가 2개 늘어난걸 확인할 수 있습니다. 포드가 늘어나고나면 들어오는 요청을 늘어난 포드에서 분산해서 받기 때문에 TARGETS의 사용률이 다시 낮아지는걸 확인할 수 있습니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:900px;width: 900px; height: 244px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9940D0425B9519DB2A&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_1.png&quot; height=&quot;244&quot; original=&quot;yes&quot; style=&quot;width: 900px; height: 244px;&quot; width=&quot;900&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;이 상태에서 부하를 발생시키던 스크립트를 중지하면 TARGETS쪽의 사용률이 줄어들고 포드개수가 MINPODS개수인 1개만 남기고 줄어드는걸 확인할 수 있습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;b&gt;HPA 구조&lt;/b&gt;&lt;/div&gt;
+&lt;div&gt;HPA는 컨트롤러 매니저 안에서 주기적으로 루프를 돌면서 설정된 HPA의 상태를 체크하도록 되어 있습니다. 매 루프마다 지정된 자원의 사용량을 api를 통해서 확인하고 설정된 HPA조건에 맞을때 오토스케일링을 수행하도록 되어 있습니다. 기본적인 루프도는 시간은 --horizontal-pod-autoscaler-sync-period 옵션으로 지정이 가능하고 기본값은 30초입니다. 다음 그림이 전체 구조를 보여주고 있습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:900px;width: 900px; height: 804px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99CF40495B9519DC34&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_2.png&quot; height=&quot;804&quot; original=&quot;yes&quot; style=&quot;width: 900px; height: 804px;&quot; width=&quot;900&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;오토스케일링이 어떻게 이루어지는지 대략적인 계산은 다음처럼 이뤄집니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 585px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 585px; padding: 8px;&quot;&gt;&lt;div&gt;TargetNumOfPods = ceil(sum(CurrentPodsCPUUtilization) / Target)&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;오토스케일링이 이뤄질때의 기준이 되는 자원 사용량은 현재 시점의 데이터만을 사용합니다. 그러다 보니 오토스케일링이 이뤄지고 나서 실제로 포드가 늘어나고 있긴 하지만 아직 포드가 실행되고 있는 도중에 다시 오토스케일링을 통해서 포드를 늘리라는 요청이 발생할 수도 있습니다. 그래서 일단 한번 오토스케일링이 일어나면 일정시간동안은 추가로 오토스케일링이 일어나지 않게 쿨다운 시간을 둘 수 있습니다. 포드가 늘어날때의 기본 쿨다운 시간은 3분이고&amp;nbsp;--horizontal-pod-autoscaler-downscale-delay 옵션을 통해 조정할 수 있습니다. 포드가 줄어들때의 기본 쿨다운 시간은 5분이고&amp;nbsp;--horizontal-pod-autoscaler-downscale-delay 옵션을 통해 조정할 수 있ㅅ브니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;b&gt;참고&lt;/b&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-metrics-apis&quot;&gt;https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/&quot;&gt;https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/autoscaling/horizontal-pod-autoscaler.md&quot;&gt;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/autoscaling/horizontal-pod-autoscaler.md&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/kubernetes/heapster/issues/1859&quot;&gt;https://github.com/kubernetes/heapster/issues/1859&lt;/a&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://arisu1000.tistory.com/27858&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Kubernetes</category>
+<category>container</category>
+<category>docker</category>
+<category>k8s</category>
+<category>kubernetes</category>
+<category>컨테이너</category>
+<category>쿠버네티스</category>
+<author>arisu1000</author>
+<guid>https://arisu1000.tistory.com/27858</guid>
+<comments>https://arisu1000.tistory.com/27858#entry27858comment</comments>
+<pubDate>Wed, 12 Sep 2018 09:00:00 +0900</pubDate>
+</item>
+<item>
+<title>쿠버네티스 모니터링 : 프로메테우스(kubernetes monitoring : phrometheus)</title>
+<link>https://arisu1000.tistory.com/27857</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div&gt;모니터링 솔루션으로 최근 가장 많이 주목받고 있는건 프로메테우스(phrometheus)입니다. 프로메테우스는 사우드클라우드(SoundCloud)에서 최초 개발했고 현재는 CNCF에 속한 프로젝트입니다. CNCF에 속한 여러가지 프로젝트들 중에서 쿠버네티스가 첫번째 졸업생이고 프로메테우스가 두번째 졸업생일 정도로 많은 주목을 받고 있는 프로젝트 입니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;프로메테우스 주요 기능&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;프로메테우스의 주요 기능으로는 시계열(time series) 데이터를 저장할 수 있는 다차원(multi-dimensional) 데이터 모델과 이 데이터 모델을 효과적으로 활용할 수 있는 PromQL이라는 쿼리 언어가 있습니다. 기본적인 데이터 수집은 pull 구조로 되어 있어서 프로메테우스 서버가 수집하려는 대상에게서 데이터를 가져오도록 되어 있습니다. 수집대상을 정적으로 설정해둘 수도 있고 서비스디스커버리(service discovery)를 통해서 동적으로 설정하는 것도 가능합니다. 기본적인 데이터 수집은 pull이지만 외부에서 직접 push한 데이터를 pushgatewat를 통해서 받아서 저장할 수도 있습니다. 데이터 저장은 단순하게 디스크에 저장하는 것도 되지만 외부 스토리지에 저장하는 것 역시 가능합니다. 수집한 데이터의 시각화는 내장된 웹 UI를 이용할 수도 있고 그라파나와 연계해서 보는 것도 가능합니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;프로메테우스 구성요소&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;프로메테우스는 여러가지 컴포넌트들로 이뤄져 있습니다. 먼저 시계열데이터를 수집해와서 저장하는 메인 컴포넌트인 프로메테우스 서버가 있습니다. 애플리케이션을 개발할때 프로메테우스에서 데이터를 수집할 수 있게 해주도록 하기 위한 클라이언트 라이브러리, 클라이언트에서 직접 프로메테우스쪽으로 데이터를 보낼때 받아줄 수 있는 pushgateway가 있습니다. 그리고 프로메테우스 클라이언트 라이브러리를 내장해서 만들어지지 않은 애플리케이션들에서 데이터를 수집할 수 있게 해주는 익스포터(exporter)가 있습니다. 100개가 넘는 다양한 익스포터들이 있어서 거의 대부분의 애플리케이션에서 데이터를 수집할 수 있는게 프로메테우스의 장점입니다. 마지막으로 알람을 보낼때 알람의 중복처리, 그룹핑등과 알람을 어디로 보낼지를 관리하는 알럿매니저(AlertManager)가 있습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;프로메테우스의 전체적인 아키텍처는 다음 그림과 같습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:1170px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9995B7495B8FC81C0E&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_1.png&quot; height=&quot;702&quot; width=&quot;1170&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;프로메테우스 사용해 보기&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;프로메테우스를 실행하기 위해서는 먼저 쿠버네티스용 설정 파일이 있어야 합니다. 프로메테우스 GitHub 저장소의 documentation/examples 를 보면 prometheus-kubernetes.yml &amp;nbsp;파일이 있는걸 확인할 수 있습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml&quot;&gt;https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;이 파일을 다운로드한 다음에 다음 명령을 이용해서 configmap을 만들어 줍니다.&lt;/div&gt;&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 712px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 712px; padding: 8px;&quot;&gt;&lt;div&gt;kubectl create configmap prometheus-kubernetes --from-file=./prometheus-kubernetes-config.yaml&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;그런 다음 프로메테우스용 디플로이먼트와 서비스를 다음 파일을 이용해서 생성합니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 568px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 568px; padding: 8px;&quot;&gt;
+&lt;div&gt;apiVersion: apps/v1&lt;/div&gt;
+&lt;div&gt;kind: Deployment&lt;/div&gt;
+&lt;div&gt;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;name: prometheus-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;labels:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;app: prometheus-app&lt;/div&gt;
+&lt;div&gt;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;replicas: 1&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;selector:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;matchLabels:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;app: prometheus-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;template:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;labels:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;app: prometheus-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;containers:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: prometheus-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;image: prom/prometheus:v2.3.2&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;args:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- &quot;--config.file=/etc/prometheus/prometheus-kubernetes-config.yaml&quot;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;ports:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- containerPort: 9090&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;volumeMounts:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: config-volume&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;mountPath: /etc/prometheus&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: storage-volume&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;mountPath: /prometheus/&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;volumes:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: config-volume&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;configMap:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;name: prometheus-kubernetes&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: storage-volume&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;emptyDir: {}&lt;/div&gt;
+&lt;div&gt;---&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;apiVersion: v1&lt;/div&gt;
+&lt;div&gt;kind: Service&lt;/div&gt;
+&lt;div&gt;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;labels:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;app: prometheus-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;name: prometheus-app-svc&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;namespace: default&lt;/div&gt;
+&lt;div&gt;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;ports:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;- nodePort: 30990&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;port: 9090&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;protocol: TCP&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;targetPort: 9090&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;selector:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;app: prometheus-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;type: NodePort&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;그런 다음 브라우저의 localhost:30990으로 접속합니다. 그러면 아래처럼 프로메테우스 UI를 확인할 수 있습니다. 여기서 상단의 graph메뉴를 선택한 다음 실행하려는 메트릭에&amp;nbsp;kubelet_running_pod_count를 선택하고 “Execute” 버튼을 눌러서 현재 실행중인 포드 개수를 확인해 보겠습니다. 이 상태에서 포드 개수를 조정해보면 다음 그림처럼 그래프가 그에 따라 변화하는걸 볼 수 있습니다. 수집가능한 항목을 보면 포드 개수뿐만이 아니라 다양한 항목이 많이 있는걸 확인할 수 있습니다.&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;width: 800px; height: 457px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9913BE3F5B8FC81D1A&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_2.png&quot; height=&quot;457&quot; original=&quot;yes&quot; style=&quot;width: 800px; height: 457px;&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;b&gt;프로메테우스와 그라파나 연동&lt;/b&gt;&lt;/div&gt;
+&lt;div&gt;프로메테우스 기본 UI외에 대시보드용으로 많이 사용하는 그라파나를 연동하는 것도 가능합니다. 다음 내용으로 grafana.yaml을 만들어서 그라파나를 실행합니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 562px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 562px; padding: 8px;&quot;&gt;
+&lt;div&gt;apiVersion: extensions/v1beta1&lt;/div&gt;
+&lt;div&gt;kind: Deployment&lt;/div&gt;
+&lt;div&gt;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;name: grafana-app&lt;/div&gt;
+&lt;div&gt;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;replicas: 1&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;template:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;labels:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;k8s-app: grafana&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;containers:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: grafana&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;image: grafana/grafana:5.2.3&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;ports:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- containerPort: 3000&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;protocol: TCP&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;env:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: GF_SERVER_HTTP_PORT&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;value: &quot;3000&quot;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: GF_AUTH_BASIC_ENABLED&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;value: &quot;false&quot;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: GF_AUTH_ANONYMOUS_ENABLED&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;value: &quot;true&quot;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: GF_AUTH_ANONYMOUS_ORG_ROLE&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;value: Admin&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: GF_SERVER_ROOT_URL&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;value: /&lt;/div&gt;
+&lt;div&gt;---&lt;/div&gt;
+&lt;div&gt;apiVersion: v1&lt;/div&gt;
+&lt;div&gt;kind: Service&lt;/div&gt;
+&lt;div&gt;metadata:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;labels:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;kubernetes.io/name: grafana-app&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;name: grafana-app&lt;/div&gt;
+&lt;div&gt;spec:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;ports:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;- port: 3000&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;targetPort: 3000&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;nodePort: 30300&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;selector:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;k8s-app: grafana&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;type: NodePort&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;그런 다음 브라우저에서&amp;nbsp;&lt;a href=&quot;http://localhost:30300/&quot;&gt;http://localhost:30300/&lt;/a&gt;&amp;nbsp;으로 접속하면 그라파나 화면을 확인할 수 있습니다. 여기에서 다음 그림처럼 &quot;Add data source&quot; 를 클릭해서 데이터 소스에 프로메테우스를 추가해 줍니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;width: 800px; height: 345px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/991985445B8FC81E08&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_3.png&quot; height=&quot;345&quot; original=&quot;yes&quot; style=&quot;width: 800px; height: 345px;&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;프로메테우스 접속 URL은 앞에서 실행했떤 프로메테우스의 주소인&amp;nbsp;&lt;a href=&quot;http://prometheus-app-svc.default.svc.cluster.local:9090&quot;&gt;http://prometheus-app-svc.default.svc.cluster.local:9090&lt;/a&gt;&amp;nbsp;를 입력해 주면 됩니다.&lt;/div&gt;
+&lt;div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;width: 800px; height: 524px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99F727505B8FC81F12&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_4.png&quot; height=&quot;524&quot; original=&quot;yes&quot; style=&quot;width: 800px; height: 524px;&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;그런 다음 이 추가한 데이터 소스를 이용해서 다음처럼 다양한 대시보드를 만들 수 있습니다.&lt;/div&gt;
+&lt;div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;width: 800px; height: 375px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99B1D34C5B8FC81F1D&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_5.png&quot; height=&quot;375&quot; original=&quot;yes&quot; style=&quot;width: 800px; height: 375px;&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:800px;width: 800px; height: 651px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/999D3D3B5B8FC82031&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_6.png&quot; height=&quot;651&quot; original=&quot;yes&quot; style=&quot;width: 800px; height: 651px;&quot; width=&quot;800&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;그라파나의 장점중 하나는 다른 사람들이 기존에 만들어놓은 대시보드를 가져다가 사용할 수 있다는 것입니다. 프로메테우스가 워낙 많은 메트릭 데이터들을 수집해서 보여주는데 이 중에서 어떤 것들을 모니터링용으로 사용할지 선별하는 것도 어려운 일입니다. 그런데, 대시보드를 모아놓은 사이트인&amp;nbsp;&lt;a href=&quot;https://grafana.com/dashboards&quot;&gt;https://grafana.com/dashboards&lt;/a&gt;&amp;nbsp;에 들어가서 kubernetes로 검색해 보면 쿠버네티스용으로 사용자들이 미리 만들어 놓은 대시보드를 여러개 볼 수 있습니다. 이중에서 마음에 드는 것으로 가져와서 import해서 사용하면 일일히 대시보드를 꾸미는 노력 없이도 쉽게 대시보드를 구성해서 사용할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;참고&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://prometheus.io/docs/introduction/overview/&quot;&gt;https://prometheus.io/docs/introduction/overview/&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://itnext.io/kubernetes-monitoring-with-prometheus-in-15-minutes-8e54d1de2e13&quot;&gt;https://itnext.io/kubernetes-monitoring-with-prometheus-in-15-minutes-8e54d1de2e13&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/prometheus/prometheus/tree/master/docs&quot;&gt;https://github.com/prometheus/prometheus/tree/master/docs&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://hub.docker.com/r/prom/prometheus/&quot;&gt;https://hub.docker.com/r/prom/prometheus/&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://arisu1000.tistory.com/27857&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Kubernetes</category>
+<category>container</category>
+<category>docker</category>
+<category>k8s</category>
+<category>kubernetes</category>
+<category>컨테이너</category>
+<category>쿠버네티스</category>
+<author>arisu1000</author>
+<guid>https://arisu1000.tistory.com/27857</guid>
+<comments>https://arisu1000.tistory.com/27857#entry27857comment</comments>
+<pubDate>Mon, 10 Sep 2018 09:00:00 +0900</pubDate>
+</item>
+<item>
+<title>쿠버네티스 모니터링 : metrics-server (kubernetes monitoring : metrics-server)</title>
+<link>https://arisu1000.tistory.com/27856</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;메트릭서버(metrics-server) 개념&lt;/b&gt;&lt;/div&gt;
+&lt;div&gt;쿠버네티스의 메트릭 수집 모니터링 아키텍처에서 코어메트릭 파이프라인 쪽을 가볍게 하기 위해서&amp;nbsp;힙스터를 deprecated시키고 그 다음으로 쿠버네티스에서 모니터링 표준으로 도입하려고 하는건 메트릭서버(metrics-server)입니다.&lt;/div&gt;
+&lt;div&gt;메트릭서버는 힙스터를 간소화한 버전이라고 생각하면 됩니다. kubelet에서 메트릭데이터를 수집해서 메모리에 저장하고 있습니다. 또한 apiserver를 통해 포드나 노드의 메트릭을 조회하는데 사용되는 메트릭 API(Metrics API)를 제공해 줍니다. 쿠버네티스에서 필요한 핵심 데이터들은 대부분 etcd에 저장되지만 메트릭 데이터들을 etcd에 저장하면 etcd의 부하가 너무 커지기 때문에 그렇게 하지 않고 메모리에 저장하도록 되어 있습니다.&amp;nbsp;데이터를 메모리에 저장하기 때문에 메트릭서버용으로 실행한 포드가 재시작하거나 하면 수집됐던 데이터가 사라집니다. 그래서 데이터 보관주기를 길게 가져가려면 별도의 외부 스토리지를 사용하도록 설정해야 합니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;b&gt;메트릭서버 실행하기&lt;/b&gt;&lt;/div&gt;
+&lt;div&gt;메트릭서버를 실행하는건 다음 GitHub 저장소에서&amp;nbsp;&lt;a href=&quot;https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy/1.8%2B&quot;&gt;https://github.com/kubernetes-incubator/metrics-server&lt;/a&gt;&amp;nbsp;deploy 디렉토리에 있는 yaml파일들을 사용하면됩니다. 도커용 쿠버네티스에서 메트릭서버를 사용하기 위해서는 수정해줘야할 부분이 있습니다. metrics-server-deployment.yaml파일의 컨테이너 설정에 &amp;nbsp;args 옵션 --kubelet-insecure-tls 을 추가해 주어야 합니다. 쿠버네티스 클러스터에서 사용하는 인증서가 공인증서가 아니라 커스텀 인증서이기 때문에 커스텀 인증서때문에 보안에러가 나지 않도록 무시하는 옵션입니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 589px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 589px; padding: 8px;&quot;&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: metrics-server&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;image: k8s.gcr.io/metrics-server-amd64:v0.3.0&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;args:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- --kubelet-insecure-tls&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;imagePullPolicy: Always&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;volumeMounts:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;- name: tmp-dir&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;mountPath: /tmp&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;설정을 변경하고 kubectl apply -f . 으로 yaml &amp;nbsp;파일들을 클러스터에 배포합니다. 최초로 메트릭이 수집되는데 시간이 좀 걸립니다. 잠시 기다렸다가 kubectl top 으로 CPU/메모리 사용량이 나오는 걸 확인할 수 있습니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 684px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 684px; padding: 8px;&quot;&gt;
+&lt;div&gt;$ kubectl top node&lt;/div&gt;
+&lt;div&gt;NAME&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;CPU(cores)&amp;nbsp;&amp;nbsp;&amp;nbsp;CPU%&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;MEMORY(bytes)&amp;nbsp;&amp;nbsp;&amp;nbsp;MEMORY%&lt;/div&gt;
+&lt;div&gt;docker-for-desktop&amp;nbsp;&amp;nbsp;&amp;nbsp;407m&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;20%&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1727Mi&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;90%&lt;/div&gt;
+&lt;div&gt;$ kubectl top pod&lt;/div&gt;
+&lt;div&gt;NAME&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;CPU(cores)&amp;nbsp;&amp;nbsp;&amp;nbsp;MEMORY(bytes)&lt;/div&gt;
+&lt;div&gt;elasticsearch-65d5c55b95-qvwsh&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;14m&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;718Mi&lt;/div&gt;
+&lt;div&gt;kibana-5b4c447657-8wq6w&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;4m&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;165Mi&lt;/div&gt;
+&lt;div&gt;kubernetes-simple-app-57585656fc-rvqdm&amp;nbsp;&amp;nbsp;&amp;nbsp;0m&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1Mi&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;curl을 통해서 직접 메트릭서버의 api로 요청을 해볼수도 있습니다. 메트릭서버로 요청을 할 수 있게 다음처럼 포트 포워딩 설정을 합니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 569px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 569px; padding: 8px;&quot;&gt;&lt;div&gt;kubectl port-forward svc/metrics-server -n kube-system 30443:443&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;쿠버네티스 API를 이용하도록 되어 있기 때문에 인증정보가 필요합니다. 다음처럼 default 계정의 TOKEN 정보를 얻어서 curl 요청을 하면 사용가능한 API목록을 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 711px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 711px; padding: 8px;&quot;&gt;
+&lt;div&gt;$ TOKEN=$(kubectl describe secret $(kubectl get secrets | grep default | cut -f1 -d ' ') | grep -E '^token' | cut -f2 -d':' | tr -d ' ‘)&lt;/div&gt;
+&lt;div&gt;$ curl -k -H &quot;Authorization: Bearer $TOKEN&quot; &lt;a href=&quot;https://localhost:30443/&quot;&gt;https://localhost:30443/&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;{&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&quot;paths&quot;: [&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/apis&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/apis/metrics.k8s.io&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/apis/metrics.k8s.io/v1beta1&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/healthz&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/healthz/healthz&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/healthz/ping&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/healthz/poststarthook/generic-apiserver-start-informers&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/metrics&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/openapi/v2&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/swagger-2.0.0.json&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/swagger-2.0.0.pb-v1&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/swagger-2.0.0.pb-v1.gz&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/swagger.json&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/swaggerapi&quot;,&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot;/version&quot;&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;]&lt;/div&gt;
+&lt;div&gt;}%&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;메트릭 정보를 확인하기 위해서 /metrics 를 호출하면 메트릭 관련정보가 나오는걸 확인할 수 있습니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 672px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 672px; padding: 8px;&quot;&gt;
+&lt;div&gt;curl -k -H &quot;Authorization: Bearer $TOKEN&quot; &lt;a href=&quot;https://localhost:30443/metrics&quot;&gt;https://localhost:30443/metrics&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;……&lt;/div&gt;
+&lt;div&gt;# TYPE metrics_server_scraper_last_time_seconds gauge&lt;/div&gt;
+&lt;div&gt;metrics_server_scraper_last_time_seconds{source=&quot;kubelet_summary:docker-for-desktop&quot;} 1.535815717e+09&lt;/div&gt;
+&lt;div&gt;# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.&lt;/div&gt;
+&lt;div&gt;# TYPE process_cpu_seconds_total counter&lt;/div&gt;
+&lt;div&gt;process_cpu_seconds_total 8.92&lt;/div&gt;
+&lt;div&gt;# HELP process_max_fds Maximum number of open file descriptors.&lt;/div&gt;
+&lt;div&gt;# TYPE process_max_fds gauge&lt;/div&gt;
+&lt;div&gt;process_max_fds 1.048576e+06&lt;/div&gt;
+&lt;div&gt;# HELP process_open_fds Number of open file descriptors.&lt;/div&gt;
+&lt;div&gt;# TYPE process_open_fds gauge&lt;/div&gt;
+&lt;div&gt;process_open_fds 11&lt;/div&gt;
+&lt;div&gt;# HELP process_resident_memory_bytes Resident memory size in bytes.&lt;/div&gt;
+&lt;div&gt;# TYPE process_resident_memory_bytes gauge&lt;/div&gt;
+&lt;div&gt;process_resident_memory_bytes 2.2048768e+07&lt;/div&gt;
+&lt;div&gt;# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.&lt;/div&gt;
+&lt;div&gt;# TYPE process_start_time_seconds gauge&lt;/div&gt;
+&lt;div&gt;process_start_time_seconds 1.53580689462e+09&lt;/div&gt;
+&lt;div&gt;# HELP process_virtual_memory_bytes Virtual memory size in bytes.&lt;/div&gt;
+&lt;div&gt;# TYPE process_virtual_memory_bytes gauge&lt;/div&gt;
+&lt;div&gt;process_virtual_memory_bytes 4.9332224e+07&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;참고&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/kubernetes-incubator/metrics-server&quot;&gt;https://github.com/kubernetes-incubator/metrics-server&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/resource-metrics-api.md&quot;&gt;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/resource-metrics-api.md&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/metrics-server.md&quot;&gt;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/metrics-server.md&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://blog.freshtracks.io/what-is-the-the-new-kubernetes-metrics-server-849c16aa01f4&quot;&gt;https://blog.freshtracks.io/what-is-the-the-new-kubernetes-metrics-server-849c16aa01f4&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/monitoring_architecture.md&quot;&gt;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/monitoring_architecture.md&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://arisu1000.tistory.com/27856&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Kubernetes</category>
+<category>container</category>
+<category>docker</category>
+<category>k8s</category>
+<category>kubernetes</category>
+<category>컨테이너</category>
+<category>쿠버네티스</category>
+<author>arisu1000</author>
+<guid>https://arisu1000.tistory.com/27856</guid>
+<comments>https://arisu1000.tistory.com/27856#entry27856comment</comments>
+<pubDate>Fri, 07 Sep 2018 09:00:00 +0900</pubDate>
+</item>
+<item>
+<title>쿠버네티스 모니터링 아키텍처(kubernetes monitoring architecture)</title>
+<link>https://arisu1000.tistory.com/27855</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold; font-size: 18px;&quot;&gt;메트릭 분류&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;쿠버네티스에서 수집하는 메트릭은 크게 2개의 메트릭으로 분류됩니다. 시스템 메트릭(system metrics)과 서비스 메트릭(service metrics)으로 나눠집니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;시스템 메트릭(system metrics)&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;시스템 메트릭은 노드나 컨테이너의 CPU, 메모리 사용량 같은 일반적인 시스템 관련 메트릭들입니다. 시스템 메트릭은 다시 코어 메트릭(core metrics)과 비코어메트릭(non-core metrics)으로 나뉩니다. 코어 메트릭은 쿠버네티스 내부 컴포넌트들이 사용하는 메트릭들입니다. 현재 클러스터내의 가용자원이 얼마나 되는지 파악하는데도 사용하고 내장된 오토스케일링등에서도 사용합니다. 대시보드에서도 사용하고 “kubectl top” 같은 명령어에서 사용하는 메트릭 데이터도 여기의 값입니다. CPU/메모리 사용량, 포드/컨테이너의 디스크 사용량등이 코어 메트릭입니다. 비코어메트릭은 쿠버네티스가 직접 사용하지 않는 다른 시스템 메트릭들을 의미합니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;서비스 메트릭(service metrics)&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;서비스 메트릭은 애플리케이션을 모니터링 하는데 필요한 메트릭들입니다. 서비스 메트릭은 다시 2가지로 나눠서 생각할 수 있습니다. 쿠버네티스 인프라용 컨테이너들에서 나오는 메트릭들과 사용자의 애플리케이션에서 나오는 메트릭입니다. 쿠버네티스 인프라컨테이너들에서 나오는 메트릭은 클러스터를 관리할 때 참고해서 사용할 수 있습니다. 사용자 애플리케이션의 메트릭들은 웹서버의 응답속도(response time)에 대한 값이라던지 시간당 HTTP 500에러가 몇건이나 나타나는지등의 서비스 관련된 정보를 파악할 수 있는 메트릭 들입니다. 서비스 메트릭은 커스텀 메트릭으로 사용되서 HPA에서 사용할 수 있습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold; font-size: 18px;&quot;&gt;파이프라인&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;쿠버네티스 모니터링의 구조는 크게 2개의 파이프라인으로 구분되어 있습니다. 코어 메트릭 파이프라인(core metric pipeline)과 모니터링 파이프라인(monitoring pipeline)입니다.&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;span style=&quot;font-weight: bold;&quot;&gt;코어 메트릭 파이프라인&lt;/span&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;(core metric pipeline)&lt;/span&gt;
+&lt;/div&gt;
+&lt;div&gt;코어 메트릭 파이프라인은 쿠버네티스에서 관련 구성요소들을 직접 관리하는 파이프 라인이고 말 그대로 핵심 요소들에 대한 모니터링을 담당합니다. kubelet, metrics-server, metric API 등으로 구성되어 있습니다. 여기서 제공하는 메트릭들은 시스템 컴포넌트들에서 사용합니다. 주로 스케줄러나 &amp;nbsp;HPA(Horizontal Pod Autoscaling, 수평적 포드 오토스케일링)등의 기초 자료로 활용됩니다. 별도의 외부 서드파티 모니터링 시스템과 연계되지 않고 독립적으로 운영됩니다.&lt;/div&gt;
+&lt;div&gt;코어 메트릭 파이프파인은 코어 시스템 메트릭들을 수집합니다. kubelet에 내장된 cAdvisor를 통해서 노드/포드/컨테이너의 사용량 정보를 수집합니다. 메트릭서버(metrics-server)가 이 정보들을 kubelet에서 가져와서 메모리에 저장하고 있습니다. 메모리에 저장하기 때문에 저장 용량의 한계가 있기 때문이 짧은 기간의 데이터만 보관하고 있게 됩니다. 그리고 이렇게 저장하고 메트릭 정보들을 마스터 메트릭 API를 통해서 다른 시스템 컴포넌트들이 조회할 수 있게 됩니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;span style=&quot;font-weight: bold;&quot;&gt;모니터링 파이프라인&lt;/span&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;(monitoring pipeline)&lt;/span&gt;
+&lt;/div&gt;
+&lt;div&gt;모니터링 파이프라인은 기본 메트릭 뿐만아니라 다양한 여러가지 메트릭을 수집합니다. 여기서 수집한 메트릭들은 쿠버네티스 시스템이 사용하기보다는 클러스터의 사용자들이 필요한 모니터링을 하는데 사용합니다. 쿠버네티스는 모니터링파이프라인 쪽은 직접 관리하지 않습니다. 이런 부분까지 쿠버네티스에서 직접 개발/유지 하려면 부담이 크기 때문에 외부 모니터링 시스템을 연계해서 이용하도록 가이드 하고 있습니다.&lt;/div&gt;
+&lt;div&gt;모니터링 파이프라인에서는 시스템 메트릭과 서비스 메트릭 둘 다 수집할 수 있습니다. 코어 메트릭 파이프라인과는 분리되어 있기 때문에 원하는대로 모니터링 솔루션을 선택해서 사용하면 됩니다. 모니터링 파이프 라인으로 사용가능한 조합은 다음 처럼 여러가지가 있습니다.&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;div&gt;cAdvisor + Heapster + InfluxDB&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;cAdvisor + Prometheus&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;cAdvisor + collectd + Heapster&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;snapd + Heapster&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;snapd + SNAP cluster-level agent&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;div&gt;Sysdig&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;이중에서 현재 가장 많이 사용되고 있는 건 첫번째 &amp;nbsp;cAdvisor + Heapster + InfluxDB조합입니다. 하지만 힙스터가 deprecated 될 것이기 때문에 두번째의&amp;nbsp;cAdvisor + Prometheus 조합이 곧 많이 사용되지 않을까 싶습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;지금까지 살펴본 모니터링 아키텍처의 전체 구조는 다음 그림에 잘 나타나 있습니다. 이 중에서 파란색 부분이 모니터링 파이프라인입니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/monitoring_architecture.png?raw=true&quot;&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:960px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/994C42495B8A0DFF2A&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_1.png&quot; height=&quot;720&quot; width=&quot;960&quot;/&gt;&lt;/span&gt;&lt;/p&gt;&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://arisu1000.tistory.com/27855&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Kubernetes</category>
+<category>container</category>
+<category>docker</category>
+<category>k8s</category>
+<category>kubernetes</category>
+<category>컨테이너</category>
+<category>쿠버네티스</category>
+<author>arisu1000</author>
+<guid>https://arisu1000.tistory.com/27855</guid>
+<comments>https://arisu1000.tistory.com/27855#entry27855comment</comments>
+<pubDate>Mon, 03 Sep 2018 11:32:47 +0900</pubDate>
+</item>
+<item>
+<title>쿠버네티스 모니터링 : 힙스터(kubernetes monitoring : heapster)</title>
+<link>https://arisu1000.tistory.com/27854</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div&gt;클러스터에서 애플리케이션을 운영하다가 보면 현재 클러스터의 상태는 어떤지 앱의 상태는 어떤지 모니터링하는 것이 중요합니다. 기본적인 시스템 메트릭인 CPU, 메모리부터 시작해서 애플리케이션의 특수한 메트릭 정보까지 많은 것들을 모니터링해야 합니다. 쿠버네티스에서는 기본적으로 사용할 수 있는 모니터링 도구로 힙스터(heapster)를 제공해 왔었습니다. 하지만 힙스터는 쿠버네티스 1.11버전에서 deprecated되었고, 1.13버전에서 완전히 제거될 예정입니다. 그리고 앞으로는 메트릭서버(metrics-server)를 힙스터 대체로 사용하길 권장하고 있습니다. 그외에 추가적으로 더 세세한 모니터링이 필요하면 프로메테우스(Prometheus) 같은 전문 모니터링 도구를 이용할 것을 권장하고 있습니다.&lt;/div&gt;
+&lt;div&gt;힙스터가 지원 종료될 예정이지만 아직까지(2018년 8월)는 가장 편하고 많이 사용할 수 있는 쿠버네티스 모니터링 도구 이기 때문에 힙스터 사용 방법을 알아보도록 하겠습니다. 힙스터의 기본적인 구조는 아래 그림에 잘 나타나 있습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://2.bp.blogspot.com/-6Bu15356Zqk/V4mGINP8eOI/AAAAAAAAAmk/-RwvkJUt4rY2cmjqYFBmRo25FQQPRb27ACEw/s1600/monitoring-architecture.png&quot;&gt;&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:640px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99E7C54D5B86890302&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_1.png&quot; height=&quot;263&quot; width=&quot;640&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;힙스터 자체도 쿠버네티스 클러스터 상에서 포드로 실행이 됩니다. 그리고 apiserver와 통신해서 전체 클러스터의 노드와 포드 현황에 대한 목록을 가져온 다음에 거기서 모니터링에 필요한 데이터들을 수집합니다. 이때 힙스터는 각 노드의 kubelet에 접근해서 데이터를 가지고 오는데 kubelet는 컨테이너의 메트릭들을 수집하는 도구인 cadvisor를 내장하고 있습니다. 결국 cadvisor에서 수집한 개별 컨테이너들의 데이터를 kubelet을 통해서 힙스터가 수집한 다음에 별도의 스토리지 벡엔드에 저장하도록 하는 구조입니다. 이 때 많이사용하는 벡엔드 스토리지로는 influxDB가 있습니다. 그리고 influxDB에 저장된 데이터를 조회할때는 대시보드 도구인 grafana를 많이 사용합니다.&lt;/div&gt;
+&lt;div&gt;이 세트를 실행하는건 heapster 소스에 포함되어 있습니다.&amp;nbsp;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;다음처럼 heapster소스를 받아서 deploy 디렉토리로 들어가면 관련 파일들이 보입니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 428px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 428px; padding: 8px;&quot;&gt;
+&lt;div&gt;git clone &lt;a href=&quot;https://github.com/kubernetes/heapster.git&quot;&gt;https://github.com/kubernetes/heapster.git&lt;/a&gt;
+&lt;/div&gt;
+&lt;div&gt;heapster/deploy/&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;이중에서 kube.sh를 이용하면 힙스터를 실행할 수 있습니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;kube.sh start로 실행이 가능하고 kube.sh stop으로 멈출 수 있습니다.&lt;/div&gt;
+&lt;div&gt;kube.sh 파일 내용을 살펴보면 deploy 디렉토리 밑에 있는&amp;nbsp;kube-config/influxdb 디렉토리에 있는 yaml파일들을 실행한다는걸 알 수 있습니다. 이 yaml파일들을에 grafana에 쉽게 접근할 수 있게 하기위해서 kube-config/influxdb/grafana.yaml 파일을 조금 수정해 보겠습니다. 파일의 마지막에 있는 서비스 부분을 기본 ClusterIP를 사용하는 것에서 다음처럼 NodePort를 사용하도록 변경합니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;table style=&quot;border-collapse: collapse; min-width: 100%;&quot;&gt;
+&lt;colgroup&gt;&lt;col style=&quot;width: 314px;&quot;&gt;&lt;/colgroup&gt;
+&lt;tbody&gt;&lt;tr&gt;&lt;td style=&quot;border: 1px solid rgb(219, 219, 219); width: 314px; padding: 8px;&quot;&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;ports:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;- port: 80&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;targetPort: 3000&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;nodePort: 30081&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;selector:&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;k8s-app: grafana&lt;/div&gt;
+&lt;div&gt;&amp;nbsp;&amp;nbsp;type: NodePort&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;div&gt;그런다음 kube.sh start로 heapster, influxdb, grafana를 실행합니다. 실행 후 데이터가 처음으로 수집되기 까지는 몇분정도 걸릴 수 있습니다. 잠시 후 브라우저에서&amp;nbsp;&lt;a href=&quot;http://localhost:30081/&quot;&gt;http://localhost:30081/&lt;/a&gt;&amp;nbsp;로 접근해 보면 grafana가 실행된걸 확인할 수 있습니다. grafana에서 다음처럼 대시보드와 패널을 세팅해서 메모리 사용량에 대한 그래프를 볼 수 있습니다. 추가로 수집되고 있는 메트릭에 대한 그래프를 원하는대로 grafna에 설정해서 볼 수 있습니다.&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:1170px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99FA7E3E5B86890439&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_2.png&quot; height=&quot;638&quot; width=&quot;1170&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;힙스터가 실행되면 대시보드에서도 관련 데이터를 가져와서 보여줄 수 있게 됩니다. 아래 그림처럼 CPU, 메모리 전체 사용량을 보여주고 하단의 포드에 대해서는 포드별 cpu, 메모리 사용량도 보여줍니다.&lt;/div&gt;
+&lt;div&gt;
+&lt;p style=&quot;text-align: center; clear: none; float: none;&quot;&gt;&lt;span class=&quot;imageblock&quot; style=&quot;display:inline-block;width:1170px;;height:auto;max-width:100%&quot;&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/993B7E4E5B86890520&quot; filemime=&quot;image/png&quot; filename=&quot;evernote_image_3.png&quot; height=&quot;543&quot; width=&quot;1170&quot;/&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-weight: bold;&quot;&gt;참고&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/kubernetes/heapster/blob/master/docs/deprecation.md&quot;&gt;https://github.com/kubernetes/heapster/blob/master/docs/deprecation.md&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://kubernetes.io/blog/2015/05/resource-usage-monitoring-kubernetes/&quot;&gt;https://kubernetes.io/blog/2015/05/resource-usage-monitoring-kubernetes/&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://github.com/kubernetes/heapster/blob/master/docs/influxdb.md&quot;&gt;https://github.com/kubernetes/heapster/blob/master/docs/influxdb.md&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href=&quot;https://elatov.github.io/2018/06/installing-heapster-for-kubernetes/#fix-permission-issue&quot;&gt;https://elatov.github.io/2018/06/installing-heapster-for-kubernetes/#fix-permission-issue&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-0294073487593637&quot;
+     data-ad-slot=&quot;6091887490&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
+&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://arisu1000.tistory.com/27854&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</description>
+<category>Kubernetes</category>
+<category>container</category>
+<category>docker</category>
+<category>k8s</category>
+<category>kubernetes</category>
+<category>컨테이너</category>
+<category>쿠버네티스</category>
+<author>arisu1000</author>
+<guid>https://arisu1000.tistory.com/27854</guid>
+<comments>https://arisu1000.tistory.com/27854#entry27854comment</comments>
+<pubDate>Mon, 03 Sep 2018 09:00:00 +0900</pubDate>
+</item>
+</channel>
+</rss>

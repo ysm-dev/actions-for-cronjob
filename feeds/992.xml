@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="https://alklid.github.io/dlog/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alklid.github.io/dlog/" rel="alternate" type="text/html" /><updated>2018-10-13T17:49:50+09:00</updated><id>https://alklid.github.io/dlog/</id><title type="html">Dlog</title><subtitle>Development Blog by ChangHa Choi
+</subtitle><author><name>ChangHa Choi</name></author><entry><title type="html">Spark #02 : write to csv file, new line char 문제…해결필요..</title><link href="https://alklid.github.io/dlog/2017/10/30/spark-02/" rel="alternate" type="text/html" title="Spark #02 : write to csv file, new line char 문제...해결필요.." /><published>2017-10-30T18:34:01+09:00</published><updated>2017-10-30T18:34:01+09:00</updated><id>https://alklid.github.io/dlog/2017/10/30/spark-02</id><content type="html" xml:base="https://alklid.github.io/dlog/2017/10/30/spark-02/">Spark에서 데이터 처리후 CSV파일로 생성할때 new-line char가 환경에 따라 달라지는 문제가 발생했다.  
+OS별로 다른건 괜찮은데, windows의 경우 java project에서 생성된것은 new-line char에 일관성이 없다.   
+이렇게 생성된 CSV를 load할때 new-line char에 대한 정의에 따라서 load가 안될수 있어 문제가 되었다.  
+
+python으로는 해보지 않았지만,
+application에서의 처리가 아닌 spark 설정상으로 일관성있게 생성할 수 있도록 방법이 있으면 좋겠다.
+
+
+# Windows
+1. spark-shell 에서의 CSV생성
+    * 생성하는 코드
+```scala
+val rdd = sc.parallelize(1 to 100)
+rdd.toDF.coalesce(1).write.csv(&quot;c:\\test&quot;)
+```
+    * 생성된 결과
+```
+95[CR][LF]
+96[CR][LF]
+97[CR][LF]
+98[CR][LF]
+99[CR][LF]
+100[CR][LF]
+```
+    * ### new-line char가 모두 `CR` `LF`로 적용된다.
+        {: style=&quot;color:red;&quot;}
+1. java project 에서의 CSV생성
+    * java code
+```java
+System.out.println(&quot;## start.....&quot;);
+　
+String appName = &quot;work1&quot;;
+SparkSession spark = sparkContextUtil.getSparkSession(appName);
+　
+try {
+    // read
+    Dataset&lt;Row&gt; tmpDS = spark.read()
+                        .format(&quot;csv&quot;)
+                        .option(&quot;header&quot;, &quot;true&quot;)
+                        .option(&quot;inferSchema&quot;, &quot;true&quot;)
+                        .option(&quot;delimiter&quot;, &quot;,&quot;)
+                        .option(&quot;mode&quot;, &quot;DROPMALFORMED&quot;)
+                        .load(&quot;C:\\test\\part-00000-5251acec-1079-4920-8ba0-f4e99e464127-c000.csv&quot;);
+　
+    // write
+    File outputPath = new File(&quot;C:\\test2&quot;);
+    tmpDS.toDF().coalesce(1).write()
+                            .mode(SaveMode.Overwrite)
+                            .option(&quot;header&quot;, &quot;true&quot;)
+                            .option(&quot;inferSchema&quot;, &quot;true&quot;)
+                            .option(&quot;delimiter&quot;, &quot;,&quot;)
+                            .option(&quot;quote&quot;, &quot;\&quot;&quot;)
+                            .csv(outputPath.getCanonicalPath());
+　
+} catch (Exception e) {
+    e.printStackTrace();
+} finally {
+    spark.stop();
+}
+　
+System.out.println(&quot;## end.....&quot;);
+```
+    * scala code  
+```scala
+package com.alklid.spark.test
+　      
+import org.apache.spark.sql.{SaveMode, SparkSession}
+　
+object Test {
+    def main(args: Array[String]) {
+        System.out.println(&quot;## start.....&quot;)
+        val appName = &quot;work1&quot;
+        val spark: SparkSession = SparkSession
+                                       .builder()
+                                       .appName(appName)
+                                       .config(&quot;spark.master&quot;, &quot;local[*]&quot;)
+                                       .getOrCreate()
+　
+        try {
+            val tmpDS = spark
+                       .read
+                       .format(&quot;csv&quot;)
+                       .option(&quot;header&quot;, &quot;true&quot;)
+                       .option(&quot;inferSchema&quot;, &quot;true&quot;)
+                       .option(&quot;delimiter&quot;, &quot;,&quot;)
+                       .option(&quot;mode&quot;, &quot;DROPMALFORMED&quot;)
+                       .load(&quot;C:\\test\\part-00000-c18d0a89-7955-410b-b80d-707cecfa2d00-c000.csv&quot;)
+ 　
+            tmpDS
+               .toDF
+               .write
+               .mode(SaveMode.Overwrite)
+               .option(&quot;header&quot;, &quot;true&quot;)
+               .option(&quot;inferSchema&quot;, &quot;true&quot;)
+               .option(&quot;delimiter&quot;, &quot;,&quot;)
+               .option(&quot;quote&quot;, &quot;\&quot;&quot;)
+               .csv(&quot;C:\\test2&quot;)
+        } catch {
+            case e: Exception =&gt; e.printStackTrace()
+        } finally spark.stop()
+　
+        System.out.println(&quot;## end.....&quot;)
+    }
+}
+```
+    * 생성된 결과
+```
+47[CR][LF]
+48[CR][LF]
+49[CR][LF]
+50[LF] --- partition01
+51[CR][LF]
+...생략...
+97[CR][LF]
+98[CR][LF]
+99[CR][LF]
+100[LF] --- partition02
+```
+    * ### new-line char가 `CR` `LF`로 적용되다가, partition에서 생성되는 파일의 마지막라인에서는 `LF`가 적용된다.
+        {: style=&quot;color:red;&quot;}
+
+   
+   
+# Linux - CentOS 7
+1. spark-shell 에서의 CSV생성
+    * 생성하는 코드
+```scala
+val rdd = sc.parallelize(1 to 100)
+rdd.toDF.coalesce(1).write.csv(&quot;/home/sparkTest/test&quot;)
+```
+    * 생성된 결과
+```
+95[LF]
+96[LF]
+97[LF]
+98[LF]
+99[LF]
+100[LF]
+```
+    * ### new-line char가 모두 `LF`로 적용된다.
+        {: style=&quot;color:red;&quot;}
+1. java project 에서의 CSV생성
+    * java code : 위의 소스를 동일하게 linux에서 실행했다.
+    * 생성된 결과
+```
+95[LF]
+96[LF]
+97[LF]
+98[LF]
+99[LF]
+100[LF]
+```
+    * ### new-line char가 모두 `LF`로 적용된다.
+        {: style=&quot;color:red;&quot;}
+
+# ! keypoint
+spark-shell에서는 new-line char가 동일한데, java application의 경우 OS에 따라 new-line char가 상이하다.</content><author><name>ChangHa Choi</name></author><category term="spark" /><category term="apache spark" /><summary type="html">Spark에서 데이터 처리후 CSV파일로 생성할때 new-line char가 환경에 따라 달라지는 문제가 발생했다. OS별로 다른건 괜찮은데, windows의 경우 java project에서 생성된것은 new-line char에 일관성이 없다. 이렇게 생성된 CSV를 load할때 new-line char에 대한 정의에 따라서 load가 안될수 있어 문제가 되었다.</summary></entry><entry><title type="html">Spark #01 : 용어 및 개념정리 첫날…</title><link href="https://alklid.github.io/dlog/2017/10/12/spark-01/" rel="alternate" type="text/html" title="Spark #01 : 용어 및 개념정리 첫날..." /><published>2017-10-12T21:47:01+09:00</published><updated>2017-10-12T21:47:01+09:00</updated><id>https://alklid.github.io/dlog/2017/10/12/spark-01</id><content type="html" xml:base="https://alklid.github.io/dlog/2017/10/12/spark-01/">Apache Spark 학습중... 모르는 용어도 너무 많고, 이해하기 쉽지 않은 개념들도 많고 관련된 stack도 방대함... 
+
+# Big Data Work Flow
+1. 데이터 수집
+    * Kafka
+    * SQOOP
+1. 데이터 저장 및 처리
+    * Hadoop
+        * HDFS(Hadoop distributed file system) : Data 보관
+        * MapReduce Framework : Data 처리
+        * Yarn : Cluster 자원관리
+    * HBase
+        * HDFS를 저장소로 사용하는 column 기반 NoSQL DB
+    * Cassandra
+    * Redis
+        * 메모리를 이용한 key/value 저장소
+    * Hive
+    * Spark
+        * 처리결과를 항상 파일시스템에 유지하는 Hadoop과 달리 메모리에 저장하고 관리
+        * Hadoop, Hive등과 연동됨
+1. 데이터 분석 및 시각화
+    * Zeppelin
+    * RStudio
+   
+   
+# RDD(Resilient Distributed Dataset)
+* 내부에 단위 데이터를 포함
+* Read-Only
+    * 변형(Transformation)을 하면 기존 RDD가 변형되는것이 아니라, 새로운 변형된 결과의 RDD가 새로 생성된다.
+* 저장될때는 여러 서버에 나누어 저장됨
+* 처리될때는 각 서버에 저장된 데이터를 동시에 병렬로 처리할 수 있음
+    * 처리하는 과정에서 문제가 발생해도 복구 가능
+* Partition
+    * 하나의 RDD는 여러개의 partition으로 구성되어 있음
+    * 작업수행시 partition 단위로 병렬처리됨
+        * partition 단위 = 병렬 프로세스의 수
+    * 작업이 수행되는 동안 재구성되거나 네트워크를 통해 다른 병렬 서버로 이동(shuffling)될 수 있음, 성능에 영향을 줌.
+* Transformation
+    * 기존 RDD에 변형(Transformation)을 하면 새로운 RDD가 생성된다.
+        * 예) 소문자 데이터를 대문자로 바꿔라
+* Action
+    * 수행의 결과로 RDD가 아닌, 다른 값을 반환하거나 아예 반환하지 않음
+        * 예) 데이터의 총합계를 구해라
+        
+        
+# ! keypoint
+* lineage
+    * Read-Only RDD가 Transformation/Actions를 통해 새로운 RDD로 만들어지는 과정이 기록된 계보(lineage)
+    * Fault-tolerant
+        * 데이터 처리 중간에 fault가 생겨도, 해당 데이터(RDD)가 부모 RDD로부터 어떻게 만들어졌는지 기록되어 있음으로 언제든지 다시 만들어 사용할 수 있다.
+* Lazy Execution
+    * Transformation을 통해서는 RDD의 생성 과정을 lineage에 기록만 해둠
+    * Action을 통해서 해당 RDD의 생성 과정을 lineage에서 가져와 순서대로 RDD를 생성하고 Action을 수행함
+![RDD Lineage](https://alklid.github.io/dlog/assets/img/2017-10-12-spark-01_apache-storm-vs-spark-streaming-two-stream-processing-platforms-compared-36-638.jpg)
+
+
+```
+# 효율적인 수행이 되도록 lineage를 잘 설계할줄 알아야 하겠다.
+```</content><author><name>ChangHa Choi</name></author><category term="spark" /><category term="apache spark" /><category term="RDD" /><summary type="html">Apache Spark 학습중… 모르는 용어도 너무 많고, 이해하기 쉽지 않은 개념들도 많고 관련된 stack도 방대함…</summary></entry><entry><title type="html">markdown syntax</title><link href="https://alklid.github.io/dlog/2017/10/01/markdown-syntax/" rel="alternate" type="text/html" title="markdown syntax" /><published>2017-10-01T20:58:01+09:00</published><updated>2017-10-01T20:58:01+09:00</updated><id>https://alklid.github.io/dlog/2017/10/01/markdown-syntax</id><content type="html" xml:base="https://alklid.github.io/dlog/2017/10/01/markdown-syntax/">이미 markdown 문법에 대해서는 'markdown' 단어로 검색만 해도 무수히 많이 나옵니다.  
+가장 대표적으로 참고할 수 있는 사이트로는 github에서 제공하는 사이트를 참조하는게 좋겠습니다.
+
+* [https://guides.github.com/features/mastering-markdown/](https://guides.github.com/features/mastering-markdown/)
+* [https://help.github.com/articles/basic-writing-and-formatting-syntax/](https://help.github.com/articles/basic-writing-and-formatting-syntax/)
+
+markdown 문법을 자주 사용하게 될텐데, 
+매번 찾아보기가 어려운 상황이 많을수도 있어 본 포스팅에서 연습할 겸 사용해봅니다.  
+역시나 익숙해지기 위해서는 자주 써봐야합니다.
+
+
+&gt; &lt;h{n}&gt; 태그와 같이 헤더를 적용하는 방법입니다. 앞에 #의 갯수를 {n}만큼 적으면 됩니다.
+```
+# This is an &lt;h1&gt; tag
+## This is an &lt;h2&gt; tag
+###### This is an &lt;h6&gt; tag
+```
+# # This is an &lt;h1&gt; tag
+## ## This is an &lt;h2&gt; tag
+###### ###### This is an &lt;h6&gt; tag
+
+
+&gt; italic 적용은 앞뒤로 [\*] 또는 [\_]를 붙이면 됩니다.  
+```
+*This text will be italic*  
+_This will also be italic_
+```
+*\*This text will be italic\**  
+_\_This will also be italic\__
+
+
+&gt; bold 적용은 앞뒤로 [\*] 또는 [\_]를 두번 연속해서 붙이면 됩니다.  
+```markdown
+**This text will be italic**  
+__This will also be italic__
+```
+**\*\*This text will be bold\*\***  
+__\_\_This will also be bold\_\___
+
+
+&gt; unordered 목록입니다.
+```md
+* Item a
+    * Item a-1
+* Item b
+    * Item b-1
+```
+* Item a
+    * Item a-1
+* Item b
+    * Item b-1  
+
+
+&gt; ordered 목록입니다.
+```mkd
+1. Item 1
+    1. Item 1-1
+1. Item 2
+    1. Item 2-1
+    1. Item 2-2
+```
+1. Item 1
+    1. Item 1-1
+1. Item 2
+    1. Item 2-1
+    1. Item 2-2
+ 
+    
+&gt; 문장안에서 코드를 표현하는 inline code를 사용할때에는 앞뒤로 backticks(`)를 붙이면 됩니다.  
+```
+I think you should use an `&lt;addr&gt;` element here instead.  
+Use `git status` to list all new or modified files that haven't yet been committed.
+```
+I think you should use an `&lt;addr&gt;` element here instead.  
+Use `git status` to list all new or modified files that haven't yet been committed.
+
+
+&gt; 취소선은 앞뒤로 [~]를 두번 연속해서 붙이면 됩니다.
+```
+~~show me the money~~
+```
+~~show me the money~~
+
+&gt; 링크는 \[링크걸릴문장\]\(링크주소\) 로 표현합니다. 다만 '_blank' target 지정과 같이 새창으로 띄우는 설정은 따로 없습니다.
+```
+[facebook url](https://fb.com/changhachoi)
+```
+[facebook url](https://fb.com/changhachoi)
+
+&gt; code highlight는 두가지 방법이 있습니다.  
+[jekyll template 문법](https://jekyllrb.com/docs/templates/#code-snippet-highlighting)의 경우 linenos를 통해 line number 표현까지 가능하며,
+{% highlight ruby linenos %}
+def foo
+  puts 'foo'
+end
+{% endhighlight %}  
+&gt; [markdown 문법](https://help.github.com/articles/creating-and-highlighting-code-blocks/)의 경우는 line number 표현은 불가능합니다.  
+```ruby
+def foo
+  puts 'foo'
+end
+```
+
+&gt;</content><author><name>ChangHa Choi</name></author><category term="markdown" /><category term="md" /><summary type="html">이미 markdown 문법에 대해서는 ‘markdown’ 단어로 검색만 해도 무수히 많이 나옵니다. 가장 대표적으로 참고할 수 있는 사이트로는 github에서 제공하는 사이트를 참조하는게 좋겠습니다.</summary></entry><entry><title type="html">dlog - jekyll theme</title><link href="https://alklid.github.io/dlog/2017/09/24/dlog-jekyll-theme/" rel="alternate" type="text/html" title="dlog - jekyll theme" /><published>2017-09-24T22:06:14+09:00</published><updated>2017-09-24T22:06:14+09:00</updated><id>https://alklid.github.io/dlog/2017/09/24/dlog-jekyll-theme</id><content type="html" xml:base="https://alklid.github.io/dlog/2017/09/24/dlog-jekyll-theme/">DLOG 첫번째 포스팅은 jekyll blog theme 입니다.
+
+brunch에서 언급([https://brunch.co.kr/@alklid/12](https://brunch.co.kr/@alklid/12))한데로 github pages에 기술블로그를 만들어 보기위해 jekyll을 올렸습니다.  
+github pages에 jekyll을 올리는 방법에 대해서는 워낙 다양한 자료가 이미 있어서 따로 정리하지는 않았습니다.  
+[jekyll 공식 사이트](https://jekyllrb.com), [한글번역사이트](https://jekyllrb-ko.github.io/) 공식사이트가 있긴 하지만, 만든 사람보다 써본사람이 초기에 이해하기 쉽게 설명해주는 편인것 같습니다.
+[xho96's Swift Lift](https://xho95.github.io/blog/github/jekyll/git/2016/01/11/Make-a-blog-with-Jekyll.html), [Nolboo's Blog](https://nolboo.kim/blog/2013/10/15/free-blog-with-github-jekyll/) 정도 보시면 도움될 것 같습니다.  
+
+깔끔한게 좋아서 [http://jekyllthemes.org](http://jekyllthemes.org) 이곳에서 테마를 찾아 보았지만, 취향저격 테마가 없어서  
+그중 제일 깔끔해보이는 Adam Blog Theme [https://github.com/artemsheludko/adam-blog](https://github.com/artemsheludko/adam-blog)를 기반으로 조금 변경해 보았습니다.
+
+이미 Adam Blog Theme 에 여러가지 plugin이 지원되도록 설정되어 있습니다.
+* Google Fonts
+* Font Awesome
+* Disqus
+* MailChimp
+* Analytics
+* Search  
+  
+  
+  
+추가로 변경한 사항은 아래와 같습니다.
+* post-card to post-list
+    * 사진위주의 포스팅목록의 배치가 카드형식으로 되어 있어, 이를 리스트 형식으로 변경했습니다.
+* Analytics
+    * Google Analytics의 추적코드를 기존 analytics.js에서 gtag.js기반으로 변경했습니다.
+* _site directory structure
+    * 빌드시 _site폴더 하위에 post 생성이 분류가 안되고 있어 yyyy/mm/dd순으로 생성되도록 설정을 변경했습니다.
+* _sass auto compile
+    * 따로 compile 해야했던 assets/sass들을 빌드시 자동으로 compile되도록 폴더구성과 설정을 변경했습니다.
+* code highlight
+    * code highlight monokai theme로 변경했습니다.
+* baseurl 설정시 pagenation 링크 오류 수정
+    * pagenation 링크에 baseurl 설정값이 표현되어 있지 않아, 링크주소가 잘못 설정되는 오류를 수정했습니다.
+    
+
+변경한 사항에 대한 Theme는 준비되는데로 github repo에 올려놓겠습니다.</content><author><name>ChangHa Choi</name></author><category term="jekyll" /><summary type="html">DLOG 첫번째 포스팅은 jekyll blog theme 입니다.</summary></entry></feed>

