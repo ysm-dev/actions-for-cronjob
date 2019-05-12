@@ -1,0 +1,1936 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="https://wonseokjung.github.io//feed.xml" rel="self" type="application/atom+xml" /><link href="https://wonseokjung.github.io//" rel="alternate" type="text/html" /><updated>2018-09-12T01:59:49+00:00</updated><id>https://wonseokjung.github.io//</id><title type="html">All about Reinforcement learning</title><subtitle>Reinforcement.</subtitle><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><entry><title type="html">Faster Reinforcement Learning via Transfer</title><link href="https://wonseokjung.github.io//reinforcementlearning/update/FasterRLviatransfer/" rel="alternate" type="text/html" title="Faster Reinforcement Learning via Transfer" /><published>2018-09-11T16:26:28+00:00</published><updated>2018-09-11T16:26:28+00:00</updated><id>https://wonseokjung.github.io//reinforcementlearning/update/FasterRLviatransfer</id><content type="html" xml:base="https://wonseokjung.github.io//reinforcementlearning/update/FasterRLviatransfer/">&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/76z0fvih6xxnrlh/Screenshot%202018-09-07%2006.46.28.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;안녕하세요.&lt;/p&gt;
+
+&lt;p&gt;정원석입니다.&lt;/p&gt;
+
+&lt;p&gt;오늘 강의할 내용은 Faster ReinforcementLearning via Transfer&lt;/p&gt;
+
+&lt;p&gt;즉, Agent 가 빨리 학습하는 방법에 대한것 입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/epi4tp4rp5u7mhc/Screenshot%202018-09-07%2018.31.18.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 강의 내용은 9월 6일 Sk T-brain에서 주관한 Human.Machine. Experience Together 커퍼런스에서 John Shulman의 발표를 감명깊게 들어 만들게 되었습니다.&lt;/p&gt;
+
+&lt;p&gt;일정부분은 제가 추가하였지만, 대부분 John Shulman이 발표한 내용을 바탕으로 만들어졌습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/7rz1ybcb2q4mywb/Screenshot%202018-09-07%2018.32.48.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/98k82gvyl2pxtku/Screenshot%202018-09-07%2018.37.24.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Overview를 먼저 보면 ,&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;첫번째로 Policy Gradients방법을 소개하고요.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;1.1 이 Policy gradients가 성공한 케이스와 Policy gradients가 가진 한계에 대해서도 이야기를 하겠습니다&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;다음으로 “Learning how to learn” 어떻게 배우는지를 배우는것의 의미를 가진 Meta Reinforcement Learning에 대해서,&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;그리고 최근에 생긴 Gym retro에 대해 이야기를 하도록 하겠습니다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ae85rr7plrwvjci/Screenshot%202018-09-07%2018.57.49.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;본격적으로 설명하기 전에 먼저 강화학습의 Terminology에 대해 알아보도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/y1fxn9kwnrtdtv4/Screenshot%202018-09-07%2018.58.05.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;강화학습이란 시도와 실패를 반복하며 받는 리워드를 최대로 하는 것을 목표로 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/i1tx6k3jy0p9yr0/Screenshot%202018-09-07%2018.58.17.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그 강화학습에 뉴럴네트워크를 적용하여 강화학습 알고리즘을 represent한 것을 Deep Reinforcement Learning이라고 하고요.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/kt2dvx57b51jmzs/Screenshot%202018-09-07%2020.07.25.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/yy4pqvzcg343i8j/Screenshot%202018-09-07%2020.11.47.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Meta-Learning이란 “  Learning how to Learn “ 즉 어떠한 Learning을 하기위한 Task를 마스터하는 학습법을 Meta-Learning이라고 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/z8nn4p3n2pku39c/Screenshot%202018-09-07%2020.16.02.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;강화학습은 Markov Decision Process를 통하여 학습을 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/kquhvtdtcabxvy2/Screenshot%202018-09-08%2002.02.13.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;강화학습에서는 로봇, 프로그램과 같은 세상과 상호작용하는 Agent가 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/vig613wkbmgsmy6/Screenshot%202018-09-08%2002.02.32.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 Agent는 각 Time step마다 Action을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/rud5b4298nizt6a/Screenshot%202018-09-08%2002.04.31.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Environment는 action을 받고 reward 와 Observation을 생성합니다.&lt;/p&gt;
+
+&lt;p&gt;여기서 Observation은 $S_{t+1}$ 로 표현하였습니다.&lt;/p&gt;
+
+&lt;p&gt;Observation은 Image, 소리 등 무엇이든 될 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;Reward는 signal인데, 이 signal을 Agent가 최대화 하려고 시도를 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/fme3sg9dhreyf32/Screenshot%202018-09-08%2002.22.42.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Trajectory란 Obervation, action, reward의 sequence입니다.&lt;/p&gt;
+
+&lt;p&gt;강화학습에서는 이 Trajectory를 보면서 최적화하는 작업을 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/4e38mhe9mxps7ra/Screenshot%202018-09-08%2002.23.53.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Return은 Agent에 의해 받은 Reward의 총합 입니다.&lt;/p&gt;
+
+&lt;h1 id=&quot;1police-gradients&quot;&gt;1.Police Gradients&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/kx6lkwr0xcxhr7f/Screenshot%202018-09-08%2002.26.28.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그렇다면 이제 Policy Gradients에 대해 알아보도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/wu9vng44pdbrrm9/Screenshot%202018-09-08%2002.28.46.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;먼저 Policy란 Observation에 의해 Action을 선택하는 함수 입니다.&lt;/p&gt;
+
+&lt;p&gt;그리고 Policy Gradients method방법이란&lt;/p&gt;
+
+&lt;p&gt;더 좋은 Policy를 찾기 위해서 Policy 자체를 최적화하는 강화학습 알고리즘 입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/vppdrshsya1ozci/Screenshot%202018-09-08%2006.48.03.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Pseudocode를 보면&lt;/p&gt;
+
+&lt;p&gt;첫번째 Policy 를 초기화 합니다. 이렇게 초기화하는 것은 임의로 하기로 하며, 전에 있었던 지식 ( Knowledge )를 이용하기도 합니다.&lt;/p&gt;
+
+&lt;p&gt;이렇게 Initialize된 것은 보통 좋은 Policy가 아닌 경우가 많습니다.&lt;/p&gt;
+
+&lt;p&gt;각 iteration마다 trajectory를 모으고 어떤 action이 좋고 나쁜지 측정합니다.&lt;/p&gt;
+
+&lt;p&gt;Gradient update를 통해 좋은 action을 선택할 확률을 더 높여줍니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;이 방법이 잘되는 이유는Gradient Ascent를 통해 Reward를 더 많이 받는 쪽으로 Policy가 update되기 때문입니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;hhttps://www.dropbox.com/s/blz5onw7ypen8xz/Screenshot%202018-09-08%2007.00.44.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 Policy gradients 방법은 사실 꽤 오래된 방법입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/pdy27dy4i9bbaox/Screenshot%202018-09-08%2007.03.09.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;1992년부터 시작하였고&lt;/p&gt;
+
+&lt;p&gt;(John은 1992년 REINFORCE부터 시작하였다고 강의에서 말하였지만, 사실 Polciy gradients에서 사용된 방법중 하나인 Actor-critic은 1983년에 나온 “Neuronalike Adaptive Elements That can Solve Difficult Learning Control Problems”의 방법도 쓰였다고 Policy gradients논문에 소개되어 있습니다. 이것에 대해 더 자세히 알고 싶은 분은 논문은 간단하게 리뷰한 https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE_AC/ 포스팅을 참고해주세요.)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/o9c63qsc8qcql04/Screenshot%202018-09-08%2007.22.53.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이러한 Policy gradients 방법이&lt;/p&gt;
+
+&lt;p&gt;최근에는 Deep learning이 적용되어 Proximal Policy Optimization (PPO)로 발전하게 되었습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/5alcz4mmwwxcpbp/Screenshot%202018-09-08%2007.28.12.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Policy gradient를 사용하여 Alphago와 dota2 에서 훌륭한 결과를 얻었습니다.&lt;/p&gt;
+
+&lt;p&gt;바둑에서는 프로바둑기사 이세돌을 이겼으며, Dota2 1 대 1 에서 도타 챔피언을 이겼고 2018년도에 5대 5 도타 게임에서는 탑&lt;/p&gt;
+
+&lt;p&gt;레벨에 도달하였습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/9o9ggtwgi0k4cg1/Screenshot%202018-09-08%2019.42.24.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;지금까지 이야기했던 게임 분야 말고 Robot에 적용할 수도 있는데요.&lt;/p&gt;
+
+&lt;p&gt;이 사진에서 보이는 로봇팔을 학습시키기 위해 Dota와 마찬가지로 LSTM에  PPO를 사용하였지만, Dota와 같은 게임을 학습시&lt;/p&gt;
+
+&lt;p&gt;키는 것보다 더 까다롭다고 합니다.&lt;/p&gt;
+
+&lt;p&gt;이렇게  강화학습을 사용하여 AlphaGo와 DOTA2를 학습시켰는데 여기서 발생하는 문제점은 무엇일까요?&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ba7xdwz0twqsjvf/Screenshot%202018-09-08%2019.56.30.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;첫번째로 학습시간이 너무 오래걸리는 것 입니다. 이 테이블은 AlphaGo가 사람만큼 바둑을 두기 위해 걸리는 시간을 나타낸 표 입니다.&lt;/p&gt;
+
+&lt;p&gt;바둑을 학습시키기 위해서는 21Million Game이 필요한데요. (21 million = 21,000,000).&lt;/p&gt;
+
+&lt;p&gt;알파고제로는 바둑을 배우기 위해서 21000000번&lt;/p&gt;
+
+&lt;p&gt;이 수치는 사람이 바둑을 배울때보다 훨씬 더 오래 걸리는 수치입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/8ur359y8xcspihp/Screenshot%202018-09-09%2005.48.19.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Dota를 학습시키기 위해서는 현실에서 1000년정도 되는 량의 게임을 하여야 했습니다.&lt;/p&gt;
+
+&lt;p&gt;1 대 1 봇을 만들기 위해 하루에 현실에서 300년 정도 되는 게임의 경험을 쌓게 했고 일주일 정도 학습시켜야 했습니다. 결국 Dota 1대1 봇은 2000년 정도의 게임 플레이를 경험하였고 5대5는 이것보다 더 오랜 경험이 필요합니다.&lt;/p&gt;
+
+&lt;p&gt;사람 이런 게임을 1~2년 정도면 충분히 배울수 있는것과 달리 강화학습은 사람보다 시간이 훨씬 오래 걸린다는것이 단점입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/0eoj790ftyhzf20/Screenshot%202018-09-09%2017.54.33.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;인간이 이렇게 빨리 배울수 있는 이유는 어떤 Task를 새로 배울때 이전에 이미 배웠던 지식을 사용하여 배우기 때문입니다.&lt;/p&gt;
+
+&lt;p&gt;그렇기 때문에 현재의 A.I system이 학습하는 것과 사람이 학습하는 방법을 비교하는 것은 공평하지 않습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/4mafm57q2oeu3zk/Screenshot%202018-09-09%2017.54.56.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그렇다면,&lt;/p&gt;
+
+&lt;p&gt;A.I 시스템이 Prior Knowledge ( 사전 지식 )을 사용할수 있게 하는 방법은 없을까요?&lt;/p&gt;
+
+&lt;p&gt;이렇게 사전지식을 사용하여 새로운 Task를 배울수 있다면, 사람과 같이 새로운 것을 배우더라도 더 빨리 배울수 있지 않을까요?&lt;/p&gt;
+
+&lt;p&gt;그래서 시도한것이 어떠한 Task를 학습하였다면 그와 연관된 task를 풀때 사전지식을 사용하여 훨씬 더 빠르게 학습할 수 있도록 하는 학습방법입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/dsy5pneuaq3gemf/Screenshot%202018-09-09%2018.19.07.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이러한 학습 방법은 Meta ReinforcementLearning이라고 하며 이 Meta-Reinforcement Learning에 대해 알아보기 전에 기존 RL 패러다임에 대해서 알아보도록 하곘습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/df65tic1zh1zdh0/Screenshot%202018-09-09%2018.19.29.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;기존 강화학습의 패러다임은 Single task(단일 테스크) 입니다.&lt;/p&gt;
+
+&lt;p&gt;싱글 테스크에서 에이전트는 일정기간 동안 환경에서 학습을 하며 쌓은 경험을 바탕으로 리워드를 최대화 시키려 한다고 하였습니다.&lt;/p&gt;
+
+&lt;p&gt;이 학습을 할때 보통은 밑바닥에서부터 시작하며 학습을 합니다.&lt;/p&gt;
+
+&lt;p&gt;대부분의 Deep Reinforcement learning은 이와가은 프레임워크로 학습을 하였습니다.&lt;/p&gt;
+
+&lt;p&gt;그렇다면  Single task인 RL과 Meta RL의 차이점은 무엇일까요 ?&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/net1oyn2h8yv3q8/Screenshot%202018-09-09%2019.32.03.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;미로찾기를 예로 든다면, 고전 강화학습에서는 하나의 미로가 있을 것이고 그 미로에는 시작점과 골이 있을 것입니다.&lt;/p&gt;
+
+&lt;p&gt;에이전트에게 원하는 것은 “시작부터 목표점까지” 잘 가는것을 학습하는 것일 것입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/f03g9asfhg1znkm/Screenshot%202018-09-09%2019.42.44.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Meta-RL 에서는 아주 많은 임의의 미로가 생성이 됩니다.&lt;/p&gt;
+
+&lt;p&gt;각 에피소드마다 에이전트는 각 임의의 미로에서의 목표를 찾아야 합니다.&lt;/p&gt;
+
+&lt;p&gt;에이전트는 어떤 미로에서 학습을 하게 될지 알지 모르기 때문에 임의의 미로를 경험해보며 골을 찾아야 합니다.&lt;/p&gt;
+
+&lt;p&gt;여기서의 목표는 여러개의 미로를 임의로 준 뒤 학습을 시켜서 새로운 미로를 경험할때 빠르게 골을 찾을수 있는 폴리시를 학습시키는 것이 목표입니다.&lt;/p&gt;
+
+&lt;p&gt;사실 Meta-Reinforcement Learning이란 보통 고전 강화학습의 특별한 케이스일 뿐입니다.&lt;/p&gt;
+
+&lt;p&gt;첫 타임 스텝에서 에이전트는 임의의 테스크 혹은 월드에 있게 되고, 에이전트에게 새로운 옵저베이션을 정의해줍니다.&lt;/p&gt;
+
+&lt;p&gt;여기서 새로운 Obeservation이란 Original task의 observation에 reward, done, signal도 같이 주는 것 입니다.&lt;/p&gt;
+
+&lt;p&gt;이 의미는  Original task가 끝날때때부터 trial을 시작하는 것입니다.&lt;/p&gt;
+
+&lt;p&gt;새로운 Task의 각 Episode는 Old-task가 끝났을때부터의 K-epsisode입니다.&lt;/p&gt;
+
+&lt;p&gt;여기서 결국 얘기하고 싶은 거슨 만약 기존의 강화학습 방법인 Single-task ( Learn from scratch)를 하게 하는 것을 Meta-learning으로 재 정의 할수도 있다는 것입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/dm5im9sthwt3f0a/Screenshot%202018-09-09%2020.42.55.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;메타러닝을 이용한 예제로는 RL square : Fast reinforcement lerning via slow reinforcement learning 논문에서의 예제로 미로에서 새로운 미로가 와도 빠르게 배울수 있는 방법을 소개하였고요.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/16d739bhk2rpi0v/Screenshot%202018-09-09%2021.02.49.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/37qe74ezgi6384p/Screenshot%202018-09-09%2020.51.14.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/n7stheja155cay8/Screenshot%202018-09-09%2021.03.04.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/5ft0z3dspm6u3rt/Screenshot%202018-09-09%2021.03.21.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Learning Dexterous In-Hand Manipulation에서는 Simulatior에서 임의로 샘플링된 월드에서 학습한 폴리시를 실제 로봇팔에 적용하여 빠르게 적응할수 있게한 방법을 소개하였습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/u93ocojhxnldiry/Screenshot%202018-09-09%2023.19.19.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;서 환경에서는 적용하기 힘들며, 트레이닝 시간을 길게 준다면 기존 강화학습 알고리즘인 Policy Gradients 혹은 Q-learning이 더 나은 해결책을 찾는다는 것입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/conf6ypgp7n15bq/Screenshot%202018-09-09%2023.30.24.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그래서 Meta RL 의 이러한 문제점들을 개선하기 위해 시도한 연구들에 대해 소개하고자 합니다.&lt;/p&gt;
+
+&lt;p&gt;여기서는 무한대가 아닌 한정된 training task와 한정된 test task가 있습니다.&lt;/p&gt;
+
+&lt;p&gt;Training task에서 학습된 test task에서 얼만큼 영향을 미치는지 보고싶은것 입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/rk26wnfwtvaik63/Screenshot%202018-09-09%2023.35.09.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 방법을 학습하기 위해서 Gym retro를 만들었고&lt;/p&gt;
+
+&lt;p&gt;이 환경을 이용한 학습 방법은 이전에 했던 비슷한 게임에서한 경험을 이용하여&lt;/p&gt;
+
+&lt;p&gt;에이전트가 한번도 해보지 못한 게임을 사람처럼 빨리 마스터 하는것 입니다.&lt;/p&gt;
+
+&lt;p&gt;Https://github.com/openai/retro&lt;/p&gt;
+
+&lt;p&gt;https://blog.openai.com/gym-retro/&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/3zsr99mp96rnoui/Screenshot%202018-09-09%2023.59.01.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;여러가지 강화학습 알고리즘을 사용하여 이 Sonic을 학습시킨 결과인데요.&lt;/p&gt;
+
+&lt;p&gt;일반 PPO를 사용하였을때 성능이 가장 좋지 않았고, Test task를 이용하여 학습된 Parameter를 이용하여 Test task에서 사용한 PPO(Joint)의 성능이 가장 좋았습니다.&lt;/p&gt;
+
+&lt;p&gt;하지만,&lt;/p&gt;
+
+&lt;p&gt;사람이 15분 정도를 연습하고 소닉을 게임했을때 평균이 7000점 인 것과 비교했을때 아직까지 사람이 훨씬 더 잘한다는 것을 아록 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ic0frivusupwhl0/Screenshot%202018-09-10%2000.04.11.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이  Joint PPO를 이용하여 Fine tune을 한 뒤의 결과입니다.&lt;/p&gt;
+
+&lt;p&gt;파란색은 Test에서의 학습 score을 나타내며, 아래 주황, 노랑, 빨강은 test set에서의 performance를 나타내는 것 입니다.&lt;/p&gt;
+
+&lt;p&gt;여기서 X측은 Policy를 학습시키는 시간( 타입스텝 ) 입니다.&lt;/p&gt;
+
+&lt;p&gt;그래프를 보면 50만 스텝 정도까지는 성능이 점점 좋아지다 갑자기 떨어집니다. 이것은 트레이닝 레벨에 오버피팅이 되었기 떄문입니다.&lt;/p&gt;
+
+&lt;p&gt;이와 같은 문제점들을 계속 풀기 위해 노력중이며 또한 이와 관련하여 대회도 열었습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ywchzssngpaw7vj/Screenshot%202018-09-10%2000.08.44.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;대회는 4월 5일부터 6월 5일까지 열렸고,&lt;/p&gt;
+
+&lt;p&gt;총 923팀이 등록하였고 229팀이 해결책을 섭밋했습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/c4322sh7y5rnlh3/Screenshot%202018-09-10%2000.14.58.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;제가 랩장으로 있는 모두의연구소 CTRL랩 에서도 OpenAI retro에 참여하였으며 27위를 하였는데요.&lt;/p&gt;
+
+&lt;p&gt;저희는 Rainbow DQN을 사용하여 소닉을 학습하였습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/mdl9u91ydwsh612/Screenshot%202018-09-10%2000.17.12.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;OpenAI에서는 Meta RL에서 발생하는 문제들을 개선하기 위해 다른 레벨 뿐만 아닌 다른 환경에서의 트랜스퍼러닝하려고 하고,&lt;/p&gt;
+
+&lt;p&gt;그렇게 하기 위해 계획하고 있는 개선안으로는 Exploration, unsupervised learning, hierarchy를 개선하고&lt;/p&gt;
+
+&lt;p&gt;긴 Horizontal한 시간에서도 적용할수 있도록 연구할 계획이라고 합니다.&lt;/p&gt;
+
+&lt;p&gt;여기까지  9월 6일 Sk T-brain에서 주관한 Human.Machine. Experience Together 커퍼런스에서 John Shulman의 발표를 정리 및 일부 추가한 내용이었습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/873knk4td3t5er2/Screenshot%202018-09-10%2000.42.02.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;궁금한점이 있으시면 제 페이스북으로 연락주시면 답변드리도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;감사합니다.&lt;/p&gt;</content><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><summary type="html"></summary></entry><entry><title type="html">강화학습으로 인공지능 슈퍼마리오 만들기 강의 1편</title><link href="https://wonseokjung.github.io//reinforcementlearning/update/Supermario1/" rel="alternate" type="text/html" title="강화학습으로 인공지능 슈퍼마리오 만들기 강의 1편" /><published>2018-09-03T16:26:28+00:00</published><updated>2018-09-03T16:26:28+00:00</updated><id>https://wonseokjung.github.io//reinforcementlearning/update/Supermario1</id><content type="html" xml:base="https://wonseokjung.github.io//reinforcementlearning/update/Supermario1/">&lt;h1 id=&quot;ai-supermario-tutorial&quot;&gt;A.I SuperMario Tutorial&lt;/h1&gt;
+
+&lt;p&gt;안녕하세요. 정원석 입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/9bxgpvp3ynvlelk/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.002.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;파이콘 2018 에서 ““인공지능 슈퍼마리오의 거의 모든 것”” 이란 주제로 발표를 하였습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://speakerdeck.com/wonseokjung/a-dot-i-supermario-with-reinforcement-learning&quot;&gt;&lt;strong&gt;https://speakerdeck.com/wonseokjung/a-dot-i-supermario-with-reinforcement-learning&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;짧은 시간동안 많은 것을 전달하려 노력했고&lt;/p&gt;
+
+&lt;p&gt;발표가 끝난 뒤 많은 분들이 문의를 주셨지만 사실 모두 답변을 드리지는 못하였어요.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/etl09x3f9w9eh0w/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.001.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그래서 더 자세히 강화학습으로 슈퍼마리오 에이전트를 만드는  튜토리얼을&lt;/p&gt;
+
+&lt;p&gt;시리즈로 만들어 보면 더 많은 분께 도움이 될것이라 생각될 생각하여 시작하게 되었습니다.&lt;/p&gt;
+
+&lt;p&gt;Video lecture :&lt;/p&gt;
+
+&lt;p&gt;https://www.youtube.com/watch?v=ydCrd9cDLsU&lt;/p&gt;
+
+&lt;p&gt;github :&lt;/p&gt;
+
+&lt;p&gt;https://github.com/wonseokjung/A.I_Supermario&lt;/p&gt;
+
+&lt;p&gt;slide :&lt;/p&gt;
+
+&lt;p&gt;https://github.com/wonseokjung/A.I_Supermario/blob/master/Tutorial/1_Environment_Install/%EC%8A%88%ED%8D%BC%EB%A7%88%EB%A6%AC%EC%98%A4%ED%8A%9C%ED%86%A0%EB%A6%AC%EC%96%BCpdf.pdf&lt;/p&gt;
+
+&lt;p&gt;튜토리얼 계획하고 있는 큰 흐름은 다음과 같습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/q1fji2js5o6wpn0/Screenshot%202018-08-30%2019.12.13.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;슈퍼마리오 환경 설치법에서 시작하여&lt;/p&gt;
+
+&lt;p&gt;RainbowDQN까지 7가지 시리즈로 나눠서 튜토리얼을 만들까 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/xvfiiptkd5617ke/Screenshot%202018-08-30%2019.12.49.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;오늘은 첫번째로  슈퍼마리오 환경과 학습 방법에 대해서 설명하도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ro8hii3qqu6euzi/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.005.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/a51z92gw9zo6224/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.006.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/tpy22td4fc6shey/Screenshot%202018-08-30%2021.31.16.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Reinforcement Learning은 Markov Decision Process를 통하여 의사결정을 합니다.&lt;/p&gt;
+
+&lt;p&gt;State $S_t$에서 Agent는 Action $A_t$를 선택하며,&lt;/p&gt;
+
+&lt;p&gt;그 Action $A_t$를 Environment이 받고&lt;/p&gt;
+
+&lt;p&gt;그 Action $A_t$ 에 대한 Reward $R$과 다음 state $S_{t+1}$를 return합니다.&lt;/p&gt;
+
+&lt;p&gt;Agent는 다시 그 state $S_{t+1}$ 에서 Action $A_{t+1}$를 선택하여 환경에게 전달합니다.&lt;/p&gt;
+
+&lt;p&gt;이런 과정을 여러번 거치면서 Agent는 특정 state에서 특정 action의 value ( 가치 )를 알게되며,&lt;/p&gt;
+
+&lt;p&gt;이와같은 학습을 거치며 이 리워드를 더 높게 받을 Action을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/v016t41ote1r1ww/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.007.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;SuperMario 환경에서도 마찬가지로  Markov Decision Process를 통해 학습을 합니다.&lt;/p&gt;
+
+&lt;p&gt;슈퍼마리오 게임 화면이 State 이며, Agent인 마리오는 화면을 인풋으로 받은 뒤 Action을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;이 Action은  위,왼쪽,오른쪽,아래, A,B버튼으로 구성되어있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/0hus0nsgtkskx3r/Screenshot%202018-08-30%2021.44.58.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;환경은 마리오가 선택한 Action을 받고 다음 state, 리워드 또는  페널티를 return 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/tcp7ph6crur1ps0/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.008.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그렇다면 Action을 받고 reward,penalty 그리고 다음 State를 return해주는 환경은 무엇일까요?&lt;/p&gt;
+
+&lt;p&gt;개인이 강화학습을 위한 슈퍼마리오 환경을 만들었고, 닌텐도 에뮬레이터를 통하여 이를 실행할수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;https://github.com/Kautenja/gym-super-mario-bros&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/evc0zoemfvmban0/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.009.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/N8yyxEuiqDU&quot; frameborder=&quot;0&quot; allow=&quot;autoplay; encrypted-media&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;이 환경은 pip install gym-super-mario-bros 명령어를 통하여 받을수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;이 환경은 python 3.6 이상 버전에서만 설치가 되니 설치되어 있는 파이썬 버전을 확인해주세요.&lt;/p&gt;
+
+&lt;p&gt;설치를 완료하신 뒤에 python3.6 을 열고 import gym_super_mario_bros 명령어로 슈퍼마리오 환경을 임포트 해줍니다.&lt;/p&gt;
+
+&lt;p&gt;그 뒤 gym_super_mario_bros.make( ) 함수를 이용하여 환경을 만든뒤 env 변수로 선언을 해줍니다.&lt;/p&gt;
+
+&lt;p&gt;여기서 make 함수 안에 들어가는 SuperMarioBros-v0는 슈퍼마리오 환경 버전입니다. 
+바로 다음장에서 자세히 설명하도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;env 변수로 선언을 해주셨으면 reset() 함수로 환경을 초기화 시키신 뒤 render() 함수를 불러주시면 
+슈퍼마리오 환경이 생성됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/54a5svhtxbnxebe/Screenshot%202018-08-30%2022.29.37.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;여기서 슈퍼마리오는 전혀움직이지 않는데 그 이유는 action을 선택해주는 코드를 넣지 않아&lt;/p&gt;
+
+&lt;p&gt;환경이 다음 state를 return하지 않기 때문입니다.&lt;/p&gt;
+
+&lt;p&gt;그럼 슈퍼마리오 환경에 대해서 조금 더 알아볼게요.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/95pwyhhuiqfb5qr/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.010.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ggri4zvp1so666k/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.011.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;슈퍼마리오 환경은 총 8개의 World로 나누어져 있으며 각 World당 4개의 레벨이 존재합니다.&lt;/p&gt;
+
+&lt;p&gt;각 월드, 레벨에는 특징이 있어서 해결해야하는 난이도가 다르며, 몬스터의 종류, 넘어야하는 장애물이 다릅니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/y6k3wqb8vfxer0c/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.012.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;gym_super_mario_bros.make( ) 함수를 사용하여 SuperMarioBros-v0 를 불러봤는데요.&lt;/p&gt;
+
+&lt;p&gt;이 SuperMarioBros-v0 환경은  일반 게임플레이와 마찬가지로 월드1 - 레벨1에서 시작해서&lt;/p&gt;
+
+&lt;p&gt;클리어했을때 다음 레벨로 넘어가는 환경입니다.&lt;/p&gt;
+
+&lt;p&gt;하지만 특정 월드, 레벨을 make하고 싶다면 SuperMarioBros-world-level-v&lt;verision&gt; 의 형태에서&lt;/verision&gt;&lt;/p&gt;
+
+&lt;p&gt;world를 1~8 까지중 원하는 월드로 지정하고,&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/wptgd8tkmjf32xg/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.013.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;레벨 또한 1~4까지 숫자로 지정하여 원하는 월드와 레벨을 불러올수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/6a9jk6yvisjqkg5/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.014.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;맨 마지막의 version의 의미는 위의 그림과 같은데요.&lt;/p&gt;
+
+&lt;p&gt;version1은 오리지날 그림이고, version2 는 background을 검은색으로 바꿨습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/iu7kz5mv1lc7e2v/Screenshot%202018-08-30%2022.51.31.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;월드1에서 레벨1, 레벨2에서 가장 큰 차이점은 “배경의 색이 다르다.” 정도인데요.&lt;/p&gt;
+
+&lt;p&gt;사람이 봤을때 이 배경의 색은 게임을 하는데 크게 다를점은 없지만, Input으로 게임 화면을 받아 학습을 하는 강화학습은&lt;/p&gt;
+
+&lt;p&gt;배경 색이 다름으로 인해 전혀 다른 상황이라고 판단하기 때문에 이를 방지하기 위해 배경의 색을 일치하게 만들어주는 것입니다.&lt;/p&gt;
+
+&lt;p&gt;Version3은 배경의 퀄리티가 더 떨어지고 version4는 퀄리티도 더 낮으며 점수판도 제거하였습니다.&lt;/p&gt;
+
+&lt;p&gt;이를 통해 마리오 agent가 화면, 장애물이  어떻게 생겼는지 자세히 알지 않아도 형태만 보고 행동을 잘 알수 있는지 실험해 볼수 있겠네요.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/0bi0puo45z7ejm1/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.015.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이렇게 불러온 환경으로 Supermario는 환경의 화면을 보고 각 레벨 끝에 있는 깃발을 잡기위해 action 을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;슈퍼마리오 에이전트가 깃발을 잡게 만들기 위해서 적절한 reward를 주는것이 중요한데요.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/eh3sb0m49jfjezc/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.016.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;저는 Reward 설정을 깃발에 가까워지면 reward를 주었습니다. 그리고 목표에 도착했을때 더 높은 값의 reward를 주었고요.&lt;/p&gt;
+
+&lt;p&gt;반대로 목표에 달성하지 못하고, 시간이 지날때마다 penalty를 주었습니다. 또한 깃발에서 멀어지는 action을 선택했을때도 penalty를 주었습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/uquygakgvwgy9ia/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.017.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그렇다면 슈퍼마리오 에이전트를 DQN 알고리즘을 통하여 어떻게 학습을 하는지 전체적을 알아보도록 하겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/zm1sqnjl0bbe2ba/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.018.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;먼저 아까 env변수로 선언한 슈퍼마리오 환경에서 obsevation_space.shape 함수는 현재 supemairo 화면의 size를 return합니다.&lt;/p&gt;
+
+&lt;p&gt;240,256,3  을 리턴하는데, 이 의미는 화면의 세로, 가로 채널의 크기 입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/o64ji55qtc7bybm/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.020.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그리고 action_space.n 함수는 현재 슈퍼마리오가 선택할수 있는 action의 조합입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/0hus0nsgtkskx3r/Screenshot%202018-08-30%2021.44.58.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 action은 닌텐도 조이스틱의 버튼 조합인데요.&lt;/p&gt;
+
+&lt;p&gt;위, 왼쪽,오른쪽,아래 버튼과 A,B 버튼 즉 점프, 불꽃발사의  조합입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/xbpihawm2hm9f1t/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.021.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;하지만 실제로 우리가 필요한 버튼은 256가지나 되지는 않습니다.&lt;/p&gt;
+
+&lt;p&gt;우리는 슈퍼마리오가 깃발을 향해 장애물과 괴물을 피하며 잘 달리는 행동을 학습하길 원하는 것이기 때문이죠.&lt;/p&gt;
+
+&lt;p&gt;이렇게 action의 수가 많으면 학습하는데 시간이 오래 걸리게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;그래서 필요한 action의 조합으로 리스트를 만들어 이것을&lt;/p&gt;
+
+&lt;p&gt;env = BinarySpaceToDiscreteSpaceEnv(env, SIMPLE_MOVEMENT)로 환경에 적용해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/97zhrj5qbmb5r7x/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.022.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;강화학습에서 현재 state에서 가장 action value가 높은 action을 선택하는, 즉 현재 상황에서 에이전트가 가장 좋다고 판단하는 행동을 하는 것을 Exploitation이라고 하며,&lt;/p&gt;
+
+&lt;p&gt;반대로 현재 가장 좋은 action은 아니지만 탐험을 해보는 exploration은 강화학습으로 학습시킬때 매우 중요합니다.&lt;/p&gt;
+
+&lt;p&gt;Exploration을 하지 않는 에이전트는 점프도 하지 않고 계속 앞으로 가는 action만 선택하게 됩니다. 그 상황에서 당장 가장 좋은 action 은 앞으로 가는 action인 오른쪽 버튼을 누른는 것이기 때문입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/m7czd57zc8pc5pt/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.023.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그래서 epsilon값을 정하고 numpy의 np.random.rand() 함수를 통하여 난수발생을 합니다. 함수를 통해 리턴된 값이 epsilon보다 작으면 agent는 할수 있는  action들중 임의로 하나를 선택합니다. 
+이렇게 하는 것은 exploration이라고 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/49bim3msod6unkw/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.024.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;반면에 epsilon값보다 높으면 agent는 할수 있는 action들 중에서 가장 action value가 높은 action을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;이 행동은 exploitation 입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/lfkl6sn8swtlpgu/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.025.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이렇게 선택된 action을 env.step()함수에 넣으면,  환경은 그 action으로 인한 다음 state, reward,done , info값을 리턴합니다.&lt;/p&gt;
+
+&lt;p&gt;next state 는 그 action 으로 인해 변화되는 화면 이며,&lt;/p&gt;
+
+&lt;p&gt;reward는 그 action으로 인한 reward 혹은 penalty값 입니다.&lt;/p&gt;
+
+&lt;p&gt;done은 마리오가 죽었는지 살았는지에 대한 True, False 값이며 info는 디버깅을 하기 위한 정보가 들어있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/p6erpqbmtminkzf/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.026.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그렇게 exploration과 explotation을 하며 마리오는 행동을 하게 되며 그 행동을 받은 슈퍼마리오 환경은 
+위에서 설명드린 next state, reward, done, info값을 return합니다.&lt;/p&gt;
+
+&lt;p&gt;이 return된 값을 replay memory buffer 라고 불리우는 기억 창고 같은곳에 넣어서 학습을 하게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/esu4v2cqw78v4et/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.027.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;epsilon 값은 초기에는 1로 설정을 합니다. epsilon 값이 1 이라는 것은 100%의 확률로 임의의 action만 선택을 한다는 것이지요. 
+&lt;img src=&quot;https://www.dropbox.com/s/vvhmc5skq2elnb5/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.028.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;1에서 시작된 epsilon 값은 최종적으로 0.1까지 줄이는데요 0.1의 의미는 10%의 확률로만 Exploration을 한다는 뜻입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/jlno8kqwx6lw2cx/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.029.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;1에서 0.1까지 200000 time step으로 나눠서 점점 줄여나가는데요. 
+이것은 초반에는 100%의 확률로 탐험을 하며 더 많은 경험을 해보고 학습을 하면 할수록 이 탐험을 하는 확률이 점점 줄어들게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ffo0f1bcar7eqru/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.030.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그렇게 선택된 action을 환경이 받고,&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/k5adzz0v7gy6or3/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.031.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;환경이 준 정보들이 deque로 만든 replay memory buffer에 차곡차곡 쌓이게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/cxhusa4ugm0g6yo/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.032.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;매번 agent가 action을 선택하고 환경이 정보를  return해줄때마다&lt;/p&gt;
+
+&lt;p&gt;state, action, reward, next_state 값을 리플레이 메모리에 append  해줍니다.&lt;/p&gt;
+
+&lt;p&gt;한계치 다다르면 새로운 정보가 들어왔을때 오래된 정보는 지워지고 새로운 정보가 들어옵니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/wvksl1i632pr4kp/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.033.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이렇게 모여진 경험들을 기반으로 에이전트는 더 좋은 action을 선택하기 위해 학습을 합니다. 
+그래서 더 좋은 action을 선택하기 위해서 신경망의 파라메터를 수정합니다.&lt;/p&gt;
+
+&lt;p&gt;이렇게 파라메터를 수정하기 위해서 로스를 줄이는 과정이 필요합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/milxm78qdgi2eo4/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.034.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 작업을 하기 위해 텐서플로우를 사용할게요.&lt;/p&gt;
+
+&lt;p&gt;import tensorflow as tf로 텐서플로우를 임포트 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/3i0v3i0k35t3rfr/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.035.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그래서 y값 ( target )값과 evaluation을 분리하고 이 둘의 차이를 줄이기 tf.reduce_mean으로 loss를 정의해줍니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/lohqoemipq8y6tj/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.036.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Opitmizer는 AdamsOptimizer을 사용할 것이고요.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/aywvdw1mykic4kj/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.037.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Optimizer을 사용해서 로스를 Minimize합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/zjrkby1fappwudv/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.038.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이렇게 수정된 파라메터를 통하여 input으로 마리오 화면을 받고 Convolutional Neural Network를 통과합니다.&lt;/p&gt;
+
+&lt;p&gt;이 네트워크를 통하여 output으로 나온 값은 슈퍼마리오 에이전트가 선태할수 있는 각 action의 action value 입니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/m4lansc7up99irb/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.039.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;전체적인 학습 구조를 보면,&lt;/p&gt;
+
+&lt;p&gt;마리오 에이전트의 위치뿐만 아닌 움직임, 방향을 알기 위해 4 time step의 사진을 input으로 넣으면,&lt;/p&gt;
+
+&lt;p&gt;Q-network( 위에서 설명한 Convolutional Neural network )를 통하여 파라메터에 의해 마리오가 선택할수 있는 각 action들의 action value가 output으로 return 됩니다. 
+그 return된 action들중 exploitation 혹은 exploration 방법에 의해 action이 하나 선택되고,&lt;/p&gt;
+
+&lt;p&gt;그 선택된 action을 환경이 받아 그에 맞는 다음 state와 reward를 return합니다.&lt;/p&gt;
+
+&lt;p&gt;state, action, reward, next state정보가 replay memory에 쌓이고 리플레이 메모리는 이 정보를 사용하여 Q-network의 파라메터를 슈퍼마리오 에이전트가 “목표를 달성하기 위해” 더 좋은 action 을 선택할 수 있도록 점점 수정합니다.&lt;/p&gt;
+
+&lt;p&gt;마리오 는 이 과정을 몇 천번 거치면서 각 레벨 끝에 있는 깃발을 잡기 위해 순간순간 action을 선택합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/7b4qvtrljbrs5z0/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.040.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/paqv98yilo5gt6y/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.041.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;총 5000번 에피소드 정도 학습을 시켰고 이것은 4일 정도 소요되었습니다.&lt;/p&gt;
+
+&lt;iframe width=&quot;790&quot; height=&quot;444&quot; src=&quot;https://www.youtube.com/embed/IjvbhwuCaF0&quot; frameborder=&quot;0&quot; allow=&quot;autoplay; encrypted-media&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/hzahantdl7pjlpa/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.047.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이렇게 파이썬과 딥러닝 프레임워크 텐서플로우,케라스,파이토치만 있으면 강화학습을 이용하여 슈퍼마리오를 학습시킬수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/kyt4dc6cmv8khfs/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.048.jpeg?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;다음 시리즈부터는 코드 리뷰 위주로 DQN부터 RainbowDQN 까지 총 여섯개로 나눠 공유해보겠습니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/lvto9ux8n5n4x8s/%EC%B2%98%EC%9D%8C%EB%B6%80%ED%84%B0%EB%81%9D.049.jpeg?raw=1&quot; /&gt;&lt;/p&gt;</content><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><summary type="html">A.I SuperMario Tutorial</summary></entry><entry><title type="html">Metalearning shared Hierarchy 논문 리뷰</title><link href="https://wonseokjung.github.io//reinforcementlearning/update/metalearning_shared_hi/" rel="alternate" type="text/html" title="Metalearning shared Hierarchy 논문 리뷰 " /><published>2018-08-28T16:26:28+00:00</published><updated>2018-08-28T16:26:28+00:00</updated><id>https://wonseokjung.github.io//reinforcementlearning/update/metalearning_shared_hi</id><content type="html" xml:base="https://wonseokjung.github.io//reinforcementlearning/update/metalearning_shared_hi/">&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ea60km7lmpqahzd/Screenshot%202018-08-26%2017.49.53.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;MetaLearning 방법으로 새로운 task를 더 효과적으로, 빠르게 학습할수 있는 방법을 알아보도록 하겠다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/loxpjz3o6qtztbo/Screenshot%202018-08-26%2017.49.23.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;오늘 볼 논문은 Meta Learning shared Hierarchies 란 논문으로 다음의 목차로 설명하도록 하겠다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/deqaw8dhoblax6u/Screenshot%202018-08-26%2017.50.32.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;1-introduction&quot;&gt;1. Introduction&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/awpw7rqraxkbhg4/Screenshot%202018-08-26%2019.38.46.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;사람은 새로운 업무 , 테스크를 마스터하기 위해서 이전에 배웠던 지식들을 활용하여 더욱 빨리 배운다.&lt;/p&gt;
+
+&lt;p&gt;반면 강화학습 알고리즘은 각 테스크들은 독립적으로 처음부터 배우는 경우가 많다.&lt;/p&gt;
+
+&lt;p&gt;https://www.youtube.com/watch?v=IjvbhwuCaF0&lt;/p&gt;
+
+&lt;p&gt;그래서 여기서 논문에서 소개된 것은,&lt;/p&gt;
+
+&lt;p&gt;강화학습 에이전트가 새로운 테스크를 빨리 배우기 위한 setting이 무엇인지 연구하였다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/auet1yxdstg8cuf/Screenshot%202018-08-26%2018.34.05.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;여기서 문제가 되었던것은,&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;모든 테스크가 정보를 공유하여 배우도록 하고 싶다.&lt;/li&gt;
+  &lt;li&gt;하지만 각의 테스크에는 각각 다른 optimal policies가 존재한다.&lt;/li&gt;
+  &lt;li&gt;어떠한 특정  Policy를 따라 action을 선택하면 모든 테스크의 policy는 suboptimal일 것이다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/84q1bztprf7lxs4/Screenshot%202018-08-26%2018.54.46.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 이슈를 해결하기 위해 sub-policies 를 공유하는 집합을 포함한 model을 만드는 방법을 제안한다.&lt;/p&gt;
+
+&lt;p&gt;새로운 task를 빨리 배우도록 하기 위한 Sub-policies의 end- to-end trainning 방식을 제안하며, 이 방법은  학습된 master policy에 따라 조정된다.&lt;/p&gt;
+
+&lt;p&gt;이 방법은 은 Sutton 1999, Baco 2016의 Option framwork와 관련이있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/9oroike8h7tft00/Screenshot%202018-08-26%2019.32.55.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Hierarchical 한 구조와 opmization algorith을 포함한 방법을 MLSH ( metalearning shared hierarchies )라고 부르도록 하겠다.&lt;/p&gt;
+
+&lt;p&gt;MLSH방법을 사용하여 2D continous 환견, gridworld navigation, 3d physics 테스크에 적용해보았으며,&lt;/p&gt;
+
+&lt;p&gt;3D 환경에서 같은 policy를 사용하여 humanoid이 걷고 기는것을 할수 있는 것을 확인 하였다.&lt;/p&gt;
+
+&lt;p&gt;또한 4개의 다리가 달린 로봇이 sparse-reward obstacle courses의 미로를 풀기위해 움직이는 것도 확인하였다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/52jmx4bdc6zi44d/Screenshot%202018-08-26%2019.39.42.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;2-problem-statement&quot;&gt;2. Problem Statement&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/o79ebhja8q96uzd/Screenshot%202018-08-26%2019.43.09.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;notation&quot;&gt;Notation&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ol44qwwh3jtxs4u/Screenshot%202018-08-26%2019.47.41.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;기본적인 Reinforcement Learning notation은 위와 같다.&lt;/p&gt;
+
+&lt;p&gt;추가적으로,&lt;/p&gt;
+
+&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;P_M&lt;/script&gt; : distribution over MDPs &lt;script type=&quot;math/tex&quot;&gt;M&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;\pi_{\theta , \phi (a \mid s)}&lt;/script&gt; : Agent는 parameter vector &lt;script type=&quot;math/tex&quot;&gt;\theta, \phi&lt;/script&gt;  를 주기적으로 update한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;\phi&lt;/script&gt; : 모든 테스크가 share하는 parameter이다.  ( 테스크들 끼리 공유하는 파라미터의 집합)&lt;/p&gt;
+
+&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;\theta&lt;/script&gt; : 각 task마다 scratch부터 배운다. ( 각 테스크 파라미터의 집합, agent가 현재 테스크 M을 배우며 업데이트 하는 파라미터)&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Agent는 task에서 time step $T$ 동안 상호작용을하며, 여러번의 Episodes동안 total reward $R$을 받는다.&lt;/p&gt;
+
+&lt;h2 id=&quot;r--r_0--r_1--r_2----r_t-1&quot;&gt;$R = r_0 + r_1 + r_2 + …. + r_{T-1}$&lt;/h2&gt;
+
+&lt;p&gt;Meta learning objective는  agent가 lifetime 동안 받은 expectre return을 optimize한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;maximize_phi-e_m-sim-p_m-t0-t-1-r&quot;&gt;$maximize_\phi E_{M \sim P_M}, t=0… T-1 [R]$&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/doxs0xo07vajwx6/Screenshot%202018-08-27%2000.04.40.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Object가 하려고 하는 것은, 새로운 MDP를 만났을때 agent가 새로운 MDP의 parameter $\theta$에 적응하여 높은 reward를 받을수 있게 하는 shared parameter vector $\phi$를 찾는 것이다.&lt;/p&gt;
+
+&lt;p&gt;Per-task parameter $\theta$ 와 shared parameter $\phi$를 결합시키는 방법은 여러가지가 있지만, 여기서 제시하는 구조는 hierarchical reinforcement learning에서 motivated된 방법이다.&lt;/p&gt;
+
+&lt;p&gt;Shared Parameter vector $\phi$ 는 subvector &lt;script type=&quot;math/tex&quot;&gt;\phi_1, \phi_2, \phi_3 ... \phi_K&lt;/script&gt; 의 집합으로 구성되어 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;\phi_k&lt;/script&gt;는 sup-policy로  &lt;script type=&quot;math/tex&quot;&gt;\pi_{\phi_{k}} (a \mid s)&lt;/script&gt; 로 정의한다.&lt;/p&gt;
+
+&lt;p&gt;Parameter $\theta$ 는 sub-policies와 swetches되는 seperate neural network이다.&lt;/p&gt;
+
+&lt;p&gt;Parameter $\theta$ 는 stochastic polcy로서 master policy 라고 정의한다. 이 master policy의 action은 index k를 선택한다.&lt;/p&gt;
+
+&lt;p&gt;Master policy는 또한 sub-policies $\phi_k$보다 늦게 action을 선택한다. ( hierarchical policy architectures , sutton, options )&lt;/p&gt;
+
+&lt;p&gt;Master policy는 action을 sample 할때 일정한 주기 N time stpe으로 action 을  sample 한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;t--0--n--2n&quot;&gt;$t = 0 , N , 2N…$&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/7zaxu2r6ta9brgk/Screenshot%202018-08-26%2021.46.57.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;## 3. Algorithm&lt;/p&gt;
+
+&lt;p&gt;Sub-policies의 집합을 반복적으로 학습시켜 agent가 T-step 동안 받을 reward를 maximize 시키는 것이 목적이다.&lt;/p&gt;
+
+&lt;p&gt;Optimal sub-policies 집합은 고 성능을 내기 위해서는 충분히 fine-tuned 되어야하며, 여러가지 테스크에서도 작동하여야 한다.&lt;/p&gt;
+
+&lt;p&gt;이 연구에서는 sub-policy parameter $\phi$ 가 위에 요구를 충족하는 방법을 제안한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;31-policy-update-in--mlsh&quot;&gt;3.1 Policy Update in  MLSH&lt;/h3&gt;
+
+&lt;p&gt;여기서는 sub-policy parameter $\phi$ 를 학습시키기 위한 MLSH(metalerning shared hierarchies)알고리즘에 대해서 설명하도록 하겠다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/l81wy6wzpl2tvua/Screenshot%202018-08-27%2018.26.35.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;MLSH의 두 가지 구성으로 나누어져있다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Warm up&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Joint update period&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Warmup period는 master policy parameter $\theta$를 optimize하며 Joint update period는 &lt;script type=&quot;math/tex&quot;&gt;\theta&lt;/script&gt;, &lt;script type=&quot;math/tex&quot;&gt;\phi&lt;/script&gt; 를 같이 Optimize 한다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;이렇게 크게 두가지로 구성된 MLSH 알고리즘의 큰 구조는 다음과 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;master-policy &lt;script type=&quot;math/tex&quot;&gt;\theta&lt;/script&gt;와 sub-policies &lt;script type=&quot;math/tex&quot;&gt;\phi&lt;/script&gt;를 초기화 시킨다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;task $M$을 distributio  $P_M$에서 sample한다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;warm up period : master-policy &lt;script type=&quot;math/tex&quot;&gt;\theta&lt;/script&gt;를 optimize 시키기 위하여 warmup period를 run한다.&lt;/li&gt;
+  &lt;li&gt;Joint update period : master-policy &lt;script type=&quot;math/tex&quot;&gt;\theta&lt;/script&gt;와 sub-policies &lt;script type=&quot;math/tex&quot;&gt;\phi&lt;/script&gt;가 함께 업데이트 된다.&lt;/li&gt;
+  &lt;li&gt;task를 sample한 뒤 master-policy &lt;script type=&quot;math/tex&quot;&gt;\theta&lt;/script&gt;를 reset하고 다시 반복한다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Warmup period 와 Joint Update period의 정확한 정의는 다음과 같다.&lt;/p&gt;
+
+&lt;h3 id=&quot;--warmup-period&quot;&gt;- Warmup period&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/i4srewk8mwvbuu2/Screenshot%202018-08-27%2018.39.38.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/isa9utrggh4uc2n/Screenshot%202018-08-27%2019.41.40.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;master-policy &lt;script type=&quot;math/tex&quot;&gt;\theta&lt;/script&gt;를 optimize 시킨다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;task를 sample한다.&lt;/p&gt;
+
+    &lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;\pi_{\phi, \theta}(a \mid s)&lt;/script&gt; 를 따라 D time step 만큼의 experience를 기록한다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;위에 기록한 experience는 master policy의 관점에서 보며, 그림으로 이해하면 아래와 같다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/eeaspm2qiqa7k0i/Screenshot%202018-08-27%2019.24.19.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;master policy 에 의해 sub-policy &lt;script type=&quot;math/tex&quot;&gt;\phi&lt;/script&gt; 중 하나가 선택된다.&lt;/li&gt;
+  &lt;li&gt;N timestep 뒤에 &lt;script type=&quot;math/tex&quot;&gt;\theta&lt;/script&gt;를 reward가 maximize 되는 방향으로 업데이트를 한다.&lt;/li&gt;
+  &lt;li&gt;위에 parameter $\theta$는 강화학습 알고리즘 (DQN, A3C, TRPO , PPO 등) 으로 업데이트 한다.&lt;/li&gt;
+  &lt;li&gt;이 작업을  W 만큼 반복한다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;--joint-update-period&quot;&gt;- Joint update period&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/fmf7pmp1evnyib9/Screenshot%202018-08-27%2018.40.13.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ojpoqp5pl63e4oo/Screenshot%202018-08-27%2019.42.05.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;master-policy &lt;script type=&quot;math/tex&quot;&gt;\theta&lt;/script&gt;와 sub-policies &lt;script type=&quot;math/tex&quot;&gt;\phi&lt;/script&gt;가 함께 업데이트 된다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;U iteration동안, &lt;script type=&quot;math/tex&quot;&gt;\pi_{\phi, \theta}(a \mid s)&lt;/script&gt; 를 따라 D time step 만큼의 experience 만큼 모은뒤 &lt;script type=&quot;math/tex&quot;&gt;\theta&lt;/script&gt;를 업데이트 한다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;이번에는 sup-optimal 관점에서 보자. master policy는 환경의 일부중 하나이다.&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/hji36pu07rlxzeg/Screenshot%202018-08-27%2019.25.00.png?raw=1&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;parameter을 update할때 master policy에 의해 ativated된 policy만을 업데이트 한다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/i0qqxdgkfneqsqr/Screenshot%202018-08-27%2019.49.33.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;왼쪽의 master policy를 훈련하는 파트 :&lt;/p&gt;
+
+&lt;p&gt;업데이트를 할때 master policy의 action과 total reward에 의하여 업데이트를 한다. sub-policies의 action과 reward는 환경의 transition의 일부로 treat한다.&lt;/p&gt;
+
+&lt;p&gt;오른쪽 의 sub-policie 훈련하는 파트 :&lt;/p&gt;
+
+&lt;p&gt;Sub-policies 를 학습시킬때는, master policy의 action을 observation의 일부로 treat 하여  updte 한다. 다른 actions들과 timesteps 는 무시한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/p09nnor86odr8ma/Screenshot%202018-08-27%2022.32.57.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;작은 초록색 공은 Agent 이며 나머지 두 개의 공은 goal이다. agent가 공의 일정범위 안에 들어가면 reward를 1 받고 그렇지 않으면 reward을 0을 받는다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/d6q36gl3sqelxde/Screenshot%202018-08-27%2022.45.21.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ra6p0b2swyubgfw/Screenshot%202018-08-27%2022.50.15.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/xu9oa27wb0cbj2r/Screenshot%202018-08-27%2022.49.31.png?raw=1&quot; /&gt;&lt;/p&gt;</content><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><summary type="html"></summary></entry><entry><title type="html">뇌과학으로 보는 강화학습 - Neuron</title><link href="https://wonseokjung.github.io//neuroscience/Computational_Cognitive_Neuroscience_Neuron/" rel="alternate" type="text/html" title="뇌과학으로 보는 강화학습 - Neuron" /><published>2018-08-24T02:26:28+00:00</published><updated>2018-08-24T02:26:28+00:00</updated><id>https://wonseokjung.github.io//neuroscience/Computational_Cognitive_Neuroscience_Neuron</id><content type="html" xml:base="https://wonseokjung.github.io//neuroscience/Computational_Cognitive_Neuroscience_Neuron/">&lt;h1 id=&quot;computational-cognitive-neuroscience---neuron&quot;&gt;Computational Cognitive Neuroscience - Neuron&lt;/h1&gt;
+
+&lt;h3 id=&quot;첫번째-neuron-편&quot;&gt;첫번째 Neuron 편&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/lvjrfnyarzcm6rv/Screenshot%202018-08-19%2020.35.47.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;뇌가 여러가지 일들을 할수 있는 이유는 수 많은 neuron들이 각각 연결되어 있기 때문이다. 
+ 뇌는 Lego 세트와 같은데, Lego 조각 하나는 단순하지만 이 조각을 모아서 수많이 많은것들을 재 조립하여 만들수 있기 때문이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/tfzhw3zrw8sk264/Screenshot%202018-08-19%2021.23.38.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Neuron 들은 다른 Neuron으로부터 여러가지 신호를 Input으로 받으며 그 신호들 중 의미가 있는 특정한 신호를 찾는다.&lt;/p&gt;
+
+&lt;p&gt;예를 들어 “Smoke detector”과 같다.  Smoke detector은 Smoke를 측정하고 그 Smoke가 일정이상&lt;/p&gt;
+
+&lt;p&gt;( threshold )를 넘으면 알람이 울리는 작용이다.&lt;/p&gt;
+
+&lt;p&gt;Smoke dectecor과 같이 Neuron은 theshold가 넘은것을 감지했을때 alarm signal을 다른 neuron에게 보낸다.&lt;/p&gt;
+
+&lt;p&gt;이 Alarm을 action potential 또는 Spike라고 부르며 이것들은 neuron들 끼리 communication 하기 위한 기본 단위이다.&lt;/p&gt;
+
+&lt;p&gt;여기서는 어떠한 방법으로 neuron이 input signals을 다른 nueron들로부터 수신하고 그 수신한 값들을 통합하여 threshold값과 비교를 하는지, 그리고 그 결과값을 다른 neuron들과 어떻게 communication 하는지 이해하는것이 목표이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;11-basic-biology-of-a-neuron-as-detector&quot;&gt;1.1 Basic Biology of a Neuron as Detector&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/28xsg6q7atd5zg7/Screenshot%202018-08-19%2022.38.48.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위의 그림에서 Synapse는 sending neurons ( 시그널을 보내는 뉴런 ) 과 Receiving neurons( Signal을 받는 neurons) 들을 연결하는 points이다.&lt;/p&gt;
+
+&lt;p&gt;대부분의 Synapses는 dendrites 위에 있다. 이 Dendrites는 neuron의  input signals를 통합하는 역할을 한다.&lt;/p&gt;
+
+&lt;p&gt;이렇게 통합된 Neuron들의 signal들이 cell body를 통과하며 최종적으로 통합된다.&lt;/p&gt;
+
+&lt;p&gt;그렇게 통합된 신호들이 Axon을 통해 다른 neuron으로 전달된다.&lt;/p&gt;
+
+&lt;p&gt;그 밖에 input signal에 의한 biological properties가 있다.&lt;/p&gt;
+
+&lt;p&gt;neuron이 받은 input signal의 주요 source는 세가지로 다음과 같다.&lt;/p&gt;
+
+&lt;h4 id=&quot;1-excitatory-inputs-&quot;&gt;1. Excitatory inputs :&lt;/h4&gt;
+
+&lt;p&gt;다른 뉴론에서의 보통, 일반적인 타입의 인풋 ( 모든 input에서 대략 85% 정도 ) , nueron을 receive 하는 것을 exciting 하는 효과가 있는 것들이다. (threshold를 끝내게 만들고 알람을 울리게 하는 것 )&lt;/p&gt;
+
+&lt;p&gt;AMPA라고 불리는 synaptic channel에 의해 운반되어지며, 이 AMPA는 neurotransmitter glutamate에 의해 개방된다.&lt;/p&gt;
+
+&lt;h4 id=&quot;2-inhibitory-inputs-&quot;&gt;2. Inhibitory inputs :&lt;/h4&gt;
+
+&lt;p&gt;Excitatory inputs와 반대되는 input의 15%. 이 input은 neuron을 fire하지 않게 만든다!&lt;/p&gt;
+
+&lt;p&gt;inhibiroty interneurons 에서 inhibitory inputs에 의해 만들어 지며 이 input은 GABA synapti channel에 의해 운반된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;3-leak-inputs-&quot;&gt;3. Leak inputs :&lt;/h3&gt;
+
+&lt;p&gt;이 Leak inputs은 항상 활동을 하는 input signal은 아니지만 inhibiroty inputs와 비슷한 기능을 serve한다.&lt;/p&gt;
+
+&lt;p&gt;excitation에 대응하며 전체 균형을 유지한다.&lt;/p&gt;
+
+&lt;p&gt;생물학적으로 leark channels은 potassiu, channels( K )이다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;inhibitory inputs와 excitatory inputs는 cortex의 다른 neurons에서 온다. neuron 끼리 communication을 할때 neuron은 inhibiroty input 또는 excitatory input을 다른 neuron에게 보내는 것이 가능하다.&lt;/p&gt;
+
+&lt;p&gt;두 종류의 input을 한번에 보내는 것은 가능하지 않다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/uyrvjvekqmfpsn2/Screenshot%202018-08-20%2000.31.37.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;12-net-synaptic-efficacy-or-weight&quot;&gt;1.2 Net synaptic efficacy or weight&lt;/h3&gt;
+
+&lt;p&gt;Synaptic connection에 따라 보내는 neuorn의 signal이 receiving neuron에게 주는 “signal의 강도” 이다.&lt;/p&gt;
+
+&lt;p&gt;또한 Synaptic weight는 computational cognitive neuroscience에서 가장 중요한 컨셉중 하나이다.&lt;/p&gt;
+
+&lt;p&gt;생물학적으로는, neurotransmitter을 release하기 위해 neuron의 action 을 보내는  순수한 능력이다.&lt;/p&gt;
+
+&lt;p&gt;그리고 neurotransmitter은 postsynaptic side에 있는  channel을 여는 역할을 수행한다.&lt;/p&gt;
+
+&lt;p&gt;Computation 의 관점으로, weight는 detecting된 neuron을 측정한다. Weight value가 높은 경우는 어떠한 input neuron에 neuron의 반응이 굉장히 강한 것이며, 반대로 weight value가 낮을경우 그 input neuron이 많이 중요하지 않다는 의미이다.&lt;/p&gt;
+
+&lt;h5 id=&quot;당신이-아는-모든것-당신의-뇌-안에-있는-모든-소중한-기억들은-모두-synaptic-weights의-패턴으로-encoded-되어있다&quot;&gt;“당신이 아는 모든것, 당신의 뇌 안에 있는 모든 소중한 기억들은 모두 synaptic weights의 패턴으로 encoded 되어있다.”&lt;/h5&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/eq9k7l58360ps0e/Screenshot%202018-08-20%2004.56.41.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;13-dynamics-of-intergration--excitation-vs-inhibition-and-leak&quot;&gt;1.3 Dynamics of Intergration : Excitation vs Inhibition and Leak&lt;/h3&gt;
+
+&lt;p&gt;통합하는 과정에서 세개의 다른 타입의 인풋 신호 ( (excitation, inhibition, leak) )은 neural computation에서 가장 중요하다.&lt;/p&gt;
+
+&lt;p&gt;이 section에는 위의 과정을 개념적, 직관적으로 이해하는 section이며 또한 이것들이 electrical properties of neurons와 어떻게 relate되어있는지 알아보도록 하겠다.&lt;/p&gt;
+
+&lt;p&gt;그후에 이 process가 어떻게 수학적 equation으로 translate되어 computer에서 simulated 되어지는지 보도록 하겠다.&lt;/p&gt;
+
+&lt;p&gt;위에서 보았던 Inhibition과 Excitation 또는 leaky inputs들이 intergration되는 과정은&lt;/p&gt;
+
+&lt;h5 id=&quot;tug-of-war이라고-불린다&quot;&gt;tug-of-war이라고 불린다&lt;/h5&gt;
+
+&lt;p&gt;Tug-of-war은 excitation과 inhibition의 싸움이라고 볼수 있다.&lt;/p&gt;
+
+&lt;p&gt;https://grey.colorado.edu/CompCogNeuro/index.php/File:fig_vm_as_tug_of_war.png&lt;/p&gt;
+
+&lt;p&gt;만약 Excitation이 inhibition보다 강력하다면, neuron의 electrical potential이 증가한다. 이렇게 증가해서 어떠한 threshold를 넘는다면 output action potential을 발사한다.&lt;/p&gt;
+
+&lt;p&gt;반대로 inhibition이 더 강력하다면, neuron의 electrical potential은 감소하며 fire하는 threshold의 반대방향으로 이동한다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h5 id=&quot;더-자세히-알아보기-전에-먼저-neuroscience에서-사용하는-terminology를-보도록-하자&quot;&gt;더 자세히 알아보기 전에 먼저 neuroscience에서 사용하는 terminology를 보도록 하자&lt;/h5&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/v47szwp1p6virw8/Screenshot%202018-08-22%2004.40.50.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;g_i&quot;&gt;$g_i$&lt;/h3&gt;
+
+&lt;p&gt;Inhibitory conductance : inhibitory input의 총 강도&lt;/p&gt;
+
+&lt;h4 id=&quot;e_i&quot;&gt;$E_i$&lt;/h4&gt;
+
+&lt;p&gt;inhibitory driving potential&lt;/p&gt;
+
+&lt;h3 id=&quot;theta&quot;&gt;$\theta$&lt;/h3&gt;
+
+&lt;p&gt;action potential threshold : electircal potential at which the neuron will fire an action potential output to signal other neuron.&lt;/p&gt;
+
+&lt;h3 id=&quot;v_m&quot;&gt;$V_m$&lt;/h3&gt;
+
+&lt;p&gt;membrance potential&lt;/p&gt;
+
+&lt;h3 id=&quot;e_e&quot;&gt;$E_e$&lt;/h3&gt;
+
+&lt;p&gt;Excitatory driving potential&lt;/p&gt;
+
+&lt;h3 id=&quot;g_e&quot;&gt;$g_e$&lt;/h3&gt;
+
+&lt;p&gt;Excitatory conductance&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/y8hlx5tvr8awiyz/Screenshot%202018-08-22%2004.45.25.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Note 1 : 뇌는 plastic하다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/pdh8mvmigio7u79/Screenshot%202018-08-19%2020.28.00.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;https://sharpbrains.com/blog/2008/02/26/brain-plasticity-how-learning-changes-your-brain&lt;/p&gt;
+
+&lt;h4 id=&quot;references&quot;&gt;References&lt;/h4&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;O’Reilly, R. C., Munakata, Y., Frank, M. J., Hazy, T. E., and Contributors (2012). Computational Cognitive&lt;/p&gt;
+
+    &lt;p&gt;Neuroscience. Wiki Book, 1st Edition. URL: http://ccnbook.colorado.edu&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;https://sharpbrains.com/blog/2008/02/26/brain-plasticity-how-learning-changes-your-brain&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;</content><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><summary type="html">Computational Cognitive Neuroscience - Neuron</summary></entry><entry><title type="html">Policy Gradient,REINFORCE,ACTOR-CRITIC 논문 리뷰</title><link href="https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE_AC/" rel="alternate" type="text/html" title="Policy Gradient,REINFORCE,ACTOR-CRITIC 논문 리뷰 " /><published>2018-08-05T16:26:28+00:00</published><updated>2018-08-05T16:26:28+00:00</updated><id>https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE_AC</id><content type="html" xml:base="https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE_AC/">&lt;h2 id=&quot;policy-gradeint-reinforce-actor-critic&quot;&gt;Policy Gradeint, REINFORCE, Actor-critic&lt;/h2&gt;
+
+&lt;p&gt;얼마전 공부하였던 PG 관련 공부가 성에 차지 않아 링크 : https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE/&lt;/p&gt;
+
+&lt;p&gt;POLICY GRADIENT , REINFORCE , ACTOR-CRITIC 논문을 다시 간단히 본 뒤 하는 리뷰입니다.&lt;/p&gt;
+
+&lt;p&gt;2000년 sutton의 policy gradient 방법을 기반으로 한 REINFORCE와 ACTOR-CRITIC 의 설명입니다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;h4 id=&quot;sutton-2000-nips&quot;&gt;Sutton 2000, NIPS&lt;/h4&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/zxbzo75v6mwp33i/Screenshot%202018-08-05%2017.26.41.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h5 id=&quot;policy-gradient-methods-for-reinforcement-learning-with-function-approximation&quot;&gt;Policy Gradient Methods for Reinforcement Learning with Function Approximation&lt;/h5&gt;
+
+&lt;p&gt;Paper 링크 :&lt;/p&gt;
+
+&lt;p&gt;https://papers.nips.cc/paper/1713-policy-gradient-methods-for-reinforcement-learning-with-function-approximation.pdf&lt;/p&gt;
+
+&lt;h6 id=&quot;--abstract-&quot;&gt;- Abstract :&lt;/h6&gt;
+
+&lt;p&gt;Reinforcement Learning(강화학습)에서 Function Approximation(함수근사) 을 적용할때 기존 접근방법은 valuefunction (가치함수)을 Approximation(근사)한 뒤 Policy(정책)를 determining(결정)하는 방법을 사용하였다.&lt;/p&gt;
+
+&lt;p&gt;이 Paper에서는 그와 다른  접근 방법으로 policy가 function approximator에 의해 표현되며, 독립된 value function을 가지고 있으며 expected reward(보상)의 gradient에 따라 policy parameter가 update되는 방법이다.&lt;/p&gt;
+
+&lt;h5 id=&quot;reinforce-method와-actor-critic-method가-이-접근-방법의-예이다&quot;&gt;REINFORCE method와 actor-critic method가 이 접근 방법의 예이다.&lt;/h5&gt;
+
+&lt;p&gt;이 paper에서는Experience( 경험 )으부터 받은  Action-value (행동의 가치) 혹은 advantage function (어드벤테이지 함수)을 이용하여 gradient를 적용할수 있는 form(형태)로 written(쓰여질수) 있다는 것이다.&lt;/p&gt;
+
+&lt;h5 id=&quot;우리는-처음으로--이-방법을-사용하여-arbitrary-differentiable-function-approxmation을-사용한-policy-iteration이-locally-optimal-policy에-convergent수렴한다는-것을-증명한다&quot;&gt;우리는 처음으로  이 방법을 사용하여 arbitrary differentiable function approxmation을 사용한 policy iteration이 locally optimal policy에 convergent(수렴)한다는 것을 증명한다.&lt;/h5&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;11-value-function-approach&quot;&gt;1.1 Value-function approach&lt;/h3&gt;
+
+&lt;p&gt;action-selection policy란 estimated values들 중 “greedy”한 action을 선택하는 policy 였다. ( 각 state에서의 action들중 갖아 높은 estimated value인 action을 선택하는 것)&lt;/p&gt;
+
+&lt;h5 id=&quot;value-function-approach는-많은-application에서-좋은-성능을-보였지만-몇가지-한계가-있다&quot;&gt;Value function approach는 많은 application에서 좋은 성능을 보였지만 몇가지 한계가 있다.&lt;/h5&gt;
+
+&lt;h5 id=&quot;첫번째-한계-&quot;&gt;첫번째 한계 :&lt;/h5&gt;
+
+&lt;p&gt;policy가 stochastic하지 않고 deterministic하다는 것. (Jaakkola and Jordan 1994)&lt;/p&gt;
+
+&lt;h5 id=&quot;두번째-한계-&quot;&gt;두번째 한계 :&lt;/h5&gt;
+
+&lt;p&gt;Estimaed 된 action value의 아주 작은 변화에도 예민하다는것 ( greedy하게 선택되기 때문에 예를 들어 두개의 action value가 굉장히 비슷해도 아주 작은 차이도 선택될수도 선택되지 않을수도 있다. )&lt;/p&gt;
+
+&lt;h5 id=&quot;예를-들어-q-learning-sarsa-dynnamic-programming방법이-간단한-mdp와-simple-function-approximator에서-되지-않는다는것을-보였다&quot;&gt;예를 들어 Q-learning, Sarsa, Dynnamic programming방법이 간단한 MDP와 simple function approximator에서 되지 않는다는것을 보였다.&lt;/h5&gt;
+
+&lt;p&gt;( Gordon, 1995, 1996; Baird, 1995 : Tsitsilils and van Roy 1996, Bersekas and Tsitsiklis 1996)&lt;/p&gt;
+
+&lt;p&gt;(나의 의견 : 의 관점은 Policy gradient 논문이 쓰였던 2000년 때의 관점으로 보인다. 
+Deep learning이 function approximation으로 잘 쓰이기 이전에 쓰여진 논문이다.
+또한 Action value를 사용하여 Atari에서 좋은 성능을 보인 DQN과 DQN으로부터 파생되어 좋은 성능을 보인 연구결과등이 고려되지 않은 논문이기에 현재의 시점에서는 다른 관점으로 이 논문을 봐야할것 같다.)&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;12-approximate-a-stochastic-policy&quot;&gt;1.2 Approximate a stochastic policy&lt;/h3&gt;
+
+&lt;p&gt;이 paper에서는&lt;/p&gt;
+
+&lt;h5 id=&quot;value-function을-approximating하기위해-사용하지-않고-deterministic-policy를-계산하기-위해-사용할-것이며&quot;&gt;Value function을 Approximating하기위해 사용하지 않고 deterministic policy를 계산하기 위해 사용할 것이며,&lt;/h5&gt;
+
+&lt;h5 id=&quot;독립적인-function-approximator을-사용하여-stochastic-policy를-직접-approximate하는-방법을-사용할-것이다&quot;&gt;독립적인 function approximator을 사용하여 Stochastic policy를 직접 approximate하는 방법을 사용할 것이다.&lt;/h5&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/oize488nllhdvee/Screenshot%202018-08-05%2017.59.03.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;예를들어,&lt;/p&gt;
+
+&lt;p&gt;function approxmator가 neural network이며 input은 state이고 output은 각 action을 선택할 “확률”이다. 그리고 weight는 policy parameter이다.&lt;/p&gt;
+
+&lt;h4 id=&quot;theta-는-policy-parameter의-vector-rho-policy에-의한-performance--eg--각-step마다의-average-reward로-정의하며&quot;&gt;$\theta$ 는 policy parameter의 vector, $\rho$ policy에 의한 performance ( eg : 각 step마다의 average reward)로 정의하며,&lt;/h4&gt;
+
+&lt;h4 id=&quot;policy-gradient-approach는-gradient에-의해-policy-parameter가-update되는-접근방법이다&quot;&gt;policy gradient approach는 gradient에 의해 policy parameter가 update되는 접근방법이다.&lt;/h4&gt;
+
+&lt;h1 id=&quot;bigtriangleup-theta-approx-alpha-fracpartial-rhopartial-theta&quot;&gt;$\bigtriangleup \theta \approx \alpha \frac{\partial \rho}{\partial \theta}$&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/bh3c5vj0dkhmncy/Screenshot%202018-08-05%2018.07.10.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;$\alpha$는 step size이며, $\theta$는 performance measure $\rho$에 의해 locally optimal policy로 converge 한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/nkvuc1b2kc38nh2/Screenshot%202018-08-05%2018.18.05.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h5 id=&quot;value-function-approach와는-다르게-polciy-gradient-방법은-theta-가-조금-변한다면-policy와-state-distribution에도-작은-영향을-미친다&quot;&gt;Value-function approach와는 다르게 Polciy gradient 방법은 $\theta$ 가 조금 변한다면 policy와 state distribution에도 작은 영향을 미친다.&lt;/h5&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;13-policy-gradient-with-reinforce-and-actor-critic&quot;&gt;1.3 Policy Gradient with REINFORCE and actor-critic&lt;/h3&gt;
+
+&lt;h5 id=&quot;131--unbiased-estimate-of-the-gradient&quot;&gt;1.3.1  Unbiased estimate of the gradient&lt;/h5&gt;
+
+&lt;h5 id=&quot;이-페이퍼에서는-unbiased-estimate-of-the-gradient를-특정-properties를-축종시키는-approximate-value-function을-사용하여-얻은-경험으로부터-얻을수-있다는-것을-증명하였다&quot;&gt;이 페이퍼에서는 unbiased estimate of the gradient를 특정 properties를 축종시키는 approximate value function을 사용하여 얻은 경험으로부터 얻을수 있다는 것을 증명하였다.&lt;/h5&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/m7ztydonjyff4jl/Screenshot%202018-08-05%2018.45.26.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Willams’s (1988, 1992) REINFORCE 알고리즘에서도 unbiased estimate of the gradient를 찾았지만  학습된 value function을 이용하지 않았다.&lt;/p&gt;
+
+&lt;p&gt;REINFORCE는 value function을 사용한 RL 방법보다 훨씬 느리게 학습하며, 
+Learning value functin을 사용하므로서 variance를 줄이고 더 빠르게 학습할수 있도록 한다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;ACTOR-CRITIC 논문 리뷰 :&lt;/p&gt;
+
+&lt;h4 id=&quot;neuronlike-adaptive-elements-that-can-solve-difficult-learning-control-problems&quot;&gt;Neuronlike Adaptive Elements That Can Solve Difficult Learning Control Problems&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/43935038-087bf022-9c8d-11e8-90ea-7201470c472e.JPG&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;“Two neuronlike adaptive elements”는 어려운 control problem을 풀 수 있다.&lt;/p&gt;
+
+&lt;p&gt;여기서 어려운 taks는 Pole의 균형을 맞추는 것이다.&lt;/p&gt;
+
+&lt;p&gt;여기서 Learning system은 두가지로 구성되어 있다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Single Associative search element(ASE)&lt;/li&gt;
+  &lt;li&gt;Single adaptive critice element (ASE)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Pole의 균형을 맞추기 위해,&lt;/p&gt;
+
+&lt;p&gt;ASE는 reinforcement의 feeback에 영향을 받아서 찾은 input과 output의 assoication 이다.&lt;/p&gt;
+
+&lt;p&gt;ACE는 좀 더 informative evaluation function으로 구성되어 있으며 reinforcement feedback과는 단독으로 제공한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;ase&quot;&gt;ASE&lt;/h2&gt;
+
+&lt;p&gt;ASE의 input은  cart-pole state의 vector이며 이것은 decorder에 의해 계산되어진 것이다.&lt;/p&gt;
+
+&lt;p&gt;또한 ASE의 output은 Cartpole에 가해질 force를 측정한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/43935037-085990ae-9c8d-11e8-957a-52b3622b0756.JPG&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;ace&quot;&gt;ACE&lt;/h2&gt;
+
+&lt;p&gt;ACE는 ASE와 마찬가지로 nonreinforcing input을 받으며 이것을 ASE를 개선하기 위해 사용한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/43935035-08326ace-9c8d-11e8-9dee-dfd856ed76cf.JPG&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Note 1&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Association&lt;/strong&gt; in psychology refers to a mental connection between concepts, events, or mental states that usually stems from specific experiences. 
+https://en.wikipedia.org/wiki/Association_(psychology)&lt;/p&gt;
+
+&lt;p&gt;현재 Reinforcement Learning에서 Actor-Critic으로 불리는 학습 알고리즘의 아이디어가 제시된 1983년의 논문을 보았다.&lt;/p&gt;
+
+&lt;p&gt;현재는 네트워크 두개를 사용해 하나는 action을 다른 하나는 state를  측정하는 방법을 actor - critic이라고 범용적으로 부르는 것 같지만, 
+이 논문에서는 ASE와 ACE를 사용하여 Pole의 balance를 맞추는 환경에서 더 좋은 performace를 보였다 라고 제시하는 것 같다.&lt;/p&gt;
+
+&lt;p&gt;재밌는점은 이 논문은 동물이 학습할때 short term memory와 long-term memory를 통해 학습한다는 것을  출발한것처럼 보인다.&lt;/p&gt;
+
+&lt;h5 id=&quot;132-proving-the-convergence-of-a-wide-variety-of-algorithms&quot;&gt;1.3.2 Proving the convergence of a wide variety of algorithms&lt;/h5&gt;
+
+&lt;h5 id=&quot;이-연구가-제안한-또-다른-결과는-actor-critic또는-policy-iteration-architectures-barto-sutton-and-anderson-1983-sutton-1984-kimura-and-kobayashi-1998를-기반으로-하여-여러가지-알고리즘에서-convergence가-됨을-증명하였다&quot;&gt;이 연구가 제안한 또 다른 결과는 “actor-critic”또는 policy-iteration architectures (Barto, Sutton and Anderson 1983, sutton 1984, Kimura and Kobayashi 1998)를 기반으로 하여 여러가지 알고리즘에서 convergence가 됨을 증명하였다.&lt;/h5&gt;
+
+&lt;p&gt;이 논문에서는 policy iteration에서의 general differentiable function approximation 은 locally optimal policy에 converge된다는 것의 아이디어를 가져왔다.&lt;/p&gt;
+
+&lt;p&gt;Baird and Moore(1999)가 VAPS 방법에서 policy-gradient가 비슷한 방법을 사용하였지만 locally optimal policy에 수렴하지 않았다.&lt;/p&gt;
+
+&lt;h6 id=&quot;-neuronlike-adaptive-elements-that-can-solve-difficult-learning-control-problems&quot;&gt;* Neuronlike Adaptive Elements That Can Solve Difficult Learning Control Problems&lt;/h6&gt;
+
+&lt;p&gt;https://github.com/wonseokjung/Papernotes/blob/master/1_Reinforcemen/1_NAETDLC/1_Neuronlike_Adaptive_Elements_that_can_solve_difficult_learning_control_problems_1983_sutton.md&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;2-policy-gradient-theorem&quot;&gt;2. Policy Gradient Theorem&lt;/h2&gt;
+
+&lt;p&gt;Function Approximation에서 Agent의 objective를 두 가지 방법으로 Formulation한다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;h5 id=&quot;reward-를-average하는-방법&quot;&gt;Reward 를 Average하는 방법&lt;/h5&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Policy에 따라 per step 마다 받는 reward를 average한다. (Long-term 관점)&lt;/p&gt;
+
+&lt;h3 id=&quot;rhopi--lim_n-rightarrow-infin--frac1n-e--r_1-r_2--r_3--r_-mid-pi---sum_s-dpis-sum_a-pisara_s&quot;&gt;$\rho(\pi) = lim_{n \rightarrow \infin } \frac{1}{n} E { r_1 +r_2 + r_3 … r_ \mid \pi } = \sum_s d^{\pi}(s) \sum_{a} \pi(s,a)R^a_s$&lt;/h3&gt;
+
+&lt;p&gt;여기서 $d^{\pi}$ 은 state $s_0$ 에서 policy $\pi$ 를 따른 state의 distribution 이며 다음과 같이 정의한다.&lt;/p&gt;
+
+&lt;p&gt;$d^\pi (s) = lim_{n \rightarrow \infin} Pr { s_t = s \mid s_0 , \pi}$&lt;/p&gt;
+
+&lt;p&gt;1.1. Average 방법에서의 State-action&lt;/p&gt;
+
+&lt;h4 id=&quot;q_pi-sa--suminfin_t1-er_t---rho-pi-mid-s_0-s-a_0-a-pi&quot;&gt;$Q_\pi (s,a) = \sum^\infin_{t=1} E{r_t - \rho (\pi) \mid s_0 =s, a_0 =a, \pi}$&lt;/h4&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;지정된 State state $s_0$에서 시작하는 방법&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;두번째 방법은 지정된 State state $s_0$에서 시작하는 방법 으로 지정된 state에서 시작하여 얻은 long-term reward만을 고려한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/9vvi05uvbdmytts/Screenshot%202018-08-20%2017.34.31.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/0iwtmt3gx9h5r66/Screenshot%202018-08-20%2017.40.29.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;policy를 따라 state $s_0$에서부터 받은 discounted reward를 모두 계산한다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;gamma-in--01---discount-rate&quot;&gt;$\gamma \in [ 0,1]$  : discount rate&lt;/h5&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;theorem-1--policy-gradint-&quot;&gt;Theorem 1 ( Policy Gradint )&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/3ezwwoklgvjx78n/Screenshot%202018-08-20%2019.53.31.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;$d^\pi(s)= \sum_{t=0}^{\infin} \gamma^t Pr{s_t = s \mid s_0, \pi}$&lt;/p&gt;
+
+&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;d^\pi(s)&lt;/script&gt; : state &lt;script type=&quot;math/tex&quot;&gt;s_0&lt;/script&gt; 부터 시작, policy &lt;script type=&quot;math/tex&quot;&gt;\pi&lt;/script&gt;를 따른 encountered된 state의 discounted weighting&lt;/p&gt;
+
+&lt;p&gt;** History&lt;/p&gt;
+
+&lt;h5 id=&quot;marbach-and-tsitsikis-1998--expressing-the-gradient-was-first-discussed-for-the-average-reward-formulation&quot;&gt;Marbach and Tsitsikis (1998) : expressing the gradient was first discussed for the average-reward formulation&lt;/h5&gt;
+
+&lt;h5 id=&quot;singh-and-jordan-1995-related-expression-state-value-function&quot;&gt;Singh, and Jordan (1995) :related expression state-value function&lt;/h5&gt;
+
+&lt;p&gt;위의 연구들의 결과를 사용하여 start-state formulation과 더 간단한 증명으로 발전시켰다.&lt;/p&gt;
+
+&lt;h5 id=&quot;willamss19881992-reinforce-algorithm-가-위의-event와-다른-점은-위의-두-연구들은--state의-distribution에-따라-policy가-변하는-term인-fracpartial-dpispartial-theta-가-고려되지-않았다는-것이다&quot;&gt;Willams’s(1988,1992) ,REINFORCE algorithm 가 위의 event와 다른 점은 위의 두 연구들은  state의 distribution에 따라 policy가 변하는 term인 $\frac{\partial d^\pi(s)}{\partial \theta}$ 가 고려되지 않았다는 것이다.&lt;/h5&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;3--policy-gradient-with-approximation&quot;&gt;3. 	Policy Gradient with Approximation&lt;/h3&gt;
+
+&lt;p&gt;이번에는 function approximator을 사용하여 Estimate 된 $Q^\pi$를 고려하는 것을 알아보도록 하겠다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/j1kelgxd3spbwz5/Screenshot%202018-08-20%2022.23.33.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 부분은 예전에 내가 정리해놓은 글과 크게 다르지 않아 블로그 글 링크로 대체함&lt;/p&gt;
+
+&lt;p&gt;https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE/&lt;/p&gt;</content><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><summary type="html">Policy Gradeint, REINFORCE, Actor-critic 얼마전 공부하였던 PG 관련 공부가 성에 차지 않아 링크 : https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE/ POLICY GRADIENT , REINFORCE , ACTOR-CRITIC 논문을 다시 간단히 본 뒤 하는 리뷰입니다. 2000년 sutton의 policy gradient 방법을 기반으로 한 REINFORCE와 ACTOR-CRITIC 의 설명입니다. Sutton 2000, NIPS Policy Gradient Methods for Reinforcement Learning with Function Approximation Paper 링크 : https://papers.nips.cc/paper/1713-policy-gradient-methods-for-reinforcement-learning-with-function-approximation.pdf - Abstract : Reinforcement Learning(강화학습)에서 Function Approximation(함수근사) 을 적용할때 기존 접근방법은 valuefunction (가치함수)을 Approximation(근사)한 뒤 Policy(정책)를 determining(결정)하는 방법을 사용하였다. 이 Paper에서는 그와 다른 접근 방법으로 policy가 function approximator에 의해 표현되며, 독립된 value function을 가지고 있으며 expected reward(보상)의 gradient에 따라 policy parameter가 update되는 방법이다. REINFORCE method와 actor-critic method가 이 접근 방법의 예이다. 이 paper에서는Experience( 경험 )으부터 받은 Action-value (행동의 가치) 혹은 advantage function (어드벤테이지 함수)을 이용하여 gradient를 적용할수 있는 form(형태)로 written(쓰여질수) 있다는 것이다. 우리는 처음으로 이 방법을 사용하여 arbitrary differentiable function approxmation을 사용한 policy iteration이 locally optimal policy에 convergent(수렴)한다는 것을 증명한다. 1.1 Value-function approach action-selection policy란 estimated values들 중 “greedy”한 action을 선택하는 policy 였다. ( 각 state에서의 action들중 갖아 높은 estimated value인 action을 선택하는 것) Value function approach는 많은 application에서 좋은 성능을 보였지만 몇가지 한계가 있다. 첫번째 한계 : policy가 stochastic하지 않고 deterministic하다는 것. (Jaakkola and Jordan 1994) 두번째 한계 : Estimaed 된 action value의 아주 작은 변화에도 예민하다는것 ( greedy하게 선택되기 때문에 예를 들어 두개의 action value가 굉장히 비슷해도 아주 작은 차이도 선택될수도 선택되지 않을수도 있다. ) 예를 들어 Q-learning, Sarsa, Dynnamic programming방법이 간단한 MDP와 simple function approximator에서 되지 않는다는것을 보였다. ( Gordon, 1995, 1996; Baird, 1995 : Tsitsilils and van Roy 1996, Bersekas and Tsitsiklis 1996) (나의 의견 : 의 관점은 Policy gradient 논문이 쓰였던 2000년 때의 관점으로 보인다. Deep learning이 function approximation으로 잘 쓰이기 이전에 쓰여진 논문이다. 또한 Action value를 사용하여 Atari에서 좋은 성능을 보인 DQN과 DQN으로부터 파생되어 좋은 성능을 보인 연구결과등이 고려되지 않은 논문이기에 현재의 시점에서는 다른 관점으로 이 논문을 봐야할것 같다.) 1.2 Approximate a stochastic policy 이 paper에서는 Value function을 Approximating하기위해 사용하지 않고 deterministic policy를 계산하기 위해 사용할 것이며, 독립적인 function approximator을 사용하여 Stochastic policy를 직접 approximate하는 방법을 사용할 것이다. 예를들어, function approxmator가 neural network이며 input은 state이고 output은 각 action을 선택할 “확률”이다. 그리고 weight는 policy parameter이다. $\theta$ 는 policy parameter의 vector, $\rho$ policy에 의한 performance ( eg : 각 step마다의 average reward)로 정의하며, policy gradient approach는 gradient에 의해 policy parameter가 update되는 접근방법이다. $\bigtriangleup \theta \approx \alpha \frac{\partial \rho}{\partial \theta}$ $\alpha$는 step size이며, $\theta$는 performance measure $\rho$에 의해 locally optimal policy로 converge 한다. Value-function approach와는 다르게 Polciy gradient 방법은 $\theta$ 가 조금 변한다면 policy와 state distribution에도 작은 영향을 미친다. 1.3 Policy Gradient with REINFORCE and actor-critic 1.3.1 Unbiased estimate of the gradient 이 페이퍼에서는 unbiased estimate of the gradient를 특정 properties를 축종시키는 approximate value function을 사용하여 얻은 경험으로부터 얻을수 있다는 것을 증명하였다. Willams’s (1988, 1992) REINFORCE 알고리즘에서도 unbiased estimate of the gradient를 찾았지만 학습된 value function을 이용하지 않았다. REINFORCE는 value function을 사용한 RL 방법보다 훨씬 느리게 학습하며, Learning value functin을 사용하므로서 variance를 줄이고 더 빠르게 학습할수 있도록 한다. ACTOR-CRITIC 논문 리뷰 : Neuronlike Adaptive Elements That Can Solve Difficult Learning Control Problems “Two neuronlike adaptive elements”는 어려운 control problem을 풀 수 있다. 여기서 어려운 taks는 Pole의 균형을 맞추는 것이다. 여기서 Learning system은 두가지로 구성되어 있다. Single Associative search element(ASE) Single adaptive critice element (ASE) Pole의 균형을 맞추기 위해, ASE는 reinforcement의 feeback에 영향을 받아서 찾은 input과 output의 assoication 이다. ACE는 좀 더 informative evaluation function으로 구성되어 있으며 reinforcement feedback과는 단독으로 제공한다. ASE ASE의 input은 cart-pole state의 vector이며 이것은 decorder에 의해 계산되어진 것이다. 또한 ASE의 output은 Cartpole에 가해질 force를 측정한다. ACE ACE는 ASE와 마찬가지로 nonreinforcing input을 받으며 이것을 ASE를 개선하기 위해 사용한다. Note 1 Association in psychology refers to a mental connection between concepts, events, or mental states that usually stems from specific experiences. https://en.wikipedia.org/wiki/Association_(psychology) 현재 Reinforcement Learning에서 Actor-Critic으로 불리는 학습 알고리즘의 아이디어가 제시된 1983년의 논문을 보았다. 현재는 네트워크 두개를 사용해 하나는 action을 다른 하나는 state를 측정하는 방법을 actor - critic이라고 범용적으로 부르는 것 같지만, 이 논문에서는 ASE와 ACE를 사용하여 Pole의 balance를 맞추는 환경에서 더 좋은 performace를 보였다 라고 제시하는 것 같다. 재밌는점은 이 논문은 동물이 학습할때 short term memory와 long-term memory를 통해 학습한다는 것을 출발한것처럼 보인다. 1.3.2 Proving the convergence of a wide variety of algorithms 이 연구가 제안한 또 다른 결과는 “actor-critic”또는 policy-iteration architectures (Barto, Sutton and Anderson 1983, sutton 1984, Kimura and Kobayashi 1998)를 기반으로 하여 여러가지 알고리즘에서 convergence가 됨을 증명하였다. 이 논문에서는 policy iteration에서의 general differentiable function approximation 은 locally optimal policy에 converge된다는 것의 아이디어를 가져왔다. Baird and Moore(1999)가 VAPS 방법에서 policy-gradient가 비슷한 방법을 사용하였지만 locally optimal policy에 수렴하지 않았다. * Neuronlike Adaptive Elements That Can Solve Difficult Learning Control Problems https://github.com/wonseokjung/Papernotes/blob/master/1_Reinforcemen/1_NAETDLC/1_Neuronlike_Adaptive_Elements_that_can_solve_difficult_learning_control_problems_1983_sutton.md 2. Policy Gradient Theorem Function Approximation에서 Agent의 objective를 두 가지 방법으로 Formulation한다. Reward 를 Average하는 방법 Policy에 따라 per step 마다 받는 reward를 average한다. (Long-term 관점) $\rho(\pi) = lim_{n \rightarrow \infin } \frac{1}{n} E { r_1 +r_2 + r_3 … r_ \mid \pi } = \sum_s d^{\pi}(s) \sum_{a} \pi(s,a)R^a_s$ 여기서 $d^{\pi}$ 은 state $s_0$ 에서 policy $\pi$ 를 따른 state의 distribution 이며 다음과 같이 정의한다. $d^\pi (s) = lim_{n \rightarrow \infin} Pr { s_t = s \mid s_0 , \pi}$ 1.1. Average 방법에서의 State-action $Q_\pi (s,a) = \sum^\infin_{t=1} E{r_t - \rho (\pi) \mid s_0 =s, a_0 =a, \pi}$ 지정된 State state $s_0$에서 시작하는 방법 두번째 방법은 지정된 State state $s_0$에서 시작하는 방법 으로 지정된 state에서 시작하여 얻은 long-term reward만을 고려한다. policy를 따라 state $s_0$에서부터 받은 discounted reward를 모두 계산한다. $\gamma \in [ 0,1]$ : discount rate Theorem 1 ( Policy Gradint ) $d^\pi(s)= \sum_{t=0}^{\infin} \gamma^t Pr{s_t = s \mid s_0, \pi}$ : state 부터 시작, policy 를 따른 encountered된 state의 discounted weighting ** History Marbach and Tsitsikis (1998) : expressing the gradient was first discussed for the average-reward formulation Singh, and Jordan (1995) :related expression state-value function 위의 연구들의 결과를 사용하여 start-state formulation과 더 간단한 증명으로 발전시켰다. Willams’s(1988,1992) ,REINFORCE algorithm 가 위의 event와 다른 점은 위의 두 연구들은 state의 distribution에 따라 policy가 변하는 term인 $\frac{\partial d^\pi(s)}{\partial \theta}$ 가 고려되지 않았다는 것이다. 3. Policy Gradient with Approximation 이번에는 function approximator을 사용하여 Estimate 된 $Q^\pi$를 고려하는 것을 알아보도록 하겠다. 이 부분은 예전에 내가 정리해놓은 글과 크게 다르지 않아 블로그 글 링크로 대체함 https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE/</summary></entry><entry><title type="html">Policy Gradient Methods - Newversion</title><link href="https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE/" rel="alternate" type="text/html" title="Policy Gradient Methods - Newversion" /><published>2018-08-05T16:26:28+00:00</published><updated>2018-08-05T16:26:28+00:00</updated><id>https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE</id><content type="html" xml:base="https://wonseokjung.github.io//reinforcementlearning/update/RL-PG_RE/">&lt;h1 id=&quot;policy-gradient-methods&quot;&gt;Policy Gradient Methods&lt;/h1&gt;
+
+&lt;h3 id=&quot;wonseok-jung&quot;&gt;Wonseok Jung&lt;/h3&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;1-two-methods-of-choosing-action&quot;&gt;1. Two methods of choosing action&lt;/h2&gt;
+
+&lt;p&gt;Action을 선택하는 방법에는 Action-value를 기준으로 하는 것과 Parameterized policy를 기준으로 하는것으로 두 가지 방법이 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/lpclwllmm9r6wec/Screenshot%202018-07-28%2020.01.45.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Action-value :
+    &lt;ul&gt;
+      &lt;li&gt;Learning the action value&lt;/li&gt;
+      &lt;li&gt;Estimate action value을 바탕으로 action을 선택한다.&lt;/li&gt;
+      &lt;li&gt;Policies would not even exist without the action-value estimates&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/gsta9vk98aql17u/Screenshot%202018-07-28%2020.02.41.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Parameterized policy :
+    &lt;ul&gt;
+      &lt;li&gt;select actions without consulting value function&lt;/li&gt;
+      &lt;li&gt;Value function still be used to learn policy parameter&lt;/li&gt;
+      &lt;li&gt;Value function이 action을 선택하는 기준으로 사용되지 않는다&lt;/li&gt;
+      &lt;li&gt;여기서 policy $\pi$ 는 neural network가 될 수 있다.&lt;/li&gt;
+      &lt;li&gt;pixel 또는 state information등 input이  neural network를 통과해 possible action을 output으로 return 한다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;2policy-objective-functions&quot;&gt;2.Policy Objective Functions&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Policy Objective Functions에 대하여 알아보도록 하겠다.&lt;/p&gt;
+
+    &lt;p&gt;Policy Objective Function의 목적은 Parameter $\theta$를 가진 주어진  Policy를 $\pi_{\theta}(s,a)$ 의 가장 좋은   Parameter $\theta$ 를 찾는 것이다.&lt;/p&gt;
+
+    &lt;p&gt;Policy $\pi_{theta}$ 를 측정하려면 어떠한 방법이 필요할까?&lt;/p&gt;
+
+    &lt;p&gt;2.1 Episodic한 환경 : Episodic한 환경에서는 start value를 사용할 수 있다.&lt;/p&gt;
+
+    &lt;h3 id=&quot;j_1-theta--vpi_theta-s_1--e_pi_theta-v1&quot;&gt;$J_1 (\theta) = V^{\pi_{\theta}} (S_1) = E_{\pi_\theta} [v1]$&lt;/h3&gt;
+
+    &lt;p&gt;2.2 Continuing 환경: Average value를 사용할 수 있다.&lt;/p&gt;
+
+    &lt;h3 id=&quot;j_avvtheta--sum_s-dpi_thetas-vpi_thetas&quot;&gt;$J_{avV}(\theta) = \sum_s d^{\pi_\theta}(s) V^{\pi_\theta}(s)$&lt;/h3&gt;
+
+    &lt;p&gt;2.3 Time-step마다의 reward를 average하는 방법&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;j_avrtheta--sum_s-dpi_thetas-vpi_thetas&quot;&gt;$J_{avR}(\theta) = \sum_s d^{\pi_\theta}(s) V^{\pi_\theta}(s)$&lt;/h3&gt;
+
+&lt;h6 id=&quot;note-1&quot;&gt;Note 1:&lt;/h6&gt;
+
+&lt;h4 id=&quot;dpi_theta--pitheta에-의한-markov-chain의-stationary-distribution&quot;&gt;$d^\pi_{\theta}$ : $\pi(\theta)$에 의한 Markov Chain의 stationary distribution&lt;/h4&gt;
+
+&lt;h6 id=&quot;note-2&quot;&gt;Note 2&lt;/h6&gt;
+
+&lt;h6 id=&quot;markov-chain&quot;&gt;Markov chain:&lt;/h6&gt;
+
+&lt;p&gt;A &lt;strong&gt;Markov chain&lt;/strong&gt; is “a &lt;a href=&quot;https://en.wikipedia.org/wiki/Stochastic_model&quot;&gt;stochastic model&lt;/a&gt; describing a &lt;a href=&quot;https://en.wikipedia.org/wiki/Sequence&quot;&gt;sequence&lt;/a&gt; of possible events in which the probability of each event depends only on the state attained in the previous event”.[[1]&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/l5n30rxnwwuq7k0/Screenshot%202018-07-26%2017.30.20.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h6 id=&quot;note-3&quot;&gt;Note 3&lt;/h6&gt;
+
+&lt;p&gt;Stationary distribution : A &lt;strong&gt;stationary distribution&lt;/strong&gt; of a Markov chain is a probability &lt;strong&gt;distribution&lt;/strong&gt; that remains unchanged in the Markov chain as time progresses
+(reference :https://brilliant.org/wiki/stationary-distributions/)&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;3-polciy-optimization&quot;&gt;3. Polciy Optimization&lt;/h2&gt;
+
+&lt;p&gt;지금부터 위의 Obejectives를 Optimization 하는 방법에 대해 알아보도록 하겠다. 정확히 말하면 Objective function을 maximize하는 parameter을 찾는 것이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;max-theta--e-sumt0h-rs_t-mid-pi_theta&quot;&gt;$Max &lt;em&gt;{\theta}  E [\sum&lt;/em&gt;{t=0}^H R(S_t) \mid \pi_{\theta}]$&lt;/h3&gt;
+
+&lt;p&gt;Optimization을 하는 방법으로는 Gradient based method와  Gradient free method 두 가지로 구분할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;Gradient free method :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Hill climbing&lt;/li&gt;
+  &lt;li&gt;Simplex, Amoeba, nelder Mead&lt;/li&gt;
+  &lt;li&gt;Genetic Algorithms&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Gradient  based method&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Gradient descent&lt;/li&gt;
+  &lt;li&gt;Conjugate gradient&lt;/li&gt;
+  &lt;li&gt;Quasi-newton&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;여기서는 Gradient descent 방법에 대하여 자세히 알아보도록 하겠다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;4-policy-optimization&quot;&gt;4. Policy Optimization&lt;/h2&gt;
+
+&lt;p&gt;$J(\theta)$를 policy의 objective function이라고 해보자.&lt;/p&gt;
+
+&lt;p&gt;우리는 이 Object function $J(\theta)$ 을 통하여 받는 reward를 maximize하는 parameter를 찾으려는게 목적이며,&lt;/p&gt;
+
+&lt;p&gt;그렇기 떄문에 parameter의  Gradient descent가 아닌  Gradient ascent를 구해야하 한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;triangle-theta--alpha-triangledown_thetajtheta&quot;&gt;$\triangle \theta = \alpha \triangledown_{\theta}J(\theta)$&lt;/h3&gt;
+
+&lt;p&gt;위의 식에서 $\alpha$는 step size이며, $\triangledown_{\theta} J(\theta)$는 Policy gradient 이다.&lt;/p&gt;
+
+&lt;p&gt;Policy gradient는 partial derivative 이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/l8ajce03tlly1qt/Screenshot%202018-07-26%2022.11.51.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Note 1&lt;/p&gt;
+
+&lt;p&gt;Gradient descent : &lt;strong&gt;Gradient descent&lt;/strong&gt; is a &lt;a href=&quot;https://en.wikipedia.org/wiki/Category:First_order_methods&quot;&gt;first-order&lt;/a&gt; &lt;a href=&quot;https://en.wikipedia.org/wiki/Iterative_algorithm&quot;&gt;iterative&lt;/a&gt; &lt;a href=&quot;https://en.wikipedia.org/wiki/Mathematical_optimization&quot;&gt;optimization&lt;/a&gt; &lt;a href=&quot;https://en.wikipedia.org/wiki/Algorithm&quot;&gt;algorithm&lt;/a&gt; for finding the minimum of a function. To find a &lt;a href=&quot;https://en.wikipedia.org/wiki/Local_minimum&quot;&gt;local minimum&lt;/a&gt; of a function using gradient descent, one takes steps proportional to the &lt;em&gt;negative&lt;/em&gt; of the &lt;a href=&quot;https://en.wikipedia.org/wiki/Gradient&quot;&gt;gradient&lt;/a&gt; (or approximate gradient) of the function at the current point. If instead one takes steps proportional to the &lt;em&gt;positive&lt;/em&gt; of the gradient, one approaches a &lt;a href=&quot;https://en.wikipedia.org/wiki/Local_maximum&quot;&gt;local maximum&lt;/a&gt; of that function; the procedure is then known as &lt;strong&gt;gradient ascent&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/vr28sje6iregzxv/Screenshot%202018-07-26%2021.22.38.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Note2&lt;/p&gt;
+
+&lt;p&gt;Gradient ascent : If instead one takes steps proportional to the positive of the gradient, one approaches a &lt;strong&gt;local maximum&lt;/strong&gt; of that function; the procedure is then known as &lt;strong&gt;gradient ascent&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Note 3&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;gradient &lt;em&gt;descent&lt;/em&gt; aims at &lt;em&gt;minimizing&lt;/em&gt; some objective function: $\theta_j \leftarrow \theta_j - \alpha \triangledown J(\theta)  $&lt;/li&gt;
+  &lt;li&gt;gradient &lt;em&gt;ascent&lt;/em&gt; aims at &lt;em&gt;maximizing&lt;/em&gt; some objective function:  $\theta_j \leftarrow \theta_j + \alpha \triangledown J(\theta)  $&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;5-likelihood-ratio-policy-gradient&quot;&gt;5. Likelihood Ratio Policy Gradient&lt;/h3&gt;
+
+&lt;p&gt;$\tau$는 state-action 의 sequence로 정의한다. ${s_0, a_0, s_1,a_1 …… s_T, u_T}$ 위와같이 state 에서 action을 선택하며 받은 reward의 총 합을 다음과 같이 정의할 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;rtau--sum_t0h-rs_t-a_t&quot;&gt;$R(\tau) = \sum_{t=0}^H R(s_t, a_t)$&lt;/h3&gt;
+
+&lt;p&gt;Parameter $\theta$ 를 따른  Policy $\pi$ 에 의해 선택된 sequence $\tau$ 는 다음과 같이 정의한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;jtheta--e--sum_t0h-rs_t-a_t--pi_theta--sum_tau-ptau--theta-rtau&quot;&gt;$J(\theta) = E [ \sum_{t=0}^H R(s_t, a_t) ; \pi_{\theta}] = \sum_{\tau} P(\tau ; \theta) R(\tau)$&lt;/h3&gt;
+
+&lt;p&gt;Reinforcement Learning에서는 episode동안 받을수 있는 총 reward를 최대화 시키는 것이 목표이기 때문에,&lt;/p&gt;
+
+&lt;h6 id=&quot;parameter-theta-를-따른--policy-pi-에-의해-선택된-sequence-tau-를-최대화-하는-parameter-theta-를-찾는것이-목표이다&quot;&gt;Parameter $\theta$ 를 따른  Policy $\pi​$ 에 의해 선택된 sequence $\tau​$ 를 최대화 하는 Parameter $\theta​$ 를 찾는것이 목표이다!&lt;/h6&gt;
+
+&lt;h3 id=&quot;max_theta-jtheta-max_theta-sum_tau-ptau--theta-rtau&quot;&gt;$max_{\theta} J(\theta) =max_{\theta} \sum_{\tau} P(\tau ; \theta) R(\tau)$&lt;/h3&gt;
+
+&lt;p&gt;$J(\theta) = E [ \sum_{t=0}^H R(s_t, a_t) ; \pi_{\theta}] = \sum_{\tau} P(\tau ; \theta) R(\tau)$ 식의 parameter $\theta$ 에 의해 gradient를  전개해보면 다음과 같다.&lt;/p&gt;
+
+&lt;h3 id=&quot;bigtriangledown--jtheta--bigtriangledown_theta-sum_tau-ptau--thetartau&quot;&gt;$\bigtriangledown  J(\theta) = \bigtriangledown_{\theta} \sum_{\tau} P(\tau ; \theta)R(\tau)$&lt;/h3&gt;
+
+&lt;h3 id=&quot;-sum_tau-bigtriangledown_theta-ptau--thetartau&quot;&gt;$= \sum_{\tau} \bigtriangledown_\theta P(\tau ; \theta)R(\tau)$&lt;/h3&gt;
+
+&lt;h3 id=&quot;probability-of-trajectory-under-theta를--fracptau--thetaptau--theta--형태로-추가&quot;&gt;Probability of Trajectory under theta를  $\frac{P(\tau ; \theta)}{P(\tau ; \theta)} $ 형태로 추가&lt;/h3&gt;
+
+&lt;h3 id=&quot;-sum_tau--fracptau--thetaptau--theta-bigtriangledown_theta-ptau--thetartau&quot;&gt;$= \sum_{\tau}  \frac{P(\tau ; \theta)}{P(\tau ; \theta)} \bigtriangledown_\theta P(\tau ; \theta)R(\tau)$&lt;/h3&gt;
+
+&lt;h3 id=&quot;-sum_tau--ptau--theta-fracbigtriangledown_theta-ptau--thetaptau--thetartau&quot;&gt;$= \sum_{\tau}  P(\tau ; \theta) \frac{\bigtriangledown_\theta P(\tau ; \theta)}{P(\tau ; \theta)}R(\tau)$&lt;/h3&gt;
+
+&lt;h3 id=&quot;-sum_tau--ptau--theta--bigtriangledown-_theta-log-ptau--theta-rtau&quot;&gt;$= \sum_{\tau}  P(\tau ; \theta)  \bigtriangledown _{\theta} log P(\tau ; \theta) R(\tau)$&lt;/h3&gt;
+
+&lt;p&gt;이렇게 변환된 식을 통하여  polcy $\pi_{\theta}$ 를 따른  Sample path m 개 만큼의 estimate of the policy gradient는 다음과 같이 정의할 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;bigtriangledown_theta-jtheta-approx-hatg--frac1m-sum_i1m-bigtriangledown_theta-log-ptaui--thetartaui&quot;&gt;$\bigtriangledown_{\theta} J(\theta) \approx \hat{g} = \frac{1}{m} \sum_{i=1}^m \bigtriangledown_{\theta} log P(\tau^{(i)} ; \theta)R(\tau^{(i)})$&lt;/h3&gt;
+
+&lt;p&gt;위와같은 Likelihood Ratio Gradient는 Roll out을 통해 경험을 하며 postive reward 의 pat의 확률을 increase 시키며 negative Reward path의 확률을 감소 시킨다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/h866irkjltsjyyv/Screenshot%202018-07-29%2023.54.42.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/kcnaizrlpn5fse9/Screenshot%202018-07-30%2000.07.14.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;bigtriangledown_theta-log-p-left--taui--theta--bigtriangledown_theta-log-prod_t0h-psit1-mid-stia_titimes-pi_theta-a_t-mid-s_ti-right-&quot;&gt;$\bigtriangledown_{\theta} log P \left [ (\tau^{(i)} ; \theta) = \bigtriangledown_{\theta} log \prod_{t=0}^{H} P(s^{(i)}&lt;em&gt;{t+1} \mid s&lt;/em&gt;{t}^{(i)}a_t^{(i)})\times \pi_{\theta} (a_t^ \mid s_t^{(i)}) \right ]$&lt;/h3&gt;
+
+&lt;p&gt;Parameter $\theta$에 는 Gradient를 하지 않으므로 Dynamics model 부분을 없앨수 있고, 그러므로 우리는 Likelyhoold Ratio Graident에서 Dynamics model을 알지 못하여도 사용할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;Note 1&lt;/p&gt;
+
+&lt;p&gt;Score function&lt;/p&gt;
+
+&lt;p&gt;Intuitively it can be thought of as describing the direction in which we should change &lt;strong&gt;θ&lt;/strong&gt; in order to maximize the likelihood. So if we for example have &lt;strong&gt;θ&lt;/strong&gt; = {&lt;strong&gt;μ&lt;/strong&gt;, &lt;strong&gt;Σ&lt;/strong&gt;}, then the score function will tell us how to change &lt;strong&gt;μ&lt;/strong&gt; and &lt;strong&gt;Σ&lt;/strong&gt; in order to maximize the likelihood.In the case of a NN, we would instead get a measure of how we should change each weight &lt;strong&gt;w&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;(reference : https://aboveintelligent.com/deep-learning-basics-the-score-function-cross-entropy-d6cc20c9f972)&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;h2 id=&quot;6-likelihood-ratio-gradient-estimate&quot;&gt;6. Likelihood Ratio Gradient Estimate&lt;/h2&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;위의 Likelihood Ratio Gradient Estimate는 unbiased하지만 noisy가 많다.&lt;/p&gt;
+
+&lt;h5 id=&quot;bigtriangledown_theta-jtheta-approx-hatg--frac1m-sum_i1m-bigtriangledown_theta-log-ptaui--thetartaui-1&quot;&gt;$\bigtriangledown_{\theta} J(\theta) \approx \hat{g} = \frac{1}{m} \sum_{i=1}^m \bigtriangledown_{\theta} log P(\tau^{(i)} ; \theta)R(\tau^{(i)})$&lt;/h5&gt;
+
+&lt;p&gt;이것을 해결하기 위해서 실제로는 다음의 방법을 사용한다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Baseline&lt;/li&gt;
+  &lt;li&gt;Temporal structure&lt;/li&gt;
+  &lt;li&gt;KL-divergence trust region/ natural gradient&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;위의 방법을 어떻게 사용하는지 하나씩 알아보도록 하자. (3번은 다음 글에)&lt;/p&gt;
+
+&lt;p&gt;먼저 위의 예제에서 세번의 path를 roll out한 예제를 보았다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/h866irkjltsjyyv/Screenshot%202018-07-29%2023.54.42.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 예제에서 세개의 roll out path가 모두 positive하다면?&lt;/p&gt;
+
+&lt;p&gt;Positive reward를 받은 path의 확률을 높이고, Negative reward를 받은 path의 확률을 낮추려는 gradient의 특징으로 인해&lt;/p&gt;
+
+&lt;p&gt;likelyhood RatioGradient는 세개의 roll out path 모두의 probability를 높이려고 할것이다.&lt;/p&gt;
+
+&lt;p&gt;하지만 이 path 중에서는 더 좋은것도 있고 덜 좋은것도 잇을 것이다.&lt;/p&gt;
+
+&lt;p&gt;이것을 어떻게 알수 있을까?&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;h5 id=&quot;baseline&quot;&gt;BaseLine&lt;/h5&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/3mna7aj3ajwsm0f/Screenshot%202018-08-04%2018.56.47.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;단순히 postive 할때 높여주고,  negative면 낮춰주는 방법을 사용하지 않고 어떠한 baseline(기준점)을 설정하여서 rollout 했을때의 path가 기준점보다 높으면 그 확률을 높여주고 그 path보다 낮다면 확률을 낮춰주는 방법을 사용하기도 한다.&lt;/p&gt;
+
+&lt;p&gt;정의는 아래와같이 할 수 있다.&lt;/p&gt;
+
+&lt;h4 id=&quot;original-equation--bigtriangledown_theta-jtheta-approx-hatg--frac1m-sum_i1m-bigtriangledown_theta-log-ptaui--thetartaui&quot;&gt;Original equation : $\bigtriangledown_{\theta} J(\theta) \approx \hat{g} = \frac{1}{m} \sum_{i=1}^m \bigtriangledown_{\theta} log P(\tau^{(i)} ; \theta)R(\tau^{(i)})$&lt;/h4&gt;
+
+&lt;h4 id=&quot;consider-base-line-b--bigtriangledown_theta-jtheta-approx-hatg--frac1m-sum_i1m-bigtriangledown_theta-log-ptaui--thetartaui--b&quot;&gt;Consider base line b : $\bigtriangledown_{\theta} J(\theta) \approx \hat{g} = \frac{1}{m} \sum_{i=1}^m \bigtriangledown_{\theta} log P(\tau^{(i)} ; \theta)R(\tau^{(i)}- b)$&lt;/h4&gt;
+
+&lt;p&gt;위의 방법은 williams가 1992년에 수학적으로 이 방법을 통하여 variance를 줄일 수 있다는 것을 증명하였다.&lt;/p&gt;
+
+&lt;h5 id=&quot;temporal-structure&quot;&gt;Temporal Structure&lt;/h5&gt;
+
+&lt;p&gt;조금 더 나아가서 baselin을 적용한 식에 current time step $t$&lt;/p&gt;
+
+&lt;p&gt;Baseline은 average를 하는 방법뿐만 아닌 다음과 같이 여러가지 방법이 있다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;여기서 notation $u_t$는 $a_t$와 같다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/8yl5irfv96kfco8/Screenshot%202018-08-04%2020.14.00.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;마지막 방법인 state-dependen expected return을 baseline으로 했을때 State $s_t$에서 policy $\pi$에 따라 받을수 있는 expected return과 비교를 하는것이 가능해진다.&lt;/p&gt;
+
+&lt;p&gt;이 방법에 대해 조금 더 자세히 알아보도록 하자.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;7-estimation-of-v_pi&quot;&gt;7. Estimation of $V_\pi$&lt;/h2&gt;
+
+&lt;h4 id=&quot;frac1m-sum_i1m-bigtriangledown_theta-log-ptaui--thetartaui--b&quot;&gt;$\frac{1}{m} \sum_{i=1}^m \bigtriangledown_{\theta} log P(\tau^{(i)} ; \theta)R(\tau^{(i)}- b)$&lt;/h4&gt;
+
+&lt;p&gt;위의 LikelihoodRatio Gradient 식을 다음과 같이 정의할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/pxyljfpdgq4utu2/Screenshot%202018-08-05%2001.52.31.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;여기서 $V_\pi (s_k^i )$를 어떻게 정의할 수 있을까?&lt;/p&gt;
+
+&lt;p&gt;Policy $\pi$를 따른 state value $V$를 생성하는 neural network를 만들어서 supervised learning에서와 같이 이 network를 다음의 식으로 parameter를 optimize 해준다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/tyw1lyht98eapsh/Screenshot%202018-08-05%2002.00.27.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위와같이 $V_\pi$와 time step $t$ 부터 Terminal state까지의 총 Reward의 합의 차이를 mimize하는 parameter $\phi$ 를 찾아 update 해준다.&lt;/p&gt;
+
+&lt;p&gt;위와같이 Value of $V$를 Monte calro estimation 으로 측정하는 것이 아닌 Bellman equation 을 사용하여 State value $V$를 구하는 방법도 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/rp9boqeizlbmk08/Screenshot%202018-08-05%2002.06.21.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위와 마찬가지로 parameter를 optimize하지만 $V_\theta^\pi(s)$ 가 아닌 $r+V_\theta^\pi(s’)$를 target 으로 parameter 를 update한다.&lt;/p&gt;
+
+&lt;p&gt;위의 방법을 사용한 poilcy gradient 방법을 Vanilla Policy Gradient 라고 하며 pseudo code는 다음과 같다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/7vuk70er135ygwy/Screenshot%202018-08-05%2002.21.05.png?raw=1&quot; /&gt;&lt;/p&gt;</content><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><summary type="html">Policy Gradient Methods</summary></entry><entry><title type="html">On-policy Control with Approximation</title><link href="https://wonseokjung.github.io//reinforcementlearning/update/RL-On_withAP/" rel="alternate" type="text/html" title="On-policy Control with Approximation" /><published>2018-07-20T16:26:28+00:00</published><updated>2018-07-20T16:26:28+00:00</updated><id>https://wonseokjung.github.io//reinforcementlearning/update/RL-On_withAP</id><content type="html" xml:base="https://wonseokjung.github.io//reinforcementlearning/update/RL-On_withAP/">&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/2osdrb8vt5g3l4m/Screenshot%202018-07-16%2021.10.10.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이번에는 function approximation 을 사용하여 state value가 아닌 state-action pair을 구하는 방법을 알아보도록 하겠다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/6kx91r0txgt6iql/Screenshot%202018-07-16%2021.17.31.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;state-action pair의 approximation value는 state $S_t$, action $A_t$를 input으로 받고 function approximation의 weight에 의한 State $S_t$, Action $A_t$의  $\hat{q}$를 출력한다.&lt;/p&gt;
+
+&lt;p&gt;Action value에 function approximation을 적용할때 update weight rule은 다음과 같다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;w_{t+1} \doteq w_t + \alpha [U_t - \hat{q}(S_t,A_t,w_t)]\bigtriangledown \hat{q}(S_t,A_t,w_t)&lt;/script&gt;
+
+&lt;p&gt;여기서 $U_t$는 Target으로 On-policy의 example of target는 다음과 같다.&lt;/p&gt;
+
+&lt;h5 id=&quot;monte-carlo--g_t&quot;&gt;Monte Carlo : $G_t$&lt;/h5&gt;
+
+&lt;h5 id=&quot;sarsaone-step--r_t1-gamma-hatqs_t1-a_t1-w_t&quot;&gt;Sarsa(one step) : $R_{t+1}+ \gamma \hat{q}(S_{t+1}, A_{t+1}, w_t)$&lt;/h5&gt;
+
+&lt;h5 id=&quot;w_t1-doteq-w_t--alpha-u_t---hatqs_ta_tw_tbigtriangledown-hatqs_ta_tw_t-&quot;&gt;$w_{t+1} \doteq w_t + \alpha [U_t - \hat{q}(S_t,A_t,w_t)]\bigtriangledown \hat{q}(S_t,A_t,w_t) $&lt;/h5&gt;
+
+&lt;p&gt;Episodic 일때 On-policy 중 하나인 Sarsa를 이용하여 $\hat{q}$ 를 Estimate하는 방법은 다음과 같다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/c7lhhjx7dk9n622/Screenshot%202018-07-18%2009.24.36.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;기존에 사용되었던 episodic task에서 time step $t$ 마다 받은 reward를 합하는 방법이 아닌,&lt;/p&gt;
+
+&lt;p&gt;continuing task에서는 reward를 평균을 내는 방법을 사용한다.&lt;/p&gt;
+
+&lt;p&gt;그러므로 더이상 discount facor는 사용되지 않는다.&lt;/p&gt;
+
+&lt;h5 id=&quot;1-continuing-task-를-위한-새로운-goal--time-step마다-평균-reward를-최대화-한다&quot;&gt;1. Continuing task 를 위한 새로운 goal : time step마다 평균 reward를 최대화 한다.&lt;/h5&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/7821d6dpe1jy1nv/Screenshot%202018-07-19%2022.14.00.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Continuing task에서는 policy를 따라 action을 선택하였을때의 평균 reward 를 maxize 를 하는 것으로 목표가 바뀐다.&lt;/p&gt;
+
+&lt;p&gt;$\mu_\pi (s) : S \rightarrow [0,1]$ 은 $\pi$ 를 따른 steady-state distribution이며 여기서 $\pi$는 on-policy distribution 이며 다음과 같이 정의할 수 있다.&lt;/p&gt;
+
+&lt;h5 id=&quot;mu_pi-s-doteq-lim_t-rightarrow-infin-pr-lbrace-s_t--s-mid-a_0t-1-sim-pi-rbrace&quot;&gt;&lt;script type=&quot;math/tex&quot;&gt;\mu_\pi (s) \doteq lim_{t \rightarrow \infin} Pr \lbrace S_t = s \mid A_{0:t-1} \sim \pi \rbrace&lt;/script&gt;&lt;/h5&gt;
+
+&lt;p&gt;$r(\pi)$ 는 reward rate이며 average reward 이다.&lt;/p&gt;
+
+&lt;h5 id=&quot;2-average-reward-일때-모든것이-새로워진다&quot;&gt;2. Average reward 일때 모든것이 새로워진다.&lt;/h5&gt;
+
+&lt;p&gt;Return&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;G_t \doteq R_{t+1} - r(\pi) + R_{t+2}- r(\pi) + ...&lt;/script&gt;
+
+&lt;p&gt;매 time step $t$ 마다 받는 reward를 average reward와 비교한다.&lt;/p&gt;
+
+&lt;p&gt;이로 인해 매 time step 마다 받는 reward가 average reward 보다 큰지 작은지 비교하는 것이 가능하다.&lt;/p&gt;
+
+&lt;p&gt;그러므로 Bellman Equation은 다음과 같이 바꿀수 있다. (Discount factor가 들어가지 않는다.)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/tfl8m9omrvvc1wy/Screenshot%202018-07-19%2023.24.07.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Continue task에서는 State를 얼마나 많이 occur했는지를 계산에 넣을때 discount factor를 더이상 사용하지 않고 state distribution term을 넣은 reward rate와 매 step마다 비교하는 방법을 사용한다.&lt;/p&gt;
+
+&lt;p&gt;(사실은 이 방법은 잘 이해가 되지 않습니다. )&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/q9vzuvst6mgo9f1/Screenshot%202018-07-19%2023.24.35.png?raw=1&quot; /&gt;&lt;/p&gt;</content><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><summary type="html"></summary></entry><entry><title type="html">Function Approximation -2</title><link href="https://wonseokjung.github.io//reinforcementlearning/update/RL-FA_2/" rel="alternate" type="text/html" title="Function Approximation -2" /><published>2018-07-16T16:26:28+00:00</published><updated>2018-07-16T16:26:28+00:00</updated><id>https://wonseokjung.github.io//reinforcementlearning/update/RL-FA_2</id><content type="html" xml:base="https://wonseokjung.github.io//reinforcementlearning/update/RL-FA_2/">&lt;p&gt;Value function approximation (VFA)는 Table 형태를 neneral parameterized form으로 바꿔주는 역할을 한다.&lt;/p&gt;
+
+&lt;p&gt;세상의 모든 현상을 파악하려면 엄청나게 많은 계산량 또는 저장량이 필요할 것이다.&lt;/p&gt;
+
+&lt;p&gt;하지만 현대 인류는 한정된 용량의 뇌, 자원, 기계를 사용하고 있기에 세상의 모든 현상을 정확히 알수 없으므로 &lt;strong&gt;예측&lt;/strong&gt;을 한다.&lt;/p&gt;
+
+&lt;p&gt;작거나 간단한 Environment에서는 모든 data를 저장하고 Optimal Policy를 찾았던 table case 대신&lt;/p&gt;
+
+&lt;p&gt;Value function approximation (VFA)는 Table 형태를 general parameterized form으로 바꿔주는 역할을 한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/hun87igez9eqfo6/Screenshot%202018-07-11%2018.29.33.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;1-state-value&quot;&gt;1. State value&lt;/h1&gt;
+&lt;p&gt;State $S_t$가 function approximation box의 input으로 들어가며, function approxmiation의 weight(w)에 의해 state value를 output으로 return한다.&lt;/p&gt;
+
+&lt;p&gt;학습을 할때 목표값이나 정답값이 존재하여야 하며 그것을 Target이라고 한다.&lt;/p&gt;
+
+&lt;p&gt;이 target은 여럭지가 될 수 있다. 사람의 어떠한 상황에서 하는 행동들을 target이라고 볼 수도 있지만, 
+여기서는 reinforcement learning방법을 사용해 target은 agent가 경험한 data로부터 정의한다.&lt;/p&gt;
+
+&lt;p&gt;(예 : bootstrapping과 같이 또 다른 prediction을 target으로 사용)&lt;/p&gt;
+
+&lt;p&gt;자세히 알아보기에 앞서 위에서 언급한 value function approximation을 사용하여 parameterized form으로 바꿔 weight에 의한 state value $\hat{v}(S_t,w)$ 계산하는 방법을 알아보도록 하겠다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ijzf5z0xijraui0/Screenshot%202018-07-11%2019.49.56.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Weight에 의한 Time step $t$에서의 State $S$는 다음과 같이 계산 가능하다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\hat{v}(S_t,w) =w^T x = \sum_{i=1}^{d} W_i^T X_i&lt;/script&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/ds5o0c4ueil8cff/Screenshot%202018-07-11%2021.18.08.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;2state-action-pair-value&quot;&gt;2.State-action pair value&lt;/h1&gt;
+
+&lt;p&gt;State value와 마찬가지고 State-action pair를 function approximator를 통해 approximation하는것이 가능하다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;Q(s,a) \approx q_\pi(s,a) \approx \hat{q}(s,a,w)&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\hat{q}(S_t,w) =w^T x(s,a) = \sum_{i=1}^{d} W_i^T X_i(s,a)&lt;/script&gt;
+
+&lt;h1 id=&quot;3-stochastic-gradient-descent-sgd&quot;&gt;3. Stochastic Gradient Descent (SGD)&lt;/h1&gt;
+
+&lt;p&gt;gradient descent는 간단히 현재의 위치에서 기울기에 따라 descent하게 움직이고 여기서는 error을 최소화 하기 위해 $minus(-)$ term으로 인해 descent 한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/v7xno0sn0fpye6l/Screenshot%202018-07-11%2021.58.47.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;w \leftarrow w - \alpha \bigtriangledown_w Error^2_t&lt;/script&gt;
+
+&lt;p&gt;Reinforcement learning에서는 descent가 아닌 reward 또는 value의 최대를 구하기 위해 $plus(+)$를 사용하여 ascent를 구하며 이것은 추후에 다룰 예정이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/7uvt3l4fikrwsnm/Screenshot%202018-07-11%2021.58.19.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 SGD를 다음과 같은 형태로 정의할 수 있다.&lt;/p&gt;
+
+&lt;h5 id=&quot;general-sgdcenter&quot;&gt;&lt;Center&gt;General SGD&amp;lt;/center&amp;gt;&lt;/Center&gt;&lt;/h5&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;w \leftarrow w - \alpha \bigtriangledown_w Error^2_t&lt;/script&gt;
+
+&lt;p&gt;#### &lt;Center&gt;Value Function Approximation&amp;lt;/center&amp;gt;&lt;/Center&gt;&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;w \leftarrow w - \alpha \bigtriangledown_w [Target_t - \hat{v}(S_t,w)]^2&lt;/script&gt;
+
+&lt;h4 id=&quot;chain-rulecenter&quot;&gt;&lt;Center&gt;Chain Rule&amp;lt;/center&amp;gt;&lt;/Center&gt;&lt;/h4&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;w \leftarrow w - 2\alpha \bigtriangledown_w [Target_t - \hat{v}(S_t,w)] \bigtriangledown_w [Target_t - \hat{v}(S_t, w)]&lt;/script&gt;
+
+&lt;h4 id=&quot;semi-gradient&quot;&gt;&lt;center&gt;Semi-gradient&lt;/center&gt;&lt;/h4&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;w \leftarrow w + \alpha \bigtriangledown_w [Target_t - \hat{v}(S_t,w)] \bigtriangledown_w\hat{v}(S_t, w)&lt;/script&gt;
+
+&lt;h4 id=&quot;linear-case&quot;&gt;&lt;center&gt;Linear case&lt;/center&gt;&lt;/h4&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;w \leftarrow w + \alpha \bigtriangledown_w [Target_t - \hat{v}(S_t,w)] x(S_t)&lt;/script&gt;
+
+&lt;h4 id=&quot;action-value-form&quot;&gt;&lt;center&gt;Action value form&lt;/center&gt;&lt;/h4&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;w \leftarrow w + \alpha \bigtriangledown_w [Target_t - \hat{q}(S_t,A_t,w)] x(S_t,A_t)&lt;/script&gt;
+
+&lt;p&gt;예를 들어 Monte Carlo Algorithm으로 $\hat{v}$을 approximation 하는 pseudo code는 다음과 같다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/mkq9s8lyn03nkcq/Screenshot%202018-07-13%2004.58.59.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위의 알고리즘을 Randowalk라는 환경에서 실험해보았고, 아래의 graph와 같이 State distribution $\mu$는 Approximation 의 정확도에 영향을 미친다는 것을 알 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/bor2r51nughkx2u/Screenshot%202018-07-15%2020.59.47.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;4-mean-square-value-error&quot;&gt;4. Mean Square Value Error&lt;/h1&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;MSVE(w) \doteq \sum_{s\in S} \mu(s) [v_\pi(s) - \hat{v}(s,w)]^2&lt;/script&gt;
+
+&lt;p&gt;$\mu(s)$ : state $s$에 머문 time step, 한 episode에서 머문 수 또는 continuing task에서는 얼마나 많은 진행되는 동안 각 state $s$에 머문 time step $t$&lt;/p&gt;
+
+&lt;p&gt;Valufe Function Approximation을 구할때 위와같이 state distribution을 계산할수 있는 $\mu$를 넣어 state $s$에 머문만큼 weight를 해준다.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;p&gt;References&lt;/p&gt;
+
+&lt;h2 id=&quot;reference&quot;&gt;Reference&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Reinforcement Learning: An Introduction Richard S. Sutton and Andrew G. Barto Second Edition, in progress
+MIT Press, Cambridge, MA, 2017&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;https://wonseokjung.github.io/&lt;/p&gt;</content><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><summary type="html">Value function approximation (VFA)는 Table 형태를 neneral parameterized form으로 바꿔주는 역할을 한다.</summary></entry><entry><title type="html">Function Approximation</title><link href="https://wonseokjung.github.io//reinforcementlearning/update/RL-FA/" rel="alternate" type="text/html" title="Function Approximation" /><published>2018-07-11T16:26:28+00:00</published><updated>2018-07-11T16:26:28+00:00</updated><id>https://wonseokjung.github.io//reinforcementlearning/update/RL-FA</id><content type="html" xml:base="https://wonseokjung.github.io//reinforcementlearning/update/RL-FA/">&lt;h1 id=&quot;function-approximation&quot;&gt;&lt;center&gt;Function Approximation&lt;center&gt;&lt;/center&gt;&lt;/center&gt;&lt;/h1&gt;
+
+&lt;h2 id=&quot;wonseok-jung&quot;&gt;&lt;center&gt;wonseok jung&lt;/center&gt;&lt;/h2&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
+
+&lt;p&gt;Reinforcement learning에서 function approximation이 어떻게 쓰이는지 알아보도록 하겠다.&lt;/p&gt;
+
+&lt;p&gt;On-policy의 data를 이용하여 state-value function을 구할 것이며,&lt;/p&gt;
+
+&lt;p&gt;이것은 Policy $\pi$ 를 이용하여 생성된 exrience를 사용하여 State value $V_{\pi}$를 approximation한 값이다.&lt;/p&gt;
+
+&lt;p&gt;Value fuction을 approximation은  Parameterized function으로 $w \in R^d$ 형태로 표현한다.&lt;/p&gt;
+
+&lt;p&gt;주어진 wieght vector $w$에 의한 state $s$의 value를 approximation한 것을 다음과 같이 표시한다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\hat{v}(s,w)\approx v_{\pi}(s)&lt;/script&gt;
+
+&lt;h6 id=&quot;neuralnetwork&quot;&gt;&lt;center&gt;(neuralnetwork)&lt;/center&gt;&lt;/h6&gt;
+
+&lt;center&gt;&lt;img src=&quot;https://www.dropbox.com/s/ex2iti75dnjoyo5/Screenshot%202018-07-05%2021.51.42.png?raw=1&quot; /&gt;&lt;/center&gt;
+
+&lt;p&gt;$\hat{v}$는 Multi-layer artificial neural network이며 $w$는 모든 layers을 연결하는 weight의 vector이다.&lt;/p&gt;
+
+&lt;p&gt;function approximation을 사용하여 agent가 모든 state를 알수 없는 경우인 Partially observable problem에서 Reinforcement learning 방법을 적용할 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;introduction-정리-&quot;&gt;Introduction 정리 :&lt;/h2&gt;
+
+&lt;p&gt;지금까지는 tabular case를 사용하여 Reinforcement learning이 어떠한 방식으로 state value와 state-action value를 계산하여 optimal policy를 찾는지 알아보았다.&lt;/p&gt;
+
+&lt;p&gt;지금부터 다룰 내용은 tabular case가 아닌 parameterlize structure이다.&lt;/p&gt;
+
+&lt;p&gt;parameterlize structure를 이용하기 위해서 function approximation을 할것이고, 
+ funtion approximation을 하므로 generalization 와 solution을 approximation하는 것이 가능하다.&lt;/p&gt;
+
+&lt;p&gt;여기서의 function은 neural network, decision tree등 이 될 수 있다.&lt;/p&gt;
+
+&lt;p&gt;input은 위의 function approximation을 통할때 function approximation의 parameter( weight ) 에 의해 계산되어지며 function을 통해 output으로 return된다.&lt;/p&gt;
+
+&lt;p&gt;function approximation이 기존 방식과 가장 다른점은,&lt;/p&gt;
+
+&lt;p&gt;state value가 table 형식으로 이루어져 특정 state의 value를 정확히 알 수 있었으며 특정 state 의 value를 업데이트할때 다른 state value에 영향을 끼치지 않았다.&lt;/p&gt;
+
+&lt;p&gt;하지만 function approximation를 사용하면 특정 state value를 정확하게 알수 없으며 특정 state를 update할때 다른 state value에도 영향을 미친다.&lt;/p&gt;
+
+&lt;p&gt;Parametric form에서는 state value의 update가 더이상 independent하지 않다.&lt;/p&gt;
+
+&lt;p&gt;Parameter를 사용하므로서 더이상 이전 tabular 방법과 같이 각 state의 true value를 찾는것이 더이상 가능하지 않다.&lt;/p&gt;
+
+&lt;h1 id=&quot;1-deep-learning&quot;&gt;1. Deep learning&lt;/h1&gt;
+
+&lt;p&gt;최근 Supervised learning에서 deep learning이 널리 쓰이고 있다.&lt;/p&gt;
+
+&lt;center&gt;&lt;img src=&quot;https://www.dropbox.com/s/yenapw14987bu43/Screenshot%202018-07-08%2022.30.17.png?raw=1&quot; /&gt;&lt;/center&gt;
+
+&lt;p&gt;Function approximator로 deep learning을 사용하기전에,&lt;/p&gt;
+
+&lt;p&gt;먼저 neural network를 알아보기 전에 neuron이 무엇인지 알아보도록 하겠다.&lt;/p&gt;
+
+&lt;h2 id=&quot;11-neuron&quot;&gt;1.1 Neuron&lt;/h2&gt;
+
+&lt;p&gt;Neuron은 아래의 그림과 같이.  Cell body, Dendrites, Axon, Synaptic terminals로 나누어져 있다.&lt;/p&gt;
+
+&lt;p&gt;Dendrities 는 input으로 data를 받으며, Cell body는 받은 data를 합산한뒤 threshold를 지나 Axon은 Cell body에서 계산된 값을 출력한다.&lt;/p&gt;
+
+&lt;p&gt;Axon의 signal은 binary로 1,0이다.&lt;/p&gt;
+
+&lt;center&gt;&lt;img src=&quot;https://www.dropbox.com/s/mvx1hz6659rgmoq/Screenshot%202018-07-08%2022.19.01.png?raw=1&quot; /&gt;&lt;/center&gt;
+
+&lt;h2 id=&quot;12-neural-network&quot;&gt;1.2 Neural Network&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.dropbox.com/s/3g296oyiuc29e7e/Screenshot%202018-07-09%2001.56.19.png?raw=1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Neuron처럼  Neural Network과 비슷하게 Input layer, hidden layer, output layer로 이루어져 있다.&lt;/p&gt;
+
+&lt;p&gt;Input layer은 feature vector(강화학습에서 input은 대부분 state이다.)라고 불리며&lt;/p&gt;
+
+&lt;p&gt;Inputer layer의 각 Input은 각 weight와 곱하고 합쳐진 뒤 출력된다.&lt;/p&gt;
+
+&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;\sum_{i=1}^d W_iX_i&lt;/script&gt;
+&lt;script type=&quot;math/tex&quot;&gt;=\vec{W}^T\vec{X}&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;이전에는 아래의 식과 같은 식으로 Estimation을 update했다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;NewEst \leftarrow OldEst + \alpha [Target - OldEst]&lt;/script&gt;
+
+&lt;p&gt;Function approximation방법은 Estimation을 update할때 weight를 update하며,&lt;/p&gt;
+
+&lt;p&gt;weight(parameter)의 gradient를 계산하여 $[Target-OldEst]$의 방향으로 update한다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\vec{W} \leftarrow \vec{W} + \alpha [Target - OldEst] \bigtriangledown_{w} OldEst&lt;/script&gt;
+
+&lt;p&gt;또한, time step $t$ OldEstimtion은 에서 W vector와 X vector의 곱을 general하게 바꾸면 아래와 같이 정의할수 있다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;OldEst_t = \vec{W}^T \vec{X}_t = \hat{V}(S_t,\vec{W}_t)&lt;/script&gt;
+
+&lt;p&gt;$\hat{v}$는 time $t$일때  weight vetor $\vec{w}$에 따른 State $s$의 approximation value이다.&lt;/p&gt;
+
+&lt;p&gt;또한, $\vec{X_t}$는 function x 이 time step $t$ State $s$에 적용된 input state에 부합하는 feature vector 이다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\vec{X_t} = x(S_{t})&lt;/script&gt;
+
+&lt;p&gt;그러므로, weight를 update하는 식은 다음과 같이 정의한다.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\vec{W_{t+1}} \doteq \vec{W_t} + \alpha [Target_t - \hat{V}(S_t,\vec{W})] \bigtriangledown_w \hat{V}(S_t,\vec{W})&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\vec{W_{t+1}} \doteq W_{t} + \alpha [R_{t+1} + \gamma \vec{W_t}^T X_{t+1} -  \vec{W_t}^T X_{t}]\vec{X}&lt;/script&gt;
+
+&lt;h2 id=&quot;reference&quot;&gt;Reference&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Reinforcement Learning: An Introduction Richard S. Sutton and Andrew G. Barto Second Edition, in progress
+MIT Press, Cambridge, MA, 2017&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;https://wonseokjung.github.io/&lt;/p&gt;</content><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><summary type="html">Function Approximation</summary></entry><entry><title type="html">A3C - Asynchorous Advantage Actor Critic Network</title><link href="https://wonseokjung.github.io//reinforcementlearning/update/RL-a3c/" rel="alternate" type="text/html" title="A3C - Asynchorous Advantage Actor Critic Network" /><published>2018-07-03T16:26:28+00:00</published><updated>2018-07-03T16:26:28+00:00</updated><id>https://wonseokjung.github.io//reinforcementlearning/update/RL-a3c</id><content type="html" xml:base="https://wonseokjung.github.io//reinforcementlearning/update/RL-a3c/">&lt;h1 id=&quot;the-asynchronous-advantage-actor-critic-network---a3c&quot;&gt;The Asynchronous Advantage Actor Critic Network - A3C&lt;/h1&gt;
+
+&lt;p&gt;wonseok Jung&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/42191485-f51ead46-7e17-11e8-9e45-8eb869c834ac.png&quot; alt=&quot;screen shot 2018-07-02 at 16 49 19&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;DQN은 많은 computation을 요구한다.&lt;/li&gt;
+  &lt;li&gt;Google deepind에서 computation 이슈를 해결하기 위한 알고리즘을 만들어냄&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+&lt;h1 id=&quot;1-a3c&quot;&gt;1. A3C&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/42199406-33a3841c-7e43-11e8-8163-544907876e83.jpeg?style=centerme&quot; alt=&quot;a3c 003&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;그 알고리즘을 Asynchronous Advantage Actor Critic Network ( A3C ) 라고 정의함&lt;/li&gt;
+  &lt;li&gt;A3C는 DQN보다 적은 computation을 요구하며 training 시간 또한 짧다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;11-a3c의-학습방법-적용-action-spaces&quot;&gt;1.1 A3C의 학습방법, 적용 action spaces&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/42199407-33d1a040-7e43-11e8-9b88-dd9379d3c119.jpeg&quot; alt=&quot;a3c 004&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;A3C의 idea는 agent를 여러개 만들어 병렬로 학습하는 방법이다.&lt;/li&gt;
+  &lt;li&gt;A3C는 continuous action 또는 discrete action spaces에서 둘다 적용할 수 있다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;12-a3c의-특징인-global-network&quot;&gt;1.2 A3C의 특징인 global network&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/42199408-33fd920e-7e43-11e8-9a41-cd6a2802c476.jpeg&quot; alt=&quot;a3c 005&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;여러 agents ( 혹은 workers )가 각 environment에서 pareller하게 학습한다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;각 agent가 수집한 experience는 global agent로 aggregated 된다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Global agent는 master network 혹은 global network라고 불린다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+&lt;h1 id=&quot;2-the-asynchronous-advantage-actor-critic-network에서-triple의-의미&quot;&gt;2. The Asynchronous Advantage Actor Critic Network에서 Triple의 의미&lt;/h1&gt;
+
+&lt;h2 id=&quot;21-a3c에서-aaa-의-의미---asynchronous&quot;&gt;2.1 A3C에서 AAA 의 의미 - Asynchronous?&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/42199409-342a8f20-7e43-11e8-8a62-1d82ac777c01.jpeg&quot; alt=&quot;a3c 006&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Asynchronous :
+    &lt;ul&gt;
+      &lt;li&gt;DQN은  하나의 Agent가 Environment와 interactrion하며 optimal policy를 찾기위해 학습을 한다.&lt;/li&gt;
+      &lt;li&gt;A3C는 multiple agents가 각 environment와 interaction하며 학습한다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;22-a3c에서-aaa-의-의미---advantage-&quot;&gt;2.2 A3C에서 AAA 의 의미 - Advantage ?&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/42199410-3456b8ac-7e43-11e8-9945-626390cf1235.jpeg&quot; alt=&quot;a3c 007&quot; /&gt;&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;Advantage :&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Advantage function은 Q function과 value function의 차이이다.&lt;/li&gt;
+  &lt;li&gt;Q function은 action value가 얼마나 좋은지 측정하는 것이고, value function은 state value가 얼마나 좋은지 측정하는 것이다.&lt;/li&gt;
+  &lt;li&gt;이 둘의 차이를 직관적으로 비교해보면, agent가 action을 하는 것이 모든 action들보다 얼마나 나쁜지 혹은 좋은지 측정하는 것이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;23-a3c에서-aaa-의-의미---actor---&quot;&gt;2.3 A3C에서 AAA 의 의미 - Actor - ?&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/42199411-347fa55a-7e43-11e8-9877-7fa4fb24ffbc.jpeg&quot; alt=&quot;a3c 008&quot; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Actor-critic
+    &lt;ul&gt;
+      &lt;li&gt;Architecture는 두가지 network로 Actor와 Critic이 있다.&lt;/li&gt;
+      &lt;li&gt;Actor : policy를 배운다.&lt;/li&gt;
+      &lt;li&gt;Critic : Actor에 의해 배운 policy가 얼마나 좋은지 Critic한다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&quot;3architecture-of-a3c&quot;&gt;3.Architecture of A3C&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/11300712/42199412-34b066b8-7e43-11e8-9df0-690e1b9a99a1.jpeg&quot; alt=&quot;a3c 009&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;multiple agents가 각 환경에서 interaction을 한다.&lt;/li&gt;
+  &lt;li&gt;각 agent는 policy를 배우고, policy loss의 gradient를 계산하여 gradient를 global network로 update한다.&lt;/li&gt;
+  &lt;li&gt;A3C는 여러 Agent가 환경과 interaction하며 global network로 aggregate하며 experience의 correlate를 없앤다.&lt;/li&gt;
+  &lt;li&gt;그렇기 때문에 replaymemory를 사용하지 않기 때문에 storage와 computation time이 줄어든다.&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>wonseok Jung, 정원석</name><email>wonseokjung@hotmail.com</email></author><summary type="html">The Asynchronous Advantage Actor Critic Network - A3C</summary></entry></feed>

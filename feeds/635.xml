@@ -1,0 +1,1073 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title><![CDATA[마법수정화살]]></title><description><![CDATA[Tech Blog]]></description><link>https://againsee.com/</link><image><url>http://againsee.com/favicon.png</url><title>마법수정화살</title><link>https://againsee.com/</link></image><generator>Ghost 1.24</generator><lastBuildDate>Sun, 12 May 2019 07:21:53 GMT</lastBuildDate><atom:link href="https://againsee.com/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title><![CDATA[JAVA - volatile]]></title><description><![CDATA[<div class="kg-post">
+<p>변수가 volatile 키워드로 선언 되었다는 것은 해당 변수가 여러 thread에 의해 수정될 것을 의미합니다.<br>
+그래서 final과 volatale은 같이 사용할 수 없습니다.</p>
+<h1 id="64">단일하지 않은 64비트 연산</h1>
+<p>동기화 되지 않은 상태에서 특정 스레드가 변수의 값을 읽으려 한다면 스테일 상태의 값을 읽어갈 가능성이 있긴 하지만 전혀 엉뚱한 값을 가져가는 것이 아니라 바로 이전에</p></div>]]></description><link>https://againsee.com/2018/07/09/java-volatile/</link><guid isPermaLink="false">5b42f3bc9b339d3b8f1374d0</guid><dc:creator><![CDATA[이경환]]></dc:creator><pubDate>Mon, 09 Jul 2018 08:34:49 GMT</pubDate><content:encoded><![CDATA[<div class="kg-post">
+<p>변수가 volatile 키워드로 선언 되었다는 것은 해당 변수가 여러 thread에 의해 수정될 것을 의미합니다.<br>
+그래서 final과 volatale은 같이 사용할 수 없습니다.</p>
+<h1 id="64">단일하지 않은 64비트 연산</h1>
+<p>동기화 되지 않은 상태에서 특정 스레드가 변수의 값을 읽으려 한다면 스테일 상태의 값을 읽어갈 가능성이 있긴 하지만 전혀 엉뚱한 값을 가져가는 것이 아니라 바로 이전에 다른 thread에서 설정한 값을 가져가게 됩니다.<br>
+하지만 64bit를 사용하는 숫자형(double, long등)을 사용하는 경우에는 엉뚱한 값이 생길 수 있습니다.</p>
+<p>JVM에서는 double이나 long형의 64비트 값에 대해서 메모리에 쓰거나 읽을때 32비트씩 2번 연산을 히도록 허용하기 때문에 이전값과 최신값에서 32비트씩을 읽어올 가능성이 있기 때문입니다.</p>
+<p><strong>스테일 데이터 (stale data)</strong></p>
+<blockquote>
+<p>한 프로세서가 피연산자의 값을 변경하고, 그리고 이어서 그 피연산자를 불러왔을 때 피연산자의 새로운 값이 아닌 변경되기 이전의 값을 가지고 왔다면, 이때 그것을 스테일 데이터라고 부른다.</p>
+</blockquote>
+<h1 id="">언제 사용해야 하는가?</h1>
+<p>두 thread가 공유 변수에 대한 읽기와 쓰기 연산이 있는경우 volatale 키워드로는 충분하지 않습니다. 이런 경우 synchronization을 통해 읽기 쓰기 연산에 대한 원자성을 보장해 줘야 합니다.</p>
+<p>아래 코드는 thread safe 하지 않습니다.</p>
+<pre><code>myVolatileVar++;
+</code></pre>
+<p>다음과 같이 작성할 수 있습니다.</p>
+<pre><code>int temp = 0;
+synchronize( myVolatileVar ) {
+  temp = myVolatileVar;
+}
+
+temp++;
+
+synchronize( myVolatileVar ) {
+  myVolatileVar = temp;
+}
+</code></pre>
+<p>myVolatileVar++; 표현식은 실제로<br>
+read - update - write의 세가지 원자성으로 구성되어 있습니다.<br>
+volatale 키워드로 선언된 변수도 update에 대해서는 원자성을 보장하지 않습니다.</p>
+<p>한 Thread에서만 변수값을 값을 읽고 쓰고 다른 thread에서는 오직 변수값을 읽기만 할 경우 thread 에서는 가장 최근 값을 읽는 것을 보장할 수 없습니다.</p>
+<h1 id="">궁금했던 것</h1>
+<p>volatale은 multi processor 환경에서만 사용할 수 있다. <strong>(X)</strong><br>
+single processor multi core인 경우에서도 사용할 수 있다. <strong>(X)</strong></p>
+<p>JAVA에서는 프로세서 아이텍쳐의 영향이 없습니다.<br>
+thread와 multi thread 측면에서 이야기 해야 합니다.</p>
+<p>multi thread 에서 공유하며 수정되는 변수가 있으면 사용해야 합니다. <strong>(O)</strong><br>
+<a href="https://stackoverflow.com/questions/4606895/java-use-of-volatile-only-makes-sense-in-multiprocessor-systems">https://stackoverflow.com/questions/4606895/java-use-of-volatile-only-makes-sense-in-multiprocessor-systems</a></p>
+<p>volatale은 primitive Type만 사용해야 합니다. <strong>(X)</strong><br>
+volatale을 reference type에 선언하면 가시성은 보장됩니다.<br>
+reference type 안에서 synchronization이 보장 되도록 하는것이 중요합니다.</p>
+<h1 id="">정리</h1>
+<p>volitile 키워드는 원자성이 아닌 가시성의 보장입니다.<br>
+volitile 은 읽기를 보장합니다. thread간 쓰기가 있다면 synchronization을 통해 원자성을 보장해야 합니다.</p>
+<h1 id="">참고</h1>
+<p><a href="https://stackoverflow.com/questions/4606895/java-use-of-volatile-only-makes-sense-in-multiprocessor-systems">https://stackoverflow.com/questions/4606895/java-use-of-volatile-only-makes-sense-in-multiprocessor-systems</a><br>
+<a href="http://m.blog.daum.net/creazier/15309646?np_nil_b=2">http://m.blog.daum.net/creazier/15309646?np_nil_b=2</a><br>
+<a href="https://www.ibm.com/developerworks/library/j-5things15/index.html">https://www.ibm.com/developerworks/library/j-5things15/index.html</a><br>
+<a href="http://blog.javarouka.me/2012/04/volatile-keyword-in-java.html">http://blog.javarouka.me/2012/04/volatile-keyword-in-java.html</a><br>
+<a href="http://thswave.github.io/java/2015/03/08/java-volatile.html">http://thswave.github.io/java/2015/03/08/java-volatile.html</a><br>
+<a href="http://tutorials.jenkov.com/java-concurrency/volatile.html">http://tutorials.jenkov.com/java-concurrency/volatile.html</a><br>
+<a href="http://blog.doortts.com/170">http://blog.doortts.com/170</a></p>
+
+</div>]]></content:encoded></item><item><title><![CDATA[JAVA - Generics]]></title><description><![CDATA[<div class="kg-post">
+<p>generics는 java 1.5에서 추가 된 기능입니다.<br>
+java 8 Streams를 을 이해 하려면 generics에 대한 이해가 필요하여 정리해 보았습니다.</p>
+<h1 id="generics">왜 Generics를 사용하는가?</h1>
+<p>generics를 사용 하므로 얻는 이점이 있습니다.</p>
+<ol>
+<li>
+<p>compile 타임에 강력한 Type 체크로 결함을 사전에 방지합니다.<br>
+(* compile exception은 runtime exception보다 고치기가 쉽습니다.)</p>
+</li>
+<li>
+<p>형 변환(Cast)을 제거할 수 있습니다.</p>
+</li>
+</ol>
+<pre><code>// following</code></pre></div>]]></description><link>https://againsee.com/2018/06/25/java-generic/</link><guid isPermaLink="false">5b306e699b339d3b8f1374c8</guid><dc:creator><![CDATA[이경환]]></dc:creator><pubDate>Mon, 25 Jun 2018 07:26:56 GMT</pubDate><content:encoded><![CDATA[<div class="kg-post">
+<p>generics는 java 1.5에서 추가 된 기능입니다.<br>
+java 8 Streams를 을 이해 하려면 generics에 대한 이해가 필요하여 정리해 보았습니다.</p>
+<h1 id="generics">왜 Generics를 사용하는가?</h1>
+<p>generics를 사용 하므로 얻는 이점이 있습니다.</p>
+<ol>
+<li>
+<p>compile 타임에 강력한 Type 체크로 결함을 사전에 방지합니다.<br>
+(* compile exception은 runtime exception보다 고치기가 쉽습니다.)</p>
+</li>
+<li>
+<p>형 변환(Cast)을 제거할 수 있습니다.</p>
+</li>
+</ol>
+<pre><code>// following code snippet without generics requires casting:
+List list = new ArrayList();
+list.add(&quot;hello&quot;);
+String s = (String) list.get(0);
+
+// When re-written to use generics, the code does not require casting:
+List&lt;String&gt; list = new ArrayList&lt;String&gt;();
+list.add(&quot;hello&quot;);
+String s = list.get(0);   // no cast
+</code></pre>
+<p>(* casting은 코드가 길어지고, 가독성이 떨어지므로 실수하기 쉬운 구조입니다.또한 runtime에서 결함이 발견 되므로 사용하지 않는 것이 좋습니다.)</p>
+<ol start="3">
+<li>일반적인 알고리즘을 구현할 수 있습니다.<br>
+(* generics를 사용함으로써 다양한 콜렉션에서 작동하고 Type Safe하며 읽기 쉬운 사용자 정의 알고리즘을 구현할 수 있습니다.)</li>
+</ol>
+<h1 id="generics">Generics란?</h1>
+<p>제네릭(Generic)은 클래스 내부에서 사용할 Type을 외부에서 지정할 수 있는 방법 입니다.</p>
+<p>Generic Types와 Generic Method로 구분할 수 있습니다.<br>
+Generic Types : Type paremeter를 갖는 Class or interface<br>
+Generic methods : Type parameter를 갖는 method</p>
+<p><strong>Type Parameter 와 Type Argument</strong></p>
+<blockquote>
+<p>Type Parameter 내부에서 사용할 Type을 선언<br>
+Type Argument 외부에서 Type을 지정</p>
+</blockquote>
+<h1 id="generictypes">Generic Types</h1>
+<pre><code> public class Box&lt;T&gt; {
+    // T stands for &quot;Type&quot;
+    private T t;
+
+    public void set(T t) { this.t = t; }
+    public T get() { return t; }
+}
+</code></pre>
+<p><strong>Type parameter</strong>는 &lt;T&gt;를 의미합니다.</p>
+<p><strong>Generic Type 객체 생성</strong></p>
+<pre><code> Box&lt;Integer&gt; integerBox = new Box&lt;Integer&gt;(); // ~ jdk 1.6
+ Box&lt;Integer&gt; integerBox = new Box&lt;&gt;(); // java 1.7 ~
+</code></pre>
+<p><strong>Type argument</strong>는 &lt;Integer&gt;를 의미합니다.</p>
+<blockquote>
+<p><a href="https://docs.oracle.com/javase/tutorial/java/generics/types.html#diamond">The Diamond</a> : Java SE 7 이후 타입을 추론할 수 있는경우 생성자 생성시 필요한 Type arguemnt를 &lt;&gt; 와 같이 표현 할 수 있습니다.</p>
+</blockquote>
+<p><strong>generic을 통한 컴파일 Type Check</strong><br>
+generic을 사용하여 Type Check를 강력 하게 할 수 있습니다.</p>
+<pre><code>  Box&lt;Integer&gt; integerBox = new Box&lt;Integer&gt;();
+  integerBox.set(&quot;100&quot;) // Integer 형이 아니므로 compile error 발생
+</code></pre>
+<p><strong>Type Parameter 명명 규칙</strong><br>
+1개의 대문자로 작성하는 것이 관례 입니다.<br>
+아래 문자들은 일반적으로 사용 되는 Type parameter의 이름 입니다.</p>
+<ul>
+<li>E - Element (used extensively by the Java Collections Framework)</li>
+<li>K - Key</li>
+<li>N - Number</li>
+<li>T - Type</li>
+<li>V - Value</li>
+<li>S,U,V etc. - 2nd, 3rd, 4th types</li>
+</ul>
+<h1 id="genericmethod">Generic method</h1>
+<p>Class, Interface 뿐 아니라 Method에서도 Generic을 사용할 수 있습니다.</p>
+<pre><code>public class Util {
+    public static &lt;K, V&gt; boolean compare(Pair&lt;K, V&gt; p1, Pair&lt;K, V&gt; p2) {
+        return p1.getKey().equals(p2.getKey()) &amp;&amp;
+               p1.getValue().equals(p2.getValue());
+    }
+}
+
+public class Pair&lt;K, V&gt; {
+
+    private K key;
+    private V value;
+
+    public Pair(K key, V value) {
+        this.key = key;
+        this.value = value;
+    }
+
+    public void setKey(K key) { this.key = key; }
+    public void setValue(V value) { this.value = value; }
+    public K getKey()   { return key; }
+    public V getValue() { return value; }
+}
+</code></pre>
+<p>아래와 같이 호출 할 수 있습니다.</p>
+<pre><code>  Pair&lt;Integer, String&gt; p1 = new Pair&lt;&gt;(1, &quot;apple&quot;);
+  Pair&lt;Integer, String&gt; p2 = new Pair&lt;&gt;(2, &quot;pear&quot;);
+  boolean same = Util.&lt;Integer, String&gt;compare(p1, p2);
+</code></pre>
+<p>타입 추론을 통해 generic 표현을 생략할 수도 있습니다.</p>
+<pre><code>  Pair&lt;Integer, String&gt; p1 = new Pair&lt;&gt;(1, &quot;apple&quot;);
+  Pair&lt;Integer, String&gt; p2 = new Pair&lt;&gt;(2, &quot;pear&quot;);
+  boolean same = Util.compare(p1, p2);
+</code></pre>
+<h1 id="boundedtypeparameters">Bounded Type Parameters</h1>
+<p>Type Parameter를 제한 하는 경우</p>
+<pre><code>public class Box&lt;T&gt; {
+
+    private T t;          
+
+    public void set(T t) {
+        this.t = t;
+    }
+
+    public T get() {
+        return t;
+    }
+
+    public &lt;U extends Number&gt; void inspect(U u){
+        System.out.println(&quot;T: &quot; + t.getClass().getName());
+        System.out.println(&quot;U: &quot; + u.getClass().getName());
+    }
+
+    public static void main(String[] args) {
+        Box&lt;Integer&gt; integerBox = new Box&lt;Integer&gt;();
+        integerBox.set(new Integer(10));
+        integerBox.inspect(&quot;some text&quot;); // error: this is still String!
+    }
+}
+</code></pre>
+<p>Type U는 Number를 extends한 Type의 객체여야 합니다.</p>
+<p>Type Parameter를 제한을 일반적인 알고리즘 구현에 사용할 수 있습니다.<br>
+값이 큰 object의 개수를 구해주는 아래의 method가 있습니다.</p>
+<pre><code>public static &lt;T&gt; int countGreaterThan(T[] anArray, T elem) {
+    int count = 0;
+    for (T e : anArray)
+        if (e &gt; elem)  // compiler error
+            ++count;
+    return count;
+}
+</code></pre>
+<p>이 메서드는 &gt; 연산을 통해 short, int, double, long, float, byte, char과 같은 primitive type의 처리는 가능하지만 reference type인 object들은 처리할 수 없습니다.</p>
+<pre><code>public interface Comparable&lt;T&gt; {
+    public int compareTo(T o);
+}
+</code></pre>
+<p>이러한 문제를 해결하기 위해 Comparable<t> interface를 만들고 Type parameter를 제한 할 수 있습니다.</t></p>
+<pre><code>public static &lt;T extends Comparable&lt;T&gt;&gt; int countGreaterThan(T[] anArray, T elem) {
+    int count = 0;
+    for (T e : anArray)
+        if (e.compareTo(elem) &gt; 0)
+            ++count;
+    return count;
+}
+</code></pre>
+<p>primitive Type의 parameter 뿐 아니라 Comparable<t> interface를 상속 한 모든 objects를 처리할 수 있는 범용적인 method가 되었습니다.</t></p>
+<h1 id="genericsinheritanceandsubtypes">Generics, Inheritance, and Subtypes</h1>
+<p>JAVA의 일반적인 상속 관계가 generics 에서는 적용 되지 않습니다.</p>
+<p>Integer는 Object의 subType이므로 아래의 구문은 문제가 없습니다.</p>
+<pre><code>  Object someObject = new Object();
+  Integer someInteger = new Integer(10);
+  someObject = someInteger;   // OK
+</code></pre>
+<p>Integer와 double은 Number의 subType 이므로 아래의 구문은 문제가 없습니다.</p>
+<pre><code>  public void someMethod(Number n) { /* ... */ }
+  someMethod(new Integer(10));   // OK
+  someMethod(new Double(10.1));   // OK
+</code></pre>
+<p>generics에서도 마찬가지 입니다. argument가 Number의 subType이라면 문제가 없습니다.</p>
+<pre><code>  Box&lt;Number&gt; box = new Box&lt;Number&gt;();
+  box.add(new Integer(10));   // OK
+  box.add(new Double(10.1));  // OK
+</code></pre>
+<p>아래의 method를 살펴 보겠습니다.</p>
+<pre><code>  public void boxTest(Box&lt;Number&gt; n) { /* ... */ }
+</code></pre>
+<p>Box&lt;Integer&gt;나 Box&lt;Double&gt;를 argument로 넣을수 있을까요?<br>
+아닙니다! Box&lt;Integer&gt;나 Box&lt;Double&gt;은 Box&lt;Number&gt;의 subType이 아니기 때문입니다.<br>
+<strong>Type parameter 관계와 generic Type의 상속 관계는 관련이 없습니다.</strong></p>
+<p><img src="https://againsee.com/content/images/2018/06/generics-subtypeRelationship.gif" alt="generics-subtypeRelationship"></p>
+<h1 id="wildcards">Wildcards</h1>
+<p>generic 코드에서는 unkown 타입을 ? 로 표현하며 와일드 카드라고 부릅니다.<br>
+generic wildcard를 사용할 수 는 경우은 아래와 같습니다.</p>
+<ul>
+<li>prarameter Type</li>
+<li>field, local variable</li>
+</ul>
+<p>WildCard를 사용하는 3가지 방법 입니다.</p>
+<pre><code>public class A { }
+public class B extends A { }
+public class C extends A { }
+
+// 1.unbounded(Unknown)
+List&lt;?&gt;           listUknown = new ArrayList&lt;A&gt;();
+
+// 2.upper bounded (extends)
+List&lt;? extends A&gt; listUknown = new ArrayList&lt;A&gt;();
+
+// 3.lower bounded (super)
+List&lt;? super   A&gt; listUknown = new ArrayList&lt;A&gt;();
+</code></pre>
+<ol>
+<li>Unknown Wildcards<br>
+List를 통해 읽을 수 있으며 Object로 취급합니다. <strong>(?)</strong></li>
+<li>upper bounded Wildcards<br>
+A Type 또는 A의 subType으로 제한 합니다. <strong>(? extends A)</strong></li>
+<li>lower bounded Wildcards<br>
+A Type의 superType으로 제한 합니다. <strong>(? super A)</strong></li>
+</ol>
+<h1 id="">참조문서</h1>
+<p><a href="https://docs.oracle.com/javase/tutorial/java/generics/index.html">https://docs.oracle.com/javase/tutorial/java/generics/index.html</a><br>
+<a href="http://tutorials.jenkov.com/java-generics/wildcards.html">http://tutorials.jenkov.com/java-generics/wildcards.html</a><br>
+<a href="https://opentutorials.org/module/516/6237">https://opentutorials.org/module/516/6237</a><br>
+<a href="https://durtchrt.github.io/blog/java/generics/8/">https://durtchrt.github.io/blog/java/generics/8/</a></p>
+
+</div>]]></content:encoded></item><item><title><![CDATA[Linux /dev/random의 entropy pool 이슈]]></title><description><![CDATA[<div class="kg-post">
+<p>JDBC 연결시 connection reset 과 관련하여 해당 이슈가 있다는 것을 알게 되었습니다.</p>
+<p>JAVA의 SecureRandom을 사용하면 엔트로피 풀의 값을 가져 오게 됩니다.<br>
+엔트로피 풀의 값이 부족 하면 요청 값 만큼 찰 때 까지 대기하게 됩니다.<br>
+JAVA에서 기본으로 사용하는 /dev/random은 blocking 방식입니다.</p>
+<p>WAS의 hang이나 DB 연결시 Timeout 을 발생시키는 원인이 되기도</p></div>]]></description><link>https://againsee.com/2018/06/22/linuxyi-dev-randomyi-entropy-pool-isyu/</link><guid isPermaLink="false">5b2b0e189b339d3b8f1374c3</guid><dc:creator><![CDATA[이경환]]></dc:creator><pubDate>Fri, 22 Jun 2018 02:01:09 GMT</pubDate><content:encoded><![CDATA[<div class="kg-post">
+<p>JDBC 연결시 connection reset 과 관련하여 해당 이슈가 있다는 것을 알게 되었습니다.</p>
+<p>JAVA의 SecureRandom을 사용하면 엔트로피 풀의 값을 가져 오게 됩니다.<br>
+엔트로피 풀의 값이 부족 하면 요청 값 만큼 찰 때 까지 대기하게 됩니다.<br>
+JAVA에서 기본으로 사용하는 /dev/random은 blocking 방식입니다.</p>
+<p>WAS의 hang이나 DB 연결시 Timeout 을 발생시키는 원인이 되기도 합니다.</p>
+<p>JAVA에서는 Random 보다는 SecureRandom class를 사용하도록 권장합니다.<br>
+SecureRandom은 예측을 어렵도록 엔트로피 풀에서 seed 값을 가져옵니다.</p>
+<p><strong>엔트로피 풀</strong></p>
+<blockquote>
+<p>장치 드라이버와 기타 소스로부터 모은 환경적 노이즈를 통해 증가하게 됩니다.<br>
+(OS 마다 다르나 키보드, 마우스, 인터럽트 등이 소스가 됩니다.)<br>
+Input 장비가 없는 서버나 VM 에서는 엔트로피 풀이 차지 않을 수 있습니다.</p>
+</blockquote>
+<p><strong>엔트로피 풀을 확인하는 방법</strong></p>
+<p>아래 명령어가 즉시 반환되면 JVM의 기본 난수 생성기를 사용할 수 있습니다.<br>
+그렇지 않다면 기본 설정을 수정 하여 non-blocking 방식의 /dev/urandom을 사용해야 합니다.</p>
+<pre><code>head -n 1 /dev/random
+</code></pre>
+<p>entropy_avail 값이 증가하지 않고 낮게 유지되면 엔트로피 풀 부족으로 인해 문제가 발생 할 수 있습니다.</p>
+<pre><code>cat /proc/sys/kernel/random/entropy_avail
+cat /proc/sys/kernel/random/poolsize
+</code></pre>
+<p><strong>JAVA 엔트로피 풀 문제 해결 방법</strong></p>
+<p>java.security 파일 수정</p>
+<ul>
+<li>$JAVA_HOME/jre/lib/security/java.security 열기</li>
+<li>securerandom.source=file:/dev/random 값을 securerandom.source=file:/dev/urandom로 수정</li>
+</ul>
+<p>jvm 옵션 변경</p>
+<ul>
+<li>jdk 1.6 이하: -Djava.security.egd=file:/dev/./urandom<br>
+(<a href="http://bugs.java.com/view_bug.do?bug_id=6202721">http://bugs.java.com/view_bug.do?bug_id=6202721</a>)</li>
+<li>jdk 1.7 이상: -Djava.security.egd=file:/dev/urandom</li>
+</ul>
+<p>rng-tools을 설치</p>
+<pre><code>apt-get install rng-tools
+</code></pre>
+<p><strong>JDBC의 SecureRandom 사용</strong></p>
+<ul>
+<li>jdbc에서 DB connection을할때 암호화를 위해서 사용합니다. (ojdbc6.jar)</li>
+<li>sun.security.provider.SecureRandom 은 싱글톤이며 처음 한번 seed를 가져오기 위해 엔트로피 풀에 접근합니다.</li>
+<li>한번에 20 byte의 엔트로피 풀을 사용하게 됩니다.</li>
+</ul>
+<pre><code>class SecureRandom$SeederHolder {
+    private static final SecureRandom seeder = new SecureRandom(SeedGenerator.getSystemEntropy(), (1)null);
+    private SecureRandom$SeederHolder() {
+    }
+    static {
+        byte[] var0 = new byte[20];
+        SeedGenerator.generateSeed(var0);  // 엔트로피 풀 접근
+        seeder.engineSetSeed(var0);
+    }
+}
+</code></pre>
+<p><strong>SecureRandom Entropy Test Code</strong><br>
+아래 코드에서 generateSeed를 호출 할 때마다 엔트로피 풀이 감소 되는 것을 확인 할 수 있습니다.<br>
+(일반적인 환경에서는 엔트로피 풀이 다시 금방 차게 되므로 변하는 값을 보려면 빠르게 갱신해야 합니다.)</p>
+<pre><code>byte seed[] = SecureRandom.getInstance(&quot;SHA1PRNG&quot;).generateSeed(40);
+long value = 0;
+for (int is = 0; is &lt; seed.length; is++)
+{
+   value += ((long) seed[is] &amp; 0xffL) &lt;&lt; (8 * is);
+}
+random.setSeed(value);
+
+byte[] b = new byte[40];
+random.nextBytes(b);
+</code></pre>
+<h1 id="">엔트로피가 뭔데요?</h1>
+<p><a href="http://www.linuxfromscratch.org/hints/downloads/files/entropy.txt">http://www.linuxfromscratch.org/hints/downloads/files/entropy.txt</a></p>
+<blockquote>
+<p>DESCRIPTION:<br>
+The word &quot;entropy&quot; generally means &quot;chaos&quot;, &quot;disorder&quot;, or &quot;uncertainty&quot;. In<br>
+this hint &quot;entropy&quot; is used to describe random computer data.</p>
+</blockquote>
+<p>엔트로피 풀의 값이 높게 유지되면 난수 예측 확률이 줄어들어 보안에 좋습니다.<br>
+엔트로피 풀의 값이 낮게 유지되면 일부 OS에서 blcoking 으로 인한 지연이 발생할 수 있습니다.</p>
+<h1 id="">정리</h1>
+<ul>
+<li>JDBC를 사용하는 경우 entropy pool 부족으로 blocking 되는 경우가 발생할 수 있습니다.</li>
+<li>JAVA에서 SecureRandom을 사용한다면 /dev/urandom을 사용하도록 설정 해야합니다.</li>
+</ul>
+<h1 id="">참고</h1>
+<ul>
+<li><a href="http://blog.leocat.kr/notes/2017/08/26/linux-random-number-generator">http://blog.leocat.kr/notes/2017/08/26/linux-random-number-generator</a></li>
+<li><a href="https://community.oracle.com/thread/943911">https://community.oracle.com/thread/943911</a></li>
+<li><a href="https://docs.oracle.com/cd/E13209_01/wlcp/wlss30/configwlss/jvmrand.html">https://docs.oracle.com/cd/E13209_01/wlcp/wlss30/configwlss/jvmrand.html</a></li>
+<li><a href="http://blog.naver.com/PostView.nhn?blogId=bestdriver94&amp;logNo=220415141564&amp;parentCategoryNo=&amp;categoryNo=20&amp;viewDate=&amp;isShowPopularPosts=true&amp;from=search">http://blog.naver.com/PostView.nhn?blogId=bestdriver94&amp;logNo=220415141564&amp;parentCategoryNo=&amp;categoryNo=20&amp;viewDate=&amp;isShowPopularPosts=true&amp;from=search</a></li>
+<li><a href="https://kb.informatica.com/solution/23/Pages/55/381796.aspx">https://kb.informatica.com/solution/23/Pages/55/381796.aspx</a></li>
+</ul>
+
+</div>]]></content:encoded></item><item><title><![CDATA[ORACLE, POSTGRES의 sequence cache 차이]]></title><description><![CDATA[<div class="kg-post">
+<p>DB sequence를 생성 할 때 cache옵션을 사용하면 IO를 줄일 수 있습니다.<br>
+20개를 cache한다고 하면 20번의 IO를 한 번에 처리할 수 있기 때문입니다.</p>
+<p>cache 옵션이 oracle, postgresql에 모두 존재하는데 동작 에는 차이가 있습니다.</p>
+<p><strong>설치 된 DB 버전</strong><br>
+oracle 11g<br>
+postgresql 9.5</p>
+<p><strong>ORACLE</strong></p>
+<ul>
+<li>default 20개의 값을 cache하여 shared pool에 저장해 놓습니다.</li></ul></div>]]></description><link>https://againsee.com/2018/06/21/oracle-postgresyi-sequence-cai/</link><guid isPermaLink="false">5b2b04cd9b339d3b8f1374c0</guid><dc:creator><![CDATA[이경환]]></dc:creator><pubDate>Thu, 21 Jun 2018 02:27:01 GMT</pubDate><media:content url="https://againsee.com/content/images/2018/06/pgoracle-2.png" medium="image"/><content:encoded><![CDATA[<div class="kg-post">
+<img src="https://againsee.com/content/images/2018/06/pgoracle-2.png" alt="ORACLE, POSTGRES의 sequence cache 차이"><p>DB sequence를 생성 할 때 cache옵션을 사용하면 IO를 줄일 수 있습니다.<br>
+20개를 cache한다고 하면 20번의 IO를 한 번에 처리할 수 있기 때문입니다.</p>
+<p>cache 옵션이 oracle, postgresql에 모두 존재하는데 동작 에는 차이가 있습니다.</p>
+<p><strong>설치 된 DB 버전</strong><br>
+oracle 11g<br>
+postgresql 9.5</p>
+<p><strong>ORACLE</strong></p>
+<ul>
+<li>default 20개의 값을 cache하여 shared pool에 저장해 놓습니다.</li>
+<li>shutdown abort로 종료하거나, instance failure가 발생하면 hole이 발생할 수 있습니다.</li>
+</ul>
+<p><em>Hole이란?</em></p>
+<blockquote>
+<p>default 20인 경우 5번까지 채번 되었다가 비정상 종료가 된다면 다음 채번시 21번이 나게 되어 6 ~ 20번까지의 hole이 발생합니다.<br>
+cache 사이즈가 크다면 hole이 더욱 커질 수 있습니다.</p>
+</blockquote>
+<p>application에서 sequence에 hole이 발생 하면 안되는 경우에는 NOCACHE 옵션을 주어야 합니다.</p>
+<pre><code>CREATE SEQUENCE [SEQUENCE_NAME] INCREMENT BY 1 START WITH 1 NOMAXVALUE NOMINVALUE NOCACHE
+</code></pre>
+<p><strong>POSTGRES</strong></p>
+<ul>
+<li>default 값은 1입니다. minimum 값 이기도 합니다. 이것은 cache를 사용하지 않고 필요할때마다 요청한다는 의미입니다.</li>
+<li>connection 별로 sequcence를 cache 하므로 cache를 사용한다면 순서 보장이 되지 않습니다.</li>
+<li>connection 별로 sequcence를 cache 하므로 connection이 close 되는 경우에 hole이 발생할 수 있습니다. application 종료시 hole이 발생할 가능성이 큽니다.</li>
+<li>10초마다 동시에 200개 sequence를 요청할 때 캐시를 사용할때와 아닐때 차이가 없었습니다. (평균 3ms 소요)</li>
+</ul>
+<h1 id="">정리</h1>
+<ul>
+<li>application에서 sequence를 통해 순서를 보장하는 key가 얻고 싶다면 cache 사용에 주의가 필요합니다.</li>
+<li>oracle은 cache를 사용 해도 unique 하고 sequential한 문자열을 얻을 수 있습니다.</li>
+<li>postgresql은 cache를 사용 한다면 sequential한 문자열은 포기해야 합니다.</li>
+<li>postgresql은 cache르 사용 한다면 sequcence의 hole이 발생하기 쉬운 구조입니다.</li>
+</ul>
+<h1 id="">참조문서</h1>
+<ul>
+<li><a href="https://www.viget.com/articles/generate-unique-identifiers-with-postgres-sequences">https://www.viget.com/articles/generate-unique-identifiers-with-postgres-sequences</a></li>
+<li><a href="https://stackoverflow.com/questions/5015979/oracle-sequence-cache-aging-too-often">https://stackoverflow.com/questions/5015979/oracle-sequence-cache-aging-too-often</a></li>
+<li><a href="http://www.linuxtopia.org/online_books/database_guides/Practical_PostgreSQL_database/PostgreSQL_x14316_001.htm">http://www.linuxtopia.org/online_books/database_guides/Practical_PostgreSQL_database/PostgreSQL_x14316_001.htm</a></li>
+<li><a href="https://www.postgresql.org/docs/9.5/static/sql-createsequence.html">https://www.postgresql.org/docs/9.5/static/sql-createsequence.html</a></li>
+<li><a href="https://docs.oracle.com/cd/B28359_01/server.111/b28310/views002.htm#ADMIN11794">https://docs.oracle.com/cd/B28359_01/server.111/b28310/views002.htm#ADMIN11794</a></li>
+</ul>
+
+</div>]]></content:encoded></item><item><title><![CDATA[JAVA ArrayList 알고 쓰기]]></title><description><![CDATA[<div class="kg-post">
+<p>그동안 아무생각 없이 사용했던 ArrayList를 알고 사용하기 위해 정리해 보았습니다.<br>
+비교를 위해 LinkedList에 대해 정리한 내용도 포함 되어있습니다.</p>
+<p>List는 이름처럼 순서대로 연결된 항목을 의미하는데요.<br>
+LIST와 비교할만한 자료구조는 순서가 없고 정렬되지 않는 SET이 있습니다.</p>
+<p>Java의 기본적인 자료구조 입니다.<br>
+<img src="https://againsee.com/content/images/2018/06/java-collection-hierarchy.jpeg" alt="java-collection-hierarchy"><br>
+<a href="https://stackoverflow.com/questions/23245386/how-does-memory-allocation-of-an-arraylist-work/23245487">https://stackoverflow.com/questions/23245386/how-does-memory-allocation-of-an-arraylist-work/23245487</a></p>
+<h1 id="arraylist">ArrayList</h1>
+<p>ArrayList는 List interface를 구현하고 있습니다.</p></div>]]></description><link>https://againsee.com/2018/06/19/java-arraylist/</link><guid isPermaLink="false">5b2769fb9b339d3b8f1374aa</guid><category><![CDATA[JAVA]]></category><category><![CDATA[ArrayList]]></category><category><![CDATA[performance]]></category><category><![CDATA[List]]></category><dc:creator><![CDATA[이경환]]></dc:creator><pubDate>Tue, 19 Jun 2018 02:28:18 GMT</pubDate><media:content url="https://againsee.com/content/images/2018/06/java-collection-hierarchy-1.jpeg" medium="image"/><content:encoded><![CDATA[<div class="kg-post">
+<img src="https://againsee.com/content/images/2018/06/java-collection-hierarchy-1.jpeg" alt="JAVA ArrayList 알고 쓰기"><p>그동안 아무생각 없이 사용했던 ArrayList를 알고 사용하기 위해 정리해 보았습니다.<br>
+비교를 위해 LinkedList에 대해 정리한 내용도 포함 되어있습니다.</p>
+<p>List는 이름처럼 순서대로 연결된 항목을 의미하는데요.<br>
+LIST와 비교할만한 자료구조는 순서가 없고 정렬되지 않는 SET이 있습니다.</p>
+<p>Java의 기본적인 자료구조 입니다.<br>
+<img src="https://againsee.com/content/images/2018/06/java-collection-hierarchy.jpeg" alt="JAVA ArrayList 알고 쓰기"><br>
+<a href="https://stackoverflow.com/questions/23245386/how-does-memory-allocation-of-an-arraylist-work/23245487">https://stackoverflow.com/questions/23245386/how-does-memory-allocation-of-an-arraylist-work/23245487</a></p>
+<h1 id="arraylist">ArrayList</h1>
+<p>ArrayList는 List interface를 구현하고 있습니다.<br>
+ArrayList는 요소가 추가되면 크기가 동적으로 증가합니다.<br>
+ArrayList는 Object[] 배열이므로 get, set method를 직접 access 할 수 있습니다.</p>
+<p>ARRAYList의 친구들이 있습니다.<br>
+LinkedList : add, remove 속도는 빠르나 get, set은 느립니다.<br>
+vector : ArrayList와 비슷하나 동기화 하여 thread-safe 합니다.</p>
+<p>vector나 ArrayList는 요소가 추가될 때 더많은 공간을 사용합니다.<br>
+vector는 배열크기를 2배로 , ArrayList는 50% 증가 시킵니다.<br>
+LinkedList는 Queue interface도 구현하고 있어서 offer(), peek(), poll() 과 같은 method들을 사용할 수 있습니다.</p>
+<p>ArrayList의 사이즈를 늘리는 Code를 통해 ArrayList의 특징을 살펴 보겠습니다.</p>
+<pre><code>private void grow(int minCapacity) {
+        // overflow-conscious code
+        int oldCapacity = elementData.length;
+        int newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1);
+        if (newCapacity - minCapacity &lt; 0)
+            newCapacity = minCapacity;
+        if (newCapacity - MAX_ARRAY_SIZE &gt; 0)
+            newCapacity = hugeCapacity(minCapacity);
+        // minCapacity is usually close to size, so this is a win:
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+</code></pre>
+<ol>
+<li>
+<p>oldCapacity &gt;&gt; 1 // 1bit를 옆으로 밀면 50%가 됩니다.<br>
+항목이 추가되면 array의 크기가 50% 증가됩니다.</p>
+</li>
+<li>
+<p>MAX_ARRAY_SIZE는 아래와 같습니다.<br>
+메모리가 충분 하다면 2억개 넘개 만들수 있습니다.</p>
+</li>
+</ol>
+<pre><code>  private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+</code></pre>
+<ol start="3">
+<li>
+<p>Arrays.copyOf(elementData, newCapacity);<br>
+사이즈가 넘을때 마다 memory를 통째로 복사합니다.<br>
+ArrayList를 사이즈를 정의하지 않으면 기본 사이즈는 10으로 초기화 됩니다.<br>
+10 &gt; 15 &gt; 22 &gt; 33 &gt; 49 &gt; 73 &gt; 109 &gt; 163 &gt; 244 &gt; 366 &gt; 549<br>
+550개의 항목을 추가하게 되면 10번의 메모리 복사가 일어나게 됩니다.</p>
+</li>
+<li>
+<p>ArrayList가 생성하면 배열 사이즈는 0입니다.<br>
+1개의 항목이 추가 될 때 기본 사이즈인 10으로 늘어나게 됩니다.</p>
+</li>
+<li>
+<p>한번에 많은 항목을 추가 할때는 addAll을 사용하면 메모리 복사를 1번만 하게됩니다.</p>
+</li>
+</ol>
+<h1 id="linkedlist">LinkedList는 왜 메모리를 적게 쓸까요?</h1>
+<pre><code>   void linkLast(E e) {
+        final Node&lt;E&gt; l = last;
+        final Node&lt;E&gt; newNode = new Node&lt;&gt;(l, e, null);
+        last = newNode;
+        if (l == null)
+            first = newNode;
+        else
+            l.next = newNode;
+        size++;
+        modCount++;
+    }
+</code></pre>
+<p>LinkedList는 Object[]을 사용하지 않습니다.<br>
+Node<e> 라는 객체를 사용합니다. 이 클래스는 item, prev, next 라는 요소를 가지고 있습니다.</e></p>
+<pre><code>    private static class Node&lt;E&gt; {
+        E item;
+        Node&lt;E&gt; next;
+        Node&lt;E&gt; prev;
+
+        Node(Node&lt;E&gt; prev, E element, Node&lt;E&gt; next) {
+            this.item = element;
+            this.next = next;
+            this.prev = prev;
+        }
+    }    
+</code></pre>
+<ol>
+<li>
+<p>메모리를 직접 관리하지 않고 참조로 연결만 해줍니다.</p>
+</li>
+<li>
+<p>Node의 prev가 null이면 처음(head)이고 next가 null이면 마지막 요소(tail)입니다.</p>
+</li>
+</ol>
+<p>ArrayList와 LinkedList time complexity 비교<br>
+<img src="https://againsee.com/content/images/2018/06/arraylist-vs-linkedlist-complexity.png" alt="JAVA ArrayList 알고 쓰기"></p>
+<p>위에서 본 것과 같이 add는 LinkedList가 효율적 입니다. 배열 사이즈 증가가 없기 때분입니다.<br>
+remove는 어떨까요?<br>
+ArrayList는 배열 복사를 합니다. 가급적 안써야 겠네요..<br>
+LinkedList는 어떨까요? 해당 노드를 지우고 참조를 이용해 가볍게 연결 시킵니다.</p>
+<p><strong>ArrayList의 remove 로직</strong></p>
+<pre><code>    public E remove(int index) {
+        rangeCheck(index);
+
+        modCount++;
+        E oldValue = elementData(index);
+
+        int numMoved = size - index - 1;
+        if (numMoved &gt; 0)
+            System.arraycopy(elementData, index+1, elementData, index,
+                             numMoved);
+        elementData[--size] = null; // clear to let GC do its work
+
+        return oldValue;
+    }
+</code></pre>
+<p><strong>LinkedList의 remove 로직</strong></p>
+<pre><code>   E unlink(Node&lt;E&gt; x) {
+        // assert x != null;
+        final E element = x.item;
+        final Node&lt;E&gt; next = x.next;
+        final Node&lt;E&gt; prev = x.prev;
+
+        if (prev == null) {
+            first = next;
+        } else {
+            prev.next = next;
+            x.prev = null;
+        }
+
+        if (next == null) {
+            last = prev;
+        } else {
+            next.prev = prev;
+            x.next = null;
+        }
+
+        x.item = null;
+        size--;
+        modCount++;
+        return element;
+    }
+</code></pre>
+<p>remove는 LinkedList의 승리였습니다.<br>
+그렇다면 get은 어떨까요? ArrayList의 압승입니다.</p>
+<p><strong>LinkedList의 get 로직</strong></p>
+<pre><code>    Node&lt;E&gt; node(int index) {
+        // assert isElementIndex(index);
+
+        if (index &lt; (size &gt;&gt; 1)) {
+            Node&lt;E&gt; x = first;
+            for (int i = 0; i &lt; index; i++)
+                x = x.next;
+            return x;
+        } else {
+            Node&lt;E&gt; x = last;
+            for (int i = size - 1; i &gt; index; i--)
+                x = x.prev;
+            return x;
+        }
+    }
+</code></pre>
+<p><strong>ArrayList의 get 로직</strong></p>
+<pre><code>    E elementData(int index) {
+        return (E) elementData[index];
+    }
+</code></pre>
+<p>벤치마크 결과입니다. 코드와 동일해 보이네요~<br>
+<img src="https://againsee.com/content/images/2018/06/arraylist-vs-linkedlist1.png" alt="JAVA ArrayList 알고 쓰기"></p>
+<h1 id="">정리</h1>
+<ul>
+<li>성능에 민감하지 않다면 ArrayList를 사용해도 좋습니다. (단 remove가 필요하다면 고민해야합니다.)</li>
+<li>ArrayList에 추가 되는 항목이 많다면 <a href="http://data-structure-learning.blogspot.com/2015/05/bulk-operation-in-arraylist.html">bulk operation</a>을 이용합니다.</li>
+<li>ArrayList는 thread-safe 하지 않으니 주의</li>
+<li>add, remove가 많고 순차적으로 항목을 가져와야 하는 경우 LinkedList가 적합합니다.</li>
+<li>remove가 없고 특정 index에 대한 접근이 많다면 ArrayList가 적합합니다.</li>
+<li>순차 접근은 (반복은 ArrayList가 메모리 접근 효율이 좋으나) 성능에 정말 민감하지 않다면 걱정할 필요는 없습니다.</li>
+</ul>
+<h1 id="">참조 사이트</h1>
+<p><a href="https://www.programcreek.com/2013/03/arraylist-vs-linkedlist-vs-vector/">https://www.programcreek.com/2013/03/arraylist-vs-linkedlist-vs-vector/</a><br>
+<a href="http://zeddios.tistory.com/60">http://zeddios.tistory.com/60</a><br>
+<a href="http://www.nextree.co.kr/p6506/">http://www.nextree.co.kr/p6506/</a><br>
+<a href="https://code-examples.net/ko/q/4ec9b">https://code-examples.net/ko/q/4ec9b</a><br>
+<a href="http://data-structure-learning.blogspot.com/2015/05/bulk-operation-in-arraylist.html">http://data-structure-learning.blogspot.com/2015/05/bulk-operation-in-arraylist.html</a></p>
+
+</div>]]></content:encoded></item><item><title><![CDATA[JAVA Primitive, Reference Type 그리고 String]]></title><description><![CDATA[<div class="kg-post">
+<p>JAVA 데이터 타입은 크게 primitive Type과 Reference Type으로 나뉩니다.</p>
+<pre><code>Java Data Type
+ㄴ Primitive Type
+    ㄴ Boolean Type(boolean)
+    ㄴ Numeric Type
+        ㄴ Integral Type
+            ㄴ Integer Type(short, int, long)
+            ㄴ Floating Point Type(float, double)
+        ㄴ Character Type(char)
+ㄴ Reference Type
+    ㄴ Class Type
+    ㄴ Interface Type</code></pre></div>]]></description><link>https://againsee.com/2018/06/15/java-datatype/</link><guid isPermaLink="false">5b2344369b339d3b8f1374a6</guid><dc:creator><![CDATA[이경환]]></dc:creator><pubDate>Fri, 15 Jun 2018 05:10:16 GMT</pubDate><media:content url="https://againsee.com/content/images/2018/06/dataType.png" medium="image"/><content:encoded><![CDATA[<div class="kg-post">
+<img src="https://againsee.com/content/images/2018/06/dataType.png" alt="JAVA Primitive, Reference Type 그리고 String"><p>JAVA 데이터 타입은 크게 primitive Type과 Reference Type으로 나뉩니다.</p>
+<pre><code>Java Data Type
+ㄴ Primitive Type
+    ㄴ Boolean Type(boolean)
+    ㄴ Numeric Type
+        ㄴ Integral Type
+            ㄴ Integer Type(short, int, long)
+            ㄴ Floating Point Type(float, double)
+        ㄴ Character Type(char)
+ㄴ Reference Type
+    ㄴ Class Type
+    ㄴ Interface Type
+    ㄴ Array Type
+    ㄴ Enum Type
+    ㄴ etc.</code></pre><h1 id="primitivetype">primitive type</h1>
+<p>JAVA는 8가지의 primitive type을 제공합니다.</p>
+<p><strong>type, size, default value</strong><br>
+byte : 8 bit (1 Byte),  0<br>
+short : 16 bit (2 Byte) ,  0<br>
+int : 32 bit (4 Byte),  0<br>
+long : 64 bit (8 Byte),  0<br>
+float : 32 bit (4 Byte),  0.0f<br>
+double : 64 bit (8 Byte),  0.0d<br>
+char : 16 bit (2 Byte),  '\u0000'<br>
+boolean : 1 bit, false</p>
+<ul>
+<li>type 마다 size가 fix 되어 있습니다.</li>
+<li>기본값이 있으므로 null이 존재하지 않습니다.</li>
+<li>generic을 이용할 때 필요한 wraper class가 존재합니다. (Integer, Long..)</li>
+<li>컴파일 시, 크기를 초과하면 에러가 발생합니다.</li>
+<li>primitive type의 size가 메모리 사이즈가 되는것은 아닙니다. VM 마다 다를 수 있습니다.</li>
+<li><strong>primitive type의 변수는 thread의 stack memory에 저장됩니다.</strong></li>
+</ul>
+<h1 id="referencetype">Reference Type</h1>
+<p>기본형을 제외한 모든 타입은 Reference Type 이며 java.lang.Object 를 상속 받습니다.<br>
+Class, Interface, Array, Enum Type 등이 있습니다.</p>
+<p><strong>type, size, default value</strong><br>
+any Object : 1Byte + @,  null</p>
+<ul>
+<li>기본값은 아무런 참조 정보가 없으므로 null을 리턴합니다.</li>
+<li>new, Reflection, sun.misc.Unsafe 등으로 객체를 생성할 수 있습니다.</li>
+<li>HotSpot 기준 아무것도 없는 Class도 8Byte를 차지합니다.</li>
+<li>boolean type 1개가 존재하는 Class는 16Byte를 차지합니다. (기본 1Bye + 1Byte (boolean 1bit 나머지 padding값)</li>
+<li><strong>생성된 객체는 Heap Memory에 저장됩니다.</strong><br>
+(<a href="http://btoddb-java-sizing.blogspot.com/">Java Object Size Calculations in 64-bit</a>)</li>
+</ul>
+<h1 id="string">String은 무엇인가?</h1>
+<p>생긴 것을 보면 primitive Type 이라고 생각 하기 쉽지만 그렇지 않습니다.<br>
+<a href="https://stackoverflow.com/questions/2099257/why-is-there-no-primitive-type-for-string">James Gosling 아저씨의 말씀</a><br>
+String은 char의 Array 입니다.<br>
+Array는 reference Type입니다.</p>
+<p><strong>String 객체를 생성하는 두 가지 방법</strong></p>
+<pre><code>public class StringMemory {
+
+    public static void main(String... args) {
+        String literal = "loper";
+        String object = new String("loper");
+
+        System.out.println(literal == object);
+        System.out.println(literal.equals(object));
+    }
+
+}</code></pre><blockquote>
+<p>primitive type의 == 연산은 값을 비교합니다.<br>
+reffeance type의 == 연산은 주소를 비교합니다.<br>
+리터럴 방식을 통해 만든 변수와, new를 통해 저장되는 메모리가 다릅니다.<br>
+두 변수의 참조 메모리가 서로 다르다는 뜻이 되는데요.<br>
+<strong>reference 타입에서 설명한 대로 new로 만든 객체는 Heap 영역에 저장이 되고, 리터럴 방식으로 만들어진 객체는 <a href="https://medium.com/@joongwon/string-%EC%9D%98-%EB%A9%94%EB%AA%A8%EB%A6%AC%EC%97%90-%EB%8C%80%ED%95%9C-%EA%B3%A0%EC%B0%B0-57af94cbb6bc">String Constant Pool</a>영역에 저장되기 때문입니다.</strong></p>
+</blockquote>
+<h1 id="callbyvaluecallbyreference">Call-by-Value, Call-by-reference?</h1>
+<p>primitive Type은 value를 전달합니다.<br>
+reference Type은 reference를 전달합니다.</p>
+<p>primitive Type을 argument로 전달할 때는 별 문제가 없습니다.<br>
+reference Type을 argument로 전달할 때는 method에서 값이 변경될 수 있습니다.</p>
+<p>저는 그 동안 parameter를 전달할 때 위와 같은 용어를 사용했는데요.<br>
+<a href="https://brunch.co.kr/@kd4/2">JAVA에는 Call-by-reference가 없습니다.</a></p>
+<blockquote>
+<p><a href="https://stackoverflow.com/questions/12709026/difference-between-arguments-and-parameters-in-java">parameter와 argument 용어 설명</a><br>
+parameter는 method를 정의할 때 사용됩니다. (전달 받는 값)<br>
+argument는 method를 호출할 때 사용됩니다. (전달 하는 값)</p>
+</blockquote>
+<pre><code>public static void main(String[] args) {
+    Dog aDog = new Dog("Max");
+    // we pass the object to foo
+    foo(aDog);
+    // aDog variable is still pointing to the "Max" dog when foo(...) returns
+    aDog.getName().equals("Max"); // true, java passes by value
+    aDog.getName().equals("Fifi"); // false 
+}
+
+public static void foo(Dog d) {
+    d.getName().equals("Max"); // true
+    // change d inside of foo() to point to a new Dog instance "Fifi"
+    d = new Dog("Fifi");
+    d.getName().equals("Fifi"); // true
+}</code></pre><p>call-by-reference 가 되려면 위의 코드에서는 Main에서 foo를 호출하고 난 뒤 aDog객체의 name이 &quot;Fifi&quot;가 되어야 합니다.</p>
+<p>parameter인 foo method의 Dog d 객체는<br>
+argument인 Main의 aDog가 복사된 객체입니다.</p>
+<p>d = new Dog(&quot;Fifi&quot;);<br>
+코드가 실행되면 새로운 Dog 객체가 heap 메모리에 할당되고 d 변수는 새로운 Dog 객체의 reference 정보를 갖게 됩니다.</p>
+<p><strong>&quot;java의 reference 타입 객체는 참조 정보를 저장하고 있지만 그 자체가 참조는 아닙니다.&quot;</strong></p>
+<pre><code>public static void main(String[] args) {
+    Dog aDog = new Dog("Max");
+    // we pass the object to foo
+    foo(aDog);
+    // aDog variable is still pointing to the "Max" dog when foo(...) returns
+    aDog.getName().equals("Max"); // false
+    aDog.getName().equals("Fifi"); // true 
+}
+
+public static void foo(Dog d) {
+    d.getName().equals("Max"); // true
+    // change d.name inside of foo()
+    d = d.setName("Fifi");
+    d.getName().equals("Fifi"); // true
+}</code></pre><p>위와같이 Dog Class에 name을 변경할 수 있는 set method가 있다고 한다면</p>
+<p>argument aDog와 parameter d는 다른 객체 이지만 같은 reference정보를 가지고 있습니다.<br>
+setName을 통해 parameter 객체를 변경하면 argument aDog의 값도 변경되어 reference를 전달하는 것처럼 보일수 있습니다.</p>
+<h1 id="stringreferencetype">String은 reference Type인데 변경되지 않나요?</h1>
+<p>String은 argument로 넘겨도 method에서 변경 되지 않습니다.<br>
+이러한 특징과 primitive Type과 같은 표기법으로 primitive Type으로 오해 하기도 합니다.</p>
+<p><strong>String은 reference Type 입니다.</strong><br>
+다른 reference Type과 다른점은 JVM에서 <a href="https://medium.com/@joongwon/string-%EC%9D%98-%EB%A9%94%EB%AA%A8%EB%A6%AC%EC%97%90-%EB%8C%80%ED%95%9C-%EA%B3%A0%EC%B0%B0-57af94cbb6bc">String constant pool</a>을 이용해 메모리 관리를 하는 것입니다.</p>
+<p>String은 immutable Class 이므로 setter가 없습니다.<br>
+그래서 paremeter reference를 가지고 있더라도 변경을 할 수 없습니다.<br>
+parameter를 재 할당 하게되면 새로운 메모리 참조주소를 갖게 되지만 argument에는 영향을 주지않습니다.</p>
+<p>StringBuilder와 같은 Class를 이용하면 parameter 객체를 통해 argument객체를 변경할 수 있습니다.</p>
+<pre><code>public static void main(String[] args) {
+	StringBuilder x = new StringBuilder("ab");
+	change(x);
+	System.out.println(x);
+}
+ 
+public static void change(StringBuilder x) {
+	x.delete(0, 2).append("cd");
+}</code></pre><h1 id="">정리</h1>
+<ul>
+<li>JAVA Primitive, Reference Type은 메모리 저장 방식이 다릅니다.</li>
+<li>String은 String constant pool을 이용한 메모리 관리 합니다. 리터럴 방식으로 생성하면 컴파일러가 효율적으로 사용할수 있게 해줍니다.</li>
+<li>Primitive Type 마다 사용하는 메모리 사이즈가 fix 되어있습니다.</li>
+<li>Reference Type은 기본 1Byte + @ (class variable size의 합)의 메모리를 사용합니다. 갖습니다.</li>
+<li>String은 reference Type 입니다.</li>
+<li>JAVA에 call-by-reference는 없습니다. pass-by-value reference 정보를 가진 객체가 복사됩니다.</li>
+</ul>
+<h1 id="">참조 문서</h1>
+<p><a href="http://jdm.kr/blog/213">자바 자료형 정리(Java Data Type)</a><br>
+<a href="http://gbsb.tistory.com/6">자바의 데이터타입 (Primitive Type, Reference Type)</a><br>
+<a href="https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html">Oracle docs - Primitive Data Types</a><br>
+<a href="http://www.baeldung.com/java-primitives">Introduction to Java Primitives</a><br>
+<a href="https://www.programcreek.com/2013/09/string-is-passed-by-reference-in-java/">String is passed by “reference” in Java</a><br>
+<a href="https://brunch.co.kr/@kd4/2">JAVA의 아규먼트 전달 방식</a><br>
+<a href="https://medium.com/@joongwon/string-%EC%9D%98-%EB%A9%94%EB%AA%A8%EB%A6%AC%EC%97%90-%EB%8C%80%ED%95%9C-%EA%B3%A0%EC%B0%B0-57af94cbb6bc">Java String 의 메모리에 대한 고찰</a><br>
+<a href="http://btoddb-java-sizing.blogspot.com/">Java Object Size Calculations in 64-bit</a></p>
+
+</div>]]></content:encoded></item><item><title><![CDATA[AWS 프리 티어로 Ghost 운영하기]]></title><description><![CDATA[<div class="kg-post">
+<p>AWS 프리 티어를 활용하여 블로그를 서비스 하려는 목적으로 Ghost를 설치해 보았습니다.</p>
+<p><a href="https://ghost.org/ko/">Ghost</a>는 호스팅 서비스로 사용할 수 있지만 직접 설치도 가능합니다.</p>
+<h1 id="1aws">1. AWS 준비</h1>
+<p><a href="https://aws.amazon.com">AWS</a> 에 가입합니다.</p>
+<blockquote>
+<p>AWS를 설명 하기에는 내용이 많으므로 처음이라 생소하다면 AWS문서를 읽으면서 시간을 보내는것이 좋습니다</p>
+</blockquote>
+<p>EC2 인스턴스를 만듭니다.<br>
+프리 티어 사용이 가능한 <strong>t2.micro</strong>를 선택합니다.</p></div>]]></description><link>https://againsee.com/2018/06/11/beulrogeu-jemog/</link><guid isPermaLink="false">5b1dd5af7f1d8b054d6ec344</guid><dc:creator><![CDATA[이경환]]></dc:creator><pubDate>Mon, 11 Jun 2018 01:58:42 GMT</pubDate><media:content url="https://againsee.com/content/images/2018/06/blog2-3.png" medium="image"/><content:encoded><![CDATA[<div class="kg-post">
+<img src="https://againsee.com/content/images/2018/06/blog2-3.png" alt="AWS 프리 티어로 Ghost 운영하기"><p>AWS 프리 티어를 활용하여 블로그를 서비스 하려는 목적으로 Ghost를 설치해 보았습니다.</p>
+<p><a href="https://ghost.org/ko/">Ghost</a>는 호스팅 서비스로 사용할 수 있지만 직접 설치도 가능합니다.</p>
+<h1 id="1aws">1. AWS 준비</h1>
+<p><a href="https://aws.amazon.com">AWS</a> 에 가입합니다.</p>
+<blockquote>
+<p>AWS를 설명 하기에는 내용이 많으므로 처음이라 생소하다면 AWS문서를 읽으면서 시간을 보내는것이 좋습니다</p>
+</blockquote>
+<p>EC2 인스턴스를 만듭니다.<br>
+프리 티어 사용이 가능한 <strong>t2.micro</strong>를 선택합니다.<br>
+AMI는 <strong>Ubuntu Server 16.04 LTS (HVM), SSD Volume Type</strong> 를 선택했습니다.<br>
+Elastic IP를 등록하여 <strong>고정 아이피를 사용</strong>합니다.</p>
+<blockquote>
+<p>t2.micro는 1개의 인스턴스로 월 750시간을 사용할 수 있으므로 1달 내내 운영해도 과금이 되지 않습니다. <strong>Elastic IP를 등록하고 EC2 인스턴스에 연결하지 않으면 시간당 0.005$ 가 과금</strong> 되므로 인스턴스 사용을 중지 하거나 삭제하면 Elastic IP 고 같이 삭제해야 과금을 피할 수 있습니다.</p>
+</blockquote>
+<p>과금에 민감하다면 <a href="https://librewiki.net/wiki/%EC%95%84%EB%A7%88%EC%A1%B4_%EC%9B%B9_%EC%84%9C%EB%B9%84%EC%8A%A4/Free_Tier_%EC%A3%BC%EC%9D%98%EC%82%AC%ED%95%AD">AWS 프리 티어 주의사항</a>을 참조하여 안전하게 사용하세요.</p>
+<p>프리티어 기간은 1년입니다.<br>
+1년 후 유지하면 1달에 10불 정도가 과금 될 수 있습니다.<br>
+블로그 특성상 프리티어 이후 서비스를 유지하려면 EC2 온디멘드가 아닌 예약 인스턴스나 lightsail등을 알아 보시는 것이 좋습니다.</p>
+<h1 id="2ghost">2. Ghost 설치</h1>
+<p><a href="https://docs.ghost.org/docs/install">Ghost install 설치 문서</a> 참조 하여 nginx와 node, ghost를 설치 합니다.<br>
+설치 문서의 주의사항들을 잘 보면서 하면 문제가 없습니다.</p>
+<blockquote>
+<p><a href="https://docs.ghost.org/docs/supported-node-versions">지원하는 node version</a>을 <strong>꼭 확인</strong>해야 합니다.<br>
+(ghost 1.24.1 버전에서는 node 6.9 이상 7.x 이하 버전을 사용해야 합니다.)<br>
+nvm 보다는 system전체에 node를 설치해서 사용하는것이 좋습니다.<br>
+ghost 사용자가 자동 생성됩니다. 미리 만들지도 말고 사용하지도 않아야 합니다.<br>
+nginx 1.9.5 버전 이상이 요구 됩니다.</p>
+</blockquote>
+<p>mysql을 사용하기에는 리소스가 부족할 것 같아 <strong>sqllite3을 사용</strong> 하였습니다<br>
+ghost install 시에 아래와 같이 인자를 추가해 주세요.</p>
+<pre><code>ghost install --db sqlite3
+</code></pre>
+<h1 id="3nginx">3. nginx 설정</h1>
+<p><a href="https://docs.ghost.org/v0.11/docs/basic-nginx-config-self-hosted-with-custom-domain">nginx 설정</a>을 통해 localhost:2368 로 서비스 되는 ghost를 public ip의 80으로 연결해 줄 수 있습니다.</p>
+<p>AWS console &gt; EC2 &gt; 네트워크 및 보안 &gt; 보안 그룹 &gt; 선택 &gt; 인바운드 &gt; 편집<br>
+화면에서 아래와 같이 80 port는 any로 서비스 할 수 있도록 설정 합니다.</p>
+<p><img src="https://againsee.com/content/images/2018/06/----.png" alt="AWS 프리 티어로 Ghost 운영하기"></p>
+<p>설정을 완료하면 browser를 통해 http://{public dns 또는 public ip}로 접속 할 수 있습니다.</p>
+<h1 id="4letsencryptssl">4. letsencrypt 발급 및 SSL 설정</h1>
+<blockquote>
+<p>이번 단계는 도메인을 가지고 있어야 합니다.<br>
+개인 적으로 사용하기 위해 AWS router53을 통해 .com 도메인을 구입하였습니다.</p>
+</blockquote>
+<p><a href="https://happist.com/548924/%EC%9B%8C%EB%93%9C%ED%94%84%EB%A0%88%EC%8A%A4-tips-lets-encrypt-%EB%AC%B4%EB%A3%8C-ssl%EC%9D%B8%EC%A6%9D%EC%84%9C-%EB%B0%9C%EA%B8%89-%EB%B0%8F-%EC%9E%90%EB%8F%99-%EA%B0%B1%EC%8B%A0/">letsencrypt 발급과 자동갱신</a> 페이지를 참고 하였습니다.</p>
+<ol>
+<li>root 계정으로 전환</li>
+</ol>
+<pre><code>sudo su -  
+</code></pre>
+<ol start="2">
+<li>필요한 소프트웨어를 받기 위해 git 설치</li>
+</ol>
+<pre><code>cd /root   # /root 디렉토리로 이동해 작업 시작
+apt-get update   # 항상 소프트웨어를 설치하기 전에 최신 업데이트가 있는 지 학인
+apt-get install git # git 설치
+git clone https://github.com/certbot/certbot  # certbot 설치
+</code></pre>
+<ol start="3">
+<li>인증서 생성</li>
+</ol>
+<pre><code>cd certbot  # /certbot 디렉토리로 이동해 작업 시작
+service nginx stop   # certbot이 80포트를 사용하므로 nginx를 잠깐 중단시킴
+./certbot-auto certonly # 인증 절차 진행, 조금 시간이 걸립니다.
+service nginx start # 작업이 끝나면 다시 nginx를 가동시킴
+</code></pre>
+<ul>
+<li>standalone을 선택 (별도 서버가 80 port를 LISTEN 하여 인증처리를 합니다.)</li>
+<li>서비스 조건 확인</li>
+<li>이메일 주소를 입력</li>
+<li>도메인 주소를 입력</li>
+</ul>
+<ol start="4">
+<li>nginx SSL 적용<br>
+<a href="https://docs.ghost.org/v0.11/docs/basic-nginx-config-self-hosted-with-custom-domain">Ghost nginx SSL 설정</a> 참조 하여 80 port로 접속하면 443으로 redirect 하도록 합니다.</li>
+</ol>
+<pre><code>server {
+ listen 80;
+ server_name {DOMAIN NAME};
+
+ return 301 https://$host$request_uri;
+}
+
+server{
+ listen 443;
+ server_name {DOMAIN NAME};
+
+ ssl on;
+ ssl_certificate /etc/letsencrypt/live/{DOMAIN NAME}/fullchain.pem;
+ ssl_certificate_key /etc/letsencrypt/live/{DOMAIN NAME}/privkey.pem;
+
+ ssl_session_timeout 5m;
+
+ ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+ ssl_ciphers HIGH:!aNULL:!MD5:!RC4;
+ ssl_prefer_server_ciphers on;
+
+ location / {
+     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+     proxy_set_header Host $http_host;
+     proxy_set_header X-Forwarded-Proto $scheme;
+     proxy_set_header X-Real-IP $remote_addr;
+     proxy_pass         http://127.0.0.1:2368;
+ }
+}
+</code></pre>
+<p>재시작</p>
+<pre><code>service nginx restart
+</code></pre>
+<ol start="5">
+<li>자동갱신<br>
+letsencrypt는 3개월만 유효하므로 주기적으로 갱신해야 합니다.<br>
+shell을 통해 자동화 할 수 있습니다.</li>
+</ol>
+<pre><code>#!/bin/sh
+/etc/init.d/nginx stop
+if ! /root/certbot/letsencrypt-auto renew &gt; /var/log/letsencrypt-renew.log 2&gt;&amp;1 ; then
+    echo Automated renew failed;
+    cat /var/log/letsencrypt-renew.log
+    exit 1
+fi
+/etc/init.d/nginx start           
+</code></pre>
+<p>위에서 만든 shell을 crontab에 추가 해야 합니다.</p>
+<pre><code>crontab -e
+</code></pre>
+<p>매월 1일 00시 30분 체크하도록 스케쥴 등록합니다.<br>
+유효기간이 30일 이하가 되면 갱신이 가능합니다.</p>
+<pre><code>30 0 1 1-12 * /root/letsencrypt.sh
+</code></pre>
+<h1 id="5ghost">5. Ghost 설정</h1>
+<p>Ghost는 'config.production.json' 설정 파일을 수정하거나<br>
+admin 화면에서 blog 설정을 할 수 있습니다.<br>
+또는 파일을 직접 수정하여 기능을 추가하거나 디자인을 변경할 수 있습니다.</p>
+<p>처음 접속하면 기본 등록된 글들을 볼 수 있습니다. 참고 하다가 운영할 때는 삭제할 수 있습니다.</p>
+<ol>
+<li>
+<p><a href="https://docs.ghost.org/docs/config">ghost config 설정 문서</a> url 과 mail.from 정도만 수정 하였습니다.</p>
+</li>
+<li>
+<p>http://{domain}/admin 으로 접속하면 관리자 화면이 나옵니다.<br>
+<a href="https://help.ghost.org/category/2-using-ghost">Ghost 사용 가이드</a>에 많은 정보가 있습니다.</p>
+</li>
+</ol>
+<p>General에서는 아래와 같은 여러가지 설정을 할 수 있습니다.</p>
+<ul>
+<li>타이틀, 설명</li>
+<li>타임존</li>
+<li>언어</li>
+<li>사이트 아이콘</li>
+<li>메인 화면 로고</li>
+<li>메인 화면 커버 이미지</li>
+<li>facebook, twitter 계정 연결</li>
+<li>날짜를 포함한 고유 URL - permalinks</li>
+</ul>
+<h1 id="6ghost">6. Ghost 설정 - 한글 폰트 적용</h1>
+<p><a href="http://tmmse.xyz/2018/04/03/ghost-changing-font/">ghost font 변경</a> 페이지를 참고하였습니다.</p>
+<p>한글로 글을 작성하면 기본 font가 굴림인데 마음에 들지 않았습니다.<br>
+그래서 기본 theme인 casper의 font를 없애고 Ghost admin page의 Code injection을 통해 font를 변경합니다.</p>
+<ol>
+<li>필요한 tool을 설치하고 gulp를 실행 합니다.</li>
+</ol>
+<pre><code>cd {your-ghost-dir}/content/themes/casper    # move to theme directory
+npm install gulp-cli -g                      # install gulp globally
+npm install                                  # install npm packages in theme
+gulp                                         # execute gulp.
+</code></pre>
+<blockquote>
+<p>npm install -g // global 설치가 안된다면<br>
+[root없이 install 사용하기](<a href="https://topaxi.codes/use-npm-without-root-or-sudo-">https://topaxi.codes/use-npm-without-root-or-sudo-</a> rights/) 페이지를 참조하세요.</p>
+</blockquote>
+<ol start="2">
+<li>
+<p>./assets/css/screen.css 파일에서 font-family : Georgia, serif; 구문을 모두 삭제 합니다.</p>
+</li>
+<li>
+<p>{your-ghost-dir}(/var/www/ghost) 로 이동하여 ghost를 재시작 합니다.</p>
+</li>
+</ol>
+<pre><code>cd /var/www/ghost
+ghost restart
+</code></pre>
+<ol start="4">
+<li>ghost admin에 접속하여 code-injection 설정 페이지로 이동합니다.<br>
+Blog Header에 아래 구문을 추가합니다.(google font를 사용합니다.)</li>
+</ol>
+<pre><code>&lt;link href='https://fonts.googleapis.com/css?family=Nanum+Gothic' rel='stylesheet' type='text/css'&gt;
+&lt;style&gt;
+body,  
+h1, h2, h3, h4, h5, h6,  
+.main-nav a,
+.subscribe-button,
+.page-title,
+.post-meta,
+.read-next-story .post:before,
+.pagination,
+.site-footer,{
+    font-family:&quot;Nanum Gothic&quot;, sans-serif;
+}
+[class^=&quot;icon-&quot;]:before, [class*=&quot; icon-&quot;]:before {
+	font-family:&quot;Nanum Gothic&quot;, sans-serif;
+&lt;/style&gt;
+</code></pre>
+<ol start="5">
+<li>글을 확인하면 font가 바뀐 것을 확인 할 수 있습니다.</li>
+</ol>
+<h1 id="7disqus">7. 댓글 DISQUS 추가 하기</h1>
+<p>Ghost는 댓글 기능이 없으므로 DISQUS와 같은 서비스를 연결해야 합니다.<br>
+<a href="https://help.ghost.org/article/15-disqus">ghost - disqus 연결 방법</a> 페이지를 참고하여 코드 수정이 필요합니다.</p>
+<ol>
+<li><a href="https://disqus.com/">DISQUS</a>에 가입합니다.</li>
+<li>{your-ghost-dir}/content/themes/casper/post.hbs 파일을 편집합니다.<br>
+아래와 같은 코드가 있는지 확인합니다.</li>
+</ol>
+<pre><code>{{!--
+&lt;section class=&quot;post-full-comments&quot;&gt;
+    If you want to embed comments, this is a good place to do it!
+&lt;/section&gt;
+--}}
+</code></pre>
+<p>위의 부분을 다음과 같이 수정합니다.</p>
+<pre><code>&lt;section class=&quot;post-full-comments&quot;&gt;
+&lt;div id=&quot;disqus_thread&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+/*
+var disqus_config = function () {
+this.page.url = &quot;{{url absolute=&quot;true&quot;}}&quot;;  
+this.page.identifier = &quot;ghost-{{comment_id}}&quot;;
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://againsee.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+&lt;/script&gt;
+&lt;noscript&gt;Please enable JavaScript to view the &lt;a href=&quot;https://disqus.com/?ref_noscript&quot;&gt;comments powered by Disqus.&lt;/a&gt;&lt;/noscript&gt;
+&lt;/section&gt;
+</code></pre>
+<ol start="3">
+<li>ghost를 재시작 합니다.</li>
+</ol>
+<pre><code>cd /var/www/ghost
+ghost restart
+</code></pre>
+<ol start="4">
+<li>post를 확인하여 disqus 영역이 잘 보이는지 확인합니다.</li>
+</ol>
+<h1 id="googleanalytics">google analytics</h1>
+<p>방문자 카운트, 유입경로 확인이 필요하다면 google analytics를 사용합니다.<br>
+<a href="https://help.ghost.org/article/16-google-analytics">https://help.ghost.org/article/16-google-analytics</a></p>
+<blockquote>
+<p>google analytics는 <a href="https://www.google.com/analytics/terms/kr.html">계정당 월 천만 조회수까지 무료</a>로 제공합니다.</p>
+</blockquote>
+<h1 id="">정리</h1>
+<ul>
+<li>AWS 프리티어는 서비스를 다양하게 활용 할 수 있습니다.</li>
+<li>Ghost는 손이 좀 가지만 직접 설치형 블로그로 운영하기에 좋은 선택인 것 같습니다.</li>
+<li>Ghost는 글을 작성하는데 최적화 되어있다는 느낌을 받았습니다. preview 기능과 단축키가 잘 되어있고 영어를 사용한다면 스펠 체크 기능도 도움이 될것 같습니다.</li>
+</ul>
+
+</div>]]></content:encoded></item></channel></rss>

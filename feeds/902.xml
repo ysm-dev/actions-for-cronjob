@@ -1,0 +1,1552 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Joswlv</title>
+    <description>My website</description>
+    <link>http://joswlv.github.io/</link>
+    <atom:link href="http://joswlv.github.io/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Fri, 03 May 2019 07:56:38 +0000</pubDate>
+    <lastBuildDate>Fri, 03 May 2019 07:56:38 +0000</lastBuildDate>
+    <generator>Jekyll v3.8.5</generator>
+    
+      <item>
+        <title>Spark-sumbit --files option</title>
+        <description>&lt;h1 id=&quot;spark-sumbit-files-option주의사항&quot;&gt;Spark-sumbit –files option주의사항&lt;/h1&gt;
+
+&lt;p&gt;Spark Application을 &lt;code class=&quot;highlighter-rouge&quot;&gt;cluster&lt;/code&gt;모드로 제작할 때 SparkConf 정보 등과 같이 다양한 리소스 파일을 읽는 경우가 있다.&lt;/p&gt;
+
+&lt;p&gt;이때 사용하면 좋은 옵션이 &lt;code class=&quot;highlighter-rouge&quot;&gt;--files&lt;/code&gt; 옵션이다.&lt;/p&gt;
+
+&lt;p&gt;(리소스파일 hadoop에 올리는 방법도 있지만, 매우 낭비가 큰 방식이라 선호하지는 않는다.)&lt;/p&gt;
+
+&lt;p&gt;deploy-mode를 &lt;code class=&quot;highlighter-rouge&quot;&gt;client&lt;/code&gt;모드를 사용할때는 dirver에서 로컬 파일을 읽는 방식으로 리소스 파일을 읽어 사용하면 되지만 &lt;code class=&quot;highlighter-rouge&quot;&gt;cluster&lt;/code&gt;모드에서는 어떤 노드가 dirver노드가 될지 모르기 때문에 로컬 파일를 읽는 방식 처럼 사용하기는 힘들다.&lt;/p&gt;
+
+&lt;p&gt;이때 사용하는 방식이 spark-submit옵션 중에 &lt;code class=&quot;highlighter-rouge&quot;&gt;--files&lt;/code&gt; 옵션을 사용하는 것이다.&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;--files&lt;/code&gt; 다음에 리소스파일 path를 주면 사용이 가능하다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    spark-submit &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;nt&quot;&gt;--class&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;  &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;nt&quot;&gt;--name&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;appName&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;nt&quot;&gt;--master&lt;/span&gt; yarn &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;nt&quot;&gt;--deploy-mode&lt;/span&gt; cluster &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;nt&quot;&gt;--files&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;filteringFile&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;runjar&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/apache/spark/blob/master/core/src/main/scala/org/apache/spark/deploy/SparkSubmitArguments.scala#L547&quot;&gt;spark-core소스&lt;/a&gt;를 보면 &lt;code class=&quot;highlighter-rouge&quot;&gt;--files&lt;/code&gt;로 deploy된 리소스파일은 각각의 executors에서 사용이 가능하다고 나온다. 즉 spark context로 배포되기때문에 어느 시점에서 로컬 파일처럼 읽어도 사용이 가능하다.&lt;/p&gt;
+
+&lt;p&gt;spark application에서  &lt;code class=&quot;highlighter-rouge&quot;&gt;Files.newBufferedReader(Paths.get(fileName))&lt;/code&gt; 으로 읽어서 사용하면 된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;다만-주의할-점은-다음과-같다&quot;&gt;다만 주의할 점은 다음과 같다.&lt;/h3&gt;
+
+&lt;div class=&quot;language-scala highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;//files로 배포되고 각 executor에 저장된 localFilePath
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;executorLocalFilePath&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SparkFiles&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fileName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    
+&lt;span class=&quot;c1&quot;&gt;//아래 코드는 NotFoundFileException을 발생시킨다.
+&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fromFile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;executorLocalFilePath&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;--files&lt;/code&gt;옵션으로 배포된 file을 읽을때는 Path에 fileName만 주면 상대경로로 file을 찾아준다.&lt;/p&gt;
+
+&lt;p&gt;절대경로 file 찾기란 쉽지 않으니,, 상대경로를 사용하자!!&lt;/p&gt;
+
+&lt;div class=&quot;language-scala highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;//files로 배포되고 소스에서 사용할려면 fileName만 주면 된다.
+&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fromFile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fileName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;(이것 때문에 많은 시간을 보냈다.ㅠㅠ)&lt;/p&gt;
+
+&lt;h3 id=&quot;추가-사항-filename-alias설정&quot;&gt;추가 사항 FileName &lt;code class=&quot;highlighter-rouge&quot;&gt;alias&lt;/code&gt;설정&lt;/h3&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    spark-submit &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;nt&quot;&gt;--class&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;  &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;nt&quot;&gt;--name&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;appName&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;nt&quot;&gt;--master&lt;/span&gt; yarn &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;nt&quot;&gt;--deploy-mode&lt;/span&gt; cluster &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;nt&quot;&gt;--files&lt;/span&gt; fileName#aliasName &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    		&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;runjar&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;--files&lt;/code&gt;옵션 파라미터에 &lt;code class=&quot;highlighter-rouge&quot;&gt;#&lt;/code&gt;을 사용하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;#&lt;/code&gt;뒤 String이 alias로 사용된다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;alias&lt;/code&gt;는 &lt;code class=&quot;highlighter-rouge&quot;&gt;cluster모드&lt;/code&gt;에서만 사용이 가능하고 소스에서 사용할 때는 &lt;code class=&quot;highlighter-rouge&quot;&gt;aliasName&lt;/code&gt;으로 호출해서 사용한다. (fileName으로는 접근 안됨)&lt;/p&gt;
+
+&lt;div class=&quot;language-scala highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;//files로 배포되고 소스에서 사용할려면 aliasName을 넣어줘야한다.
+&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fromFile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;aliasName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+</description>
+        <pubDate>Wed, 24 Apr 2019 13:10:00 +0000</pubDate>
+        <link>http://joswlv.github.io/2019/04/24/SparkSubmitFilesOption/</link>
+        <guid isPermaLink="true">http://joswlv.github.io/2019/04/24/SparkSubmitFilesOption/</guid>
+        
+        
+        <category>Spark</category>
+        
+      </item>
+    
+      <item>
+        <title>SpringBatch 정리</title>
+        <description>&lt;h1 id=&quot;springbatch&quot;&gt;SpringBatch&lt;/h1&gt;
+
+&lt;h2 id=&quot;batch특징&quot;&gt;Batch특징&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;특징
+    &lt;ul&gt;
+      &lt;li&gt;대용량 데이터 처리&lt;/li&gt;
+      &lt;li&gt;사람의 조작없이 자동으로 처리&lt;/li&gt;
+      &lt;li&gt;주기적 실행&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;배치실행의 예
+    &lt;ul&gt;
+      &lt;li&gt;신용카드 청구서 발행&lt;/li&gt;
+      &lt;li&gt;마켓팅 이메일 발송&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;-&amp;gt; 배치 사용하기 전에 배치를 꼭 사용하는가를 먼저 생각하기&lt;/p&gt;
+
+&lt;h2 id=&quot;spring-batch&quot;&gt;Spring Batch&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;많은 오픈소스가 웹기반 프레임워크에 집중&lt;/li&gt;
+  &lt;li&gt;재사용 가능한 표준 배치 아키텍처가 없었음&lt;/li&gt;
+  &lt;li&gt;Accenture의 일괄 처리 아키텍처와 스피링 프로그래밍 모델을 통합하여 배치 프레임워크 개발&lt;/li&gt;
+  &lt;li&gt;개발자는 비지니스 로직에 집중하고 일괄 처리 인프라는 프레임워크에서 관리&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;domain-lang귀지&quot;&gt;Domain Lang귀지&lt;/h2&gt;
+
+&lt;h3 id=&quot;job&quot;&gt;Job&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Setp container
+    &lt;ul&gt;
+      &lt;li&gt;step구성&lt;/li&gt;
+      &lt;li&gt;재시작 여부&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Job instance
+    &lt;ul&gt;
+      &lt;li&gt;Job + Job parameter&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Job execution
+    &lt;ul&gt;
+      &lt;li&gt;Job instance의 실행을 기술&lt;/li&gt;
+      &lt;li&gt;실행결과, 시간등의 데이터&lt;/li&gt;
+      &lt;li&gt;재시작등으로 1:n 관계가능&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;step&quot;&gt;Step&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;독립적인 실행 단계&lt;/li&gt;
+  &lt;li&gt;배치처리를 정의하고 제어하는데 필요한 모든 정보를 포함&lt;/li&gt;
+  &lt;li&gt;Job은 하나 이상의 Step으로 구성&lt;/li&gt;
+  &lt;li&gt;ItemReader&lt;/li&gt;
+  &lt;li&gt;ItemProcessor&lt;/li&gt;
+  &lt;li&gt;ItemWriter&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;개발자가 실제로 개발하는 부분
+Tip은 복잡한 step을 만들때 간단한.step을 여러개 만들어서 만드는게 낫다 
+배치를 만들때 어떻게 잘 나눌까?를 고민하기&lt;/p&gt;
+
+&lt;h3 id=&quot;executioncontext&quot;&gt;ExecutionContext&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Key-Value Store&lt;/li&gt;
+  &lt;li&gt;SpringBatch 프레임워크에서 자동으로 영속성 관리&lt;/li&gt;
+  &lt;li&gt;JobScope VS StepScope&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;저장소 개념으로 사용&lt;/p&gt;
+
+&lt;h3 id=&quot;persistent-metadata&quot;&gt;Persistent MetaData&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;JobRepository
+    &lt;ul&gt;
+      &lt;li&gt;JobInstance, JobExecution, StepExcution 등의 CRUD&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;JobExplorer
+    &lt;ul&gt;
+      &lt;li&gt;읽기전용&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;JobOperator= JobRepository + JobExplorer&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Job의 영속성관리 할때 사용 DAO라고 보면 됨&lt;/p&gt;
+
+&lt;h2 id=&quot;job-1&quot;&gt;Job&lt;/h2&gt;
+
+&lt;h3 id=&quot;jobrepository&quot;&gt;JobRepository&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;DB이용
+    &lt;ul&gt;
+      &lt;li&gt;Table Prefix 설정가능&lt;/li&gt;
+      &lt;li&gt;지원하는 DB타입이 정해져있음&lt;/li&gt;
+      &lt;li&gt;지원하지 않는 dB타입을 사용하는 경우 (CUBRID)
+        &lt;ul&gt;
+          &lt;li&gt;JobRepositoryFactoryBean 이용&lt;/li&gt;
+          &lt;li&gt;호환되는 적당한 타입을 강제로 설정&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;DB를 이용하지 않는 경우
+    &lt;ul&gt;
+      &lt;li&gt;SimpleJobRepository 안의 Dao들을 구현해서 사용&lt;/li&gt;
+      &lt;li&gt;MapJobRepository (jenkins사용하는 경우)
+        &lt;ul&gt;
+          &lt;li&gt;인메모리 저장소 = 휘발성&lt;/li&gt;
+          &lt;li&gt;ResourcelessTransactionmanager 사용해야함&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Job meta데이터를 어디에 저장할 것인가를 결정하는 인터페이스임&lt;/p&gt;
+
+&lt;h3 id=&quot;job-launcher&quot;&gt;Job Launcher&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;job을 실행하는 인터페이스&lt;/li&gt;
+  &lt;li&gt;기본제약사항
+    &lt;ul&gt;
+      &lt;li&gt;jobExcution이 생성되었으면 Job실행결과와 상관없이 Execution을 리턴함&lt;/li&gt;
+      &lt;li&gt;이전에 정지된 Execution이 있었으면 새로 만들지 않고 그걸 실행&lt;/li&gt;
+      &lt;li&gt;Exception은 Job실행 시작과정에서 에러가 발생한 경우만 발생
+        &lt;ul&gt;
+          &lt;li&gt;jobInstance가 이미 완료되었거나, 실행중인 경우&lt;/li&gt;
+          &lt;li&gt;Parameer가 Null이거나&lt;/li&gt;
+          &lt;li&gt;파라미터 validation이 실패한 경우&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;그외는 Execution을 리턴하고 에러발생 여부는 상태를 보고 판단&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;기본구현체 SimplejobLauncher&lt;/li&gt;
+  &lt;li&gt;Async 실행 - ThreadPoolTaskExecutor주입&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;jobregistry&quot;&gt;JobRegistry&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Job 객체에 편하게 접근할 수 있다.
+    &lt;ul&gt;
+      &lt;li&gt;SpringBatch의 Jobinstance 개념이 아닌 Java객체&lt;/li&gt;
+      &lt;li&gt;Application context에서 bean받아 올 수도 있다. (beanName)&lt;/li&gt;
+      &lt;li&gt;job registry는 job name기반&lt;/li&gt;
+      &lt;li&gt;mapJobRegistry사용 (이거 bean등록)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;JobRegistryBeanPostProcessor로 자동 등록 (이거 bean등록)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;job이름을 가져올때 사용&lt;/p&gt;
+
+&lt;h3 id=&quot;joboperator&quot;&gt;JobOperator&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;모니터링에 유용한 기능들을 제공
+    &lt;ul&gt;
+      &lt;li&gt;실행중 job목록 가져오기&lt;/li&gt;
+      &lt;li&gt;실행, 다음실행, 재실행, 정지, 실행요약, job이름목록&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;기본구현체 SimpleJobOperator
+    &lt;ul&gt;
+      &lt;li&gt;jobRepository, Jobexplorer, job.. bean등록 되어 있어야지 사용가능&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;step-1&quot;&gt;Step&lt;/h2&gt;
+
+&lt;h3 id=&quot;step-restart&quot;&gt;Step Restart&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;같은 job instance에서, 한번 성공한 Step은 skip&lt;/li&gt;
+  &lt;li&gt;allow-start-if-complete
+    &lt;ul&gt;
+      &lt;li&gt;성공여부 상관없이 항상 실행&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;start-limit
+    &lt;ul&gt;
+      &lt;li&gt;스텝을 싱핼 수 있는 횟수 제한&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;chunk-oriented&quot;&gt;Chunk-Oriented&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;하나의 데이터 -&amp;gt; item&lt;/li&gt;
+  &lt;li&gt;item을 모아서 chunks&lt;/li&gt;
+  &lt;li&gt;쓰기는 chunks 단위로&lt;/li&gt;
+  &lt;li&gt;Transaction boundary&lt;/li&gt;
+  &lt;li&gt;chunk크기는 Step에설정
+    &lt;ul&gt;
+      &lt;li&gt;commit-interval&lt;/li&gt;
+      &lt;li&gt;.chunk()&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;skip-exception&quot;&gt;Skip Exception&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Exception발생시 실패로 만들지 않고 해당 item만 skip
+    &lt;ul&gt;
+      &lt;li&gt;Step skip과는 다름&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;demo5를 보면 batch의 트렌젝션을 볼 수 있음&lt;/p&gt;
+
+&lt;p&gt;주의할점 wirte에서 error나면 chunk가 1로 변경되기 때문에 느려질수도 잇으니 적절하게 chunck크기를 조절하자 모니터링잘하구&lt;/p&gt;
+
+&lt;h3 id=&quot;taskletstep&quot;&gt;TaskletStep&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;read-process-wirte 형태가 아닌 작업인경우
+    &lt;ul&gt;
+      &lt;li&gt;디비프로시저 실행&lt;/li&gt;
+      &lt;li&gt;스크립트 실행&lt;/li&gt;
+      &lt;li&gt;단순 sql업뎃&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;RepeatStatus
+    &lt;ul&gt;
+      &lt;li&gt;반환값이 FINISIHED일때 까지 반복 실행됨&lt;/li&gt;
+      &lt;li&gt;각 반복마다 트랜잭션 생성&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;partition&quot;&gt;Partition&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;partition을 나누면 read도 멀티쓰레드도 가능&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Wed, 03 Apr 2019 15:10:00 +0000</pubDate>
+        <link>http://joswlv.github.io/2019/04/03/SpringBatch/</link>
+        <guid isPermaLink="true">http://joswlv.github.io/2019/04/03/SpringBatch/</guid>
+        
+        
+        <category>Spring</category>
+        
+      </item>
+    
+      <item>
+        <title>Spark To Cassandra Insert 작업 개편기</title>
+        <description>&lt;h1 id=&quot;spark-to-cassandra-insert-작업-개편기&quot;&gt;Spark To Cassandra Insert 작업 개편기&lt;/h1&gt;
+
+&lt;h2 id=&quot;이야기를-시작하기-전에-대량-insert작업의-문제점&quot;&gt;&amp;lt;이야기를 시작하기 전에 대량 Insert작업의 문제점&amp;gt;&lt;/h2&gt;
+
+&lt;p&gt;Datastax에서 제공하는 &lt;code class=&quot;highlighter-rouge&quot;&gt;spark-cassandra-connector_2.11&lt;/code&gt;을 사용하여 2억 Row이상이 되는 파일을 읽어 Cassandra에 Insert하는 작업이 있다. 이 작업은 Daily로 진행 된다.&lt;/p&gt;
+
+&lt;p&gt;회사 클러스터 자원을 사용했을 때 작업 시간은 대략 30분 정도이다. 하지만 이 작업을 할 때 Cassandra Read 기능은 거의 사용할 수 없을 정도로 불능 상태가 된다.&lt;/p&gt;
+
+&lt;p&gt;해당 작업이 수행할 동안 Cassandra의 Read Latency는 다음과 같다. (오전7시30분~ 오전8시까지)&lt;/p&gt;
+
+&lt;p&gt;해당 작업이 2억Row가 되는 데이터를 한번에 Insert하는 작업이기 때문에 Spark-Cassandra-connector에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;throughput_mb_per_sec&lt;/code&gt;옵션으로 insert throughtput양을 조절해도 워낙 들어가는 양이 많아서 Network I/O 부하가 심해지고 memTable에 작성되는 내용이기 때문에 Memory 사용량 증가와 잦은 compaction으로 C* 전체의 성능이 저하되는 현상이 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/2019-02-144-344f0fbe-c79e-4c63-b76e-886488852fb2.47.59.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/2019-02-144-a3f547a7-c749-446d-9814-5bfed4bafcf4.48.17.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;즉 C*를 사용하는 Data-API서버의 Response Time을 개선하고 싶은 것이다.&lt;/p&gt;
+
+&lt;p&gt;아래는 Data-API서버에 Response Time이 100ms가 넘는 비율을 나타낸 그래프이다.&lt;/p&gt;
+
+&lt;p&gt;7시 Bulk Insert작업이 동작하는 시간이다.&lt;/p&gt;
+
+&lt;p&gt;일명 불기둥(7시 bulk insert작업동안 C*의 Read성능이 떨어져 API Response Time이 100m가 넘는 것)을 제거하는 것이 이번 프로젝트에 목표다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/-5e099e60-63c7-47ee-89b0-7979e100961cUntitled.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;기존 방식에서 Read성능이 떨어지는 이유를 write path와 read path보면 알 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/Untitled-fcda22c0-3c91-4c7b-be33-1a2a7f8bf937.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;write-path&quot;&gt;&lt;strong&gt;Write path&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;client와 node의 process
+    &lt;ol&gt;
+      &lt;li&gt;client에서 접속한 node가 coordinator의 역할을 하게 된다&lt;/li&gt;
+      &lt;li&gt;coordinator node는 partitioner를 이용하여 replica node를 찾고 지정된 consistency level을 만족할 만큼의 replica node를 찾지 못하면 바로 에러를 반환한다&lt;/li&gt;
+      &lt;li&gt;대상 테이블이 materialized view 테이블의 base 테이블이면 batch log를 생성하고 설정된 consistency level과 관계 없이 내부적으로 replica nodes의 quorum만큼 변경이 반영되게 한다&lt;/li&gt;
+      &lt;li&gt;coordinator node는 replica node로 write 요청을 보내고, 요청을 받은 node는 write 처리를 수행한다&lt;/li&gt;
+      &lt;li&gt;cluster가 여러 data center로 구성되어 있으면 다른 data center에 remote coordinator를 선택하여 local coordinator와 같은 처리를 하고, remote replica는 완료 응답을 original coordinator node로 보낸다&lt;/li&gt;
+      &lt;li&gt;original coordinator node는 timeout까지 replica의 응답을 기다려 client에 응답을 보낸다&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;node 안에서 process
+    &lt;ol&gt;
+      &lt;li&gt;대상 테이블이 materialized view 테이블이면 partition에 대한 lock을 획득하여 base 테이블의 변경이 다른 write 요청에 의해 변경되지 않고 materialized view 테이블에 반영될 수 있도록 하고 partition을 읽어 materialized view 테이블에 반영할 변화량을 구성한다&lt;/li&gt;
+      &lt;li&gt;commit log를 쓴다&lt;/li&gt;
+      &lt;li&gt;대상 테이블이 materialized view 테이블이면 batch log를 생성하고 materialized view 테이블에 변경을 반영한다&lt;/li&gt;
+      &lt;li&gt;memtable에 data를 쓴다&lt;/li&gt;
+      &lt;li&gt;row cache가 있으면 해당 row를 invalidate 처리한다&lt;/li&gt;
+      &lt;li&gt;commit log나 memtable이 threshold를 넘으면 flush를 schedule에 등록한다&lt;/li&gt;
+      &lt;li&gt;coordinator가 client로 응답을 보낸다&lt;/li&gt;
+      &lt;li&gt;schedule에 flush가 등록되어 있으면 memtable을 sstable에 쓰고 commit log를 지우고 compaction이 필요한지 체크 후 필요하면 compaction을 수행한다&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;read-path&quot;&gt;&lt;strong&gt;Read path&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;client와 node의 process
+    &lt;ol&gt;
+      &lt;li&gt;client에서 접속한 node가 coordinator의 역할을 하게 된다&lt;/li&gt;
+      &lt;li&gt;coordinator node는 partitioner를 이용하여 replica node를 찾고 지정된 consistency level을 만족할 만큼의 replica node를 찾지 못하면 바로 에러를 반환한다&lt;/li&gt;
+      &lt;li&gt;coordinator는 dynamic snitch를 이용해 가장 빠른 replica node에 read 요청(full data)를 보내고 다른 replica node에 digest 요청을 보내 read 요청을 보낸 node의 값의 digest와 비교하여 consistency level을 만족하면 client에 응답을 보낸다&lt;/li&gt;
+      &lt;li&gt;가장 빠른 replica node에서 받은 값의 digest와 다른 replica node의 digest 값이 다르면 가장 빠른 replica node를 제외한 다른 replica node에 read 요청(full data)를 보내고 결과를 받아 timestamp를 비교하여 각 cell마다 가장 최근값을 client에 응답으로 보내고 값이 맞지 않는 replica node(가장 빠른 replica node 포함)들에 read repair 요청을 보내 최신값으로 동기화한다&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;node 안에서 process
+    &lt;ol&gt;
+      &lt;li&gt;
+        &lt;p&gt;row cache를 쓰고 있으면 를 확인하여 있으면 응답을 보낸다&lt;/p&gt;
+
+        &lt;p&gt;row cache&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;row cache에 값이 없으면 를 체크하여 sstable에 값이 있는지 확인한다&lt;/p&gt;
+
+        &lt;p&gt;bloom filter&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;bloom filter 확인 결과가 true라고 하더라도 는 false positive(실제로는 없는데 있다고 판단) 가능성이 있으므로 를 한 번 더 확인한다&lt;/p&gt;
+
+        &lt;p&gt;bloom filter&lt;/p&gt;
+
+        &lt;p&gt;key cache&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;key cache에 값이 있으면 그 결과(sstable에서 partition key의 offset)를 이용하여 sstable에서 값을 찾는다&lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;key cache에 값이 없으면 에서 partition key에 해당하는 partition index의 offset값을 찾는다(partition key에 딱 맞는 값을 주는 것이 아니라 starting point를 알려줌)&lt;/p&gt;
+
+        &lt;p&gt;partition summary&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;위에서 찾은 offset 값을 이용하여 sstable에서 요청된 partition key에 맞는 값을 찾는다&lt;/li&gt;
+      &lt;li&gt;memtable에서 값을 찾고 sstable에서 찾은 값이 있으면 cell별로 최신값으로 merge한다&lt;/li&gt;
+      &lt;li&gt;row cache를 쓰고 있으면 update한다&lt;/li&gt;
+      &lt;li&gt;merge된 결과를 client로 반환한다&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;memtable을 cache처럼 쓰지 않는 이유
+    &lt;ul&gt;
+      &lt;li&gt;memtable의 값이 항상 최신이라고 볼 수 없다
+        &lt;ol&gt;
+          &lt;li&gt;새로운 row가 들어와 memtable에만 값이 있는 경우 bloom filter에서 false가 되어 바로 memtable에서 값을 찾는다&lt;/li&gt;
+          &lt;li&gt;memtable이 flush가 되어 sstable에 값이 써지면 memtable은 비워지게 된다&lt;/li&gt;
+          &lt;li&gt;비워진 memtable에 기존에 들어왔던 row에서 일부 cell들만 update가 된다고 하면 memtable만 보고서 row에 해당하는 모든 cell의 값을 알 수 없다&lt;/li&gt;
+        &lt;/ol&gt;
+      &lt;/li&gt;
+      &lt;li&gt;memtable은 일반적인 cache라기 보다는 sstable에 값을 쓰기 전에 임시로 값을 저장하고 있는 write-back cache의 일종으로 볼 수 있다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;spark-cassandra-connector&lt;/code&gt;에서 C*에 데이터를 Insert하는 방식은 RDD를 mapPartition 돌면서 Insert문을 만들어 C*에 질의하는 방식이다. 그렇기 때문에 MamTable에서 SSTable로 가는 Flush가 많아지고 SSTable이 많아지면 Compaction수가 많아져 Read작업에 사용될 Memory가 부족해 wirte작업이 끝날때 까지 Read Latency의 값이 매우 크게 나타난다. 또 GC발생횟수가 증가하고, Memory에서 Disk로 Flush가 되기 때문에 System Load도 증가된다.&lt;/p&gt;
+
+&lt;p&gt;문제는 실시간으로 C*에서 값을 가져가 사용하는 서비스에 큰 영향을 미친다. &lt;code class=&quot;highlighter-rouge&quot;&gt;spark-cassandra-connector&lt;/code&gt;에서 제공하는 방식이 아닌 새로운 방식을 모색하게 되었다. 여러가지 실험을 진행했지만 그 중 SSTableFile을 만들어 직업 C*에 Insert하는 방식을 사용하니 ReadLatency와 C*의 성능 개선을 할 수 있었다.&lt;/p&gt;
+
+&lt;h1&gt;&lt;Cassandra-Bulk Insert=&quot;&quot; Lib=&quot;&quot; 제작=&quot;&quot;&gt;&lt;/Cassandra-Bulk&gt;&lt;/h1&gt;
+
+&lt;h2 id=&quot;cassandra-bulk-insert-lib--구조&quot;&gt;Cassandra Bulk Insert Lib  구조&lt;/h2&gt;
+
+&lt;p&gt;라이브러리를 제작할 때 크게 두가지 기능을 구현하면 되었다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Make SSTable File&lt;/li&gt;
+  &lt;li&gt;SSTable File Up Load to Cassandra&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이때 Spark를 사용하여, 위 두가지 기능을 분산 처리 하도록 하였다.&lt;/p&gt;
+
+&lt;p&gt;작업이 순서는 다음과 같다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Read File&lt;/li&gt;
+  &lt;li&gt;File transform to RDD&lt;/li&gt;
+  &lt;li&gt;foreachRDD&lt;/li&gt;
+  &lt;li&gt;Bulk Insert Process
+    &lt;ol&gt;
+      &lt;li&gt;make SSTable File&lt;/li&gt;
+      &lt;li&gt;SSTable File Up Load to Cassandra&lt;/li&gt;
+      &lt;li&gt;Delete SSTable File&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;작업 시간은 10분정도 이다. (기존 30분에서 20분 가량 줄어 든 시간이다.)&lt;/p&gt;
+
+&lt;p&gt;아래 코드는 RDD를 Iterator돌며 SSTableFile제작 → C* upload작업을 나타낸다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SSTableExportProcessor&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;implements&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Serializable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Iterator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CustomTargetingFitModel&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;it&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SparkCassSSTableLoaderClientStatement&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clientStatement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TTL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IOException&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;keyspaceName&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clientStatement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getKeyspaceName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tableName&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clientStatement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getTableName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    
+		&lt;span class=&quot;c1&quot;&gt;//ssTable Directory Path에 마지막은 keyspace/tableName으로 해야함.&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tempSSTableDirectoryPath&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/tmp/&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;spark-cass-&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;randomUUID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; 
+							&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;keyspaceName&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tableName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;File&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tempSSTableDirectory&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;File&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tempSSTableDirectoryPath&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;kt&quot;&gt;boolean&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;makeDirCheck&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tempSSTableDirectory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;mkdirs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    
+		&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;makeDirCheck&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+			&lt;span class=&quot;c1&quot;&gt;//SSTable File 생성작업&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;CQLSSTableWriter&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;writer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+				&lt;span class=&quot;n&quot;&gt;CQLSSTableWriter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;builder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+					&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;inDirectory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tempSSTableDirectory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+					&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;forTable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clientStatement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getTableSchemaStatement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;())&lt;/span&gt;
+					&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;using&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clientStatement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getInsertStatement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TTL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+					&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    
+			&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;it&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;hasNext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;CustomTargetingFitModel&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;it&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;next&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rowValues&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ArrayList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;rowValues&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getUid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;rowValues&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;writer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addRow&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rowValues&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+			&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;writer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    
+			&lt;span class=&quot;c1&quot;&gt;//SSTable File cassandar로 load&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;CqlBulkRecordWriter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;ExternalClient&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;externalClient&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+			&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CqlBulkRecordWriter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;ExternalClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clientStatement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getExternalClientConf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+			&lt;span class=&quot;k&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+				&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SSTableLoader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tempSSTableDirectory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; 
+					&lt;span class=&quot;n&quot;&gt;externalClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; 
+					&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OutputHandler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;LogOutput&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+			&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;InterruptedException&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ExecutionException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;printStackTrace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+			&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+			&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tempSSTableDirectory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;exists&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;FileUtils&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;deleteDirectory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tempSSTableDirectory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+			&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+		&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/2019-02-2110-55345ee1-f862-469b-a424-7531eeec1677.58.07.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/2019-02-2110-e7c12d09-ed35-4f0c-9f6d-630b08a6268c.57.33.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;매일 오전 7시30분에 Bulk Insert작업이 시작된다. 수정한 코드는 2월 16일에 배포를 했다. SystemLoad와 GC Time이 줄어든 것을 확인할 수 있다. MemTable을 거치지 않으니 당연한 결과이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/2019-02-213-4db2e41a-9ad6-4c09-a0a8-ae337ac6e74b.07.40.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;하지만 Read Latency는 크게 변화가 없었다. (혼자 크게 뛰는 장비는 장비 이상으로 추후 제거되었다.)&lt;/p&gt;
+
+&lt;p&gt;그래서 원인을 찾아보았다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/-88df1e14-dbfc-4a71-93a7-d4feef6e5ab0Untitled.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;위 그래프는 C*를 Datasource로 사용하는 API서버에서 ResponseTime이 100ms가 넘는 비율을 나타낸다.&lt;/p&gt;
+
+&lt;p&gt;SSTable File을 이용한 Bulk insert 방식은 7시33분 1분 동안 70%가 넘는 비율이 ResponseTime이 100ms를 넘겼다.&lt;/p&gt;
+
+&lt;p&gt;이에 반해 Spark-Cassandra-Connector를 사용한 isnert작업은 10%대를 길게 유지하였다.&lt;/p&gt;
+
+&lt;p&gt;Bulk Inert한 테이블의 Compaction Strategy는 &lt;code class=&quot;highlighter-rouge&quot;&gt;LeveledCompactionStrategy&lt;/code&gt;이다. 즉 많은 SSTable File이 생성되면 될 수록 Read성능이 떨어진다.(reper. &lt;a href=&quot;https://docs.datastax.com/en/cassandra/3.0/cassandra/dml/dmlHowDataMaintain.html&quot;&gt;datastax-doc&lt;/a&gt;)&lt;/p&gt;
+
+&lt;p&gt;기존 작업은 executor하나당 1000개가 넘는 SStable파일이 생성되어 compaction 타임에 C*의 Read성능에 악영향을 미쳤을 것으로 보인다.&lt;/p&gt;
+
+&lt;p&gt;그래서 수정된 작업은 다음과 같다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Read File&lt;/li&gt;
+  &lt;li&gt;File transform to RDD&lt;/li&gt;
+  &lt;li&gt;foreachRDD&lt;/li&gt;
+  &lt;li&gt;RepartitionByCassandraReplica (option: partitionPerHost = 1)&lt;/li&gt;
+  &lt;li&gt;Bulk Insert Process
+    &lt;ol&gt;
+      &lt;li&gt;make SSTable File&lt;/li&gt;
+      &lt;li&gt;SSTable File Up Load to Cassandra&lt;/li&gt;
+      &lt;li&gt;Delete SSTable File&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;즉 1만개가 넘는 SSTableFile 갯수를 Repartitions을 하여 10개로 만들어서 테스트를 하니 API에 100ms넘는 비율이 확연하게 줄어든 것을 알 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/-29848812-e6fa-4a84-9108-c575fa682e9eUntitled.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그리고 7시 불기둥도 사라졌다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/-af4aaa46-b16d-4138-b52b-db5f06377f58Untitled.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;정리&quot;&gt;정리&lt;/h1&gt;
+
+&lt;p&gt;2억 Row이상의 데이터를 C*로 Insert하는 작업을 할때 line-by-line으로 memTable로 insert하는 것 보다 SSTable에 바로 write하는 것이 유리하다.&lt;/p&gt;
+
+&lt;h3 id=&quot;sstable에-바로-wirte하는-것이-유리한-점&quot;&gt;SSTable에 바로 wirte하는 것이 유리한 점&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;System Load 감소&lt;/li&gt;
+  &lt;li&gt;GC time 감소&lt;/li&gt;
+  &lt;li&gt;BulkInsert 작업 시간감소로 인해 리소스 제고&lt;/li&gt;
+  &lt;li&gt;line-by-line insert 작업 보다 나은 Read Latency&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;새롭게-학습한-내용&quot;&gt;새롭게 학습한 내용&lt;/h3&gt;
+
+&lt;p&gt;C* doc에서 권장하는 Heap Size는 8GB였다. 그래서 장비의 memory에 큰 관심이 없었다. 하지만 compaction, read할때 장비의 memory가 크면 클 수록 유리하다는 것을 doc(&lt;a href=&quot;https://docs.datastax.com/en/cassandra/3.0/cassandra/dml/dmlHowDataMaintain.html&quot;&gt;datastax-doc&lt;/a&gt;)을 읽으면서 알 수 있었다.&lt;/p&gt;
+
+&lt;p&gt;특히 compaction이 발생할때…&lt;/p&gt;
+
+&lt;p&gt;그리고 SSTable File용량보다는 File갯수가 성능에 더 큰 영향을 준다. 즉 SSTableFile갯수가 적을 수록 성능에 더 유리하다.&lt;/p&gt;
+
+&lt;p&gt;아래는 C*에서 사용하는 Memory구조이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://joswlv.github.io/images/-766b280d-1d34-463d-94c8-26fab37a3107Untitled.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sun, 24 Feb 2019 15:10:00 +0000</pubDate>
+        <link>http://joswlv.github.io/2019/02/24/Spark-To-Cassandra-Insert/</link>
+        <guid isPermaLink="true">http://joswlv.github.io/2019/02/24/Spark-To-Cassandra-Insert/</guid>
+        
+        
+        <category>Cassandra</category>
+        
+      </item>
+    
+      <item>
+        <title>Cassandra CqlBulkOutputFormat사용법</title>
+        <description>&lt;h1 id=&quot;cassandra-cqlbulkoutputformat사용법&quot;&gt;Cassandra CqlBulkOutputFormat사용법&lt;/h1&gt;
+
+&lt;h2 id=&quot;도입배경&quot;&gt;도입배경&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Cassandra에서는 Spark connector, cqlsh 등 다양한 방법의 데이터 업로드 방법을 제공하나 대부분 insert query를 만들어 Cassandra에 실행하는 형태임.&lt;/li&gt;
+  &lt;li&gt;많은 수의 query가 발생할 경우 Network I/O 부하가 심해지고, Cassandra의 Memory 사용량 증가와 잦은 compaction으로 인해 성능 저하가 발생함.&lt;/li&gt;
+  &lt;li&gt;이를 방지하기 위해 Cassandra는 외부 서버에서 SSTable을 만든 후 올리는 SSTableLoader라는 Tool을 제공함.&lt;/li&gt;
+  &lt;li&gt;그러나, 외부 서버에서 SSTable 생성시 많은 Memory 사용과 CPU 점유률로 인해 부하 분산을 고민하게 되었음.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;분산-환경에서-cassandra-bulk-업로드-방법들&quot;&gt;분산 환경에서 Cassandra bulk 업로드 방법들&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;CqlBulkOutputFormat, CQL3 based, easier to program, requires C* V2+ and JDK 7 in Hadoop environment&lt;/li&gt;
+  &lt;li&gt;BulkOutputFormat, thrift based, less abstraction and needs more low-level work, provided in C* V1 and OK with JDK 6&lt;/li&gt;
+  &lt;li&gt;CqlSSTableWriter + SSTableLoader, CQL3 based, easier to program, but no managed parallelism, requires C* V2 but no need for Hadoop environment, multi-thread/parallel computing mechanism would required for scalability&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;[출처: &lt;a href=&quot;https://shenghuawan.wordpress.com/2015/01/20/cassandra-bulk-loading-summary/&quot;&gt;https://shenghuawan.wordpress.com/2015/01/20/cassandra-bulk-loading-summary/&lt;/a&gt;]&lt;/p&gt;
+
+&lt;p&gt;–&amp;gt; 3번은 분산 환경에서 적합하지 않음&lt;/p&gt;
+
+&lt;p&gt;–&amp;gt; 2번은 레퍼런스는 많으나 Cassandra 버전업 이후 deprecated 됨&lt;/p&gt;
+
+&lt;p&gt;–&amp;gt; 1번 방법인 CqlBulkOutputFormat을 이용해 개발하기로 결정함&lt;/p&gt;
+
+&lt;h2 id=&quot;cqlbulkoutputformat-소스&quot;&gt;CqlBulkOutputFormat 소스&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/apache/cassandra/blob/trunk/src/java/org/apache/cassandra/hadoop/cql3/CqlBulkOutputFormat.java&quot;&gt;https://github.com/apache/cassandra/blob/trunk/src/java/org/apache/cassandra/hadoop/cql3/CqlBulkOutputFormat.java&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;cqlbulkoutputformat-기본-동작&quot;&gt;CqlBulkOutputFormat 기본 동작&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Mapper 혹은 Reducer에서 넘어온 &lt;code class=&quot;highlighter-rouge&quot;&gt;List&amp;lt;ByteBuffer&amp;gt;&lt;/code&gt; 데이터를 입력으로 받음&lt;/li&gt;
+  &lt;li&gt;전달된 데이터들은 buffer size대로 쪼개져 여러개의 SSTable 파일로 생성됨&lt;/li&gt;
+  &lt;li&gt;생성된 SSTable들은 지정된 대역폭대로 압축되어 Cassandra에 전송됨&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;mapper-구현&quot;&gt;Mapper 구현&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;CqlBulkOutputFormat은 &lt;code class=&quot;highlighter-rouge&quot;&gt;List&amp;lt;ByteBuffer&amp;gt;&lt;/code&gt;로만 입력을 받으므로 Mapper(혹은 Reducer)를 Java로 구현하는 게 필요함&lt;/li&gt;
+  &lt;li&gt;Cassandra 테이블 컬럼의 데이터형에 따라 ByteBuffer로 casting 해줘야 하는데 Cassandra API 중 org.apache.cassandra.utils.ByteBufferUtil 을 사용하면 편리함&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LongWritable&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Text&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; 
+             &lt;span class=&quot;n&quot;&gt;OutputCollector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ByteBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
+             &lt;span class=&quot;n&quot;&gt;Reporter&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;reporter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IOException&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    
+ &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dataArr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;split&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;delimiter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+ &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;categoryId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Integer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;parseInt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dataArr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]);&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;uid&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dataArr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;toLowerCase&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;SimpleDateFormat&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sdf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SimpleDateFormat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dateformat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+ &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dtSeconds&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+ &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+     &lt;span class=&quot;n&quot;&gt;Date&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sdf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;parse&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;uploadData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+     &lt;span class=&quot;n&quot;&gt;dtSeconds&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getTime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+ &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;java&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;ParseException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    
+ &lt;span class=&quot;c1&quot;&gt;// make column data&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ByteBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;columns&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ArrayList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ByteBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;();&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;columns&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ByteBufferUtil&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;uid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;columns&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ByteBufferUtil&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dtSeconds&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;columns&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ByteBufferUtil&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;score&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;columns&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ByteBufferUtil&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;categoryId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+    
+ &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;collect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;uid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;columns&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+ &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;cqlbulkoutputformat-옵션&quot;&gt;CqlBulkOutputFormat 옵션&lt;/h2&gt;
+
+&lt;p&gt;Hadoop Streaming -D 옵션으로 직접 설정하거나, -conf 옵션에 properties xml 파일로 지정함&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;cassandra.output.keyspace : keyspace 이름 설정&lt;/li&gt;
+  &lt;li&gt;mapreduce.output.basename : table 이름 설정&lt;/li&gt;
+  &lt;li&gt;cassandra.columnfamily.schema.user_interest_category : table schema&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;ex) CREATE TABLE dmp.user_interest_category_test ( uid text, date timestamp, score float, category_id int, PRIMARY KEY (uid, date, score, category_id) )&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;cassandra.columnfamily.insert.user_interest_category : insert query&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;ex) INSERT INTO dmp.user_interest_category_test (uid, date, score, category_id) VALUES (?, ?, ?, ?);&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;cassandra.output.keyspace.username : cassandra user name&lt;/li&gt;
+  &lt;li&gt;cassandra.output.keyspace.passwd : password&lt;/li&gt;
+  &lt;li&gt;cassandra.output.thrift.address : cassandra 서버 ip 목록 (comma seperate)&lt;/li&gt;
+  &lt;li&gt;cassandra.output.partitioner.class : org.apache.cassandra.dht.Murmur3Partitioner&lt;/li&gt;
+  &lt;li&gt;mapreduce.job.user.classpath.first&lt;/li&gt;
+  &lt;li&gt;hadoop core 라이브러리와 cassandra 라이브러리 간에 충돌이 발생할 경우가 있음. guava api의 경우 사용하는 버전이 달라서 에러가 발생하므로 cassandra의 라이브러리를 우선 사용하도록 이 옵션을 true로 설정&lt;/li&gt;
+  &lt;li&gt;mapreduce.output.bulkoutputformat.buffersize&lt;/li&gt;
+  &lt;li&gt;sstable 생성시 사용하는 buffer size (기본 64MB).&lt;/li&gt;
+  &lt;li&gt;설정값을 크게 할수록 한번에 생성되는 sstable size가 커지는 대신에 메모리 사용량이 많아서 MR 작업시 java.lang.OutOfMemoryError: GC overhead limit exceeded 에러가 발생하기도 함&lt;/li&gt;
+  &lt;li&gt;너무 적게 설정할 경우 sstable 개수가 많아져 cassandra의 compaction이 자주 일어날 가능성이 있음&lt;/li&gt;
+  &lt;li&gt;mapreduce.output.bulkoutputformat.streamthrottlembits&lt;/li&gt;
+  &lt;li&gt;cassandra에 sstable 전송시 설정되는 bandwidth 값. (기본 0: 무한대)&lt;/li&gt;
+  &lt;li&gt;설정하지 않을 경우 굉장히 빠른 속도로 cassandra 서버에 전송되나 cassandra 서버의 network inbound 대역폭을 전부 점유해버려 일시적으로 cassandra 서버에 큰 부하를 줄 수 있음.&lt;/li&gt;
+  &lt;li&gt;상황에 따라 적절한 값으로 설정하는 게 중요함.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;maven-build&quot;&gt;Maven build&lt;/h2&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;repositories&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;repository&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;id&amp;gt;&lt;/span&gt;ngnentRepository&lt;span class=&quot;nt&quot;&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;name&amp;gt;&lt;/span&gt;NMP Repository&lt;span class=&quot;nt&quot;&gt;&amp;lt;/name&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;url&amp;gt;&amp;lt;http:&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;//nexus.nhnent.com/content/groups/public&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/url&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;/repository&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;repository&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;id&amp;gt;&lt;/span&gt;mvnRepository&lt;span class=&quot;nt&quot;&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;name&amp;gt;&lt;/span&gt;mvn Repository&lt;span class=&quot;nt&quot;&gt;&amp;lt;/name&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;url&amp;gt;&amp;lt;https:&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;//mvnrepository.com/artifact/org.apache.cassandra/cassandra-all&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/url&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;/repository&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/repositories&amp;gt;&lt;/span&gt;
+    
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.hadoop&lt;span class=&quot;nt&quot;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;hadoop-common&lt;span class=&quot;nt&quot;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;system&lt;span class=&quot;nt&quot;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;systemPath&amp;gt;&lt;/span&gt;${HADOOP_COMMON}&lt;span class=&quot;nt&quot;&gt;&amp;lt;/systemPath&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;2.0.0&lt;span class=&quot;nt&quot;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.hadoop&lt;span class=&quot;nt&quot;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;hadoop-core&lt;span class=&quot;nt&quot;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;system&lt;span class=&quot;nt&quot;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;systemPath&amp;gt;&lt;/span&gt;${HADOOP_MAPREDUCE_CORE}&lt;span class=&quot;nt&quot;&gt;&amp;lt;/systemPath&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;0.20&lt;span class=&quot;nt&quot;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.cassandra&lt;span class=&quot;nt&quot;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;cassandra-all&lt;span class=&quot;nt&quot;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+		&lt;span class=&quot;nt&quot;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;2.1.15&lt;span class=&quot;nt&quot;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;hadoop-streaming-mapreduce-작업-실행&quot;&gt;Hadoop Streaming MapReduce 작업 실행&lt;/h2&gt;
+
+&lt;p&gt;Maven 빌드한 jar 파일을 포함 시키고, 작업한 Mapper class와 outputformat을 명시한다.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hadoop jar &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;HADOOP_STREAMING_JAR&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; mapred.job.name&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;dmp-interest-bulkload-&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;DATE&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; mapred.map.tasks&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;2 &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; mapreduce.job.user.classpath.first&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; cassandra.output.keyspace.username&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;CASSANDRA_USER&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; cassandra.output.keyspace.passwd&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;CASSANDRA_PAWD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; cassandra.output.thrift.address&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;CASSANDRA_ADDR&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; cassandra.output.partitioner.class&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;org.apache.cassandra.dht.Murmur3Partitioner &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-conf&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;CONF_DIR&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;/schema_user_interest_category_app.xml &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-libjars&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;JAR_PATH&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-input&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;INPUT_PATH&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-output&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;OUTPUT_PATH&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-mapper&lt;/span&gt; com.toast.exchange.dmp.interest.bulkload.AppAdidBulkload &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-reducer&lt;/span&gt; NONE &lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;-outputformat&lt;/span&gt; org.apache.cassandra.hadoop.cql3.CqlBulkOutputFormat
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;hadoop-streaming-mapreduce-작업-로그&quot;&gt;Hadoop Streaming MapReduce 작업 로그&lt;/h2&gt;
+
+&lt;p&gt;각 Map (혹은 Reduce)의 stdout 로그를 살펴보면 sstable 파일들이 생성되고, 전송된 결과를 확인할 수 있다.
+MapReduce작업이 실행된 data node를 접근해 생성된 sstable 파일들을 확인해볼 수도 있다.&lt;/p&gt;
+
+&lt;p&gt;sstable 생성로그&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;09:25:46.685 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Thread-11] DEBUG o.apache.cassandra.io.util.FileUtils - Renaming /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-tmp-ka-1-Digest.sha1 to /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Digest.sha1
+09:25:46.687 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Thread-11] DEBUG o.apache.cassandra.io.util.FileUtils - Renaming /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-tmp-ka-1-TOC.txt to /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-TOC.txt
+09:25:46.687 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Thread-11] DEBUG o.apache.cassandra.io.util.FileUtils - Renaming /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-tmp-ka-1-Index.db to /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Index.db
+09:25:46.688 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Thread-11] DEBUG o.apache.cassandra.io.util.FileUtils - Renaming /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-tmp-ka-1-Statistics.db to /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Statistics.db
+09:25:46.688 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Thread-11] DEBUG o.apache.cassandra.io.util.FileUtils - Renaming /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-tmp-ka-1-Filter.db to /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Filter.db
+09:25:46.688 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Thread-11] DEBUG o.apache.cassandra.io.util.FileUtils - Renaming /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-tmp-ka-1-CompressionInfo.db to /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-CompressionInfo.db
+09:25:46.689 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Thread-11] DEBUG o.apache.cassandra.io.util.FileUtils - Renaming /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-tmp-ka-1-Data.db to /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;sstable 전송로그&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;09:25:48.236 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;StreamConnectionEstablisher:3] INFO  o.a.c.streaming.StreamCoordinator - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401, ID#0] Beginning stream session with /x.x.x.x&lt;/span&gt;
+09:25:48.235 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.streaming.ConnectionHandler - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Sending File (Header (cfId: e5ec2a50-3fd2-11e5-9d62-af38b156d6d1, #0, version: ka, estimated keys: 24064, transfer size: 2436481, compressed?: true, repairedAt: 0), file: /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db)&lt;/span&gt;
+09:25:48.235 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.streaming.ConnectionHandler - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Sending File (Header (cfId: e5ec2a50-3fd2-11e5-9d62-af38b156d6d1, #0, version: ka, estimated keys: 22528, transfer size: 2483732, compressed?: true, repairedAt: 0), file: /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db)&lt;/span&gt;
+09:25:48.236 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.streaming.ConnectionHandler - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Sending File (Header (cfId: e5ec2a50-3fd2-11e5-9d62-af38b156d6d1, #0, version: ka, estimated keys: 22912, transfer size: 2574224, compressed?: true, repairedAt: 0), file: /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db)&lt;/span&gt;
+09:25:48.315 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.s.c.CompressedStreamWriter - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Start streaming file /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db to /10.161.26.40, repairedAt = 0, totalSize = 2459515&lt;/span&gt;
+09:25:48.324 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.s.c.CompressedStreamWriter - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Start streaming file /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db to /10.161.26.156, repairedAt = 0, totalSize = 2379097&lt;/span&gt;
+09:25:48.325 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.s.c.CompressedStreamWriter - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Start streaming file /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db to /10.161.26.37, repairedAt = 0, totalSize = 2482971&lt;/span&gt;
+09:25:48.328 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.s.c.CompressedStreamWriter - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Start streaming file /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db to /10.161.26.39, repairedAt = 0, totalSize = 2424141&lt;/span&gt;
+09:25:48.333 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.s.c.CompressedStreamWriter - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Start streaming file /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db to /10.161.26.21, repairedAt = 0, totalSize = 2436481&lt;/span&gt;
+09:25:48.336 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.s.c.CompressedStreamWriter - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Start streaming file /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db to /10.161.26.38, repairedAt = 0, totalSize = 2574224&lt;/span&gt;
+09:25:48.342 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.s.c.CompressedStreamWriter - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Start streaming file /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db to /10.161.26.157, repairedAt = 0, totalSize = 2483732&lt;/span&gt;
+09:25:48.350 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.s.c.CompressedStreamWriter - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Start streaming file /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db to /10.161.26.22, repairedAt = 0, totalSize = 2461039&lt;/span&gt;
+09:27:24.853 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.s.c.CompressedStreamWriter - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Finished streaming file /data8/yarn/nm/usercache/irteam/appcache/application_1456906327100_79670/container_1456906327100_79670_01_000004/tmp/dmp/user_interest_category-c485093c-ef8b-4d06-b870-9465cd076a3b/dmp-user_interest_category-ka-1-Data.db to /10.161.26.38, bytesTransferred = 2574224, totalSize = 2574224&lt;/span&gt;
+09:27:24.863 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-IN-/x.x.x.x] DEBUG o.a.c.streaming.ConnectionHandler - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Received Received (e5ec2a50-3fd2-11e5-9d62-af38b156d6d1, #0)&lt;/span&gt;
+09:27:24.864 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-OUT-/x.x.x.x] DEBUG o.a.c.streaming.ConnectionHandler - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Sending Complete&lt;/span&gt;
+09:27:24.876 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-IN-/x.x.x.x] DEBUG o.a.c.streaming.ConnectionHandler - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Received Complete&lt;/span&gt;
+09:27:24.877 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-IN-/x.x.x.x] DEBUG o.a.c.streaming.ConnectionHandler - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Closing stream connection handler on /x.x.x.x&lt;/span&gt;
+09:27:24.880 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;STREAM-IN-/x.x.x.x] INFO  o.a.c.streaming.StreamResultFuture - &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Stream &lt;span class=&quot;c&quot;&gt;#5082a580-6023-11e6-a70e-5fc5e5829401] Session with /x.x.x.x is complete&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;cqlbulkoutputformat-bulk-업로드-성능-측정&quot;&gt;CqlBulkOutputFormat bulk 업로드 성능 측정&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;대상 데이터 : 4.5억 row수의 13G 데이터&lt;/li&gt;
+  &lt;li&gt;buffer size와 대역폭의 변화를 주고 성능 측정함&lt;/li&gt;
+  &lt;li&gt;buffer size : 64MB(기본값), 대역폭 : 0 (기본값)
+    &lt;ul&gt;
+      &lt;li&gt;결과 : sstable 생성 10분, 전송 5분&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;buffer size : 96MB, 대역폭 지정: 1MBps
+    &lt;ul&gt;
+      &lt;li&gt;결과 : sstable 생성 10분, 전송 1시간 50분&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Sun, 13 Jan 2019 15:10:00 +0000</pubDate>
+        <link>http://joswlv.github.io/2019/01/13/Cassandra_CqlBulkOutputFormat/</link>
+        <guid isPermaLink="true">http://joswlv.github.io/2019/01/13/Cassandra_CqlBulkOutputFormat/</guid>
+        
+        
+        <category>Cassandra</category>
+        
+      </item>
+    
+      <item>
+        <title>Apache-SpringBoot 연동</title>
+        <description>&lt;h1 id=&quot;apache---springboot내장톰캣-연동&quot;&gt;Apache - SpringBoot(내장톰캣) 연동&lt;/h1&gt;
+
+&lt;h3 id=&quot;개요&quot;&gt;개요&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;사내정보 시스템 SSO&lt;/code&gt;연동을 위해 Apache사용이 불가피함&lt;/p&gt;
+
+&lt;h3 id=&quot;part1-mod_jk를-이용한-tomcat-연동apache설정&quot;&gt;Part1. mod_jk를 이용한 tomcat 연동(Apache설정)&lt;/h3&gt;
+
+&lt;p&gt;사내에서 발급받은 서버에는 기본적으로 Apahce2.2가 설치되어 있어 Apahce설치과정은 생략한다.&lt;/p&gt;
+
+&lt;p&gt;mod_jk를 설치과정 및 Apache설정은 다음과 같다.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;1) &lt;strong&gt;tomcat-connectors설치&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /usr/local/src
+wget http://www.apache.org/dist/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.44-src.tar.gz
+&lt;span class=&quot;nb&quot;&gt;tar&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-xzf&lt;/span&gt; tomcat-connectors-1.2.44-src.tar.gz
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;2) &lt;strong&gt;native 디렉토리로 이동&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;tomcat-connectors-1.2.44-src/native
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;3) &lt;strong&gt;컴파일&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./configure &lt;span class=&quot;nt&quot;&gt;--with-apxs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/sbin/apxs
+make
+make install
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;apxs path를 입력해줘야하는데, defulat는 &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/sbin/apxs&lt;/code&gt;이다. 만약 이 경로에 없다면 찾아서 알맞게 입력하자.&lt;/p&gt;
+
+&lt;p&gt;만약 없는 경우&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;yum install httpd-devel
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;4) &lt;strong&gt;httpd.conf수정&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /etc/httpd/conf
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;vi httpd.conf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;(httpd.conf) 맨아래추가&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;LoadModule jk_module modules/mod_jk.so
+include conf/mod_jk.conf
+include conf/http_vhost.conf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;5) &lt;strong&gt;mod_jk.conf 추가&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;vi mod_jk.conf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;(mod_jk.conf)&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;IfModule mod_jk.c&amp;gt;
+ JkWorkersFile conf/workers.properties
+ JkLogFile     logs/mod_jk.log
+ JkLogLevel    info
+&amp;lt;/IfModule&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;6) &lt;strong&gt;workers.properties 추가&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;vi worker.properties
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;(workers.properties)&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;worker.list&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;worker1,worker2
+ 
+worker.worker1.port&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;18009
+worker.worker1.host&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;127.0.0.1
+worker.worker1.type&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;ajp13
+worker.worker1.lbfactor&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+
+worker.worker2.port&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;28009
+worker.worker2.host&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;127.0.0.1
+worker.worker2.type&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;ajp13
+worker.worker2.lbfactor&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;work가 여러개이면 woker.list에 콤마(,)구분자로 추가&lt;/p&gt;
+
+&lt;p&gt;7) &lt;strong&gt;http_vhost.conf&lt;/strong&gt; 추가&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;vi http_vhost.conf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;(http_vhost.conf)&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;VirtualHost &lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;:80&amp;gt;
+ ServerName  customtargeting.nhnent.com
+ JkMount /&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; worker1
+&amp;lt;/VirtualHost&amp;gt;
+
+&amp;lt;VirtualHost &lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;:80&amp;gt;
+ ServerName  addinfra-site.nhnent.com
+ JkMount /&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; worker2
+ &amp;lt;/VirtualHost&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;서비스를 추가할려면 &lt;code class=&quot;highlighter-rouge&quot;&gt;workers.properties&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;http_vhost.conf&lt;/code&gt;에 값을 추가하고 apache를 재시작해주면 된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;part2-mod_jk를-이용한-tomcat-연동spring-boot설정&quot;&gt;Part2. mod_jk를 이용한 tomcat 연동(Spring-Boot설정)&lt;/h3&gt;
+
+&lt;p&gt;SpringBoot 1.x와 SpringBoot 2.x의 AJP포트 설정 법에 차이가 있다.
+그 이유는 SpringBoot1.x에서는 내장톰캣을 기본으로 사용하고 있었지만 SpringBoot2.x에서는 내장톰캣대신에 netty를 사용하기 때문이다.&lt;/p&gt;
+
+&lt;p&gt;1)  &lt;strong&gt;application.properties 값추가&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tomcat.ajp.protocol=AJP/1.3
+tomcat.ajp.port=18009
+tomcat.ajp.enabled=true
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;2-1) &lt;strong&gt;SpringBoot1.x ContainerConfig 클래스 추가&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.apache.catalina.connector.Connector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.springframework.beans.factory.annotation.Value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.springframework.context.annotation.Bean&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.springframework.context.annotation.Configuration&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@Configuration&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ContainerConfig&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;nd&quot;&gt;@Value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;${tomcat.ajp.protocol}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ajpProtocol&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;${tomcat.ajp.port}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ajpPort&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;${tomcat.ajp.enabled}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;boolean&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tomcatAjpEnabled&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Bean&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EmbeddedServletContainerCustomizer&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;containerCustomizer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;TomcatEmbeddedServletContainerFactory&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tomcat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TomcatEmbeddedServletContainerFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+			&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tomcatAjpEnabled&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;Connector&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Connector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ajpProtocol&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setPort&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ajpPort&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setSecure&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setAllowTrace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setScheme&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;http&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;tomcat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addAdditionalTomcatConnectors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+			&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+		&lt;span class=&quot;o&quot;&gt;};&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;2-2) &lt;strong&gt;SpringBoot2.x ContainerConfig 클래스 추가&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.apache.catalina.connector.Connector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.springframework.beans.factory.annotation.Value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.springframework.boot.web.servlet.server.ServletWebServerFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.springframework.context.annotation.Bean&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;org.springframework.context.annotation.Configuration&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@Configuration&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ContainerConfig&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;nd&quot;&gt;@Value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;${tomcat.ajp.protocol}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ajpProtocol&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;${tomcat.ajp.port}&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ajpPort&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;nd&quot;&gt;@Bean&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ServletWebServerFactory&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;servletContainer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;TomcatServletWebServerFactory&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tomcat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TomcatServletWebServerFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;tomcat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addAdditionalTomcatConnectors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createAjpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tomcat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Connector&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;createAjpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;Connector&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Connector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ajpProtocol&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setPort&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ajpPort&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setSecure&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setAllowTrace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setScheme&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;http&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ajpConnector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;3) 부팅 로그 확인&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;10:50:32.520 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;INFO &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;http-nio-8080&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+10:50:32.538 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;INFO &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;http-nio-8080&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+10:50:32.544 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;INFO &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; o.a.tomcat.util.net.NioSelectorPool - Using a shared selector &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;servlet write/read
+10:50:32.560 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;INFO &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; o.apache.coyote.ajp.AjpNioProtocol - Initializing ProtocolHandler &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ajp-nio-18009&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+10:50:32.563 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;INFO &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; o.a.tomcat.util.net.NioSelectorPool - Using a shared selector &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;servlet write/read
+10:50:32.563 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;INFO &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; o.apache.coyote.ajp.AjpNioProtocol - Starting ProtocolHandler &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ajp-nio-18009&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+10:50:32.576 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;INFO &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; o.s.b.c.e.t.TomcatEmbeddedServletContainer - Tomcat started on port&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: 8080 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;http&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 18009 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;http&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;ajp포트가 올라왔는지 확인한다.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 03 Jan 2019 15:10:00 +0000</pubDate>
+        <link>http://joswlv.github.io/2019/01/03/Apache_SpringBoot/</link>
+        <guid isPermaLink="true">http://joswlv.github.io/2019/01/03/Apache_SpringBoot/</guid>
+        
+        
+        <category>Spring</category>
+        
+      </item>
+    
+      <item>
+        <title>Spark 실행 구성</title>
+        <description>&lt;h1 id=&quot;spark-실행-구성&quot;&gt;Spark 실행 구성&lt;/h1&gt;
+
+&lt;h3 id=&quot;spark-실행-구성-정리&quot;&gt;Spark 실행 구성 정리&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;결과 RDD인 counts는 어떤 Action도 수행되지 않은 상태에선 내부적으로 정의된 RDD 객체들의 방향성 비순환 그래프(DAG, Directed Acyclic Graph)를 갖으며, 이것이 나중에 Action을 수행할 때 쓰임&lt;/li&gt;
+  &lt;li&gt;각 RDD는 자신이 어떤 타입의 관계를 갖고 있는지에 대한 메타데이터에 따라 하나 이상의 부모 RDD를 가리키는 포인터를 유지, 이런 포인터들은 RDD가 모든 조상들을 추적할 수 있게 해줌&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;toDebugString()&lt;/code&gt; 메소드로 RDD의 가계도 출력 가능&lt;/li&gt;
+  &lt;li&gt;Spark의 스케줄러는 Action을 수행할 때 필요한 RDD 연산의 Physical Plan을 만듬&lt;/li&gt;
+  &lt;li&gt;​Spark의 스케줄러는 연산되는 마지막 RDD에서 시작하여 연산해야 할 것을 역으로 추적, 모든 조상 RDD들을 연산하기 위해 필요한 Physical Plan을 재귀적으로 생성&lt;/li&gt;
+  &lt;li&gt;그래프의 각 RDD에 대해 하나의 연산 Stage를 출력하게 되고, 이 Stage는 해당 RDD의 각 Partition들을 위한 Task들을 갖으며, 최종 결과 RDD를 연산해 내기 위해 Stage들은 역순으로 실행&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;​파이프라이닝 외에도 Spark의 내부 스케줄러는 RDD가 이미 Cluster 메모리나 디스크에 Caching되어 있는 경우 RDD 그래프의 가계도를 제거&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;특정 Action을 위해 생성되는 Stage들이 모여 Job을 이룸
+즉, count() 같은 Action을 호출할 때마다 하나 이상의 Stage로 구성된 Job이 생성 됨&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;한 번 Stage 그래프가 정의되면 Task들이 만들어지고 사용하는 배포 모드에 따라 다양하게 내부 스케줄러로 전송 됨&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Physical Plan에서 Stage들은 RDD 가계도에 따라 각자 의존성을 가지게 되므로 그에 맞는 순서로 실행&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Stage는 실행되는 Partition은 서로 다르지만 같은 일을 수행하는 Task들을 실행 시킴&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;각 Task는 내부적으로 다음과 같은 동일한 순서에 따라 수행됨&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;요약하면-spark의-실행-중에는-다음과-같은-단계들이-발생&quot;&gt;요약하면, Spark의 실행 중에는 다음과 같은 단계들이 발생&lt;/h4&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;사용자 코드가 RDD의 DAG를 정의한다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;RDD의 연산들은 새로운 RDD를 만들고 이것들은 부모를 참조하게 되면서 이에 따라 그래프가 만들어 진다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;DAG가 Action의 Physical Plan으로 변환되게 한다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;RDD에서 Action을 호출하면 그때는 반드시 연산이 수행되어야 한다. 이는 또한 부모 RDD에게도 연산을 요구하게 된다. Spark의 스케줄러는 RDD들이 필요한 모든 연산을 수행하도록 Job을 제출한다. 이 Job은 하나 이상의 Stage를 갖게 되며, 이는 Task들로 구성된 병렬 집단 연산들을 말한다. 각 Stage는 DAG에서 하나 이상의 RDD들과 연계된다. 하나의 Stage는 파이프라이닝에 의해 여러개의 RDD와 연계될 수도 있다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Task들이 스케줄링되고 Cluster에서 실행된다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Stage들은 순서대로 실행되며 RDD의 조각들을 연산하기 위한 Task들을 실행한다. Stage의 최종 단계가 끝나면 Action이 완료된다.&lt;/p&gt;
+&lt;/blockquote&gt;
+</description>
+        <pubDate>Tue, 04 Dec 2018 15:10:00 +0000</pubDate>
+        <link>http://joswlv.github.io/2018/12/04/spark-execute/</link>
+        <guid isPermaLink="true">http://joswlv.github.io/2018/12/04/spark-execute/</guid>
+        
+        
+        <category>Spark</category>
+        
+      </item>
+    
+      <item>
+        <title>2년동안 회사에서 한것들</title>
+        <description>&lt;h1 id=&quot;2년동안-회사에서-한것들&quot;&gt;2년동안 회사에서 한것들.&lt;/h1&gt;
+
+&lt;p&gt;회사를 입사를 한지 2년 3개월째가 되어 간다. 회사를 다니면서 데이터엔지니어링을 잘하기 위해 많은 시간을 투자했다.&lt;/p&gt;
+
+&lt;p&gt;2년동안 한 작업들에 대해서 정리가 필요해 글을 남겨본다.&lt;/p&gt;
+
+&lt;h2 id=&quot;1-csutom-data-extractor&quot;&gt;1. Csutom Data Extractor&lt;/h2&gt;
+
+&lt;h4 id=&quot;system-spec&quot;&gt;System Spec&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;광고제작 및 모수추출시 사용되는 Data Size
+    &lt;ul&gt;
+      &lt;li&gt;Daily - 500GB&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;AdminPage
+    &lt;ul&gt;
+      &lt;li&gt;Spring Boot (ver. 1.5.9)&lt;/li&gt;
+      &lt;li&gt;Angular Js 1.5&lt;/li&gt;
+      &lt;li&gt;WebPack&lt;/li&gt;
+      &lt;li&gt;JDBC Hive Driver&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Schduler
+    &lt;ul&gt;
+      &lt;li&gt;Spring Boot (ver. 1.5.9)&lt;/li&gt;
+      &lt;li&gt;Quartz&lt;/li&gt;
+      &lt;li&gt;JDBC Hive Driver&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Spark Module
+    &lt;ul&gt;
+      &lt;li&gt;Spark (ver. 1.6)&lt;/li&gt;
+      &lt;li&gt;Spark-Cassandra-Connector&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;DataLake를 더 활용할 수 있는 커스텀 데이터 추출기 시스템(별칭 &lt;strong&gt;Ad-hoc Query processor&lt;/strong&gt;)을 만들었다. 영업에서 요청하는 조건에 맞는 유저집합을 만들어 타겟팅광고로 활용할 수 있게하는 시스템이다. 기능은 크게 두가지이다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;조건에 맞는 유저집합의 모수는 얼마나 되는가? (광고비소진을 위해 광고등록전에 미리정보를 본다.)&lt;/li&gt;
+  &lt;li&gt;조건에 맞는 유저집합을 광고로 등록할 수 있게 한다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;처음 시스템을 설계했을 때는 경험부족으로 어떤 영업에서 어떤 요청을 줄지 몰라서 요청하나하나마다 SparkJob을 만들어서 사용했다.(이런 무식한 방식은 팀장님의 믿음이 있기에 가능했다.) 
+(ex. 데이터소스에서 키워드1,키워드2등의 키워드를 사용한 유저의 집합, 광고배너를 클릭한 유저의 집합, 특정앱리스트를 설치한 사용자 등)
+그리고 모수추출은 요청이 있을 때마다 spark-shell에서 추출하여 제공하였다.&lt;/p&gt;
+
+&lt;p&gt;이런 식으로 3개월 정도 운영하다보니, 광고등록은 400개정도 였고 모수추출요청은 500개건 정도 되었다. 하루에 적어도 5~9건을 커스텀타겟팅 관련 업무때문에 다른 일을 할 수 없었다.(정말 스트레스가 심했다.)&lt;/p&gt;
+
+&lt;p&gt;이런 방식으로 운영했다가는 몸이 먼저 망가질꺼 같아서.. 시스템을 개선하기로 마음 먹었다.&lt;/p&gt;
+
+&lt;p&gt;문제점은 세가지 정도 있었다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;추출 요청이 너무 많아서 혼자서 할 수 없는 환경이다.&lt;/li&gt;
+  &lt;li&gt;반복 작업 부분이 추상화가 되어 있지 않아 코드가 지저분하다.&lt;/li&gt;
+  &lt;li&gt;추출시간이 너무 오래걸린다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;우선 3개월동안 영업에서 들어온 요청을 분석하였다. 분석하다보니, 특정 규칙이 있었고 대략 20개정도의 패턴으로 요청을 하였다. 이를 Hive Query로 추출할 수 있는 시스템으로 개선하였고, 영업에서 직접 모수추출 및 광고등록을 할 수 있도록 AdminPage를 제작하였다.&lt;/p&gt;
+
+&lt;p&gt;기존에 동작하는 Schduler에 Adminpage요청을 받아 HiveQuery가 동작할 수 있는 시스템을 추가하였다. 
+모수추출은 광고등록 보다 빈번하게 하고 테스트성이 많아, Research클러스터에서 동작하도록 하였고, 광고등록은 HiveQuery로 추출한 유저집합을 HDFS에 저장(다른 연구용으로 사용되기 때문)한 뒤 Spark Module에서 Cassandra로 인입하는 작업을 진행하였다.&lt;/p&gt;
+
+&lt;p&gt;여기서 20개 패턴에서 요청 파라미터가 기본 30~40개정도 되었는데, 이작업을 효율적인 Daily 배치작업으로 하기 위해서 매턴매칭 알고리즘인 &lt;code class=&quot;highlighter-rouge&quot;&gt;Aho Corasick&lt;/code&gt; 패턴매칭 알고리즘을 사용하여 O(n)시간복잡도(보통 패턴매칭은 exponentiation 시간복잡도를 가짐)를 가지는 Hive UDTF를 제작하기도 하였다.(20개의 정형화된 광고패턴에서 사용되는 추출 방식은 로그에서 사용자 요청 파라미터와 매칭되는 유저 찾기 문제로 귀결되기 때문)&lt;/p&gt;
+
+&lt;p&gt;이 UDTF 방식(later view)을 사용하지 않았다면 &lt;strong&gt;약 4000개&lt;/strong&gt;되는 커스텀광고 인입 배치작업을 할 수 없었을 것이다.&lt;/p&gt;
+
+&lt;p&gt;커스텀타겟팅 시스템은 처음으로 오너쉽을 가지고 1부터 100까지 혼자한 작업이다. 그래서 더 애착있고, 사업적으로도 많은 성과를 보여준 시스템이였다.(시스템 등장 이후 커스텀타겟팅이 주력상품으로 되었다.)&lt;/p&gt;
+
+&lt;p&gt;현재는 이 시스템을 기반으로 데이터 장사를 하기 위한 시스템으로 확장시키는 작업을 하고 있다.&lt;/p&gt;
+
+&lt;p&gt;그래서 코드리펙토링 과정과 외부와 통신을 할 수 있는 인터페이스를 제작하는 작업을 하고 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;2-high-performance-api-server&quot;&gt;2. High Performance API Server&lt;/h2&gt;
+
+&lt;h4 id=&quot;system-spec-1&quot;&gt;System Spec&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;API서버
+    &lt;ul&gt;
+      &lt;li&gt;Spring Boot (ver. 1.5.9)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Cassandra
+    &lt;ul&gt;
+      &lt;li&gt;2.x -&amp;gt; 3.9&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;타겟팅 광고에서 사용되는 모든 데이터는 BID, ADID(비식별 유저 키)를 키로 Cassandra에 저장된다. 
+그리고 가장큰 Mission이 광고서버(DSP)에서 유저ID API서버로 요청하면 100ms안에 Cassandra에 저장되어 있는 해당유저에 관련된 모든 유정정보를 전달해야한다.&lt;/p&gt;
+
+&lt;p&gt;여기서 100ms라는 조건은 온라인광고를 하기위한 제약사항이다. (Response Time이 100ms가 넘으면 Timeout으로 간주한다.)&lt;/p&gt;
+
+&lt;p&gt;처음 팀에 왔을 때 하루 평균 API서버로 광고서버(DSP)에서 보낸 요청수는 1억건 정도였다.&lt;/p&gt;
+
+&lt;p&gt;이 시절에는 4대의 API서버는 ORM으로 Cassandra 데이터를 가져와도 Timeout ratio가 하루 평균 0.3%정도 였다.&lt;/p&gt;
+
+&lt;p&gt;하루 평균 요청수가 3억건이 되었을 때 Timeout ratio가 2~3%로 증가하였고, Timeout ratio가 1%이하로 떨어질때까지 API서버를 증설하기만 하였다. 그렇게 API서버는 10대가 되었다. 그리고 ORM으로 되어 있는 Cassandra 질의부분을 Template방식으로 변경을 하여 API부담을 덜어주었다. 하지만 결과는 미비하였다.&lt;/p&gt;
+
+&lt;p&gt;하루 평균 요청수가 6~7억건이 되었을 때 Tiomout ratio가 4~5%로 증가하였고, API서버 추가보다는 근본적인 개선이 필요하였다. 여기서부터 개선작업이 시작되었는데, 크게 두가지를 생각하고 작업하였는데,&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Cassandra Compaction 및 GC(CMS GC사용)가 발생하는 동안 select 지연을 Heap size를 늘려서 개선하였다.&lt;/li&gt;
+  &lt;li&gt;API로 요청하나당 Cassandra로 12개의 select 요청이 동기로 처리되는 부분을 비동기요청으로 개선하였다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Cassandra Compaction시 발생하는 GC를 개선하고자 G1로 적용해 테스트를 했지만 fullGC횟수는 줄었지만 fullGC 처리시간은 오히려 더 길어졌다. 그래서 공식Doc에서 추천하는 방식인 기존 CMS GC에서 heapSize를 4G -&amp;gt; 8G로 늘려보았다. 이때는 0.8~1%로 타임아웃 비율이 줄어들었다. 여기서도 만족할 수 있었지만 더 개선하고자 하였다.&lt;/p&gt;
+
+&lt;p&gt;API로 요청하나당 12개의 질의를 Cassandra에 한다. 이때 각각의 쿼리가 순차적으로 실행된다. 즉 쿼리결과 얻거나 오류가 발생하기 전까지 blocking이 된다.
+이부분을 개선할 필요가 있었다. Counter자료형을 사용하는 필드를 가지고 있는 Table에 질의할 때 응답시간이 가장많이 지연되는 것을 알 수 있었다. 그래서 12개의 쿼리를 비동기로 요청하고 callback은 한번에 모아서 처리하는 방식으로 수정하였고 각각의 future들을 callback을 기다리는 동안 90ms가 넘으면 먼저 도착한 쿼리결과만이라도 보내주어 API 처리량을 증가시켰다.&lt;/p&gt;
+
+&lt;p&gt;개선한 결과 10개의 API서버로 7억건의 요청을 0.3%정도의 Timeout ratio로 유지하였다. (Timeout ratio 개선 : 5~6% -&amp;gt; 0.3%)&lt;/p&gt;
+
+&lt;p&gt;현재는 Cassandra에 1억건이상의 데이터를 BulkInsert을 할때 API서버 성능 저하가 발생하는 것을 튜닝하고 있다. 즉 효율적인 Cassandra BulkInsert방법을 고민하고 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;3-realtime-ad-report&quot;&gt;3. RealTime AD Report&lt;/h2&gt;
+
+&lt;h4 id=&quot;system-spec-2&quot;&gt;System Spec&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Spark Streaming (ver. 1.6)&lt;/li&gt;
+  &lt;li&gt;Kafka (ver. 0.8) 
+광고리포트를 실시간으로 제공하고자 제작되었고, 난 수치가 엉망진창인 실시간 리포트 레거시 코드를 받아 개선하는 작업을 진행하였다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;개선작업은 크게 두번의 작업으로 진행되었다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;실시간 정보를 광고서버에서 socket으로 제공 받고 있는 부분을 Kafka로 인입하여 Spark Streaming의 입력소스를 kafka로 개선한작업&lt;/li&gt;
+  &lt;li&gt;Spark Streaming를 사용하여 kafka에 있는 데이터를 읽을 때 offset 관리 문제를 개선한 작업&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;처음 개선한 부분은 입력소스가 socket으로 받고 있었다. 평소에는 문제가 되지 않지만 트래픽이 증가하는 시간대에서는 Spark Streaming에서 작업을 처리한다고 socket에서 데이터를 읽어오지 못하고 대기상태가 된다. 이때 socket의 버퍼를 초과하여 데이터 유실이 발생하는 현상이 발생하였다. 가장 좋은 방법은 광고서버에서 바로 kafka로 producing하는 것이지만 다른 팀에서 관여하는 부분이라. socket에서 데이터를 읽어 kafka로 쏘아주는 producer를 제작하였다.(팀원분이 작업 하셨음) 이렇게 되면 socket의 버퍼가 초과하기 전에 빠르게 kafka로 producing하여 기존 문제를 해결할 수 있었다.&lt;/p&gt;
+
+&lt;p&gt;난 이렇게 개선된 입력소스를 가지고, 실시간리포트 레거시코드를 개선하는 작업을 진행하였다. 처음 제작한 코드는 가장 편하게 사용할 수 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;createStream&lt;/code&gt;으로 Receiver를 사용한 데이터처리 방식을 사용했다. 이는 데이터의 중복이 발생할 수 있는 여지가 있었다. (&lt;a href=&quot;https://joswlv.github.io/2017/10/24/sparkstreamingandkafka/&quot;&gt;해당내용정리한 글&lt;/a&gt;) 데이터 정합성이 어긋나는 일들이 발생했다.(해당 job이 재시작되는 시점에 데이터가 어긋나는 일)&lt;/p&gt;
+
+&lt;p&gt;그래서 &lt;code class=&quot;highlighter-rouge&quot;&gt;Kafka Direct API&lt;/code&gt;를 사용하기로 결정하고 개선하였다.
+개선한 결과 옛 레거시코드에서 제공받는 실시간 리포트보다 더 정확한 데이터를 제공할 수 있게 되었다.&lt;/p&gt;
+
+&lt;h2 id=&quot;4-hive-query-schduler&quot;&gt;4. Hive Query Schduler&lt;/h2&gt;
+
+&lt;h4 id=&quot;system-spec-3&quot;&gt;System Spec&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Java 1.8 Application&lt;/li&gt;
+  &lt;li&gt;JDBC Hive Driver&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;그림에서 &lt;strong&gt;Hive Query Base DataPipline&lt;/strong&gt;이다.&lt;/p&gt;
+
+&lt;p&gt;팀에 배치되었을 때 많은 작업들이 다른 조직에서 관리하던 작업이였다. 그러다보니 데이터마켓에 데이터를 인입하는 데이터파이프라인 작업들이 다양한 스타일로 존재하였다.(오직 shell로만, HadoopMR이 최고야!, Spark가 최고야! 등)&lt;/p&gt;
+
+&lt;p&gt;데이터파이프라인 작업의 오너쉽이 우리팀으로 넘어오자 마자 한 작업이 파이프라인 작업을 통일하고 유지보수가 편리하게 하는 것이였다.&lt;/p&gt;
+
+&lt;p&gt;어떤 식으로 개선하면 좋을까 고민하던 중, 팀장님이 작업하고 있는 eCTR 학습기 코드를 보게되었다. 그리고 힌트를 얻었다. 팀장님은 모든 데이터 파이프라인 작업을 HiveQuery로 처리하였다. 이런 작업을 하던 중 만들어진게 있는데, 바로 Hive Query Schduler였다. Hive Query Schduler는 eCTR학습기에 사용되는 코드의 일부였지만 소스의 안전성과 failOver기능이 매우 좋아 Schduler부분만 가져와서 파이프라인정리작업에 사용하기로 하였다.&lt;/p&gt;
+
+&lt;p&gt;Hive Query Schduler는 Query파일을 읽고 해당 시간에 순차적으로 실행시켜주는 어플리케이션이다. 이런 작업을 수행하는 WorkFlow도구들이 많이 있지만, 다들 제한적인 기능때문에 내입맛에 맞지는 않았다. Query한줄이면 데이터파이프라인이 제작되는 기능의 편리함은 생산성 증대를 가져왔다.&lt;/p&gt;
+
+&lt;h2 id=&quot;5-생산성-증대를-위한-각종-tool&quot;&gt;5. 생산성 증대를 위한 각종 Tool&lt;/h2&gt;
+
+&lt;h4 id=&quot;system-spec-4&quot;&gt;System Spec&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;대부분 Spring Boot로 제작&lt;/li&gt;
+  &lt;li&gt;몇몇은 프레이워크가 없는 Java Application&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;업무를 처리하다보면 반복적으로 들어오는 요청들이 있다. 거의 대부분 테스트성 데이터 인입작업이였다. 처음 2~3번은 수동으로 해주다가 작업 중간중간에 들어오는 요청들이 내 작업흐름에 interrupt걸어 생산성 저하를 가져온다고 생각하게 되었다. 그래서 테스트 데이터를 인입할 수 있는 간단한 Tool제공하여, 요청자에게 제공했다.&lt;/p&gt;
+
+&lt;p&gt;그리고 자주보는 통계자료리포트는 처음에는 query를 날려 수동으로 보았지만, 매번하는 복붙엔터작업이 귀찮아 간단한 static html파일로 만들어 메일로 메일 아침 수신하도록 하였다.&lt;/p&gt;
+
+&lt;p&gt;기본 성격이 반복되는 작업을 되게 싫어하고 귀찮아해서, 한번딱 고생해서 반복되고 귀찮은 부분을 개선하는 방향으로 회사생활을 한것 같다.&lt;/p&gt;
+
+</description>
+        <pubDate>Fri, 23 Nov 2018 15:10:00 +0000</pubDate>
+        <link>http://joswlv.github.io/2018/11/23/work_list/</link>
+        <guid isPermaLink="true">http://joswlv.github.io/2018/11/23/work_list/</guid>
+        
+        
+        <category>Think</category>
+        
+      </item>
+    
+      <item>
+        <title>DistCp 정리</title>
+        <description>&lt;h1 id=&quot;hadoop-distcp-정리&quot;&gt;Hadoop distcp 정리&lt;/h1&gt;
+
+&lt;p&gt;자주 이용하는 옵션만 사용해서.. 다른 옵션들도 사용하자! 편한기능이 많이 있었다..&lt;/p&gt;
+
+&lt;p&gt;주의할점&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;여러군데의 파일을 각각의 폴더 위치로 이동시키는 것은 불가&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;목적지(destination) 폴더에 파일이 존재하면 파일이 전달되지 않을 수도 있다.&lt;/p&gt;
+
+    &lt;p&gt;파일 이동시 확인하도록 하자.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;distcp-명령&quot;&gt;distcp 명령&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hadoop distcp hdfs://source hdfs://destination&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;update-or-overwrite&quot;&gt;update or overwrite&lt;/h2&gt;
+
+&lt;h3 id=&quot;파일-이름이-동일할-경우-update는-파일사이즈를-비교해서-옮기고-overwrite는-그냥-덮어쓴다&quot;&gt;파일 이름이 동일할 경우 update는 파일사이즈를 비교해서 옮기고, overwrite는 그냥 덮어쓴다.&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hadoop distcp -update hdfs://source hdfs://destination&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hadoop distcp -overwrite hdfs://source hdfs://destination&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;여러위치의-파일을-하나의-위치로-이동-를-이용하여-복사하는것도-가능&quot;&gt;여러위치의 파일을 하나의 위치로 이동, *를 이용하여 복사하는것도 가능&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hadoop distcp hdfs://source1 hdfs://soucrce2 hdfs://destination&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hadoop distcp hdfs://source/*/* hdfs://destination&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hadoop distcp hdfs://source/*.csv hdfs://destination&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;여러-위치를-파일에-저장하고--f-옵션으로-하나의-위치로-이동&quot;&gt;여러 위치를 파일에 저장하고 -f 옵션으로 하나의 위치로 이동&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hadoop distco -f hdfs://source_file hdfs://destination&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;-d-옵션을-이용하여-하둡-처리-옵션을-지정하는-것도-가능&quot;&gt;-D 옵션을 이용하여 하둡 처리 옵션을 지정하는 것도 가능&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hadoop distcp -Dmapred.job.queue.name=dist hdfs://source hdfs://destination&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;repreence&quot;&gt;Repreence&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://118k.tistory.com/371&quot;&gt;https://118k.tistory.com/371&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://hadoop.apache.org/docs/current/hadoop-distcp/DistCp.html&quot;&gt;https://hadoop.apache.org/docs/current/hadoop-distcp/DistCp.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Thu, 22 Nov 2018 10:04:00 +0000</pubDate>
+        <link>http://joswlv.github.io/2018/11/22/distcp/</link>
+        <guid isPermaLink="true">http://joswlv.github.io/2018/11/22/distcp/</guid>
+        
+        
+        <category>Hadoop</category>
+        
+      </item>
+    
+      <item>
+        <title>302 Redirect 처리</title>
+        <description>&lt;h1 id=&quot;302-redirect-처리&quot;&gt;302 Redirect 처리&lt;/h1&gt;
+
+&lt;p&gt;외부에서 제공하는 API를 사용하다보면 GET요청은 문제가없이 잘동작하는데, http로 된 URL에 POST요청을 할 경우 종종 302상태 코드를 리턴 받게 된다.&lt;/p&gt;
+
+&lt;p&gt;처음에는 당황했다. 302리다렉트할꺼면 제공하는 url를 처음부터 https로 주던지…쩝&lt;/p&gt;
+
+&lt;h2 id=&quot;3xx-redirect&quot;&gt;3xx Redirect&lt;/h2&gt;
+
+&lt;p&gt;301과 302가 존재하는데, 301 redirect는 기존 URL를 영구적(Permanent)으로 옮겼을 때 사용하고 302 redirect은 URL를 일시적(Temporary)으로 옮겼을 때 발생한다.&lt;/p&gt;
+
+&lt;p&gt;301 redirect은 api호출하는 입장에서 크게 수정해야할 부분이 없다. 영구적으로 url이 옮겨졌으니 자동으로 새로운 URL로 연결해준다.&lt;/p&gt;
+
+&lt;p&gt;하지만 302 redirect를 받을 경우 이야기는 달라진다. 말그대로 임시 URL이기 때문에 호출하는 쪽에서 새로운 URL로 redirect처리를 해줘야한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;apahce-httpclient를-사용하자&quot;&gt;Apahce httpclient를 사용하자&lt;/h2&gt;
+
+&lt;p&gt;apahce httpclient 버전을 4.3이상되는 거를 사용해야지 편리하게 사용할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;4.3아래 버전에서는 커낵션관리, redirect처리, pool관리 등 defulat값들이 정해져있지 않아 수동으로 해줘야해서 손이 많이간다.&lt;/p&gt;
+
+&lt;h4 id=&quot;426버전에서-302redirect를-처리한-post요청-코드이다&quot;&gt;4.2.6버전에서 302redirect를 처리한 post요청 코드이다.&lt;/h4&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;sendPooledRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;requestBody&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;apiURL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Exception&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ConnectException&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cm&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;SchemeRegistry&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;schemeRegistry&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SchemeRegistry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;schemeRegistry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Scheme&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;http&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;80&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PlainSocketFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getSocketFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()));&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;schemeRegistry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Scheme&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;https&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;443&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SSLSocketFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getSocketFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()));&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;cm&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PoolingClientConnectionManager&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;schemeRegistry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;cm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setMaxTotal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;cm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setDefaultMaxPerRoute&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;HttpPost&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;HttpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;apiURL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;c1&quot;&gt;// header&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setHeader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BasicHeader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Pragma&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;no-cache&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setHeader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BasicHeader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Cache-Control&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;no-cache&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+	&lt;span class=&quot;c1&quot;&gt;// body&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;StringEntity&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bodyEntity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;StringEntity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;requestBody&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;application/json&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;UTF-8&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setEntity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bodyEntity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;HttpClient&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;httpClient&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;HttpResponse&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;response&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;resStatus&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;httpClient&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DefaultHttpClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;response&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;httpClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;resStatus&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getStatusLine&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getStatusCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ConnectException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;c1&quot;&gt;//ce.printStackTrace();&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;abort&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+		&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ce&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IOException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ioe&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;c1&quot;&gt;//ioe.printStackTrace();&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;abort&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+		&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ioe&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;finally&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;response&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;EntityUtils&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;consume&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getEntity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+		&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;resStatus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;453버전에서-302redirect를-처리한-post요청-코드이다&quot;&gt;4.5.3버전에서 302redirect를 처리한 post요청 코드이다.&lt;/h4&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;shootRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ApiRequestModel&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;apiRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inputUrl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;throws&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IOException&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;Gson&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gson&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Gson&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;requestData&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gson&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;toJson&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;apiRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;HttpPost&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;HttpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputUrl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setHeader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BasicHeader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Pargma&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;no-cache&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setHeader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BasicHeader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Cache-Control&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;no-cache&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;request Data =&amp;gt; &quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;requestData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;StringEntity&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bodyEntity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;StringEntity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;requestData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;application/json&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;UTF-8&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setEntity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bodyEntity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;CloseableHttpClient&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;httpClient&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;HttpClientBuilder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setRedirectStrategy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LaxRedirectStrategy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;CloseableHttpResponse&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;response&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;httpClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;httpPost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;response&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getStatusLine&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getStatusCode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;4.5 버전에서는 closeable객체를 사용하고, 거의 대부분의 값들이 default로 셋팅되어 있어 크게 손볼 것이 없다.&lt;/p&gt;
+</description>
+        <pubDate>Tue, 13 Nov 2018 15:10:00 +0000</pubDate>
+        <link>http://joswlv.github.io/2018/11/13/302redirect/</link>
+        <guid isPermaLink="true">http://joswlv.github.io/2018/11/13/302redirect/</guid>
+        
+        
+        <category>Java</category>
+        
+      </item>
+    
+      <item>
+        <title>RDD가 좋은 이유</title>
+        <description>&lt;h1 id=&quot;rdd가-좋은-이유&quot;&gt;RDD가 좋은 이유&lt;/h1&gt;
+
+&lt;p&gt;누가 Spark가 좋냐고 물어본다면 좋다고 말할 것이다. 그럼 왜 좋은가라고 물어본다면 RDD를 사용하기때문이라고 말할 것이다. 그럼 RDD가 머야?라는 질문에 답변을 하고자 이글을 정리한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;rdd이란&quot;&gt;RDD이란?&lt;/h2&gt;
+
+&lt;p&gt;RDD의 정식 명칭은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Resilient Distributed Datasets&lt;/code&gt;이다. Spark를 이루는 기본연산단위이다. 기존의 Mapreduce을 이용한 방식에서 iteration과 interactive job에 한계를 느껴서 시작한 프로젝트이다.&lt;/p&gt;
+
+&lt;p&gt;큰 특징은&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Immutable&lt;/strong&gt;, partitioned collections of records&lt;/li&gt;
+  &lt;li&gt;스토리지 -&amp;gt; RDD변환 or RDD -&amp;gt; RDD변환만 가능&lt;/li&gt;
+  &lt;li&gt;lazy-execution (action에 해당하는 명령어가 실행되야지 transformation이 실행됨)&lt;/li&gt;
+  &lt;li&gt;Immutalbe하니 Read-Only이다. 그래서 실행계획(lineage)를 그릴 수 있고 최적화 연산을 할 수 있다.&lt;/li&gt;
+  &lt;li&gt;실행계획(lineage)가 그려지기때문에 Fault Tolerancer가 능해진다.&lt;/li&gt;
+  &lt;li&gt;클러스터 전체에서 공유되는 데이터 형태로 대부분 메모리에 올라가 있음 (=빠르다)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;또 알아야될 것은 다음과 같다.&lt;/p&gt;
+
+&lt;p&gt;기존 Mapreduce를 사용할때에는 Map, Reduce연산만을 가지고 지지고 볶고 했다. 하지만 RDD를 사용한 Spark는 다양한 요구사항을 처리할 수 있다.(MR, Pregel, DryadLINQ, Iterative MR, SQL, Batched Stream Processiog)&lt;/p&gt;
+
+&lt;h4 id=&quot;그래서-rdd가-먼가요라는-질문의-한줄-답변은-다음과-같다&quot;&gt;그래서 RDD가 먼가요?라는 질문의 한줄 답변은 다음과 같다.&lt;/h4&gt;
+
+&lt;p&gt;fault-tolerant &amp;amp; efficient한 램스토리지이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;reference&quot;&gt;Reference&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.slideshare.net/yongho/rdd-paper-review&quot;&gt;https://www.slideshare.net/yongho/rdd-paper-review&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://people.csail.mit.edu/matei/papers/2012/nsdi_spark.pdf&quot;&gt;http://people.csail.mit.edu/matei/papers/2012/nsdi_spark.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Mon, 29 Oct 2018 15:10:00 +0000</pubDate>
+        <link>http://joswlv.github.io/2018/10/29/what_is_rdd/</link>
+        <guid isPermaLink="true">http://joswlv.github.io/2018/10/29/what_is_rdd/</guid>
+        
+        
+        <category>Spark</category>
+        
+      </item>
+    
+  </channel>
+</rss>

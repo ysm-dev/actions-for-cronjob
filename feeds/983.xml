@@ -1,0 +1,1772 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+ <title>Rokt33r</title>
+ <link href="https://rokt33r.github.io/atom.xml" rel="self"/>
+ <link href="https://rokt33r.github.io/"/>
+ <updated>2018-08-07T01:31:49+00:00</updated>
+ <id>https://rokt33r.github.io</id>
+ <author>
+   <name></name>
+   <email></email>
+ </author>
+
+ 
+ <entry>
+   <title>왜 내가 Redux 대신 MobX를 쓰게 되었나</title>
+   <link href="https://rokt33r.github.io/devnotes/2018/03/04/why-i-replace-redux-with-mobx/"/>
+   <updated>2018-03-04T19:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2018/03/04/why-i-replace-redux-with-mobx</id>
+   <content type="html">&lt;p&gt;TLDR; 다음과 같은 이유로 개발시 오버헤드가 너무 크다:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;기능이 너무 부족하다.&lt;/li&gt;
+  &lt;li&gt;타입스크립트와 너무 안 어울린다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;이전 글에서 이어지는 내용인데, Redux엔 은근 부족한 점이 많다.&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;h3 id=&quot;redux-굴기&quot;&gt;Redux 굴기&lt;/h3&gt;
+
+  &lt;p&gt;https://rokt33r.github.io/devnotes/2017/09/10/redux-rises/&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h1 id=&quot;1-memoization&quot;&gt;1. Memoization&lt;/h1&gt;
+
+&lt;p&gt;Memoization을 적재적소에 활용하는게 어렵다.
+&lt;code&gt;connect&lt;/code&gt;의 &lt;code&gt;mapToStateProps&lt;/code&gt;는 기본적으로 &lt;code&gt;memoization&lt;/code&gt;이 포함되어 있지만, 제약이 너무 심하다.
+스테이트 전체를 항상 보기 때문에, 지금 컴포넌트와는 상관이 없는 부분이 변경이 되어도 바뀌면 무조건 실행이 되어야한다.
+일부 항목에 대해서 Memoization을 이용하려면 Reselect를 활용하면 되긴 하다. 하지만 여전히 오버헤드는 엄청나다. 스테이트에서 어떤 값을 인수로써 기억해야하는지 일일히 한땀한땀 설정을 해주어야한다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;const mySelector = createSelector(
+  state =&amp;gt; state.value1, // 한땀
+  state =&amp;gt; state.value2, // 한땀
+  (value1, value2) =&amp;gt; value1 + value2
+)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;게다가 Typescript를 쓸 경우, 그만큼 인터페이스와 타입정의가 배로 들어간다.&lt;/p&gt;
+
+&lt;p&gt;하지만, MobX의 경우는 기본적으로 지원한다. 게다가 당신이 신경 쓸 필요도 없다. &lt;code&gt;getter&lt;/code&gt;를 활용해 당신이 필요한 타이밍(컴포넌트가 렌더가 되는 타이밍)에 &lt;strong&gt;느긋하고(lazy) 똑똑하게(smart)&lt;/strong&gt; 처리해준다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;class myState {
+    @observable value1 = 0;
+    @observable value2 = 0;
+
+    @computed get total() {
+        return this.value1 + this.value2
+    }
+}
+
+@observer
+class MyComponent extends React.Component {
+  render () {
+    return &amp;lt;div&amp;gt;{this.props.myState.total}&amp;lt;/div&amp;gt;
+  }
+}
+
+ReactDOM.render(&amp;lt;MyComponent myState={myState} /&amp;gt;, document.body)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;@computed&lt;/code&gt;는 값을 memoization해주고,
+&lt;code&gt;@observer&lt;/code&gt;는 자기가 쓰는 값이 무엇들인지를 알아서 기억해준다.&lt;/p&gt;
+
+&lt;p&gt;고로, 각각의 &lt;code&gt;@observer&lt;/code&gt;가 사용된 컴포넌트들은 자기가 다시 렌더해야될 근원적인 요인이 되는 값들을 자동적으로 추적하게 되므로, &lt;code&gt;connect&lt;/code&gt;나 reselect에서 하나하나 세세하게 해줬던 작업들이 아예 필요가 없어지게 된다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;h3 id=&quot;getter---mdn&quot;&gt;&lt;code&gt;getter&lt;/code&gt; - MDN&lt;/h3&gt;
+
+  &lt;p&gt;https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Functions/get&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h1 id=&quot;2-multiple-mutations&quot;&gt;2. Multiple mutations&lt;/h1&gt;
+
+&lt;p&gt;리액트는 모든 액션에 대해 항상 렌더를 시도한다. 하나의 액션만이라도 모든 &lt;code&gt;connect&lt;/code&gt;로 연결된 컴포넌트의 &lt;code&gt;mapStateToProps&lt;/code&gt;를 실행시킨다. 이로 인해, 스테이트의 연속적인 변경이 필요한 경우, 많은 일을 하는 액션을 만들 필요가 있는데, 이는 코드의 혼잡도를 엄청나게 올려버린다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;store.dispatch(setA())
+store.dispatch(setB())
+store.dispatch(setC())
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;같은 경우 기능이 바뀌어서 setB를 지우려고 하면 코드 한줄만 수정하면 되지만,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;store.dispatch(setAAndBAndC())
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;같은 경우, 새로운 &lt;code&gt;setAAndB&lt;/code&gt;라는 액션을 만들고, 리듀서 역시 수정이 필요하다.&lt;/p&gt;
+
+&lt;p&gt;이를 해결하기 위해 몇가지 라이브러리들이 있지만, redux-saga같은 라이브러리랑 연동이 되는 것도 별로 없고, 타입정의는 커녕 관리도 안되는 라이브러리가 대부분이다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;내가 전 회사에서 만들어둔 라이브러리이다. 필요하다면 이걸 참고하면 좋을 듯 하다. https://github.com/Revisolution/typed-redux-kit/tree/master/packages/batch-enhancer&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;MobX의 경우, &lt;code&gt;@action&lt;/code&gt; 데코레이터에 뮤테이션 함수를 감싸둠으로써, 최상위 스택의 뮤테이션 함수(가장 먼저 최상단에서 불러진 액션)가 끝날 때 까지 렌더를 시키지 않는다.&lt;/p&gt;
+
+&lt;h1 id=&quot;3-깊은-스테이트와-불변성&quot;&gt;3. 깊은 스테이트와 불변성&lt;/h1&gt;
+
+&lt;p&gt;어떤 액션이 깊은 곳에 있는 값을 바꿀 경우, 불변성 유지를 위해 한단계씩 인스턴스를 새로 만들어 줄 필요가 있다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;const myReducer = (state, action) =&amp;gt; ({
+  ...state,
+  depth1: {
+    ...state.depth1,
+    depth2: {
+      ...state.depth1.depth2,
+      depth3: {
+        ...state.depth1.depth2.depth3,
+        depth4: action.payload
+      },
+    },
+  },
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;물론 Immutable.js를 쓰면 조금 낫긴 하지만, 역시 프로퍼티값을 string으로 주고 받아야 하는 점 너무 괴롭다.
+&lt;code&gt;getIn&lt;/code&gt;, &lt;code&gt;setIn&lt;/code&gt;등의 함수를 쓸 때, 스테이트 트리가 조금만이라도 깊어지면 &lt;strong&gt;테스트에 의존하지 않고는 제정신으로 코딩을 할 수가 없다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;obj.some.where.deep.underground&lt;/code&gt;같은 형태가 있고,
+여기에 &lt;code&gt;where&lt;/code&gt;를 &lt;code&gt;wheree&lt;/code&gt;로 잘못 입력했다고 생각해보자.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;obj.getIn(['some', 'wheree', 'deep', 'underground'])
+undefined
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이 코드는 아무것도 알려주지 않고 &lt;code&gt;undefined&lt;/code&gt;를 뱉는다. 런타임에서도 에러가 나지 않는 만큼, 디버깅 경험은 최악에 다다른다. 몇번째 줄에서 문제가 생겼는지, 몇번째 키값이 잘못 입력됬는지를 눈으로 확인해서 고쳐야한다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;obj.some.wheree.deep.underground
+Uncaught TypeError: Cannot read property 'deep' of undefined
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;반면, MobX는 다음과 같이 곧바로 에러를 뱉어버리므로 그럴 여지가 없다. 또한, 키값이 문자열로 되어있지 않은만큼, 타입 추론이 가능하므로 Typescript와 잘어울린다. (&lt;code&gt;Immutable.Record&lt;/code&gt;도 프로퍼티이름으로 타입추론이 가능 하지만 &lt;code&gt;getIn&lt;/code&gt;, &lt;code&gt;setIn&lt;/code&gt;처럼 깊이 가야할 경우, 타입 추론이 불가능하다.)&lt;/p&gt;
+
+&lt;h1 id=&quot;4-아픈-손가락과-의외로-작지않은-러닝코스트&quot;&gt;4. 아픈 손가락과 의외로 작지않은 러닝코스트&lt;/h1&gt;
+
+&lt;p&gt;Redux는 기능을 하나 추가하려면 ActionType과 ActionCreator, 그리고 이걸 다루는 Reducer를 손대어야한다. 여기에 Typescript를 쓸경우, Action에 대한 인터페이스 역시 만들어주어야 하므로 매우 피곤하다.
+그리고 &lt;code&gt;combineReducers&lt;/code&gt;를 쓰려면 &lt;strong&gt;모든 액션 인터페이스&lt;/strong&gt;를 모아서 유니언타입으로 만들어주어야 하는데, 이것도 사람 할 짓이 못된다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;type AllAction = SetAAction | SetBAction | SetCAction | ...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;말그대로 모든 액션을 다 가져와야하므로 여러 모듈로 분리된 경우 순환의존이 일어나지 않도록 신경쓸 필요까지 생긴다.&lt;/p&gt;
+
+&lt;p&gt;그리고 &lt;code&gt;connect&lt;/code&gt;에서는 &lt;code&gt;mapStateToProps&lt;/code&gt;, &lt;code&gt;mapDispatchToProps&lt;/code&gt;, &lt;code&gt;mergeProps&lt;/code&gt;의 결과값을 인터페이스로 관리해주어야한다. 그리고 이것들은 다 제네릭으로 주고 받으므로, 타입스크립트와 리덕스에 제대로된 이해가 된 사람이 아니고는 컴파일 에러를 통과조차 못할 것이다.&lt;/p&gt;
+
+&lt;p&gt;반면, MobX는 처음부터 Typescript로 쓰여있어서, Decorator를 언제 써야하는지만 익숙해지면 매우 심리스하게 개발을 할 수 있다. &lt;strong&gt;어떤 값이 기억되야하는지, 언제 컴포넌트를 다시 렌더링해야하는지&lt;/strong&gt;를 알아서 통제해주는 만큼, 이걸 직접 구축해야하는 Redux와 비교하면 훨씬 손가락이 안아프고 쉽지 않을까 생각한다.&lt;/p&gt;
+
+&lt;h1 id=&quot;마무리&quot;&gt;마무리&lt;/h1&gt;
+
+&lt;p&gt;위의 이유들로 개발중인 앱들을 &lt;strong&gt;MobX로 바꾼 이후, 다시 타입스크립트로 하는 리액트 개발이 즐거워진거 같다.&lt;/strong&gt; 써보면 확실히 개발에 소요되는 시간이 단축되는게 느껴질 것이다. 만약 당신이 타입스크립트를 쓰고 있고, 나와 비슷한 고통을 받고 있다면 꼭 MobX를 써보길 바란다.&lt;/p&gt;
+
+&lt;p&gt;단, &lt;strong&gt;처음 리액트를 사용하는 사람이면 Redux부터 다뤄보길 권한다.&lt;/strong&gt; 왜 MobX의 이러한 기능들이 절실한지, 먼저 Redux로 무언가를 만들고 나면 엄청 체감하지 않을까?&lt;/p&gt;
+
+&lt;h1 id=&quot;추신-그럼-넌-왜-이제서야-쓰냐&quot;&gt;추신: 그럼 넌 왜 이제서야 쓰냐?&lt;/h1&gt;
+
+&lt;p&gt;솔직하게 말해 나의 쓸데없는 자존심 때문이었다. Redux가 순수한 함수형 프로그래밍인만큼 라이브러리에 대해 신뢰도가 높고, 고로 내가 통제가능한 코드를 쓸 수 있지 않겠느냐여서다. 처음 MobX를 썻을 때, &lt;code&gt;componentShouldUpdate&lt;/code&gt;가 작동하지 않는걸 보고, React의 기본적인 라이프사이클에 영향을 주는게 조금 불쾌했던거 같다.
+그 이외 자잘한 핑계는 데코레이터 정도일까? Babel의 데코레이터는 아직까지도 스펙대로 구현이 개선 안된 상태가 계속 이어지고 있다. 단, 타입스크립트 컴파일러에서의 구현은 잘 되어있으므로 타입스크립트를 쓴다면 딱히 신경 쓸 필요가 없는 듯 하다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Redux 굴기(崛起)</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/09/10/redux-rises/"/>
+   <updated>2017-09-10T03:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/09/10/redux-rises</id>
+   <content type="html">&lt;p&gt;Redux 사용에 있어서 아쉬웠던 점들과 그걸 고쳐나간 경험을 써보려 한다.
+(솔직히, Redux는 MobX에 비해 부족한 점이 많다.)&lt;/p&gt;
+
+&lt;p&gt;리덕스는 다음과 같은 문제가 있다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Memoization이 안된다.&lt;/li&gt;
+  &lt;li&gt;비효율적인 리듀싱
+    &lt;ul&gt;
+      &lt;li&gt;액션마다 렌더를 다시 시킨다.(Batched actions 처리에 불리)&lt;/li&gt;
+      &lt;li&gt;모든 리듀서에 액션을 넘겨준다.(combineReducers)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;깊은 구조를 다루기 힘들다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;하나씩 까엎어보자.&lt;/p&gt;
+
+&lt;h2 id=&quot;memoization&quot;&gt;Memoization&lt;/h2&gt;
+
+&lt;p&gt;Redux는 스테이트에 변경이 일어나면 모든 연결된(&lt;code&gt;connect&lt;/code&gt;) 컴포넌트들에게 새로운 스테이트를
+전달해준다. 여기서, 스테이트의 일부에 이터레이션이나(배열이나 맵의 정렬, 필터) 계산이 있을 경우, 각각의
+컴포넌트들은 자신이 필요로 하는 부분은 변경이 없음에도 불구하고 다시 계산을 해야한다.&lt;/p&gt;
+
+&lt;p&gt;여기서 Memoization은 이전에 받은 인수들과 리턴 값을 기억해두어, 새로 받은 인수가 이전과 동일 할 경우,
+기억해둔 리턴값을 그대로 돌려주게 만들어져있다.&lt;/p&gt;
+
+&lt;p&gt;직접 만들기 어려운건 아니지만, &lt;a href=&quot;https://github.com/reactjs/reselect&quot;&gt;Reselect&lt;/a&gt;를 사용하면 좀 더 강력하게 Memoization을 사용할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;Reselect는 2개의 단계로 Redux의 스테이트로부터 계산식에 필요한 인수를 구하는 함수들과,
+이 인수들로 결과값을 만드는 계산 함수로 되어있다.&lt;/p&gt;
+
+&lt;p&gt;고로 값이 변경되어 State의 인스턴스가 새로 만들어져도, 인수로 필요로 하는 값이 아직 변경이 안됬으면
+이전 결과값을 바로 재활용 할 수 있다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-js&quot;&gt;import { createSelector } from 'reselect'
+
+// 스테이트에서 어떤 값을 인수로 쓸지 찾아주는 함수들이다.
+const getVisibilityFilter = (state) =&amp;gt; state.visibilityFilter
+const getTodos = (state) =&amp;gt; state.todos
+
+export const getVisibleTodos = createSelector(
+  [ getVisibilityFilter, getTodos ],
+  // 찾아진 인수에 대해 계산을 행한다.
+  (visibilityFilter, todos) =&amp;gt; {
+    switch (visibilityFilter) {
+      case 'SHOW_ALL':
+        return todos
+      case 'SHOW_COMPLETED':
+        return todos.filter(t =&amp;gt; t.completed)
+      case 'SHOW_ACTIVE':
+        return todos.filter(t =&amp;gt; !t.completed)
+    }
+  }
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;batched-actions&quot;&gt;Batched Actions&lt;/h2&gt;
+
+&lt;p&gt;연속적인 액션 디스패치시, 리덕스는 매 디스패치마다 연결된 컴포넌트에게 새 스테이트를 전달해준다.
+스테이트가 안바뀐다면, &lt;code&gt;mapStateToProps&lt;/code&gt;를 두드리진 않겠지만, 매 디스패치마다 스테이트가 바뀌고 앞서
+설명한 Memoization이 제대로 안되어있으면 앱은 엄청나게 느려질 것이다.&lt;/p&gt;
+
+&lt;p&gt;물론 대책은 &lt;code&gt;디스패치를 자주 안하면 된다.&lt;/code&gt; 라는 방법이 있다. 이는 작은 액션을 여러개 디스패치하는걸
+삼가고, 아주 강력한 하나의 액션을 소수 만들면 된다. 문제는 여기서 시작된다. 이렇게 만든 액션이 관리하기
+쉬운 코드일까? 함수를 만들 때도 작은 일을 확실하게 하는 녀석들을 많이 만들어야 테스트도 쉽고, 재사용성도
+높아지고 이해하기도 쉬워진다. 고로, 개발 경험을 높이기 위해서는 작고 하나의 일을 확실히 해내는 액션을
+많이 가지는게 이롭다.&lt;/p&gt;
+
+&lt;p&gt;고로, 우리는 일련의 액션에 대해 리듀싱을 모두 다 끝내주고 컴포넌트들에게 넘겨 줄 필요가 있다.&lt;/p&gt;
+
+&lt;p&gt;이를 해결하기 위해 몇가지의 작은 기존 라이브러리가 있는데, 사용성이 별로 마음에 안들고, Redux Saga에
+제대로 대응하지도 않는게 대부분이었다.&lt;/p&gt;
+
+&lt;p&gt;그래서, 새롭게 &lt;a href=&quot;https://github.com/Revisolution/typed-redux-kit/blob/master/packages/batch-enhancer/readme.md&quot;&gt;Batch Enhancer&lt;/a&gt;를 만들었다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;const sagaMiddleware = createSagaMiddleware()
+const middlewareEnhancer = applyMiddleware(sampleMiddleware)
+const enhancer = compose&amp;lt;Redux.StoreEnhancerStoreCreator&amp;lt;State&amp;gt;&amp;gt;(
+  middlewareEnhancer,
+  batchEnhancer(sagaMiddleware),
+  // Saga를 쓰지 않는다면, 미들웨어를 넘겨주지 않아도 된다.
+  // batchEnhancer(),
+)
+// 적용은 가볍게 인핸서만 넣어주면 된다.
+const store = createStore(reducer, enhancer)
+
+// 이제 배열로 디스패치가 가능하다.
+store.dispatch([
+  {
+    type: 'SayHello',
+  },
+  {
+    type: 'SayHello',
+  },
+  {
+    type: 'SayHello',
+  },
+])
+
+// `put` 이펙트에서도 똑같이 쓸 수 있다.
+function * saga () {
+  while (true) {
+    yield take('SayHello')
+    yield put([
+      {
+        type: 'SayBye',
+      },
+      {
+        type: 'SayBye',
+      },
+      {
+        type: 'SayBye',
+      },
+    ])
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;이제, 배열에 담긴 액션들을 다 리듀스하고나서 컴포넌트들에겐 최종적인 결과물만 알려주게 된다.&lt;/p&gt;
+
+&lt;h2 id=&quot;efficient-reducing-with-map&quot;&gt;Efficient reducing with Map&lt;/h2&gt;
+
+&lt;p&gt;또 다른 문제로, &lt;code&gt;combineReducers&lt;/code&gt;과 &lt;code&gt;switch&lt;/code&gt; 구문이 별로 마음에 안들었다. 처음 쓰기엔 쉽지만,
+앱이 커질수록 매 액션들을 모든 스위치 구문으로 통과시키는건 너무 비효율 적인듯 해보였다.&lt;/p&gt;
+
+&lt;p&gt;이에, &lt;a href=&quot;https://github.com/Revisolution/typed-redux-kit/blob/master/packages/mapped-reducer/readme.md&quot;&gt;Mapped Reducer&lt;/a&gt;를 만들었는데, 액션 타입을 키로 그에 맞춰 스테이트를 변경하는 함수를 값으로
+가지는 맵을 만들었다. 이벤트 리스너랑 비슷해진 느낌인데, 기능상으론 combineReducers와 크게 다른건 없다.&lt;/p&gt;
+
+&lt;p&gt;장점은 액션에 대해 특정 리듀서만 작동 시킬 수 있다는 점이고, Map을 활용했기에 액션 수가 많아질 수록
+Switch보다 인덱싱에서 유리한 고지를 점할 수 있다.(Map은 키를 해시값으로 다룬다.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;import { createStore } from 'redux'
+import { MappedPipeReducer } from 'typed-redux-kit.mapped-reducer'
+import {
+  PureAction,
+  PayloadAction,
+} from 'typed-redux-kit.base'
+
+enum ActionTypes {
+  Plus = 'test_Plus',
+  Set = 'test_Set',
+}
+
+namespace Actions {
+  export interface Plus extends PureAction&amp;lt;ActionTypes.Plus&amp;gt; {}
+
+  export interface Set extends PayloadAction&amp;lt;ActionTypes.Set, {
+    count: number
+  }&amp;gt; {}
+}
+
+interface State {
+  count: number
+}
+
+const plusReducer = (state: State, action: Actions.PlusAction) =&amp;gt; ({
+  ...state,
+  count: state.count + 1,
+})
+
+const setReducer = (state: State, action: Actions.SetAction) =&amp;gt; ({
+  ...state,
+  ...action.payload,
+})
+
+// 초기 스테이트는 스토어에 넣어줘도 된다.
+const reducer = new MappedPipeReducer&amp;lt;State&amp;gt;({
+  initialState: {
+    count: 0,
+  },
+})
+
+reducer
+  .set(ActionTypes.Plus, plusReducer)
+  .set(ActionTypes.Set, setReducer)
+  // 복수의 액션타입에 대해서도 간단히 배열로 넣어줄 수 있다.
+  .set([
+    ActionTypes.Plus,
+    ActionTypes.Set,
+  ], anotherReducer)
+  // String enum도 따로 변환없이 바로 넣어줄 수 있다.
+  .set(ActionTypes, yetAnotherReducer)
+
+const store = createStore(reducer.reduce)
+store.dispatch({
+  type: ActionTypes.Plus,
+} as Actions.Plus)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;deep-state&quot;&gt;Deep state&lt;/h2&gt;
+
+&lt;p&gt;Redux에선 깊은 데이터 구조를 다루기 매우 귀찮다. 이는 변경 사항을 항상 Immutable한 상태로 유지해야하기 떄문인데, 그냥 오브젝트로 깊은 곳에 있는 값을 수정하려 할경우 다음과 같이 된다:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;const myReducer = (state, action) =&amp;gt; ({
+  ...state,
+  depth1: {
+    ...state.depth1,
+    depth2: {
+      ...state.depth1.depth2,
+      depth3: {
+        ...state.depth1.depth2.depth3,
+        depth4: action.payload
+      },
+    },
+  },
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;콜백헬 처럼 피라미드가 되어가…&lt;/p&gt;
+
+&lt;p&gt;이에 페이스북이 만든 Immutable.js는 더 나은 API로 이를 쉽게 다루게 해준다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;const myReducer = (state, action) =&amp;gt; (
+  state.setIn(['depth1', 'depth2', 'depth3', 'depth4'], action.payload)
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;근데, 문제점은… &lt;code&gt;getIn&lt;/code&gt;, &lt;code&gt;setIn&lt;/code&gt;, &lt;code&gt;...In&lt;/code&gt;과 같은 메소드는 문자열의 배열로 키들을 가져와서 값을
+찾아 내도록 만들어져 있으므로, 타입 추론이 불가능하다는 것이므로, 키값을 잘못넣으면 런타임까지 가야 에러를
+찾을 수 있기 때문에, 항상 테스트를 할 필요가 있다.&lt;/p&gt;
+
+&lt;p&gt;이를 타입스크립트로 틀어막기위해선 &lt;code&gt;...In&lt;/code&gt;을 쓰면 안되는데, 그러면…:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;const myReducer = (state, action) =&amp;gt; (
+  state
+    .update('depth1', depth1 =&amp;gt; depth1
+      .update('depth2', depth2 =&amp;gt; depth2
+        .update('depth3', depth3 =&amp;gt; depth3
+          .update('depth4', depth4 =&amp;gt; action.payload)
+        )
+      )
+    )
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;또 다른 피라미드가 생긴다.&lt;/p&gt;
+
+&lt;p&gt;이에 해결책을 고민하다 MobX의 Observable Object를 보고 영감을 받아 &lt;a href=&quot;https://github.com/Revisolution/typed-redux-kit/blob/master/packages/trackable/readme.md&quot;&gt;Trackable&lt;/a&gt;을 만들었다.&lt;/p&gt;
+
+&lt;p&gt;Trackable은 말그대로 추적을 해주는 데이터 구조체로 값이 변경되면 흔적을 남겨두고 마지막으로 리듀서에서
+나갈 때 변경된 부분만 새로운 인스턴스로 만들어주면 준다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;import * as Redux from 'redux'
+import {
+  trackEnhancer,
+  TrackableRecord,
+} from '../lib'
+
+const CountRecord = TrackableRecord({
+  count: 0,
+})
+type CountRecord = TrackableRecord&amp;lt;{
+  count: number
+}&amp;gt;
+type State = TrackableMap&amp;lt;string, CountRecord&amp;gt;
+const defaultChildState = CountRecord({
+  count: 0,
+})
+const defaultState: State = new TrackableMap({
+  a: defaultChildState,
+})
+
+const myReducer = (state: State = defaultState, action: Redux.Action) =&amp;gt; {
+  if (action.type === 'add') {
+    // 이제 불변성 신경안쓰고 신나게 바꿔도 된다!
+    state.get('a').count++
+  }
+  return state
+}
+// 왜냐하면 `trackEnhancer`가 변경을 추적해서 더러워진(변경된) 부분을 깔끔하게 해주기 때문에!
+const store = Redux.createStore(myReducer, trackEnhancer)
+
+store.dispatch({
+  type: 'add',
+})
+
+const reducedState = store.getState()
+expect(reducedState.get('a').count).toBe(1)
+// 고로 변경은 뮤터블하게 했지만 결과의 인스턴스는 바뀌어있다.
+expect(reducedState).not.toBe(defaultState)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;주의할 점은 Object나 Map, Array를 모두 Trackable로 관리해야한다. (예제엔 없지만 배열을 위해
+&lt;code&gt;TrackableArray&lt;/code&gt; 역시 준비되어 있다.)&lt;/p&gt;
+
+&lt;p&gt;그리고 Immutable.js보다 조금 성능상 모자란 부분이 있는데, Immutable.js는 HAMT를 사용하여
+새 인스턴스를 더욱 효율적으로 만들 수 있다. 하지만 Trackable은 아직 단순히 1차원적으로 키와 값의
+이터레이션으로 새 인스턴스를 만들고 있으므로, 혹시 수평적으로 엄청 거대한 맵을 만들려고 할 때에는 보틀넥이
+될것이다. 아마 이번달 중으로 작업할 것이므로 조금만 더 기다려줬으면 한다. (혹은 수직적으로 더 깊은 구조를
+만들어 카테고리화 시키는 것도 한가지 방법이다.)&lt;/p&gt;
+
+&lt;p&gt;앞으로 할 건 HAMT와 Set 구조를 더 추가할 계획이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;마무리&quot;&gt;마무리&lt;/h2&gt;
+
+&lt;p&gt;리덕스에서 느껴지는 여러가지 문제점들을 하나씩 태클해 보았다. 덕분에 타입스크립트를 좀 더 잘 다룰 수 있게
+되는 등 배운게 많은 거 같다.&lt;/p&gt;
+
+&lt;p&gt;단, 아직까지 리덕스에서 아쉽다고 느껴지는 점은 언제나 코드가 너무 장황해진다는 것이다.&lt;/p&gt;
+
+&lt;p&gt;어쩌면 CLI같은걸 만들어서 해결할 수 있지 않을까 라는 상상도 하는데 일단은 좀 더 유즈케이스를 늘려서
+힌트를 찾으러 다녀야겠다.&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Contribute DefinitelyTyped!</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/09/08/contribute-definitely-typed/"/>
+   <updated>2017-09-08T09:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/09/08/contribute-definitely-typed</id>
+   <content type="html">&lt;p&gt;자바스크립트 라이브러리를 타입스크립트에서도 쓸 수 있도록 타이핑을 정의해보자!&lt;/p&gt;
+
+&lt;p&gt;Remark를 타입스크립트에서 활용하기 위한 과정의 일환으로 VFile의 타입 정의를 준비하는 걸 글로 써보았다.&lt;/p&gt;
+
+&lt;h3 id=&quot;vfile&quot;&gt;VFile?&lt;/h3&gt;
+
+&lt;p&gt;VFile은 Gulp등 파일등을 다루는 라이브러리에서 파일을 추상화 시킨(파일 이름, 위치, 내용들을 가지고 있는 오브젝트) 라이브러리 &lt;a href=&quot;https://github.com/gulpjs/vinyl&quot;&gt;Vinyl&lt;/a&gt;와 같은 라이브러리로, 여기서 추가적으로 에러 메세지(린트 에러)를 담을 수 있도록 만들어져 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;타입-정의-파일을-만들어보자&quot;&gt;타입 정의 파일을 만들어보자!&lt;/h2&gt;
+
+&lt;p&gt;타입스크립트는 자바스크립트 코드에 타입을 주입 할 수 있도록 &lt;code&gt;*.d.ts&lt;/code&gt;라는 파일 형식을 지원하고 있다.&lt;/p&gt;
+
+&lt;p&gt;여기에 내부에 타입 정의가 포함되지 않은 라이브러리는 &lt;a href=&quot;https://github.com/DefinitelyTyped/DefinitelyTyped&quot;&gt;DefinitelyTyped&lt;/a&gt;에서 커뮤니티에 의해 타입 정의가 만들어 지고 있다.&lt;/p&gt;
+
+&lt;p&gt;고로, 내겐 해당 패키지를 수정할 권한이 없더라도 타입정의를 제공하는게 가능하다.&lt;/p&gt;
+
+&lt;p&gt;그럼 우선 타이핑부터 만들어본다.&lt;/p&gt;
+
+&lt;h3 id=&quot;define-vfile&quot;&gt;Define VFile&lt;/h3&gt;
+
+&lt;p&gt;일반적으로 라이브러리의 사용하는 도중에 긴급하게 타이핑을 추가할 경우에는 &lt;code&gt;node_modules/@types/$라이브러리명$/index.d.ts&lt;/code&gt; 형식으로 주입을 하지만, 제대로된 타이핑을 만들 경우 직접적으로 테스트 코드에 매칭 시킬 필요가 있다.&lt;/p&gt;
+
+&lt;p&gt;고로 &lt;a href=&quot;https://github.com/vfile/vfile&quot;&gt;VFile&lt;/a&gt;을 직접 클롭해서 여기서 직접 타입 정의를 매칭시키는게 가장 이상적이다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-sh&quot;&gt;git clone git@github.com:vfile/vfile.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;이후, 내부에 index.d.ts를 추가하고, 테스트 파일(&lt;code&gt;test.js&lt;/code&gt;) 역시 복사해서 &lt;code&gt;test.ts&lt;/code&gt;로 만들어준다.
+또한, &lt;code&gt;tsconfig.json&lt;/code&gt; 역시 만들어주어 기본적으로 VSCode의 타입체크가 가능하도록 만들어준다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;tsconfig.json&lt;/code&gt;의 기본적인 타입체킹이 가능하도록만 넣어주면 된다. 나는 이번 타이핑에선 &lt;code&gt;allowJs&lt;/code&gt;만 주었다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+  &quot;compilerOptions&quot;: {
+    &quot;allowJs&quot;: true
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;그리고 &lt;code&gt;test.ts&lt;/code&gt;에서 타입스크립트가 쉽게 알아 볼 수 있도록, &lt;code&gt;require&lt;/code&gt; 구문을 조금 바꾸어준다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;test.ts&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-diff&quot;&gt;- var test = require('tape');
+- var vfile = require('./');
++ import test = require('tape');
++ import vfile = require('./');
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;이제 테스트에서 빨갛게 표시가 된 게 보일 것이다. 이제 정의를 시작하자.&lt;/p&gt;
+
+&lt;p&gt;우선 VFile은 CommonJS(이하 CJS) 형식의 모듈이므로 &lt;code&gt;export = vfile&lt;/code&gt;과 같은 형식으로 다뤄야 할 필요가 있다. 또한, 이 라이브러리는 조금 복잡한 부분이 있으므로, 여러 인터페이스를 준비할 필요가 있다. 고로, 네임스페이스 까지 선언해준다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;declare namespace vfile {
+  interface VFile {
+  }
+}
+
+declare const vfile: vfile.VFile;
+
+export = vfile;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;이제 기본적인 vfile에 대한 설정이 완성되었으므로, &lt;code&gt;test.ts&lt;/code&gt;로 돌아가면 &lt;code&gt;import vfile = ...&lt;/code&gt;의 빨간줄이 사라지고 밑으로 매우 많은 양의 타입 에러들이 나타나게 된다.&lt;/p&gt;
+
+&lt;p&gt;타이핑을 하는 수법에 대해선, 명확하게 &lt;code&gt;string&lt;/code&gt;이나 &lt;code&gt;number&lt;/code&gt;로 보이는 것들은(&lt;code&gt;path&lt;/code&gt;, &lt;code&gt;dirname&lt;/code&gt; 등…) 바로 추가해준다. 그리고 무언가 완전한 형체는 모르겠지만 오브젝트같아 보이는 것은 전부 인터페이스로 뺴준다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;꺼내둔 인터페이스는 구성요소가 보이면 보이는 족족 찾아서 넣어주는게 좋다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;/// &amp;lt;reference types=&quot;node&quot; /&amp;gt;
+
+declare namespace vfile {
+  interface Point {
+      line: number
+      column: number
+  }
+
+  interface Position {
+    start: Point
+  }
+
+  interface VFileMessage {
+    ruleId: string
+  }
+
+  interface VFileParams {
+    file: string;
+    ruleId: string ;
+    reason: string;
+    line: number | null;
+    column: number | null;
+    location: Unist.Position;
+    source: string | null;
+    fatal?: boolean | null;
+  }
+
+  type Message = (reason: string, position?: Point, ruleId?: string) =&amp;gt; VFileMessage;
+
+  type Fail = (reason: string, position?: Point, ruleId?: string) =&amp;gt; void;
+
+  type Info = (reason: string, position?: Point, ruleId?: string) =&amp;gt; void;
+
+  type ToString = (encoding?: BufferEncoding) =&amp;gt; string;
+
+  interface VFile {
+    (input?: string | Buffer | VFile | VFileParams): VFile;
+    message: Message;
+    fail: Fail;
+    info: Info;
+    history: string[];
+    data: {};
+    messages: VFileMessage[];
+    contents: string;
+    path: string;
+    dirname: string;
+    basename: string;
+    stem: string;
+    extname: string;
+    cwd: string;
+    toString: ToString;
+  }
+}
+
+declare const vfile: vfile.VFile;
+
+export = vfile;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;code&gt;/// &amp;lt;reference types=&quot;node&quot; /&amp;gt;&lt;/code&gt;는 Node.js에서만 존재하는 &lt;code&gt;Buffer&lt;/code&gt;와 &lt;code&gt;BufferEncoding&lt;/code&gt; 타입을 가져오기 위해 필요하다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;이렇게 타이핑을 넣고 다시 &lt;code&gt;test.ts&lt;/code&gt;를 확인하면 &lt;code&gt;should set custom props&lt;/code&gt; 이외에는 에러가 없게 된다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;  t.test('should set custom props', function (st) {
+    var testing = [1, 2, 3];
+    var file = vfile({custom: true, testing: testing});
+
+    st.equal(file.custom, true);
+    st.equal(file.testing, testing);
+
+    st.end();
+  });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;이걸 보면 커스텀한 값을 자유롭게 추가 할 수 있게 의도된 것 같다. 단순하게 한다면 &lt;code&gt;{[key: string]: any}&lt;/code&gt;를 추가해줄 수 있겠지만, 이러면 타입추론이 불가능해지므로 타입스크립트를 쓰는 이유가 많이 사라지게 된다.&lt;/p&gt;
+
+&lt;p&gt;고로, 여기서의 타이핑을 살리기 위해 Generic을 사용한다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;declare namespace vfile {
+  // 생략...
+  interface VFileBase&amp;lt;C&amp;gt; {
+    (input?: string | Buffer): VFile&amp;lt;C&amp;gt;;
+    &amp;lt;C&amp;gt;(input?: string | Buffer | VFile&amp;lt;C&amp;gt; | VFileParams): VFile&amp;lt;C&amp;gt;;
+    message: Message;
+    fail: Fail;
+    info: Info;
+    history: string[];
+    data: {};
+    messages: VFileMessage[];
+    contents: string;
+    path: string;
+    dirname: string;
+    basename: string;
+    stem: string;
+    extname: string;
+    cwd: string;
+    toString: ToString;
+  }
+
+  type VFile&amp;lt;C&amp;gt; = VFileBase&amp;lt;C&amp;gt; &amp;amp; C;
+}
+
+declare const vfile: vfile.VFile&amp;lt;{}&amp;gt;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;위와 같이 쓸 경우, VFile에 추가 옵션을 넣엇을 때, 그리고 이미 제네릭을 가진 VFile이 새로운 인스턴스를 만들려고 할 때에도 쉽게 이전 제네릭을 계승 시킬 수 있게 된다.&lt;/p&gt;
+
+&lt;p&gt;이것으로 테스트코드의 문제는 쉽게 틀어 막을 수 있다. 이제 정말 세세한 것들을 막아주기 위해 문서를 읽으면서 하나씩 해야한다. vfile같은 경우는 &lt;code&gt;readme.md&lt;/code&gt;에 API의 사용법이 아주 잘 정리되어있어서 이대로 따라하면 된다. 여기선 자잘한 타이핑은 다루지 않겠다. 최종 결과물을 보자!&lt;/p&gt;
+
+&lt;p&gt;이제 기본적인 타이핑 준비는 끝났으니, 실제 배포를 준비해보자.&lt;/p&gt;
+
+&lt;h3 id=&quot;fork-and-clone&quot;&gt;Fork and Clone!&lt;/h3&gt;
+
+&lt;p&gt;외부 정의들은 &lt;a href=&quot;https://github.com/DefinitelyTyped/DefinitelyTyped&quot;&gt;DefinitelyTyped&lt;/a&gt; 저장소에서 관리된다. 고로, 이걸 수정해서 PR을 주는 형식으로 새로운 정의를 배포 할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;우선 깃에서 포크를 하고 다음 명령으로 클론을 해오자.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-sh&quot;&gt;git clone --depth=1 git@github.com:$자기계정$/DefinitelyTyped.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;a href=&quot;https://github.com/DefinitelyTyped/DefinitelyTyped&quot;&gt;DefinitelyTyped&lt;/a&gt;는 매우 거대한 저장소이므로 &lt;code&gt;--depth=1&lt;/code&gt;를 통해 가장 최신 커밋만 가져오는게 효율이 좋다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;열어보면 &lt;code&gt;types&lt;/code&gt; 디렉토리에 모든게 들어있는 걸 볼 수 있을 것이다. 이제 우리걸 추가해보자.&lt;/p&gt;
+
+&lt;p&gt;우선 필요로 하는 파일은 다음과 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code&gt;index.d.ts&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;vfile-tests.ts&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;tsconfig.json&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;tslint.json&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;하지만, 위의 파일들을 직접 만드는건 매우 번거로우므로, &lt;a href=&quot;https://github.com/DefinitelyTyped/DefinitelyTyped&quot;&gt;DefinitelyTyped&lt;/a&gt;에서는 [&lt;code&gt;dts-gen&lt;/code&gt;]을 사용할 것을 권하고 있다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-sh&quot;&gt;# dts-gen 설치
+npm i -g dts-gen
+# vfile로 파일 생성
+dts-gen --dt --name vfile --template module-function
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;이제 &lt;code&gt;index.d.ts&lt;/code&gt;의 코드를 앞서 만든 정의 코드로 바꿔넣어준다. 단, 가장 위의 코멘트는 다음과 같이 자신의 정보를 추가로 넣어준다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;// Type definitions for VFile 2.2
+// Project: https://github.com/vfile/vfile
+// Definitions by: bizen241 &amp;lt;https://github.com/bizen241&amp;gt;
+//                 Junyoung Choi &amp;lt;https://github.com/rokt33r&amp;gt;
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;code&gt;--template module-function&lt;/code&gt; : dts-gen에선 여러가지 기본 템플레이트를 준비해두고 있다. 여기선 이미 타이핑을 준비해뒀기에 쓰지 않지만, vfile같은 하나의 함수를 제공하는 라이브러리의 경우 &lt;code&gt;module-function&lt;/code&gt; 템플레이트를 쓰는게 가장 적합하다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;이제 &lt;code&gt;vfile.tests.ts&lt;/code&gt;를 작업해보자. 여기에 들어가는 테스트는 직접 실행을 하고 결과를 보는게 아니라 타입 추론과 컴파일 에러가 의도대로 일어나는지를 확인하기 위해 사용한다. 고로 여기에서 필요한 코드는 모두 &lt;a href=&quot;https://github.com/vfile/vfile&quot;&gt;vfile&lt;/a&gt;의 공식 문서에서 가져올 수 있다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;const file = vfile({
+    path: '~/example.txt',
+    contents: 'Alpha *braavo* charlie.',
+    custom: 'Custom tango',
+    data: {
+        custom: 12345
+    },
+});
+
+file.path; // =&amp;gt; '~/example.txt'
+file.dirname; // =&amp;gt; '~'
+
+file.extname = '.md';
+
+file.basename; // =&amp;gt; 'example.md'
+
+file.basename = 'index.text';
+
+file.history; // =&amp;gt; ['~/example.txt', '~/example.md', '~/index.text']
+
+file.message('`braavo` is misspelt; did you mean `bravo`?', {line: 1, column: 8});
+
+console.log(file.messages);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Definitely Typed 루트 디렉토리에서 다음 명령으로 다시 한번 체크 해보자.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;npm run lint vfile
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;따로 메세지가 없이 쉘 프롬프트로 돌아오면 테스트에 성공했다는 의미이다.&lt;/p&gt;
+
+&lt;p&gt;그럼 타입 에러가 발생해야 할 경우는 어떻게 테스트할까?&lt;/p&gt;
+
+&lt;p&gt;Definitely Typed는 의도된 방향대로 유저가 사용해 주지 않을 경우까지 테스트 할 수 있게 해준다. 우선 다음 코드를 추가해보자.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;const invalid = vfile({path: {something: {is: &quot;wrong&quot;}}})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;이 코드는 &lt;code&gt;path&lt;/code&gt;에 문자열이 아닌 다른 값을 집어 넣고 있으므로 에러를 내고 있다. 이대로 다시 한번 &lt;code&gt;npm run lint vfile&lt;/code&gt;을 실행하면 에러가 난다.&lt;/p&gt;
+
+&lt;p&gt;자, 그럼 설정을 해보자. 해당 코드 위나 같은 줄에 &lt;code&gt;$ExpectError&lt;/code&gt;를 코멘트로 추가해준다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;// $ExpectError
+const invalid = vfile({path: {something: {is: &quot;wrong&quot;}}})
+
+// 혹은...
+const invalid = vfile({path: {something: {is: &quot;wrong&quot;}}})// $ExpectError
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;이제 테스트를 다시 해보면 정상적으로 타입에러를 확인해주게 된다.&lt;/p&gt;
+
+&lt;p&gt;이걸로 준비는 끝이고 직접 PR을 올리면 된다. 내가 작업 한것은 이런식으로 올라가있다.
+https://github.com/DefinitelyTyped/DefinitelyTyped/pull/19583&lt;/p&gt;
+
+&lt;p&gt;PR을 올리고 원작자와 관련자들을 불러서 같이 리뷰를 하고 하나씩 맞춰나간다. PR은 산더미 같이 많지만, 대체로 하루 이내에 처리되니 부담없이 PR을 만들어주자.&lt;/p&gt;
+
+&lt;p&gt;혹시나 머지가 급한 경우는 &lt;a href=&quot;https://github.com/DefinitelyTyped/DefinitelyTyped&quot;&gt;DefinitelyTyped&lt;/a&gt;에서도 권고하듯, 앞서 만든 정의 코드를 &lt;code&gt;node_modules/@types/$패키지 이름$/..&lt;/code&gt;에 직접 넣어서 쓰는 방법도 좋다.&lt;/p&gt;
+
+&lt;h2 id=&quot;정리&quot;&gt;정리&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;기존 코드에 있는 테스트와 문서를 활용해서 타이핑을 만든다.
+    &lt;ul&gt;
+      &lt;li&gt;우선 테스트 코드의 빨간 줄부터 지워나간다.&lt;/li&gt;
+      &lt;li&gt;인터페이스의 모든 값을 다 확인할 필요는 없고, 보이는 족족 추가해준다.&lt;/li&gt;
+      &lt;li&gt;값의 타입을 확인하는 Assertion 테스트의 경우는 무시한다.&lt;/li&gt;
+      &lt;li&gt;문서와 비교해가며 확실하게 검증해나간다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Definitely Typed를 포크하고 dts-gen으로 기본 파일을 생성시킨다.&lt;/li&gt;
+  &lt;li&gt;예제 코드로 타입 테스트 코드를 만든다.&lt;/li&gt;
+  &lt;li&gt;필요에 따라서 반면교사적인 테스트도 추가해준다. &lt;code&gt;$ExpectError&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;PR을 작성하고, 원작자에게 리뷰를 요청하여 확실하게 마무리한다.&lt;/li&gt;
+&lt;/ol&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>다시 시작</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/09/05/restart/"/>
+   <updated>2017-09-05T01:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/09/05/restart</id>
+   <content type="html">&lt;h2 id=&quot;도입&quot;&gt;도입&lt;/h2&gt;
+
+&lt;p&gt;다시금 본격적으로 시작하려한다.&lt;/p&gt;
+
+&lt;p&gt;한동안 백수로 있을 계획이었는데, 4월중에 얼떨결에 취업을 해버렸다.
+레비솔루션이라는 한국에 소재하지만 미국회사에 들어와있고 그동안 서울서 생활과 회사에 맞춰가느라 너무 바빳다.&lt;/p&gt;
+
+&lt;p&gt;그동안 일본 유학생 대상에게 일본어로 수학도 가르켜보고, 커뮤니티 활동도 이것저것 나가보고 다녔다.&lt;/p&gt;
+
+&lt;p&gt;그간 이것저것 보고 느끼면서 내 스스로의 컨텐츠를 제대로 갖출 필요가 느껴졌다. 솔직히 그동안 회사 일하면서 새로운 스택을 경험하고 여러가지 툴을 만들어내며 쌓인게 많은데 이걸 정리하질 못하고 있는게 큰 한이 되었다. 고로 다시 시작해보고자 한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;왜-그만두게-되었는가&quot;&gt;왜 그만두게 되었는가.&lt;/h2&gt;
+
+&lt;p&gt;장황한 설명은 접어두고 분석을 하면 다음과 같다.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;시간 부족&lt;/li&gt;
+  &lt;li&gt;조악한 작성툴(지킬은 너무 불편하다)&lt;/li&gt;
+  &lt;li&gt;퀄리티에 대한 욕심(내 분수를 알아야지)
+    &lt;ul&gt;
+      &lt;li&gt;글쓰기 실력이 모자르다&lt;/li&gt;
+      &lt;li&gt;독자가 누군지 모른다&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;어떻게-할건가&quot;&gt;어떻게 할건가.&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;시간 부족 : 일단 시간은 확보가 되었다고 본다.&lt;/li&gt;
+  &lt;li&gt;조악한 작성툴 : 새롭게 타입스크립트와 리액트를 활용해서 만들 수 있으면 좋을 것 같다.(다시 바퀴를 개발하는 느낌이지만…)&lt;/li&gt;
+  &lt;li&gt;퀄리티에 대한 욕심
+    &lt;ul&gt;
+      &lt;li&gt;글쓰기 실력이 모자르다 : 계속 쓰면서 키울 수 밖에 없다.&lt;/li&gt;
+      &lt;li&gt;독자가 누군지 모른다 : 이것도 쓰면서 키울 수 밖에 없다고 본다. 반응을 기대하기 어렵기 때문에 더 많은 글을 작성하여, 사람들의 반응을 지켜보아야 한다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;앞으로-올릴-컨텐츠&quot;&gt;앞으로 올릴 컨텐츠&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Redux의 문제점과 TypedReduxKit로 하나씩 정복해나간 이야기&lt;/li&gt;
+  &lt;li&gt;Remark 마크다운 프로세싱 라이브러리를 타입스크립트에서 활용하기 위한 여정&lt;/li&gt;
+  &lt;li&gt;Inpad의 인수후 재개발에 대한 이야기&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>한국어로 배우는 리액트</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/03/29/learn-react-in-korean/"/>
+   <updated>2017-03-29T13:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/03/29/learn-react-in-korean</id>
+   <content type="html">&lt;p&gt;Awesome처럼 한국어로된 React관련 리소스를 모아서 큐레이션을 시작했습니다. &lt;a href=&quot;https://github.com/Rokt33r/learn-react-in-korean&quot;&gt;한국어로 배우는 리액트&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;유학생활 정리하면서 만들려는 앱을 개발하기 전에 제가 사용하는 스택을 좀 더 깊게 이해하고 싶어서 요즘은 거의 공부만 하고 있습니다.
+그러다보니 읽는 글들을 하나씩 정리해나가고 있는데, 한국어 글을 따로 모아두면 누군가 쓸만하지 않을까 싶어서 모아보게 되었네요.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;정리된 글들은 아직 소화가 덜되서 블로그로 옮기기엔 부끄럽습니다.. 😭&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;그리고 좋은 포스팅을 발견하면 조금씩 번역도 해보려 합니다. 오늘 아침엔 &lt;a href=&quot;https://github.com/Rokt33r/learn-react-in-korean/blob/master/translated/deal-with-async-process-by-redux-saga.md&quot;&gt;redux-saga로 비동기처리와 분투하다.&lt;/a&gt;를 번역해 보았는데, 볼륨이 엄청나서 시간이 많이 걸렸네요. 그래도 덕분에 맞춤법 연습이나 글 쓸때 말투를 어떻게 해야 할지 아주 조금은 감이 오는 것 같습니다.&lt;/p&gt;
+
+&lt;p&gt;그리고 요즘은 &lt;a href=&quot;https://gitter.im/reactkr/discuss&quot;&gt;React KR 그룹의 Gitter&lt;/a&gt;에서 상주하고 있으니 React에 대해 수다떨고 싶으시면 언제든지 와주세요! 채팅이 매우 액티브해서 좋은 정보를 많이 얻을 수 있네요.&lt;/p&gt;
+
+&lt;p&gt;여튼 얼른 내공을 쌓을 수 있도록 더욱 노력하겠습니다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Monorepo and Lerna</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/03/08/monorepo-and-lerna/"/>
+   <updated>2017-03-08T23:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/03/08/monorepo-and-lerna</id>
+   <content type="html">&lt;p&gt;제가 만든 &lt;a href=&quot;https://github.com/Rokt33r/remark-math&quot;&gt;Remark Math&lt;/a&gt;를 배포하면서 모노리포를 구현하기 위해 &lt;a href=&quot;https://github.com/lerna/lerna&quot;&gt;Lerna&lt;/a&gt;를 사용한 노하우를 공유합니다.&lt;/p&gt;
+
+&lt;h1 id=&quot;용어-설명&quot;&gt;용어 설명&lt;/h1&gt;
+
+&lt;h2 id=&quot;모노리포monorepo&quot;&gt;모노리포(Monorepo)?&lt;/h2&gt;
+
+&lt;p&gt;가령 바벨과 같이 복수의 패키지가 서로 연계되서 활용되는 패키지의 경우, 각각의 리포지터리로 만들면 관리하기가 매우 복잡해집니다. 아마도 패키지간의 이슈를 처리할 때 매번 리포지터리를 건너다니면서 확인을 해야하고 매번 번거롭게 따로따로 배포해야하겠죠…&lt;/p&gt;
+
+&lt;p&gt;이를 위한 대책중 하나가 모노리포인데, 하나의 리포지터리에 복수의 패키지를 두는 형식입니다. 리액트와 바벨에서 주로 활용되고 있고, Remark Math의 경우도 수식 파서 확장과 렌더러 플러그인을 쉽게 관리하기 위해 하나의 모노리포로 만들었습니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;a href=&quot;https://github.com/babel/babel/blob/master/doc/design/monorepo.md&quot;&gt;Why is Babel a monorepo?&lt;/a&gt; - Babel&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;lerna&quot;&gt;&lt;a href=&quot;https://github.com/lerna/lerna&quot;&gt;Lerna&lt;/a&gt;?&lt;/h2&gt;
+
+&lt;p&gt;모노리포를 간편하게 관리할 수 있도록 도와주는 CLI 패키지입니다.&lt;/p&gt;
+
+&lt;p&gt;Git의 커밋상태를 확인하여 변경된 패키지만 일괄적으로 NPM으로 배포하는 것이 가능하고 동시에 리모트 리포지터리까지 푸시해줍니다. 아직 베타버젼이긴해도 매우매우 편리했어요. :100::100:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/lerna.png&quot; alt=&quot;Lerna Logo&quot; width=&quot;300&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;로고부터 모노리포의 특징을 잘 나타내주고 있네요!&lt;/p&gt;
+
+&lt;h1 id=&quot;사용법&quot;&gt;사용법&lt;/h1&gt;
+
+&lt;h2 id=&quot;lerna-init&quot;&gt;&lt;code&gt;lerna init&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;우선, Git의 변경점을 통해 패키지를 관리하기 때문에 Git이 초기화 되어져야합니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git init
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;그리고, Lerna를 글로벌로 설치와 함께 초기화를 합니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;npm i -g lerna
+lerna init -i
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;-i&lt;/code&gt; 플래그는 &lt;code&gt;--independent&lt;/code&gt;의 얼라이어스로, 각각의 패키지의 버젼을 독립적으로 관리하겠다는 의미입니다. 없이 기본상태로 초기화를 시키면 하나의 버젼으로 모두를 관리합니다.&lt;/p&gt;
+
+&lt;p&gt;Babel 역시 독립적으로 관리합니다.&lt;/p&gt;
+
+&lt;p&gt;초기화를 마치면 &lt;code&gt;lerna.json&lt;/code&gt;이 생성됩니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-json&quot;&gt;{
+  &quot;lerna&quot;: &quot;2.0.0-beta.38&quot;,
+  &quot;packages&quot;: [
+    &quot;packages/*&quot;
+  ],
+  &quot;version&quot;: &quot;independent&quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;lerna&lt;/code&gt;는 사용중인 Lerna의 버젼이에요. Lerna가 아직 베타이어서 설정이 언제 바뀔지 모르기에 사용하는 CLI와 설정의 버젼이 항상 동일할 것을 요구하고 있어요.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;packages&lt;/code&gt;는 각각의 패키지들의 위치를 나타냅니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;version&lt;/code&gt;은 &lt;code&gt;-i&lt;/code&gt; 플래그를 넣었기 때문에 &lt;code&gt;independent&lt;/code&gt;로 설정되어 있습니다. 플래그가 없으면 그냥 버젼이 들어가요.&lt;/p&gt;
+
+&lt;p&gt;이제 각각의 패키지는 &lt;code&gt;packages/some-package&lt;/code&gt;형식으로 넣어주시면 됩니다. 또한, 각각의 패키지마다 &lt;code&gt;package.json&lt;/code&gt;을 생성해주셔야 해요!&lt;/p&gt;
+
+&lt;h2 id=&quot;lerna-bootstrap&quot;&gt;&lt;code&gt;lerna bootstrap&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;npm install&lt;/code&gt;을 각각의 패키지에 대해 일괄적으로 돌려줍니다.&lt;/p&gt;
+
+&lt;p&gt;루트 디렉토리의 &lt;code&gt;package.json&lt;/code&gt;에 &lt;code&gt;postinstall&lt;/code&gt;로 추가해두면 간편하게 사용할 수 있어요.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+  &quot;scripts&quot;: {
+    &quot;postinstall&quot;: &quot;lerna bootstrap&quot;
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;lerna-publish&quot;&gt;&lt;code&gt;lerna publish&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;npm publish&lt;/code&gt;를 일괄적으로 실행해 줍니다. 커밋을 확인해서 업데이트가 된 패키지만 배포를 시도합니다.&lt;/p&gt;
+
+&lt;p&gt;개인적으로 편리했던건 대화형식으로 간단하게 버젼을 올릴 수 있었던 것이었어요.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;? Select a new version for remark-math (currently 0.2.0) (Use arrow keys)
+❯ Patch (0.2.1)
+  Minor (0.3.0)
+  Major (1.0.0)
+  Custom
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;그리고 안전하게 더블체크까지 해줍니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Changes:
+- rehype-katex: 0.2.0 =&amp;gt; 0.2.1
+- remark-html-katex: 0.2.0 =&amp;gt; 0.2.1
+- remark-math: 0.2.0 =&amp;gt; 0.2.1
+
+? Are you sure you want to publish the above changes?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;완료하면 버젼부분을 업데이트하는 커밋과 패키지별로 태그를 생성하고 등록된 리포지터리로 푸시까지 해줘요. 정말 편리해요! :smile:&lt;/p&gt;
+
+&lt;h1 id=&quot;팁--주의사항&quot;&gt;팁 &amp;amp; 주의사항&lt;/h1&gt;
+
+&lt;h2 id=&quot;각각의-패키지의-packagejson에서-devdependencies와-scripts는-필요없다&quot;&gt;각각의 패키지의 &lt;code&gt;package.json&lt;/code&gt;에서 &lt;code&gt;devDependencies&lt;/code&gt;와 &lt;code&gt;scripts&lt;/code&gt;는 필요없다?&lt;/h2&gt;
+
+&lt;p&gt;복수의 패키지를 관리하기 쉽게하기위해 만들었기 때문에 개발환경 역시 통합시키는게 관리하기 편하다고 생각해요. 물론 일괄적으로 &lt;code&gt;npm&lt;/code&gt;명령을 실행시키는 커맨드가 있기는 해요. 대신, 각각의 패키지별로 스크립트를 관리하는건 어쩌면 모노리포를 사용할 필요가 없는 케이스이지 않을까 싶어요.&lt;/p&gt;
+
+&lt;p&gt;고로, 저의 경우 개발에 필요한 모든 스크립트들은 루트 디렉토리의 &lt;a href=&quot;https://github.com/Rokt33r/remark-math/blob/master/package.json&quot;&gt;&lt;code&gt;package.json&lt;/code&gt;&lt;/a&gt;에 넣어 두었습니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;루트-디렉토리의-packagejson에선-dependencies와-version가-필요없다&quot;&gt;루트 디렉토리의 &lt;code&gt;package.json&lt;/code&gt;에선 &lt;code&gt;dependencies&lt;/code&gt;와 &lt;code&gt;version&lt;/code&gt;가 필요없다?&lt;/h2&gt;
+
+&lt;p&gt;루트디렉토리는 퍼블리시를 하지 않는 부분이기 때문에, &lt;code&gt;dependencies&lt;/code&gt;가 필요 없습니다.&lt;/p&gt;
+
+&lt;p&gt;그리고, &lt;code&gt;version&lt;/code&gt;을 미리 지워두는 것도 상당히 좋은 버릇이라고 생각해요. 실수로 루트 디렉토리에서 &lt;code&gt;npm publish&lt;/code&gt; 명령을 실행해버려도 &lt;code&gt;version&lt;/code&gt;이 존재하지 않기 때문에 배포가 원천적으로 불가능 하게 됩니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;배포시-태깅과-travisci&quot;&gt;배포시 태깅과 TravisCI&lt;/h2&gt;
+
+&lt;p&gt;엄밀하게 말하면 TravisCI가 나쁜건데…. 배포시 패키지별로 태깅을 하기 때문에 TravisCI가 태그별로 테스트를 반복해서 돌려요..😣 😣 (분명 커밋의 해시가 일치함에도 불구한데도 말이죠…)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/travisci-tag-handling.png&quot; alt=&quot;Travis tag handling&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;일단은 대처법은 다음과 같이 플래그를 추가시키는 2가지 방법이 있다고 생각합니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code&gt;--skip-git&lt;/code&gt; : 이 경우 깃의 조작없이 배포를 합니다. 버전 변경후 직접 커밋/푸시를 해주셔야합니다.&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;-m &quot;[ci skip]&quot;&lt;/code&gt; : 커밋메세지를 덮어써서 CI를 생략시킵니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;npmjscom에서의-readmemd-표시&quot;&gt;npmjs.com에서의 readme.md 표시&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;npmjs.com&lt;/code&gt;는 루트 디렉토리 &lt;code&gt;package.json&lt;/code&gt;의 &lt;code&gt;name&lt;/code&gt;과 동일한 이름의 패키지에 한해서 루트 디렉토리의 &lt;code&gt;readme.md&lt;/code&gt;를 해당 패키지의 문서로 가져와요. 고로, 다른 패키지들은 다 따로따로 &lt;code&gt;readme.md&lt;/code&gt;를 만들어 주어야 합니다. 물론, 동일한 이름의 패키지에도 &lt;code&gt;readme.md&lt;/code&gt;를 만들어 주면 루트디렉토리가 아니라 패키지쪽 문서를 우선해서 표시합니다.&lt;/p&gt;
+
+&lt;p&gt;말이 복잡하니 Remark Math의 경우를 보여드릴게요.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-sh&quot;&gt;/readme.md # remark-math의 문서
+/packages/remark-html-katex/readme.md # remark-html-katex의 문서
+/packages/rehype-katex/readme.md # rehype-katex의 문서
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;만약에 &lt;code&gt;packages/remark-math/readme.md&lt;/code&gt;를 추가한 경우 이렇게 바뀝니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-sh&quot;&gt;/readme.md # npmjs.com에서는 표시되지 않습니다!
+/packages/remark-math/readme.md # remark-math의 문서
+/packages/remark-html-katex/readme.md # remark-html-katex의 문서
+/packages/rehype-katex/readme.md # rehype-katex의 문서
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;npm-대신-yarn&quot;&gt;&lt;code&gt;npm&lt;/code&gt; 대신 &lt;code&gt;yarn&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/lerna/lerna/releases/tag/v2.0.0-beta.38&quot;&gt;&lt;code&gt;2.0.0-beta.38&lt;/code&gt;&lt;/a&gt; 버젼 부터 &lt;code&gt;lerna.json&lt;/code&gt;에 다음과 같이 설정을 하면 쓸 수 있습니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-json&quot;&gt;  &quot;npmClient&quot;: &quot;yarn&quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;code&gt;yarn.lock&lt;/code&gt;은 &lt;code&gt;.gitignore&lt;/code&gt;에 추가하는 걸로 감출 수 있는 듯 합니다.&lt;/p&gt;
+
+  &lt;pre&gt;&lt;code&gt;packages/*/yarn.lock
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;h1 id=&quot;잡담&quot;&gt;잡담&lt;/h1&gt;
+
+&lt;p&gt;원래 Remark Math을 만들면서 배운점들을 정리하는 포스트를 작성하려고 했는데 Lerna에 대해서만 작성하게 되었네요. 제가 글을 쓰는데 아직 덜 익숙한 것도 있고… 여튼 부족한 글 읽어주셔서 감사합니다.&lt;/p&gt;
+
+&lt;p&gt;그리고 제가 일본서 5년간 체류하다 저번주 귀국해서 한국 친구가 별로 없네요… 혹시 React나 Node.js 그리고 Electron에 흥미있으신분은 &lt;a href=&quot;https://gitter.im/rokt33r/Lobby&quot;&gt;https://gitter.im/rokt33r/Lobby&lt;/a&gt;로 오세요! 같이 수다나 떨어요. :grin:&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Charcoal</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/02/14/charcoal/"/>
+   <updated>2017-02-14T13:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/02/14/charcoal</id>
+   <content type="html">&lt;p&gt;마크다운 에디터 이름을 정했다. &lt;strong&gt;Charcoal&lt;/strong&gt;(목탄)으로 한다.&lt;/p&gt;
+
+&lt;p&gt;좀 더 에디터 개발에 필요한 정보를 조사했다.&lt;/p&gt;
+
+&lt;h2 id=&quot;다른-에디터-분석&quot;&gt;다른 에디터 분석&lt;/h2&gt;
+
+&lt;p&gt;여러가지 Wysiwyg 기능이 붙어있는 마크다운 에디터를 찾아보았다. 의외로 개발에 앞서 많은 힌트가 얻어졌다.&lt;/p&gt;
+
+&lt;p&gt;일단 대충 느낀 점만 언급한다. 나중에 개발동기를 깨끗하게 정리할 필요가 있지만, 지금은 프로토타입이 우선이이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;typora&quot;&gt;Typora&lt;/h3&gt;
+
+&lt;p&gt;먼저 살펴보면서 파악된 부분은 다음과 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;GFM에 가장 근접&lt;/li&gt;
+  &lt;li&gt;웹뷰 베이스로 만들어져있다.&lt;/li&gt;
+  &lt;li&gt;content editible을 활용한다.&lt;/li&gt;
+  &lt;li&gt;codemirror로 코드블럭을 다루고 있다.&lt;/li&gt;
+  &lt;li&gt;클립보드 복사 시 마크다운으로 복사하는 기능이 따로 있다. 기본복사는 HTML/Plain Text로 관리하는듯 하다.&lt;/li&gt;
+  &lt;li&gt;HTML은 지원하지 않는다.&lt;/li&gt;
+  &lt;li&gt;비공개 소스&lt;/li&gt;
+  &lt;li&gt;어떤 마크다운 파서를 쓰는지 조차 모른다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;그리고 &lt;a href=&quot;http://abnerlee.github.io/typora/2015/03/11/why-typora/&quot;&gt;개발자 블로그&lt;/a&gt;를 보면 Typora의 컨샙이 있는데 상당히 배울만한 듯 하다.
+그리고 렌더러와 파서를 동일한곳에 제공해야 한다는것도 공감된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;prosemirror&quot;&gt;ProseMirror&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;CodeMirror제작자가 만들었다.&lt;/li&gt;
+  &lt;li&gt;그럼에도 불구하고 신택스 하이라이트 지원이 빠져있다.(개발자 스스로 어렵다고 인정하고 있기에 시간이 걸릴듯하다.)&lt;/li&gt;
+  &lt;li&gt;인디고고에서 소셜펀딩으로 제작이 시작되었다.&lt;/li&gt;
+  &lt;li&gt;오픈소스&lt;/li&gt;
+  &lt;li&gt;자체 파서를 쓰고 있다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;draftjs&quot;&gt;Draft.js&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;페이스북에서 만들었다.&lt;/li&gt;
+  &lt;li&gt;원칙적으로 마크다운 지원은 하지 않는다.&lt;/li&gt;
+  &lt;li&gt;엔티티라는 개념덕분에 확장성은 높다. 하지만 안정적으로 사용가능할지는 미지수이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;slate&quot;&gt;&lt;a href=&quot;https://github.com/ianstormtaylor/slate&quot;&gt;Slate&lt;/a&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;역시 마크다운 에디터는 아니다.&lt;/li&gt;
+  &lt;li&gt;플러그인으로 마크다운 신택스를 숏컷키처럼 활용하고 있다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;modeling-language&quot;&gt;Modeling Language&lt;/h2&gt;
+
+&lt;p&gt;플로우차트와 같은 다이어그램까지 지원을 고려하고 있다.&lt;/p&gt;
+
+&lt;p&gt;대충 &lt;a href=&quot;https://en.wikipedia.org/wiki/Modeling_language&quot;&gt;Modeling Language&lt;/a&gt;에 대부분 정리되어 있는 듯하다. 물론 모두 대응할 필요는 없고 나중에 니즈를 읽어가며 하면 되겠다.&lt;/p&gt;
+
+&lt;p&gt;단지 마크다운에 신택스적으로 추가되어져야할 부분이 많다.&lt;/p&gt;
+
+&lt;p&gt;일단 초기에는 &lt;a href=&quot;https://github.com/knsv/mermaid&quot;&gt;Mermaid&lt;/a&gt;를 쓰는 걸로 충분할듯하다.&lt;/p&gt;
+
+&lt;p&gt;이쪽 부분에 있어선 실제 그룹으로 프로그래밍을 하는 유저의 히어링이 필요하다.&lt;/p&gt;
+
+&lt;h2 id=&quot;파서&quot;&gt;파서&lt;/h2&gt;
+
+&lt;p&gt;파서는 이전 포스팅에 언급한 Wooorm/Remark를 사용한다. 성능은 다른 파서보다 조금 떠러질지 몰라도 파스된 코드를 깨끗하게 다루기쉬운 AST로 만들어주기 때문에 플러그인의 추가가 용이하다. 또한, 본 에디터의 경우 AST를 직접적으로 편집하기 때문에 최초 AST화를 위한 파스 이외에 프리뷰를 위한 파싱은 하지 않는다.&lt;/p&gt;
+
+&lt;h2 id=&quot;1차-마일스톤&quot;&gt;1차 마일스톤&lt;/h2&gt;
+
+&lt;p&gt;먼저 기본적인 블럭 생성과 인라인 요소를 처리할 수 있는 기능 구현을 우선으로 한다.&lt;/p&gt;
+
+&lt;p&gt;개발은 일렉트론에서 실시한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;블럭-종류&quot;&gt;블럭 종류&lt;/h3&gt;
+
+&lt;p&gt;지원해야 할 블럭의 종류는 다음과 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;헤딩1~6&lt;/li&gt;
+  &lt;li&gt;단락&lt;/li&gt;
+  &lt;li&gt;인용블럭&lt;/li&gt;
+  &lt;li&gt;코드펜스&lt;/li&gt;
+  &lt;li&gt;테이블&lt;/li&gt;
+  &lt;li&gt;레이텍 블록&lt;/li&gt;
+  &lt;li&gt;리스트(오더드, 언오더드)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이 중 테이블, 레이텍블록 그리고 인용블럭과 리스트블럭안에 다른 블럭을 넣는건 다음 마일스톤으로 미룬다.&lt;/p&gt;
+
+&lt;h3 id=&quot;인라인-종류&quot;&gt;인라인 종류&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;굵게&lt;/li&gt;
+  &lt;li&gt;기울임&lt;/li&gt;
+  &lt;li&gt;취소선&lt;/li&gt;
+  &lt;li&gt;코드&lt;/li&gt;
+  &lt;li&gt;레이텍 인라인&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이 중 레이텍 인라인은 미룬다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Fourteen으로의 Deepstream IO의 도입고려</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/02/14/considering-application-of-deepstreamio/"/>
+   <updated>2017-02-14T04:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/02/14/considering-application-of-deepstreamio</id>
+   <content type="html">&lt;p&gt;DeepstreamIO를 채용해볼까 싶었는데 전체적으로 훑어보고는 그럴 필요 없는 듯하다.&lt;/p&gt;
+
+&lt;p&gt;먼저 파우치DB의 역할과 겹치는 부분이 많고, 데이터 충돌은 커버해주지만 오프라인 서포트까진 해주지 않는듯하다.
+아마 일시적인 오프라인이나 시간차등의 문제는 해결 해 주겠지만, 장기간 연결이 안되는 환경의 경우는 직접 손을 대야 할 듯 하다.&lt;/p&gt;
+
+&lt;p&gt;파우치DB의 경우 완전한 레플리케이션을 클라이언트가 가지기에 이런 문제가 없다. 그 대신 클라이언트마다 DB편집 권한에 제한을 둬야 하는 경우, PouchDB는 해결책이 되지 못한다. 이미 완전한 레플리케이션을 가지기 때문에 DB에 접근이 가능한 순간부터 얼마든지 변조시킬 수 있다.&lt;/p&gt;
+
+&lt;p&gt;딥스트림의 인상적이었던건 실시간 게임이 간편하게 구축하는 예제가 있다는 것이다.
+아마 게임이나 채팅 프로그램은 이를 이용하면 간단하게 만들 수 있을듯…&lt;/p&gt;
+
+&lt;p&gt;아마 구글 도큐먼트처럼 한 문서에대해 동시적인 편집이 필요할땐 있으면 좋을 듯하지만, 현재 내가 구상중인 앱의 사양상 필요가 없다.&lt;/p&gt;
+
+&lt;p&gt;결론은 지금은 웹소켓 서버를 파우치DB와 함께 호스팅 시키고, 동기화 정보만 소켓으로 뿌려주면 충분할 듯 하다.
+덧붙여 &lt;a href=&quot;https://github.com/nolanlawson/socket-pouch&quot;&gt;Socket Pouch&lt;/a&gt;를 통해 호스팅까지 Http가 아닌 소켓으로 해보는것도 재밋을 듯 하다. 물론 여기까진 필요할지는 잘 모르곘다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Fourteen 설계</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/02/13/fourteen-design/"/>
+   <updated>2017-02-13T01:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/02/13/fourteen-design</id>
+   <content type="html">&lt;p&gt;Fourteen을 만들기에 앞서 개발에 대해 개념적인 설계를 한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;ipc&quot;&gt;IPC&lt;/h2&gt;
+
+&lt;p&gt;IPC는 인터 프로세스 커뮤니케이션의 약자로 프로세스간의 커뮤니케이션을 의미한다.&lt;/p&gt;
+
+&lt;p&gt;일렉트론은 렌더러 프로세스와 메인 프로세스로 나뉘어져 있다. 렌더러 프로세스의 경우 브라우저의 윈도우와 같으며 메인프로세스는 각각의 브라우저윈도우를 제어하고 OS의 API를 사용하게 해주는 역할을 한다. 본 앱의 경우는 데이터베이스를 메인프로세스에 만든다. 이유는 렌더러 프로세스의 경우 브라우저이기에 리프레시를 통해 너무 쉽게 프로세스를 죽일 수 있다. 이게 치명적인건 가령 파우치db의 동기화와 같은 중요한 타이밍에 유저가 임의로 리프레시를 시키는게 가능하다는 것이다. 또한 서버를 열어둘 경우 CLI툴이나 원격에서도 앱의 DB에 액세스하는게 가능하기 때문에 더욱 재밋는 시도가 가능해진다. (물론 외부에서의 접속시 인증수단을 가지는건 당연하다.)&lt;/p&gt;
+
+&lt;p&gt;프로세스간 내부의 데이터 송수단방식은 일렉트론 기본의 ipc라든가 여러가지가 있지만 그냥 TCP로 해도 충분할듯하다. 어차피 로컬이라 전송코스트는 싸다. 아마 본 앱의 대부분의 코스트는 렌더링과 데이터베이스 첫 기동시의 데이터 매핑일 것이다. 또한, TCP를 통한 접속이므로 웹앱을 만들떄도 데이터베이스 엑세스 부분의 코드는 대부분 그대로 활용 할 수 있게된다.&lt;/p&gt;
+
+&lt;p&gt;이 경우 포트번호를 뭘로할지 생각해야 한다. 대충 https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers 에서 아직 사용하지 않은 번호를 고르면 되지 않을 까 싶다.&lt;/p&gt;
+
+&lt;p&gt;여튼 정리해서 메인프로세스에서 PouchDB를 호스팅하고 렌더러 프로세스는 일반적인 PouchDB 서버의 http api를 통해 데이터를 액세스한다. 그리고 포트번호가 이미 사용중일 경우 +1을하여 다른 포트번호로 재시도를 하고, 렌더러는 포트번호가 바뀔 경우를 대비해 항상 로드시 Electron의 기본 ipc라이브러리를 활용해 포트번호를 요청하게 한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;페이지-호스팅&quot;&gt;페이지 호스팅&lt;/h2&gt;
+
+&lt;p&gt;어차피 DB호스팅 할거면 페이지도 똑같이 호스팅해도 될 것 같다. 리얼타임부분은 따로 웹소켓을 써도 되고 ipc를 써도 되고…&lt;/p&gt;
+
+&lt;p&gt;그리고 동기화 속도를 더 빠르게 하기 위해 딥스트림IO까지 고려 해볼 수 있다.
+일단 오늘 한번 딥스트림IO시도를 하고 밤중에 다시 포스팅을 해봐야겠다.&lt;/p&gt;
+
+&lt;h2 id=&quot;데이터베이스-스킴&quot;&gt;데이터베이스 스킴&lt;/h2&gt;
+
+&lt;p&gt;PouchDB는 그냥 도큐먼트 베이스의 데이터베이스라 MySQL처럼 테이블이라는 개념이 없다. 여기에 대한 대책이 필요하다. 물론 아이디나 새로운 고유 어트리뷰트를 추가하고 뷰를 통해 테이블처럼 나눌 수 있지만,  &lt;a href=&quot;https://github.com/nolanlawson/relational-pouch#many-to-many-relationships&quot;&gt;nolanlawson/relational-pouch&lt;/a&gt;를 사용하면 간단하게 해결이 가능할 듯 하다.&lt;/p&gt;
+
+&lt;h2 id=&quot;고려중인-사용-라이브러리&quot;&gt;고려중인 사용 라이브러리&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Electron&lt;/li&gt;
+  &lt;li&gt;Electron Builder&lt;/li&gt;
+  &lt;li&gt;Electron Lets Move&lt;/li&gt;
+  &lt;li&gt;React&lt;/li&gt;
+  &lt;li&gt;Redux&lt;/li&gt;
+  &lt;li&gt;Styled Components&lt;/li&gt;
+  &lt;li&gt;Webpack 2&lt;/li&gt;
+  &lt;li&gt;Redux Saga&lt;/li&gt;
+  &lt;li&gt;React Router 4&lt;/li&gt;
+  &lt;li&gt;React Router Redux&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/sindresorhus/github-markdown-css&quot;&gt;Github Markdown CSS&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;CodeMirror&lt;/li&gt;
+  &lt;li&gt;Remark&lt;/li&gt;
+  &lt;li&gt;Katex&lt;/li&gt;
+  &lt;li&gt;Superagent&lt;/li&gt;
+  &lt;li&gt;PouchDB&lt;/li&gt;
+  &lt;li&gt;LevelDB&lt;/li&gt;
+  &lt;li&gt;Jest&lt;/li&gt;
+  &lt;li&gt;Moment&lt;/li&gt;
+  &lt;li&gt;Octicons&lt;/li&gt;
+  &lt;li&gt;Standard&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>어떻게 블로깅을 할건가</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/02/11/how-to-blog/"/>
+   <updated>2017-02-11T13:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/02/11/how-to-blog</id>
+   <content type="html">&lt;p&gt;앞으로 블로그를 어떻게 활용할지에 대해 좀더 생각해보고 싶어졌습니다.&lt;/p&gt;
+
+&lt;p&gt;지금은 일단 머리속에 쌓인 아이디어를 정리할 용도로 쓸려고 합니다. 물론 저의 개인 노트에다가 하면 될일 이기도 한데, 왠지 남에게 보여준다고 생각을 하니 어느정도 신경써서 적게되네요…(다른 사람들이 보기엔 기준 이하일지도 모르지만….) 게다가 깃허브에 아이디어를 직접 어카이브 할 수 있으니 컴퓨터가 고장나서 데이터가 날아갈 걱정도 없고… 앱에 의존하는 것도 아니고 왠지 안락하네요.&lt;/p&gt;
+
+&lt;p&gt;그리고 개인적으로 개발에 관한 잡담을 너무 나누고 싶었어요. 언제나 수다 떨때면 머리속에 가득했던 생각들이 언어라는 틀에 체계를 갖추게 되기가 쉬웠거든요… 근데 그 역할을 이 블로그가 해낼 수 있는 듯해서 앞으로도 몇달간은 혼자 있어야겠지만 외롭지는 않을 것 같아요.&lt;/p&gt;
+
+&lt;p&gt;그리고 다른 개발자분들이 주로 하는 큰 정보를 담는 기술 포스팅은 아마 다른 카테고리를 만들어서 정리하면 좋지 않을까 싶어요.&lt;/p&gt;
+
+&lt;p&gt;또 개발내용뿐만아니라 관심 카테고리를 추가하려합니다. 음악이나 그림, 꽃, 게임을 많이 좋아해서 이것들에 대한 기록도 남기고 싶어요. 아마 처음은 주로 음악이 될것같네요. 작년부터 애플뮤직에 푹 빠져있어서 매달 리스트에 라이브러리에 추가되는 앨범만 10개 이상이네요… 듣는 곡수도 한주에 몇십곡을 들으니 이것들에 대한 감상도 조금씩 남기고 싶어요. 그리고 게임은 스타크래프트2를 좋아하긴 하는데 아직 그렇게 잘하는 것도 아니고 일본에 있는 동안은 할 여유가 없어서 제대로 해보질 못하고 있네요. 여튼 이것들에대한 블로깅은 한국 돌아와서 해볼려 합니다.&lt;/p&gt;
+
+&lt;p&gt;마지막으로 블로그 자체의 기능적인 개선에대해 얘기해봐야겠네요. 먼저 IFTTT등을 활용해서 자동으로 트윗하도록 만들어야겠습니다. 그리고 포스트의 리스팅에대해 좀더 개선할 여지가 있다고 생각하는데… 이 역시 좀 더 생각해봐야 겠습니다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>재시작</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/02/11/restart/"/>
+   <updated>2017-02-11T11:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/02/11/restart</id>
+   <content type="html">&lt;p&gt;3주만의 포스팅입니다. 이제 졸업이 멀지않은 듯합니다. 물론 아직 졸업까지 신경쓰이는 부분이 있긴 하지만 큰 태스크들은 거의 끝났기 때문에 별 문제는 없을겁니다. 앞으로 남은 일들은 졸업논문 수정, 발표 그리고 일본에서의 생활 정리가 되겠네요.&lt;/p&gt;
+
+&lt;p&gt;여튼 오늘 포스트의 주제는 앞으로 무엇을 목표로 달려가느냐에 대한 설정입니다. 딱히 2017년 목표는 아니고 일단 해볼려고 하는 것들에 대해 정리해보고 싶네요.&lt;/p&gt;
+
+&lt;p&gt;먼저 주력으로 해볼 생각인 것들은 다음과 같습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;GUI 마크다운 에디터&lt;/li&gt;
+  &lt;li&gt;파우치DB 호스팅 서비스&lt;/li&gt;
+  &lt;li&gt;캘린더앱??&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;그럼 하나씩 설명부터 해봅니다.&lt;/p&gt;
+
+&lt;h1 id=&quot;gui-마크다운-에디터&quot;&gt;GUI 마크다운 에디터&lt;/h1&gt;
+
+&lt;p&gt;편집부분과 독립된 렌더러를 가지지 않는 마크다운 에디터를 만들 생각입니다. 신택스 부분까지 숨겨서 유저입장에선 거의 MS 워드를 사용하는 느낌이 들 정도까지 해보고 싶네요.&lt;/p&gt;
+
+&lt;h2 id=&quot;배경&quot;&gt;배경&lt;/h2&gt;
+
+&lt;p&gt;개인적으로 오랜 숙원이기도 합니다. 마크다운 글을 작성할떄 프리뷰를 볼 수가 없다 라는… 물론 프로그래머에겐 그렇게 치명적인 문제가 아닌듯 하지만 실질적으로 내가 적고있는 마크다운 신택스가 제대로 작동한다는 보장이 없는 스트레스는 마크다운을 작성하는 누구든 은연중에 크게 느끼고 있을 것입니다. 그럼에도 불구하고 천하의 깃허브조차 프리뷰버튼을 따로 두고 있는게 현 실정입니다. 개인적으로 깃허브가 아톰에디터처럼 총대매고 개발 해 주었으면 하지만 아직 그럴 조짐은 없어 보이네요…&lt;/p&gt;
+
+&lt;h2 id=&quot;개발의-어려움&quot;&gt;개발의 어려움&lt;/h2&gt;
+
+&lt;p&gt;그럴 조짐이 없어보이는 이유는 간단합니다. 개발 코스트가 너무 큽니다. 단편적인 예를 들면 WYSIWYG HTML 에디터를 개발하는 것과 비슷합니다. 아마 자바스크립트기반의 이런 에디터를 프로젝트에 써보셧으면 무언가 부족한 부분이 계속 느껴지셧을 겁니다. 그리고 쓸만한건 대부분 상용으로 배포되는게 많죠… 좀 더 구체적인 이유를 들자면 다음과 같습니다. 물론 이외에도 많겠지만 일단 생각나는 것만 열거해볼게요.&lt;/p&gt;
+
+&lt;h3 id=&quot;마크다운에-대한-이해도&quot;&gt;마크다운에 대한 이해도&lt;/h3&gt;
+
+&lt;p&gt;먼저 마크다운을 어떻게 쓰느냐와 어떻게 렌더링하느냐는 필요 이해도에 있어서 상당한 차이를 보입니다. 가령 blockquote 내부에 테이블이나 코드펜스를 렌더하는게 가능한가? 라든가 코드펜스 내부에 백틱&lt;code&gt;```&lt;/code&gt;을 이스케이프 시키거나… 또한 망가진 신택스는 어떻게 처리해야하는가 등등…&lt;/p&gt;
+
+&lt;h3 id=&quot;마크다운-파편화&quot;&gt;마크다운 파편화&lt;/h3&gt;
+
+&lt;p&gt;너무 다양한 마크다운이 존재합니다. 물론 유명한것만 따지면 Github Flavored Markdown이나 CommonMark등이 있겠네요…. 게다가 이를 지원한다고 하는 대부분의 서비스나 파서들은 다양한 추가기능을 제공하고 있죠…&lt;/p&gt;
+
+&lt;p&gt;일단 기본이 되는건 &lt;a href=&quot;http://daringfireball.net/projects/markdown/&quot;&gt;daringfireball의 마크다운 프로젝트&lt;/a&gt;입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;사용성ux&quot;&gt;사용성(UX)&lt;/h3&gt;
+
+&lt;p&gt;마크다운의 큰 강점인 간단한 신택스만으로 서식이 설정된건 무조건 살려야합니다. 더 나아가 모든 조작은 키보드 만으로도 충분히 가능해야하며 직관적이어야 합니다.
+왠지 20년전의 도스 기반의 한컴 오피스가 떠오르네요… 그리고 분명히 VI나 Emacs커맨드에 대응해라는 니즈역시 나타날 것입니다.&lt;/p&gt;
+
+&lt;p&gt;동시에 GUI인터페이스의 고려역시 필요합니다. 테이블 편집은 어떤 형식으로 할것인가? 레이텍 작성은 어떻게 할것인가? 혹시 레이텍 코드에 에러가 발견되면 어떻게 핸들링 할 것인가?&lt;/p&gt;
+
+&lt;h3 id=&quot;출력방식&quot;&gt;출력방식&lt;/h3&gt;
+
+&lt;p&gt;각 블록별로 어떻게 다뤄야 할지도 고려가 필요합니다. 앞서말한 백틱의 경우 일반적인 코드 신택스를 쓸떈 &lt;code&gt;&amp;grave;인라인 코드&amp;grave;&lt;/code&gt;로 작성하면 되지만 백틱이 포함된 인라인 코드의 경우 &lt;code&gt;&amp;lt;code&amp;gt;&amp;grave;백틱이 포함된 인라인 코드&amp;grave;&amp;lt;/code&amp;gt;&lt;/code&gt;로 작성해야 합니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+이 글 또한 마크다운이다보니 이미 이 글자체에서 인라인 코드에 코드태그와 백틱까지 같이 쓰고 있네요... 참고로 &lt;code&gt;&amp;lt;code&amp;gt;&amp;grave;백틱이 포함된 인라인 코드&amp;grave;&amp;lt;/code&amp;gt;&lt;/code&gt;의 RAW버젼은 다음과 같습니다.
+&lt;pre&gt;
+&amp;lt;code&amp;gt;&amp;amp;lt;code&amp;amp;gt;&amp;amp;grave;백틱이 포함된 인라인 코드&amp;amp;grave;&amp;amp;lt;/code&amp;amp;gt;&amp;lt;/code&amp;gt;
+&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;다양한-사용환경&quot;&gt;다양한 사용환경&lt;/h3&gt;
+
+&lt;p&gt;OS마다 브라우저마다 언어별 입력기 마다 다양한 행동을 보여줍니다. 이를 모두 추적하는건 혼자 힘으론 불가능에 가깝고 상당히 피곤한 일입니다. 아마 저도 혼자서 해결할 수는 없을 겁니다. 그래서 이 프로젝트가 오픈소스여야 하는 이유이기도 하죠. 먼저 영어와 CJK를 우선적으로 처리할 계획입니다. OS는 윈도우즈, macOS 그리고 일부 리눅스에 대해서만 행해질 겁니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;계획&quot;&gt;계획&lt;/h2&gt;
+
+&lt;p&gt;일단 총체적인 계획은 다음과 같습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;전용 마크다운 스펙&lt;/li&gt;
+  &lt;li&gt;파서/렌더러&lt;/li&gt;
+  &lt;li&gt;CLI툴&lt;/li&gt;
+  &lt;li&gt;데스크톱 에디터&lt;/li&gt;
+  &lt;li&gt;모바일 에디터&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;전용 스펙을 따로 만들어야하는건 필연적입니만 물론 또 다른(Yet Another) 스펙을 만든다라는 것과는 거리가 멉니다. 엄밀하게 말해 사용성을 보증한다는 것에 가깝습니다. 먼저 GFM의 경우 깃허브에서 폭넓게 이용되고 있고 간편히 Gist에 작성해보는 걸로 결과물을 알 수 있지만, 스펙이 존재하지 않습니다… 간단한 사용 가이드가 전부이므로 복잡한 신택스 작성시 결과물이 어떻게 될지는 예측하는건 야바위랑 다를 바 없습니다. 결국 프리뷰를 몇번이고 번갈아가며 확인 할 수 밖에 없게되죠… 이에 대해 CommonMark에서 깨끗하게 스펙을 만들어 두긴 했지만 Emoji나 레이텍같은 부분은 마크다운의 기능으로 고려하지 않고 있기에 이들에 대한 스펙역시 필요합니다. 또한 Data Model Langauge를 활용한 다이어그램 작성(플로우차트 시퀸스 다이어그램을 추가기능으로 고려중입니다.)같은 추가기능을 고려하고 있기에 이들에 대한 스펙역시 필요합니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;개발적인-측면&quot;&gt;개발적인 측면&lt;/h3&gt;
+
+&lt;p&gt;먼저 Wooorm/Remark를 사용할 계획입니다. Babel처럼 마크다운을 AST화 시켜주기 때문에 좀더 유연하고 효과적으로 마크다운을 관리 할 수 있을겁니다. 또한 린터까지 고려되어 있기 때문에 유저가 넣어준 마크다운 코드에 대해 잘못된 부분이 있을 경우 쉽게 피드백까지 해줄 수 있을겁니다.&lt;/p&gt;
+
+&lt;p&gt;에디터 내부적으론 데이터를 마크다운 그대로가 아니라 블록을 오브젝트(JSON)상태로 만들어 관리할 생각입니다. 이게 편한게 유저의 신택스 실수를 고려할 필요가 없게 되기도 하고 편집할 때마다 마크다운을 통째로 다시 렌더링 하는 코스트도 없을 겁니다.&lt;/p&gt;
+
+&lt;p&gt;마지막으로… 개발은 리액트로 할 생각입니다.&lt;/p&gt;
+
+&lt;h1 id=&quot;파우치db-호스팅-서비스&quot;&gt;파우치DB 호스팅 서비스&lt;/h1&gt;
+
+&lt;p&gt;깃허브에서 Git 저장소를 호스팅하는 것처럼 PouchDB를 호스팅해주는 서비스를 만들 생각입니다.&lt;/p&gt;
+
+&lt;p&gt;아마 제 첫 사업이 될 것입니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;파우치db&quot;&gt;파우치DB?&lt;/h2&gt;
+
+&lt;p&gt;파우치 DB는 카우치 DB와 호환가능한 자바스크립트 기반의 데이터베이스입니다.&lt;/p&gt;
+
+&lt;p&gt;먼저, 어디에서든지 쓸 수 있습니다. 자바스크립트로 작성됬기때문에 브라우저에서도 사용이 가능하고 Node.js를 통해 어떤 앱에서도 활용이 가능합니다.&lt;/p&gt;
+
+&lt;p&gt;그리고, 다양한 어댑터를 지원합니다. IndexedDB와 LevelDB를 지원하기 때문에 정말 다양한 데이터베이스를 저장소로 활용 할 수 있습니다.&lt;/p&gt;
+
+&lt;p&gt;둘째로 카우치DB와 호환가능하기 때문에 동기화옵션이 기본적으로 따라옵니다. 서버와 접속이 끊어져도 데이터베이스는 지속적으로 사용이 가능합니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;어떻게-만드냐&quot;&gt;어떻게 만드냐&lt;/h2&gt;
+
+&lt;p&gt;ServerLess와 IBM Cloudant를 활용해서 만들 계획입니다.&lt;/p&gt;
+
+&lt;p&gt;제가 제공하는 모든 API는 서버리스로 AWS람다에서 제공하고, 클라우던트를 통해 파우치 DB를 호스팅 합니다. 제가 실질적으로 개발하는 부분은 인증, 과금부분입니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;왜-만드냐&quot;&gt;왜 만드냐&lt;/h2&gt;
+
+&lt;p&gt;개발자를 위한 DB가 아니라 사용자를 위한 DB를 제공하고 싶습니다.&lt;/p&gt;
+
+&lt;p&gt;기존 DB의 경우 개발자가 서비스를 제공하기 위해 사용될 뿐이기 때문에 사용자입장에선 블랙박스에 가깝죠… 이에 항상 서비스가 제공하는 인터페이스로밖에 접근이 불가능하기에 유저가 서비스를 완전히 이해하지 않고는 그 데이터베이스를 제대로 활용하기 힘들어집니다.&lt;/p&gt;
+
+&lt;p&gt;물론 일반 유저가 데이터베이스 스키마에대해 알 필요가 있느냐? 라고 질문 받을 수도 있습니다. 네, 알 필요가 있습니다. 엄밀하게 말해 유저가 몰라도 되는건 &lt;code&gt;스키마&lt;/code&gt;, &lt;code&gt;테이블&lt;/code&gt;, &lt;code&gt;칼럼&lt;/code&gt; 같은 용어일 뿐입니다. 이미 그들은 스키마에 대한 개념을 이해 하고 있습니다. 프로그래밍따위 모르는 전업주부라도 가계부에 &lt;code&gt;지출&lt;/code&gt;, &lt;code&gt;수입&lt;/code&gt;으로 나누어서 데이터를 관리 할 줄 압니다.&lt;/p&gt;
+
+&lt;p&gt;또한 사용자에게 데이터베이스의 존재를 실감시켜 자신의 통제권안에 있다는 걸 알려주고 싶습니다. 어디에 어떻게 저장되는지를 명확하게 알 수 있게함으로써 보안적으로도 좀 더 능동적으로 대처 할 수 있게되고 스스로 좀더 다양한 시도를 하게 해줄 겁니다.&lt;/p&gt;
+
+&lt;p&gt;또 다른 문제로 데이터베이스의 호스팅 난이도가 있습니다. MySQL조차 리눅스를 어느 정도 다를 줄 모르면 호스팅을 할 수 없습니다. 그리고 안다고 해도 리눅스 셋업이 그렇게 유쾌하진 않죠.. 대부분 리눅스 셋업을 일관화시켜서 쓰는 사람들은 인프라 개발자정도이기도 하고요… 이제 시대가 바뀌었기에 AWS처럼 간단한 클릭몇번으로 할 수 있게 해야한다고 생각합니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;왜-사업아이템을-공개하는가&quot;&gt;왜 사업아이템을 공개하는가&lt;/h2&gt;
+
+&lt;p&gt;먼저, 제 새로운 철학을 시험해 보고 싶습니다. 투명성은 정보적 우위를 통한 경쟁성을 포기하는 비즈니스적인 측면에서는 자살행위인듯 해 보이지만 거국적으로 생각합시다. 저의 아이디어를 따라하는 사람이 많을 수록 더 많은 사람들이 자신통제하의 DB를 가지기 쉬워질것이고 IT에 대한 일반인들의 수준은 더욱 높아질 것입니다. 테슬라가 기술 공개하는 것과 비슷하겠네요. 저는 이 사업에 실패 할 지 모르지만 이로써 득을 볼 이는 훨씬 많을 것입니다.&lt;/p&gt;
+
+&lt;p&gt;둘째, 저는 아직 혼자입니다. 앞으로 저와 함께 할 이는 저의 생각방식에 공감하는 사람이 될것입니다. 그리고 그 생각방식이 가장 투영될 것이 바로 제가 앞으로 만들어 나갈 사업아이템이고 이를 숨긴다는건 오히려 좋은 사람을 만날 기회를 버리는 것이 된다고 생각합니다.&lt;/p&gt;
+
+&lt;h1 id=&quot;캘린더앱&quot;&gt;캘린더앱??&lt;/h1&gt;
+
+&lt;p&gt;새로운 어플리케이션 역시 생각하고 있습니다. macOS의 리마인더와 캘린더가 조합된 물건으로 단순하게 이벤트나 할일 목록을 넣는 앱이 아니라 시간에 대한 기록을 남기는데 중점을 둔 좀 더 원시적인 욕구를 만족시키는 어플리케이션을 만들려고 합니다.&lt;/p&gt;
+
+&lt;p&gt;리액트와 일렉트론 파우치DB로 만들 계획이며 웹앱과 모바일 앱역시 만들 계획입니다.&lt;/p&gt;
+
+&lt;p&gt;이 앱의 경우에는 장황하게 설명하는 것보다 직접 쓰는걸 보는게 빠르니 프로토타입이 나올떄 좀더 자세한 설명을 해드릴게요.&lt;/p&gt;
+
+&lt;p&gt;여기서 설명해드리고 싶은건 본 앱의 주 목적은 단순한 기능이아니라 &lt;strong&gt;레퍼런스급&lt;/strong&gt; 일렉트론/리액트 앱을 개발하는 것입니다.&lt;/p&gt;
+
+&lt;p&gt;아마도 많은 분들이 어떻게 일렉트론이나 리액트를 활용하여 앱을 만드는지 궁금하실 것이지만 리액트나 일렉트론 모두 개발예제가 난잡하고 특히 리액트는 각종 보일러 플레이트가 난무해서 정말 좋은 설계 라는걸 찾기가 어렵습니다.&lt;/p&gt;
+
+&lt;p&gt;그리고 프로덕션 레벨의 앱개발에 필요로하는 테스트부터 배포까지 철저하게 노하우를 정리할 것이고 이러한 앱개발에 있어서의 머리부터 발끝까지의 부분을 튜토리얼로 만듬으로써 좀 더 많은 사람들이 아름다운 코드를 쓰고 효과적으로 자신의 창의력을 활용 할 기회를 제공하고 싶습니다.&lt;/p&gt;
+
+&lt;p&gt;아, 이 프로젝트의 경우 이름은 정해졌습니다. &lt;strong&gt;Fourteen&lt;/strong&gt;으로 방사성 탄소 연대 측정법에 사용되는 탄소14의 번호 14를 의미합니다.&lt;/p&gt;
+
+&lt;h1 id=&quot;대략적인-목표&quot;&gt;대략적인 목표&lt;/h1&gt;
+
+&lt;p&gt;20일간 쌓인 생각들을 풀어해치니 양이 엄청나군요… 머리속엔 아직 이거 몇배분은 남아 있지만 위의 내용에 비해 상대적으로 트리비얼하므로 다음에 얘기하도록 합시다.&lt;/p&gt;
+
+&lt;p&gt;대략적인 일정은 3가지 모두 프로토타입을 3월부터 시작해서 6월중까지 완성시키는걸 목적으로 합니다.&lt;/p&gt;
+
+&lt;p&gt;먼저 우선적으로 기반지식과 노하우의 확보에 주력할 생각입니다. PouchDB를 좀더 자세히 알기위해 코드를 뜯어봐야 하는 것도 있고 카우치DB에 대한 깊은 이해역시 필요합니다. 그리고, 서버리스에 대해서도 안정적인 활용을 위해 실제 활용한 경험을 늘려야합니다. 아마 여기에 1달정도 필요할 듯 하네요.&lt;/p&gt;
+
+&lt;p&gt;실질적인 개발은 단순 프로토타입수준이면 각각 2주정도면 충분할 듯 합니다. 아마 이게 완성된 다음부터 구체적인 플랜을 짤 수 있겠네요. 해보기 전까진 어떤 함정이 도사릴지 모르니까요!&lt;/p&gt;
+
+&lt;p&gt;여튼 조금씩 생각이 정리되는 대로 공개해나갈 생각입니다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Babel 플러그인을 맛보다!</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/01/20/babel-plugin/"/>
+   <updated>2017-01-20T00:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/01/20/babel-plugin</id>
+   <content type="html">&lt;p&gt;개인적으로 &lt;a href=&quot;https://facebook.github.io/react/docs/handling-events.html&quot;&gt;리액트 공식 튜토리얼의 방식&lt;/a&gt;이 마음에 들지않았어요.
+그래서 컨스트럭터에 애로우펑션을 넣어서 따로 바인드 없이 쓰는 방식을 시도해보았는데 작동은 하지만 React Hot Loader 3(이하 RHL3)가 제대로 움직이지 않더라고요.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-js&quot;&gt;class LoggingButton extends React.Component {
+  constructor (props) {
+    super(props)
+    // 이렇게 !!
+    this.handleClick = () =&amp;gt; {
+      console.log('this is:', this);
+    }
+  }
+
+  render() {
+    return (
+      &amp;lt;button onClick={this.handleClick}&amp;gt;
+        Click me
+      &amp;lt;/button&amp;gt;
+    );
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;그래서 &lt;a href=&quot;https://github.com/gaearon/react-hot-loader/issues/427&quot;&gt;이슈&lt;/a&gt;를 등록했는데 아무래도 메인테이너분들이 다른 일로 바쁘셔서 대응이 안되는듯 하셨어요. 그나마 다행인건 어디를 보면 다룰 수 있는지는 알려주셨어요. 물고기를 주는 대신 물고기를 잡는법을 알려주는 것처럼! :fishing_pole_and_fish::fishing_pole_and_fish::fishing_pole_and_fish:&lt;/p&gt;
+
+&lt;h2 id=&quot;참고자료&quot;&gt;참고자료&lt;/h2&gt;
+
+&lt;p&gt;다음 3개의 링크가 제가 받은 부분입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/thejameskyle/babel-handbook&quot;&gt;바벨 핸드북&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://astexplorer.net/&quot;&gt;AST Explorer&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/babel/babel/tree/master/packages/babel-types&quot;&gt;Babel types&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;바벨핸드북은 바벨 사용법은 한글화 되어있는데 플러그인은 아직 한글화 되어있지 않았어요. 뭐 딱히 안보셔도 괜찬아요. 엄청 길기도하고 이 포스트도 간단하게 바벨이 어떻게 코드를 트랜스파일하는지 가볍게 맛만보는걸 목표로 하니까요. :smile:&lt;/p&gt;
+
+&lt;p&gt;하지만, AST Explorer는 꼭 써보셔야 합니다!&lt;/p&gt;
+
+&lt;p&gt;AST는 정말 복잡하기 때문에 이게없으면 뭐가 어디있는지 파악하기 정말 어려워져요. 물론 익숙해지면 필요없겠지만 처음다루시면 꼭 여기에 예제코드 넣어보세요!
+넣고 커서를 움직이면 지금 선택한 부분이 어떻게 파싱되어있는지 간단히 알 수 있습니다!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/ast-explorer.png&quot; alt=&quot;AST Explorer&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;바빌론 버젼별로 약간 타입이름이 다르므로 꼭 &lt;strong&gt;바빌론6&lt;/strong&gt;를 선택해주세요!&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Babel Types 역시 플러그인 편집할땐 존재하는 모든 신택스 노드가 정리되어있기 때문에 사전처럼 계속 보셔야합니다.
+이 모듈은 일종의 헬퍼로서 간단히 신택스 노드를 생성하거나 노드에 대한 테스트가 가능합니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;코드&quot;&gt;코드&lt;/h2&gt;
+
+&lt;p&gt;이게 제가 쓴 코드의 PR입니다! &lt;a href=&quot;https://github.com/gaearon/react-hot-loader/pull/464/files&quot;&gt;#464&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;먼저 목표확인을 위해 테스트 코드부터 봅시다. 테스트는 필스쳐로 컴파일 전 코드와 컴파일된 후의 코드를 두고 이 픽스쳐들을 &lt;code&gt;fs.readdir&lt;/code&gt;로 불러 일괄처리하는 형식이었습니다.&lt;/p&gt;
+
+&lt;p&gt;먼저 컴파일 전 코드입니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-js&quot;&gt;class Foo {
+  constructor() {
+    this.onClick = (e) =&amp;gt; e.target.value
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;컴파일 된 후의 코드입니다. 고로 우리는 위의 코드를 밑으로 바꿔써주는 트랜스파일러를 만들면 됩니다.&lt;/p&gt;
+
+&lt;p&gt;컨스트럭터는 처음 마운트 될때만 실행되고, 리로드시에는 클래스 메소드의 리로드만 일어나기 때문에, 컨스트럭터내부의 메소드를 바깥으로 꺼내주고 안에서는 꺼낸 코드를 부르도록 함으로서, 리로드시 컨스트럭터가 다시 한번 바인드 할 필요없이 새롭게 리로드된 메소드를 재사용 할 수 있게됩니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-js&quot;&gt;class Foo {
+  constructor() {
+    this.onClick = (...params) =&amp;gt; this.__onClick__REACT_HOT_LOADER__(...params);
+  }
+
+  __onClick__REACT_HOT_LOADER__(e) {
+    return e.target.value;
+  }
+
+}
+;
+
+var _temp = function () {
+  if (typeof __REACT_HOT_LOADER__ === 'undefined') {
+    return;
+  }
+
+  __REACT_HOT_LOADER__.register(Foo, &quot;Foo&quot;, __FILENAME__);
+}();
+
+;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;자 그럼 트랜스파일러 플러그인을 본격적으로 보기전에 간단한 설명부터 드리겠습니다. AST는 코드를 파스하여 JSON 트리와 같은 구문트리를 만들어줍니다. 여기서 우리는 어떤 패턴(컨스트럭터안에서의 애로우펑션)을 찾아서 웹팩이 대응가능한 형식으로 만들어 주어야합니다.&lt;/p&gt;
+
+&lt;p&gt;이에 바벨은 Visitor(이하 방문자)라는 개념이 있어 이를 활용하면 노드 하나씩 자식 노드를 확인해가며 깊숙한 곳 구석구석까지 점검해줍니다. 고로 &lt;code&gt;if&lt;/code&gt;문등 각종 블록으로 코드의 깊이가 제각각 일 경우가 많으므로 직접적 이터레이팅을 하는 것 보다 방문자를 활용하는게 적합합니다.&lt;/p&gt;
+
+&lt;p&gt;그리고 또다른 특징으로 방문자가 해당 노드를 찾았을 때 돌려주는건 노드 자체의 인스턴스가 아니라 &lt;code&gt;path&lt;/code&gt;라는(Node.js의 &lt;code&gt;path&lt;/code&gt;가 아닙니다.) 형식으로 감싸서 줍니다. jQuery와 조금 비슷한 느낌이긴한데 트랜스파일링을 위한 몇가지 헬퍼와 트리내 색인기능을 제공해줍니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-js&quot;&gt;// 컨스트럭터에 선언된 애로우 펑션을 같은 형식으로 트랜스파일을 했을 때,
+// 방문자는 이를 인식못하고 다시 한번 트랜스파일을 하여 무한히 트랜스파일을 하는 현상이 생깁니다.
+// 고로 심볼을 활용하여 한번 트랜스파일한 부분에는 심볼로 표시를 해두어 다시 한번 트랜스파일한 부분은 무시하게 합니다.
+// 헨젤과 그레텔의 빵가루같은 존재이죠! 🍞🍞
+const replaced = Symbol('replaced');
+
+// 생략
+
+// 교체될 메소드를 만들어주는 함수입니다. 중간에 코드가 생략되었는데 t는 Babel types입니다.
+const buildNewAssignmentExpression = (t, classPropertyName, newMethodName, isAsync) =&amp;gt; {
+  let returnExpression = t.callExpression(
+    t.memberExpression(t.thisExpression(), newMethodName),
+    [t.spreadElement(t.identifier('params'))]
+  );
+
+  if (isAsync) {
+    returnExpression = t.awaitExpression(returnExpression);
+  }
+
+  const newArrowFunction = t.arrowFunctionExpression(
+    [t.restElement(t.identifier('params'))],
+    returnExpression,
+    isAsync
+  );
+  const left = t.memberExpression(t.thisExpression(), t.identifier(classPropertyName.name));
+
+  const replacement = t.assignmentExpression('=', left, newArrowFunction);
+  replacement[replaced] = true;
+
+  return replacement;
+};
+
+// 생략
+
+module.exports = function plugin(args) {
+  return {
+    visitor: {
+
+      // 생략
+
+      // 매번 클래스에 방문할 때마다 이 함수가 쓰여집니다.
+      Class(classPath) {
+        // 패스 내부 색인은 `get` 메소드를 사용합니다.
+        const classBody = classPath.get('body');
+
+        classBody.get('body').forEach(path =&amp;gt; {
+          if (path.isClassProperty()) {
+            // 생략
+          } else {
+            // 바디를 이터레이트시켜 컨스트럭터를 찾습니다. 앞서 만든 심볼을 활용해 이미 트랜스파일된 메소드는 무시합니다.
+            if (!path.node[replaced] &amp;amp;&amp;amp; path.node.kind === 'constructor') {
+              // 트래버스는 Path내에서 다시한번 방문자를 사용할 수 있게 해줍니다. 저는 컨스트럭터안의 애로우 펑션이 대입되는 구문을 찾기위해 사용합니다.
+              path.traverse({
+                AssignmentExpression(exp) {
+                  // 이미 트랜스파일 되었나, this에 바인드되었나 등등을 처리해줍니다.
+                  if (!exp.node[replaced]
+                    &amp;amp;&amp;amp; exp.node.left.type === 'MemberExpression'
+                    &amp;amp;&amp;amp; exp.node.left.object.type === 'ThisExpression'
+                    &amp;amp;&amp;amp; exp.node.right.type === 'ArrowFunctionExpression'
+                  ) {
+                    const key = exp.node.left.property;
+                    const node = exp.node.right;
+
+                    const isAsync = node.async;
+                    const params = node.params;
+                    const newIdentifier = t.identifier(`__${key.name}__REACT_HOT_LOADER__`);
+
+                    const newMethodBody = node.body.type === 'BlockStatement' ?
+                      node.body :
+                      t.blockStatement([t.returnStatement(node.body)]);
+
+                    const newMethod = t.classMethod('method', newIdentifier, params, newMethodBody);
+                    newMethod.async = isAsync;
+                    newMethod[replaced] = true;
+                    // 클래스메소드로 새롭게 만들어 바깥으로 꺼내줍니다.
+                    path.insertAfter(newMethod);
+
+                    // 컨스트럭터안의 메소드는 바깥으로 꺼낸 메소드를 부르게 합니다.
+                    exp
+                      .replaceWith(buildNewAssignmentExpression(t, key, newIdentifier, isAsync));
+                  }
+                },
+              });
+            }
+          }
+        });
+      },
+    },
+  };
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;이상입니다. 바벨의 파싱원리는 아직 저도 잘 모르겠지만, 이번 기회로 이미 파싱된 AST를 트랜스파일하는건 그렇게 어렵지 않아진 느낌이 듭니다. :sunglasses::sunglasses:&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Rogue 대신 Codemirror!</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/01/19/rogue-to-codemirror/"/>
+   <updated>2017-01-19T05:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/01/19/rogue-to-codemirror</id>
+   <content type="html">&lt;p&gt;신택스 하이라이트에 JSX가 제대로 작동하지 않는 듯해서 jneen/rouge의 이슈트래커를 보니 &lt;a href=&quot;https://github.com/jneen/rouge/issues/275#issuecomment-149714664&quot;&gt;이런 코멘트&lt;/a&gt;가 있어서 놀랬습니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;zackify: Any status update on this?&lt;/p&gt;
+
+  &lt;p&gt;jneen: No&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;물론 지금은 대응하는 것 같은데 지킬에서 어떻게 쓰는지 잘 모르겠네요.
+크램다운도 도큐멘트가 오래되어보이고… 역시 그냥 익숙한 방식대로 하는게 맞는 것 같아서 익숙한 CodeMirror로 Rogue대신에 프론트엔드에서 신택스 하이라이트를 처리해 보았습니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;disable-rogue&quot;&gt;Disable Rogue&lt;/h2&gt;
+
+&lt;p&gt;먼저 로그를 꺼야겠죠…&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;_config.yml&lt;/code&gt;에서 크램다운의 하이라이트 옵션을 수정합니다.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;markdown: kramdown
+kramdown:
+  syntax_highlighter_opts:
+    disable: true
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;apply-codemirror&quot;&gt;Apply Codemirror&lt;/h2&gt;
+
+&lt;p&gt;좀 많은 라이브러리를 동시에 사용하고 있습니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Lodash : &lt;code&gt;forEach&lt;/code&gt;와 &lt;code&gt;unescape&lt;/code&gt;를 사용하기 위해 씁니다.&lt;/li&gt;
+  &lt;li&gt;Runmode : 에디터가 아니라 렌더링만 하는 모드입니다. 코드미러 본체를 추가하지 않고도 쓸 수 있는 스탠드얼론도 있지만 모드검색등의 다른 모듈을 이용하기위해 애드온으로 추가합니다.&lt;/li&gt;
+  &lt;li&gt;Meta : 코드미러에서 사용가능한 신택스 모드 리스트와 이를 검색하기위한 메소드를 추가해줍니다.&lt;/li&gt;
+  &lt;li&gt;Load Mode : 직접 신택스모드를 부를 필요없이 필요할 경우에만 부를 수 있게 해줍니다.(수십개의 모드를 직접 불러오는건 그다지 유쾌하지 않을겁니다.)&lt;/li&gt;
+  &lt;li&gt;Overlay : HTML의 &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt;에 쓰이는 Javascript나 Markdown의 Code Fence에 쓰이는 각종 코드를 위해 복수의 신택스모드를 겹쳐쓰게 해줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-html&quot;&gt;&amp;lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.2/codemirror.min.css&quot;&amp;gt;
+&amp;lt;!-- 저는 Dracula 테마를 쓸 겁니다 --&amp;gt;
+&amp;lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.2/theme/dracula.min.css&quot;&amp;gt;
+
+&amp;lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js&quot;&amp;gt;&amp;lt;/script&amp;gt;
+&amp;lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.2/codemirror.min.js&quot;&amp;gt;&amp;lt;/script&amp;gt;
+&amp;lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.2/addon/runmode/runmode.min.js&quot;&amp;gt;&amp;lt;/script&amp;gt;
+&amp;lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.2/mode/meta.min.js&quot;&amp;gt;&amp;lt;/script&amp;gt;
+&amp;lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.2/addon/mode/loadmode.min.js&quot;&amp;gt;&amp;lt;/script&amp;gt;
+&amp;lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.2/addon/mode/overlay.min.js&quot;&amp;gt;&amp;lt;/script&amp;gt;
+&amp;lt;script&amp;gt;
+
+// 어디서 모드를 불러올지를 적어줍니다.
+CodeMirror.modeURL = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.2/mode/%N/%N.js'
+var codeBlocks = document.querySelectorAll('pre code')
+
+// 저는 JSX를 주로 쓰므로 js나 javascript 모두 JSX로 처리하게 했습니다.
+function parseMode (mode) {
+  switch (mode) {
+    case 'js':
+    case 'javascript':
+      mode = 'jsx'
+  }
+  let syntax = CodeMirror.findModeByName(mode)
+  if (syntax == null) syntax = CodeMirror.findModeByName('Plain Text')
+  return syntax
+}
+
+_.forEach(codeBlocks, block =&amp;gt; {
+  // 클래스의 프리픽스 `language-`를 지우고 모드를 파스합니다.
+  var syntax = parseMode(block.className.substring(9))
+
+  CodeMirror.requireMode(syntax.mode, () =&amp;gt; {
+    // 이미 이스케이프된 `&amp;amp;gt;`등 엔티티를 `&amp;gt;`로 돌려줍니다
+    var value = _.unescape(block.innerHTML)
+    // 런모드 전에 내용을 다 정리해둡니다.
+    block.innerHTML = ''
+    // 테마를 적용합니다
+    block.parentNode.className = `cm-s-dracula CodeMirror`
+    // 렌더를 시작합니다
+    CodeMirror.runMode(value, syntax.mime, block, {
+      tabSize: 2
+    })
+  })
+})
+&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;이상입니다. 이제 페이지가 열리면 &lt;code&gt;&amp;lt;pre&amp;gt;&amp;lt;code&amp;gt;&lt;/code&gt;를 자동으로 검색해서 코드미러로 렌더링 하게 될겁니다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>리액트 튜토리얼</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/01/18/react-tutorial/"/>
+   <updated>2017-01-18T11:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/01/18/react-tutorial</id>
+   <content type="html">&lt;p&gt;웹팩, 리액트, 일렉트론을 활용한 튜토리얼을 만들 계획입니다.
+원래 만들고 싶은 건 캘린더이긴한데 규모가 너무 커질 것이기 때문에 간단한 &lt;strong&gt;To do list&lt;/strong&gt; 앱을 만들어 볼 생각입니다.&lt;/p&gt;
+
+&lt;p&gt;주요 목적은 &lt;em&gt;단순하게 리액트를 써보자&lt;/em&gt; 수준이 아니라 웹팩 셋팅부터 앱 설계, 개발, 테스트, 배포까지 처음부터 프로덕션 레벨까지 어떤 식으로 앱이 개발되는지를 보여줄 생각입니다.&lt;/p&gt;
+
+&lt;p&gt;일단 제가 튜토리얼을 제대로 써본적이 없기 때문에 미리 구체적인 흐름을 짜고 하는 것보다 매번 마일스톤을 정하고 이에 대한 연재를 하는게 맞다고 생각합니다.&lt;/p&gt;
+
+&lt;p&gt;본격적으로 시작하는 시점은 2월 중순이 될 것 같습니다. 왜냐하면 그때 제 졸업논문이 끝나거든요! :sunglasses:&lt;/p&gt;
+
+&lt;h2 id=&quot;대략적인-계획&quot;&gt;대략적인 계획&lt;/h2&gt;
+
+&lt;p&gt;앱자체는 macOS 기본앱 &lt;strong&gt;Reminder&lt;/strong&gt;를 따라할 것입니다. 어쩌면 제 입맛에 맞게 일부 기능을 더 추가할지도 모르겠네요. :)&lt;/p&gt;
+
+&lt;p&gt;그리고 클라우드 사용까지 고려해서 파우치DB를 사용할 계획입니다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;아마 이것 다음 튜토리얼은 이 앱을 위한 클라우드 서버가 될 것 같네요. :smile:&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;사용 스택 설명&lt;/li&gt;
+  &lt;li&gt;웹팩 셋팅&lt;/li&gt;
+  &lt;li&gt;리액트 기본&lt;/li&gt;
+  &lt;li&gt;스타일드 컴포넌트&lt;/li&gt;
+  &lt;li&gt;리덕스&lt;/li&gt;
+  &lt;li&gt;파우치DB&lt;/li&gt;
+  &lt;li&gt;리액트 라우터&lt;/li&gt;
+  &lt;li&gt;일렉트론 API
+    &lt;ul&gt;
+      &lt;li&gt;메뉴&lt;/li&gt;
+      &lt;li&gt;윈도우 컨트롤&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;테스트&lt;/li&gt;
+  &lt;li&gt;디플로이
+    &lt;ul&gt;
+      &lt;li&gt;코드사인 / Auto updater 서드파티 디플로이(아톰 기본)&lt;/li&gt;
+      &lt;li&gt;brew 등등 CLI를 통한 디플로이&lt;/li&gt;
+      &lt;li&gt;MAS / Windows store등 앱스토어 대상 디플로이&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Hello World</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/01/18/hello-world/"/>
+   <updated>2017-01-18T00:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/01/18/hello-world</id>
+   <content type="html">&lt;p&gt;한번 시작 해 봅시다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>블로그 초기설정</title>
+   <link href="https://rokt33r.github.io/devnotes/2017/01/18/blog-initial-configuration/"/>
+   <updated>2017-01-18T00:00:00+00:00</updated>
+   <id>https://rokt33r.github.io/devnotes/2017/01/18/blog-initial-configuration</id>
+   <content type="html">&lt;p&gt;처음엔 스타일링이 분명 귀찮을거니 부트스트랩을 도입하는게 좋다고 생각했습니다.
+근데 금방 그게 틀린 사실을 알아차리게 되네요…&lt;/p&gt;
+
+&lt;p&gt;너무 장황하고 이해하기가 어렵운 느낌이고, 디자인 컨샙도 흑백의 미니멀리즘을 지향했는데, 컨샙자체가 이렇다보니 대부분의 기능이 필요없었씁니다.&lt;/p&gt;
+
+&lt;p&gt;그리고 &lt;code&gt;bootstrap-rubygem&lt;/code&gt;을 이용하려하니 &lt;code&gt;compass&lt;/code&gt;를 필요로해서 &lt;code&gt;jekyll-compass&lt;/code&gt;를 넣어보려 했는데, 역시나 금방 실패해버렸네요. 루비도 모르는 와중에 억지로 로컬에 실행시키는 것도 상당히 귀찮은 작업이었는데… 역시 욕심 안부리고 스크래치로 필요한 부분만 깨끗하게 손질하는게 가장 속 편할 것 같습니다..&lt;/p&gt;
+
+&lt;p&gt;여튼 부트스트랩 부분이 싹 빠졌기때문에 기본적인 노말라이즈도 추가해야되겠고 타이포그래피나 테이블 설정도 넣어줘야 할 듯 합니다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+
+</feed>

@@ -1,0 +1,1045 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>평범한 9/3의 개발 정리</title>
+<link>https://normal93.tistory.com/</link>
+<description>개발 공부 정리 및 기타등등의 블로그입니다.</description>
+<language>ko</language>
+<pubDate>Sun, 12 May 2019 16:12:02 +0900</pubDate>
+<generator>TISTORY</generator>
+<managingEditor>9/3</managingEditor>
+<image>
+<title>평범한 9/3의 개발 정리</title>
+<url>https://tistory1.daumcdn.net/tistory/2018428/attach/c029a3882c834644a376b3a746169809</url>
+<link>https://normal93.tistory.com</link>
+<description>개발 공부 정리 및 기타등등의 블로그입니다.</description>
+</image>
+<item>
+<title>[ 알고리즘 ] 백준 3078번 좋은친구</title>
+<link>https://normal93.tistory.com/30</link>
+<description>&lt;h1&gt;백준 3078번 좋은 친구&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://www.acmicpc.net/problem/3078&quot;&gt;문제 링크&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99625C3F5CCBBE540E&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2&gt;문제 접근&lt;/h2&gt;
+&lt;p&gt;처음에는 단순히 큐를 이용해서 일일히 계산을 하면 되는 쉬운 문제라고 생각하고 시작했다.&lt;br&gt;정답이 나오는 단순한 코드는 금방 짤 수 있었지만, 제출결과 시간초과......&lt;/p&gt;
+&lt;p&gt;결국 계속해서 다른 방법을 도전하다가 다른 분의 코드를 봤는데, 어떻게 이런 생각을 하시고 풀었는 지 놀라울 따름..........  &lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;먼저 문자열의 길이는 2~20으로 주어졌으므로, 길이 20짜리 &lt;code&gt;Queue&lt;/code&gt; 배열을 선언했다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;이 후 문자열의 입력이 들어오는데 이 때, 문자열의 내용은 중요하지 않으므로 바로 길이를 계산한다. &lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;계산한 길이를 이용하여 앞에 선언한 큐 배열의 인덱스로 각 큐를 불러온다. &lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;불러온 큐가 &lt;code&gt;Empty&lt;/code&gt; 이면 바로 큐에 넣어주고, &lt;/li&gt;
+&lt;li&gt;그렇지 않다면 큐 안의 원소들을 앞에서부터 &lt;code&gt;지금 들어온 입력값 - 큐의 맨앞의 원소값 &amp;gt; K&lt;/code&gt; 을 만족하면(&lt;strong&gt;지금 들어온 입력값과 좋은 친구가 아니면&lt;/strong&gt;) 반복문을 돌면서 전부 &lt;code&gt;poll&lt;/code&gt; 해준다. 이 후 , 큐의 남은 원소들의 갯수를 &lt;code&gt;좋은 친구 쌍의 수&lt;/code&gt;에 추가해준다. &lt;/li&gt;
+&lt;li&gt;이 후 지금 들어온 입력값은 해당 큐에 넣어주고, 이를 각 입력마다 반복한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;아, count 는 &lt;code&gt;long&lt;/code&gt; 으로 선언해야 정답을 맞출수 있다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;이러한 방식으로 푸셨는데, 나는 당연히 입력을 다받고 나서, 이를 이용해서 어떻게 풀지 만을 생각했는데, 이런 식으로 생각을 하는 게 참 대단한 것 같다. 나도 이런 다양한 접근 방식을 가질 수 있기를.................. :)&lt;/p&gt;
+&lt;h2&gt;코드&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;package Algorithms;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.*;
+
+/**
+ * https://www.acmicpc.net/problem/3078
+ * 백준 3078번 좋은 친구
+ */
+public class Baekjoon3078 {
+    private static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+    public static void main(String[] args) throws IOException {
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        Queue&amp;lt;Integer&amp;gt;[] queues = new Queue[21];
+        int N = Integer.parseInt(st.nextToken());
+        int K = Integer.parseInt(st.nextToken());
+
+
+        for (int i = 0; i &amp;lt; 21; i++) {
+            queues[i] = new LinkedList&amp;lt;&amp;gt;();
+        }
+
+        long count = 0;
+        for (int i = 0; i &amp;lt; N; i++) {
+            int length = br.readLine().trim().length();
+
+            if(queues[length].isEmpty()){
+                queues[length].offer(i);
+            } else {
+                while(i- queues[length].peek() &amp;gt; K){
+                        queues[length].poll();
+                        if(queues[length].isEmpty()){
+                            break;
+                        }
+                }
+
+                count += queues[length].size();
+                queues[length].offer(i);
+            }
+        }
+
+
+        System.out.println(count);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+<category>알고리즘</category>
+<category>3078번</category>
+<category>백준</category>
+<category>알고리즘</category>
+<category>자바</category>
+<category>좋은친구</category>
+<category>큐</category>
+<author>사용자 9/3</author>
+<guid>https://normal93.tistory.com/30</guid>
+<comments>https://normal93.tistory.com/30#entry30comment</comments>
+<pubDate>Fri, 03 May 2019 13:20:57 +0900</pubDate>
+</item>
+<item>
+<title>[ 알고리즘 ] 백준 1935번 후위표기식 2</title>
+<link>https://normal93.tistory.com/29</link>
+<description>&lt;h1&gt;백준 1935번 후위표기식 2&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://www.acmicpc.net/problem/1935&quot;&gt;문제 링크&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/996D2C445CCA989A03&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;아래 1918번 후위표기식을 풀고 바로 풀어서 그런 지, 바로 풀 수 있었다.&lt;/p&gt;
+&lt;p&gt;문제는 크게 어려움 없이, 두가지 경우로 나눠서 해결했다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;&lt;b&gt;알파벳&lt;/b&gt;인 경우에는 해당하는 숫자를 바로 스택에 push해주었다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;b&gt;연산자&lt;/b&gt;인 경우에는 스택에서 두 피연산자를 pop해준 뒤 ( 두번 ) 이를 연산자를 이용하여 계산하고, 이를 다시 스택에 push해주었다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;위의 두가지를 반복하여 답을 구하였고, &lt;code&gt;System.out.format()&lt;/code&gt;함수를 이용하여 소수점 두자리 까지 표현하였다.&lt;/p&gt;
+&lt;h2&gt;코드&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;package Algorithms;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+/**
+ * Baekjoon1935
+ * 백준 1935 후위표기식2
+ */
+public class Baekjoon1935 {
+    private static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+    public static void main(String[] args) throws IOException {
+        int N = Integer.parseInt(br.readLine());
+        Map&amp;lt;Character, Integer&amp;gt; map = new HashMap&amp;lt;&amp;gt;();
+
+
+        String input = br.readLine();
+        char key = &amp;#39;A&amp;#39;;
+        for (int i = 0; i &amp;lt; N; i++) {
+            map.put(key, Integer.parseInt(br.readLine()));
+            key++;
+        }
+
+
+        Stack&amp;lt;Double&amp;gt; stack = new Stack&amp;lt;&amp;gt;();
+
+        for (char c : input.toCharArray()) {
+            if (Character.isAlphabetic(c)) {
+                stack.push(Double.valueOf(map.get(c)));
+            } else {
+                double temp = calculate(stack.pop(), stack.pop(), c);
+                stack.push(temp);
+            }
+        }
+
+        System.out.format(&amp;quot;%.2f&amp;quot;,stack.pop());
+    }
+
+    private static double calculate(Double num1, Double num2, char c) {
+        switch (c) {
+            case &amp;#39;+&amp;#39;:
+                return num2 + num1;
+            case &amp;#39;-&amp;#39;:
+                return num2 - num1;
+            case &amp;#39;*&amp;#39;:
+                return num2 * num1;
+            case &amp;#39;/&amp;#39;:
+                return num2 / num1;
+            default:
+                return -1;
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+<category>알고리즘</category>
+<category>java</category>
+<category>postfix</category>
+<category>백준</category>
+<category>알고리즘</category>
+<category>자바</category>
+<category>후위표기법</category>
+<category>후위표기식</category>
+<author>사용자 9/3</author>
+<guid>https://normal93.tistory.com/29</guid>
+<comments>https://normal93.tistory.com/29#entry29comment</comments>
+<pubDate>Thu, 02 May 2019 16:17:37 +0900</pubDate>
+</item>
+<item>
+<title>[ 알고리즘 ] 백준 1918번 후위표기식</title>
+<link>https://normal93.tistory.com/28</link>
+<description>&lt;h1&gt;백준 1918번 후위표기식&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://www.acmicpc.net/problem/1918&quot;&gt;문제 링크&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/990FB33B5CCA8F602E&quot; alt=&quot;문제 스크린샷&quot;&gt;&lt;/p&gt;
+&lt;p&gt;이 문제는 &lt;code&gt;Stack&lt;/code&gt;을 이용하는 문제로 평소 학교 공부에서도 많이 풀어보았다고, 생각해서 쉽게 풀 수 있을 것이라 생각했는데 쉽지 않았다.&lt;/p&gt;
+&lt;p&gt;결국은 다른 사람의 답을 참고하여 해결하였다.&lt;/p&gt;
+&lt;p&gt;생각해보니 평소에는 후위표기식으로 표현된 식을 계산하는 문제를 많이 풀어보았지, 주어진 식을 후위표기식으로 변환을 시키는 코드를 짜본 적은 없는 것 같다.&lt;/p&gt;
+&lt;h2&gt;문제 풀이&lt;/h2&gt;
+&lt;p&gt;입력받은 문자열을 차례로 비교하는데 총 네가지의 경우가 있다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;알파벳&lt;/li&gt;
+&lt;li&gt;연산자&lt;/li&gt;
+&lt;li&gt;열린 괄호&lt;/li&gt;
+&lt;li&gt;닫힌 괄호&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;각 경우에 따라서 출력하거나 스택에 넣거나, 스택에 있는 것을 꺼내주는 식으로 해결한다.&lt;/p&gt;
+&lt;p&gt;먼저&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;&lt;b&gt;알파벳&lt;/b&gt;인 경우에는 그냥 바로 출력해준다. 나는 그냥 &lt;code&gt;StringBuilder&lt;/code&gt;를 하나 만들어서 거기다 계속 &lt;code&gt;append&lt;/code&gt;해줬다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;b&gt;연산자&lt;/b&gt;인 경우 :&lt;br /&gt; 연산자인 경우가 조금 복잡한데 이 문제에서 연산자는 아래의 네가지가 나온다.&lt;br /&gt; &lt;code&gt;+&lt;/code&gt;, &lt;code&gt;-&lt;/code&gt;, &lt;code&gt;*&lt;/code&gt;, &lt;code&gt;/&lt;/code&gt;&lt;br /&gt; 여기서 곱하기와 나누기는 더하기와 빼기보다 우선순위가 높기 때문에 &lt;code&gt;precedenceMap&lt;/code&gt;이라는 것을 만들어 주어서 그 안에 우선순위값을 저장해놓고 비교해주었다.&lt;br /&gt; 이 후, 연산자가 들어왔을 때는 이 때 &lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;b&gt;&lt;code&gt;stack&lt;/code&gt;이 비었거나&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;&lt;code&gt;stack&lt;/code&gt;의 &lt;code&gt;top&lt;/code&gt;이 열린 괄호, 즉 &lt;code&gt;(&lt;/code&gt; 이거나&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;&lt;code&gt;stack&lt;/code&gt;의 &lt;code&gt;top&lt;/code&gt; 보다 지금 들어오는 연산자의 우선순위가 더 높을 때&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;stack&lt;/code&gt;에 연산자를 &lt;code&gt;push&lt;/code&gt;해준다. &lt;/p&gt;
+&lt;p&gt;위에 해당하지 않는 경우에는 해당될 때까지 &lt;code&gt;top&lt;/code&gt;을 &lt;code&gt;pop&lt;/code&gt;해준다음 값을 &lt;code&gt;push&lt;/code&gt;해준다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;b&gt;열린괄호&lt;/b&gt;인 경우에는 바로 &lt;code&gt;stack&lt;/code&gt;에 &lt;code&gt;push&lt;/code&gt;한다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;b&gt;닫힌괄호&lt;/b&gt;인 경우에는&lt;br /&gt; &lt;code&gt;stack&lt;/code&gt;의 &lt;code&gt;top&lt;/code&gt;이 열린괄호 이거나 &lt;code&gt;stack&lt;/code&gt;이 빌 때까지 &lt;code&gt;pop&lt;/code&gt;하여 출력해준다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;위의 방법을 이용해 모든 문자열을 탐색하고 나면, 마지막으로  &lt;code&gt;stack&lt;/code&gt; 내부에 남아있는 값을 출력해준다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;b&gt;설명이 조금 복잡하지만 &lt;a href=&quot;https://www.youtube.com/watch?v=vXPL6UavUeA&quot;&gt;이 분의 영상&lt;/a&gt;을 보면 이해가 빠르다.&lt;/b&gt;&lt;/p&gt;
+&lt;h2&gt;내가 짠 코드&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;package Algorithms;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+/**
+ * https://www.acmicpc.net/problem/1918
+ * 백준 1918 후위표기
+ */
+public class Baekjoon1918 {
+    private static Map&amp;lt;Character, Integer&amp;gt; precedenceMap = new HashMap&amp;lt;&amp;gt;();
+
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+        String input = br.readLine().trim();
+
+        initPrecedenceMap();
+        Stack&amp;lt;Character&amp;gt; stack = new Stack&amp;lt;&amp;gt;();
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i &amp;lt; input.length(); i++) {
+            char c = input.charAt(i);
+            //알파벳
+            if(Character.isAlphabetic(c)){
+                sb.append(c);
+                continue;
+            }
+            // 여는 괄호일 때
+            if(c =='('){
+                stack.push(c);
+                continue;
+            }
+
+            //닫는 괄호일 때
+            if(c==')'){
+                while(!stack.isEmpty() &amp;amp;&amp;amp; stack.peek() != '('){
+                    sb.append(stack.pop());
+                }
+                if(!stack.isEmpty() &amp;amp;&amp;amp; stack.peek() == '('){
+                    stack.pop();
+                }
+                continue;
+            }
+
+            //연산자 일때
+            while(!stack.isEmpty() &amp;amp;&amp;amp; ( precedenceMap.get(stack.peek()) &amp;gt;= precedenceMap.get(c))){
+                sb.append(stack.pop());
+            }
+            stack.push(c);
+        }
+
+        while(!stack.isEmpty()){
+            sb.append(stack.pop());
+        }
+
+        System.out.println(sb.toString());
+    }
+
+    private static void initPrecedenceMap() {
+        precedenceMap.put('+', 1);
+        precedenceMap.put('-', 1);
+        precedenceMap.put('*', 2);
+        precedenceMap.put('/', 2);
+
+    }
+
+
+}
+&lt;/code&gt;&lt;/pre&gt;</description>
+<category>알고리즘</category>
+<category>1918</category>
+<category>algorithms</category>
+<category>java</category>
+<category>stack</category>
+<category>문제</category>
+<category>백준</category>
+<category>백준 1918번</category>
+<category>백준1918</category>
+<category>스택</category>
+<category>알고리즘</category>
+<category>자바</category>
+<category>프로그래밍</category>
+<category>후위표기식</category>
+<author>사용자 9/3</author>
+<guid>https://normal93.tistory.com/28</guid>
+<comments>https://normal93.tistory.com/28#entry28comment</comments>
+<pubDate>Thu, 02 May 2019 15:52:21 +0900</pubDate>
+</item>
+<item>
+<title>Spring boot S3 Local에서 Test하기</title>
+<link>https://normal93.tistory.com/27</link>
+<description>&lt;h1&gt;Spring boot S3 Local에서 Test하기&lt;/h1&gt;
+&lt;h3&gt;문제&lt;/h3&gt;
+&lt;p&gt;S3를 사용하여 정적 이미지를 업로드 하도록 설정을 하였더니 , 문제가 생겼다. 테스트할 때 마다 실제 s3 저장소에 이미지가 올라간다는 점과, Travis 에서 빌드할 때 accessKey 와 secretKey가 없으니 계속해서 빌드에 실패하는 것이다.&lt;/p&gt;
+&lt;h3&gt;해결방안&lt;/h3&gt;
+&lt;p&gt;인터넷에 어떤 블로그에서 실제 회사에서 업무 시 하나의 s3 버킷에 여러명의 개발자가 붙어서 개발하면 다양한 문제가 발생할 수 있기 때문에 로컬에서 테스트시에는 s3 mock을 이용해서 로컬에서 각각의 mock으로 작성된 s3 버킷에서 테스트를 한다는 글을 며칠전에 봤던 것이 기억나는데 아무리 다시 찾아서 읽어보려해도 찾지 못했다…ㅠㅠ&lt;/p&gt;
+&lt;p&gt;그래도 그 후 s3 mock 에 관련되서 검색해본 결과 &lt;strong&gt;adobe&lt;/strong&gt;에서 만든 &lt;strong&gt;&lt;a href=&quot;https://github.com/adobe/S3Mock&quot;&gt;S3Mock&lt;/a&gt;&lt;/strong&gt; 과 &lt;strong&gt;findify&lt;/strong&gt;의 &lt;strong&gt;&lt;a href=&quot;https://github.com/findify/s3mock&quot;&gt;S3 mock library for Java/Scala&lt;/a&gt;&lt;/strong&gt; 가 존재하는 것을 확인하여서 프로젝트에 적용하여 봤다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99E4B14F5CA5D9B624&quot; alt=&quot;S3Mock&quot;&gt;&lt;/p&gt;
+&lt;p&gt;S3Mock&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99F179435CA5D9B621&quot; alt=&quot;S3 Mock library for Java/Scala&quot;&gt;&lt;/p&gt;
+&lt;p&gt;S3 Mock library for Java/Scala&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;먼저 adobe의 &lt;strong&gt;S3Mock&lt;/strong&gt;이 더 최근까지 관리되고 있는 것을 확인하여 S3Mock을 프로젝트에 적용하였다.&lt;/p&gt;
+&lt;p&gt;사이트의 README를 보면서 하나하나 적용하였는데, 중간에 계속 어딘가에서 NullPointException이 발생하는 바람에 결국 사용을 포기하고, S3 Mock library를 적용하였다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-xml&quot;&gt;//pom.xml
+    &amp;lt;dependency&amp;gt;
+        &amp;lt;groupId&amp;gt;io.findify&amp;lt;/groupId&amp;gt;
+        &amp;lt;artifactId&amp;gt;s3mock_2.12&amp;lt;/artifactId&amp;gt;
+        &amp;lt;version&amp;gt;0.2.5&amp;lt;/version&amp;gt;
+        &amp;lt;scope&amp;gt;test&amp;lt;/scope&amp;gt;
+    &amp;lt;/dependency&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;pom.xml에 dependency를 추가해주었다. ( 링크의 사이트의 예제는 0.2.4로 적혀있는데 0.2.5버전이 존재하므로 0.2.5를 사용해주자. )&lt;/p&gt;
+&lt;p&gt;이 후 S3MockConfig라는 TestConfiguration을 작성하여 주었다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;@TestConfiguration
+public class S3MockConfig {
+
+//@Value는 Properties에서 값을 가져온다.
+    @Value(&amp;quot;${cloud.aws.region.static}&amp;quot;)
+    String region;
+
+    @Value(&amp;quot;${cloud.aws.s3.bucket}&amp;quot;)
+    String bucket;
+
+//S3Mock을 빌드할때 포트나 메모리에 저장할 지 실제로 저장할 지 같은 것 등등을 설정 가능하다.
+    @Bean
+    public S3Mock s3Mock() {
+        return new S3Mock.Builder().withPort(8001).withInMemoryBackend().build();
+    }
+
+//위에서 작성한 S3Mock을 주입받는 Bean을 작성하였다.
+//실제 테스트가 아닌 환경을 위해 작성된 Config환경과 같이 켜질 경우를 대비하여 @Primary를 넣어주었다.
+//s3Mock.start를 이용하여 Mock S3 서버를 로컬에서 시작한다.
+    @Bean
+    @Primary
+    public AmazonS3 amazonS3(S3Mock s3Mock){
+        s3Mock.start();
+        AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(&amp;quot;http://localhost:8001&amp;quot;, region);
+        AmazonS3 client = AmazonS3ClientBuilder
+                .standard()
+                .withPathStyleAccessEnabled(true)
+                .withEndpointConfiguration(endpoint)
+                .withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))
+                .build();
+        client.createBucket(bucket);
+
+        return client;
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이렇게 작성하여서 AmazonS3라는 bean을 작성하여 준 뒤, 테스트 코드를 작성하였다.&lt;/p&gt;
+&lt;p&gt;테스트 코드는 S3ImageUploader라는 클래스가 실제로 잘 작동하는 지를 테스트한다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;@SpringBootTest
+@RunWith(SpringRunner.class)
+@ActiveProfiles(&amp;quot;test&amp;quot;)
+@Import(S3MockConfig.class)
+public class S3ImageUploaderTest {
+
+    @Autowired
+    S3ImageUploader s3ImageUploader;
+    @Autowired
+    S3Mock s3Mock;
+
+    @Test
+    public void test() throws IOException {
+        String expected = &amp;quot;mock1.png&amp;quot;;
+        MockMultipartFile mockMultipartFile = new MockMultipartFile(&amp;quot;file&amp;quot;, expected,
+                &amp;quot;image/png&amp;quot;, &amp;quot;test data&amp;quot;.getBytes());
+        UploadedImageDto uploadedImageDto = s3ImageUploader.upload(mockMultipartFile, &amp;quot;static&amp;quot;);
+
+        assertThat(uploadedImageDto.getImageExtension()).isEqualTo(&amp;quot;png&amp;quot;);
+        assertThat(uploadedImageDto.getOriginalName()).isEqualTo(expected);
+    }
+
+    @After
+    public void shutdownMockS3(){
+        s3Mock.stop();
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;위에서 작성한 S3MockConfig를 &lt;code&gt;@Import&lt;/code&gt; 어노테이션으로 임포트 해주었다.&lt;/p&gt;
+&lt;p&gt;이 후 잘 작동하는 것을 잘 테스트하고, &lt;code&gt;@After&lt;/code&gt; 어노테이션으로 만든 메소드에서 s3Mock을 멈추었다. (&lt;code&gt;s3Mock.shutdown()&lt;/code&gt;)으로 작성하여도 된다.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;아직 모르는게 많아 게시글에 잘못된 정보가 있을 수 있습니다. 혹시 잘못된 정보가 있다면, 댓글 혹은 메일로 알려주시면 최대한 빨리 수정하겠습니다!&lt;/em&gt;&lt;/p&gt;
+</description>
+<category>서버 프로그래밍</category>
+<category>java</category>
+<category>mocks3</category>
+<category>S3</category>
+<category>s3mock</category>
+<category>Spring</category>
+<category>springboot</category>
+<category>test</category>
+<category>자바</category>
+<author>사용자 9/3</author>
+<guid>https://normal93.tistory.com/27</guid>
+<comments>https://normal93.tistory.com/27#entry27comment</comments>
+<pubDate>Thu, 04 Apr 2019 19:19:17 +0900</pubDate>
+</item>
+<item>
+<title>[알고리즘] 백준 2667번 단지번호붙이기 ( BFS )</title>
+<link>https://normal93.tistory.com/25</link>
+<description>&lt;h1&gt;백준 2667번 단지번호붙이기&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://www.acmicpc.net/problem/2667&quot;&gt;문제 바로가기&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99C77F395C99EA4821&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;오늘은 단지번호붙이기 문제를 풀어보았다.&lt;/p&gt;
+&lt;p&gt;원래 그림이나 이차원배열이 나오는 문제는 보기만해도 풀기 싫어서 넘기곤 했는데, BFS, DFS를 연습하면서 이제 그나마 거부감이 많이 줄었다.&lt;/p&gt;
+&lt;p&gt;문제는 2차원배열내에서 서로 이어진 단지가 몇개 있는지 찾는 문제로, 이와 비슷한 문제를 이전에 풀어본 경험이 있어서 쉽게 풀 수 있었다.&lt;/p&gt;
+&lt;p&gt;먼저 2차원배열을 잘 입력받아서 &lt;code&gt;map&lt;/code&gt;이라는 배열에 넣어줬고, &lt;code&gt;visited&lt;/code&gt;라는 2차원 &lt;code&gt;boolean&lt;/code&gt;배열을 만들어 주었다.&lt;/p&gt;
+&lt;p&gt;이 후, 1이 있는 위치를 돌면서 bfs 함수에 넣어준다. 이 때 visited 값이 true이면 이미 다른 이어진 부분에서 체크를 했다는 뜻이므로 bfs함수를 돌지 않는다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;
+for (int i = 0; i &amp;lt; N; i++) {
+            for (int j = 0; j &amp;lt; N; j++) {
+                if (map[i][j] != 0 &amp;amp;&amp;amp; !visited[i][j]) {
+                    bfs(new Node(i, j));
+                }
+            }
+        }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;bfs함수 내부에서는 &lt;code&gt;Queue&lt;/code&gt;를 만들어서 상, 하, 좌, 우를 탐색하여 &lt;code&gt;visited&lt;/code&gt;값과 &lt;code&gt;map&lt;/code&gt;값을 확인하여 서로 연결된 단지들을 찾아준다. 이때 &lt;code&gt;count&lt;/code&gt;를 세어준다.&lt;/p&gt;
+&lt;p&gt;이 후 &lt;code&gt;Queue&lt;/code&gt;가 비었을 때 &lt;code&gt;static&lt;/code&gt;으로 선언해놓은 answer라는 &lt;code&gt;ArrayList&lt;/code&gt;에 값을 추가해주었다.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;bfs함수&lt;/b&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;
+Queue&amp;lt;Node&amp;gt; queue = new LinkedList&amp;lt;&amp;gt;();
+
+        int count = 0;
+        visited[node.x][node.y] = true;
+        queue.add(node);
+
+        while (!queue.isEmpty()) {
+            count++;
+            Node current = queue.poll();
+
+            for (int i = 0; i &amp;lt; 4; i++) {
+                int nx = current.x + dx[i];
+                int ny = current.y + dy[i];
+
+                if (nx &amp;lt; 0 || ny &amp;lt; 0 || nx &amp;gt;= N || ny &amp;gt;= N) continue;
+
+                if(visited[nx][ny]) continue;
+
+                if(map[nx][ny] != 0){
+                    visited[nx][ny] = true;
+                    queue.add(new Node(nx, ny));
+                }
+            }
+        }
+
+        answer.add(count);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이 후 &lt;code&gt;answer&lt;/code&gt;의 size를 출력해주고, 오름차순으로 정렬한 &lt;code&gt;answer&lt;/code&gt;의 원소들을 출력하여주었다.&lt;/p&gt;
+</description>
+<category>알고리즘</category>
+<category>BOJ</category>
+<category>java</category>
+<category>단지</category>
+<category>단지번호붙이기</category>
+<category>백준</category>
+<category>번호</category>
+<category>붙이기</category>
+<category>알고리즘</category>
+<category>자바</category>
+<author>사용자 9/3</author>
+<guid>https://normal93.tistory.com/25</guid>
+<comments>https://normal93.tistory.com/25#entry25comment</comments>
+<pubDate>Tue, 26 Mar 2019 18:11:05 +0900</pubDate>
+</item>
+<item>
+<title>[알고리즘] 알고스팟 소풍 PICNIC</title>
+<link>https://normal93.tistory.com/24</link>
+<description>&lt;h1&gt;알고스팟 소풍 PICNIC&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://algospot.com/judge/problem/read/PICNIC&quot;&gt;문제 바로가기&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/997C683A5C947E4609&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;백트래킹으로 문제를 해결하였다.&lt;br&gt;보통 이런식으로 모든 방법의 수를 구하는 방법은 백트래킹으로 구하는 경우가 많은 것 같다.&lt;br&gt;이와 반대로 가장 먼저 도달하는 방법을 구하는 경우는 BFS가 많은 것 같은데... 이것도 더 익숙해져서 문제를 바로바로 어떤식으로 풀지 머릿 속에 나올 정도가 됐으면 좋겠다....&lt;/p&gt;
+&lt;p&gt;먼저 친구관계를 저장해줄 &lt;code&gt;friends&lt;/code&gt; 라는 이차원 &lt;code&gt;boolean&lt;/code&gt;배열을 만들어서 친구관계를 저장하였고, 짝이 정해졌는 지 확인해줄 &lt;code&gt;visited&lt;/code&gt;라는 &lt;code&gt;boolean&lt;/code&gt; 배열도 만들어 주었다.&lt;/p&gt;
+&lt;p&gt;이 후 재귀함수를 만들어서 아직 짝이 없는 친구들을 짝을 주어지는 식으로 백트래킹을 해줬다.&lt;/p&gt;
+&lt;p&gt;구현 코드는 아래와 같다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;
+/**
+ * https://algospot.com/judge/problem/read/PICNIC
+ * 알고스팟 피크닉 PICNIC
+ */
+public class Picnic {
+    static BufferedReader br= new BufferedReader(new InputStreamReader(System.in));
+    static int N = 0;
+    static int M = 0;
+    static int count = 0;
+    static boolean[][] friends;
+    static boolean[] visited;
+    public static void main(String[] args) throws IOException {
+        int C = Integer.parseInt(br.readLine().trim());
+        while(C--&amp;gt;0){
+            count= 0;
+            solution();
+            System.out.println(count);
+        }
+    }
+
+    private static void solution() throws IOException {
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        N = Integer.parseInt(st.nextToken());
+        M = Integer.parseInt(st.nextToken());
+        friends = new boolean[N][N];
+        visited = new boolean[N];
+        st = new StringTokenizer(br.readLine());
+
+        for (int i = 0; i &amp;lt; M; i++) {
+            int person1 = Integer.parseInt(st.nextToken());
+            int person2 = Integer.parseInt(st.nextToken());
+
+            friends[person1][person2] = true;
+            friends[person2][person1] = true;
+        }
+
+        dfs();
+    }
+
+    private static void dfs() {
+        int person = findNotQueue();
+
+        if(person&amp;lt;0){
+            count++;
+            return;
+        }
+
+        for (int i = 0; i &amp;lt; N; i++) {
+            if(i == person) continue;
+            if(friends[person][i] &amp;amp;&amp;amp; !visited[i]){
+                visited[person] = true;
+                visited[i] = true;
+                dfs();
+                visited[person] = false;
+                visited[i] = false;
+            }
+        }
+    }
+
+    private static int findNotQueue() {
+        for (int i = 0; i &amp;lt; N; i++) {
+            if(!visited[i]) return i;
+        }
+        return -1;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+<category>알고리즘</category>
+<category>Algospot</category>
+<category>java</category>
+<category>picnic</category>
+<category>소풍</category>
+<category>알고리즘</category>
+<category>알고스팟</category>
+<category>자바</category>
+<category>피크닉</category>
+<author>사용자 9/3</author>
+<guid>https://normal93.tistory.com/24</guid>
+<comments>https://normal93.tistory.com/24#entry24comment</comments>
+<pubDate>Fri, 22 Mar 2019 15:24:05 +0900</pubDate>
+</item>
+<item>
+<title>[알고리즘] 알고스팟 BOARDCOVER  게임판 덮기 문제</title>
+<link>https://normal93.tistory.com/23</link>
+<description>&lt;h1&gt;알고스팟 BOARDCOVER&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://algospot.com/judge/problem/read/BOARDCOVER&quot;&gt;문제 바로가기&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9945A7505C9472251B&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;최근 취업준비로 알고리즘 공부를 꾸준히 하려고 노력하고 있다.&lt;/p&gt;
+&lt;p&gt;DFS, BFS, 백트래킹 문제들을 위주로 풀어보려고 하고 있는데 생각보다 쉽지 않은 것 같다. 한 문제를 푸는데 한시간 이상 걸리는 경우가 다반사인데 실제 코딩테스트에서는 한문제를 30~1시간이내에 풀어야 하기때문에 주의해야겠다.&lt;/p&gt;
+&lt;p&gt;이번 문제는 알고스팟에서 문제를 보다가 _난이도 하 _ 라는 말에 덥석 문제를 풀기 시작했는데.... 나에게는 난이도 하가 하가 아니었다는 사실...ㅠㅠ&lt;/p&gt;
+&lt;p&gt;문제를 읽어보고 처음엔 백트래킹을 이용하여 금세 풀 수 있을 것이라 생각했는데 생각보다 일일히 바꿔주는 부분을 구현하는 데 오래 걸려서 결국 남들의 풀이를 참고하여 풀었다.&lt;/p&gt;
+&lt;p&gt;다행히 백트래킹을 사용하여 푸는 것이 맞았다 하하..&lt;/p&gt;
+&lt;p&gt;코드는 아래와 같이 짰다. 썩 깔끔한 코드는 아닌 것같다...&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;package algo.Algorithms;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.StringTokenizer;
+
+/**
+ * https://algospot.com/judge/problem/read/BOARDCOVER
+ * 알고스팟 BOARDCOVER  난이도 하(라는데 매우 어려움 나한텐..)
+ */
+public class BoardCover {
+    public static int H = 0;
+    public static int W = 0;
+    public static int[][] map;
+    public static int[][][] arr = {
+            {{0, 0}, {1, 0}, {0, 1}},
+            {{0, 0}, {1, 0}, {1, -1}},
+            {{0, 0}, {1, 0}, {1, 1}},
+            {{0, 0}, {0, 1}, {1, 1}}
+    };
+    public static int count = 0;
+    public static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+    public static void main(String[] args) throws IOException {
+        int C = Integer.parseInt(br.readLine().trim());
+        while (C-- &amp;gt; 0) {
+            count = 0;
+            StringTokenizer st = new StringTokenizer(br.readLine());
+            H = Integer.parseInt(st.nextToken());
+            W = Integer.parseInt(st.nextToken());
+            solution();
+        }
+    }
+
+    private static void solution() throws IOException {
+        map = new int[H][W];
+
+        for (int i = 0; i &amp;lt; H; i++) {
+            String str = br.readLine();
+            for (int j = 0; j &amp;lt; W; j++) {
+                map[i][j] = str.charAt(j) == &amp;#39;#&amp;#39; ? 1 : 0;
+            }
+        }
+
+        dfs();
+
+        System.out.println(count);
+
+    }
+
+    private static void dfs() {
+        Node node = findFirstWhiteBlock();
+        if (node == null) {
+            count++;
+            return;
+        }
+
+    //이 부분의 코드를 좀 깔끔하게 짤 수 있을 것은데....
+        outerloop:
+        for (int i = 0; i &amp;lt; 4; i++) {
+            for (int j = 0; j &amp;lt; 3; j++) {
+                int nextX = node.x + arr[i][j][0];
+                int nextY = node.y + arr[i][j][1];
+                if (nextX &amp;lt; 0 || nextY &amp;lt; 0 || nextX &amp;gt;= H || nextY &amp;gt;= W) continue outerloop;
+                if (map[nextX][nextY] == 1) continue outerloop;
+            }
+            // 세팅해주고 
+            set(node, arr[i], 1);
+            // 재귀함수 호출
+            dfs();
+            // 함수가 리턴되면 세팅해준값 다시 초기화 ( 백트래킹 )
+            set(node, arr[i], 0);
+        }
+
+
+    }
+    // 세번째 인자로 들어온 값으로 set해준다.
+    private static void set(Node node, int[][] arr, int num) {
+        for (int j = 0; j &amp;lt; 3; j++) {
+            int nextX = node.x + arr[j][0];
+            int nextY = node.y + arr[j][1];
+            map[nextX][nextY] = num;
+        }
+    }
+
+    // 모두 다 검은색으로 칠해졌을 시에는 null을 리턴한다.
+    private static Node findFirstWhiteBlock() {
+        for (int i = 0; i &amp;lt; H; i++) {
+            for (int j = 0; j &amp;lt; W; j++) {
+                if (map[i][j] == 0) return new Node(i, j);
+            }
+        }
+        return null;
+    }
+
+    public static class Node {
+        int x, y;
+
+        public Node(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;최근 몇몇 지원한 기업에서 코딩테스트를 봤느데 몽땅 떨어졌다...&lt;br&gt;서버개발 연습하는 게 더 즐겁고 재밌지만, 개발자를 업으로 삼고 싶으면 일단 알고리즘 공부에 몰두해야할듯하다...&lt;/p&gt;
+</description>
+<category>알고리즘</category>
+<category>BOARDCOVER</category>
+<category>게임판덮기</category>
+<category>알고스팟</category>
+<category>자바</category>
+<author>사용자 9/3</author>
+<guid>https://normal93.tistory.com/23</guid>
+<comments>https://normal93.tistory.com/23#entry23comment</comments>
+<pubDate>Fri, 22 Mar 2019 14:26:36 +0900</pubDate>
+</item>
+<item>
+<title>Travis CI를 이용해 Maven + SpringBoot에 CI 적용하기</title>
+<link>https://normal93.tistory.com/21</link>
+<description>&lt;h1&gt;Travis CI를 이용해 Maven + SpringBoot에 CI 적용하기&lt;/h1&gt;
+&lt;h3&gt;CI&lt;/h3&gt;
+&lt;p&gt;CI란 Continuous Integration의 약자로, 각각의 개발자의 개발소스를 한번에 통합 빌드하는 과정을 지속적으로 함으로써 따로 어느시점에 코드를 모아서 통합빌드할 필요가 없도록 하는 기법을 말합니다. 이를 활용하면 배포를 위한 빌드와 테스트 단계의 소요시간을 줄일 수 있다고 합니다.&lt;/p&gt;
+&lt;h3&gt;CI Server&lt;/h3&gt;
+&lt;p&gt;빌드 프로세스를 관리해주는 서버로 대표적으로 젠킨스, Travis CI, Circle CI가 있습니다. 오늘 저는 Travis CI를 이용해 제 SpringBoot 프로젝트에 CI를 적용해보겠습니다.&lt;/p&gt;
+&lt;p&gt;Travis에 프로젝트를 연동완료하면, master브랜치에 소스코드가 올라갈때마다 자동으로 통합빌드 및 테스트를 진행하여, 수행 결과를 이메일 혹은 텔레그램 등으로 보내줍니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;먼저 SpringBoot 프로젝트를 하나 만들어줍니다. 저는 미리 만들어 놓은 개인 프로젝트에 적용할 것이고, Maven을 빌드툴로 사용합니다. 만드신 프로젝트를 git을 이용하여 github에 새로 올려주세요.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ol start=&quot;2&quot;&gt;
+&lt;li&gt;github에 프로젝트를 올리셨다면, &lt;a href=&quot;https://travis-ci.org&quot;&gt;Travis CI&lt;/a&gt;로 이동합니다. Travis CI에 가입되어 있지 않으신 분은 가입을 먼저 진행하신 후, &lt;code&gt;new repository&lt;/code&gt; 버튼을 클릭합니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99A3B63A5C6D3D830A&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;ol start=&quot;3&quot;&gt;
+&lt;li&gt;이런식으로 본인의 github에 올라가있는 repository들이 리스트에 보여집니다. 여기서 본인이 원하는 해당 레포지토리 옆의 스위치 버튼을 클릭하여 활성화시킵니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ol start=&quot;4&quot;&gt;
+&lt;li&gt;.travis.yml파일을 repository의 root 위치에 생성합니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;language: java
+jdk: oraclejdk8
+
+before_install:
+  - chmod +x mvnw&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;before_install에서 chmod +x mvnw를 해주는 이유는 travis내에서 admin 권한을 갖고 있지않아 permission denied에러가 뜨는 경우가 있기 때문입니다.&lt;/p&gt;
+&lt;p&gt;기본적으로 Travis는 mvn test -B를 실행할 것입니다. 하지만 이외의 다른 command를 사용을 원하실 경우 .travis.yml파일을 수정하여 적용시킬 수 있습니다.&lt;/p&gt;
+&lt;p&gt;이제 .travis.yml을 &lt;code&gt;commit&lt;/code&gt;하고, &lt;code&gt;push&lt;/code&gt;까지 완료해주세요.&lt;/p&gt;
+&lt;ol start=&quot;5&quot;&gt;
+&lt;li&gt;Travis 홈페이지로 돌아가면 아래와 같이 빌드가 시작된 것을 볼 수 있습니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/995097485C6D3FBB33&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;빌드 시작까지 시간이 조금 걸릴 수 있습니다. 기다려도 실행되지않으면 우측상단의 More Options버튼을 클릭 후 Requests를 클릭한 후 다시 기다려주세요.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;빌드과정에서 에러 발생시 화면 최하단으로 내려보면 아래와 같이 에러코드가 써있습니다. 에러 발생시 소스코드를 수정 후 다시 커밋앤 푸시해주세요.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99BA444A5C6D441321&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;ol start=&quot;6&quot;&gt;
+&lt;li&gt;빌드가 완료되면 아래와 같은 화면이 뜨고 레포지토리 우측에 status image가 &lt;code&gt;build: passing&lt;/code&gt;으로 바뀝니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99AD7A445C6D44E81C&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;이제 이를 저희 README파일에 넣어보겠습니다. 화면에서 &lt;code&gt;build passing&lt;/code&gt;이라 적혀있는 부분을 클릭하시면 이런 화면이 뜹니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9994E8485C6D45190D&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;두번째 선택란을 markdown으로 변경하시고, 3번째 입력칸에 적혀있는 값을 복사합니다.&lt;/p&gt;
+&lt;p&gt;이제 이를 본인의 README.md파일에서 넣기 원하시는 부분에 붙여넣고 이를 푸시해주면 끝!&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9990663B5C6D45AB10&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;위와 같이 status이미지가 README에 나타나는 걸 확인할 수 있습니다!&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;em&gt;아직 모르는게 많아 게시글에 잘못된 정보가 있을 수 있습니다. 혹시 잘못된 정보가 있다면, 댓글 혹은 메일로 알려주시면 최대한 빨리 수정하겠습니다!&lt;/em&gt;&lt;/p&gt;
+</description>
+<category>서버 프로그래밍</category>
+<category>CI</category>
+<category>maven</category>
+<category>Travis</category>
+<category>travisci</category>
+<category>스프링</category>
+<category>스프링부트</category>
+<category>트래비스</category>
+<author>사용자 9/3</author>
+<guid>https://normal93.tistory.com/21</guid>
+<comments>https://normal93.tistory.com/21#entry21comment</comments>
+<pubDate>Wed, 20 Feb 2019 21:20:32 +0900</pubDate>
+</item>
+<item>
+<title>@Valid 에서 받은 Errors를 Serialize해서 ResponseEntity에 담자!</title>
+<link>https://normal93.tistory.com/20</link>
+<description>&lt;h1&gt;@Valid 에서 받은 Errors를 Serialize해서 ResponseEntity에 담자!&lt;/h1&gt;
+&lt;p&gt;지난번 &lt;a href=&quot;https://normal93.tistory.com/18&quot;&gt;Valid로 RequestBody값 검증하기&lt;/a&gt;글에서 보면 제가 &lt;code&gt;Errors&lt;/code&gt;를 바로 &lt;code&gt;ResponseEntity.badRequest().body(errors)&lt;/code&gt; 이런식으로 에러를 직접 바디에 담아서 리턴해주는 코드를 짰습니다.&lt;/p&gt;
+&lt;p&gt;아마 실행해보신 분들은 이런 에러가 떴을거에요!&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;org.springframework.web.util.NestedServletException: Request processing failed; nested exception is org.springframework.http.converter.HttpMessageConversionException: Type definition error: [simple type, class org.springframework.validation.DefaultMessageCodesResolver]; nested exception is com.fasterxml.jackson.databind.exc.InvalidDefinitionException: No serializer found for class org.springframework.validation.DefaultMessageCodesResolver and no properties discovered to create BeanSerializer (to avoid exception, disable SerializationFeature.FAIL_ON_EMPTY_BEANS) (through reference chain: org.springframework.validation.BeanPropertyBindingResult[&amp;quot;messageCodesResolver&amp;quot;])
+
+    at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1006)
+    at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:901)
+    at javax.servlet.http.HttpServlet.service(HttpServlet.java:660)
+    at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:875)
+    at org.springframework.test.web.servlet.TestDispatcherServlet.service(TestDispatcherServlet.java:71)
+    at javax.servlet.http.HttpServlet.service(HttpServlet.java:741)
+    at org.springframework.mock.web.MockFilterChain$ServletFilterProxy.doFilter(MockFilterChain.java:166)
+    at org.springframework.mock.web.MockFilterChain.doFilter(MockFilterChain.java:133)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:320)
+    at org.springframework.security.web.access.intercept.FilterSecurityInterceptor.invoke(FilterSecurityInterceptor.java:127)
+    at org.springframework.security.web.access.intercept.FilterSecurityInterceptor.doFilter(FilterSecurityInterceptor.java:91)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:119)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:137)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:111)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:170)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationProcessingFilter.doFilter(OAuth2AuthenticationProcessingFilter.java:176)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:116)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:66)
+    at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.web.context.SecurityContextPersistenceFilter.doFilter(SecurityContextPersistenceFilter.java:105)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:56)
+    at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107)
+    at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:334)
+    at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:215)
+    at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:178)
+    at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:357)
+    at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:270)
+    at org.springframework.mock.web.MockFilterChain.doFilter(MockFilterChain.java:133)
+    at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:99)
+    at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107)
+    at org.springframework.mock.web.MockFilterChain.doFilter(MockFilterChain.java:133)
+    at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:92)
+    at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107)
+    at org.springframework.mock.web.MockFilterChain.doFilter(MockFilterChain.java:133)
+    at org.springframework.web.filter.HiddenHttpMethodFilter.doFilterInternal(HiddenHttpMethodFilter.java:93)
+    at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107)
+    at org.springframework.mock.web.MockFilterChain.doFilter(MockFilterChain.java:133)
+    at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:200)
+    at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107)
+    at org.springframework.mock.web.MockFilterChain.doFilter(MockFilterChain.java:133)
+    at org.springframework.test.web.servlet.MockMvc.perform(MockMvc.java:182)
+    at com.example.junsta.accounts.AccountControllerTest.회원가입_실패_비밀번호_공백(AccountControllerTest.java:106)
+    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+    at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke(Method.java:498)
+    at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+    at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+    at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+    at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+    at org.springframework.test.context.junit4.statements.RunBeforeTestExecutionCallbacks.evaluate(RunBeforeTestExecutionCallbacks.java:74)
+    at org.springframework.test.context.junit4.statements.RunAfterTestExecutionCallbacks.evaluate(RunAfterTestExecutionCallbacks.java:84)
+    at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+    at org.springframework.test.context.junit4.statements.RunBeforeTestMethodCallbacks.evaluate(RunBeforeTestMethodCallbacks.java:75)
+    at org.springframework.test.context.junit4.statements.RunAfterTestMethodCallbacks.evaluate(RunAfterTestMethodCallbacks.java:86)
+    at org.springframework.test.context.junit4.statements.SpringRepeat.evaluate(SpringRepeat.java:84)
+    at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
+    at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.runChild(SpringJUnit4ClassRunner.java:251)
+    at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.runChild(SpringJUnit4ClassRunner.java:97)
+    at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+    at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+    at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+    at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+    at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+    at org.springframework.test.context.junit4.statements.RunBeforeTestClassCallbacks.evaluate(RunBeforeTestClassCallbacks.java:61)
+    at org.springframework.test.context.junit4.statements.RunAfterTestClassCallbacks.evaluate(RunAfterTestClassCallbacks.java:70)
+    at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+    at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.run(SpringJUnit4ClassRunner.java:190)
+    at org.junit.runners.Suite.runChild(Suite.java:128)
+    at org.junit.runners.Suite.runChild(Suite.java:27)
+    at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+    at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+    at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+    at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+    at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+    at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+    at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
+    at com.intellij.junit4.JUnit4IdeaTestRunner.startRunnerWithArgs(JUnit4IdeaTestRunner.java:68)
+    at com.intellij.rt.execution.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:47)
+    at com.intellij.rt.execution.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:242)
+    at com.intellij.rt.execution.junit.JUnitStarter.main(JUnitStarter.java:70)
+Caused by: org.springframework.http.converter.HttpMessageConversionException: Type definition error: [simple type, class org.springframework.validation.DefaultMessageCodesResolver]; nested exception is com.fasterxml.jackson.databind.exc.InvalidDefinitionException: No serializer found for class org.springframework.validation.DefaultMessageCodesResolver and no properties discovered to create BeanSerializer (to avoid exception, disable SerializationFeature.FAIL_ON_EMPTY_BEANS) (through reference chain: org.springframework.validation.BeanPropertyBindingResult[&amp;quot;messageCodesResolver&amp;quot;])
+    at org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter.writeInternal(AbstractJackson2HttpMessageConverter.java:293)
+    at org.springframework.http.converter.AbstractGenericHttpMessageConverter.write(AbstractGenericHttpMessageConverter.java:103)
+    at org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodProcessor.writeWithMessageConverters(AbstractMessageConverterMethodProcessor.java:289)
+    at org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor.handleReturnValue(HttpEntityMethodProcessor.java:223)
+    at org.springframework.web.method.support.HandlerMethodReturnValueHandlerComposite.handleReturnValue(HandlerMethodReturnValueHandlerComposite.java:82)
+    at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:119)
+    at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:895)
+    at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:800)
+    at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+    at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1038)
+    at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:942)
+    at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:998)
+    ... 91 more
+Caused by: com.fasterxml.jackson.databind.exc.InvalidDefinitionException: No serializer found for class org.springframework.validation.DefaultMessageCodesResolver and no properties discovered to create BeanSerializer (to avoid exception, disable SerializationFeature.FAIL_ON_EMPTY_BEANS) (through reference chain: org.springframework.validation.BeanPropertyBindingResult[&amp;quot;messageCodesResolver&amp;quot;])
+    at com.fasterxml.jackson.databind.exc.InvalidDefinitionException.from(InvalidDefinitionException.java:77)
+    at com.fasterxml.jackson.databind.SerializerProvider.reportBadDefinition(SerializerProvider.java:1191)
+    at com.fasterxml.jackson.databind.DatabindContext.reportBadDefinition(DatabindContext.java:313)
+    at com.fasterxml.jackson.databind.ser.impl.UnknownSerializer.failForEmpty(UnknownSerializer.java:71)
+    at com.fasterxml.jackson.databind.ser.impl.UnknownSerializer.serialize(UnknownSerializer.java:33)
+    at com.fasterxml.jackson.databind.ser.BeanPropertyWriter.serializeAsField(BeanPropertyWriter.java:727)
+    at com.fasterxml.jackson.databind.ser.std.BeanSerializerBase.serializeFields(BeanSerializerBase.java:719)
+    at com.fasterxml.jackson.databind.ser.BeanSerializer.serialize(BeanSerializer.java:155)
+    at com.fasterxml.jackson.databind.ser.DefaultSerializerProvider._serialize(DefaultSerializerProvider.java:480)
+    at com.fasterxml.jackson.databind.ser.DefaultSerializerProvider.serializeValue(DefaultSerializerProvider.java:319)
+    at com.fasterxml.jackson.databind.ObjectWriter$Prefetch.serialize(ObjectWriter.java:1396)
+    at com.fasterxml.jackson.databind.ObjectWriter.writeValue(ObjectWriter.java:913)
+    at org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter.writeInternal(AbstractJackson2HttpMessageConverter.java:287)
+    ... 102 more
+
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;잘 읽어보시면 &lt;code&gt;No Serailizer&lt;/code&gt;라는 말이 보일겁니다. &lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Errors&lt;/code&gt;를 &lt;code&gt;Serailize&lt;/code&gt;하지 못해서 &lt;code&gt;ResponseEntity&lt;/code&gt;에 담을 수 없다는 말인 것 같습니다.&lt;/p&gt;
+&lt;p&gt;그래서 한번 &amp;#39;백기선님의 REST API&amp;#39;강좌에서 봤던  &lt;code&gt;ErrorSerializer&lt;/code&gt;를 추가해보겠습니다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;@JsonComponent
+public class ErrorsSerializer extends JsonSerializer&amp;lt;Errors&amp;gt; {
+    @Override
+    public void serialize(Errors errors, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+        gen.writeStartArray();
+
+        errors.getFieldErrors().forEach(e -&amp;gt; {
+            try {
+                gen.writeStartObject();
+
+                gen.writeStringField(&amp;quot;field&amp;quot;, e.getField());
+                gen.writeStringField(&amp;quot;objectName&amp;quot;, e.getObjectName());
+                gen.writeStringField(&amp;quot;code&amp;quot;, e.getCode());
+                gen.writeStringField(&amp;quot;defaultMessage&amp;quot;, e.getDefaultMessage());
+                Object rejectedValue =  e.getRejectedValue();
+                if (rejectedValue != null) {
+                    gen.writeStringField(&amp;quot;rejectedValue&amp;quot;, rejectedValue.toString());
+                }
+
+                gen.writeEndObject();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        });
+
+        errors.getGlobalErrors().forEach(e-&amp;gt;{
+            try {
+                gen.writeStartObject();
+
+                gen.writeStringField(&amp;quot;objectName&amp;quot;, e.getObjectName());
+                gen.writeStringField(&amp;quot;code&amp;quot;, e.getCode());
+                gen.writeStringField(&amp;quot;defaultMessage&amp;quot;, e.getDefaultMessage());
+
+                gen.writeEndObject();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        });
+
+
+        gen.writeEndArray();
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;@JsonComponent&lt;/code&gt; 어노테이션을 추가해주시고, &lt;code&gt;JsonSerializer&amp;lt;Errors&amp;gt;&lt;/code&gt;를 상속받아줍니다. 이때 import는 &lt;code&gt;fasterxml&lt;/code&gt;의 시리얼라이저를 임포트해줍니다.&lt;/p&gt;
+&lt;p&gt;이제 이 상태로 코드를 실행해보면 코드가 무사히 실행되는 것을 확인하실 수 있습니다.&lt;/p&gt;
+&lt;p&gt;사실 저도 위의 Serializer를 설명할 정도는 안되서 포스트를 작성할 겸 공부를 좀 해봤는데, [HomoEfficio님의 블로그]를 보면 이해를 도울 수 있을 것 같습니다.(&lt;a href=&quot;https://homoefficio.github.io/2016/11/18/%EC%95%8C%EA%B3%A0%EB%B3%B4%EB%A9%B4-%EB%A7%8C%EB%A7%8C%ED%95%9C-Jackson-Custom-Serialization/&quot;&gt;https://homoefficio.github.io/2016/11/18/%EC%95%8C%EA%B3%A0%EB%B3%B4%EB%A9%B4-%EB%A7%8C%EB%A7%8C%ED%95%9C-Jackson-Custom-Serialization/&lt;/a&gt;)&lt;/p&gt;
+&lt;p&gt;다음에 기회가 되면 &lt;code&gt;Serializer&lt;/code&gt;에 관련된 포스트도 작성해보겠습니다! 그럼 오늘은 이만!&lt;/p&gt;
+</description>
+<category>서버 프로그래밍</category>
+<category>fasterxml</category>
+<category>Jackson</category>
+<category>serializer</category>
+<category>Spring</category>
+<category>Spring Boot</category>
+<category>springboot</category>
+<category>서버</category>
+<category>스프링</category>
+<category>스프링부트</category>
+<category>시리얼라이저</category>
+<author>사용자 9/3</author>
+<guid>https://normal93.tistory.com/20</guid>
+<comments>https://normal93.tistory.com/20#entry20comment</comments>
+<pubDate>Tue, 19 Feb 2019 15:30:27 +0900</pubDate>
+</item>
+<item>
+<title>스프링 시큐리티 요청 URI별 권한 처리할 때 문제상황 해결!</title>
+<link>https://normal93.tistory.com/19</link>
+<description>&lt;h1&gt;스프링 시큐리티 요청 URI별 권한 처리할 때 문제상황 해결!&lt;/h1&gt;
+&lt;p&gt;스프링 시큐리티를 사용하는 프로젝트에서 &lt;code&gt;/api/**&lt;/code&gt;는 &lt;code&gt;authenticated()&lt;/code&gt;로 처리하고, &lt;code&gt;/api/accounts&lt;/code&gt;로 들어오는 &lt;code&gt;POST&lt;/code&gt;요청만 &lt;code&gt;permitAll()&lt;/code&gt; 처리를 해줬는데 이게 실제 테스트코드에서 계속해서 실패하는 이슈가 있었다.&lt;/p&gt;
+&lt;p&gt;해당 코드는&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        http.anonymous()
+                .and()
+                .authorizeRequests()
+                .mvcMatchers(&amp;quot;/api/**&amp;quot;).authenticated()
+                .mvcMatchers(HttpMethod.POST, &amp;quot;/api/accounts&amp;quot;)
+                .permitAll()
+                .and()
+                .exceptionHandling()
+                .accessDeniedHandler(new OAuth2AccessDeniedHandler());
+
+    }&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이렇게 작성되어 있었다. 하지만 &lt;code&gt;/api/accounts&lt;/code&gt;로 &lt;code&gt;POST&lt;/code&gt;요청을 날릴때마다 권한이 없다는 에러가 발생하여서 검색결과, &lt;a href=&quot;https://docs.spring.io/spring-security/site/docs/current/apidocs/org/springframework/security/config/annotation/web/builders/HttpSecurity.html#authorizeRequests--&quot;&gt;스프링 공식 문서&lt;/a&gt;를 보면, 먼저 설정된 값이 우선순위를 가지고 있다는 것을 알게되었다.&lt;/p&gt;
+&lt;p&gt;따라서 코드의 순서를 아래와 같이 바꾸어주었다.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-java&quot;&gt;@Override
+    public void configure(HttpSecurity http) throws Exception {
+        http.anonymous()
+                .and()
+                .authorizeRequests()
+                .mvcMatchers(HttpMethod.POST, &amp;quot;/api/accounts&amp;quot;)
+                .permitAll()
+                .mvcMatchers(&amp;quot;/api/**&amp;quot;).authenticated()
+                .and()
+                .exceptionHandling()
+                .accessDeniedHandler(new OAuth2AccessDeniedHandler());
+
+    }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;이렇게 바꾼뒤 테스트해 본 결과, 테스트를 통과하는 것을 확인할 수 있었다.&lt;/p&gt;
+&lt;p&gt;가끔가다 권한설정에서 이유없이 문제가 발생하여 다시 코드를 짜는 경험이 있었는데, 그것도 아마 이것과 같은 상황이었던 것 같다.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt; 기억하자! 먼저 설정한 권한이 우선순위를 갖는다! &lt;/b&gt;&lt;/p&gt;
+</description>
+<category>서버 프로그래밍</category>
+<category>Spring</category>
+<category>Spring Boot</category>
+<category>spring security</category>
+<category>springboot</category>
+<category>스프링</category>
+<category>스프링 시큐리티</category>
+<category>스프링부트</category>
+<author>사용자 9/3</author>
+<guid>https://normal93.tistory.com/19</guid>
+<comments>https://normal93.tistory.com/19#entry19comment</comments>
+<pubDate>Tue, 19 Feb 2019 15:17:31 +0900</pubDate>
+</item>
+</channel>
+</rss>

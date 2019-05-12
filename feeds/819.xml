@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://jhyejun.com/feed.xml" rel="self" type="application/atom+xml" /><link href="http://jhyejun.com/" rel="alternate" type="text/html" /><updated>2019-04-20T14:27:12+00:00</updated><id>http://jhyejun.com/feed.xml</id><title type="html">jhyejun</title><subtitle>jhyejun's blog</subtitle><entry><title type="html">[Xcode] 날짜와 카운트를 이용한 빌드 번호 스크립트 2</title><link href="http://jhyejun.com/blog/build-number-script-using-date-and-count-2" rel="alternate" type="text/html" title="[Xcode] 날짜와 카운트를 이용한 빌드 번호 스크립트 2" /><published>2019-04-05T03:18:00+00:00</published><updated>2019-04-05T03:18:00+00:00</updated><id>http://jhyejun.com/blog/build-number-script-using-date-and-count-2</id><content type="html" xml:base="http://jhyejun.com/blog/build-number-script-using-date-and-count-2">&lt;p&gt;이전 글 &lt;strong&gt;&lt;a href=&quot;http://jhyejun.com/blog/build-number-script-using-date-and-count&quot; target=&quot;_blank&quot;&gt;[버전과 빌드 번호의 차이란?]&lt;/a&gt;&lt;/strong&gt; 에 있던&lt;br /&gt;
+&lt;strong&gt;빌드 번호를 자동으로 수정해주는 스크립트&lt;/strong&gt;를 만들었었다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;그런데 스크립트를 사용하다보니 이슈가 하나 생겼다.&lt;br /&gt;
+이슈는 카운트가 일의 자릿수에서 십의 자릿수로 넘어갈 때&lt;br /&gt;
+카운트 하나만 증가했지만, 빌드번호가 이전꺼보다는 숫자상으로는 크게 되었다.&lt;br /&gt;
+(예를 들어 201904059 보다 2019040510 이 숫자가 크다)&lt;br /&gt;
+&lt;strong&gt;앱 빌드를 아카이브할 때 이전에 빌드했던 버전과 같은 버전일 때&lt;/strong&gt;&lt;br /&gt;
+&lt;strong&gt;빌드번호를 비교해서 빌드번호가 이전 것보단 커야 아카이브를 할 수 있다.&lt;/strong&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;이런 이슈로 인해 스크립트를 수정했다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/bash&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Print buildDay&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Print buildCount&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;today&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;date +%Y%m%d&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; x&lt;span class=&quot;nv&quot;&gt;$buildDay&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; x &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;today&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+&lt;span class=&quot;nb&quot;&gt;printf&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; zeroPadBuildCount &lt;span class=&quot;s2&quot;&gt;&quot;%03d&quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;buildNumber&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;zeroPadBuildCount&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+
+/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Add :buildDay string &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildDay&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Add :buildCount string &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :CFBundleVersion &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildNumber&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$buildDay&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$today&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;today&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+&lt;span class=&quot;nb&quot;&gt;printf&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; zeroPadBuildCount &lt;span class=&quot;s2&quot;&gt;&quot;%03d&quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;buildNumber&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;zeroPadBuildCount&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+
+/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :buildDay &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildDay&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :buildCount &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :CFBundleVersion &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildNumber&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;else
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;printf&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; zeroPadBuildCount &lt;span class=&quot;s2&quot;&gt;&quot;%03d&quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;buildNumber&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;zeroPadBuildCount&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+
+/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :buildDay &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildDay&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :buildCount &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :CFBundleVersion &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildNumber&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;수정된 내용은 카운트가 001 에서 999 까지 가도&lt;br /&gt;
+빌드번호의 자릿수는 같도록 수정하였다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+여담이지만…&lt;br /&gt;
+Xcode 에서만 쓸 때는 빌드번호가 보기에 괜찮다고 생각했는데…&lt;br /&gt;
+앱스토어에서 빌드번호를 보니 보기가 좀 별로인 거 같다.&lt;br /&gt;
+계속 쓸지는 진지하게 고려해봐야겠다.&lt;br /&gt;&lt;/p&gt;</content><author><name>jhyejun</name></author><category term="blog" /><category term="Xcode" /><category term="Build Number" /><category term="Script" /><summary type="html">이전 글 [버전과 빌드 번호의 차이란?] 에 있던 빌드 번호를 자동으로 수정해주는 스크립트를 만들었었다.</summary></entry><entry><title type="html">[IOS] 오토레이아웃 - ScrollView, StackView</title><link href="http://jhyejun.com/blog/autolayout-scrollview-stackview" rel="alternate" type="text/html" title="[IOS] 오토레이아웃 - ScrollView, StackView" /><published>2019-04-04T20:57:00+00:00</published><updated>2019-04-04T20:57:00+00:00</updated><id>http://jhyejun.com/blog/autolayout-scrollview-stackview</id><content type="html" xml:base="http://jhyejun.com/blog/autolayout-scrollview-stackview">&lt;h3 id=&quot;오토레이아웃-autolayout&quot;&gt;오토레이아웃 (AutoLayout)&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;오토레이아웃이란?&lt;/strong&gt;&lt;br /&gt;
+두개의 뷰 사이의 관계를 &lt;strong&gt;제약 조건(Constraints)&lt;/strong&gt; 이라는 것을 이용하여&lt;br /&gt;
+&lt;strong&gt;뷰의 위치 혹은 크기를 지정&lt;/strong&gt;하는 것이다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;쉽게 말하자면, A B C 라는 사람(뷰)이 있으면&lt;br /&gt;
+A는 왼쪽 벽에 딱 붙어 있어야한다는 조건,&lt;br /&gt;
+C는 오른쪽 벽에 딱 붙어 있어야한다는 조건,&lt;br /&gt;
+B는 A의 오른쪽에서 3m 떨어지고&lt;br /&gt;
+C의 왼쪽에서 5m 거리에 있어야 한다는 조건을 걸어서&lt;br /&gt;
+A B C 사람(뷰)들의 각 위치를 알 수 있고&lt;br /&gt;
+사람(뷰)들의 움직일 수 있는 행동반경(크기)를 지정할 수 있다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;strong&gt;오토레이아웃의 장점&lt;/strong&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;화면 회전 혹은 기기 해상도 어디에든 잘 맞게&lt;/strong&gt; 화면이 구성된다.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;유지보수&lt;/strong&gt;성이 뛰어나진다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;스크롤뷰-scrollview&quot;&gt;스크롤뷰 (ScrollView)&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;스크롤뷰는 안에 있는 콘텐츠가 자신보다 커져야 스크롤이 가능&lt;/strong&gt;하다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;스크롤뷰에서 오토레이아웃을 사용하는 것은 이제껏 적용해왔던 방법&lt;/strong&gt;과는 다르다.&lt;br /&gt;
+이전까지는 기준이 되는 뷰에서와 자신에게 제약조건을 적용해 오토레이아웃을 사용했는데&lt;br /&gt;
+이 방법은 &lt;strong&gt;기준이 되는 뷰의 크기 혹은 위치를 정확하게 알 수 있을 때 가능한 방법&lt;/strong&gt;이다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;하지만 스크롤뷰는 스크롤이 가능해서&lt;br /&gt;
+&lt;strong&gt;스크롤뷰의 크기가 무한으로 커질 수 있기 때문에&lt;/strong&gt;&lt;br /&gt;
+기존의 적용해왔던 방법으로는 부족한 점이 있다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;그래서 스크롤뷰에서 오토레이아웃을 사용하는 방법은 무엇이냐?&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;스크롤뷰 콘텐츠들을 감싸줄 콘텐츠 래퍼뷰(Contents Wrapper)&lt;/strong&gt;를 만들어서&lt;br /&gt;
+콘텐츠들을 감싸준 콘텐츠 래퍼뷰를&lt;br /&gt;
+&lt;strong&gt;스크롤뷰 내부에서 꽉차게끔 상하좌우의 제약조건을 걸고&lt;/strong&gt;&lt;br /&gt;
+&lt;strong&gt;스크롤뷰와 높이가 같게끔 제약조건을 걸어주면&lt;/strong&gt;&lt;br /&gt;
+이전까지 사용하던 오토레이아웃 적용 방법을 사용할 수 있다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;하지만, 이럴 경우 콘텐츠들이 많아져서 스크롤뷰보다 더 커질 경우&lt;br /&gt;
+스크롤뷰와 높이가 같다고 제약조건을 걸었기 때문에&lt;br /&gt;
+&lt;strong&gt;스크롤이 안 되는 문제&lt;/strong&gt;가 생긴다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;이 문제를 해결하기 위해서는&lt;br /&gt;
+아까 걸었던 &lt;strong&gt;스크롤뷰와 컨텐츠 래퍼뷰의 높이가 같다는 제약조건&lt;/strong&gt;의&lt;br /&gt;
+&lt;strong&gt;priority(우선순위) 를 낮게&lt;/strong&gt; 잡아주면&lt;br /&gt;
+콘텐츠들이 많아져도 스크롤이 가능해지게 된다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;스택뷰-stackview&quot;&gt;스택뷰 (StackView)&lt;/h3&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;스택뷰는 iOS 9 부터 나온 혜성같은 존재&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;strong&gt;스택뷰는 여러개의 뷰를 하나의 뷰로 합쳐주는 뷰&lt;/strong&gt;이다.&lt;br /&gt;
+합쳐졌던 여러개의 뷰는 스택뷰의 스택으로 존재한다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;스택뷰를 사용하게 되면 각각 뷰에 걸려있던 제약조건을&lt;br /&gt;
+합치면서 뷰들을 관리하기가 쉬워진다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;스택뷰의 주요 프로퍼티는&lt;br /&gt;
+distribution, alignment, spacing 가 있다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;하나씩 알아보면,&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Distribution&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;fill (각 내부 뷰들의 컨텐츠 사이즈. 단 누가 늘어나도 되는지 priority를 통해 정해져야함)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/distribution_fill.png&quot; alt=&quot;distribution_fill&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;fillEqually (내부 뷰들의 크기를 같게)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/distribution_fillEqually.png&quot; alt=&quot;distribution_fillEqually&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;fillProportionally (각 뷰들의 콘텐츠 사이즈의 비율대로 스택뷰 사이즈를 비율 분할함)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/distribution_fillProportionally.png&quot; alt=&quot;distribution_fillProportionally&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;equalSpacing (내부 뷰들 사이의 간격을 Spacing 값으로 설정)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/distribution_equalSpacing.png&quot; alt=&quot;distribution_equalSpacing&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;equalCentering (내부 뷰들의 Center 간격을 같게 설정)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/distribution_equalCentering.png&quot; alt=&quot;distribution_equalCentering&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;strong&gt;Alignment&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;fill (정렬없이 채우기)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/alignment_fill.png&quot; alt=&quot;alignment_fill&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;leading (텍스트가 시작하는 쪽으로 정렬)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/alignment_leading.png&quot; alt=&quot;alignment_leading&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;top (위쪽 정렬)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/alignment_top.png&quot; alt=&quot;alignment_top&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;firstBaseline (첫째줄 텍스트의 아랫라인으로 정렬)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/alignment_firstBaseline.png&quot; alt=&quot;alignment_firstBaseline&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;center (가운데 정렬)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/alignment_center.png&quot; alt=&quot;alignment_center&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;trailing (텍스트가 끝나는 쪽으로 정렬)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/alignment_trailing.png&quot; alt=&quot;alignment_trailing&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;bottom (아랫쪽 정렬))
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/alignment_bottom.png&quot; alt=&quot;alignment_bottom&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+  &lt;li&gt;lastBaseline (마지막줄 텍스트의 아랫라인으로 정렬)
+&lt;img src=&quot;/assets/images/blog/autolayout-scrollview-stackview/alignment_lastBaseline.png&quot; alt=&quot;alignment_lastBaseline&quot; width=&quot;100%&quot; height=&quot;50%&quot; /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;strong&gt;Spacing&lt;/strong&gt;
+스택뷰 내부의 뷰들간의 간격&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;strong&gt;스택뷰의 장점&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;조작이 쉽다.&lt;/li&gt;
+  &lt;li&gt;조립하기 쉽다.&lt;/li&gt;
+  &lt;li&gt;유지보수가 쉽다.&lt;/li&gt;
+  &lt;li&gt;가볍게 쓸 수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;정리&quot;&gt;정리&lt;/h3&gt;
+&lt;p&gt;위에서 배운 스크롤뷰에서 콘텐츠 래퍼뷰를&lt;br /&gt;
+스택뷰로 사용하면 더 효과적으로 사용할 수 있다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;이 글은 ‘야곰님의 오토레이아웃 정복하기’ 에서 배운 걸 정리하였습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;잘못된-부분에-대한-피드백은-언제나-작성자에게-힘과-도움이-됩니다&quot;&gt;잘못된 부분에 대한 피드백은 언제나 작성자에게 힘과 도움이 됩니다.&lt;/h4&gt;</content><author><name>jhyejun</name></author><category term="blog" /><category term="IOS" /><category term="AutoLayout" /><category term="오토레이아웃" /><summary type="html">오토레이아웃 (AutoLayout) 오토레이아웃이란? 두개의 뷰 사이의 관계를 제약 조건(Constraints) 이라는 것을 이용하여 뷰의 위치 혹은 크기를 지정하는 것이다.</summary></entry><entry><title type="html">[알고리즘] 프로그래머스 - 수박수박수박수박수박수? 문제 풀이</title><link href="http://jhyejun.com/blog/algorithm-string-iterator-subak-solution" rel="alternate" type="text/html" title="[알고리즘] 프로그래머스 - 수박수박수박수박수박수? 문제 풀이" /><published>2019-02-20T21:52:00+00:00</published><updated>2019-02-20T21:52:00+00:00</updated><id>http://jhyejun.com/blog/algorithm-string-iterator-subak-solution</id><content type="html" xml:base="http://jhyejun.com/blog/algorithm-string-iterator-subak-solution">&lt;p&gt;&lt;img src=&quot;/assets/images/blog/algorithm-string-iterator-subak-solution/problem.png&quot; alt=&quot;수박수박수박수박수박수? 문제&quot; width=&quot;100%&quot; height=&quot;70%&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이것 또한 매우 단순하게 풀었다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;n 을 홀수일 경우 “수” 를 문자열 변수에 더하고&lt;/strong&gt;&lt;br /&gt;
+&lt;strong&gt;짝수일 경우는 “박” 을 문자열 변수에 더한다.&lt;/strong&gt;&lt;br /&gt;
+&lt;strong&gt;더한 문자열 변수를 반환하는 방법으로 풀었다.&lt;/strong&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import Foundation
+
+func solution(_ n:Int) -&amp;gt; String {
+    var result: String = &quot;&quot;
+        
+    for i in 1 ... n {
+        if i % 2 == 1 {
+            result += &quot;수&quot;
+        } else {
+            result += &quot;박&quot;
+        }
+    }
+    
+    return result
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>jhyejun</name></author><category term="blog" /><category term="알고리즘" /><category term="프로그래머스" /><summary type="html"></summary></entry><entry><title type="html">[알고리즘] 프로그래머스 - 서울에서 김서방 찾기 문제 풀이</title><link href="http://jhyejun.com/blog/algorithm-find-kim-seobang-in-seoul-solution" rel="alternate" type="text/html" title="[알고리즘] 프로그래머스 - 서울에서 김서방 찾기 문제 풀이" /><published>2019-02-20T21:45:00+00:00</published><updated>2019-02-20T21:45:00+00:00</updated><id>http://jhyejun.com/blog/algorithm-find-kim-seobang-in-seoul-solution</id><content type="html" xml:base="http://jhyejun.com/blog/algorithm-find-kim-seobang-in-seoul-solution">&lt;p&gt;&lt;img src=&quot;/assets/images/blog/algorithm-find-kim-seobang-in-seoul-solution/problem.png&quot; alt=&quot;서울에서 김서방 찾기 문제&quot; width=&quot;100%&quot; height=&quot;70%&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;이것 또한 단순하게 풀었다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;문자열 리스트에서 “Kim” 인 엘리먼트 인덱스 값을 반환하면 되기 때문에&lt;br /&gt;
+&lt;strong&gt;index 함수를 사용하여 문자열 리스트에서 “Kim” 인 엘리먼트 인덱스 값을 받게 했고&lt;/strong&gt;&lt;br /&gt;
+&lt;strong&gt;반환받은 인덱스 값은 스트링 안에 포함해서 반환하는 방법으로 풀었다.&lt;/strong&gt;&lt;br /&gt;
+&lt;strong&gt;(index 함수는 옵셔널 값을 반환하기 때문에 옵셔널 체이닝으로 옵셔널을 풀었다.)&lt;/strong&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import Foundation
+
+func solution(_ seoul:[String]) -&amp;gt; String {
+    return &quot;김서방은 \(seoul.index { $0 == &quot;Kim&quot; } ?? 0)에 있다&quot;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>jhyejun</name></author><category term="blog" /><category term="알고리즘" /><category term="프로그래머스" /><summary type="html"></summary></entry><entry><title type="html">[알고리즘] 프로그래머스 - 두 정수 사이의 합 문제 풀이</title><link href="http://jhyejun.com/blog/algorithm-sum-of-two-integers-solution" rel="alternate" type="text/html" title="[알고리즘] 프로그래머스 - 두 정수 사이의 합 문제 풀이" /><published>2019-02-20T21:34:00+00:00</published><updated>2019-02-20T21:34:00+00:00</updated><id>http://jhyejun.com/blog/algorithm-sum-of-two-integers-solution</id><content type="html" xml:base="http://jhyejun.com/blog/algorithm-sum-of-two-integers-solution">&lt;p&gt;&lt;img src=&quot;/assets/images/blog/algorithm-sum-of-two-integers-solution/problem.png&quot; alt=&quot;두 정수 사이의 합 문제&quot; width=&quot;100%&quot; height=&quot;70%&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;정말 단순하게 풀었다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;a 와 b 까지 포함해서 더해야하기 때문에&lt;br /&gt;
+&lt;strong&gt;a 와 b 의 대소를 구분하고&lt;/strong&gt;&lt;br /&gt;
+&lt;strong&gt;작은 숫자에서 높은 숫자까지 반복문을 돌려 값을 계속 더한 걸 반환하는 방법으로 풀었다.&lt;/strong&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import Foundation
+
+func solution(_ a:Int, _ b:Int) -&amp;gt; Int64 {
+    var result: Int = 0
+        
+    if b &amp;gt; a {
+        for i in a ... b {
+            result += i
+        }
+    } else {
+        for i in b ... a {
+            result += i
+        }
+    }
+        
+    return Int64(result)
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>jhyejun</name></author><category term="blog" /><category term="알고리즘" /><category term="프로그래머스" /><summary type="html"></summary></entry><entry><title type="html">[알고리즘] 프로그래머스 - 문자열 내 마음대로 정렬하기 문제 풀이</title><link href="http://jhyejun.com/blog/algorithm-sort-strings-as-you-like-solution" rel="alternate" type="text/html" title="[알고리즘] 프로그래머스 - 문자열 내 마음대로 정렬하기 문제 풀이" /><published>2019-02-11T21:39:00+00:00</published><updated>2019-02-11T21:39:00+00:00</updated><id>http://jhyejun.com/blog/algorithm-sort-strings-as-you-like-solution</id><content type="html" xml:base="http://jhyejun.com/blog/algorithm-sort-strings-as-you-like-solution">&lt;p&gt;&lt;img src=&quot;/assets/images/blog/algorithm-sort-strings-as-you-like-solution/problem.png&quot; alt=&quot;문자열 내 마음대로 정렬하기 문제&quot; width=&quot;100%&quot; height=&quot;70%&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;문제는 단순하다.&lt;br /&gt;
+&lt;strong&gt;문자열로 된 리스트에서 각 문자열들의 n 번째 글자를 뽑아서 정렬하면 된다.&lt;/strong&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;문자열에서 n 번째 글자를 뽑는 걸 반복해서 사용해야 하기 때문에&lt;br /&gt;
+&lt;strong&gt;extension 으로 String 타입에 함수를 추가했다.&lt;/strong&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;그리고 문자열 리스트인 strings 를 정렬시킨다.&lt;br /&gt;
+&lt;strong&gt;정렬은 각 문자열에서 n 번째 글자를 뽑아서 비교하고 문자열을 오름차순으로 정렬한다.&lt;/strong&gt;&lt;br /&gt;
+만약 비교하려는 문자열들의 n 번째 글자가 같은 글자일 경우&lt;br /&gt;
+&lt;strong&gt;문자열 자체를 비교해서 문자열을 오름차순으로 정렬한다.&lt;/strong&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import Foundation
+
+func solution(_ strings:[String], _ n:Int) -&amp;gt; [String] {
+	return strings.sorted {
+	    if $0[n] == $1[n] {
+	        return $0 &amp;lt; $1
+	    } else {
+	        return $0[n] &amp;lt; $1[n]
+	    }
+	}
+}
+	
+extension String {
+	subscript (i: Int) -&amp;gt; String {
+	    return String(self[index(startIndex, offsetBy: i)])
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>jhyejun</name></author><category term="blog" /><category term="알고리즘" /><category term="프로그래머스" /><summary type="html"></summary></entry><entry><title type="html">[알고리즘] 프로그래머스 - 체육복 문제 풀이</title><link href="http://jhyejun.com/blog/algorithm-gym-suit-solution" rel="alternate" type="text/html" title="[알고리즘] 프로그래머스 - 체육복 문제 풀이" /><published>2019-02-02T10:51:00+00:00</published><updated>2019-02-02T10:51:00+00:00</updated><id>http://jhyejun.com/blog/algorithm-gym-suit-solution</id><content type="html" xml:base="http://jhyejun.com/blog/algorithm-gym-suit-solution">&lt;p&gt;&lt;img src=&quot;/assets/images/blog/algorithm-gym-suit-solution/problem.png&quot; alt=&quot;체육복 문제&quot; width=&quot;100%&quot; height=&quot;70%&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;가장 먼저 도난 당하지 않은 학생들은 체육 수업을 받을 수 있기에&lt;/strong&gt;&lt;br /&gt;
+수업 받을 수 있는 학생들의 수를 세는 result 변수에 도난 당하지 않은 학생들의 수를 더 헀다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;그 이후 여벌의 체육복을 가져온 친구들을 찾는다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;여벌의 체육복을 가져온 친구가 자신이 도난 당한거라면&lt;/strong&gt;&lt;br /&gt;
+(여벌의 체육복을 가져온 친구가 도난 당하면 총 두벌에서 한벌만 도난 당함)&lt;br /&gt;
+여벌의 체육복을 가진 친구들의 배열에서 빼고 result 변수에 1을 더한다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;혹은 여벌의 체육복을 가져온 친구의 앞번호 혹은 뒷번호 친구가 도난 당한 친구라면&lt;/strong&gt;&lt;br /&gt;
+여벌의 체육복을 가진 친구들의 배열에서 빼고 result 변수에 1을 더한다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;변수명은 아무 생각 안하고 짰으니, 감안하고 봐주시길 바랍니다 ㅎㅎ…&lt;br /&gt;&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import Foundation
+
+func solution(_ n:Int, _ lost:[Int], _ reserve:[Int]) -&amp;gt; Int {
+    var result: Int = 0
+    var extra: [Int] = reserve
+        
+    result += n - lost.count
+        
+    for i in 0 ..&amp;lt; lost.count {
+        var has: Int?
+
+        for j in 0 ..&amp;lt; extra.count {
+            if lost[i] == extra[j] {
+                has = j
+                break
+            } else if lost[i] - 1 == extra[j] || lost[i] + 1 == extra[j] {
+                has = j
+                break
+            }
+        }
+
+        if let index = has {
+            extra.remove(at: index)
+            result += 1
+        }
+    }
+
+    return result
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>jhyejun</name></author><category term="blog" /><category term="알고리즘" /><category term="프로그래머스" /><summary type="html"></summary></entry><entry><title type="html">[Xcode] 날짜와 카운트를 이용한 빌드 번호 스크립트</title><link href="http://jhyejun.com/blog/build-number-script-using-date-and-count" rel="alternate" type="text/html" title="[Xcode] 날짜와 카운트를 이용한 빌드 번호 스크립트" /><published>2018-10-20T22:39:00+00:00</published><updated>2018-10-20T22:39:00+00:00</updated><id>http://jhyejun.com/blog/build-number-script-using-date-and-count</id><content type="html" xml:base="http://jhyejun.com/blog/build-number-script-using-date-and-count">&lt;p&gt;이전 글 &lt;a href=&quot;http://jhyejun.com/blog/what-is-difference-between-version-and-build-number&quot; target=&quot;_blank&quot;&gt;[버전과 빌드 번호의 차이란?]&lt;/a&gt; 에서 올렸던&lt;br /&gt;
+&lt;strong&gt;빌드 번호를 자동으로 수정해주는 스크립트&lt;/strong&gt;를 만들었다.&lt;br /&gt;
+사용법은 &lt;strong&gt;[Xcode Build Phases] -&amp;gt; [Run Script]&lt;/strong&gt; 에 코드를 넣으면&lt;br /&gt;
+&lt;strong&gt;빌드할 때마다 빌드 번호가 자동으로 수정&lt;/strong&gt;된다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/bash&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Print buildDay&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;/usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Print buildCount&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;today&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;date +%Y%m%d&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; x&lt;span class=&quot;nv&quot;&gt;$buildDay&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; x &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+    &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;today&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+    &lt;span class=&quot;nv&quot;&gt;buildNumber&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+
+    /usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Add :buildDay string &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildDay&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+    /usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Add :buildCount string &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+    /usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :CFBundleVersion &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildNumber&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$buildDay&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$today&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+    &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;today&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+    &lt;span class=&quot;nv&quot;&gt;buildNumber&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+
+    /usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :buildDay &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildDay&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+    /usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :buildCount &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+    /usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :CFBundleVersion &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildNumber&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;else
+    &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;buildNumber&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildDay&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;buildCount&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+
+    /usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :buildDay &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildDay&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+    /usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :buildCount &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildCount&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+    /usr/libexec/PlistBuddy &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Set :CFBundleVersion &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$buildNumber&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$INFOPLIST_FILE&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이 스크립트는 info.plist 에서 buildDay 와 buildCount 항목을 가져온다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;첫번째는 &lt;strong&gt;buildDay 항목이 없거나 값이 없을 경우&lt;/strong&gt;&lt;br /&gt;
+&lt;strong&gt;buildDay 항목은 오늘 날짜로 설정하고, buildCount 는 0 으로 설정한 후 항목을 추가&lt;/strong&gt;한다.&lt;br /&gt;
+&lt;strong&gt;빌드 번호는 (buildDay)(buildCount) 를 합쳐서 빌드 번호를 적용&lt;/strong&gt;한다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;두번째는 &lt;strong&gt;buildDay 항목의 값이 오늘 날짜 값과 다를 경우&lt;/strong&gt;&lt;br /&gt;
+&lt;strong&gt;buildDay 항목을 오늘 날짜 값으로 설정하고, buildCount 는 1을 증가시킨 후 적용&lt;/strong&gt;한다.&lt;br /&gt;
+&lt;strong&gt;이번에도 빌드 번호는 (buildDay)(buildCount) 를 합쳐서 빌드 번호를 적용&lt;/strong&gt;한다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;세번째는 두 가지 경우에 해당 안되는 경우인데&lt;br /&gt;
+&lt;strong&gt;사실상 buildDay 항목의 값은 오늘 날짜일 경우이다.&lt;/strong&gt;&lt;br /&gt;
+&lt;strong&gt;buildCount 만 1을 증가시킨 후 적용&lt;/strong&gt;한다.&lt;br /&gt;
+&lt;strong&gt;이번에도 빌드 번호는 (buildDay)(buildCount) 를 합쳐서 빌드 번호를 적용&lt;/strong&gt;한다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;만약 10월 20일에 빌드를 10번 돌렸다하면 빌드 번호는 &lt;strong&gt;2018102010&lt;/strong&gt; 으로 세팅된다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;이걸 자동화하기 위해서 이 스크립트를 만들었다는게 기분이 좋고&lt;br /&gt;
+처음으로 쉘스크립트로 코드를 짜서 시간이 좀 소요되긴 했지만&lt;br /&gt;
+만들고 나니 확실히 편해진 것 같다.&lt;br /&gt;&lt;/p&gt;</content><author><name>jhyejun</name></author><category term="blog" /><category term="Xcode" /><category term="Build Number" /><category term="Script" /><summary type="html">이전 글 [버전과 빌드 번호의 차이란?] 에서 올렸던 빌드 번호를 자동으로 수정해주는 스크립트를 만들었다. 사용법은 [Xcode Build Phases] -&amp;gt; [Run Script] 에 코드를 넣으면 빌드할 때마다 빌드 번호가 자동으로 수정된다.</summary></entry><entry><title type="html">[Xcode] 버전과 빌드 번호의 차이란?</title><link href="http://jhyejun.com/blog/what-is-difference-between-version-and-build-number" rel="alternate" type="text/html" title="[Xcode] 버전과 빌드 번호의 차이란?" /><published>2018-10-19T23:52:00+00:00</published><updated>2018-10-19T23:52:00+00:00</updated><id>http://jhyejun.com/blog/what-is-difference-between-version-and-build-number</id><content type="html" xml:base="http://jhyejun.com/blog/what-is-difference-between-version-and-build-number">&lt;p&gt;오늘은 앱을 출시할 때 중요한 설정인 &lt;strong&gt;버전&lt;/strong&gt;과 &lt;strong&gt;빌드 번호&lt;/strong&gt;를 알아봅시다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/blog/what-is-difference-between-version-and-build-number/xcode_begin_setting.png&quot; alt=&quot;Xcode Begin Setting Image&quot; width=&quot;70%&quot; height=&quot;50%&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Xcode 프로젝트를 새로 만들게 되면 이미지와 같이 &lt;strong&gt;버전&lt;/strong&gt;과 &lt;strong&gt;빌드 번호&lt;/strong&gt;가 세팅되어있습니다.&lt;br /&gt;
+&lt;strong&gt;버전&lt;/strong&gt;과 &lt;strong&gt;빌드 번호&lt;/strong&gt;를 어떻게 적용하는지 &lt;strong&gt;제가 생각하는 기준에서 정리&lt;/strong&gt;하겠습니다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/blog/what-is-difference-between-version-and-build-number/xcode_current_setting.png&quot; alt=&quot;Xcode Current Setting Image&quot; width=&quot;70%&quot; height=&quot;50%&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;현재 제가 제 개인 프로젝트에 적용되어 있는 &lt;strong&gt;버전&lt;/strong&gt;과 &lt;strong&gt;빌드 번호&lt;/strong&gt; 입니다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;p&gt;
+일단 &lt;strong&gt;버전은 1.0.0&lt;/strong&gt; 으로 되어있는데&lt;br /&gt;
+&lt;strong&gt;첫번째 자리의 1&lt;/strong&gt;은 &lt;strong&gt;메이저한 업데이트&lt;/strong&gt;가 변경될 때 숫자가 올라갑니다.&lt;br /&gt;
+쉽게 말하면 게임에서 대규모 패치 같은 경우에서 올라간다고 생각하면 될 것 같습니다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;두번째 자리의 0&lt;/strong&gt;은 메이저한 업데이트는 아니지만&lt;br /&gt;
+좀 규모가 있는 업데이트 일 때 숫자가 올라갑니다.&lt;br /&gt;
+&lt;strong&gt;기능같은 것들 리뉴얼하는 업데이트&lt;/strong&gt;일 때 숫자가 올라갑니다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;마지막 자리의 0&lt;/strong&gt;은 &lt;strong&gt;자잘한 수정이나, 버그 수정&lt;/strong&gt;같은 경우에 숫자가 올라갑니다.&lt;br /&gt;
+별 거 아닌데, 업데이트를 해야할 때 올린다고 생각하면 될 것 같습니다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;빌드 번호&lt;/strong&gt;는 개인 취향에 따라 달라지는데&lt;br /&gt;
+제가 적용하는 방식을 설명드리겠습니다.&lt;br /&gt;
+제가 적용하는 방식은 &lt;strong&gt;빌드 번호&lt;/strong&gt;를 두개의 파트로 나눠서 이해할 수 있습니다.&lt;br /&gt;
+&lt;strong&gt;앞에 8자리는 빌드를 마지막으로 돌렸던 날짜&lt;/strong&gt;고&lt;br /&gt;
+그 뒤에 나오는 나머지 숫자들은 &lt;strong&gt;빌드를 마지막으로 돌렸던 날짜 때 빌드 돌렸던 횟수&lt;/strong&gt;이다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;예시 이미지에 나오는 빌드 번호인 &lt;strong&gt;201810191&lt;/strong&gt;를 예로 들어서 설명하면,&lt;br /&gt;
+&lt;strong&gt;앞 8자리인 20181019&lt;/strong&gt;는 빌드를 마지막으로 돌렸던 날짜가 2018년 10월 19일인거고&lt;br /&gt;
+&lt;strong&gt;8 자리 뒤에 나온 숫자 1&lt;/strong&gt;은 2018년 10월 19일에 빌드 돌린 횟수가 1번이라는 뜻이다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;빌드 번호는 개발하는 개발자가 프로그램을 트래킹&lt;/strong&gt;하기 위해서 사용하는 것이기 때문에&lt;br /&gt;
+개인 취향 껏 잘 구분될 수 있게 하면 될 것 같습니다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;그럼 오늘은 여기서 끄읕&lt;/strong&gt;&lt;/p&gt;</content><author><name>jhyejun</name></author><category term="blog" /><category term="Xcode" /><category term="Version" /><category term="Build Number" /><summary type="html">오늘은 앱을 출시할 때 중요한 설정인 버전과 빌드 번호를 알아봅시다.</summary></entry><entry><title type="html">[모각코] 2018년 8월 16일 모각코 기록일지</title><link href="http://jhyejun.com/blog/mogakko-record-journal-10" rel="alternate" type="text/html" title="[모각코] 2018년 8월 16일 모각코 기록일지" /><published>2018-08-16T23:54:00+00:00</published><updated>2018-08-16T23:54:00+00:00</updated><id>http://jhyejun.com/blog/mogakko-record-journal-10</id><content type="html" xml:base="http://jhyejun.com/blog/mogakko-record-journal-10">&lt;h2 id=&quot;모각코란&quot;&gt;&lt;strong&gt;모각코란?&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;‘모여서 각자 코딩하자’&lt;/strong&gt; 라는 뜻으로 각자 모여서 코딩하는 모임.&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;식사&quot;&gt;&lt;strong&gt;식사&lt;/strong&gt;&lt;/h2&gt;
+&lt;h3 id=&quot;역삼역-4번출구-일식당-유리카모메&quot;&gt;역삼역 4번출구 일식당 &lt;strong&gt;&lt;a href=&quot;https://store.naver.com/restaurants/detail?id=37005429&quot; target=&quot;_blank&quot;&gt;유리카모메&lt;/a&gt;&lt;/strong&gt;&lt;br /&gt;&lt;/h3&gt;
+&lt;p&gt;오늘이 말복이라 보양식을 먹을 줄 알았지만,&lt;br /&gt;
+일식당에 가기로 되었다.&lt;br /&gt;
+외부모습과 내부모습은 진짜 맛집같은 분위기의 식당이었다.&lt;br /&gt;
+진짜 골목에 있는 소박한 맛집의 느낌이 많이 났다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;메뉴판에는 우동, 오니기리, 돈까스 등이 있었다.&lt;br /&gt;
+나는 메뉴판을 보다보니 돈까스랑 소바를 먹고 싶었기 때문에&lt;br /&gt;
+&lt;strong&gt;돈까스 + 미니소바&lt;/strong&gt; 메뉴를 주문했다.&lt;br /&gt;
+주문했던 메뉴가 나오고 먼저 돈까스를 한입 먹어보니&lt;br /&gt;
+튀김옷은 일식 돈까스답게 바삭했고 속은 정말 부드러웠다.&lt;br /&gt;
+미니소바에는 간 무와 와사비가 아닌 겨자가 곁들여졌다.&lt;br /&gt;
+간 무와 겨자를 넣고 섞은 다음&lt;br /&gt;
+미니소바까지 먹어보니 와사비 넣은 소바와 다른 맛이었다.&lt;br /&gt;
+겨자를 넣은 소바는 처음이라 되게 신기하고 맛있었다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;맛은 정말 있었지만 한 가지 아쉬웠던 점은&lt;br /&gt;
+&lt;strong&gt;가격이 비쌌다.&lt;/strong&gt;&lt;br /&gt;
+내가 주문했던 메뉴인 &lt;strong&gt;돈까스 + 미니소바&lt;/strong&gt;가 13,500원인데&lt;br /&gt;
+만족스러운 가격은 아니였으나&lt;br /&gt;
+그래도 맛있게 잘 먹었었기에 만족스러웠다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;카페&quot;&gt;&lt;strong&gt;카페&lt;/strong&gt;&lt;/h2&gt;
+&lt;h3 id=&quot;역삼역-4번출구-할리스커피-역삼테헤란점&quot;&gt;역삼역 4번출구 &lt;strong&gt;&lt;a href=&quot;https://store.naver.com/restaurants/detail?id=1719973629&quot; target=&quot;_blank&quot;&gt;할리스커피 역삼테헤란점&lt;/a&gt;&lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;기존에 가던 할리스 커피 말고 다른 할리스 커피로 가게 되었다.&lt;br /&gt;
+갑작스럽게 변경된 것이다.&lt;br /&gt;
+변경된 이유는 단지 일행들이 길을 건너기 귀찮다는 이유였고,&lt;br /&gt;
+근데 마침 내가 최근에 강남역까지 걸으면서 같은 블록에&lt;br /&gt;
+할리스 커피가 새로 생긴 걸 알았었기에&lt;br /&gt;
+근처에 새로 생긴 할리스 커피를 가보는 것이 어떠냐고 제안했다.&lt;br /&gt;
+건너기 귀찮았던 일행들은 흔쾌히 승낙했고,&lt;br /&gt;
+이러한 이유로 기존에 가던 할리스 커피와 다른 할리스 커피를 가게 되었다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;원래 버거킹이 있던 곳이었으나, 최근에 할리스 커피로 변경된 것 같다.&lt;br /&gt;
+내부 인테리어나 외부 인테리어가 최근에 지어서 그런지&lt;br /&gt;
+되게 깔끔하고 세련되어서 나름 느낌이 괜찮은 카페였다.&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;최근에 할리스 커피에서 5만원 기프트 카드를 구매하면&lt;br /&gt;
+10월 3일 페스티벌에 참가할 수 있는 티켓을 주는 이벤트를 진행하고 있다.&lt;br /&gt;
+&lt;img src=&quot;/assets/images/blog/mogakko-record-journal-10/hollys_festival.jpg&quot; alt=&quot;Event Image&quot; width=&quot;50%&quot; height=&quot;50%&quot; /&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;자세히 보니 페스티벌 라인업도 괜찮고, 나는 할리스를 좋아해서 주로 가기 떄문에&lt;br /&gt;
+페스티벌 기프트 카드를 구매했다.&lt;br /&gt;
+그래서 구매한 기프트 카드를 주문할 때 사용하려 헀는데&lt;br /&gt;
+여기는 최근에 생긴 곳이라 안된다고 한다…&lt;br /&gt;
+그래서 아쉬운 맘으로 일반 카드로 결제를 했다…&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;오늘도 역시나 아시다시피 &lt;strong&gt;콜드 브루&lt;/strong&gt;를 주문했다.&lt;br /&gt;
+최근에 할리스 &lt;strong&gt;아이스 아메리카노&lt;/strong&gt;를 먹을 일이 있었는데&lt;br /&gt;
+그 때의 &lt;strong&gt;아이스 아메리카노&lt;/strong&gt;와 &lt;strong&gt;콜드 브루&lt;/strong&gt; 맛을 비교해보니&lt;br /&gt;
+확실히 &lt;strong&gt;콜드 브루&lt;/strong&gt;가 맛있는 것 같다.&lt;br /&gt;
+&lt;strong&gt;콜드 브루&lt;/strong&gt; 최고!!!&lt;br /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;오늘-공부한-내용&quot;&gt;&lt;strong&gt;오늘 공부한 내용&lt;/strong&gt;&lt;/h2&gt;
+&lt;h3 id=&quot;친구-블록체인-프로젝트-보고서-검토&quot;&gt;친구 블록체인 프로젝트 보고서 검토&lt;/h3&gt;
+
+&lt;p&gt;최근에 알게 된 친구가 블록체인 관련 프로젝트를 하고&lt;br /&gt;
+그 블록체인 프로젝트에 대한 보고서를 작성했는데,&lt;br /&gt;
+그 보고서를 나에게 봐달라고 부탁했다.&lt;br /&gt;
+그래서 오늘 모각코 시간에 잠깐 보고 내가 느낀 느낌 알려주려 했더니&lt;br /&gt;
+보다 보니깐 오늘 모각코 시간을 다 할애하게 되었다.&lt;br /&gt;&lt;/p&gt;</content><author><name>jhyejun</name></author><category term="blog" /><category term="모각코" /><summary type="html">모각코란? ‘모여서 각자 코딩하자’ 라는 뜻으로 각자 모여서 코딩하는 모임.</summary></entry></feed>
