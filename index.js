@@ -33,7 +33,7 @@ const dbFileURL = 'https://raw.githubusercontent.com/sarojaba/awesome-devblog/ma
       sh.exec(`git add .`)
       sh.exec(`git config --global user.email "ysm0622@gmail.com"`)
       sh.exec(`git commit -m "Update"`)
-      sh.exec(`git push --repo https://${process.env.GH_PAT}@github.com/ysm0622/actions-for-cronjob.git`)
+      sh.exec(`git push https://${process.env.GH_PAT}@github.com/ysm0622/actions-for-cronjob.git HEAD:master`)
     }),
   )
 })()
