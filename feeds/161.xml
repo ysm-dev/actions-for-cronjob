@@ -5,7 +5,7 @@
 <link>https://chancethecoder.tistory.com/</link>
 <description></description>
 <language>ko</language>
-<pubDate>Sun, 12 May 2019 16:36:45 +0900</pubDate>
+<pubDate>Sun, 12 May 2019 16:46:08 +0900</pubDate>
 <generator>TISTORY</generator>
 <managingEditor>chancethecoder</managingEditor>
 <item>
@@ -70,200 +70,162 @@
 &lt;li&gt;CircleCI에 가상머신 SSH 키 등록하기&lt;/li&gt;
 &lt;li&gt;Azure 배포하기&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4 id=&quot;%EC%8B%9C%EC%9E%91%EC%97%90-%EC%95%9E%EC%84%9C&quot;&gt;시작에 앞서&lt;/h4&gt;
+&lt;h4&gt;시작에 앞서&lt;/h4&gt;
 &lt;p&gt;CircleCI를 이용한 것은 저의 기존 프로젝트를 활용하기 위해서인데, 꼭 이와 동일하게 구성할 필요는 없습니다. 만약 선호하는 솔루션이 있거나 기존 사용하던 것이 있다면 다른 것을 사용하는 것도 무방합니다.&lt;/p&gt;
 &lt;p&gt;CI 구성이 처음인 분들을 위해 다른 옵션을 소개드리면 Travis CI, Jenkins 등이 있습니다. 장단점이 있는데, 복잡한 것이 싫고 간단하게 해결하고싶은 분들은 Travis CI 또는 CircleCI를 사용하시고 본인이 CI용 서버를 별도 구축하여 세부적인 컨트롤 및 최적화를 하고싶은 분들은 Jenkins를 사용해보시길 추천드립니다.&lt;/p&gt;
-&lt;h3 id=&quot;circleci-%EB%B9%8C%EB%93%9C%ED%95%98%EA%B8%B0&quot;&gt;CircleCI 빌드하기&lt;/h3&gt;
+&lt;h3&gt;CircleCI 빌드하기&lt;/h3&gt;
 &lt;ol&gt;
 &lt;li&gt;CircleCI 대시보드에 접속합니다. 처음이라면 회원가입을 해줍시다.&lt;/li&gt;
 &lt;li&gt;우상단 클릭 &amp;gt; User Settings &amp;gt; Account Integration에서 Github 계정과 연동하여 access permission이 있는지 확인합니다. 없다면 연결해줍니다.&lt;/li&gt;
 &lt;li&gt;좌측 ADD PROJECTS를 클릭합니다. 본인의 Github 프로젝트 리스트를 볼 수 있습니다. 이 중에 배포하기 위한 프로젝트를 찾아 Set Up Project를 누릅니다.&lt;/li&gt;
 &lt;li&gt;환경은 Linux, Node를 선택합니다.&lt;/li&gt;
-&lt;li&gt;CircleCI에서는 설정을 읽어오기 위해 프로젝트 내의 .circleci/config.yml 파일을 참조합니다. 아래 내용을 복사하여 프로젝트의 .circleci/config.yml 파일에 붙여넣습니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-built_in&quot;&gt;cd&lt;/span&gt; /path/to/project
-mkdir -p .circleci
-vi .circleci/config.yml
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-attr&quot;&gt;version:&lt;/span&gt; &lt;span class=&quot;hljs-number&quot;&gt;2&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;jobs:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;build:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;  docker:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;    - image:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;circleci/node:7.10&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;  working_directory:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;~/repo&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;  steps:&lt;/span&gt;
-&lt;span class=&quot;hljs-bullet&quot;&gt;    -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;checkout&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;    - restore_cache:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;        keys:&lt;/span&gt;
-&lt;span class=&quot;hljs-bullet&quot;&gt;        -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;v1-dependencies-{{&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;checksum&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;&quot;package.json&quot;&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;}}&lt;/span&gt;
-&lt;span class=&quot;hljs-bullet&quot;&gt;        -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;v1-dependencies-&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;yarn&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;install&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;    - save_cache:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;        paths:&lt;/span&gt;
-&lt;span class=&quot;hljs-bullet&quot;&gt;          -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;node_modules&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;        key:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;v1-dependencies-{{&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;checksum&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;&quot;package.json&quot;&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;}}&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;yarn&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;test&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;yarn&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;build&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;        command:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;|
-          tar cvf application.tar.gz -C build .
-
-&lt;/span&gt;&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;        command:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;|
-          mkdir -p /tmp/artifacts
-          mv application.tar.gz /tmp/artifacts
-
-&lt;/span&gt;&lt;span class=&quot;hljs-attr&quot;&gt;    - store_artifacts:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;        path:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;/tmp/artifacts&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;deploy:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;  machine:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;    enabled:&lt;/span&gt; &lt;span class=&quot;hljs-literal&quot;&gt;true&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;  steps:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;    - run:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;        command:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;|
-          echo &quot;Deploy Over SSH&quot;
-
-&lt;/span&gt;&lt;span class=&quot;hljs-attr&quot;&gt;workflows:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;  version:&lt;/span&gt; &lt;span class=&quot;hljs-number&quot;&gt;2&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;  build-and-deploy:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;    jobs:&lt;/span&gt;
-&lt;span class=&quot;hljs-bullet&quot;&gt;      -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;build&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;      - deploy:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;        requires:&lt;/span&gt;
-&lt;span class=&quot;hljs-bullet&quot;&gt;          -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;build&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;        filters:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;          branches:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;            only:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;master&lt;/span&gt;
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;CircleCI에서는 설정을 읽어오기 위해 프로젝트 내의 .circleci/config.yml 파일을 참조합니다. 아래 내용을 복사하여 프로젝트의 .circleci/config.yml 파일에 붙여넣습니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; cd /path/to/project
+ mkdir -p .circleci
+ vi .circleci/config.yml&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt; version: 2
+ jobs:
+ build:
+   docker:
+     - image: circleci/node:7.10
+   working_directory: ~/repo
+   steps:
+     - checkout
+     - restore_cache:
+         keys:
+         - v1-dependencies-{{ checksum &amp;quot;package.json&amp;quot; }}
+         - v1-dependencies-
+     - run: yarn install
+     - save_cache:
+         paths:
+           - node_modules
+         key: v1-dependencies-{{ checksum &amp;quot;package.json&amp;quot; }}
+     - run: yarn test
+     - run: yarn build
+     - run:
+         command: |
+           tar cvf application.tar.gz -C build .
+     - run:
+         command: |
+           mkdir -p /tmp/artifacts
+           mv application.tar.gz /tmp/artifacts
+     - store_artifacts:
+         path: /tmp/artifacts
+ deploy:
+   machine:
+     enabled: true
+   steps:
+     - run:
+         command: |
+           echo &amp;quot;Deploy Over SSH&amp;quot;
+ workflows:
+   version: 2
+   build-and-deploy:
+     jobs:
+       - build
+       - deploy:
+         requires:
+           - build
+         filters:
+           branches:
+             only: master&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;변경사항을 커밋하고 github에 푸시합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;git commit -a -m &lt;span class=&quot;hljs-string&quot;&gt;&quot;Add CircleCI configuration file&quot;&lt;/span&gt;
-git push
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;변경사항을 커밋하고 github에 푸시합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; git commit -a -m &amp;quot;Add CircleCI configuration file&amp;quot;
+ git push&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
 &lt;li&gt;Start building을 누릅니다. config.yml에 정의한 과정대로 첫 번째 build가 수행되는 것을 볼 수 있습니다.&lt;/li&gt;
 &lt;li&gt;jobs 탭을 확인합니다. success로 초록색 표시가 있다면 성공입니다. 이제 Artifacts 탭을 보면 application.tar.gz 파일이 생성된 것을 볼 수 있습니다. 다음으로 이 파일을 가상머신으로 가지고 와서 서버 기동까지 이어지는 작업을 해보겠습니다.&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h3 id=&quot;api%EB%A1%9C-artifact-%EA%B0%80%EC%A0%B8%EC%98%A4%EA%B8%B0&quot;&gt;API로 Artifact 가져오기&lt;/h3&gt;
+&lt;h3&gt;API로 Artifact 가져오기&lt;/h3&gt;
 &lt;ol&gt;
 &lt;li&gt;위에서 생성된 Artifacts를 CircleCI API를 통해 가져오기 위해서는 &lt;a href=&quot;https://circleci.com/docs/2.0/managing-api-tokens/#creating-a-personal-api-token&quot;&gt;Personal Token&lt;/a&gt;이 필요합니다. 우상단 아이콘 &amp;gt; User settings로 이동합니다.&lt;/li&gt;
 &lt;li&gt;Personal API Tokens를 클릭합니다.&lt;/li&gt;
 &lt;li&gt;Create New Token 버튼을 클릭합니다.&lt;/li&gt;
 &lt;li&gt;Token name에 적당한 이름을 입력하고 Add API Token을 클릭합니다.&lt;/li&gt;
 &lt;li&gt;생성된 토큰값을 복사하여 적당한 곳에 메모 해둡시다. &lt;strong&gt;한 번 보여준 뒤로 다시 볼 수 없기 때문에, 분실할 경우 복구가 불가능&lt;/strong&gt;합니다. 만약 분실한 경우 삭제 및 재생성을 하시기 바랍니다.&lt;/li&gt;
-&lt;li&gt;가상머신에 접속합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;ssh chancethecoder@52.141.36.128
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;가상머신에 접속합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; ssh chancethecoder@52.141.36.128&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;생성된 토큰 값을 환경변수로 저장합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-built_in&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;'export CIRCLE_TOKEN=&quot;your_token&quot;'&lt;/span&gt; &amp;gt;&amp;gt; ~/.bashrc
-&lt;span class=&quot;hljs-built_in&quot;&gt;source&lt;/span&gt; ~/.bashrc
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;생성된 토큰 값을 환경변수로 저장합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; echo &amp;#39;export CIRCLE_TOKEN=&amp;quot;your_token&amp;quot;&amp;#39; &amp;gt;&amp;gt; ~/.bashrc
+ source ~/.bashrc&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;curl로 API호출을 해봅시다. 예제에서 각각 vcs_type에 github, bitbucket 등 사용하는 VCS를, username에 CircleCI의 좌상단 유저 닉네임을, project에 VCS의 타겟 프로젝트 이름을, build_num에 호출하고자 하는 빌드 번호를 넣어주면 됩니다. 성공적으로 호출된다면 아래와 같은 값이 출력됩니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-comment&quot;&gt;# example&lt;/span&gt;
-curl https://circleci.com/api/v1.1/project/:vcs_type/:username/:project/:build_num/artifacts?circle-token=&lt;span class=&quot;hljs-variable&quot;&gt;$CIRCLE_TOKEN&lt;/span&gt;
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt;&lt;div&gt;[ {
-&amp;quot;path&amp;quot; : &amp;quot;tmp/artifacts/application.tar.gz&amp;quot;,
-&amp;quot;pretty_path&amp;quot; : &amp;quot;tmp/artifacts/application.tar.gz&amp;quot;,
-&amp;quot;node_index&amp;quot; : 0,
-&amp;quot;url&amp;quot; : &amp;quot;https://52-131691113-gh.circle-artifacts.com/0/tmp/artifacts/application.tar.gz&amp;quot;
-} ]
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;curl로 API호출을 해봅시다. 예제에서 각각 vcs_type에 github, bitbucket 등 사용하는 VCS를, username에 CircleCI의 좌상단 유저 닉네임을, project에 VCS의 타겟 프로젝트 이름을, build_num에 호출하고자 하는 빌드 번호를 넣어주면 됩니다. 성공적으로 호출된다면 아래와 같은 값이 출력됩니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; # example
+ curl https://circleci.com/api/v1.1/project/:vcs_type/:username/:project/:build_num/artifacts?circle-token=$CIRCLE_TOKEN&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; [ {
+ &amp;quot;path&amp;quot; : &amp;quot;tmp/artifacts/application.tar.gz&amp;quot;,
+ &amp;quot;pretty_path&amp;quot; : &amp;quot;tmp/artifacts/application.tar.gz&amp;quot;,
+ &amp;quot;node_index&amp;quot; : 0,
+ &amp;quot;url&amp;quot; : &amp;quot;https://52-131691113-gh.circle-artifacts.com/0/tmp/artifacts/application.tar.gz&amp;quot;
+ } ]&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;이제 artifact를 가져와봅시다. curl 명령어 결과와 wget을 조합해 아래와 같이 입력합니다. application.tar.gz 파일이 생성된다면 정상 호출 된 것입니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;curl https://circleci.com/api/v1.1/project/github/chancethecoder/playground/52/artifacts?circle-token=&lt;span class=&quot;hljs-variable&quot;&gt;$CIRCLE_TOKEN&lt;/span&gt; | grep -o &lt;span class=&quot;hljs-string&quot;&gt;'https://[^&quot;]*'&lt;/span&gt; | xargs -P4 -I % wget %?circle-token=&lt;span class=&quot;hljs-variable&quot;&gt;$CIRCLE_TOKEN&lt;/span&gt;
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;ls -al | circle-token
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt;&lt;div&gt;application.tar.gz?circle-token=...
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;이제 artifact를 가져와봅시다. curl 명령어 결과와 wget을 조합해 아래와 같이 입력합니다. application.tar.gz 파일이 생성된다면 정상 호출 된 것입니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; curl https://circleci.com/api/v1.1/project/github/chancethecoder/playground/52/artifacts?circle-token=$CIRCLE_TOKEN | grep -o &amp;#39;https://[^&amp;quot;]*&amp;#39; | xargs -P4 -I % wget %?circle-token=$CIRCLE_TOKEN&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; ls -al | circle-token&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; application.tar.gz?circle-token=...&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;이제 빌드 결과 파일을 구동시켜봅시다. 이 부분은 각자의 리액트 프로젝트 구성에 따라 다르겠습니다만, 저는 빌드를 통해 생성된 static 파일만을 서빙하도록 구성했기 때문에 pm2의 serve 명령어를 사용하겠습니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;mkdir -p myapp
+&lt;li&gt;이제 빌드 결과 파일을 구동시켜봅시다. 이 부분은 각자의 리액트 프로젝트 구성에 따라 다르겠습니다만, 저는 빌드를 통해 생성된 static 파일만을 서빙하도록 구성했기 때문에 pm2의 serve 명령어를 사용하겠습니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;mkdir -p myapp
 tar xvf application.tar.gz?circle-token=... -C myapp
-
 pm2 delete all
-
-&lt;span class=&quot;hljs-comment&quot;&gt;# myapp은 static 파일 디렉토리 경로, 3000은 포트번호 지정입니다.&lt;/span&gt;
-pm2 serve myapp 3000
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+# myapp은 static 파일 디렉토리 경로, 3000은 포트번호 지정입니다.
+pm2 serve myapp 3000&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
 &lt;li&gt;이제 브라우저에서 본인의 도메인 혹은 공용아이피로 접속해봅시다. 본인이 작성한 리액트 앱이 보인다면 잘 따라오신 것입니다.&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h3 id=&quot;circleci%EC%97%90-%EA%B0%80%EC%83%81%EB%A8%B8%EC%8B%A0-ssh-%ED%82%A4-%EB%93%B1%EB%A1%9D%ED%95%98%EA%B8%B0&quot;&gt;CircleCI에 가상머신 SSH 키 등록하기&lt;/h3&gt;
+&lt;h3&gt;CircleCI에 가상머신 SSH 키 등록하기&lt;/h3&gt;
 &lt;ol&gt;
-&lt;li&gt;빌드 타임에 CircleCI에서 가상머신에 배포 및 구동까지 하도록 하기 위해서는 SSH 통신이 가능해야 합니다. 따라서 SSH 설정을 먼저 해줍시다. 먼저 가상머신에 접속합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;ssh chancethecoder@52.141.36.128
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;빌드 타임에 CircleCI에서 가상머신에 배포 및 구동까지 하도록 하기 위해서는 SSH 통신이 가능해야 합니다. 따라서 SSH 설정을 먼저 해줍시다. 먼저 가상머신에 접속합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; ssh chancethecoder@52.141.36.128&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;ssh 키를 생성합시다. ssh-keygen 옵션은 본인에 맞게 변경하셔도 무방합니다. 엔터키를 계속 눌러주면 기본값으로 생성됩니다. 주의할점으로, &lt;strong&gt;passphrase는 빈 값&lt;/strong&gt;으로 두어야 합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;ssh-keygen -t rsa -b 4096 -C &lt;span class=&quot;hljs-string&quot;&gt;&quot;chancethecoder@gmail.com&quot;&lt;/span&gt;
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt;&lt;div&gt;Generating public/private rsa key pair.
-Enter file in which to save the key (/home/chancethecoder/.ssh/id_rsa):
-Enter passphrase (empty for no passphrase):
-Enter same passphrase again:
-Your identification has been saved in /home/chancethecoder/.ssh/id_rsa.
-Your public key has been saved in /home/chancethecoder/.ssh/id_rsa.pub.
-...
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;ssh 키를 생성합시다. ssh-keygen 옵션은 본인에 맞게 변경하셔도 무방합니다. 엔터키를 계속 눌러주면 기본값으로 생성됩니다. 주의할점으로, &lt;strong&gt;passphrase는 빈 값&lt;/strong&gt;으로 두어야 합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; ssh-keygen -t rsa -b 4096 -C &amp;quot;chancethecoder@gmail.com&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; Generating public/private rsa key pair.
+ Enter file in which to save the key (/home/chancethecoder/.ssh/id_rsa):
+ Enter passphrase (empty for no passphrase):
+ Enter same passphrase again:
+ Your identification has been saved in /home/chancethecoder/.ssh/id_rsa.
+ Your public key has been saved in /home/chancethecoder/.ssh/id_rsa.pub.
+ ...&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;public 키를 authorized_keys에 추가합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;cat ~/.ssh/id_rsa.pub &amp;gt;&amp;gt; ~/.ssh/authorized_keys
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;public 키를 authorized_keys에 추가합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; cat ~/.ssh/id_rsa.pub &amp;gt;&amp;gt; ~/.ssh/authorized_keys&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;private 키파일을 복사합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;div&gt;cat ~/.ssh/id_rsa
-&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;private 키파일을 복사합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; cat ~/.ssh/id_rsa&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
 &lt;li&gt;CircleCI에서 대시보드 &amp;gt; 프로젝트 설정(기어 버튼) &amp;gt; PERMISSIONS &amp;gt; SSH Permisions로 이동합니다.&lt;/li&gt;
 &lt;li&gt;Add SSH Key 버튼을 클릭합니다.&lt;/li&gt;
 &lt;li&gt;Hostname을 빈칸으로 두고 Private Key에 복사한 내용을 붙여넣습니다. 정상적으로 등록되면 Fingerprint가 보이는데, 해당 값을 복사합니다.&lt;/li&gt;
-&lt;li&gt;리액트 프로젝트의 .circleci/config.yml에 아래 코드를 추가합니다. your_fingerprints 부분에 복사한 값을 넣으시면 됩니다.&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-string&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;  deploy:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;    machine:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;      enabled:&lt;/span&gt; &lt;span class=&quot;hljs-literal&quot;&gt;true&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;    steps:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;      - add_ssh_keys:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;          fingerprints:&lt;/span&gt;
-&lt;span class=&quot;hljs-bullet&quot;&gt;            -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;&quot;your_fingerprints&quot;&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;      - run:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;          command:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;|
-            echo &quot;Deploy Over SSH&quot;
-...
-&lt;/span&gt;&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;리액트 프로젝트의 .circleci/config.yml에 아래 코드를 추가합니다. your_fingerprints 부분에 복사한 값을 넣으시면 됩니다.&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt; ...
+   deploy:
+     machine:
+       enabled: true
+     steps:
+       - add_ssh_keys:
+           fingerprints:
+             - &amp;quot;your_fingerprints&amp;quot;
+       - run:
+           command: |
+             echo &amp;quot;Deploy Over SSH&amp;quot;
+ ...&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;h3 id=&quot;azure-%EB%B0%B0%ED%8F%AC%ED%95%98%EA%B8%B0&quot;&gt;Azure 배포하기&lt;/h3&gt;
+&lt;h3&gt;Azure 배포하기&lt;/h3&gt;
 &lt;ol&gt;
-&lt;li&gt;마지막으로 CircleCI에서 가상머신 배포까지 구성해봅시다. 마찬가지로 .circleci/config.yml에 아래 코드를 추가합니다.&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;&lt;div&gt;&lt;span class=&quot;hljs-string&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;  deploy:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;    machine:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;      enabled:&lt;/span&gt; &lt;span class=&quot;hljs-literal&quot;&gt;true&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;    steps:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;      - add_ssh_keys:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;          fingerprints:&lt;/span&gt;
-&lt;span class=&quot;hljs-bullet&quot;&gt;            -&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;&quot;your_fingerprints&quot;&lt;/span&gt;
-
-&lt;span class=&quot;hljs-attr&quot;&gt;      - run:&lt;/span&gt;
-&lt;span class=&quot;hljs-attr&quot;&gt;          command:&lt;/span&gt; &lt;span class=&quot;hljs-string&quot;&gt;|
-            echo &quot;Deploy Over SSH&quot;
-            ssh $SSH_USER@$SSH_HOST &amp;lt;&amp;lt; EOF
-              rm -f application.tar.gz*
-              curl https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_PREVIOUS_BUILD_NUM/artifacts?circle-token=$CIRCLE_TOKEN | grep -o 'https://[^&quot;]*' | xargs -P4 -I % wget %?circle-token=$CIRCLE_TOKEN
-              pm2 delete all
-              rm -rf myapp/*
-              tar xvf application.tar.gz?circle-token=$CIRCLE_TOKEN -C playground
-              pm2 serve myapp 3000
-            EOF
-&lt;/span&gt;&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;마지막으로 CircleCI에서 가상머신 배포까지 구성해봅시다. 마찬가지로 .circleci/config.yml에 아래 코드를 추가합니다.&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt; ...
+   deploy:
+     machine:
+       enabled: true
+     steps:
+       - add_ssh_keys:
+           fingerprints:
+             - &amp;quot;your_fingerprints&amp;quot;
+       - run:
+           command: |
+             echo &amp;quot;Deploy Over SSH&amp;quot;
+             ssh $SSH_USER@$SSH_HOST &amp;lt;&amp;lt; EOF
+               rm -f application.tar.gz*
+               curl https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_PREVIOUS_BUILD_NUM/artifacts?circle-token=$CIRCLE_TOKEN | grep -o &amp;#39;https://[^&amp;quot;]*&amp;#39; | xargs -P4 -I % wget %?circle-token=$CIRCLE_TOKEN
+               pm2 delete all
+               rm -rf myapp/*
+               tar xvf application.tar.gz?circle-token=$CIRCLE_TOKEN -C playground
+               pm2 serve myapp 3000
+             EOF&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
 &lt;li&gt;CircleCI에서 대시보드 &amp;gt; 프로젝트 설정(기어 버튼) &amp;gt; BUILD SETTINGS &amp;gt; Environment Variables로 이동합니다.&lt;/li&gt;
-&lt;li&gt;Add Variable 버튼을 누릅니다. Name과 Value가 있는데, 각각 아래의 값으로 추가해줍시다.
-&lt;ol&gt;
+&lt;li&gt;Add Variable 버튼을 누릅니다. Name과 Value가 있는데, 각각 아래의 값으로 추가해줍시다.&lt;ol&gt;
 &lt;li&gt;SSH_USER: 가상머신 접속 계정&lt;/li&gt;
 &lt;li&gt;SSH_HOST: 가상머신 아이피 주소&lt;/li&gt;
 &lt;li&gt;CIRCLE_TOKEN: Personal Token&lt;/li&gt;
@@ -405,79 +367,61 @@ git push -u origin master
 &lt;h3&gt;웹 어플리케이션 연결&lt;/h3&gt;
 &lt;p&gt;이제 웹 어플리케이션을 연결해봅시다. 기존에 운영하시는 프로젝트가 있다면 그대로 사용하면 되지만, 없다고 가정하여 Node 프로젝트 생성부터 진행해보겠습니다.&lt;/p&gt;
 &lt;ol&gt;
-&lt;li&gt;&lt;p&gt;nvm을 설치합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+&lt;li&gt;nvm을 설치합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
  source ~/.bashrc&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt; 아래처럼 nvm ls를 했을 때 정상적으로 출력된다면 성공입니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; nvm ls&lt;/code&gt;&lt;/pre&gt;
+ 아래처럼 nvm ls를 했을 때 정상적으로 출력된다면 성공입니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; nvm ls&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt;             N/A
  iojs -&amp;gt; N/A (default)
  node -&amp;gt; stable (-&amp;gt; N/A) (default)
  unstable -&amp;gt; N/A (default)&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;node를 설치합니다. 별 이슈가 없다면 최신 stable 버전으로 설치합시다. 2019년 1월 기준으로 최신 버전은 v11.6.0이 되겠습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; nvm install stable
+&lt;li&gt;node를 설치합니다. 별 이슈가 없다면 최신 stable 버전으로 설치합시다. 2019년 1월 기준으로 최신 버전은 v11.6.0이 되겠습니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; nvm install stable
  node --version # v11.6.0&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;node 프로젝트를 생성합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; mkdir myapp
+&lt;li&gt;node 프로젝트를 생성합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; mkdir myapp
  cd myapp
  npm init&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;package.json이 만들어졌다면, 서버 코드를 작성합니다. 이 때 구동에 필요한 npm 패키지도 같이 설치해줍시다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; npm install express --save
+&lt;li&gt;package.json이 만들어졌다면, 서버 코드를 작성합니다. 이 때 구동에 필요한 npm 패키지도 같이 설치해줍시다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; npm install express --save
  npm install -g pm2
  vi app.js&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt; // 아래 내용을 app.js에 추가
  var express = require(&amp;#39;express&amp;#39;);
-
  var app = express();
  app.get(&amp;#39;/&amp;#39;, function (req, res) {
- res.send(&amp;#39;Hello World!&amp;#39;);
+   res.send(&amp;#39;Hello World!&amp;#39;);
  });
-
  app.listen(3000, function () {
- console.log(&amp;#39;Example app listening on port 3000!&amp;#39;);
+   console.log(&amp;#39;Example app listening on port 3000!&amp;#39;);
  });&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;위에서 설치한 pm2를 이용해 서버를 구동합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; pm2 start app.js --name myapp&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;위에서 설치한 pm2를 이용해 서버를 구동합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; pm2 start app.js --name myapp&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;이제 브라우저에서 &lt;strong&gt;공인아이피:3000 주소로 접속하면 타임아웃 현상이 발생합니다&lt;/strong&gt;. 3000번 포트에 대해서 인바운드 설정을 하지 않았기 때문입니다. 우리는 사용자가 3000번 포트가 아닌 80/443 포트를 통해 접근하기를 원합니다. 따라서 Nginx를 통해 80/443 -&amp;gt; 3000 리다이렉션을 수행하도록 리버스 프록시 설정을 추가하겠습니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;아래와 같이 myapp.conf에 다음과 같이 설정을 추가하고 Nginx를 재시작합니다. 재시작 할 때 에러가 발생할 경우 십중팔구 conf 파일에 오타가 있을 수 있으니 잘 확인합시다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo vi /etc/nginx/conf.d/myapp.conf&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;이제 브라우저에서 &lt;strong&gt;공인아이피:3000 주소로 접속하면 타임아웃 현상이 발생합니다&lt;/strong&gt;. 3000번 포트에 대해서 인바운드 설정을 하지 않았기 때문입니다. 우리는 사용자가 3000번 포트가 아닌 80/443 포트를 통해 접근하기를 원합니다. 따라서 Nginx를 통해 80/443 -&amp;gt; 3000 리다이렉션을 수행하도록 리버스 프록시 설정을 추가하겠습니다.&lt;/li&gt;
+&lt;li&gt;아래와 같이 myapp.conf에 다음과 같이 설정을 추가하고 Nginx를 재시작합니다. 재시작 할 때 에러가 발생할 경우 십중팔구 conf 파일에 오타가 있을 수 있으니 잘 확인합시다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo vi /etc/nginx/conf.d/myapp.conf&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; # 아래 내용을 myapp.conf에 추가
  upstream backend {
      server localhost:3000;
  }
-
  server {
      listen       80;
-
      server_name  your_domain; # --&amp;gt; 도메인 or 공인아이피 입력
-
      location / {
          proxy_set_header X-Real-IP $remote_addr;
          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
          proxy_set_header Host $host;
          proxy_set_header Port $proxy_port;
          proxy_http_version 1.1;
-
          proxy_pass http://backend;
      }
  }&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo systemctl restart nginx # nginx 재시작&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;이제 본인이 설정한 서버네임으로 브라우저에서 접속해봅시다. &lt;strong&gt;잘 될 것 같지만, 502 Bad Gateway 에러가 나올 것입니다&lt;/strong&gt;. (ㅜㅜ) Nginx 에러 로그를 살펴봅니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo cat /var/log/nginx/error.log | tail -1&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; 2019/01/20 08:40:29 [crit] 23637#0: *1 connect() to 127.0.0.1:3000 failed (13: Permission denied) while connecting to upstream, client: 121.167.144.18, server: 52.141.36.128, request: &amp;quot;GET / HTTP/1.1&amp;quot;, upstream: &amp;quot;http://127.0.0.1:3000/&amp;quot;, host: &amp;quot;52.141.36.128&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;이제 본인이 설정한 서버네임으로 브라우저에서 접속해봅시다. &lt;strong&gt;잘 될 것 같지만, 502 Bad Gateway 에러가 나올 것입니다&lt;/strong&gt;. (ㅜㅜ) Nginx 에러 로그를 살펴봅니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo cat /var/log/nginx/error.log | tail -1&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;위와 같은 에러가 나오는데, SELinux에서 3000번 포트에 대해 Nginx 연결을 deny하는 이슈입니다. 이를 해결하려면 아래 명령어를 추가로 실행해줘야 합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo setsebool httpd_can_network_connect on&lt;/code&gt;&lt;/pre&gt;
+&lt;li&gt;위와 같은 에러가 나오는데, SELinux에서 3000번 포트에 대해 Nginx 연결을 deny하는 이슈입니다. 이를 해결하려면 아래 명령어를 추가로 실행해줘야 합니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo setsebool httpd_can_network_connect on&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;이제 다시 브라우저로 접속해봅니다. Hello World!라는 문구가 출력되면 정상적으로 연결 된 것입니다.&lt;/p&gt;
-&lt;/li&gt;
+&lt;li&gt;이제 다시 브라우저로 접속해봅니다. Hello World!라는 문구가 출력되면 정상적으로 연결 된 것입니다.&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h3&gt;도메인 설정 (optional)&lt;/h3&gt;
 &lt;p&gt;개인 서버를 운영하는 경우 대부분 자신만의 도메인 네임을 가지고 있습니다. 사용자가 서버의 아이피 주소를 외우고 다닐 리가 없을 뿐더러, 깔끔하지 않기 때문입니다. 다만, &lt;strong&gt;이 과정은 선택사항이기 때문에&lt;/strong&gt; 도메인 네임까지 설정할 필요가 없다고 생각하시는 분들은 가볍게 넘어가되, 공인 아이피로 접속해주시면 되겠습니다.&lt;/p&gt;
@@ -502,33 +446,23 @@ git push -u origin master
 &lt;h3&gt;SSL 인증서 설정 (optional)&lt;/h3&gt;
 &lt;p&gt;도메인 설정과 마찬가지로, SSL 설정은 부가적인 옵션입니다. 위의 Nginx 설정이 완료된 상태에서 &lt;a href=&quot;https://support.cloudflare.com/hc/en-us/articles/217471977&quot;&gt;Cloudflare 공식 문서&lt;/a&gt;를 참고하여 아래 과정을 진행합니다.&lt;/p&gt;
 &lt;ol&gt;
-&lt;li&gt;&lt;p&gt;Cloudflare에 접속한 후 Crypto 메뉴를 선택합니다.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Origin Certificates에서 Create Certificate를 누릅니다. 다이얼로그가 나타나면 본인의 도메인 네임 리스트를 입력합니다. 서브도메인을 위해 Asterisk를 포함한 도메인도 추가해줍니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt; *.your-domain.com, your-domain.com&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Next를 누르면 Origin Certificate와 Private Key가 생성되는 것을 확인할 수 있습니다. 생성된 키와 인증서를 복사하여 서버에 추가해줍니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo vi /etc/ssl/certs/your-domain.com.key # --&amp;gt; Private Key 내용 추가
+&lt;li&gt;Cloudflare에 접속한 후 Crypto 메뉴를 선택합니다.&lt;/li&gt;
+&lt;li&gt;Origin Certificates에서 Create Certificate를 누릅니다. 다이얼로그가 나타나면 본인의 도메인 네임 리스트를 입력합니다. 서브도메인을 위해 Asterisk를 포함한 도메인도 추가해줍니다.&lt;pre&gt;&lt;code&gt; *.your-domain.com, your-domain.com&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;Next를 누르면 Origin Certificate와 Private Key가 생성되는 것을 확인할 수 있습니다. 생성된 키와 인증서를 복사하여 서버에 추가해줍니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo vi /etc/ssl/certs/your-domain.com.key # --&amp;gt; Private Key 내용 추가
  sudo vi /etc/ssl/certs/your-domain.com.pem # --&amp;gt; Origin Certificate 내용 추가&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt; 주의 할 점으로, Private Key의 경우 &lt;strong&gt;한 번 발급되면 다시 보여주지 않기 때문에 로컬에 복사&lt;/strong&gt;해두는 것이 좋습니다. 만약 분실할 경우 삭제 후 다시 발급해야 합니다.&lt;/p&gt;
+ 주의 할 점으로, Private Key의 경우 &lt;strong&gt;한 번 발급되면 다시 보여주지 않기 때문에 로컬에 복사&lt;/strong&gt;해두는 것이 좋습니다. 만약 분실할 경우 삭제 후 다시 발급해야 합니다.&lt;/li&gt;
+&lt;li&gt;서버의 Nginx 설정을 엽니다.&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo vi /etc/nginx/conf/conf.d/myapp.conf&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;서버의 Nginx 설정을 엽니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo vi /etc/nginx/conf/conf.d/myapp.conf&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;SSL 인증서 설정을 추가하고 Nginx를 재시작합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; upstream backend {
+&lt;li&gt;SSL 인증서 설정을 추가하고 Nginx를 재시작합니다.&lt;pre&gt;&lt;code class=&quot;language-text&quot;&gt; upstream backend {
      server localhost:3000;
  }
-
  server {
      listen       80;
      listen       443;
-
      ssl        on;
      ssl_certificate         /etc/ssl/certs/your-domain.com.pem;
      ssl_certificate_key     /etc/ssl/certs/your-domain.com.key;
-
      server_name  your_domain;
-
      location / {
          proxy_set_header X-Real-IP $remote_addr;
          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -540,8 +474,7 @@ git push -u origin master
  }&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt; sudo systemctl restart nginx&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;도메인에 https를 붙여서 접속해봅시다. 정상 접속이 된다면 설정이 마무리 된 것입니다.&lt;/p&gt;
-&lt;/li&gt;
+&lt;li&gt;도메인에 https를 붙여서 접속해봅시다. 정상 접속이 된다면 설정이 마무리 된 것입니다.&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;</description>
 <category>Cloud</category>
