@@ -782,4 +782,19 @@
 &lt;p&gt;이 시점에서 제가 왜 백엔드와 상호작용한 결과가 바로 UI에 녹아드는 방식을 그리 선호하지 않는지 아실겁니다. GraphQL을 다루기 위해 react-apollo 같은 바인딩을 사용하는 것 말이죠. 변경 사항을 반영하거나 데이터를 가져오는 등 백엔드와 상호작용하는 것은 제가 만든 도메인 스토어에서 담당해야 하는 일입니다. UI 레이어에서 처리할 일이 아닙니다. 제가 느끼기에 react-apollo는 데이터 계층과 UI 계층을 단단하게 결합하도록 만드는 지름길처럼 보입니다.&lt;/p&gt;
 &lt;hr&gt;
 &lt;p&gt;자 그럼 원래 질문으로 돌아가봅시다. “context(컨텍스트), hooks(훅), suspense(서스펜스)같은 리액트의 새 기능이 추가되었는데 앞으로 우리가 (웹) 앱을 만드는데 많은 영향을 미칠까요? 리액트 팀에서 Redux(리덕스)나 MobX(몹엑스)가 쓸모없어지는 새로운 상태 관리 라이브러리를 만들까요?” 라는 질문이었죠.&lt;/p&gt;
-&lt;p&gt;제 답변을 말씀드리겠습니다. 새 기능들이 상태 관리의 판도를 바꾸진 않습니다. context, hooks 기능이 리액트가 여태 못하던 것을 새로이 할 수 있게 만들어주는 트릭도 아닙니다. 그저 같은 트릭일 뿐이나, 훨씬 잘 정리되어있고 더욱 조합하기 쉬우며 에러가 덜 발생하도록 만들어졌습니다. (확실히 저는 새 API의 팬입니다!) 하지만 리액트 자체 API만 사용한다면 컴포넌트는 오로지 자체 상태(state)에만 반응할 수 있습니다. 만약 도메인 상태를 컴포넌트 트리 바깥에 두고 싶다면 별도�
+&lt;p&gt;제 답변을 말씀드리겠습니다. 새 기능들이 상태 관리의 판도를 바꾸진 않습니다. context, hooks 기능이 리액트가 여태 못하던 것을 새로이 할 수 있게 만들어주는 트릭도 아닙니다. 그저 같은 트릭일 뿐이나, 훨씬 잘 정리되어있고 더욱 조합하기 쉬우며 에러가 덜 발생하도록 만들어졌습니다. (확실히 저는 새 API의 팬입니다!) 하지만 리액트 자체 API만 사용한다면 컴포넌트는 오로지 자체 상태(state)에만 반응할 수 있습니다. 만약 도메인 상태를 컴포넌트 트리 바깥에 두고 싶다면 별도의 상태 관리 패턴이나 추상화, 설계 구현체나 라이브러리를 사용해서 관리해야 합니다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;따라서 최근에 추가된 리액트 API는 근본적으로 상태 관리 상태계에 큰 변화를 일으키지 않습니다.  &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;다시 말해 context, hooks 등이 나왔으니 리덕스나 몹엑스가 더이상 필요 없다고 느끼고 계신다면 이전에도 필요 없었을 겁니다.&lt;/p&gt;
+&lt;p&gt;hooks 에 대해 첨언하자면 이제는 &lt;a href=&quot;https://blog.cloudboost.io/3-reasons-why-i-stopped-using-react-setstate-ab73fc67a42e&quot;&gt;컴포넌트의 지역 상태를 관리하기 위해 몹엑스를 쓸 필요가 줄었습니다.&lt;/a&gt; 특히 몹엑스의 &lt;code class=&quot;language-text&quot;&gt;observable&lt;/code&gt; 을 컴포넌트 상태로 사용한다면 suspense API를 활용할 수 없습니다.&lt;/p&gt;
+&lt;p&gt;일반적으로 suspense 대(versus) 상태 관리라는 주제로 이야기하자면 두 개념은 대립된다기 보단 &lt;a href=&quot;https://zetawiki.com/wiki/%EA%B4%80%EC%8B%AC%EC%9D%98_%EB%B6%84%EB%A6%AC_SoC&quot;&gt;관심사 분리&lt;/a&gt;를 명확하게 하기 위한 방법이라고 생각합니다. suspense + 리액트의 state 는 모든 UI 상태를 관리하기 아주 좋은 방법이고, 이를 활용하여 동시성 랜더링(concurrent rendering) 등을 할 수 있습니다. 동시성을 지원하는 것은 UI 상태같이 휘발성 상태에서 관리하는 것이 더 맞습니다. 하지만 비지니스 로직은 어떨까요? 비지니스 로직은 언제나 한 곳에서 관리되어야 합니다.&lt;/p&gt;
+&lt;p&gt;위에 말씀드린 내용을 바탕으로 모던 리액트 대 상태 관리 라이브러리에 대한 답을 드렸으리라 생각합니다.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;리액트는 휘발성 UI 상태를 관리하고, 비지니스 로직을 관리해서는 안된다. 따라서 본질적으로 변한 것은 없습니다.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;마지막으로 덧붙이자면 이 글을 통해  &lt;a href=&quot;https://mobx.js.org/&quot;&gt;MobX&lt;/a&gt;와 &lt;a href=&quot;https://github.com/mobxjs/mobx-state-tree&quot;&gt;mobx-state-tree&lt;/a&gt;에 근본 목표를 더욱 잘 이해하셨으리라 생각합니다. 이 라이브러리들은 아래와 같은 목표를 가지고 설계되었습니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;어떤 UI 추상화 기법과 관계없이 상태를 관리할 수 있도록 한다.&lt;/li&gt;
+&lt;li&gt;깔끔하고 투명하게 상태를 UI와 연결할 수 있게 한다.&lt;/li&gt;
+&lt;li&gt;에러가 발생하기 쉬운 구독 관리(역주: pub-sub 패턴의 구독 이야기로 보입니다. 지난 포스트를 참고하세요), 셀렉터(역주: 메모이제이션 등. reselect 참고), 그 외의 직접 해야하는 최적화를 최대한 피하고 이벤트 발생 시 컴포넌트가 불필요하게 리랜더(re-render)되지 않도록 한다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;도메인 상태를 분리하여 관리하는게 얼마나 멋진 일인지 자세히 알고 싶다면 저의 &lt;a href=&quot;https://www.youtube.com/watch?v=3J9EJrvqOiM&amp;#x26;index=7&amp;#x26;t=0s&amp;#x26;list=PLW0vzLDjfaNSFs7OBLK6anfQiE5FJzAPD&quot;&gt;“Complexity: Divide &amp;#x26; Conquer”&lt;/a&gt; 발표를 
