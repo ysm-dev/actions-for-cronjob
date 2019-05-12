@@ -13,7 +13,7 @@ const fetch = (url, options, timeout = 30000) => {
 const dbFileURL = 'https://raw.githubusercontent.com/sarojaba/awesome-devblog/master/db.yml'
 
 !(async () => {
-  const RSSs = await _.go(
+  await _.go(
     fetch(dbFileURL),
     _('text'),
     data => yaml.safeLoad(data),
@@ -31,8 +31,8 @@ const dbFileURL = 'https://raw.githubusercontent.com/sarojaba/awesome-devblog/ma
     _.tap(() => _.log(`Finish Download all feeds.`)),
     _.tap(() => {
       sh.exec(`git add .`)
-      sh.exec(`git config --global user.email "ysm0622@gmail.com"`)
-      sh.exec(`git commit -m "Update"`)
+      sh.exec(`git config --global user.email "support+actions@github.com"`)
+      sh.exec(`git commit -m "Auto Deploy By Github Actions"`)
       sh.exec(`git push https://${process.env.GH_PAT}@github.com/ysm0622/actions-for-cronjob.git HEAD:master`)
     }),
   )
