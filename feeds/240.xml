@@ -1,0 +1,2047 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="https://ddii.dev/feed.xml" rel="self" type="application/atom+xml" /><link href="https://ddii.dev/" rel="alternate" type="text/html" /><updated>2019-05-12T23:37:48+09:00</updated><id>https://ddii.dev/feed.xml</id><title type="html">ddiiwoong Tech Blog</title><subtitle>ddiiwoong tech blog</subtitle><author><name>Jinwoong Kim</name></author><entry><title type="html">eksworkshop</title><link href="https://ddii.dev/kubernetes/eksworkshop/" rel="alternate" type="text/html" title="eksworkshop" /><published>2019-03-29T00:00:00+09:00</published><updated>2019-03-29T00:00:00+09:00</updated><id>https://ddii.dev/kubernetes/eksworkshop</id><content type="html" xml:base="https://ddii.dev/kubernetes/eksworkshop/">&lt;h2 id=&quot;amazon-eks-elastic-container-service-for-kubernetes&quot;&gt;Amazon EKS (Elastic Container Service for Kubernetes)&lt;/h2&gt;
+
+&lt;p&gt;Kubernetes Managed Service인 Amazon EKS가 2018년 7월 출시되고 2019년 1월 정식으로 서울리전에 출시되었다. 개인적으로 완전관리형 Kubernetes 출시가 늦어져서 AWS 행보가 다소 늦다고 생각은 했으나 ALB와 VPC연동, 여러가지 기존 OpenSource와의 연결고리를 배제하고 자체 Managed서비스와 연동할것들이 많기 때문에 당연히 타사에 비해 늦어진걸로 보인다. 언제나 그랬지만 오픈소스를 받아들이는 느낌이 아니라 뭔가 완성된 제품을 쓰는 느낌(?)이다. 물론 불편한 부분과 감수해야할 내용들은 조금 있지만 기존 AWS 충성 User에게 호응을 얻을수 있기 때문이 아닐까라는 생각을 해보면서 포스팅을 시작하려고 한다.&lt;/p&gt;
+
+&lt;p&gt;오픈소스가 아닌 Managed서비스에 대한 리뷰는 처음이지만 4월 10일 &lt;a href=&quot;https://www.meetup.com/ko-KR/awskrug/events/260024327/&quot;&gt;AWS판교소모임&lt;/a&gt; 발표도 있고, 실제 고려중인 아키텍처에 포함이 되어야 하는 EKS에 대해서 살펴보고 eskworkshop 튜토리얼을 실행해보면서 다른 관리형 Kubernetes 서비스들에 비해 어떤 사항을 좀더 고민해야 하는지 정리해보고 넘어가면 좋을듯 하다.&lt;/p&gt;
+
+&lt;h2 id=&quot;eksworkshopcom&quot;&gt;eksworkshop.com&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://eksworkshop.com/&quot;&gt;https://eksworkshop.com/&lt;/a&gt;&lt;br /&gt;
+Kubernete를 처음접하는 유저를 위한 기본 개념과 아키텍처, 그리고 VPC, ALB를 활용하여 EKS에 대한 설치, 구성, 데모앱 배포 등을 해볼수 있는 튜토리얼 사이트이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.facebook.com/groups/awskrug/&quot;&gt;AWSKRUG&lt;/a&gt;에서 한글화 작업도 진행중이다.  &lt;a href=&quot;https://awskrug.github.io/eks-workshop/deploy/&quot;&gt;한글화 링크&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;eksworkshop-따라하기전-사전-준비사항&quot;&gt;eksworkshop 따라하기전 사전 준비사항&lt;/h2&gt;
+
+&lt;p&gt;eksworkshop에서는 기본적으로 workshop이라는 신규 IAM 계정을 생성하고 Cloud9 Workspace 와 몇가지 설정들을 진행하지만 &lt;a href=&quot;https://www.meetup.com/ko-KR/awskrug/events/260024327/&quot;&gt;AWS판교소모임&lt;/a&gt;을 위해 최대한 비용이 드는 구성요소를 배제하고 작성하고자 한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;aws-account&quot;&gt;AWS account&lt;/h3&gt;
+&lt;p&gt;Free Tier는 EKS를 자유롭게 활용할수 없다.&lt;br /&gt;
+관련 issue - &lt;a href=&quot;https://github.com/aws/containers-roadmap/issues/78&quot;&gt;https://github.com/aws/containers-roadmap/issues/78&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;실제 사용중인 계정이나 Credit이 확보된 계정이 필요하다.&lt;/p&gt;
+
+&lt;h3 id=&quot;iam-설정-json-template&quot;&gt;IAM 설정 (JSON template)&lt;/h3&gt;
+&lt;p&gt;EKSworkshop에서는 Full administrator 계정을 필요로 하지만 eksctl로 배포를 진행하므로 그 기준으로 IAM설정을 진행한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/terraform-aws-modules/terraform-aws-eks/blob/master/examples/eks_test_fixture/README.md&quot;&gt;terraform eks iam 설정&lt;/a&gt;을 참고하려고 했지만 eksctl과 terraform과의 약간 다른 방식의 배포로 인해 어쩔수없이 EKS Full Access권한을 할당하였다.&lt;br /&gt;
+(다른 유경험자의 도움이 필요한 상황 ㅠㅠ)&lt;/p&gt;
+
+&lt;p&gt;자세한 JSON 내용은 &lt;a href=&quot;https://github.com/ddiiwoong/eksworkshop/blob/master/iam_for_eksworkshop.json&quot;&gt;링크&lt;/a&gt;를 참고한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;kubectl-aws-iam-authenticator&quot;&gt;kubectl, aws-iam-authenticator&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;kubectl : kubernetes CLI&lt;/li&gt;
+  &lt;li&gt;aws-iam-authenticator : AWS IAM Authenticator CLI&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;kubectl-config를-저장하기-위해-kube-directory를-생성&quot;&gt;kubectl config를 저장하기 위해 .kube directory를 생성&lt;/h4&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;mkdir &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; ~/.kube
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;kubectl-설치-linux&quot;&gt;kubectl 설치 (linux)&lt;/h4&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;curl &lt;span class=&quot;nt&quot;&gt;--silent&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--location&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; /usr/local/bin/kubectl &lt;span class=&quot;s2&quot;&gt;&quot;https://amazon-eks.s3-us-west-2.amazonaws.com/1.11.5/2018-12-06/bin/linux/amd64/kubectl&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;chmod +x /usr/local/bin/kubectl
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;kubectl-설치-macos-homebrew&quot;&gt;kubectl 설치 (MacOS Homebrew)&lt;/h4&gt;
+&lt;p&gt;MacOS는 brew로 설치하였다.&lt;br /&gt;
+&lt;a href=&quot;https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos&quot;&gt;https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos&lt;/a&gt;&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;brew install kubernetes-cli
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;kubectl-설치-windows-powershell&quot;&gt;kubectl 설치 (windows PowerShell)&lt;/h4&gt;
+&lt;p&gt;&lt;a href=&quot;https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/install-kubectl.html&quot;&gt;https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/install-kubectl.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -o kubectl.exe https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/windows/amd64/kubectl.exe
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;kubectl-설치-확인&quot;&gt;kubectl 설치 확인&lt;/h4&gt;
+
+&lt;p&gt;현재 MacOS에서는 1.11.7 버전이 설치되어 있다. (다른경로로 설치됨)&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl version &lt;span class=&quot;nt&quot;&gt;--short&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--client&lt;/span&gt;
+Client Version: v1.11.7-dispatcher
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;aws-iam-authenticator-설치&quot;&gt;aws-iam-authenticator 설치&lt;/h4&gt;
+&lt;p&gt;Amazon EKS는 IAM을 사용하여 Kubernetes용 AWS IAM Authenticator를 통해 Kubernetes 클러스터에 인증을 제공한다.  Go(버전 1.7이상)가 설치되어 있으면 아래와 같이 진행하면 된다.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;go get &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; github.com/kubernetes-sigs/aws-iam-authenticator/cmd/aws-iam-authenticator
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;mv ~/go/bin/aws-iam-authenticator /usr/local/bin/aws-iam-authenticator
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;만약 Go설치가 안되어 있다면 다음 링크를 통해 설치 진행할수 있다.&lt;br /&gt;
+&lt;a href=&quot;https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/install-aws-iam-authenticator.html&quot;&gt;https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/install-aws-iam-authenticator.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;aws-iam-authenticator-binary-다운로드&quot;&gt;aws-iam-authenticator binary 다운로드&lt;/h4&gt;
+
+&lt;p&gt;Linux: &lt;a href=&quot;https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/linux/amd64/aws-iam-authenticator&quot;&gt;https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/linux/amd64/aws-iam-authenticator&lt;/a&gt;&lt;br /&gt;
+MacOS: &lt;a href=&quot;https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/darwin/amd64/aws-iam-authenticator&quot;&gt;https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/darwin/amd64/aws-iam-authenticator&lt;/a&gt;&lt;br /&gt;
+Windows: &lt;a href=&quot;https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/windows/amd64/aws-iam-authenticator.exe&quot;&gt;https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/windows/amd64/aws-iam-authenticator.exe&lt;/a&gt;&lt;/p&gt;
+
+&lt;h5 id=&quot;macos의-경우&quot;&gt;MacOS의 경우&lt;/h5&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;curl &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/darwin/amd64/aws-iam-authenticator
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;chmod +x ./aws-iam-authenticator
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;cp ./aws-iam-authenticator &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/bin/aws-iam-authenticator &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/bin:&lt;span class=&quot;nv&quot;&gt;$PATH&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h5 id=&quot;macos-bash-환경변수-추가&quot;&gt;MacOS bash 환경변수 추가&lt;/h5&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'export PATH=$HOME/bin:$PATH'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; ~/.bash_profile
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h5 id=&quot;macos-zsh-환경변수-추가&quot;&gt;MacOS zsh 환경변수 추가&lt;/h5&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'export PATH=$HOME/bin:$PATH'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; ~/.zshrc
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;aws-iam-authenticator-binary-확인&quot;&gt;aws-iam-authenticator binary 확인&lt;/h4&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;aws-iam-authenticator &lt;span class=&quot;nb&quot;&gt;help&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;eksctl&quot;&gt;eksctl&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://github.com/weaveworks/eksctl/blob/master/logo/eksctl.png?raw=true&quot; alt=&quot;mascot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;eksctl은 weaveworks에서 contribute하고 있는 오픈소스로 EKS 클러스터를 생성하는 간단한 CLI 도구이다. Go로 작성되어 있고 CloudFormation을 기본으로 동작한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://eksctl.io/&quot;&gt;https://eksctl.io/&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&quot;https://github.com/weaveworks/eksctl&quot;&gt;https://github.com/weaveworks/eksctl&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;eksctl-binary-다운로드&quot;&gt;eksctl binary 다운로드&lt;/h4&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;curl &lt;span class=&quot;nt&quot;&gt;--silent&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--location&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://github.com/weaveworks/eksctl/releases/download/latest_release/eksctl_&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;uname &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;_amd64.tar.gz&quot;&lt;/span&gt; | &lt;span class=&quot;nb&quot;&gt;tar &lt;/span&gt;xz &lt;span class=&quot;nt&quot;&gt;-C&lt;/span&gt; /tmp
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;mv &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; /tmp/eksctl /usr/local/bin
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;macos-homebrew-설치&quot;&gt;MacOS Homebrew 설치&lt;/h4&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;brew tap weaveworks/tap
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;brew install weaveworks/tap/eksctl
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;windows-설치-powershell-chocolatey&quot;&gt;Windows 설치 (PowerShell, chocolatey)&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;chocolatey install eksctl
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;eksctl-동작확인&quot;&gt;eksctl 동작확인&lt;/h4&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;eksctl version
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;cli-api-자격증명-구성&quot;&gt;CLI API 자격증명 구성&lt;/h4&gt;
+
+&lt;p&gt;사전설정한 aws configure가 있는지 확인. 기존 Terraform이나 kops 사용한적이 있으면 건너뛰어도 된다.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;ls&lt;/span&gt;  ~/.aws
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;없을경우 aws 자격증명을 생성한다.&lt;/p&gt;
+
+&lt;h4 id=&quot;awscredentials&quot;&gt;~/.aws/credentials&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[default]
+aws_access_key_id={EXAMPLE}
+aws_secret_access_key={EXAMPLEKEY}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;awsconfig&quot;&gt;~/.aws/config&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[default]
+region=ap-northeast-2
+output=json
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;eks-배포&quot;&gt;EKS 배포&lt;/h2&gt;
+&lt;p&gt;kubectl, aws-iam-authenticator, eksctl, AWS 자격증명 환경까지 구성되어 있으면 바로 배포가 가능하다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;eksctl create cluster &lt;span class=&quot;nt&quot;&gt;--name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;eksworkshop-eksctl &lt;span class=&quot;nt&quot;&gt;--nodes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;3 &lt;span class=&quot;nt&quot;&gt;--node-ami&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;auto
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  using region ap-northeast-2
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  setting availability zones to &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ap-northeast-2a ap-northeast-2c ap-northeast-2a]
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  subnets &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ap-northeast-2a - public:192.168.0.0/19 private:192.168.96.0/19
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  subnets &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ap-northeast-2c - public:192.168.32.0/19 private:192.168.128.0/19
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  subnets &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ap-northeast-2a - public:192.168.64.0/19 private:192.168.160.0/19
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  nodegroup &lt;span class=&quot;s2&quot;&gt;&quot;ng-cfb3cb01&quot;&lt;/span&gt; will use &lt;span class=&quot;s2&quot;&gt;&quot;ami-0c7972077aa002104&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;AmazonLinux2/1.11]
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  creating EKS cluster &lt;span class=&quot;s2&quot;&gt;&quot;eksworkshop-eksctl&quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;ap-northeast-2&quot;&lt;/span&gt; region
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  will create 2 separate CloudFormation stacks &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;cluster itself and the initial nodegroup
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  &lt;span class=&quot;k&quot;&gt;if &lt;/span&gt;you encounter any issues, check CloudFormation console or try &lt;span class=&quot;s1&quot;&gt;'eksctl utils describe-stacks --region=ap-northeast-2 --name=eksworkshop-eksctl'&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  creating cluster stack &lt;span class=&quot;s2&quot;&gt;&quot;eksctl-eksworkshop-eksctl-cluster&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  creating nodegroup stack &lt;span class=&quot;s2&quot;&gt;&quot;eksctl-eksworkshop-eksctl-nodegroup-ng-cfb3cb01&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  &lt;span class=&quot;nt&quot;&gt;--nodes-min&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;2 was &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;automatically
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  &lt;span class=&quot;nt&quot;&gt;--nodes-max&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;2 was &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;automatically
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;✔]  all EKS cluster resource &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;eksworkshop-eksctl&quot;&lt;/span&gt; had been created
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;✔]  saved kubeconfig as &lt;span class=&quot;s2&quot;&gt;&quot;/Users/ddii/.kube/config&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  nodegroup &lt;span class=&quot;s2&quot;&gt;&quot;ng-cfb3cb01&quot;&lt;/span&gt; has 0 node&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;at least 2 node&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; to become ready &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;ng-cfb3cb01&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  nodegroup &lt;span class=&quot;s2&quot;&gt;&quot;ng-cfb3cb01&quot;&lt;/span&gt; has 2 node&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  node &lt;span class=&quot;s2&quot;&gt;&quot;ip-192-168-42-42.ap-northeast-2.compute.internal&quot;&lt;/span&gt; is ready
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  node &lt;span class=&quot;s2&quot;&gt;&quot;ip-192-168-66-165.ap-northeast-2.compute.internal&quot;&lt;/span&gt; is ready
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  kubectl &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;should work with &lt;span class=&quot;s2&quot;&gt;&quot;/Users/ddii/.kube/config&quot;&lt;/span&gt;, try &lt;span class=&quot;s1&quot;&gt;'kubectl get nodes'&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;✔]  EKS cluster &lt;span class=&quot;s2&quot;&gt;&quot;eksworkshop-eksctl&quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;ap-northeast-2&quot;&lt;/span&gt; region is ready
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;서울리전(ap-northeast-2)기준 약 15-20분이 소요되며 &lt;code class=&quot;highlighter-rouge&quot;&gt;eksctl&lt;/code&gt; 기본 설정값은 다음과 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;클러스터명은 자동생성, –name 옵션으로 지정가능 (eksworkshop-eksctl)&lt;/li&gt;
+  &lt;li&gt;CloudFormation : eksctl-{$Cluster_Name}-cluster&lt;/li&gt;
+  &lt;li&gt;m5.large * 2 instances (&lt;a href=&quot;https://github.com/awslabs/amazon-eks-ami/blob/7f6c8cb3597e17f6e5f7df96d12bccf5604dc909/amazon-eks-nodegroup.yaml&quot;&gt;EKS Instance Type&lt;/a&gt; NodeInstanceType.AllowedValues 참고)&lt;/li&gt;
+  &lt;li&gt;Default AMI : AWS EKS AMI (custom EKS AMI 가능 - Packer활용)&lt;/li&gt;
+  &lt;li&gt;Default Region : us-west-2&lt;/li&gt;
+  &lt;li&gt;dedicated VPC : 192.168.0.0/16&lt;/li&gt;
+  &lt;li&gt;kubernetes version : 1.11.x (&lt;a href=&quot;https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/platform-versions.html&quot;&gt;EKS Version&lt;/a&gt; 참고)&lt;/li&gt;
+  &lt;li&gt;StorageClass : gp2 (&lt;a href=&quot;https://kubernetes.io/docs/concepts/storage/storage-classes/#aws-ebs&quot;&gt;AWS EBS&lt;/a&gt; 참고)&lt;/li&gt;
+  &lt;li&gt;CNI : &lt;a href=&quot;https://github.com/aws/amazon-vpc-cni-k8s&quot;&gt;Amazon VPC&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Node Autoscaler : –node-min, –node-max Auto Scaling 설정&lt;/li&gt;
+  &lt;li&gt;기본 Pod 개수 : &lt;a href=&quot;https://github.com/awslabs/amazon-eks-ami/blob/7f6c8cb3597e17f6e5f7df96d12bccf5604dc909/files/eni-max-pods.txt&quot;&gt;참고&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;nodegroup : worker가 포함되는 group&lt;/li&gt;
+  &lt;li&gt;kubeconfig : ~/.kube/config 로 통합됨&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;config-file-사용&quot;&gt;Config File 사용&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/weaveworks/eksctl/tree/master/examples&quot;&gt;https://github.com/weaveworks/eksctl/tree/master/examples&lt;/a&gt;를 참고하여 &lt;code class=&quot;highlighter-rouge&quot;&gt;YAML&lt;/code&gt;형태로 작성하여 배포가능하다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;eksctl create cluster &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; example.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;기존에 관리하는 VPC subnet정보 및 AutoScaling, AZ(availabilityZones)설정, nodegroup 관리, node Instance에 preBootstrapCommand등을 아래 예시와 같이 미리 작성하면 GitOps측면에서 활용도가 더욱 높아질수 있다.&lt;/p&gt;
+
+&lt;h4 id=&quot;05-advanced-nodegroupsyaml&quot;&gt;05-advanced-nodegroups.yaml&lt;/h4&gt;
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# An advanced example of ClusterConfig object with customised nodegroups:&lt;/span&gt;
+&lt;span class=&quot;nn&quot;&gt;---&lt;/span&gt; 
+&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;eksctl.io/v1alpha4&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterConfig&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;cluster-5&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;region&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;eu-west-2&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;nodeGroups&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ng1-public&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;instanceType&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;m5.xlarge&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;minSize&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;2&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;maxSize&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;8&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;nodegroup-type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;frontend-workloads&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;iam&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;withAddonPolicies&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;autoScaler&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
+
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ng2-private-a&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;instanceType&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;m5.large&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;desiredCapacity&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;2&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;nodegroup-type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;backend-cluster-addons&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;privateNetworking&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;preBootsrapCommand&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;# allow docker registries to be deployed as cluster service &lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;echo&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;{\&quot;insecure-registries\&quot;:&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;[\&quot;172.20.0.0/16\&quot;,\&quot;10.100.0.0/16\&quot;]}&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/etc/docker/daemon.json'&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;systemctl&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;restart&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;docker&quot;&lt;/span&gt;
+
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ng3-private-b&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;instanceType&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;c3.8xlarge&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;desiredCapacity&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;4&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;nodegroup-type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;very-special-science-workloads&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;privateNetworking&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;availabilityZones&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;eu-west-2a&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# use single AZ to optimise data transfer between isntances&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;preBootstrapCommand&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;# disable hyperthreading&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;in&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;$(cat&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/sys/devices/system/cpu/cpu*/topology/thread_siblings_list&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;cut&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;-s&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;-d,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;-f2-&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;tr&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;','&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;sort&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;-un);&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;do&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;echo&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/sys/devices/system/cpu/cpu${n}/online;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;done&quot;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# cluster AZs must be set explicitly for single AZ nodegroup example to work&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;availabilityZones&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;eu-west-2a&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;eu-west-2b&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;eu-west-2c&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;kubernetes-대시보드-배포&quot;&gt;Kubernetes 대시보드 배포&lt;/h2&gt;
+
+&lt;p&gt;Kubernetes 공식 대시보드는 기본으로 배포되지 않기 때문에 수동으로 배포해야한다. 설치 방법은 &lt;a href=&quot;https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/&quot;&gt;공식 문서&lt;/a&gt;에서 확인가능하다.&lt;/p&gt;
+
+&lt;p&gt;위에서 구성된 클러스터에서 Kubernetes 대시보드를 배포한다.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl apply &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;접속을 위해 kube-proxy 기능을 활용하여 8080포트로 expose를 진행한다. 모든 인터페이스에서 필터링없이 접속이 가능하도록 옵션을 지정한다. 
+아래 명령은 터미널에서 백그라운드로 계속 동작한다.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl proxy &lt;span class=&quot;nt&quot;&gt;--port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;8080 &lt;span class=&quot;nt&quot;&gt;--address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'0.0.0.0'&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--disable-filter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt; &amp;amp;
+W0328 16:39:09.061754    9100 proxy.go:139] Request filter disabled, your proxy is vulnerable to XSRF attacks, please be cautious
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;TOKEN으로 접속하기 위해 aws-iam-authenticator를 통해 해당 클러스터 token을 확인한다.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;aws-iam-authenticator token &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; eksworkshop-eksctl &lt;span class=&quot;nt&quot;&gt;--token-only&lt;/span&gt;
+k8s-aws-v1.aHR0cHM6Ly9zdHMuYXAtbm9ydGhlYXN0LTIuYW1hem9uYXdzLmNvbS8_QWN0aW9uPUdldENhbGxlcklkZW50aXR5JlZlcnNpb249MjAxMS0wNi0xNSZYLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFKMjVNVjJSVVZQNlRWTURBJTJGMjAxOTAzMjglMkZhcC1ub3J0aGVhc3QtMiUyRnN0cyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMTkwMzI4VDA3NDEwNVomWC1BbXotRXhwaXJlcz0wJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCUzQngtazhzLWF3cy1pZCZYLUFtei1TaWduYXR1cmU9Yjc0NzkzYzUwOTU5NDYwMzMxMjY2YjExYWY4ODBkM2Q2OWQ5MWRhYzFhZWY1NjZmZTAwNTNlNWY2MTM0NGFlZQ
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;그냥 localhost:8080 으로만 접속하면 구성된 클러스터 kube API list를 확인되므로 아래 경로로 접속한다.&lt;br /&gt;
+위에서 출력된 TOKEN값으로 로그인한다. Token 세션 Timeout이 있으니 세션만료시 &lt;code class=&quot;highlighter-rouge&quot;&gt;aws-iam-authenticator&lt;/code&gt; 명령을 통해 갱신값을 입력하면 된다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://localhost:8080/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/login
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;/images/k8s_dashboard.png&quot; alt=&quot;dashboard&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;microservice-app-배포&quot;&gt;Microservice app 배포&lt;/h2&gt;
+&lt;p&gt;가장 기본적인 &lt;a href=&quot;https://microservices-demo.github.io/&quot;&gt;Sock Shop&lt;/a&gt;을 배포하기 위해 Git Clone 수행&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;git clone https://github.com/microservices-demo/microservices-demo.git sockshop
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;sockshop/deploy/kubernetes
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;NodePort&lt;/code&gt;로 되어있는 Front-End Service를 &lt;code class=&quot;highlighter-rouge&quot;&gt;LoadBalancer&lt;/code&gt;로 수정한다.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;sed &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'s/NodePort/LoadBalancer/g'&lt;/span&gt; complete-demo.yaml
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cat &lt;/span&gt;complete-demo.yaml | &lt;span class=&quot;nb&quot;&gt;grep &lt;/span&gt;LoadBalancer
+ &lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;: LoadBalancer
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;namespace 생성 및 sock-shop 배포&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl create namespace sock-shop
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl apply &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; complete-demo.yaml
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl get all
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;서비스 접속확인을 위해서는 ALB배포시간(DNS전파)이 일정 소요되므로 잠시후 접속을 시도한다.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl get svc
+NAME           TYPE           CLUSTER-IP       EXTERNAL-IP                                                                 PORT&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;S&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;        AGE
+carts          ClusterIP      10.100.84.58     &amp;lt;none&amp;gt;                                                                      80/TCP         1h
+carts-db       ClusterIP      10.100.227.156   &amp;lt;none&amp;gt;                                                                      27017/TCP      1h
+catalogue      ClusterIP      10.100.206.52    &amp;lt;none&amp;gt;                                                                      80/TCP         1h
+catalogue-db   ClusterIP      10.100.119.66    &amp;lt;none&amp;gt;                                                                      3306/TCP       1h
+front-end      LoadBalancer   10.100.249.164   a4c42cfe951be11e9bb8c0a8cd8a2e5d-8156023.ap-northeast-2.elb.amazonaws.com   80:30001/TCP   1h
+orders         ClusterIP      10.100.160.17    &amp;lt;none&amp;gt;                                                                      80/TCP         1h
+orders-db      ClusterIP      10.100.70.203    &amp;lt;none&amp;gt;                                                                      27017/TCP      1h
+payment        ClusterIP      10.100.57.233    &amp;lt;none&amp;gt;                                                                      80/TCP         1h
+queue-master   ClusterIP      10.100.146.109   &amp;lt;none&amp;gt;                                                                      80/TCP         1h
+rabbitmq       ClusterIP      10.100.32.115    &amp;lt;none&amp;gt;                                                                      5672/TCP       1h
+shipping       ClusterIP      10.100.180.174   &amp;lt;none&amp;gt;                                                                      80/TCP         1h
+user           ClusterIP      10.100.211.41    &amp;lt;none&amp;gt;                                                                      80/TCP         1h
+user-db        ClusterIP      10.100.87.142    &amp;lt;none&amp;gt;                                                                      27017/TCP      1h
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;브라우저에서 ALB주소 &lt;code class=&quot;highlighter-rouge&quot;&gt;a4c42cfe951be11e9bb8c0a8cd8a2e5d-8156023.ap-northeast-2.elb.amazonaws.com&lt;/code&gt; 로 접속하여 sock-shop Demo Web을 확인할수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/sock-shop.png&quot; alt=&quot;sockshop&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;eks-클러스터-및-삭제&quot;&gt;EKS 클러스터 및 삭제&lt;/h2&gt;
+
+&lt;p&gt;위에서 외부접속을 위해 LoadBalancer를 수동으로 설정하였으므로 EC2 - Load Balancer서 프로비저닝된 ALB를 삭제하고 진행해야 한다.&lt;/p&gt;
+
+&lt;p&gt;클러스터에서 실행 중인 모든 서비스를 다시 확인하고 EXTERNAL-IP값과 연결된 모든 서비스를 삭제한다.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl get svc &lt;span class=&quot;nt&quot;&gt;--all-namespaces&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl delete svc front-end
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;ALB와 VPC 삭제가 완료된것을 확인하고 클러스터를 삭제하자.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;eksctl delete cluster &lt;span class=&quot;nt&quot;&gt;--name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;eksworkshop-eksctl
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  deleting EKS cluster &lt;span class=&quot;s2&quot;&gt;&quot;eksworkshop-eksctl&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  will delete stack &lt;span class=&quot;s2&quot;&gt;&quot;eksctl-eksworkshop-eksctl-nodegroup-ng-3af535b7&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;stack &lt;span class=&quot;s2&quot;&gt;&quot;eksctl-eksworkshop-eksctl-nodegroup-ng-3af535b7&quot;&lt;/span&gt; to get deleted
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ℹ]  will delete stack &lt;span class=&quot;s2&quot;&gt;&quot;eksctl-eksworkshop-eksctl-cluster&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;✔]  kubeconfig has been updated
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;✔]  the following EKS cluster resource&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;eksworkshop-eksctl&quot;&lt;/span&gt; will be deleted: cluster. If &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;doubt, check CloudFormation console
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;정리&quot;&gt;정리&lt;/h2&gt;
+&lt;p&gt;서울 리전(ap-northeast-2)에 EKS가 오픈되고 Production환경을 EKS로 넘어가는 기업들이 많아지고 있는건 아주 긍정적인 현상이다.&lt;br /&gt;
+또한 엄청난 속도의 기술개발과 다양한 툴들로 Kubernetes Cluster를 구성하거나 Microservice형태의 App을 배포하는것은 점점 대중화 되어가고 있다.&lt;br /&gt;
+실제 Production에서 구현을 하기 위해서는 보안 및 성능을 동시에 고려한 네트워크(CNI), Ingress 설정이나 전체 클러스터 퍼포먼스 측면에서의 파라미터 튜닝이 더욱 더 중요해지고 관련된 DevOps(SRE) 인력들의 중요도가 높아질것은 분명해 보인다.&lt;/p&gt;
+
+&lt;p&gt;EKS를 오픈소스 측면에서 고려했을때에는 예전에 페이스북이나 다른곳에서 종종 이야기 했던것처럼 AWS 고유의 Lock-in 전략을 엄청나게 고민하고 발표한듯한 생각이 한 느낌을 지울수는 없는건 사실이지만 훌륭한 제품인건 확실하고 단기간에 서비스 성장속도를 낼 수 있는 서비스라 생각한다.&lt;/p&gt;
+
+&lt;p&gt;마지막으로 Managed Kubernetes의 선택은 엔지니어의 몫으로 보고 각 벤더별 비교한 아래 링크를 참조해서 선정 기준을 잡으면 더욱 좋을것 같다.&lt;br /&gt;
+&lt;a href=&quot;https://docs.google.com/spreadsheets/d/1U0x4-NQegEPGM7eVTKJemhkPy18LWuHW5vX8uZzqzYo/edit#gid=0&quot;&gt;https://docs.google.com/spreadsheets/d/1U0x4-NQegEPGM7eVTKJemhkPy18LWuHW5vX8uZzqzYo/edit#gid=0&lt;/a&gt;&lt;/p&gt;</content><author><name>Jinwoong Kim</name></author><category term="eks" /><category term="aws" /><category term="Kubernetes" /><category term="eskworkshop" /><category term="kubectl" /><category term="Managed Kubernetes" /><summary type="html">Amazon EKS (Elastic Container Service for Kubernetes)</summary></entry><entry><title type="html">git-sync</title><link href="https://ddii.dev/kubernetes/git-sync/" rel="alternate" type="text/html" title="git-sync" /><published>2019-03-21T00:00:00+09:00</published><updated>2019-03-21T00:00:00+09:00</updated><id>https://ddii.dev/kubernetes/git-sync</id><content type="html" xml:base="https://ddii.dev/kubernetes/git-sync/">&lt;p&gt;git repo를 kubernetes volume으로 구현할수 있는 sidecar pattern &lt;code class=&quot;highlighter-rouge&quot;&gt;git-sync&lt;/code&gt; 프로젝트에 대해서 알아본다.&lt;/p&gt;
+
+&lt;h2 id=&quot;git-sync&quot;&gt;git-sync&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/kubernetes&quot;&gt;Kubernetes Github&lt;/a&gt;에 방문하면 다양한 프로젝트들을 볼 수 있다.&lt;br /&gt;
+&lt;a href=&quot;https://github.com/kubernetes/kubernetes&quot;&gt;Kubernetes Project&lt;/a&gt;부터 minikube, kubeadm, kubectl, kubelet, dashboard등 필수적으로 필요하거나 많이 사용되는 프로젝트를 볼 수 있는데,
+기존에 storage volume 으로 활용되던 &lt;a href=&quot;https://kubernetes.io/docs/concepts/storage/volumes/#gitrepo&quot;&gt;gitrepo&lt;/a&gt;가 &lt;code class=&quot;highlighter-rouge&quot;&gt;deprecated&lt;/code&gt; 되어서 방법을 찾다가 유사한 프로젝트를 공식 repo에서 우연히 발견하게 되었다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/kubernetes/git-sync&quot;&gt;git-sync&lt;/a&gt;는 sidecar 방식으로 git repository를 clone하는 프로젝트이다.&lt;/p&gt;
+
+&lt;p&gt;최초 한번 clone도 가능하고 일정한 간격으로 끌어와서 응용프로그램에 사용할 수 있고 원하는 branch, Tag 또는 특정 git hash 기반으로 pulling이 가능하다.&lt;/p&gt;
+
+&lt;p&gt;upstream의 repository에서 대상이 변경되었을때 다시 pulling하고, webhook기능을 추가하여 비동기성으로 POST 요청이 있을때만 git-sync를 수행할수 있기 때문에 
+Continuous Deployment를 간단하게 구현하는데 활용될 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;github-ssh설정&quot;&gt;GitHub SSH설정&lt;/h2&gt;
+
+&lt;p&gt;git 내용을 pulling을 할때 https, ssh 방법을 사용하는데 GitHub ssh key를 kubernetes cluster의 secret으로 사용을 할수 있기 때문에 ssh 방식을 사용하는 방법을 작성하였다.&lt;/p&gt;
+
+&lt;p&gt;아래 모든 과정은 MacOS에서 진행하였고 다른 OS는 아래 링크에서 확인 가능하다.&lt;br /&gt;
+&lt;a href=&quot;https://help.github.com/en/articles/connecting-to-github-with-ssh&quot;&gt;https://help.github.com/en/articles/connecting-to-github-with-ssh&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;사용하고자 하는 터미널에서 등록키를 확인하자.&lt;/p&gt;
+
+&lt;h3 id=&quot;기존에-등록된-ssh-key-확인&quot;&gt;기존에 등록된 SSH key 확인&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ ls -al ~/.ssh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;새로운-ssh-key-생성&quot;&gt;새로운 SSH key 생성&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ ssh-keygen -t rsa -b 4096 -C &quot;ddiiwoong@gmail.com&quot;
+# Start the SSH key creation process
+&amp;gt; Enter file in which the key is (/Users/you/.ssh/id_rsa): [Hit enter]
+&amp;gt; Key has comment '/Users/you/.ssh/id_rsa'
+&amp;gt; Enter new passphrase (empty for no passphrase): [Type new passphrase]
+&amp;gt; Enter same passphrase again: [One more time for luck]
+&amp;gt; Your identification has been saved with the new passphrase.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;ssh-agent-실행중인지-확인&quot;&gt;ssh agent 실행중인지 확인&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;eval “$(ssh-agent -s)”
+&amp;gt; Agent pid 59566
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;생성된-키를-keychain에-저장-및-확인&quot;&gt;생성된 키를 keychain에 저장 및 확인&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ ssh-add -K ~/.ssh/id_rsa
+$ cat ~/.ssh/id_rsa.pub
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;복사-및-github에-추가&quot;&gt;복사 및 github에 추가&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ pbcopy &amp;lt; ~/.ssh/id_rsa.pub
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Setting - SSH and GPG keys - SSH keys - New SSH key&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;Title&lt;/code&gt;은 구분자로 입력하고 GitHub password를 한번더 입력하고 완료한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;터미널에서-ssh접속-확인&quot;&gt;터미널에서 SSH접속 확인&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ ssh -T git@github.com
+Hi ddiiwoong! You've successfully authenticated, but GitHub does not provide shell access.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;git-sync를-위한-secret-등록&quot;&gt;git-sync를 위한 secret 등록&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/kubernetes/git-sync/blob/master/docs/ssh.md&quot;&gt;https://github.com/kubernetes/git-sync/blob/master/docs/ssh.md&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;secret-생성&quot;&gt;secret 생성&lt;/h3&gt;
+&lt;p&gt;위에서 생성한 SSH key를 Kubernetes Cluster에 Secret resource로 저장을 한다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ ssh-keyscan github.com &amp;gt; /tmp/known_hosts
+# github.com:22 SSH-2.0-babeld-9d924d26
+# github.com:22 SSH-2.0-babeld-9d924d26
+# github.com:22 SSH-2.0-babeld-9d924d26
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;known_hosts와 key를 Secret으로 저장한다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl create secret generic git-creds \
+    --from-file=ssh=$HOME/.ssh/id_rsa \
+    --from-file=known_hosts=/tmp/known_hosts
+
+$ kubectl get secret git-creds
+NAME        TYPE      DATA      AGE
+git-creds   Opaque    2         1d
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;sample-ngnix-배포&quot;&gt;sample ngnix 배포&lt;/h2&gt;
+
+&lt;p&gt;기본적으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;git-sync/cmd/git-sync/main.go&lt;/code&gt; 소스를 확인하면 여러가지 flag를 확인할 수 있는데 주로 사용하는 옵션은 다음과 같다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;ssh : pulling 방식 (default=false)&lt;/li&gt;
+  &lt;li&gt;root : git clone이 수행되는 root directory (default=”$HOME/git”)&lt;/li&gt;
+  &lt;li&gt;repo : clone 대상 Repository (default=””)&lt;/li&gt;
+  &lt;li&gt;branch : branch (default=master)&lt;/li&gt;
+  &lt;li&gt;rev : git revision (tag or hash) to check out&lt;/li&gt;
+  &lt;li&gt;depth : commit depth (default=0)&lt;/li&gt;
+  &lt;li&gt;dest : repository 배포 directory&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;기타 옵션들은 &lt;code class=&quot;highlighter-rouge&quot;&gt;git-sync/cmd/git-sync/main.go&lt;/code&gt; 에서 확인이 가능하며 해당 옵션들을 변수로 처리하여 활용하면 된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;git-sync-demoyaml-작성&quot;&gt;git-sync-demo.yaml 작성&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: git-sync-demo
+  name: git-sync-demo
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: git-sync-demo
+  template:
+    metadata:
+      labels:
+        app: git-sync-demo
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14-alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: git-sync-volume
+          mountPath: /usr/share/nginx
+      - name: git-sync
+        image: k8s.gcr.io/git-sync:v3.1.1
+        imagePullPolicy: Always
+        args:
+         - &quot;-ssh&quot;
+         - &quot;-repo=git@github.com:ddiiwoong/git-sync-demo.git&quot;
+         - &quot;-root=/usr/share/nginx&quot;
+         - &quot;-dest=html&quot;
+         - &quot;-branch=master&quot;
+         - &quot;-depth=1&quot;
+        volumeMounts:
+        - name: git-sync-volume
+          mountPath: /usr/share/nginx
+        - name: git-secret
+          mountPath: /etc/git-secret
+      volumes:
+      - name: git-sync-volume
+        emptyDir: {}
+      - name: git-secret
+        secret:
+          secretName: git-creds
+          defaultMode: 288 # = mode 0440
+      securityContext:
+        fsGroup: 65533 # to make SSH key readable
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: git-sync-demo
+spec:
+  type: NodePort
+  selector:
+    app: git-sync-demo
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;h3 id=&quot;확인사항&quot;&gt;확인사항&lt;/h3&gt;
+&lt;p&gt;일단 ngnix로 1.14-alpine Image를 기본으로 하고 git-sync container가 sidecar로 들어가도록 작성하였다.&lt;br /&gt;
+실제 동작하는 순서대로 manifest를 아래서부터 살펴보자.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;git-sync-volume은 &lt;code class=&quot;highlighter-rouge&quot;&gt;emptyDir&lt;/code&gt;, git-secret은 &lt;code class=&quot;highlighter-rouge&quot;&gt;secret&lt;/code&gt; volume 설정
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;...
+    volumes:
+    - name: git-sync-volume
+      emptyDir: {}
+    - name: git-secret
+      secret:
+        secretName: git-creds
+        defaultMode: 288 # = mode 0440
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;sidecar container image를 &lt;code class=&quot;highlighter-rouge&quot;&gt;k8s.gcr.io/git-sync:v3.1.1&lt;/code&gt;로 설정&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;git-sync-volume&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;git-sync-volume&lt;/code&gt; volume을 &lt;code class=&quot;highlighter-rouge&quot;&gt;git-sync&lt;/code&gt; sidecar에 마운트&lt;/li&gt;
+  &lt;li&gt;위에서 이야기한 &lt;code class=&quot;highlighter-rouge&quot;&gt;git-sync&lt;/code&gt; flag, args로 설정
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;...
+    containers:
+    - name: git-sync
+      image: k8s.gcr.io/git-sync:v3.1.1
+      imagePullPolicy: Always
+      args:
+       - &quot;-ssh&quot;
+       - &quot;-repo=git@github.com:ddiiwoong/git-sync-demo.git&quot;
+       - &quot;-root=/usr/share/nginx&quot;
+       - &quot;-dest=html&quot;
+       - &quot;-branch=master&quot;
+       - &quot;-depth=1&quot;
+      volumeMounts:
+      - name: git-sync-volume
+        mountPath: /usr/share/nginx
+      - name: git-secret
+        mountPath: /etc/git-secret
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;nginx 기본 위치가 &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/share/nginx&lt;/code&gt; 이므로 mount 위치를 git-sync-volume으로 설정
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;...
+  spec:
+    containers:
+    - name: nginx
+      image: nginx:1.14-alpine
+      ports:
+      - containerPort: 80
+      volumeMounts:
+      - name: git-sync-volume
+        mountPath: /usr/share/nginx
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;위 nginx를 배포하고 접속하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;Hello git-sync demo v1.0&lt;/code&gt;를 확인할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;결국 git repo code (static html page)는 &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/share/nginx/html&lt;/code&gt; 위치에 clone 되는것처럼 보이지만 
+실제 clone 위치를 확인해보면 symbolic link로 특정 revision dir를 가리키고 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl exec -it git-sync-demo-665c9c9ddf-6nwc4 sh
+Defaulting container name to nginx.
+Use 'kubectl describe pod/git-sync-demo-665c9c9ddf-6nwc4 -n default' to see all of the containers in this pod.
+/ # cd /usr/share/nginx/
+/usr/share/nginx # ls -al
+total 16
+drwxrwsrwx    4 root     nogroup       4096 Mar 21 06:54 .
+drwxr-xr-x    1 root     root          4096 Mar  8 03:09 ..
+drwxr-sr-x    9 65533    nogroup       4096 Mar 21 06:54 .git
+lrwxrwxrwx    1 65533    nogroup         44 Mar 21 06:54 html -&amp;gt; rev-07aa36f719091d75b5665203fa5846a549e7d540
+drwxr-sr-x    2 65533    nogroup       4096 Mar 21 06:54 rev-07aa36f719091d75b5665203fa5846a549e7d540
+/usr/share/nginx # cat ./html/index.html
+&lt;span class=&quot;cp&quot;&gt;&amp;lt;!DOCTYPE html&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;title&amp;gt;&lt;/span&gt;Hello git-sync demo&lt;span class=&quot;nt&quot;&gt;&amp;lt;/title&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/head&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;body&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;h1&amp;gt;&lt;/span&gt;Hello git-sync demo v1.0&lt;span class=&quot;nt&quot;&gt;&amp;lt;/h1&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/body&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;github에 있는 위 index.html 내용을 수정하고 commit을 하게 되면 실시간으로 아래와 같이 revision 정보 및 내용이 바뀐것을 확인할수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/usr/share/nginx # ls -al
+total 16
+drwxrwsrwx    4 root     nogroup       4096 Mar 21 13:40 .
+drwxr-xr-x    1 root     root          4096 Mar  8 03:09 ..
+drwxr-sr-x    9 65533    nogroup       4096 Mar 21 13:40 .git
+lrwxrwxrwx    1 65533    nogroup         44 Mar 21 13:40 html -&amp;gt; rev-b125908649135856d79c515c17decba68797a6cb
+drwxr-sr-x    2 65533    nogroup       4096 Mar 21 13:40 rev-b125908649135856d79c515c17decba68797a6cb
+/usr/share/nginx # cat ./html/index.html
+&lt;span class=&quot;cp&quot;&gt;&amp;lt;!DOCTYPE html&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;title&amp;gt;&lt;/span&gt;Hello git-sync demo&lt;span class=&quot;nt&quot;&gt;&amp;lt;/title&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/head&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;body&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;h1&amp;gt;&lt;/span&gt;Hello git-sync demo v1.1&lt;span class=&quot;nt&quot;&gt;&amp;lt;/h1&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/body&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;정리&quot;&gt;정리&lt;/h2&gt;
+&lt;p&gt;git-sync를 간단하게 테스트해봤다.&lt;br /&gt;
+간단하게 &lt;code class=&quot;highlighter-rouge&quot;&gt;sidecar&lt;/code&gt; 방식의 clone tool로서 &lt;code class=&quot;highlighter-rouge&quot;&gt;git-sync&lt;/code&gt;를 활용하면 여러가지로 충분히 활용이 가능할 것이다.&lt;br /&gt;
+포스팅을 작성하면서 떠오른 활용용도를 정리하면 아래와 같다. 어찌보면 sidecar pattern의 활용방안이라고도 볼수 있다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;CDN을 사용하지 않고 git에서 소규모로 컨텐츠를 가져올때&lt;/li&gt;
+  &lt;li&gt;DBMS가 필요없을 정도의 적은 데이터를 가져올때&lt;/li&gt;
+  &lt;li&gt;jekyll이나 hugo 같은 정적 사이트(블로그)의 sidecar 패턴 (GitPage처럼 markdown을 추가하고 git commit하면 바로 사이트에 반영되는 방식)&lt;/li&gt;
+  &lt;li&gt;nginx, haproxy, apache와 같이 config 변경이 필요할때 webhook방식으로 설정을 변경한후 pod를 재기동하는 GitOps 구현&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>Jinwoong Kim</name></author><category term="git-sync" /><category term="GitOps" /><category term="Kubernetes" /><category term="ssh git" /><category term="sidecar" /><category term="sidecar pattern" /><summary type="html">git repo를 kubernetes volume으로 구현할수 있는 sidecar pattern git-sync 프로젝트에 대해서 알아본다.</summary></entry><entry><title type="html">VScode Server</title><link href="https://ddii.dev/tools/vscode-server/" rel="alternate" type="text/html" title="VScode Server" /><published>2019-03-20T00:00:00+09:00</published><updated>2019-03-20T00:00:00+09:00</updated><id>https://ddii.dev/tools/vscode-server</id><content type="html" xml:base="https://ddii.dev/tools/vscode-server/">&lt;p&gt;IntelliJ IDEA를 사용하다가 개발업무를 거의 손놓다시피 하다보니 라이센스를 연장하지 못하게 되었고 주로 Local에서 VScode를 사용하고 있다. 현재 부서와 업무도 바뀌었고 워낙 고가다보니 IDE를 부서비로 구매하도 어렵다. 뭐 얼마나 한다고 말할수도 있겠지만 업무특성상 개발툴을 사달라고 할수 없고 최근 크롬북이나 아이패드 프로같은 태블릿을 가지고 다니시는 분들도 많고 단순 필기나 메모가 아닌 온라인 환경에서 블로깅 포스팅 정도는 할수 있다는 가정으로 Web IDE를 구성하는 포스팅을 시작해본다.&lt;/p&gt;
+
+&lt;h2 id=&quot;web-ide&quot;&gt;Web IDE&lt;/h2&gt;
+&lt;p&gt;이번 포스팅을 쓰기 시작하면서 2017년 AWS re;invent에선가 Cloud9 제품이 출시되어서 Lambda에서 사용했던 장면이 갑자기 떠올랐다. Cloud 9은 &lt;a href=&quot;https://github.com/c9/core&quot;&gt;https://github.com/c9/core&lt;/a&gt;를 기반으로 instance를 띄는것을 기본으로 한다. Lambda의 기본 에디터도 나쁘진 않지만 Cloud9에서 강조하는 부분은 코드 협업이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://d1.awsstatic.com/product-marketing/Tulip/C9-Collab-Image@3x.e03a65d9488633c154358430540ab363dd1e8f45.png&quot; alt=&quot;cloud9&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;AWS에서 서비스로 출시되기 이전에도 Dockerhub에서도 종종 확인할수 있었지만 현재는 찾아보기 어렵다.&lt;/p&gt;
+
+&lt;p&gt;국내에는 Cloud 형태로 &lt;a href=&quot;https://ide.goorm.io/&quot;&gt;GoormIDE&lt;/a&gt; 제품이 있다.&lt;br /&gt;
+Free 에디션도 있으니 따로 확인해보면 된다. (응원합니다!)&lt;/p&gt;
+
+&lt;p&gt;이외에도 &lt;a href=&quot;https://github.com/theia-ide/theia&quot;&gt;https://github.com/theia-ide/theia&lt;/a&gt;, &lt;a href=&quot;https://github.com/codercom/code-server&quot;&gt;https://github.com/codercom/code-server&lt;/a&gt;와 같은 Web기반 오픈소스가 존재하고 둘다 상용이나 Beta형태로 서비스 중이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;code-server&quot;&gt;code-server&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/codercom/code-server&quot;&gt;code-server&lt;/a&gt;는 원격서버 형태로 동작하는 브라우저 기반 &lt;a href=&quot;https://github.com/Microsoft/vscode&quot;&gt;VSCode&lt;/a&gt; IDE이다.&lt;/p&gt;
+
+&lt;p&gt;그런데 왜 구지 VScode 설치형을 냅두고 Server로 구동하느냐? 아래와 같이 설명하고 있다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Chromebook, Table(IPAD) 에서 Coding 가능&lt;/li&gt;
+  &lt;li&gt;저사양 Client에서도 Cloud 기반 Server의 이점 사용가능&lt;/li&gt;
+  &lt;li&gt;Battery! (제일 중요포인트)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;구동방식은 여러방식이 존재한다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Hosted : &lt;a href=&quot;https://coder.com/&quot;&gt;coder&lt;/a&gt; - Enterprise&lt;/li&gt;
+  &lt;li&gt;Docker
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  $ docker run -t -p 127.0.0.1:8443:8443 -v &quot;${PWD}:/root/project&quot; codercom/code-server code-server --allow-http --no-auth
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Bianry
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  $ code-server &amp;lt;initial directory to open&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;code-server-kubernetes에-배포&quot;&gt;code-server kubernetes에 배포&lt;/h2&gt;
+
+&lt;p&gt;공식 &lt;a href=&quot;https://hub.docker.com/r/codercom/code-server&quot;&gt;Image&lt;/a&gt;와 &lt;a href=&quot;https://github.com/codercom/code-server/blob/master/Dockerfile&quot;&gt;Dockerfile&lt;/a&gt;는 해당 링크를 참조한다.
+살짝 변경해서 재빌드하려고 했는데 맥북 메모리가 부족한지 &lt;code class=&quot;highlighter-rouge&quot;&gt;yarn build&lt;/code&gt;할때 &lt;code class=&quot;highlighter-rouge&quot;&gt;Serve fails with Error Code 137&lt;/code&gt; 가 발생하였다. 이문제는 나중에 해결하기로 하고 일단 배포하자.&lt;/p&gt;
+
+&lt;p&gt;로컬 minikube에서 테스트하기 위해&lt;br /&gt;
+&lt;a href=&quot;https://github.com/codercom/code-server/blob/master/deployment/deployment.yaml&quot;&gt;https://github.com/codercom/code-server/blob/master/deployment/deployment.yaml&lt;/a&gt; 에서 ClusterIP를  NodePort로 수정하고 패스워드를 로그에서 확인하지 않고 사용할수 있도록 &lt;code class=&quot;highlighter-rouge&quot;&gt;1234&lt;/code&gt;로 설정하고 배포한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;deploymentyaml&quot;&gt;deployment.yaml&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: v1
+kind: Namespace
+metadata:
+  name: code-server
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: code-server
+ namespace: code-server
+spec:
+ ports:
+ - port: 8443
+   name: https
+   protocol: TCP
+ selector:
+   app: code-server
+ type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: code-server
+  name: code-server
+  namespace: code-server
+spec:
+  selector:
+    matchLabels:
+      app: code-server
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: code-server
+    spec:
+      containers:
+      - image: codercom/code-server
+        imagePullPolicy: Always
+        name: code-server
+        ports:
+        - containerPort: 8443
+          name: https
+        args:
+         - &quot;--password=1234&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl create -f deployment.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이후 서비스 확인 및 minikube service로 expose 시킨다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl get svc
+NAME          TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+code-server   NodePort   10.111.206.64   &amp;lt;none&amp;gt;        8443:32665/TCP   15m
+
+$ minikube service code-server
+
+$ minikube service list
+|-------------|---------------|-----------------------------|
+|  NAMESPACE  |     NAME      |             URL             |
+|-------------|---------------|-----------------------------|
+| code-server | code-server   | http://192.168.99.102:32665 |
+| default     | git-sync-demo | http://192.168.99.102:31595 |
+| default     | kubernetes    | No node port                |
+| kube-system | kube-dns      | No node port                |
+|-------------|---------------|-----------------------------|
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;해당 URL로 접속하여 패스워드 &lt;code class=&quot;highlighter-rouge&quot;&gt;1234&lt;/code&gt;를 입력하면 vscode가 원격으로 실행된 것을 확인할수 있다.
+&lt;img src=&quot;/images/vscode.png&quot; alt=&quot;vscode&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;정리&quot;&gt;정리&lt;/h2&gt;
+&lt;p&gt;실제 사용을 해보면 아직 버그가 많다. 애드온이나 플러그인 설치시 제대로 동작을 하지 않는 경우도 있었고 
+&lt;a href=&quot;https://github.com/kubernetes/git-sync&quot;&gt;git-sync&lt;/a&gt; 프로젝트와 연동을 통해 실제 gitOPS를 구현해보고자 하였으나 배포후에 mount된 repository volume에 변경사항이 발생시 갑자기 UI가 먹통이 되는 경우가 발생하기도 하였다. Kubernetes플랫폼을 개발자에게 PaaS형태로 제공하는 경우 webIDE의 좋은 옵션이 될수 있을것 같다.&lt;/p&gt;</content><author><name>Jinwoong Kim</name></author><category term="vscode" /><category term="code-server" /><category term="kubernetes" /><category term="online coding" /><category term="GoormIDE" /><category term="Cloud9" /><summary type="html">IntelliJ IDEA를 사용하다가 개발업무를 거의 손놓다시피 하다보니 라이센스를 연장하지 못하게 되었고 주로 Local에서 VScode를 사용하고 있다. 현재 부서와 업무도 바뀌었고 워낙 고가다보니 IDE를 부서비로 구매하도 어렵다. 뭐 얼마나 한다고 말할수도 있겠지만 업무특성상 개발툴을 사달라고 할수 없고 최근 크롬북이나 아이패드 프로같은 태블릿을 가지고 다니시는 분들도 많고 단순 필기나 메모가 아닌 온라인 환경에서 블로깅 포스팅 정도는 할수 있다는 가정으로 Web IDE를 구성하는 포스팅을 시작해본다.</summary></entry><entry><title type="html">K3s on Raspberry Pi Cluster</title><link href="https://ddii.dev/kubernetes/k3s-homelab/" rel="alternate" type="text/html" title="K3s on Raspberry Pi Cluster" /><published>2019-03-11T00:00:00+09:00</published><updated>2019-03-11T00:00:00+09:00</updated><id>https://ddii.dev/kubernetes/k3s-homelab</id><content type="html" xml:base="https://ddii.dev/kubernetes/k3s-homelab/">&lt;p&gt;이번에는 경량 Kubernetes라고 이야기하는 &lt;a href=&quot;https://github.com/rancher/k3s&quot;&gt;K3s&lt;/a&gt;를 Raspberry Pi 클러스터상에 구동하려고 한다. 
+순수하게 개인의견으로 작성하였고 절대 제품이나 부품홍보를 하고자 하는 의도는 전혀 없다.&lt;/p&gt;
+
+&lt;h2 id=&quot;k3s&quot;&gt;K3s?&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;K3s&lt;/strong&gt;는 Rancher Lab에서 최소자원을 사용하는 Kubernetes 클러스터 구성을 위한 솔루션으로 시작되었고 2019년 3월 12일 현재 0.2버전이 릴리즈된 상태이다. 바이너리 전체가 40mb가 되지 않고 설치가 쉽다는 점에서 최근 트위터 상에서 이슈가 되고 있는 프로젝트라고 할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;주로 Edge, IoT 등 저전력, 저사양 기반 ARM계열 컴퓨팅에 최적화 되어 있고 실제 실험적이긴 하지만 간단한 기능이나 baremetal 기반 클러스터 테스트를 집에서 해보기에는 딱 좋은 프로젝트라 할 수 있다. 이미 vSphere, OpenStack기반으로 테스트는 차고 넘치게 해봤지만 일단 물리적인 케이스부터 보고나면 하드웨어를 좋아하는 사람들에게는 아주 재미있는 장난감이 아닐수 없을 것이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/rancher/k3s&quot;&gt;K3s Github&lt;/a&gt; 상세 설명에 보면 Cloud Provider, Storage Plugin은 제거하였고  default 저장소가 &lt;code class=&quot;highlighter-rouge&quot;&gt;etcd&lt;/code&gt;가 아닌 &lt;code class=&quot;highlighter-rouge&quot;&gt;sqlite3&lt;/code&gt;으로 되어있다고 한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;사전-준비사항&quot;&gt;사전 준비사항&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;최소 2개 이상의 Raspberry Pi 2B/3B/3B+, 4ea&lt;br /&gt;
+오픈마켓에서 할인쿠폰 적용해서 Raspberry Pi 3B+, 4ea를 &lt;code class=&quot;highlighter-rouge&quot;&gt;166,820원&lt;/code&gt;(대당 42,000원) 정도에 구매하였다.&lt;br /&gt;
+최저가 검색으로 대당 46,000원 정도 했던것 같다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Stackable Case&lt;br /&gt;
+&lt;a href=&quot;https://www.amazon.com/gp/product/B07CTG5N3V/ref=ppx_yo_dt_b_asin_title_o00_s00?ie=UTF8&amp;amp;psc=1&quot;&gt;iUniker Raspberry Pi Cluster Case&lt;/a&gt; 강추!! (개인적으로 쿨러와 디자인이 맘에 듬)&lt;br /&gt;
+배송비포함 29.19달러, 약 &lt;code class=&quot;highlighter-rouge&quot;&gt;33,000원&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;micro SDHC 4ea&lt;br /&gt;
+16GB로도 충분하지만 삼성전자 micro SDHC CLASS10 UHS-I EVO (32GB), 4ea를 오픈마켓에서 사게되면 배송료 포함해서 8,500원 * 4ea = &lt;code class=&quot;highlighter-rouge&quot;&gt;34,000원&lt;/code&gt;에 구매가 가능하다. 오픈마켓에서는 개당 배송료를 내야한다. 하지만 쿠팡에서는 2ea를 로켓배송으로 15,380원에 구매가 가능하므로 약 &lt;code class=&quot;highlighter-rouge&quot;&gt;31,000원&lt;/code&gt;에 4개를 구매할수 있다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;멀티충전기&lt;br /&gt;
+1만원대 후반에서 2만원 초반이면 6포트 충전기를 구매할수 있는데 구매했던 가장 큰 기준은 Pi 4대를 동시에 2.5A 전류를 안정적으로 공급하려면 최대 10A를 지원하는 멀티 충전기를 사야했었고 4-5포트 짜리 충전기들은 대부분 최대 전류가 8A로 충족하지 못해 4포트만 사용하더라도 안정적인 전류 공급을 위해 6포트 충전기로 선택하였다.&lt;br /&gt;
+쿠팡 로켓배송 - 포*지 가정용 6포트 급속 멀티 충전기, &lt;code class=&quot;highlighter-rouge&quot;&gt;22,900원&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;micro 5pin 20cm 2.4A 지원 케이블 4ea&lt;br /&gt;
+Pi 권장 전류가 2.5A라고 했지만 2.4A, 3A 짜리중에 저렴한 2.4A 지원 숏케이블로 구매하였다.&lt;br /&gt;
+오픈마켓에서 배송료 포함, &lt;code class=&quot;highlighter-rouge&quot;&gt;7800원&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;UTP Cat5e 30cm 케이블 4ea&lt;br /&gt;
+그냥 제일싼걸로 오픈마켓에서 배송료 포함 &lt;code class=&quot;highlighter-rouge&quot;&gt;4,100원&lt;/code&gt;에 구매하였다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;기가비트 지원되는 5포트 이상 스위치 허브(공유기)&lt;br /&gt;
+집에 있던 공유기 활용 (iptime A1004) 하였지만 최저 5포트 이상 스위치 허브중 제일 싼 모델은 &lt;code class=&quot;highlighter-rouge&quot;&gt;16,000원&lt;/code&gt;대로 가격 형성중이다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;실제 위 스펙으로 대충 구매를 진행하게 되면 18.4 + 3.3 + 3.1 + 2.3 + 0.8 + 0.4 + 1.6 = &lt;code class=&quot;highlighter-rouge&quot;&gt;29.9만원&lt;/code&gt; 정도 소요가 될 것으로 예상된다. 집에 굴러다는 부품이나 충전기, 케이블, SD카드들을 활용하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;25만원&lt;/code&gt; 이내로도 충분히 가능하다.&lt;/p&gt;
+
+&lt;h2 id=&quot;구매-제품-조립&quot;&gt;구매 제품 조립&lt;/h2&gt;
+&lt;p&gt;조립은 그다지 어렵지 않은데 케이스 구매시 제공되는 방열판(CPU, GPU, RAM)을 꼼꼼하게 붙이고 쿨러를 GPIO에 연결한다.&lt;br /&gt;
+그렇게 어려운 점은 없지만 본체를 케이스에 고정할때 너트가 작아 손이 큰 사람은 조금 힘들 수도 있을 것 같다.&lt;/p&gt;
+
+&lt;p&gt;케이스의 CPU 쿨러가 화룡점정이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/cases.jpg&quot; alt=&quot;cases&quot; /&gt;&lt;br /&gt;
+&lt;img src=&quot;/images/heat.jpg&quot; alt=&quot;heat&quot; /&gt;&lt;br /&gt;
+&lt;img src=&quot;/images/cooler.jpg&quot; alt=&quot;cooler&quot; /&gt;
+&lt;img src=&quot;/images/3stack.jpg&quot; alt=&quot;3stack&quot; /&gt;
+&lt;img src=&quot;/images/charger.jpg&quot; alt=&quot;charger&quot; /&gt;
+&lt;img src=&quot;/images/fullstack.jpg&quot; alt=&quot;full&quot; /&gt;
+&lt;img src=&quot;/images/complete.jpg&quot; alt=&quot;complete&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;os-설치&quot;&gt;OS 설치&lt;/h2&gt;
+
+&lt;p&gt;SD카드에 설치는 MacOS상에서 진행하였다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.raspberrypi.org/downloads/raspbian/&quot;&gt;Raspbian Lite&lt;/a&gt;를 내려받아 &lt;a href=&quot;https://www.balena.io/etcher/&quot;&gt;Etcher&lt;/a&gt;를 사용하여 OS를 설치한다.&lt;/p&gt;
+
+&lt;p&gt;자세한 추가적인 설치방법은 다음 링크를 통해서도 확인이 가능하다.&lt;br /&gt;
+&lt;a href=&quot;https://www.raspberrypi.org/documentation/installation/installing-images/README.md&quot;&gt;Installing operating system images&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;환경-설정&quot;&gt;환경 설정&lt;/h2&gt;
+&lt;p&gt;Mac에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;/Volumes/boot&lt;/code&gt;에 마운트가 된다. OS마다 다르지만 Linux에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;/mnt/boot&lt;/code&gt;, Windows에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;boot&lt;/code&gt; 로 마운트가 된다.&lt;/p&gt;
+
+&lt;p&gt;SSH Service 자동 활성화를 위해 위 OS별 mount된 root 경로에 ssh 빈 파일을 생성하게 되면 reboot이후에 SSH 접속이 가능해진다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo touch /Volumes/boot/ssh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;또한 container 사용을 위해 root경로의 &lt;code class=&quot;highlighter-rouge&quot;&gt;cmdline.txt&lt;/code&gt; 파일 마지막에 cgroup 설정을 추가한다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cgroup_memory=1 cgroup_enable=memory
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;SD카드를 만들고 각각의 Pi에 장착후에 UTP케이블과 전원을 모두 연결한다.
+부팅이 완료되면 default id/pass 인 &lt;code class=&quot;highlighter-rouge&quot;&gt;pi/raspberry&lt;/code&gt;로 로그인 하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo raspi-config&lt;/code&gt; 를 통해 패스워드 변경, hostname 설정, GPU memory split 설정 등을 완료하자.&lt;br /&gt;
+나중에는 PXE booting 및 ansible 자동화로 구현하면 무인환경 설치가 가능할것 같다. (Edge Computing)&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;┌───────────────────┤ Raspberry Pi Software Configuration Tool (raspi-config) ├────────────────────┐
+│                                                                                                  │
+│        1 Change User Password Change password for the current user                               │
+│        2 Network Options      Configure network settings                                         │
+│        3 Boot Options         Configure options for start-up                                     │
+│        4 Localisation Options Set up language and regional settings to match your location       │
+│        5 Interfacing Options  Configure connections to peripherals                               │
+│        6 Overclock            Configure overclocking for your Pi                                 │
+│        7 Advanced Options     Configure advanced settings                                        │
+│        8 Update               Update this tool to the latest version                             │
+│        9 About raspi-config   Information about this configuration tool                          │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                           &amp;lt;Select&amp;gt;                           &amp;lt;Finish&amp;gt;                            │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;1 Change User Password&lt;/li&gt;
+  &lt;li&gt;2 Network Options - hostname
+    &lt;ul&gt;
+      &lt;li&gt;k3s-master, k3s-slave-01, k3s-slave-02, k3s-slave-03&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;4 Localisation Options - TimeZone
+    &lt;ul&gt;
+      &lt;li&gt;Asia, Seoul&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;7 Advanced Options - GPU Memory split
+    &lt;ul&gt;
+      &lt;li&gt;16mb&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;모두 완료가 되었으면 pi들을 재기동하자.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo reboot
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;k3s-클러스터-생성&quot;&gt;k3s 클러스터 생성&lt;/h2&gt;
+
+&lt;h3 id=&quot;server-기동&quot;&gt;Server 기동&lt;/h3&gt;
+
+&lt;p&gt;armhf(arm hard float) 지원이 되는 최신 릴리즈 v0.2.0를 다운받는다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ wget -O k3s https://github.com/rancher/k3s/releases/download/v0.2.0/k3s-armhf &amp;amp;&amp;amp; \
+  chmod +x k3s &amp;amp;&amp;amp; \
+  sudo mv k3s /usr/local/bin/k3s
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Master node 기동 (백그라운드)&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo k3s server &amp;amp;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;해당 node를 Control plane 형태로 분리시켜 workload에서 제외하려면 &lt;code class=&quot;highlighter-rouge&quot;&gt;--disable-agent&lt;/code&gt; 옵션을 사용한다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;amp; k3s server --disable-agent
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;정상적으로 k3s 기동이 완료되면 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/rancher/k3s/k3s.yaml&lt;/code&gt;에서 Kubeconfig를 확인할수 있다. 그리고 node 상태도 확인이 가능하다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo k3s kubectl get nodes
+NAME          STATUS   ROLES    AGE   VERSION
+k3s-master    Ready    &amp;lt;none&amp;gt;   21h   v1.13.4-k3s.1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;node-추가&quot;&gt;node 추가&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;/var/lib/rancher/k3s/server/manifests&lt;/code&gt; 에서 TOKEN을 확인한다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo cat /var/lib/rancher/k3s/server/node-token
+K100fa5235031f2b8e92e01b8bd3255142422a7aeaa47657ad4c68969d35cddbf3a::node:431342ac6204466e8f81445edb8c2e3a
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;worker node에 접속한다음 동일하게 최신 릴리즈 v0.2.0를 다운받는다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ wget -O k3s https://github.com/rancher/k3s/releases/download/v0.2.0/k3s-armhf &amp;amp;&amp;amp; \
+  chmod +x k3s &amp;amp;&amp;amp; \
+  sudo mv k3s /usr/local/bin/k3s
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위에서 나온 TOKEN값과 Kube API Endpoint정보로 node들을 차례로 추가 시키면 모든 작업이 완료된다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ export NODE_TOKEN=&quot;K100fa5235031f2b8e92e01b8bd3255142422a7aeaa47657ad4c68969d35cddbf3a::node:431342ac6204466e8f81445edb8c2e3a&quot;
+$ export MASTER_IP=&quot;https://192.168.0.14:6443&quot;
+$ sudo k3s agent --server https://${MASTER_IP}:6443 --token ${NODE_TOKEN} &amp;amp;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;완성된 클러스터를 확인한다. 외부 로컬에서 확인하려면 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/rancher/k3s/k3s.yaml&lt;/code&gt; 파일을 &lt;code class=&quot;highlighter-rouge&quot;&gt;~/.kube/config&lt;/code&gt;에 추가하면 된다. 클러스터 내부에서 kubectl 명령은 k3s 바이너리 내부에 포함되어 있으므로 &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo k3s kubectl&lt;/code&gt; 명령을 사용하였다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo k3s kubectl get node -o wide
+NAME          STATUS   ROLES    AGE   VERSION         INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                         KERNEL-VERSION   CONTAINER-RUNTIME
+k3s-master    Ready    &amp;lt;none&amp;gt;   22h   v1.13.4-k3s.1   192.168.1.14   &amp;lt;none&amp;gt;        Raspbian GNU/Linux 9 (stretch)   4.14.79-v7+      containerd://1.2.4+unknown
+k3s-slave01   Ready    &amp;lt;none&amp;gt;   21h   v1.13.4-k3s.1   192.168.1.15   &amp;lt;none&amp;gt;        Raspbian GNU/Linux 9 (stretch)   4.14.79-v7+      containerd://1.2.4+unknown
+k3s-slave02   Ready    &amp;lt;none&amp;gt;   10h   v1.13.4-k3s.1   192.168.1.16   &amp;lt;none&amp;gt;        Raspbian GNU/Linux 9 (stretch)   4.14.79-v7+      containerd://1.2.4+unknown
+k3s-slave03   Ready    &amp;lt;none&amp;gt;   10h   v1.13.4-k3s.1   192.168.1.17   &amp;lt;none&amp;gt;        Raspbian GNU/Linux 9 (stretch)   4.14.79-v7+      containerd://1.2.4+unknown
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;node 상세정보를 보면 기본적으로 K8s &lt;code class=&quot;highlighter-rouge&quot;&gt;v1.13.4&lt;/code&gt;, runtime은 &lt;code class=&quot;highlighter-rouge&quot;&gt;containerd&lt;/code&gt;를 사용하고 있음을 알 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo k3s kubectl get svc --all-namespaces
+NAMESPACE     NAME         TYPE           CLUSTER-IP     EXTERNAL-IP                 PORT(S)                      AGE
+default       kubernetes   ClusterIP      10.43.0.1      &amp;lt;none&amp;gt;                      443/TCP                      21h
+kube-system   kube-dns     ClusterIP      10.43.0.10     &amp;lt;none&amp;gt;                      53/UDP,53/TCP,9153/TCP       21h
+kube-system   traefik      LoadBalancer   10.43.19.160   192.168.1.14,192.168.1.15   80:32304/TCP,443:31690/TCP   21h
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Rancher쪽에서도 오늘날짜(3/12)로 F5가 Nginx를 인수하는것을 예견했던 것일까?&lt;br /&gt;
+Service를 확인하면 traefik이 기본으로 되어있다. 아래처럼 기본적으로 loadbalancer로 활용되고 있는 traefik을 Helm Chart CRD를 통해 배포된것을 확인할 수 있다. 또한 얼마전 졸업한 CoreDNS도 보인다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo k3s kubectl get pod --all-namespaces
+NAMESPACE     NAME                             READY   STATUS      RESTARTS   AGE
+kube-system   coredns-7748f7f6df-qflx9         1/1     Running     0          21h
+kube-system   helm-install-traefik-dqqg9       0/1     Completed   0          21h
+kube-system   svclb-traefik-598fd65c97-4xtkf   2/2     Running     0          21h
+kube-system   svclb-traefik-598fd65c97-vbsqv   2/2     Running     0          19h
+kube-system   traefik-6876857645-2sqg9         1/1     Running     0          21h
+
+$ sudo k3s kubectl get crd
+NAME                            CREATED AT
+addons.k3s.cattle.io            2019-03-11T16:46:22Z
+helmcharts.k3s.cattle.io        2019-03-11T16:46:22Z
+listenerconfigs.k3s.cattle.io   2019-03-11T16:46:22Z
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;정리&quot;&gt;정리&lt;/h2&gt;
+&lt;p&gt;아주 적은비용(?)으로 취미삼아 k3s 클러스터를 구성해봤다.&lt;br /&gt;
+아직 ARM계열에서 kubernetes workload를 구동하는 것은 시기상조이긴 하지만 기존에 kubeadm을 가지고 pi에 배포하는것에 비하면 설치 난이도나 자원사용량 측면에서 장점이 많은 프로젝트이다.&lt;br /&gt;
+해외 블로그나 트위터를 보면 최근 &lt;code class=&quot;highlighter-rouge&quot;&gt;k3s&lt;/code&gt;에 대한 관심도가 높아지는것을 확인할 수 있는데 단순히 취미생활만이 아니라 IoT, Edge에서의 Serverless Workload 수행이라던지 ARM 계열 최적화된 모습만으로도 충분히 가능성은 보여준것 같다.&lt;br /&gt;
+Rancher 2.0 이후로 Kubernetes 연관된 관심도가 떨어졌었는데 엔지니어들의 관심을 끄는데는 성공한듯 하고 AWS의 Greengrass, Firecracker와 동일선상에서 봐도 견줄만한 가치가 있다고 생각된다.&lt;/p&gt;</content><author><name>Jinwoong Kim</name></author><category term="Kubernetes" /><category term="Rancher" /><category term="K3s" /><category term="Raspberry" /><category term="Homelab" /><summary type="html">이번에는 경량 Kubernetes라고 이야기하는 K3s를 Raspberry Pi 클러스터상에 구동하려고 한다. 순수하게 개인의견으로 작성하였고 절대 제품이나 부품홍보를 하고자 하는 의도는 전혀 없다.</summary></entry><entry><title type="html">Cloud-Native Microservices Demo Application with OpenCensus</title><link href="https://ddii.dev/kubernetes/microservices-demo/" rel="alternate" type="text/html" title="Cloud-Native Microservices Demo Application with OpenCensus" /><published>2019-03-07T00:00:00+09:00</published><updated>2019-03-07T00:00:00+09:00</updated><id>https://ddii.dev/kubernetes/microservices-demo</id><content type="html" xml:base="https://ddii.dev/kubernetes/microservices-demo/">&lt;h1 id=&quot;hipster-shop-cloud-native-microservices-demo-application&quot;&gt;Hipster Shop: Cloud-Native Microservices Demo Application&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/GoogleCloudPlatform/microservices-demo&quot;&gt;https://github.com/GoogleCloudPlatform/microservices-demo&lt;/a&gt;에서 소개된 Demo Application인 &lt;code class=&quot;highlighter-rouge&quot;&gt;Hipster Shop&lt;/code&gt;을 Kubernetes 기반으로 배포하고 관련 오픈소스들을 더 알아보고자 한다.&lt;/p&gt;
+
+&lt;p&gt;위 링크에 가서 보면 알수 있지만 &lt;code class=&quot;highlighter-rouge&quot;&gt;Hipster Shop&lt;/code&gt; 아래 그림처럼 10개의 Microservice로 구성되어 있고 상품을 검색 및 구매할 수있는 웹 기반 이커머스 Application으로 구성 되어있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://github.com/GoogleCloudPlatform/microservices-demo/raw/master/docs/img/architecture-diagram.png&quot; alt=&quot;arch&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;각각의 서비스는 &lt;strong&gt;gRPC&lt;/strong&gt; 로 통신하고 외부 사용자만 HTTP로 접근한다. 모든 서비스는 서로 다른 언어(Go, C#, Node.js, Python, Java)로 구성되어 있고 대부분의 Microservice들은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Istio&lt;/code&gt; service mesh 형태로 구성할수 있도록 되어있다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Skaffold&lt;/code&gt;를 통해 배포하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;OpenCensus&lt;/code&gt;라고 하는 gRPC/HTTP기반 Tracing tool을 활용하여 Google &lt;code class=&quot;highlighter-rouge&quot;&gt;Stackdriver&lt;/code&gt;로 보내도록 되어있지만  Prometheus에 통합하는 방향으로 작성하기 위해서 Prometheus 기반으로 Metric을 수집하는 Fork된 데모 Application을 검색을 통해 찾을수 있었다.&lt;br /&gt;
+&lt;a href=&quot;https://github.com/census-ecosystem/opencensus-microservices-demo&quot;&gt;https://github.com/census-ecosystem/opencensus-microservices-demo&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;opencensus&quot;&gt;OpenCensus&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://opencensus.io/&quot;&gt;OpenCensus(OC)&lt;/a&gt;는 Microservice 및 Monolith 서비스를 Tracing 및 Metric Monitoring 할 수 있는 라이브러리를 제공하는 오픈소스이다.&lt;/p&gt;
+
+&lt;p&gt;아래와 같이 다양한 언어를 지원 한다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Java , Go, Python, C++, Nodejs, Erlang, Ruby, PHP, C#&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;또한 수집된 데이터를 Prometheus, Stackdriver Tracing and Monitoring, DataDog, Graphite, Zipkin, Jaeger, Azure Insights 등 과 같은 백엔드 Application으로 내보낼 수 있기 때문에 개발자, 운영자 측면에서 좋은 선택사항이 될 수 있다.&lt;/p&gt;
+
+&lt;p&gt;Microservice와 같은 분산 시스템에서 개발자/운영자 관점의 가장 중요한 미션은 각각의 수행되는 서비스들의 실행 시간을 확인하고 상호 API간 통신이 얼마나 걸리는지를 확인하고 Span(아래 그림참조)에서 가장 지연이 발생하는 서비스를 빨리 찾아내 확인하고 조치하는 것이라 할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://www.jaegertracing.io/img/spans-traces.png&quot; alt=&quot;span&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;OpenCensus는 주로 두가지 기능으로 활용된다.&lt;br /&gt;
+첫번째는 Metric 수집이고 두번째는 Tracing 기능이다.&lt;br /&gt;
+Log같은 경우 현재 미지원이지만 다음 메이저 릴리즈에 추가될 예정이라고 하니 조금더 지켜보면 좋을것 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Metrics
+    &lt;ul&gt;
+      &lt;li&gt;데이터베이스 및 API의 응답시간, 요청 content length, open file descriptor 수와 같이 추적하고자하는 정량 데이터를 말한다. Metric 을 시각화해서 보면 응용 프로그램 및 서비스의 성능과 품질을 측정하는 데 도움이 될 수 있다. 예를 들면 요청 응답시간의 평균값이나 cache hit/miss 수와 같은 것들이 될 수 있다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Traces
+    &lt;ul&gt;
+      &lt;li&gt;서비스 요청에 대한 애플리케이션 또는 서비스 구조를 확인할수 있고 모든 서비스 간 데이터 흐름을 시각화하여 아키텍처상의 병목 현상을 파악하는 데 도움이 된다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;hipster-shop-demo&quot;&gt;Hipster Shop Demo&lt;/h2&gt;
+
+&lt;p&gt;위에서 언급했던 내용처럼 GCP에서 작성한 &lt;a href=&quot;https://github.com/GoogleCloudPlatform/microservices-demo&quot;&gt;Hipster Shop Demo&lt;/a&gt;는 minikube 및 GCP 데모로 되어있고 코드안에 기본 Metric 설정이 Stackdriver으로 되어있어 Prometheus Exporter 적용을 하려면 코드 수정이 필요하기 때문에 Prometheus기반으로 작성된 &lt;a href=&quot;https://github.com/census-ecosystem/opencensus-microservices-demo&quot;&gt;Forked Repo&lt;/a&gt;를 살펴보기로 하였다.&lt;/p&gt;
+
+&lt;h3 id=&quot;requirement&quot;&gt;Requirement&lt;/h3&gt;
+&lt;p&gt;현재 가지고 있는 MacOS 환경에서 구동하였다. 최소 스펙은 따로 기재하지 않았으나 K8s 1.11 이상을 권장한다.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;kubectl : v1.10.7&lt;/li&gt;
+  &lt;li&gt;Minikube : v0.34.1&lt;/li&gt;
+  &lt;li&gt;Kubernetes : v1.13.3&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/GoogleContainerTools/skaffold/#installation&quot;&gt;skaffold&lt;/a&gt; : v0.24&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;minikube-기동&quot;&gt;minikube 기동&lt;/h3&gt;
+&lt;p&gt;최소 3 CPU, 6Gb Memory가 필요하다. 그냥 minikube를 구동시기면 4 CPU, 8Gb 로 구동이 되기 때문에 별다른 옵션 없이 default로 구동하면 된다.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;minikube start
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl get nodes
+NAME       STATUS    ROLES     AGE       VERSION
+minikube   Ready     master    6h        v1.13.3
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;repository-clone&quot;&gt;Repository Clone&lt;/h3&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;git clone https://github.com/census-ecosystem/opencensus-microservices-demo.git
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;opencensus-microservices-demo
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;내부 구조를 살펴보면 기본적으로 &lt;a href=&quot;https://github.com/GoogleContainerTools/skaffold&quot;&gt;skaffold&lt;/a&gt;를 활용하여 배포를 진행을 하는 것을 알수있다.&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;skaffold&lt;/code&gt;는 로컬에서 Kubernetes 기반 어플리케이션 개발과 배포(CD)를 빠르게 도와주는 CLI tool이다. 소스코드의 변화를 감지하여 build, registry push/tagging, deploy까지 자동으로 할 수 있는 로컬 기반 도구이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;skaffold dev&lt;/code&gt;는 로컬 환경의 반복적인 개발에 활용하고 실제 배포는 CI Process에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;skaffold run&lt;/code&gt;을 통해 배포를 진행할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://github.com/GoogleContainerTools/skaffold/raw/master/docs/static/images/intro.gif&quot; alt=&quot;skaffold demo&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Kubernetes 배포툴에 대해 비교한 글은 &lt;a href=&quot;https://blog.hasura.io/draft-vs-gitkube-vs-helm-vs-ksonnet-vs-metaparticle-vs-skaffold-f5aa9561f948/&quot;&gt;블로그 링크&lt;/a&gt;를 통해 확인할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;아래에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;skaffold&lt;/code&gt;에 대한 자세한 내용은 미뤄두고 배포하는 도구로서만 설명한다.&lt;/p&gt;
+
+&lt;p&gt;기본적으로 구성을 하고자 하는 내용은 helm처럼 template 파일을 사용하게 되는데 프로젝트 root에 &lt;code class=&quot;highlighter-rouge&quot;&gt;skaffold.yaml&lt;/code&gt; 에 build를 위한 image name, tag, src 위치등 기본적인 내용을 기재한다. 파일내용을 살펴보면 build에 관련된 내용들을 작성하고 deploy할 manifests의 위치까지 지정하도록 되어있다. 로컬환경에서 확인을 위해 grafana, prometheus, jaeger가 추가된 것을 확인할 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;skaffold/v1alpha2&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Config&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;tagPolicy&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;gitCommit&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;{}&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;artifacts&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/emailservice&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/emailservice&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/productcatalogservice&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/productcatalogservice&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/recommendationservice&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/recommendationservice&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/shippingservice&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/shippingservice&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/checkoutservice&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/checkoutservice&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/paymentservice&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/paymentservice&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/currencyservice&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/currencyservice&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/cartservice&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/cartservice&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/frontend&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/frontend&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/loadgenerator&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/loadgenerator&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/adservice&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/adservice&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/grafana&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/grafana&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/prometheus&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/prometheus&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;imageName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gcr.io/opencensus-microservices-demo/jaeger&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;workspace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;src/jaeger&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;deploy&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;kubectl&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;manifests&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;./kubernetes-manifests/**.yaml&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Go로 작성된 Frontend microservice을 살펴보자. [&lt;strong&gt;./src/frontend/main.go&lt;/strong&gt;]&lt;/p&gt;
+
+&lt;h3 id=&quot;library-추가-및-http-handler-초기화&quot;&gt;library 추가 및 http handler 초기화&lt;/h3&gt;
+
+&lt;p&gt;Go기반 exporter 패키지(jaeger,prometheus)를 추가적으로 import 하고 http handler를 위한 &lt;a href=&quot;https://godoc.org/go.opencensus.io/plugin/ochttp&quot;&gt;ochttp 패키지&lt;/a&gt;를 추가하였다.&lt;/p&gt;
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;go.opencensus.io/exporter/jaeger&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;go.opencensus.io/exporter/prometheus&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;go.opencensus.io/plugin/ochttp&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;go.opencensus.io/plugin/ochttp/propagation/b3&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;next&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ensureSessionID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;      
+        &lt;/span&gt;&lt;span class=&quot;c&quot;&gt;// add opencensus instrumentation&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ochttp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; 
+                &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Propagation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HTTPFormat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{}}&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Infof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;starting server on &quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addr&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;:&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;srvPort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ListenAndServe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;:&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;srvPort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;exporter-등록jaeger-tracing-및-prometheus-exporter&quot;&gt;exporter 등록(Jaeger Tracing 및 Prometheus exporter)&lt;/h3&gt;
+
+&lt;p&gt;예시처럼 각각의 서비스에 jaeger와 prometheus exporter Endpoint를 쉽게 등록할수 있다.&lt;br /&gt;
+또한 initTracing() 에서는 데모를 위해 trace.AlwaysSample()을 사용하였다. 실제 운영환경에서는 &lt;a href=&quot;https://github.com/census-instrumentation/opencensus-specs/blob/master/trace/Sampling.md&quot;&gt;다음 링크&lt;/a&gt;를 참고해서 사용하는 것을 권고하고 있다.&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;initJaegerTracing&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logrus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FieldLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;c&quot;&gt;// Register the Jaeger exporter to be able to retrieve&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;c&quot;&gt;// the collected spans.&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;jaeger&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NewExporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;jaeger&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Endpoint&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;http://jaeger:14268&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;jaeger&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ServiceName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;frontend&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;trace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RegisterExporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;initTracing&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logrus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FieldLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;c&quot;&gt;// This is a demo app with low QPS. trace.AlwaysSample() is used here&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;c&quot;&gt;// to make sure traces are available for observation and analysis.&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;c&quot;&gt;// In a production environment or high QPS setup please use&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;c&quot;&gt;// trace.ProbabilitySampler set at the desired probability.&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;trace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ApplyConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;trace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DefaultSampler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;trace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AlwaysSample&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;initJaegerTracing&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;initPrometheusStatsExporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logrus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FieldLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prometheus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Exporter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+	&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prometheus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NewExporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prometheus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{})&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+
+	&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+		&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;error registering prometheus exporter&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+		&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+	&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+
+	&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;view&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RegisterExporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+	&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exporter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;startPrometheusExporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logrus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FieldLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exporter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prometheus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Exporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+	&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addr&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;:9090&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+	&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Infof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;starting prometheus server at %s&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+	&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Handle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/metrics&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exporter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+	&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ListenAndServe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;x&quot;&gt; &lt;/span&gt;&lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;demo-application-배포&quot;&gt;Demo Application 배포&lt;/h3&gt;
+
+&lt;p&gt;minikube에 Hipster Shop Demo를 배포한다. 단순하게 &lt;code class=&quot;highlighter-rouge&quot;&gt;skaffold run&lt;/code&gt; 명령으로 진행하면 된다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ skaffold run
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;현재 사용중인 2018 Macbook Pro(3.1 GHz Intel Core i7, 16GB) 상의 Docker기반 minikube 환경으로도 배포를 하였는데 시간이 꽤 소요되었다.(20분이상)&lt;br /&gt;
+코드를 실시간으로 수정하고 빌드, 배포되는 것은 &lt;code class=&quot;highlighter-rouge&quot;&gt;skaffold dev&lt;/code&gt; 명령으로 확인할 수 있다. 진행되는 과정을 보면 &lt;a href=&quot;https://draft.sh/&quot;&gt;draft.sh&lt;/a&gt; 프로젝트와도 꽤 유사하다고 볼 수 있다.&lt;/p&gt;
+
+&lt;p&gt;에러없이 run이 실행되고 난후 minikube에 배포된 pod와 service를 확인한다. 중간에 loadgenerator가 init인 이유는 minikube 자원이 부족해서 발생하는 현상이다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl get pod
+NAME                                     READY     STATUS     RESTARTS   AGE
+adservice-7c7d687dcb-xzr4m               1/1       Running    1          4h
+cartservice-f54bcb9ff-tcfgn              1/1       Running    4          4h
+checkoutservice-576446687b-95bwj         1/1       Running    1          4h
+currencyservice-5bd99bf97d-28mtz         1/1       Running    1          4h
+emailservice-6cb587798d-wwzdh            1/1       Running    1          4h
+frontend-6bf9796f7b-ch9pl                1/1       Running    4          4h
+grafana-6678c5c5d9-2qx75                 1/1       Running    1          4h
+jaeger-5b66bdf7f7-csdzx                  1/1       Running    2          4h
+loadgenerator-7c4f446774-68djg           0/1       Init:0/1   1          4h
+paymentservice-fc4c8589-wrfg7            1/1       Running    1          4h
+productcatalogservice-84878c8b9c-jhgnw   1/1       Running    1          4h
+prometheus-58d98b7578-87td6              1/1       Running    1          4h
+recommendationservice-8564f9d894-smlpf   1/1       Running    1          4h
+redis-cart-798bc66d58-xn6ff              1/1       Running    1          4h
+shippingservice-789656f6bc-rgzrp         1/1       Running    1          4h
+
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl get svc
+NAME                    TYPE           CLUSTER-IP       EXTERNAL-IP   PORT&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;S&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;                                                            AGE
+adservice               ClusterIP      10.107.196.115   &amp;lt;none&amp;gt;        9555/TCP,9090/TCP                                                  4h
+cartservice             ClusterIP      10.98.151.164    &amp;lt;none&amp;gt;        7070/TCP                                                           4h
+checkoutservice         ClusterIP      10.97.9.197      &amp;lt;none&amp;gt;        5050/TCP                                                           4h
+currencyservice         ClusterIP      10.103.112.225   &amp;lt;none&amp;gt;        7000/TCP                                                           4h
+emailservice            ClusterIP      10.97.184.174    &amp;lt;none&amp;gt;        5000/TCP                                                           4h
+frontend                ClusterIP      10.103.40.138    &amp;lt;none&amp;gt;        80/TCP,9090/TCP                                                    4h
+frontend-external       LoadBalancer   10.108.170.241   &amp;lt;pending&amp;gt;     80:31944/TCP                                                       4h
+grafana                 ClusterIP      10.104.141.254   &amp;lt;none&amp;gt;        3000/TCP                                                           4h
+grafana-external        LoadBalancer   10.102.166.138   &amp;lt;pending&amp;gt;     3000:30459/TCP                                                     4h
+jaeger                  ClusterIP      10.98.71.173     &amp;lt;none&amp;gt;        9411/TCP,5775/UDP,6831/UDP,6832/UDP,5778/TCP,16686/TCP,14268/TCP   4h
+jaeger-external         LoadBalancer   10.96.164.126    &amp;lt;pending&amp;gt;     16686:32362/TCP                                                    4h
+kubernetes              ClusterIP      10.96.0.1        &amp;lt;none&amp;gt;        443/TCP                                                            6h
+paymentservice          ClusterIP      10.109.31.241    &amp;lt;none&amp;gt;        50051/TCP                                                          4h
+productcatalogservice   ClusterIP      10.101.124.106   &amp;lt;none&amp;gt;        3550/TCP                                                           4h
+prometheus              ClusterIP      10.103.107.213   &amp;lt;none&amp;gt;        9090/TCP                                                           4h
+recommendationservice   ClusterIP      10.104.225.28    &amp;lt;none&amp;gt;        8080/TCP                                                           4h
+redis-cart              ClusterIP      10.101.24.157    &amp;lt;none&amp;gt;        6379/TCP                                                           4h
+shippingservice         ClusterIP      10.104.224.18    &amp;lt;none&amp;gt;        50051/TCP                                                          4h
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;서비스-접속-및-metrictracing-확인&quot;&gt;서비스 접속 및 Metric/Tracing 확인&lt;/h3&gt;
+&lt;p&gt;로컬 minikube환경이기 때문에 external service가 pending이므로 service를 minikube NAT IP로 expose 시킨다.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;minikube service frontend-external
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;minikube service grafana-external
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;minikube service jaeger-external
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;minikube service list
+|-------------|-----------------------|-----------------------------|
+|  NAMESPACE  |         NAME          |             URL             |
+|-------------|-----------------------|-----------------------------|
+| default     | adservice             | No node port                |
+| default     | cartservice           | No node port                |
+| default     | checkoutservice       | No node port                |
+| default     | currencyservice       | No node port                |
+| default     | emailservice          | No node port                |
+| default     | frontend              | No node port                |
+| default     | frontend-external     | http://192.168.99.101:31944 |
+| default     | grafana               | No node port                |
+| default     | grafana-external      | http://192.168.99.101:30459 |
+| default     | jaeger                | No node port                |
+| default     | jaeger-external       | http://192.168.99.101:32362 |
+| default     | kubernetes            | No node port                |
+| default     | paymentservice        | No node port                |
+| default     | productcatalogservice | No node port                |
+| default     | prometheus            | No node port                |
+| default     | recommendationservice | No node port                |
+| default     | redis-cart            | No node port                |
+| default     | shippingservice       | No node port                |
+| kube-system | kube-dns              | No node port                |
+|-------------|-----------------------|-----------------------------|
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;3개의 서비스로 각각 접속이 되는것을 확인할수 있다.
+Grafana 대시보드로 들어가면 현재 수집되는 prometheus source(http://prometheus:9090)를 통해 OpenCensus기반 Application Metric을 확인할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/hipster_grafana.png&quot; alt=&quot;hipster_grafana&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그림에서 보면 전체 서비스 응답에 대한 99% 백분위 지연시간이 944ms 인것을 확인할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;또한 Jaeger를 통해 DAG(Directed acyclic graph) 및 서비스간 Tracing 을 확인할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/dag.png&quot; alt=&quot;DAG&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/tracing.png&quot; alt=&quot;tracing&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;정리&quot;&gt;정리&lt;/h2&gt;
+&lt;p&gt;OpenCensus 기반으로 개발자가 코드를 작성하고 Microservice를 minikube에서 배포하고 Prometheus, Jaeger Exporter 연동을 통해 시스템뿐만이 아닌 Application기반 Metrics/Stats을 수집하고 개발자가 작성한 코드를 직접 Tracing하는 간단한 데모를 진행하였다. (Istio를 포함해서 Public환경에 배포해봐도 좋은 공부가 될 것 같다)&lt;/p&gt;
+
+&lt;p&gt;향후 &lt;a href=&quot;https://openmetrics.io/&quot;&gt;OpenMetric&lt;/a&gt;과 &lt;a href=&quot;https://opencensus.io/&quot;&gt;Opencensus&lt;/a&gt;가 실제 개발자 기반으로 활성화되고 적용이 된다면 Telemetric 측면에서 많은 Use-Case가 도출될 수 있을것 같다.&lt;/p&gt;
+
+&lt;p&gt;위에서 언급했듯이 Prometheus기반 Kubernetes 클러스터를 운영하고 있는 팀의 경우 개발자의 작성 코드를 최소화할 수 있는 도구로서 충분히 활용될 수 있어 보인다.&lt;/p&gt;
+
+&lt;p&gt;꼭 Cloud Native 기반 Web 개발이 아니더라도 기존 공장, 금융, 병원 등 의 IoT나 센서/설비를 위한 비즈니스에도 Backend로서 확장성있는 도구로서 활용이 될 수 있을것 같다.&lt;/p&gt;</content><author><name>Jinwoong Kim</name></author><category term="Kubernetes" /><category term="Istio" /><category term="Stackdriver" /><category term="Prometheus" /><category term="gRPC" /><category term="OpenCensus" /><category term="skaffold" /><summary type="html">Hipster Shop: Cloud-Native Microservices Demo Application https://github.com/GoogleCloudPlatform/microservices-demo에서 소개된 Demo Application인 Hipster Shop을 Kubernetes 기반으로 배포하고 관련 오픈소스들을 더 알아보고자 한다.</summary></entry><entry><title type="html">Knative with Gloo</title><link href="https://ddii.dev/kubernetes/knative-using-gloo/" rel="alternate" type="text/html" title="Knative with Gloo" /><published>2019-02-28T00:00:00+09:00</published><updated>2019-02-28T00:00:00+09:00</updated><id>https://ddii.dev/kubernetes/knative-using-gloo</id><content type="html" xml:base="https://ddii.dev/kubernetes/knative-using-gloo/">&lt;h2 id=&quot;knative-routing&quot;&gt;Knative Routing&lt;/h2&gt;
+&lt;p&gt;Knative는 앞에서도 몇번 언급하였지만 기본적으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;Routing&lt;/code&gt;을 사용하여 외부에 노출할 서비스들에 대한 HTTP Endpoint를 제공한다. 어떻게 보면 기본적으로 API Gateway 역할을 하기도 하고 Ingress 역할을 하기도 한다. 보통 Service mesh인 &lt;code class=&quot;highlighter-rouge&quot;&gt;Istio&lt;/code&gt;를 사용하여 ingress를 구현하는것이 당연하다고 생각하기도 하지만 Istio의 모든 기능이 Knative에 필요하지는 않고 설치되는것 자체가 리소스 소모가 꽤 된다는것은 설치 해본사람은 알고 있을것이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;service&quot;&gt;Service&lt;/h2&gt;
+&lt;h3 id=&quot;kubernetes&quot;&gt;Kubernetes&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&quot;https://www.nginx.com/wp-content/uploads/2017/09/NGINX-Plus-Features-Kubernetes-Ingress-Controller-644x372@2x.png&quot; alt=&quot;ingress&quot; /&gt;&lt;br /&gt;
+이미지출처 : https://www.nginx.com/blog/announcing-nginx-ingress-controller-for-kubernetes-release-1-3-0/&lt;/p&gt;
+
+&lt;p&gt;Kubernetes에서는 일반적으로 서비스 접속을 구현하게 되면 기본적으로 Pod와 Service를 생성하고 Ingress를 사용하여 클러스터 내부로 들어오는 트래픽을 처리하게 된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;knative&quot;&gt;Knative&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&quot;https://i1.wp.com/blog.openshift.com/wp-content/uploads/intro.png?w=499&amp;amp;ssl=1&quot; alt=&quot;Serving&quot; /&gt;&lt;br /&gt;
+이미지출처 : https://blog.openshift.com/knative-serving-your-serverless-services/&lt;/p&gt;
+
+&lt;p&gt;Knative에서는 앞선 Knative 관련 포스팅에서도 설명했듯이 &lt;code class=&quot;highlighter-rouge&quot;&gt;Automatic scaling up and down to zero&lt;/code&gt; 특성을 가지고 있기에 Pod가 최초 실행되어있지 않은 상태에서 트래픽이 들어오게 되면 &lt;a href=&quot;https://github.com/knative/serving/blob/master/docs/scaling/DEVELOPMENT.md&quot;&gt;Knative Serving Activator&lt;/a&gt;에 의해서 Pod가 없는 Revision을 확인하고 Cold Start 형태로 프로비저닝하게 된다. 나는 이게 진정한 서버리스라고 생각하지만 주변에 반박하시는 분들도 간혹 있다.&lt;/p&gt;
+
+&lt;p&gt;이후 Pod가 Warm 상태가 되고 나면 Istio Route(Ingress Gateway)를 통해 트래픽이 Pod로 전달되어 통신이 이뤄지게 된다.&lt;/p&gt;
+
+&lt;p&gt;현재 Knative는 현재 Ingress Gateway 의존성을 가지고 있고 Envoy기반 Service Mesh인 &lt;code class=&quot;highlighter-rouge&quot;&gt;Istio&lt;/code&gt;, Envoy기반 API Gateway인 &lt;code class=&quot;highlighter-rouge&quot;&gt;Gloo&lt;/code&gt; 두가지 옵션으로 Ingress 구현이 가능하다.&lt;/p&gt;
+
+&lt;h2 id=&quot;istio&quot;&gt;Istio&lt;/h2&gt;
+&lt;p&gt;Knative는 기본적으로 Ingress Gateway기능을 탑재하고 있는데 이는 Istio의 기능중 하나다.&lt;br /&gt;
+Istio는 다음과 같은 Core Feature를 가진다. 상세한 내용은 https://istio.io/docs/concepts/what-is-istio/ 에서 확인하면 된다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Traffic management&lt;/li&gt;
+  &lt;li&gt;Security&lt;/li&gt;
+  &lt;li&gt;Policies and Telemetry&lt;/li&gt;
+  &lt;li&gt;Performance and Scalability&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Istio는 48개의 &lt;code class=&quot;highlighter-rouge&quot;&gt;CRDs&lt;/code&gt;(CustomResourceDefinition objects)를 가지고 있는데 이중 Knative Serving에서 사용하는건 &lt;code class=&quot;highlighter-rouge&quot;&gt;VirtualService&lt;/code&gt; 단 하나다.&lt;/p&gt;
+
+&lt;h2 id=&quot;gloo&quot;&gt;Gloo&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://gloo.solo.io/&quot;&gt;Gloo&lt;/a&gt;는 Kubernetes-native ingress controller이자 &lt;a href=&quot;https://medium.com/solo-io/announcing-gloo-the-function-gateway-3f0860ef6600&quot;&gt;Next Generation API Gateway&lt;/a&gt; 를 위해 시작된 프로젝트이다. 실제 Redhat에서 Openshift기반 Microservice 및 Istio 개발업무를 하다가 최근에 solo.io의 CTO로 이직한 &lt;a href=&quot;https://blog.christianposta.com/&quot;&gt;Christian Posta&lt;/a&gt;가 밀고 있는 프로젝트이기도 하다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn-images-1.medium.com/max/1600/0*Z0Jb5DJFOyeY91sN.&quot; alt=&quot;gloo&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Gloo&lt;/code&gt;는 Envoy Proxy 기반으로 동작하며 
+기존 Legacy부터 Container서비스, FaaS(AWS Lambda, Azure Functions, GCP Functions)영역의 Application들을 REST, gRPC, SOAP, Web Socker기반으로 Aggregate 해서 Function 기반 추상화를 구현해 주는 오픈소스 프로젝트라 정의 할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;Istio의 Ingress기능외의 여러가지 부가 기능(Telemetry, Security, Policy Enforcement)들은 Knative에서는 필요로 하지 않는다.&lt;/p&gt;
+
+&lt;p&gt;Knative API Gateway 로서 Istio가 아닌 Gloo가 조금더 경량화된 대안으로 결정되었고 Gloo를 통해 Knative 설치가 가능하게 되었다. 단, Knative Eventing 컴포넌트는 현재 지원하지 않는다고 한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;install-knative-with-gloo&quot;&gt;Install Knative with Gloo&lt;/h2&gt;
+
+&lt;p&gt;참고: &lt;a href=&quot;https://github.com/knative/docs/blob/master/install/Knative-with-Gloo.md&quot;&gt;Install with Gloo&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;간단하게 gloo와 Knative 설치를 해보자.&lt;/p&gt;
+
+&lt;h3 id=&quot;requirements&quot;&gt;Requirements&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Kubernetes cluster v1.11 or newer&lt;/li&gt;
+  &lt;li&gt;Enable &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller&quot;&gt;MutatingAdmissionWebhook admission controller&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;kubectl v1.10 or newer&lt;/li&gt;
+  &lt;li&gt;Bash in Mac or Linux&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;install-glooctl&quot;&gt;Install Glooctl&lt;/h3&gt;
+
+&lt;p&gt;gloo CLI (glooctl) Download&lt;br /&gt;
+https://github.com/solo-io/gloo/releases&lt;/p&gt;
+
+&lt;p&gt;또는 직접 Download&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ curl -sL https://run.solo.io/gloo/install | sh
+Attempting to download glooctl version v0.8.1
+Downloading glooctl-darwin-amd64...
+Download complete!, validating checksum...
+Checksum valid.
+Gloo was successfully installed 🎉
+
+Add the gloo CLI to your path with:
+  export PATH=$HOME/.gloo/bin:$PATH
+
+Now run:
+  glooctl install gateway     # install gloo's function gateway functionality into the 'gloo-system' namespace
+  glooctl install ingress     # install very basic Kubernetes Ingress support with Gloo into namespace gloo-system
+  glooctl install knative     # install Knative serving with Gloo configured as the default cluster ingress
+Please see visit the Gloo Installation guides for more:  https://gloo.solo.io/installation/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;PATH 등록&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ export PATH=$HOME/.gloo/bin:$PATH
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;gloo CLI 확인&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ glooctl --version
+glooctl version 0.8.1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;GCP 무료플랜으로 3-node 클러스터를 생성한다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ gcloud container clusters create gloo \
+  --region=asia-east1-a \
+  --cluster-version=latest \
+  --machine-type=n1-standard-2 \
+  --enable-autorepair \
+  --num-nodes=3
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;cluster 생성된것을 확인하고 cluster-admin 권한을 할당한다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl get nodes
+NAME                                  STATUS    ROLES     AGE       VERSION
+gke-gloo-default-pool-f6bcc479-f8v9   Ready     &amp;lt;none&amp;gt;    9m        v1.11.7-gke.6
+gke-gloo-default-pool-f6bcc479-fl78   Ready     &amp;lt;none&amp;gt;    9m        v1.11.7-gke.6
+gke-gloo-default-pool-f6bcc479-gfgw   Ready     &amp;lt;none&amp;gt;    9m        v1.11.7-gke.6
+
+$ kubectl create clusterrolebinding cluster-admin-binding \
+&amp;gt;   --clusterrole=cluster-admin \
+&amp;gt;   --user=$(gcloud config get-value core/account)
+Your active configuration is: [cloudshell-25974]
+clusterrolebinding.rbac.authorization.k8s.io &quot;cluster-admin-binding&quot; created
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Gloo와 Knative 설치를 한다. 미리 &lt;code class=&quot;highlighter-rouge&quot;&gt;glooctl install knative --dry-run&lt;/code&gt; 으로 전체 manifest를 확인할 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ glooctl install knative
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위에서 설치 과정은 생략했지만 Istio에 비해 CRD 개수가 적은 것을 알수있다. 또한 설치된 컴포넌트 역시 Istio에 비해서 간소화된 것을 알수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl get pods --namespace gloo-system                                                                                         
+NAME                                   READY     STATUS    RESTARTS   AGE
+clusteringress-proxy-59fd6fb56-dmwwm   1/1       Running   0          7m
+discovery-779884d4cc-xlql2             1/1       Running   6          7m
+gloo-844fc79445-f4zvg                  1/1       Running   6          7m
+ingress-7d75c99874-s4m76               1/1       Running   6          7m
+
+$ kubectl get pods --namespace knative-serving
+NAME                          READY     STATUS    RESTARTS   AGE
+activator-746f6bb684-49tfh    1/1       Running   0          12m
+autoscaler-955f679cd-tx5vw    1/1       Running   0          12m
+controller-7fc84c6584-jbn69   1/1       Running   0          12m
+webhook-7797ffb6bf-6pgsw      1/1       Running   0          12m
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이전 포스팅에서도 사용했던 &lt;code class=&quot;highlighter-rouge&quot;&gt;gcr.io/knative-sample/helloworld-go&lt;/code&gt; 이미지를 활용하여 샘플앱 Knative Service를 만든다.&lt;/p&gt;
+
+&lt;h4 id=&quot;serviceyaml&quot;&gt;service.yaml&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ vi service.yaml
+
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: helloworld-go
+  namespace: default
+spec:
+  runLatest:
+    configuration:
+      revisionTemplate:
+        spec:
+          container:
+            image: gcr.io/knative-sample/helloworld-go
+            env:
+              - name: TARGET
+                value: &quot;Go Sample v1&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl apply --filename service.yaml
+service.serving.knative.dev &quot;helloworld-go&quot; created
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;앞에서도 설명했지만 &lt;code class=&quot;highlighter-rouge&quot;&gt;Automatic scaling up and down to zero&lt;/code&gt; 으로 Cold Start가 되고 잠시후에 아래와 같이 Knative Service를 확인할 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl get ksvc helloworld-go -n default  --output=custom-columns=NAME:.metadata.name,DOMAIN:.status.domain]($ kubectl get ksvc helloworld-go -n default  --output=custom-columns=NAME:.metadata.name,DOMAIN:.status.d
+omain
+NAME            DOMAIN
+helloworld-go   helloworld-go.default.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Gloo Ingress를 확인한다. GKE에서 설치했기 때문에 자동으로 LoadBalancer가 연동되어 있는것을 확인할 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl get svc -n gloo-system
+NAME                   TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
+clusteringress-proxy   LoadBalancer   10.3.244.54    34.**.**.54   80:30978/TCP,443:32448/TCP   39m
+gloo                   ClusterIP      10.3.243.231   &amp;lt;none&amp;gt;        9977/TCP                     39m
+
+$ glooctl proxy url --name clusteringress-proxy
+http://34.**.**.54:80
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위에서 얻은 두가지 정보로 생성된 app을 테스트한다. Cold Start(default timeout 5분) 때문에 응답이 늦어질 수도 있지만 잠시 기다리면 응답을 확인할 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ curl -H &quot;Host: helloworld-go.default.example.com&quot; http://34.**.**.54:80
+Hello Go Sample v1!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;물론 &lt;code class=&quot;highlighter-rouge&quot;&gt;Revision&lt;/code&gt;이나 &lt;code class=&quot;highlighter-rouge&quot;&gt;Route&lt;/code&gt;를 활용하여 Knative의 기능에 대해서도 확인이 가능하다.&lt;/p&gt;
+
+&lt;h2 id=&quot;정리&quot;&gt;정리&lt;/h2&gt;
+&lt;p&gt;Gloo는 Knative ClusterIngress CRD를 기반으로 동작하는 Istio의 대안으로서 가능성을 보여주고 있다. 이외에도 The Service Mesh Orchestration Platform &lt;code class=&quot;highlighter-rouge&quot;&gt;SuperGloo&lt;/code&gt;, Debugger for microservices &lt;code class=&quot;highlighter-rouge&quot;&gt;Squash&lt;/code&gt; 등 다양한 Mesh Layer기반의 오픈소스들을 확인할수 있다. 또다른 스쳐지나갈수도 있는 오픈소스일수도 있겠지만 현재 개발되는 로드맵(https://www.solo.io/)을 보면 Knative가 고도화되는 여정에 같이 가는 모습을 확인할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;next-generation API Gateway로서 다양한 프로토콜을 지원하기 때문에 (HTTP1, HTTP2, gRPC, REST/OpenAPISpec, SOAP, WebSockets, Lambda/Cloud Functions) 더욱더 Microservices 및 Serverless Workload를 수행하기에 더욱 적합한 오픈소스로 보인다.&lt;/p&gt;
+
+&lt;h2 id=&quot;다음-주제&quot;&gt;다음 주제&lt;/h2&gt;
+&lt;p&gt;현재 해보고 싶은것은 베어메탈 Kubernetes Cluster기반 BGP로 동작하는 &lt;a href=&quot;https://metallb.universe.tf/&quot;&gt;MetalLB&lt;/a&gt;나 &lt;a href=&quot;https://cilium.io/try-eks/&quot;&gt;Cillium on AWS&lt;/a&gt; 인데 시간나는 대로 테스트 해봐야 겠다.&lt;/p&gt;</content><author><name>Jinwoong Kim</name></author><category term="Knative" /><category term="Kubernetes" /><category term="FaaS" /><category term="Serverless" /><category term="CRDs" /><category term="CloudEvents" /><category term="Mesh" /><category term="Gloo" /><summary type="html">Knative Routing Knative는 앞에서도 몇번 언급하였지만 기본적으로 Routing을 사용하여 외부에 노출할 서비스들에 대한 HTTP Endpoint를 제공한다. 어떻게 보면 기본적으로 API Gateway 역할을 하기도 하고 Ingress 역할을 하기도 한다. 보통 Service mesh인 Istio를 사용하여 ingress를 구현하는것이 당연하다고 생각하기도 하지만 Istio의 모든 기능이 Knative에 필요하지는 않고 설치되는것 자체가 리소스 소모가 꽤 된다는것은 설치 해본사람은 알고 있을것이다.</summary></entry><entry><title type="html">Knative CLI - knctl</title><link href="https://ddii.dev/kubernetes/knative-knctl/" rel="alternate" type="text/html" title="Knative CLI - knctl" /><published>2019-02-18T00:00:00+09:00</published><updated>2019-02-18T00:00:00+09:00</updated><id>https://ddii.dev/kubernetes/knative-knctl</id><content type="html" xml:base="https://ddii.dev/kubernetes/knative-knctl/">&lt;h1 id=&quot;knative-cli---knctl&quot;&gt;Knative CLI - knctl&lt;/h1&gt;
+
+&lt;h2 id=&quot;knctl&quot;&gt;knctl&lt;/h2&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;knctl&lt;/code&gt; 은 Knative CLI 툴로 간단하게 knative cluster를 만들고 Knative를 추상화해서 앱까지 배포할 수 있는 오픈소스이다.&lt;/p&gt;
+
+&lt;h4 id=&quot;참고&quot;&gt;참고&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;https://github.com/cppforlife/knctl&lt;/li&gt;
+  &lt;li&gt;https://developer.ibm.com/blogs/2018/11/12/knctl-a-simpler-way-to-work-with-knative/&lt;/li&gt;
+  &lt;li&gt;https://starkandwayne.com/blog/public-traffic-into-knative-on-gke/&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;knative-다시-살펴보기&quot;&gt;Knative 다시 살펴보기&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://ddii.dev/kubernetes/knative/&quot;&gt;앞선 포스팅에서도 이야기&lt;/a&gt; 했지만 기존 FaaS(AWS Lambda, Google Cloud Funtions, Azure Function) 과는 다른 Serverless 개념으로 받아들어야 한다.&lt;/p&gt;
+
+&lt;p&gt;다시 한번 특징을 나열해보면 아래와 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Serverless Container의 신속한 배치&lt;/li&gt;
+  &lt;li&gt;Automatic scaling up and down to zero&lt;/li&gt;
+  &lt;li&gt;Istio를 백엔드로 활용하여 Routing 구현&lt;/li&gt;
+  &lt;li&gt;배포 된 코드 및 config의 특정 시점 스냅 샷&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;그리고 다음과 같은 CRDs(Custom Resource Definitions)로 구성된 오브젝트들로 정의된다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Route&lt;/code&gt;는 사용자 서비스에 대한 HTTP endpoint와 Routing을 제공한다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Revisions&lt;/code&gt;은 code(function)와 config로 구성된 불변의 스냅샷. Route를 통해 endpoint를 할당받지 못한 Revision은 자동으로 kubernetes resource에서 삭제됨&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Configuration&lt;/code&gt;은 요구되는 Revision 최신 상태를 기록하고 생성하고 추적할수 있음. 소스 패키지(git repo나 archive)를 컨테이너로 변환하기 위한 내용이나 메타데이터등을 포함시킬수 있음.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Service&lt;/code&gt;는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Routes&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;Configurations&lt;/code&gt; 리소스의 추상화된 집합체. 모든 워크로드의 lifecycle을 관리함. 트래픽을 항상 최신의 Revision으로 route되도록 정의할수 있음&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;하나씩 조금 자세히 이야기 하면 아래처럼 정리 할수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;route&quot;&gt;Route&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Route&lt;/strong&gt;는 사용자 서비스(Code와 Configuration의 Revision정보)의 네트워크 Endpoint를 제공한다. kubernetes namespace는 여러개의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Route&lt;/code&gt;를 가질수 있다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Route&lt;/code&gt;는 하나 이상의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Revisions&lt;/code&gt;을 가지면서 수명이 길고 안정적인 HTTP Endpoint를 제공한다. 기본구성은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Route&lt;/code&gt; 객체가 &lt;code class=&quot;highlighter-rouge&quot;&gt;Configuration&lt;/code&gt;에 의해 생성된 최신의 Revision으로 트래픽을 자동으로 지정한다. 조금더 복잡한 경우로는 istio의 기능을 활용하여 트래픽을 백분율 기준으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;Route&lt;/code&gt;를 지정할 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;revision&quot;&gt;Revision&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Revision&lt;/strong&gt;은 Code와 Configuration의 불변의 스냅샷이다. 하나의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Revision&lt;/code&gt;은 컨테이너 이미지를 참조하고 선택적으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;Build&lt;/code&gt;를 참조할 수 있다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Revision&lt;/code&gt;은 &lt;strong&gt;Configuration&lt;/strong&gt;이 업데이트 시 생성된다.&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;Route&lt;/code&gt;를 통해 http주소 지정이 불가능한 &lt;code class=&quot;highlighter-rouge&quot;&gt;Revision&lt;/code&gt;은 폐기 되고 관련된 kubernetes 리소스가 삭제가 된다. 시간이 지남에 따라 &lt;code class=&quot;highlighter-rouge&quot;&gt;Configuration&lt;/code&gt;이 생성한 &lt;code class=&quot;highlighter-rouge&quot;&gt;Revision&lt;/code&gt; 히스토리가 제공되고 사용자는 이전 &lt;code class=&quot;highlighter-rouge&quot;&gt;Revision&lt;/code&gt;로 쉽게 롤백 할 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;configuration&quot;&gt;Configuration&lt;/h3&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Configuration&lt;/code&gt;은 최신의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Revision&lt;/code&gt;상태를 설명하고, 생성하고, 원하는 상태가 갱신될때 &lt;code class=&quot;highlighter-rouge&quot;&gt;Revision&lt;/code&gt;의 상태를 추적한다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Configuration&lt;/code&gt;은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Build&lt;/code&gt;를 참조하여 소스(git repo 또는 archive)를 컨테이너로 변환하는 방법에 대한 가이드가 포함되어 있거나 단순히 컨테이너 이미지 및 수정에서 필요한 메타 데이터 만 참조 할 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;product-integration&quot;&gt;Product Integration&lt;/h3&gt;
+
+&lt;p&gt;2019년 2월 현재 0.3이 릴리스되고 있고 벌써 여러 제품에 통합이 되고 있다.&lt;/p&gt;
+
+&lt;p&gt;최근 IBMthink 2019에서 Managed Knative (Experimental)를 내놓기도 하였다.&lt;br /&gt;
+https://www.ibm.com/blogs/bluemix/2019/02/announcing-managed-knative-on-ibm-cloud-kubernetes-service-experimental/&lt;/p&gt;
+
+&lt;p&gt;Istio를 포함한 Knative 마저도 품는 모습으로 managed kubernetes 영역에서 글로벌 플레이어들 모두 서로 치고나가는 모습들을 볼수 있다.&lt;/p&gt;
+
+&lt;p&gt;작년 11월에는 Gitlab 제품안에 serverless라는 extension형태의 서비스가 추가 되기도 하였고,&lt;br /&gt;
+https://about.gitlab.com/press/releases/2018-12-11-gitlab-and-triggermesh-announce-gitlab-serverless.html&lt;/p&gt;
+
+&lt;p&gt;triggermesh 라는 곳에서는 serverless management platform이라는 이름으로 knative 기반 멀티 서버리스 플랫폼을 출시하기도 하였다.&lt;br /&gt;
+https://triggermesh.com/serverless_management_platform/&lt;/p&gt;
+
+&lt;p&gt;Pivotal Function Service (PFS), Google GKE SERVERLESS ADD-ON 등은 아직 early access 신청만 받고 있는 상태이다.&lt;/p&gt;
+
+&lt;p&gt;오늘은 간단하게 배포할수 있는 툴 knctl과 관련 use-case를 소개하고자 한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;kubernetes-cluster-생성&quot;&gt;Kubernetes Cluster 생성&lt;/h3&gt;
+
+&lt;p&gt;일단 GKE Free tier에서 Cluster를 하나 생성하자.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gcloud container clusters create knative \
+  --region=asia-east1-a \
+  --cluster-version=latest \
+  --machine-type=n1-standard-2 \
+  --enable-autoscaling --min-nodes=1 --max-nodes=5 \
+  --enable-autorepair \
+  --scopes=service-control,service-management,compute-rw,storage-ro,cloud-platform,logging-write,monitoring-write,pubsub,datastore \  
+  --num-nodes=3
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;cluster 생성된것을 확인하고 cluster-admin 권한을 할당한다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl get nodes
+NAME                                     STATUS    ROLES     AGE       VERSION
+gke-knative-default-pool-d1a39347-5m5t   Ready     &amp;lt;none&amp;gt;    1m        v1.11.7-gke.4
+gke-knative-default-pool-d1a39347-l6zh   Ready     &amp;lt;none&amp;gt;    1m        v1.11.7-gke.4
+gke-knative-default-pool-d1a39347-qv5r   Ready     &amp;lt;none&amp;gt;    1m        v1.11.7-gke.4
+
+$ kubectl create clusterrolebinding cluster-admin-binding \
+  --clusterrole=cluster-admin \
+  --user=$(gcloud config get-value core/account)
+Your active configuration is: [cloudshell-4728]
+clusterrolebinding.rbac.authorization.k8s.io &quot;cluster-admin-binding&quot; created
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;knctl-설치&quot;&gt;knctl 설치&lt;/h2&gt;
+
+&lt;p&gt;이번 포스팅에서는 Mac OS 설치 기준으로 작성하였다.&lt;/p&gt;
+
+&lt;h4 id=&quot;homebrew-설치&quot;&gt;homebrew 설치&lt;/h4&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;brew install starkandwayne/kubernetes/knctl
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;binary&quot;&gt;binary&lt;/h4&gt;
+&lt;p&gt;https://github.com/cppforlife/knctl/releases&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ wget https://github.com/cppforlife/knctl/releases/download/v0.1.0/knctl-darwin-amd64
+$ mv knctl-* /usr/local/bin/knctl
+$ chmod +x /usr/local/bin/knctl
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;knctl-로-knative-배포&quot;&gt;knctl 로 Knative 배포&lt;/h2&gt;
+
+&lt;p&gt;설치한 knctl로 Knative 배포를 진행한다. 설치되는 내용을 지켜보고 있으면 &lt;code class=&quot;highlighter-rouge&quot;&gt;istio&lt;/code&gt;를 먼저 배포하고 그다음에 &lt;code class=&quot;highlighter-rouge&quot;&gt;Knative&lt;/code&gt;를 설치하는 것을 확인할 수 있다. 배포되는 모듈들의 상태를 하나하나 체크해서 배포하기 때문에 설치상에 과정들을 확인할 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl install --exclude-monitoring
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;테스트를 위한 namespace &lt;code class=&quot;highlighter-rouge&quot;&gt;hello-test&lt;/code&gt;를 생성한다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl create namespace hello-test
+namespace &quot;hello-test&quot; created
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;knctl deploy 명령으로 최초 revision을 배포한다.&lt;br /&gt;
+아래 결과를 보면 hello-00001 이라고 하는 최초의 revision을 작성하기 때문에 &lt;code class=&quot;highlighter-rouge&quot;&gt;latest&lt;/code&gt; tag를 달고 배포를 하게 된다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl deploy \
+      --namespace hello-test \
+      --service hello \
+      --image gcr.io/knative-samples/helloworld-go \
+      --env TARGET=Rev1
+
+Name  hello
+
+Waiting for new revision to be created...
+
+Tagging new revision 'hello-00001' as 'latest'
+
+Tagging new revision 'hello-00001' as 'previous'
+
+Annotating new revision 'hello-00001'
+
+Waiting for new revision 'hello-00001' to be ready for up to 5m0s (logs below)...
+
+hello-00001 &amp;gt; hello-00001-deployment-5cdbfc9bc9-hks6t | 2019/02/17 22:27:50 Hello world sample started.
+
+Revision 'hello-00001' became ready
+
+Continuing to watch logs for 5s before exiting
+
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl get svc knative-ingressgateway -n istio-system
+NAME                     TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)                                                                                                                   AGE
+knative-ingressgateway   LoadBalancer   10.63.253.209   34.***.***.248   80:32380/TCP,443:32390/TCP,31400:32400/TCP,15011:30082/TCP,8060:31125/TCP,853:32009/TCP,15030:31102/TCP,15031:31631/TCP   6h
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위처럼 Knative가 프로비저닝 되면서 ingress-gateway가 하나 생성이 되어있는 것을 확인할 수 있고 knctl로도 ingress를 확인이 가능하다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl ingress list
+Ingresses
+
+Name                    Addresses     Ports  Age
+knative-ingressgateway  34.***.***.248  80     6h
+                                        443
+                                        31400
+                                        15011
+                                        8060
+                                        853
+                                        15030
+                                        15031
+
+1 ingresses
+
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;knative-custom-domain-연결&quot;&gt;Knative custom domain 연결&lt;/h2&gt;
+
+&lt;p&gt;Domain이 별도로 없기 때문에 Knative는 내부적으로 example.com이라고 하는 기본 domain을 사용한다. 그래서 실제 &lt;code class=&quot;highlighter-rouge&quot;&gt;knctl curl&lt;/code&gt; 명령은 내부적으로 &lt;code class=&quot;highlighter-rouge&quot;&gt;hello.hello-test.example.com&lt;/code&gt;으로 curl을 실행하게 되고 해당 결과를 아래와 같이 확인할 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl curl --service hello -n hello-test
+Running: curl '-sS' '-H' 'Host: hello.hello-test.example.com' 'http://34.***.***.248:80'
+
+Hello Rev1!
+
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;kubernetes node가 3개이므로 3개의 pod가 생성된 것을 확인할 수 있다. 일정시간(default:5분)이 지나면 &lt;code class=&quot;highlighter-rouge&quot;&gt;zero to scale&lt;/code&gt; 관점에서 pod가 종료되므로 다시 확인할때는 다시 curl 명령을 날리게 되면 다시 pod가 올라오게 된다. 해당 개념은 FaaS또는 AWS Lambda에서 Cold-Start와 동일한 것이라 볼 수 있다.&lt;/p&gt;
+
+&lt;p&gt;AWS Cold Start 참고 : https://novemberde.github.io/aws/2018/02/02/Lambda_coldStart.html&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ kubectl get po
+NAME                                      READY     STATUS    RESTARTS   AGE
+hello-00001-deployment-5cdbfc9bc9-hks6t   3/3       Running   0          4m
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;가지고 있는 도메인이 있다면 위에서 나온 &lt;code class=&quot;highlighter-rouge&quot;&gt;34.***.***.248&lt;/code&gt; IP를 domain에 매핑해보자.
+아래에서는 기존 보유중인 skcloud.io 도메인을 연결하였다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ dig knative.skcloud.io
+;; ANSWER SECTION:
+knative.skcloud.io.     603     IN      A       34.***.***.248
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;knctl domain을 이용하여 default domain을 &lt;code class=&quot;highlighter-rouge&quot;&gt;knative.skcloud.io&lt;/code&gt;로 변경한다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl domain create -d knative.skcloud.io --default
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;knctl routes 명령으로 해당 hello-test app의 Endpoint 정보를 확인할 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl routes list -n hello-test
+Routes in namespace 'hello-test'
+
+Name   Domain                               Traffic        Annotations  Conditions  Age
+hello  hello.hello-test.knative.skcloud.io  100% -&amp;gt; hello  -            3 OK / 3    1h
+
+1 routes
+
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;5분이상 기다렸다가 curl로 확인하면 Cold-Start 되는 시간(몇초) 지연이 발생하고 결과를 확인할 수 있다.
+이후에는 바로 응답을 확인할 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ curl http://hello.hello-test.knative.skcloud.io/
+Hello Rev1!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;revision-추가&quot;&gt;revision 추가&lt;/h2&gt;
+
+&lt;p&gt;이번에는 revision을 추가해보자. TARGET environment 변수를 &lt;code class=&quot;highlighter-rouge&quot;&gt;Rev2&lt;/code&gt;로 수정하고 배포를 한다.
+기존 hello-00002 revision이 최신 revision으로 갱신되어 배포가 되는것을 확인할 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl deploy --service hello \
+    --image gcr.io/knative-samples/helloworld-go \
+    --env TARGET=Rev2
+Name  hello
+
+Waiting for new revision (after revision 'hello-00001') to be created...
+
+Tagging new revision 'hello-00002' as 'latest'
+
+Tagging older revision 'hello-00001' as 'previous'
+
+Annotating new revision 'hello-00002'
+
+Waiting for new revision 'hello-00002' to be ready for up to 5m0s (logs below)...
+
+hello-00002 &amp;gt; hello-00002-deployment-6cf86bbfc7-sblz9 | 2019/02/17 23:25:43 Hello world sample started.
+
+Revision 'hello-00002' became ready
+
+Continuing to watch logs for 5s before exiting
+
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;신규 &lt;code class=&quot;highlighter-rouge&quot;&gt;revision&lt;/code&gt; 서비스를 추가된것을 확인할 수 있다. 마찬가지로 몇초간의 Cold-Start delay가 발생할 수도 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ curl http://hello.hello-test.knative.skcloud.io/
+Hello Rev2!
+
+$ knctl curl --service hello
+Running: curl '-sS' '-H' 'Host: hello.hello-test.knative.skcloud.io' 'http://34.***.***.248:80'
+
+Hello Rev2!
+
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;revision list를 확인해보면 현재 latest, previous TAG정보를 확인할 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl revision list --service hello
+Revisions for service 'hello'
+
+Name         Tags      Annotations  Conditions  Age  Traffic
+hello-00002  latest    -            1 OK / 4    14m  100% -&amp;gt; hello.hello-test.knative.skcloud.io
+hello-00001  previous  -            1 OK / 4    4h   -
+
+2 revisions
+
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;bluegreen-배포&quot;&gt;Blue/Green 배포&lt;/h2&gt;
+
+&lt;p&gt;Blue/Green Deploy는 knctl rollout 명령으로 수행할수 있다.&lt;br /&gt;
+rollout 할때 &lt;code class=&quot;highlighter-rouge&quot;&gt;--managed-route=false&lt;/code&gt; 옵션을 줘야 특정 비율로 routing이 가능하다.&lt;br /&gt;
+아래 예시는 TARGET environment 변수를 &lt;code class=&quot;highlighter-rouge&quot;&gt;blue&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;green&lt;/code&gt;으로 바꿔가면서 배포를 진행하였다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl deploy --service hello \
+    --image gcr.io/knative-samples/helloworld-go \
+    --env TARGET=blue \
+    --managed-route=false
+Name  hello
+
+Waiting for new revision (after revision 'hello-00002') to be created...
+
+Tagging new revision 'hello-00003' as 'latest'
+
+Tagging older revision 'hello-00002' as 'previous'
+
+Annotating new revision 'hello-00003'
+
+Waiting for new revision 'hello-00003' to be ready for up to 5m0s (logs below)...
+
+Revision 'hello-00003' became ready
+
+Continuing to watch logs for 5s before exiting
+
+hello-00003 &amp;gt; hello-00003-deployment-99478dcc5-jf267 | 2019/02/17 23:48:20 Hello world sample started.
+
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;revision list를 확인하면 아래와 같이 &lt;code class=&quot;highlighter-rouge&quot;&gt;latest&lt;/code&gt;로 Traffic 전체가 routing 되는 것을 확인할 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl revision list --service hello
+Revisions for service 'hello'
+
+Name         Tags      Annotations  Conditions  Age  Traffic
+hello-00005  latest    -            4 OK / 4    44s  100% -&amp;gt; hello.hello-test.knative.skcloud.io
+hello-00004  previous  -            4 OK / 4    2m   -
+hello-00003  -         -            1 OK / 4    5m   -
+hello-00002  -         -            1 OK / 4    28m  -
+hello-00001  -         -            1 OK / 4    4h   -
+
+5 revisions
+
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이후에 rollout을 통해 previous로 90%, latest로 10%로 변경을 하면 즉시 반영이 되고 실제 트래픽도 분산되어 들어온다. %가 낮은 쪽으로 routing이 될 경우 Cold-Start가 발생하게 되면 delay는 발생하게 된다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ knctl rollout --route hello -p hello:latest=10% -p hello:previous=90%
+Succeeded
+
+$ knctl revision list
+Revisions
+
+Service  Name         Tags      Annotations  Conditions  Age  Traffic
+hello    hello-00005  latest    -            2 OK / 4    1h   10% -&amp;gt; hello.hello-test.knative.skcloud.io
+~        hello-00004  previous  -            2 OK / 4    1h   90% -&amp;gt; hello.hello-test.knative.skcloud.io
+~        hello-00003  -         -            1 OK / 4    1h   -
+~        hello-00002  -         -            1 OK / 4    1h   -
+~        hello-00001  -         -            1 OK / 4    5h   -
+
+5 revisions
+
+Succeeded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;간단하게 curl 반복문을 작성하여 돌려보자.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/sh&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;while &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;do
+&lt;/span&gt;curl &lt;span class=&quot;nt&quot;&gt;-sS&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--max-time&lt;/span&gt; 3 http://hello.hello-test.knative.skcloud.io/
+&lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;간단하게 위 sh을 돌리면 아래와 같이 Cold-Start delay가 발생할때 time out이 발생하고 이후 green revision으로 접속이 되는것을 볼 수 있다.&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ ./test.sh
+curl: (28) Operation timed out after 3002 milliseconds with 0 bytes received
+Hello blue!
+Hello blue!
+Hello blue!
+Hello blue!
+Hello blue!
+curl: (28) Operation timed out after 3003 milliseconds with 0 bytes received
+Hello blue!
+Hello blue!
+Hello blue!
+Hello blue!
+Hello blue!
+Hello blue!
+Hello green!
+Hello blue!
+Hello blue!
+Hello blue!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;정리&quot;&gt;정리&lt;/h2&gt;
+&lt;p&gt;지금까지 &lt;code class=&quot;highlighter-rouge&quot;&gt;knctl&lt;/code&gt;을 사용하여 간단하게 knative를 배포하고 custom domain을 연결하여 blue-green 배포까지 해봤다. 
+이외에도 Knative Build를 활용하여 Docker image 작업을 하거나 서비스 카탈로그 등을 연동하여 외부 DBaaS를 연동하는 use-case등을 찾아볼수 있다.&lt;/p&gt;
+
+&lt;p&gt;아직 초기 단계이지만 Knative는 istio와 함께 IBM, Google, Pivotal등 global player들의 차세대 오픈소스로 부상하고 있다고 볼 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Zero to scale&lt;/code&gt; 이라는 슬로건아래 Serverless, FaaS 사상을 기반으로 build, serving, event, routing이라고 하는 Cloud Computing 추상화의 끝판으로 진화하고 있다. 앞으로 어떤 모습으로 진화될지 궁금하고 다음번에는 MQ나 Pub/sub를 연동하거나 멀티 클라우드 환경에서 동작하는 모습을 보여주는 것도 좋을것 같다. 희망사항이지만 올해 OpenInfraDay나 Kubernetes Day Korea 행사에서 Hands-on을 진행해보는것도 좋지 않을까?&lt;/p&gt;</content><author><name>Jinwoong Kim</name></author><category term="Knative" /><category term="Kubernetes" /><category term="FaaS" /><category term="Serverless" /><category term="CRDs" /><category term="CloudEvents" /><category term="Mesh" /><category term="knctl" /><summary type="html">Knative CLI - knctl</summary></entry><entry><title type="html">Hybrid Cloud</title><link href="https://ddii.dev/cloud/Hybrid/" rel="alternate" type="text/html" title="Hybrid Cloud" /><published>2019-02-10T00:00:00+09:00</published><updated>2019-02-10T00:00:00+09:00</updated><id>https://ddii.dev/cloud/Hybrid</id><content type="html" xml:base="https://ddii.dev/cloud/Hybrid/">&lt;h1 id=&quot;hybrid-cloud-하이브리드-클라우드&quot;&gt;Hybrid Cloud (하이브리드 클라우드)&lt;/h1&gt;
+
+&lt;p&gt;오늘도 기술적인 이야기보다는 화두가 되고 있는 하이브리드 클라우드 이야기를 해보고자 한다.&lt;/p&gt;
+
+&lt;p&gt;업계 사람들도 하이브리드, 엣지 클라우드 서비스를 긍정적인 시각으로 보고있지만 성숙도 측면에서 문제가 있어 도입을 꺼려왔던게 사실이다. 최근 동향을 봤을때 퍼블릭 클라우드 공급사에서도 프라이빗 클라우드를 포섭해야할 대상으로 인정하고 공격적으로 하이브리드 클라우드 솔루션을 개발하여 제공하려고 하는 움직임을 보이고 있다.&lt;/p&gt;
+
+&lt;p&gt;엔터프라이즈에서는 입장에서는 Scale, DR측면에서 On-Prem 에서 퍼블릭으로 확장을 도모하고 있고 글로벌플레이어 입장에서는 퍼블릭에서 On-Prem으로 전이하는 모습으로 비즈니스를 진행하고 있다. 하지만 구글은 특별하게 컨테이너 기반으로 진행중이다. 누가 끝까지 살아남아 승자가 될지 아무도 모른다.&lt;/p&gt;
+
+&lt;p&gt;앞으로 열릴 시장은 확실하고 꼭 필요하다는 것은 알지만 기술의 성숙도가 높지 않고 넘어야할 허들이 많다. 아직까지 연계 기술이나 생태계가 비어 있는 부분들이 존재하기 때문에 올해 말쯤 되면 여러 상품들이 출시되면서 정리 되지 않을까 싶다.&lt;/p&gt;
+
+&lt;p&gt;https://wikibon.com/aws-outposts-enables-hybrid-cloud/&lt;/p&gt;
+
+&lt;p&gt;위 포스팅에서도 2가지 의문점을 제기한다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Will a data egress charge be applied to data resident on the disks to other on-premise workloads?&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;예시) S3 → Outpost egress 트래픽(private n/w 이긴 하지만 aws가 돈을 안 받을것인가?, 결국 direct-link는 필수인건지?)&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Is the data on site under the legal control of AWS or the customer?&lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;데이터의 소유권 문제(이게 심각한 문제가 될수 있다)&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;그래서 AWS가 작년에 내놓은 Outpost의 첫그림은 &lt;a href=&quot;https://aws.amazon.com/ko/outposts/features/&quot;&gt;VMware on AWS&lt;/a&gt;로 작년 reinvent이후 많은 관심을 받았던 프로젝트이다.&lt;/p&gt;
+
+&lt;p&gt;이외에도 메이저 사들도 &lt;a href=&quot;https://azure.microsoft.com/ko-kr/overview/azure-stack/&quot;&gt;Azure Stack&lt;/a&gt;, &lt;a href=&quot;https://www.ibm.com/kr-ko/cloud/vmware&quot;&gt;VMware on IBM Cloud&lt;/a&gt;, &lt;a href=&quot;https://www.ncloud.com/product/hybridPrivateCloud/vmwareOnNcloud&quot;&gt;VMware on Ncloud&lt;/a&gt;와 같은 하이브리드 서비스를 내놓고 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;product별-기본-전략&quot;&gt;Product별 기본 전략&lt;/h3&gt;
+&lt;h4 id=&quot;azure-stack&quot;&gt;Azure Stack&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;호환성 인증받은 서버를 On-prem에 구매/설치하고 Azure UI 및 API와 동일한 UI/UX로 private cloud 사용&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;aws-outpost&quot;&gt;AWS Outpost&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;고객 On-prem에 EC2 cloud instances 제공 (전용 HPC 하드웨어 - EC2 Nitro Platform)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;aws-outpostvmware-based&quot;&gt;AWS Outpost(VMware based)&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;baremetal 전용 플랫폼으로 VMware - software, AWS - hardware 에 집중&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;google-cloud&quot;&gt;Google Cloud&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;K8s On-prem전략을 기본으로 Cisco와 하이브리드 전략 (based on Istio)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;ibm-cloud&quot;&gt;IBM Cloud&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;구글과 유사하게 Istio를 기본으로 하여 멀티, 하이브리드 클라우드 제품 출시&lt;/li&gt;
+  &lt;li&gt;IKS on Vmware on IBM Cloud Baremetal 와 같은 상품도 출시&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;대부분 VMware 협력을 기반으로 하이브리드 클라우드 전략을 전개하고 있고 내면을 들여다보면 물리적으로 다른곳에 있는 Overlay 네트워크에 대한 해결이 가장 문제이기 때문에 Direct-link나 VPN을 통해 연결하는것도 결국 클라우드 사업자가 네트워크 트래픽 비용을 가져가지 위한 전략으로서 보인다.&lt;/p&gt;
+
+&lt;p&gt;실제 퍼블릭 클라우드 벤더의 Cash Cow는 Compute 자원보다는 네트워크 비용과 Blob Storage, API과금 등 에 대한 매출이 큰 비중을 차지한다고 봐야 한다. 혹자는 글로벌 네트워크 전용선에 대한 투자나 고성능 HPC도입 투자 비용에 대한 말들을 하지만 IBM같은 경우 글로벌 네트워크 무료 정책을 통해 Market Share를 획득하고자 하는 부분들을 보면 네트워크가 가장 핵심이 아닐까 싶다.&lt;/p&gt;
+
+&lt;p&gt;클라우드를 이야기 할때 기술 성숙도를 보면 Compute &amp;gt; Storage &amp;gt; Network 순으로 전이가 되는데 OpenStack이나 Kubernetes 프로젝트와 같은 오픈소스나 VMware NSX 플랫폼만 봐도 정말 네트워크가 중요한 영역이 되고 있음을 알수 있다.&lt;/p&gt;
+
+&lt;p&gt;결국 핵심적으로 봐야하는 부분은 네트워크다. 네트워크 부분에서 아주 강력한 솔루션이 나와야 한다. 결국 회선 비용이 문제고 최근 넷플릭스와 SKB의 속도 분쟁만 봐도 결국 강자의 논리로 네트워크 문제가 해결되는 시대가 온 것이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;정리&quot;&gt;정리&lt;/h3&gt;
+
+&lt;p&gt;내가 생각한 서비스 사용자 측면에서 우리가 고려해야할 클라우드 옵션들을 정리해보면 아래와 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;멀티 클라우드 : 퍼블릭 클라우드 to 퍼블릭 클라우드 운영 솔루션으로 프라이빗 클라우드 영역에는 거의 관여를 안하며, 솔루션에 따라 일부 가상화된 Computing 자원까지 모니터링 지원하기도 함. 멀티 클라우드 운영 플랫폼은 주로 클라우드 Brokerage Service 형태로 제공되어야 하므로 MSP역할이 중요해질 것 같다. 메가존, 베스핀글로벌과 같은곳 뿐아니라 자체적인 클라우드를 운영하는 대형 SI회사를 포함한 기존 IaaS 운영조직의 변화들도 눈여겨 봐야할것 같다. 마진율이 낮은 레드오션 싸움에서 누가 이기느냐가 중요하기 보다는 미래를 보고 투자하는 자세가 필요하다고 본다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;프라이빗 클라우드 : 프라이빗 클라우드 전용 솔루션으로 벤더 또는 특정 IaaS 서비스에 최적화된 경우가 많으므로 VMware, OpenShift, OpenStack Managed 서비스등 기존 제품에서의 연장선에서 얼마나 오픈소스를 이해하고 프로덕션에 적용할수 있는 역량을 기르는것이 중요하다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;하이브리드 클라우드 : 퍼블릭 클라우드 to 프라이빗 클라우드 운영 솔루션으로 프라이빗 클라우드의 인프라스트럭처까지 관여를 하며, 퍼블릭 클라우드 영역은 일반적으로 IaaS 영역과 일부 PaaS / 컨테이너까지 구성, 모니터링 지원해야 하고 이를 위한 3rd Party 솔루션들이 등장하고 있고 점차 영역을 확대할것이다. 이에 있어 컨테이너 플랫폼을 도입하는것이 가장 글로벌 플레이어와 격차를 줄이는데 효과적인 도구라 생각한다. 결국 하이브리드 클라우드 구현은 기존 Public과 Local Cloud간 네트워크 연계가 중요한 포인트이다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;간단히 구현해 볼수 있는 General Hybrid Kubernetes Architecture를 간단히 그려봤다. 기본적으로 StrongSwan VPN을 가지고 CI/CD를 고려한 DevOps관점에서의 구성도이다.
+&lt;img src=&quot;/images/hybrid-cloud.png&quot; alt=&quot;hybrid-cloud&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;위에 내용과 함께 하이브리드 클라우드를 고려할때 &lt;code class=&quot;highlighter-rouge&quot;&gt;데이터 소유권 측면에서의 거버넌스&lt;/code&gt; 와 &lt;code class=&quot;highlighter-rouge&quot;&gt;overlay 네트워크&lt;/code&gt;에 대한 고민이 동행되었을때 성공적인 하이브리드 클라우드를 구축할수 있다라는 나 혼자만의 생각을 정리해봤다.&lt;/p&gt;</content><author><name>Jinwoong Kim</name></author><category term="Hybrid" /><category term="Multi" /><category term="Outpost" /><category term="VMware" /><summary type="html">Hybrid Cloud (하이브리드 클라우드)</summary></entry><entry><title type="html">SRE (Site Reliablity Engineering)</title><link href="https://ddii.dev/job/SRE/" rel="alternate" type="text/html" title="SRE (Site Reliablity Engineering)" /><published>2019-01-30T00:00:00+09:00</published><updated>2019-01-30T00:00:00+09:00</updated><id>https://ddii.dev/job/SRE</id><content type="html" xml:base="https://ddii.dev/job/SRE/">&lt;h1 id=&quot;sre-site-reliability-engineering-소개&quot;&gt;SRE (Site Reliability Engineering) 소개&lt;/h1&gt;
+
+&lt;p&gt;그동안 DevOps 담당자라고 부르짖던 사람들의 Role이 인프라 담당자인지 플랫폼 담당자인지 아니면 개발하는 운영자인지 헷갈릴때가 많았다.&lt;/p&gt;
+
+&lt;p&gt;갑자기 국내에서도 SRE 채용 공고가 많아지는것을 보면서 내 자신도 한번 정리를 하고 가야할것 같은 생각이 들었다.&lt;/p&gt;
+
+&lt;p&gt;https://docs.microsoft.com/ko-kr/learn/modules/intro-to-site-reliability-engineering/&lt;/p&gt;
+
+&lt;p&gt;개념정리 측면에서 위 MS Azure의 온라인 교육내용을 정리해봤다.&lt;/p&gt;
+
+&lt;h2 id=&quot;sre&quot;&gt;SRE&lt;/h2&gt;
+
+&lt;p&gt;SRE(사이트 안정성 엔지니어링)란 조직이 해당 시스템, 서비스 및 제품에서 적절한 수준의 안정성을 달성하도록 지원하는 엔지니어링 분야이다.&lt;/p&gt;
+
+&lt;p&gt;출처 : https://landing.google.com/sre/sre-book/chapters/introduction/&lt;/p&gt;
+
+&lt;p&gt;기본적으로 운영경험이 있는 sysadmin, IT전문가, DevOps실행 담당자 등이 대상이 될 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;적절한-수준의-안정성&quot;&gt;적절한 수준의 안정성&lt;/h3&gt;
+&lt;p&gt;가장 핵심이 되는 단어는 &lt;code class=&quot;highlighter-rouge&quot;&gt;안정성&lt;/code&gt;이다. 조직에서 만든 애플리케이션이 안정성이 부족하여 작동하지 않거나 불안정한 경우 실제 비즈니스에 피해를 줄 수 있다는건 누구나 알고 있는 당연한 이야기이지만 100%의 안정적인 시스템은 존재하지 않으므로 적절한 수준(정량적으로 측정하긴 어렵지만 이해관계자들이 납들할만한 수준)의 안정성을 달성하기 위한 일련의 작업들을 수행하는 것이 SRE의 기본 속성이라고 볼수 있다.&lt;/p&gt;
+
+&lt;p&gt;SRE는 Google에서 2003년부터 7명의 소프트웨어 엔지니어로 구성된 팀에서 시작된 이후 (자세한 내용은 위 링크 ebook 참조) Google 사내에 널리 확산되고 내부적인 문화로 조성되는 중에 밖에서는 DevOps라고 하는 문화가 동시에 확산되었다 한다. 결국 동일한 문제를 해결하기 위한 측면에서 두개의 방법론은 다르다고 봐야한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;차이점&quot;&gt;차이점&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;SRE - 안정성을 위한 엔지니어링, DevOps - 개발과 운영조직 각각의 사일로를 해체하기 위한 문화적인 움직임&lt;/li&gt;
+  &lt;li&gt;SRE - 저는 SRE 입니다, DevOps - 저는 DevOps를 하는 운영자 또는 개발자 입니다.&lt;/li&gt;
+  &lt;li&gt;SRE - 규범으로 인식, DevOps - 문화로 인식&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;공통점&quot;&gt;공통점&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;모니터링/식별 가능, 자동화&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;주요-sre원칙--선순환&quot;&gt;주요 SRE원칙 : 선순환&lt;/h2&gt;
+&lt;p&gt;새로운 서비스의 상태의 지표는 어떻게 정의할까? 보통은 무엇을 &lt;code class=&quot;highlighter-rouge&quot;&gt;SLI(서비스 수준 지표)&lt;/code&gt;로 사용할지를 정하는것으로 본다. 일반적으로 성공 및 실패 측정값(200 OK,500 Error), 응답시간(ms), 처리량 등의 조합으로 결정될 수 있다. 보통  카나리아 분석을 통해 Scoring을 한 &lt;code class=&quot;highlighter-rouge&quot;&gt;SLI&lt;/code&gt;를 200 OK와 500 또는 에러코드의 비율로 결정하는 방법을 사용하는 경우가 많다.&lt;/p&gt;
+
+&lt;p&gt;서비스 상태를 식별하는 지표를 정하고 나면 고객이나 우리가 원하는 안정성 수준을 결정해야 한다. 개발팀과 운영팀이 같이 만든 원하는 안전성 수준을 &lt;code class=&quot;highlighter-rouge&quot;&gt;SLO(서비스 수준 목표)&lt;/code&gt;라고 말하면 된다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;SLO&lt;/code&gt;는 Prometheus나 Datadog과 같은 모니터링 시스템을 활용하여 정확하게 측정하고 표시해야 한다. 서비스의 안정성에 대해서 명확하게 이해할수 있는 목표이기도 하다. 반드시 &lt;code class=&quot;highlighter-rouge&quot;&gt;SLO&lt;/code&gt;를 만족하는지 못하는지 명확한 측정값으로 데이터가 존재해야 하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;SLO&lt;/code&gt;를 충족하지 못하면 문제가 있는것으로 판단하고 문제를 해결해야 한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;오류-예산&quot;&gt;오류 예산&lt;/h3&gt;
+&lt;p&gt;오류 예산이라는 말을 명확히 이해하려면 흔히 고객과 체결하는 계약서 상의 명시된 서비스 가동율(SLA)을 생각하면 될 것 같다. 보통 99.9% 의 &lt;code class=&quot;highlighter-rouge&quot;&gt;SLO&lt;/code&gt;를 정한다고 한다면 1년에 8시간 45분 57초의 서비스 다운타임을 허용하는 것이다. 오류 예산은 서비스의 완벽한 안정성과 원하는 안정성의 차이(100%-99.9%=0.01%)를 말한다. 0.01%로 즉 8시간정도의 오류 예산을 가지는 것은 그 시간을 모두 사용할 때까지 추가 릴리스나 패치를 진행할 수 있다는 이야기와 같다. 어떤 팀은 해당 예산을 신규 기능을 릴리스하는데 사용하기도 하고 장애가 발생했을때 문제의 원인을 발견하고 개선하는데 사용하기도 한다.&lt;/p&gt;
+
+&lt;p&gt;일반적으로 서비스에 대한 오류 예산이 모두 사용되면 서비스가 원하는 안정성 수준으로 돌아갈때 까지 해당 서비스의 추가적인 릴리스를 보류하는게 일반적이긴 하지만 특정기간(월 또는 분기 또는 연간) 기준으로 계산되기 때문에 서비스 안정성이 정상 상태라면 오류 예산은 다시 주어지게 되므로 &lt;code class=&quot;highlighter-rouge&quot;&gt;선순환&lt;/code&gt; 구조를 가진다고 볼 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;비난-없는-장애-회고&quot;&gt;비난 없는 장애 회고&lt;/h3&gt;
+&lt;p&gt;일반적으로 비즈니스에 크리티컬한 장애가 발생했을때 사후 분석(회고)을 하게 되는데 이때는 &lt;code class=&quot;highlighter-rouge&quot;&gt;비난 없는&lt;/code&gt; 분석을 해야한다. 오래전 기억이지만 예전 직장 특정팀에서는 장애가 발생하면 유관자들이 모두 엔지니어 책상 뒤에 서서 모든 화살과 눈총을 주기 때문에 도저히 일을 할 수 없게 만든 경우가 많았었다.&lt;/p&gt;
+
+&lt;p&gt;특정 운영자의 작업 실수로 인해 장애가 발생했다 하더라도 해당 이벤트가 발생하게 된 프로세스나 기술기반에 실패 원인을 파악하는데 중점을 두어야 할것이다.&lt;/p&gt;
+
+&lt;p&gt;시스템의 안정성을 저하시키고 서비스를 중단시킨 작업(릴리스, 패치 등)을 사유로 개인에게 페널티를 주거나 고과에 반영하는 방법은 장애로 부터 교훈을 얻을수가 없고 해당 담당자의 충성도나 생산성 저하를 유발하는 안좋은 장치가 될 수 있다. 내 경험이기도 하지만 한동안 두려워서 아무 변경도 하지 못하는 경우가 종종 있었다.&lt;/p&gt;
+
+&lt;p&gt;회사나 조직, 팀은 시스템 중단으로부터 교훈을 얻고 지속적으로 시스템을 개선할수 있다. 적절한 분석을 통해 후속조치를 수행함으로써 실패를 수용하는 것이 SRE의 핵심 원칙이다. 이러한 내용을 모두에게 공유하고 타 조직이나 팀에게 인사이트를 제공하는 선순환 구조를 만드는것 또한 SRE의 기본 원칙이라고 볼 수 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;주요-sre원칙--사람측면&quot;&gt;주요 SRE원칙 : 사람측면&lt;/h2&gt;
+&lt;h3 id=&quot;toil수고스런-일-번거로운-작업&quot;&gt;Toil(수고스런 일, 번거로운 작업)&lt;/h3&gt;
+&lt;p&gt;항상 SRE에서는 Toil에 초점을 맞춰야 한다. Toil은 사람이 수행하는 운영 작업 중 특정한 패턴이나 특성이 있는 작업을 말한다. 종종 반복적이고 자동화 될 수 있는 작업일지라도 대부분 수동작업으로 처리를 한다. 서비스의 규모가 커지거나 고객이 많아지게 되면 보통 우리가 이야기 하는 티켓(또는 SR)의 수가 많아지고 공수가 많이 필요하게 된다.&lt;/p&gt;
+
+&lt;p&gt;배포때마다 Config를 적용하거나 계정 등록, 볼륨이나 디스크 프로비저닝 등 수동으로 처리해야하는 모든 작업이 운영자에게는 부하로 다가올수 있다. 이러한 반복적인 작업을 티켓시스템을 통해 처리를 하게 되면 티켓 생성, 작업계획서 작성, 검토, 승인 단계를 그때 마다 해야하는 아주 번거로운 작업(Toil)을 해야한다.&lt;/p&gt;
+
+&lt;p&gt;SRE는 최대한 이러한 반복적이고 번거로운 작업을 제거하기 위해 노력해야하고 자동화와 Self-Service로 개발자가 편하게 직접 사용할수 있도록 환경을 제공해 주어야 한다. 이러한 요청이나 티켓을 자동으로 처리할 수 있으면 조금 더 생산적인 일을 수행할수 있다.&lt;/p&gt;
+
+&lt;p&gt;위에서 이야기한 적절한 안정성과 비슷한 맥락으로 생각하면 될 것 같다. 번거로운 작업을 없애는것이 다른 중요한 작업보다 우선순위가 떨어지기도 하지만 서비스 상에서 Toil을 제거하는것도 SRE의 주된 업무이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;운영작업의-비율&quot;&gt;운영작업의 비율&lt;/h2&gt;
+&lt;p&gt;Toil을 제거하거나 서비스/시스템 안정성을 개선하기 위해 SRE는 장애를 해결하고 티켓을 처리하는 시간 비중을 50%를 넘겨서는 안된다. 티켓이 필요하지 않도록 개발자 Self-Service를 구성/제공하고 효율성을 증대시키기 위해서 IaC등(Shell, Ansible, Terraform)과 같이 자동화를 위한 코드를 만드는데에도 집중을 해야한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;정리&quot;&gt;정리&lt;/h2&gt;
+&lt;p&gt;지금까지 SRE에 대해서 간단하게 소개하고 이해하는 측면에서 정리해 봤다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://landing.google.com/sre/sre-book/chapters/part3/&quot;&gt;Service Reliability Hierarchy&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://lh3.googleusercontent.com/3gX2qgys2I-9HnEIvXUA10ed3AILvg5MclnKWBquEkJKP3g5_kD6WR7Ptwp3TwAGla1DuSmHv64MdTtACNLlArFVq7BwbTrTVhigsA=s0&quot; alt=&quot;hierarchy&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;그림과 같이 서비스 안정성 계층 구조에서는 기본적으로 모든 서비스를 모니터링 하는 시스템을 갖추어야 한다고 말한다. 모니터링 시스템이 준비가 되면 서비스에 대한 SLI, SLO를 만들고 모니터링 시스템에서 구현하는것이 첫번째 SRE를 적용하는 방법이라고 할 수 있을 것이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;참고-서적&quot;&gt;참고 서적&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://shop.oreilly.com/product/0636920041528.do&quot;&gt;Site Reliability Engineering: How Google Runs Production Systems(“The SRE Book”)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://landing.google.com/sre/workbook/toc/&quot;&gt;The Site Reliability Workbook: Practical Ways to Implement SRE(“The SRE Workbook”)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://shop.oreilly.com/product/0636920063964.do&quot;&gt;Seeking SRE: Conversations About Running Production Systems at Scale&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>Jinwoong Kim</name></author><category term="SRE" /><category term="DevOps" /><summary type="html">SRE (Site Reliability Engineering) 소개</summary></entry><entry><title type="html">2018 Retrospective</title><link href="https://ddii.dev/retrospective/newyear-plan/" rel="alternate" type="text/html" title="2018 Retrospective" /><published>2019-01-03T00:00:00+09:00</published><updated>2019-01-03T00:00:00+09:00</updated><id>https://ddii.dev/retrospective/newyear-plan</id><content type="html" xml:base="https://ddii.dev/retrospective/newyear-plan/">&lt;p&gt;한해가 또 훅 가버렸다. 18년도 Retrospective 시작한다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Work
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;17년까지 팀 막내였지만 새로운 부서로 이동하여 서비스개발 파트장을 맞게 되었음. 17년도에 개발이라고는 python를 사용하여 vmware vm을 openstack instance로 migration하는 프로젝트 및 kubernetes 기반 tensorflow 플랫폼을 개발하는 초보개발자 수준이였던 내가 인프라와 클라우드 플랫폼(openstack, vsphere, kubernetes) 경력이 인정되어 서비스 개발 파트를 맡게 되었다. 인생에서 가장 큰 변혁중 하나였다고 생각하고 항상 감사하는 마음으로 일을 하고 있다.&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;CNCF OpenSource들을 활용하여 FaaS(Function as a Service), IaC(Infra as Code) 플랫폼 개발을 진행하였다. 서비스 기획 및 두개 프로젝트의 Scrum Master 역할을 수행하였고 메인 업무는 SRE역할로 Kubernetes 설계 구축, 클러스터 및 스토리지 관리, LB, 인증서 등 클라우드 인프라 자원관리 정도였던것 같다.&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Tech.
+    &lt;ul&gt;
+      &lt;li&gt;Public Cloud : AWS, DigitalOcean, IBM Cloud, GCP, Azure, nCloud&lt;/li&gt;
+      &lt;li&gt;Provisioning : Harbor, Ansible, Portus, Clair, Kubicorn, Terraform, Vault&lt;/li&gt;
+      &lt;li&gt;Runtime : Rook, Minio, OpenEBS, Calico, REX-ray, WeaveNet, Cilium&lt;/li&gt;
+      &lt;li&gt;Orchestration : Kubernetes, Envoy, etcd, gRPC, Kong, HAProxy, Istio, Kong, NGINX, Traefik&lt;/li&gt;
+      &lt;li&gt;App : NATS, Helm, Kafka, Docker-compose, Draft, Gitlab, minikube, Operator, Jenkins, JenkisX, Packer, RabbitMQ, Spinnaker&lt;/li&gt;
+      &lt;li&gt;Serverless : Dispatch, Fission, Knative, Nuclio, OpenWhisk, OpenFaas&lt;/li&gt;
+      &lt;li&gt;Monitoring, Logging : Prometheus, Fluentd, Elastic, Grafana, influx, WeaveScope&lt;/li&gt;
+      &lt;li&gt;기타 : Cert-Manager, Dex, Agones&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Speak
+쓰다보니 사내외 발표를 10번을 넘게 한거 같다.
+    &lt;ul&gt;
+      &lt;li&gt;4월 사내 Cloud Tech : 컨테이너 기반 SaaS 개발을 위한 고려사항&lt;/li&gt;
+      &lt;li&gt;5월 사내 DT 솔루션 행사, 클라우드사업부 세션 : Advanced Cloud (Road to Serverless)&lt;/li&gt;
+      &lt;li&gt;5월 사내 통신사업부문 Tech세션 : Road to Serverless (Functions as Applications)&lt;/li&gt;
+      &lt;li&gt;6월 Open Infra Days Korea 2018 : &lt;a href=&quot;https://www.slideshare.net/JinwoongKim8/provisioning-dedicated-game-server-on-kubernetes-cluster&quot;&gt;Provisioning Dedicated Game Server on Kubernetes Cluster&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;8월 SK DNA 2018 : &lt;a href=&quot;https://www.slideshare.net/JinwoongKim8/cloud-z-serverless-118143924&quot;&gt;Cloud Z 의 오픈소스 서비스 소개 및 Serverless로 게임 개발하기&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;10월 DT Labs Meetup : &lt;a href=&quot;https://www.slideshare.net/JinwoongKim8/continuous-delivery-with-spinnaker-on-k8skubernetes-cluster-118140930&quot;&gt;Continuous Delivery with Spinnaker on K8s(kubernetes) Cluster&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;10월 NCsoft IO : &lt;a href=&quot;https://www.slideshare.net/JinwoongKim8/cloud-native-serverless/JinwoongKim8/cloud-native-serverless&quot;&gt;Cloud Native 오픈소스 서비스 소개 및 Serverless로 실제 게임 개발하기&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;11월 IBM Developer Day : &lt;a href=&quot;http://public.dhe.ibm.com/software/kr/TrackB/B3.pdf&quot;&gt;Continuous Delivery using Spinnaker on Kubernetes Multi Cluster&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;11월 “Kubernetes Meetup” 1Day : &lt;a href=&quot;https://www.slideshare.net/JinwoongKim8/spinnaker-on-kubernetes-123752186&quot;&gt;Spinnaker on Kubernetes&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;쓰고나서 보니 2018년도 회고라기 보다 거의 개발에 필요한 잡일(DevOps라고 두둔하면서)과 발표만 한거 같네…
+19년도 부터는 다른업무를 하게 될거 같은데 초심을 잃지 말아야 하겠다.&lt;/p&gt;
+
+&lt;p&gt;최근 화두가 되었던 &lt;code class=&quot;highlighter-rouge&quot;&gt;노력중독&lt;/code&gt; 이였던것 같은 18년은 털어버리고
+내가 진짜로 좋아하고 하고 싶은 공부와 업무, 그리고 가족을 위해서 로드밸런싱 하면서 지내야 하겠다.&lt;/p&gt;
+
+&lt;p&gt;2006년에 쓴 미래의 내 모습과 어느정도 일치하는거 같지만 목표를 좀더 높이 잡아야할듯 하다.&lt;/p&gt;
+
+&lt;p&gt;번역에 참여하거나 책을 써본다던지 커뮤니티 활동을 좀더 적극적으로 해보고
+회사에서 시키는 밋업이 아닌 자발적으로 참여하는 외부 강연이나 밋업을 위주로 해봐야겠다.&lt;/p&gt;
+
+&lt;p&gt;또한 점점 개발영역과 멀어지는거 같은 내모습이 나이가 들면서 더 심화될거 같아서 지인들과 별도의 개발 프로젝트를 진행해보려고 한다.&lt;/p&gt;
+
+&lt;p&gt;내 13년간 직장 생활중 가장 바쁘고 다이내믹하면서 바빴던 한해이자 많은 경험과 공부가 되었던 일년이였던것 같다.&lt;/p&gt;
+
+&lt;p&gt;나를 땡겨주셨던 &lt;code class=&quot;highlighter-rouge&quot;&gt;June&lt;/code&gt;, 항상 분위기를 리드했던 &lt;code class=&quot;highlighter-rouge&quot;&gt;Joonbum&lt;/code&gt;, 언제나 열정가득하고 최고의 DevOps 플레이어 &lt;code class=&quot;highlighter-rouge&quot;&gt;Jeongho&lt;/code&gt;, 든든한 Backender &lt;code class=&quot;highlighter-rouge&quot;&gt;Donghun&lt;/code&gt;, Excellent/Free/Kind(a.k.a EFK)한 &lt;code class=&quot;highlighter-rouge&quot;&gt;Minyoung&lt;/code&gt;, 내가 인정하는 Frontier &lt;code class=&quot;highlighter-rouge&quot;&gt;Sanghun&lt;/code&gt;, Best Rookie &lt;code class=&quot;highlighter-rouge&quot;&gt;Minsoo&lt;/code&gt;, sorry because the hy &lt;code class=&quot;highlighter-rouge&quot;&gt;HyunSang&lt;/code&gt;, Moontoring &lt;code class=&quot;highlighter-rouge&quot;&gt;Jinsoo&lt;/code&gt;, Forever Mentor &lt;code class=&quot;highlighter-rouge&quot;&gt;Jaemoon&lt;/code&gt;, Guru of CNI &lt;code class=&quot;highlighter-rouge&quot;&gt;Youngchae&lt;/code&gt; 모두에게 감사의 말씀을 전하고 싶다. (무슨 수상소감도 아니고 ㅋㅋ)&lt;/p&gt;
+
+&lt;p&gt;19년에도 남들에게 존경을 받는 사람보다는 무슨일을 하든지 대중에게 욕먹지 않고 필요할때 도움을 요청을 할수 있는 그런 편한 사람이 되어야 겠다.&lt;/p&gt;</content><author><name>Jinwoong Kim</name></author><category term="Retrospective" /><category term="2018" /><category term="Planning" /><category term="Change" /><summary type="html">한해가 또 훅 가버렸다. 18년도 Retrospective 시작한다.</summary></entry></feed>
