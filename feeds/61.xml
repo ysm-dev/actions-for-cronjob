@@ -5,7 +5,7 @@
 <link>https://web-front-end.tistory.com/</link>
 <description>Web Front-End 개발자</description>
 <language>ko</language>
-<pubDate>Mon, 13 May 2019 14:17:21 +0900</pubDate>
+<pubDate>Mon, 13 May 2019 15:17:21 +0900</pubDate>
 <generator>TISTORY</generator>
 <managingEditor>권윤학</managingEditor>
 <image>
@@ -2399,4 +2399,39 @@ constructor(
 &lt;p&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;pre class=&quot;code&quot;&gt;&lt;code class=&quot;bash&quot;&gt;ng g component CommentTree&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&quot;code&quot;&gt;&lt;code class=&quot;bash&quot;&gt;ng g component Comment&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;우리
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;우리는 hackernews.api 서비스에 새로운 GET 요청을 추가하여 comment를&amp;nbsp;가져와야 합니다.&amp;nbsp;component를 수정하기전에 먼저&amp;nbsp;살펴보겠습니다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;pre class=&quot;code&quot;&gt;&lt;code class=&quot;typescript&quot;&gt;// hackernews.api.service.ts
+
+//...
+
+fetchComments(id: number): Observable&lt;any&gt; {
+  return this.http.get(`${this.baseUrl}/item/${id}`);
+}&lt;/any&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;p&gt;item-comments.component도 수정하도록 하겠습니다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;pre class=&quot;code&quot;&gt;&lt;code class=&quot;typescript&quot;&gt;// item-comments.component.ts
+
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+
+import { HackerNewsAPIService } from '../hackernews-api.service';
+
+@Component({
+  selector: 'app-item-comments',
+  templateUrl: './item-comments.component.html',
+  styleUrls: ['./item-comments.component.scss']
+})
+export class ItemCommentsComponent implements OnInit {
+  sub: any;
+  item;
+
+  constructor(
+    private _hackerNewsAPIService: HackerNewsAPIService,
+    private route: ActivatedRoute
+  ) {}
+
+  ngOnInit() {    
+    this.sub = this.route.params.subscribe(params =&amp;gt; {
+      const itemID = +params['id'];
+      this._hackerNewsAPIService.fetchComments(itemID).subscribe(data =&amp;gt; {
+        this.item = data;
+      }, error =&amp;

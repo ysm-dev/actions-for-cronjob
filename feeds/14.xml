@@ -764,4 +764,16 @@
 
 사실 이건 당연히 복잡하리라고 생각하여 계산에 넣고 일정을 추론한 터라 복잡하다는 것 자체에 큰 불만은 없다. 하지만 그래도 짚고는 넘어 가야지. 비주얼 스튜디오의 확장 메커니즘은 크게는 두 개로 나뉜다.
 
-* [매니지드 확장 프레임워크](&lt;a href="https://msdn.microsoft.com/en-us/library/dd460648.aspx"&gt;https://msdn.microsoft.com/en-us/library/dd460648.aspx&lt;/a&gt;)(MEF)를 사용한 확장. 그러니까 본래 닷넷 어셈블리는 자바 jar 파일이나 다른 언어에서의 &amp;ldquo;컴파일된 라이브러리&amp;quot;의 역할을 수행하는데, 거기에 메타데이터를 박아서 블록 같이 튀어 나온 부분(어셈블리가 제공하
+* [매니지드 확장 프레임워크](&lt;a href="https://msdn.microsoft.com/en-us/library/dd460648.aspx"&gt;https://msdn.microsoft.com/en-us/library/dd460648.aspx&lt;/a&gt;)(MEF)를 사용한 확장. 그러니까 본래 닷넷 어셈블리는 자바 jar 파일이나 다른 언어에서의 &amp;ldquo;컴파일된 라이브러리&amp;quot;의 역할을 수행하는데, 거기에 메타데이터를 박아서 블록 같이 튀어 나온 부분(어셈블리가 제공하는 인터페이스)과 들어간 부분(어셈블리가 요구하는 인터페이스)을 붙인 뒤, 신호만 주면 주어진 어셈블리들에서 모양이 맞는 블록을 짜 맞춰 주는 그런 프레임워크이다.
+* 좀 더 고전적인 [VSPackage](&lt;a href="https://msdn.microsoft.com/en-us/library/bb166424.aspx"&gt;https://msdn.microsoft.com/en-us/library/bb166424.aspx&lt;/a&gt;) 시스템. MEF에 비하면 허술한데, 일단 패키지 등록이 레지스트리(…)에 의존하고 문제가 발생했을 때 해결하는 것도 까다로운 편이다. 중복으로 등록되기도 하고 등록이 된 척 하면서 실제로는 실행이 안 되거나 하는 경우도 있다.
+
+그럼 두 개만 알면 되냐고? 천만의 말씀. 더 알아야 하는 게 있다.
+
+* 상술한 두 개의 확장 메커니즘은 결국 최종적으로 사용자에게 전달되어야 하는데, 어셈블리 뭉치만 그대로 전달할 수가 없으니 결국 바깥에 포장을 하나 더 씌워서 배포하니 그것이 바로 [VSIX](&lt;a href="https://msdn.microsoft.com/en-us/library/dd997148.aspx"&gt;https://msdn.microsoft.com/en-us/library/dd997148.aspx&lt;/a&gt;)이다. 이 쪽은 결국 XML 파일 하나 더해진 zip 파일이라 확인 자체는 어렵지 않은데, [빌드 시스템](&lt;a href="https://en.wikipedia.org/wiki/MSBuild"&gt;https://en.wikipedia.org/wiki/MSBuild&lt;/a&gt;)에 통합하는 게 더럽게 어렵다. &lt;del&gt;애초에 빌드 시스템도 더럽다.&lt;/del&gt;
+* MEF를 쓰든 VSPackage를 쓰든 결국 최종 보스는 COM으로, [자동화 객체 모델](&lt;a href="https://msdn.microsoft.com/en-us/library/za2b25t3.aspx"&gt;https://msdn.microsoft.com/en-us/library/za2b25t3.aspx&lt;/a&gt;)이라는 별도의 인터페이스가 있어서 피하기 어렵다. 참 골때린 것이, 매니지드 인터페이스만 있는 경우도 있고, COM 인터페이스만 있는 경우도 있지만, **둘 다** 있는 경우도 있다!
+
+이 중에서 그나마 이해가 쉬운 것은 MEF 쪽으로, C#에 대한 기본적인 지식이 있고 자기가 뭘 하고 싶은지 안다면 그럭 저럭 쓸만한 인터페이스이다. 확장 개발 초반에는 문법 강조부터 시작해서 배경에서 타입 체커를 돌린 뒤 그 지식으로 자동 완성을 하는 걸 구현했었는데, 타입 체커를 돌리는 과정은 전혀 깔끔하지 않지만[^1] 문법 강조 부분은 진짜 쉽게 넘어갈 수 있다. 오히려 초반에 귀찮았던 건 C#과 기 개발된 Rust 코드를 합치는 뻘짓 및 에디터 모델에 맞게 Rust 쪽의 모델을 바꾸는 작업… 그러나 MEF도 나중에 하다 보면 뭔가 막 꼬여서 실험적 인터페이스를 리셋해야 하는 경우가 꽤 있다[^2].
+
+[^1]: 한 파일만 타입 체커를 돌릴 수 없어서 전체 프로젝트에 대한 정보를 얻어야 하는데 이 정보를 얻으려면 COM 말고는 방법이 없다. 그런데 MEF만 갖고는 바로 COM 오브젝트를 만들 수 없어서, 결국 COM에 이벤트 핸들러를 등록해서 프로젝트에 파일이 생기거나 사라질 때 그 목록을 갱신해서, 그 목록을 가지고 MEF 쪽의… (후략)
+
+[^2]: 정확히는 MEF는 컴포넌트들 사이의 연결 관계에 의존하기 때문에 그 관계를 캐시하는 부분이 �
