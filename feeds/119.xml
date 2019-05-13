@@ -1390,29 +1390,4 @@ Chromium의 Blink 프로젝트의 &lt;a href=&quot;https://www.chromium.org/blin
 2: baz
 &lt;/pre&gt;
 
-&lt;p&gt;초기화 리스트 덕에 C++에서도 파이썬처럼 &lt;code class=&quot;highlighter-rouge&quot;&gt;{&quot;foo&quot;, &quot;bar&quot;}&lt;/code&gt;로 &lt;code class=&quot;highlighter-rouge&quot;&gt;vector&amp;lt;string&amp;gt;&lt;/code&gt;을 초기화할 수 있다. 예전에는 일일이 &lt;code class=&quot;highlighter-rouge&quot;&gt;push_back&lt;/code&gt;를 불러야만 했다.&lt;/p&gt;
-
-&lt;p&gt;참조자, 상수 컨테이너, 배열, 우측값 등 여러 사항을 고려하니 테스트 케이스가 짧지 않았다. 코딩할 시간이다.&lt;/p&gt;
-
-&lt;h3 id=&quot;3-enumerate-함수-인터페이스-구현&quot;&gt;3. &lt;code class=&quot;highlighter-rouge&quot;&gt;enumerate&lt;/code&gt; 함수 인터페이스 구현&lt;/h3&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;enumerate&lt;/code&gt;는 임의의 컨테이너 타입을 받는 템플릿 함수로 설계한다. &lt;code class=&quot;highlighter-rouge&quot;&gt;range&lt;/code&gt;와 비슷하게 &lt;code class=&quot;highlighter-rouge&quot;&gt;enumerate&lt;/code&gt; 함수 얼개를 만들어보자.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c--&quot; data-lang=&quot;c++&quot;&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
-2
-3
-4
-5
-&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;k&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;C&lt;/span&gt; &lt;span class=&quot;cm&quot;&gt;/* 컨테이너 타입 */&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;// 좌측값 참조자만 받는 원형으로 테스트 케이스 1~4까지만 실행가능.
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;enumerate_impl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;enumerate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;enumerate_impl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;cm&quot;&gt;/* TODO: arguments... */&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;!-- _includes/code_caption.html --&gt;
-&lt;div class=&quot;code-wrapper&quot;&gt;
-    &lt;div class=&quot;code-caption&quot;&gt;enumerate 함수 얼개&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;p&gt;거의 팩토리 함수이므로 입력 인자를 받아 구현 객체인 &lt;code class=&quot;highlighter-rouge&quot;&gt;enumerate_impl&lt;/code&gt;을 돌려준다.
-라인 3을 보면 일반적인 참조자, &lt;code class=&quot;highlighter-rouge&quot;&gt;C&amp;amp; container&lt;/code&gt;로 받았다. 그래야 입력 컨테이너의 불필요한 복사를 막고, &lt;code class=&quot;highlighter-rouge&quot;&gt;C&lt;/code&gt;가 비상수형일 때 원소 변경도 할 수 있다. &lt;code class=&quot;highlighter-rouge&quot;&gt;C&lt;/code&gt;가 상수형이면 어떻게 될까? 템플릿 인수 연역 법칙(template argument deduction)에 따르면&lt;sup id=&quot;fnref:deduct&quot;&gt;&lt;a href=&quot;#fn:deduct&quot; class=&quot;footnote&quot;&gt;5&lt;/a&gt;&lt;/sup&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;C&lt;/code&gt;가 &lt;code class=&quot;highlighter-rouge&quot;&gt;const vector&amp;lt;string&amp;gt;&lt;/code&gt; 같은 상수형이면 &lt;code class=&quot;highlighter-rouge&quot;&gt;C&amp;amp; container&lt;/code&gt; 역시 상수형 참조자로 넘어간다. 직관적이다. 굳이 &lt;code class=&quot;highlighter-rouge&quot;&gt;enumerate(const C&amp;amp; container)&lt;/code&gt; 버전을 오버로드할 필요가 없다. 물론 오버로드할 수는 있고, &lt;code class=&quot;highlighter-rouge&quot;&gt;C&lt;/code&gt;가 상수형이면 &lt;code class=&quot;highlighter-rouge&quot;&gt;const&lt;/code&gt; 함수가 먼�
+&lt;p&gt;초기화 �
