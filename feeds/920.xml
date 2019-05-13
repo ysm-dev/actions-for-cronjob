@@ -2155,4 +2155,34 @@ Learning rate의 경우 처음 60k mini-batches에 대해서는 0.001, 그 다�
 
 &lt;h1 id=&quot;processing-tips&quot;&gt;Processing Tips&lt;/h1&gt;
 
-&lt;h2 id=&quot;non-maximum-suppression&quot;&g
+&lt;h2 id=&quot;non-maximum-suppression&quot;&gt;Non-Maximum Suppression&lt;/h2&gt;
+
+&lt;p&gt;Faster R-CNN에 대한 학습이 완료된 후, RPN 모델을 예측시키면 아마도 한 객체당 여러개의 proposals (bounding boxes) 값을 얻을 것 입니다. 이유는 anchors자체가 어떤 객체에 중복이 되기 때문에 proposals 또한 여러개가 되는 것 입니다.&lt;/p&gt;
+
+&lt;p&gt;문제를 해결하기 위해서 non-maximum suppression (NMS) 알고리즘을 사용해서 proposals의 갯수를 줄이도록 합니다. NMS를 간단히 설명하면 먼저 IoU값으로 proposals을 모두 정렬시켜놓은뒤,  RoI점수가 가장 높은 proposal과 다른 proposals에 대해서 overlapping을 비교한뒤 overlapping이 높은 것은 특정 threshold이상이면 지워버리며 이 과정을 iterate돌면서 삭제시킵니다.&lt;/p&gt;
+
+&lt;p&gt;직관적으로 설명하면 RoI가 높은 bounding box가 있는데.. 이 놈하고 overlapping 되는 녀석들중 특정 threshold이상이면 proposals에서 삭제시켜버리는 형태입니다. 그러면 서로 오버랩은 되지 않으면서 RoI가 높은 녀석들만 남게 됩니다.&lt;/p&gt;
+
+&lt;p&gt;일반적으로 threshold의 값은 0.6~0.9 정도로 합니다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/faster-rcnn-nms-algo.jpg&quot; class=&quot;img-responsive img-rounded mx-auto d-block img-fluid&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;NMS 는 training시에도 학습 속도를 높이기 위해서 사용 할 수 있습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;roi-removed-model&quot;&gt;ROI-Removed Model&lt;/h2&gt;
+
+&lt;p&gt;만약 구분해야 될 클래스가 1개밖에 없을때는 RPN만 사용해서 구현이 가능합니다.
+객체인지 아니면 배경인지를 구분하는 classifier자체를 사용해서 클래스를 구별해주면 됩니다.&lt;/p&gt;
+
+&lt;p&gt;비젼에서 가장 대표적인 예가 face detection 그리고 text detection등이 있습니다.
+RPN만 사용하게 됨으로 당연히 training 그리고 inference의 속도는 매우 빨라지게 됩니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;fixed-size-resize-instead-of-roi-pooling&quot;&gt;Fixed-size Resize instead of ROI Pooling&lt;/h2&gt;
+
+&lt;p&gt;Region of Interest Pooling 대신 object detection을 실제 구현할때 그냥 더 많이 쓰이고 쉬운 방법이 있습니다.
+각각의 convolutional feature map을 각각의 proposal로 crop을 시킨뒤에, copped된 이미지를 고정된 크기 14 x 14 x depth 로 interpolation (보통 bilinear)을 사용하여 resize 시킵니다. 이후 2 x 2 kernel을 사용하여 7 x 7 x depth 형태의 feature map으로 max pooling시켜줍니다.&lt;/p&gt;
+
+&lt;p&gt;위에서 사용된 크기나 값들은 그 다음에 사용될 block (보통 fully-connected dense layer)에 따라서 결정됨으로 다양하게 바뀔수 있습니다.&lt;/p&gt;
+</descripti
