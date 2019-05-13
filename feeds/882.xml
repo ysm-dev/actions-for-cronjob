@@ -8,7 +8,7 @@
 email : wedul.chul@gmail.com
 github : github.com/weduls</description>
 <language>ko</language>
-<pubDate>Mon, 13 May 2019 22:33:13 +0900</pubDate>
+<pubDate>Mon, 13 May 2019 22:52:45 +0900</pubDate>
 <generator>TISTORY</generator>
 <managingEditor>wedul</managingEditor>
 <image>
@@ -20,6 +20,188 @@ github : github.com/weduls</description>
 email : wedul.chul@gmail.com
 github : github.com/weduls</description>
 </image>
+<item>
+<title>Redis Cluster mode에서 mget, mset, pipeline과 같은 멀티 키 명령어 사용하기.</title>
+<link>https://wedul.site/607</link>
+<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고1 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-9436108597713486&quot;
+     data-ad-slot=&quot;4177416649&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;float:right;margin:0 0 10px 10px;&quot;&gt;&lt;ins class=&quot;kakao_ad_area&quot; style=&quot;display:none;&quot; 
+ data-ad-unit    = &quot;DAN-trqse87bff52&quot; 
+ data-ad-width   = &quot;250&quot; 
+ data-ad-height  = &quot;250&quot;&gt;&lt;/ins&gt; 
+&lt;script type=&quot;text/javascript&quot; src=&quot;//t1.daumcdn.net/adfit/static/ad.min.js&quot; async&gt;&lt;/script&gt;&lt;/div&gt;&lt;p&gt;redis에 만약 200 ~ 300개가 넘는 캐시 정보를 계속 request를 날리면 레이턴시가 발생할 가능성이 크기 때문에 이런경우에 mget, mset, pipeline 등 멀티키 명령어를 사용한다.&lt;/p&gt;
+&lt;p&gt;하지만 redis가 single mode일 때는 아무 상관이 없지만 cluster mode인경우에는 다음과 같은 오류를 발생 시킨다.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;&quot;CROSSSLOT&amp;nbsp;Keys&amp;nbsp;in&amp;nbsp;request&amp;nbsp;don't&amp;nbsp;hash&amp;nbsp;to&amp;nbsp;the&amp;nbsp;same&amp;nbsp;slot&quot;&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;무슨 오류일까?? 처음에 redis가 싱글모드로 돌고 있던 stage에서 테스트를 해서 정상적으로 멀티키 명령어가 잘 되는줄 알고 배포 했다가 라이브에서 위와 같은 오류가 발생했다...&lt;/p&gt;
+&lt;p&gt;너무 당황해서 바로 수정했다.&lt;/p&gt;
+&lt;p&gt;무엇이 문제 였을까? 하면서 문서를 찾아보니 redis에는&amp;nbsp;16384의 키 슬롯이 있는데 클러스터 모드인 경우 이 키 슬롯들이 각 node에 분할되기 때문에 멀티키 명령어를 사용할 수 없다고 한다.&lt;/p&gt;
+&lt;p&gt;만약 멀티키 명령어를 사용하고 싶다면 그 키들은 모두 같은 키 슬롯에 들어있어야 한다.&lt;/p&gt;
+&lt;p&gt;방법은 다음과 같다.&lt;/p&gt;
+&lt;h4&gt;&amp;nbsp;&lt;/h4&gt;
+&lt;h4&gt;&lt;b&gt;같은 키 슬롯에 데이터 넣기&lt;/b&gt;&lt;/h4&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
+&lt;p&gt;동일한 키 슬롯에 저장하고 싶으면 강제로 지정하는 해야한다. 이때 저장하고자 하는 키들 앞에 {..}의 값을 붙여주고 저장하는 것이다. 예를 들어 저장하고자 하는 데이터에 {product}.products1,&amp;nbsp;&lt;span style=&quot;color: #333333;&quot;&gt;{product}.products2로 저장하면 이 두개는 동일한 키 슬롯에 포함되게 된다.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;이는 aws elasticcache페이지에 상세히 나와있으니 참고하면 된다.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot;color: #333333;&quot;&gt;&lt;a href=&quot;https://aws.amazon.com/ko/premiumsupport/knowledge-center/elasticache-crossslot-keys-error-redis/&quot;&gt;https://aws.amazon.com/ko/premiumsupport/knowledge-center/elasticache-crossslot-keys-error-redis/&lt;/a&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;figure id=&quot;og_1557753147142&quot; contenteditable=&quot;false&quot; data-ke-type=&quot;opengraph&quot;&gt;&lt;a href=&quot;https://aws.amazon.com/ko/premiumsupport/knowledge-center/elasticache-crossslot-keys-error-redis/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot; data-original-url=&quot;https://aws.amazon.com/ko/premiumsupport/knowledge-center/elasticache-crossslot-keys-error-redis/&quot;&gt;
+&lt;div class=&quot;og-image&quot; style=&quot;background-image: url('https://scrap.kakaocdn.net/dn/c3cO3w/hyA9ccw54T/YUPix76vWuiygE7X1e3Ejk/img.png?width=1200&amp;amp;height=630&amp;amp;face=0_0_1200_630');&quot;&gt;&amp;nbsp;&lt;/div&gt;
+&lt;div class=&quot;og-text&quot;&gt;
+&lt;p class=&quot;og-title&quot;&gt;ElastiCache 오류 &quot;CROSSSLOT Keys in request don't hash to the same slot&quot; 해결&lt;/p&gt;
+&lt;p class=&quot;og-desc&quot;&gt;이 오류는 키가 동일한 노드가 아니라, 동일한 해시 슬롯에 있어야 하기 때문에 발생합니다. 샤딩된 Redis ElastiCache 클러스터(클러스터 모드 활성화됨)에서 다중 키 작업을 구현하려면 키는 동일한 해시 슬롯으로 해시되어야 합니다. 해시 태그를 사용하여 키를 동일한 해시 슬롯에 강제로 배치할 수 있습니다. 이 예제에서는 &quot;myset2&quot; 및 &quot;myset&quot; 세트가 동일한 노드에 있습니다. 이 오류를 해결하려면 해시 태그를 사용하여 키를 동일한 해시&lt;/p&gt;
+&lt;p class=&quot;og-host&quot;&gt;aws.amazon.com&lt;/p&gt;
+&lt;/div&gt;
+&lt;/a&gt;&lt;/figure&gt;
+&lt;p&gt;하지만 여기서 중요한건, 우리가 클러스터 모드를 사용하는 이유는 한군데이 집중시키지 않고 값을 분산시켜서 부하를 막기 위해서인데 이를 하나의 키 슬롯에 데이터를 모두 집어 넣을 경우 의미가 없어진다.&lt;/p&gt;
+&lt;p&gt;그럼 키를 각 노드마다 분산시키면서 멀티키 명령어를 사용할 수 있는 방법이 있을까?&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h4&gt;&lt;b&gt;클러스터 모드에서 각 노드별 key slot에 데이터 삽입하여 멀티 명령어 사용하기&lt;/b&gt;&lt;/h4&gt;
+&lt;hr contenteditable=&quot;false&quot; data-ke-type=&quot;hr&quot; data-ke-style=&quot;style5&quot; /&gt;
+&lt;p&gt;생각을 바꿔보았다. 싱글모드에서는 키 슬롯&amp;nbsp;16384개가 존재하고 mset, mget, pipeline등의 명령어가 사용 가능했다.&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;그럼 각 노드를 하나의 싱글모드의 레디스라고 생각하면 어떨까? 하는 생각으로 전략을 바꿔봤다.&lt;/p&gt;
+&lt;p&gt;처음에는 가능할지 모르고 작업을 진행했는데 정상적으로 동작해서 기분이 좋았다.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;#작업 순서 (명령어는 ioredis를 기준으로 작성하였다.)&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;1. 클러스터 모드에서 동작중인 master node에 대한 정보를 가져온다. (cluster mode에는 master 노드와 slave노드가 있는데 slave node는 단순 readonly이고 마스터 노드 값을 가지고 있기 때문에 가져올 필요 없다.)&lt;/p&gt;
+&lt;pre id=&quot;code_1557754020588&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;const masterNodes = redis.nodes('master')&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;2. 각 노드별 key slot 현황을 확인하고 masterNode와 매핑한다. key slot 현황을 확인하기 위해서는 cluster slots 사용한다. ioredis에서는 redis.cluster('slots')&lt;/p&gt;
+&lt;pre id=&quot;code_1557754168549&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;127.0.0.1:7001&amp;gt; cluster slots
+1) 1) (integer) 0
+   2) (integer) 4095
+   3) 1) &quot;127.0.0.1&quot;
+      2) (integer) 7000
+   4) 1) &quot;127.0.0.1&quot;
+      2) (integer) 7004
+2) 1) (integer) 12288
+   2) (integer) 16383
+   3) 1) &quot;127.0.0.1&quot;
+      2) (integer) 7003
+   4) 1) &quot;127.0.0.1&quot;
+      2) (integer) 7007
+3) 1) (integer) 4096
+   2) (integer) 8191
+   3) 1) &quot;127.0.0.1&quot;
+      2) (integer) 7001
+   4) 1) &quot;127.0.0.1&quot;
+      2) (integer) 7005
+4) 1) (integer) 8192
+   2) (integer) 12287
+   3) 1) &quot;127.0.0.1&quot;
+      2) (integer) 7002
+   4) 1) &quot;127.0.0.1&quot;
+      2) (integer) 7006&lt;/code&gt;&lt;/pre&gt;
+&lt;pre id=&quot;code_1557754307445&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;const slots = await redis.cluster('slots');
+
+// 각 슬롯정보에 있는 ip, port정보를 확인하여 각 master와 슬롯의 범위를 정리한다.
+{
+ 'ip' : ,
+ 'port' : ,
+ 'node' : masterNode[0],
+ 'slotStart' : 0
+ 'slotEnd': 4460
+},
+{
+ 'ip' : ,
+ 'port' : ,
+ 'node' : masterNode[1],
+ 'slotStart' : 4461
+ 'slotEnd': 8845
+},
+.
+..
+...
+....
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;3. 찾고자하는 키들의 slot 정보를 정리하고 slot 범위에 맞는 오브젝트에 키 값을 배열에 정리한다. slot 정보를 뽑는 알고리즘이 CRC16이기 때문에 이를 이용해서 구할수도 있고 npm에 모듈로 나와있는게 있으니 활용해도 된다. (&lt;a href=&quot;https://www.npmjs.com/package/cluster-key-slot&quot;&gt;https://www.npmjs.com/package/cluster-key-slot&lt;/a&gt;)&lt;/p&gt;
+&lt;pre id=&quot;code_1557754484340&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;{
+ 'ip' : ,
+ 'port' : ,
+ 'node' : masterNode[0],
+ 'slotStart' : 0
+ 'slotEnd': 4460,
+ 'keys': ['product::1', 'product::2', 'product::5'] // 범위가 0 ~ 4460에 속하고 masterNode[0]에 존재하는 키 슬롯에 저장되는 키들
+},
+{
+ 'ip' : ,
+ 'port' : ,
+ 'node' : masterNode[1],
+ 'slotStart' : 4461
+ 'slotEnd': 8845,
+ 'keys': ['product::4', 'product::3', 'product::6'] // 범위가 4461 ~ 8845에 속하고 masterNode[1]에 존재하는 키 슬롯에 저장되는 키들
+},
+.
+..
+...
+....&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;4. 그리고 정리된 Object를 순회하면서 각 키에 있는 데이터를 조회하기 위한 pipeline을 생성하고 get명령어를 매핑하고 실행시킨다. 없는 데이터는 pipeline을 set으로 설정하고 exec 실행시킨다.&lt;/p&gt;
+&lt;pre id=&quot;code_1557755048595&quot; class=&quot;javascript&quot; data-ke-type=&quot;codeblock&quot;&gt;&lt;code&gt;const objs = [{
+ 'ip' : ,
+ 'port' : ,
+ 'node' : masterNode[0],
+ 'slotStart' : 0
+ 'slotEnd': 4460,
+ 'keys': ['product::1', 'product::2', 'product::5']
+},
+{
+ 'ip' : ,
+ 'port' : ,
+ 'node' : masterNode[1],
+ 'slotStart' : 4461
+ 'slotEnd': 8845,
+ 'keys': ['product::4', 'product::3', 'product::6']
+}];
+
+for(const obj of objs) {
+ const pipeline = obj.node.pipeline();
+ 
+ obj.keys.forEach(keySlot =&amp;gt; pipeline.get(key =&amp;gt; pipeline.get);
+ 
+ // 결과
+ const ret = await keys.exec();
+ 
+ //..... 없으면 없는 것들은 set로 pipeline 열어서 설정(예를 들어서 keys 배열에 1, 2번째 값이 없다고 가정)
+ const setPipeline = obj.node.pipeline();
+ 
+ pipeline.set(obj.keys[1]);
+ pipeline.set(obj.keys[2]);
+ 
+ await setPipeline.exec();
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;소스를 모두 다 적기에는 양도 많기 때문에 간단하게 내가 진행한 방식에 대한 설명만 적었다.&lt;/p&gt;
+&lt;p&gt;이 글을 보고 방법을 찾고자 하는 사람들에게 도움이 되지 않을수도 있지만&amp;nbsp; 클러스터 모드에서 레디스의 멀티키 사용법에 대해 자료가 없어서 고민을 많이 했었기 때문에 &lt;span style=&quot;color: #333333;&quot;&gt;작은 힌트라도 되었으면 좋겠다.&lt;/span&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 반응형 광고1 --&gt;
+&lt;ins class=&quot;adsbygoogle&quot;
+     style=&quot;display:block&quot;
+     data-ad-client=&quot;ca-pub-9436108597713486&quot;
+     data-ad-slot=&quot;4177416649&quot;
+     data-ad-format=&quot;auto&quot;
+     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+&lt;script&gt;
+(adsbygoogle = window.adsbygoogle || []).push({});
+&lt;/script&gt;&lt;/div&gt;</description>
+<category>Nosql</category>
+<category>Cluster</category>
+<category>cluster mode</category>
+<category>ioredis</category>
+<category>mget</category>
+<category>multi key</category>
+<category>node</category>
+<category>nodejs</category>
+<category>Pipeline</category>
+<category>redis</category>
+<category>레디스</category>
+<author>위들 wedul</author>
+<guid>https://wedul.site/607</guid>
+<comments>https://wedul.site/607#entry607comment</comments>
+<pubDate>Mon, 13 May 2019 22:48:59 +0900</pubDate>
+</item>
 <item>
 <title>DDD. DIP 의존 역전 원칙</title>
 <link>https://wedul.site/606</link>
@@ -1120,76 +1302,6 @@ public Account(int value, String accountNumber) throws Exception {
 <guid>https://wedul.site/598</guid>
 <comments>https://wedul.site/598#entry598comment</comments>
 <pubDate>Sat, 27 Apr 2019 16:18:04 +0900</pubDate>
-</item>
-<item>
-<title>크레마 사운드(sound) 개봉 및 사용기</title>
-<link>https://wedul.site/597</link>
-<description>&lt;div class=&quot;tt_adsense_top&quot; style=&quot;margin-bottom:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 광고1 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-9436108597713486&quot;
-     data-ad-slot=&quot;4177416649&quot;
-     data-ad-format=&quot;auto&quot;
-     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-(adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;&lt;/div&gt;&lt;div style=&quot;float:right;margin:0 0 10px 10px;&quot;&gt;&lt;ins class=&quot;kakao_ad_area&quot; style=&quot;display:none;&quot; 
- data-ad-unit    = &quot;DAN-trqse87bff52&quot; 
- data-ad-width   = &quot;250&quot; 
- data-ad-height  = &quot;250&quot;&gt;&lt;/ins&gt; 
-&lt;script type=&quot;text/javascript&quot; src=&quot;//t1.daumcdn.net/adfit/static/ad.min.js&quot; async&gt;&lt;/script&gt;&lt;/div&gt;&lt;p&gt;생일이 돌아왔다.&lt;/p&gt;
-&lt;p&gt;생일선물로 어떠한 것도 받고 싶은게 없었지만 그래도 하나 꼽자면 출퇴근시 가지고 다닐 이북 리더기를 가지고 싶었다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;휴대폰으로 이북을 자주보고 있었지만 아무래도 눈이 너무 피로해져서 금방 보지 않게되었다.&lt;/p&gt;
-&lt;p&gt;화면도 작고 자꾸 다른 메시지나 인터넷 유혹에 벗어나지 못해서도 있었다 ㅋㅋㅋ&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;그래서 여자친구와 같이 잠실에 알라딘을 방문하여 크레마 사운드를 샀다.&lt;/p&gt;
-&lt;p&gt;크레마 그랑데도 있었지만 굳이 10만원 더주고 비싼걸 사고 싶지 않았다. 두 개의 큰 차이도 없을 뿐더러 더 무겁다.&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/bAP3j8/btquz8Db9xi/I5JMJ8L96RRECVCccRGk40/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/bAP3j8/btquz8Db9xi/I5JMJ8L96RRECVCccRGk40/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FbAP3j8%2Fbtquz8Db9xi%2FI5JMJ8L96RRECVCccRGk40%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;굉장히 고급진 포장을 하고 있다.&lt;/p&gt;
-&lt;p&gt;몬가 지식인이 된 기분 ㅋㅋ&lt;/p&gt;
-&lt;p&gt;알라딘에서 구매 시 친절하게 문제가 있을 시 다음과 같이 조치하라고 안내해주셨다.&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/cxX8fN/btquAyBzssi/C4fRpy0xA9lVRHniEnAQ9k/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/cxX8fN/btquAyBzssi/C4fRpy0xA9lVRHniEnAQ9k/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FcxX8fN%2FbtquAyBzssi%2FC4fRpy0xA9lVRHniEnAQ9k%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;기기가 조금 오래되서 그런지 안드로이드 업데이트와 내부에 있는 이북 리더 어플이 업데이트 되었다. 안드로이를 오랜만에 보니 몬가 반가웠다.&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/Yowxz/btquCiqNhuI/PLM8k4vZKVnLrUwpykpZdK/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/Yowxz/btquCiqNhuI/PLM8k4vZKVnLrUwpykpZdK/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2FYowxz%2FbtquCiqNhuI%2FPLM8k4vZKVnLrUwpykpZdK%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;실제로 켜보니 내용이 무슨 볼펜으로 쓴거같이 보였다.&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;확실히 눈이 덜 피로하다. 이쁘다 ㅋㅋㅋ&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;&lt;figure class='imageblock alignLeft'&gt;&lt;span data-url='https://k.kakaocdn.net/dn/p4syG/btquBbFUZZm/ZlNQfnHnPN6JDtlKor9y31/img.png' data-lightbox='lightbox' data-alt=''&gt;&lt;img src='https://k.kakaocdn.net/dn/p4syG/btquBbFUZZm/ZlNQfnHnPN6JDtlKor9y31/img.png' srcset='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory&amp;fname=https%3A%2F%2Fk.kakaocdn.net%2Fdn%2Fp4syG%2FbtquBbFUZZm%2FZlNQfnHnPN6JDtlKor9y31%2Fimg.png' width=&quot;660&quot;&gt;&lt;/span&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;케이스랑 액보필은 굳이 필요없을 것 같다.&lt;/p&gt;
-&lt;p&gt;어차피 떨어지면 깨질테니 조심히 가지고 다니는게 장땡이다.&lt;/p&gt;
-&lt;p&gt;그리고 애초에 없다. 그랑데는 조금 케이스나 액보필이있지만 사운드의 경우에는 거의 존재하지 않는다.&lt;/p&gt;
-&lt;p&gt;&amp;nbsp;&lt;/p&gt;
-&lt;p&gt;내부에 서재에서 yes24, 알라딘과 같은 여러 사이트와 계정을 연동하여 이북을 내려받을 수 있다.&lt;/p&gt;
-&lt;p&gt;기대된다. 많이 읽어보자 책&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 광고1 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-9436108597713486&quot;
-     data-ad-slot=&quot;4177416649&quot;
-     data-ad-format=&quot;auto&quot;
-     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-(adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;&lt;/div&gt;</description>
-<category>상품리뷰</category>
-<category>Crema</category>
-<category>EBOOK</category>
-<category>sound</category>
-<category>알라딘</category>
-<category>이북</category>
-<category>이북 리더기</category>
-<category>책</category>
-<category>크레마</category>
-<category>크레마 그랑데</category>
-<category>크레마 사운드</category>
-<author>위들 wedul</author>
-<guid>https://wedul.site/597</guid>
-<comments>https://wedul.site/597#entry597comment</comments>
-<pubDate>Tue, 16 Apr 2019 23:57:58 +0900</pubDate>
 </item>
 </channel>
 </rss>
