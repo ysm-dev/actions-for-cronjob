@@ -1822,33 +1822,4 @@ Caption은 일이 좀 커질 것 같아서..</p>
 <p><img class="center" src="http://SanghyukChun.github.io/images/post/93-3.png" width="300" /></p>
 
 <p>이때 1번 식의 $i_t,f_t ,c_t ,o_t ,h_t $는 각각 input, forget, memory, output, hidden state를 의미한다. 이 논문은 LSTM의 initial memory state와 hidden state를 $a$의 평균 $\bar a = \frac{1}{L}\sum_i^L a_i$을 input으로 하는 두 개의 MLP ($f_{init,c}$ $f_{init,h}$)로 estimate한다고 한다.</p>
-<p>그럼 이제 LSTM cell 하나에 input으로 들어오는 $Ey_{t-1}, h_{t-1}, \hat z_t$에 대해 알아보자. $h_{t-1}$은 바로 전 hidden state이니 제외하고, $Ey_{t-1} $는 $t-1$ 시점에서 생성된 caption $y_{t-1}$을 embedding matrix $E \in \mathbb R^{m \times K}$로 embedding한 $m$ dimensional vector이다. $E$는 맨 처음에 randomly initialize를 한 이후 train 과정에서 update되는 parameter이다. 마지막으로 $\hat z \in \mathbb R^D$는 context vector라고 하는데, 이 context vector는 attention model들에 의해서 결정된다.</p>
-
-<p>Context vector $\hat z_t$는 CNN encoder output $a$와 바로 전 hidden state $h_{t-1}$에 의해 다음과 같이 결정된다.</p>
-
-<p>$$ \hat z_t = \phi (a, \alpha_t), \mbox{ where } \alpha_{ti} = \frac{\exp(f_{att}(a_i, h_{t-1}))}{\sum_{k=1}^L \exp(f_{att}(a_k, h_{t-1}) )}. $$</p>
-
-<p>먼저 $\alpha_t$는 time $t$에서의 $a$의 weight vector를 의미하며, $\alpha_{ti}$는 time $t$에서의 $a$의 $i$번째 element $a_i$에 해당하는 weight value값이다. 이때 weight란, 우리가 주어진 annotation (CNN의 output) 중에서 어느 location에 focus를 맞출 것인지, 혹은 어떤 것이 중요하지 않은지를 결정하는 값으로, 모델에서 &#8216;attention&#8217; 개념이 적용된 부분이다. 위의 식에서 알 수 있듯, softmax로 정의가 되기 때문에, weight $\alpha_t$의 element-wise summation은 1이다. $f_{att}$는 attention model이라는 것으로, weight vector $\alpha$를 계산하기 위한 모델이며, 이 논문은 이 모델을 hard와 soft 두 가지로 정의하였다. $\phi$ function은 주어진 $a$와 그것의 weight vector $\alpha_t$를 사용해 $\hat z_t$를 계산하기 위한 function이다. 정리해보면 다음과 같다.</p>
-
-<ul>
-	<li><p>$\alpha_t$: $a$의 weight vector로, 어디에 &#8216;attend&#8217; 할지 결정하는 값. 모두 더하면 1.</p></li>
-	<li><p>$f_{att}$: $a$와 $h_{t-1}$을 사용해 weight vector $\alpha$를 계산하기 위한 attention model.</p></li>
-	<li><p>$\phi$: $a$와 $\alpha_t$를 받아 $\hat z$를 계산하는 mechanism (예: $\phi(a,\alpha_t) = \sum_i\alpha_{ti} a$).</p></li>
-</ul>
-
-<p>마지막으로, 모델이 주어졌을 때, time $t$에서의 단어 $y_t$는 다음과 같이 바로 전 context vector $\hat z_{t-1}$와 그 동안의 LSTM의 state를 저장하고 있는 hidden state $h_t$, 그리고 바로 직전 단어 $y_{t-1}$에 관련된 확률에 의해 결정된다.</p>
-
-<p>$$p (y_t | a, y^{t-1}_1) \propto \exp(L_o(E y_{t-1} + L_h h_t + L_z \hat z_t)). $$</p>
-
-<p>여기에서 $L_o \in \mathbb R^{K \times m}, L_h \in \mathbb R^{m \times n} L_z \in \mathbb R^{m \times D}, E \in \mathbb R^{m \times K} $는 train과정에서 learning하는 parameter들이다.</p>
-
-<p>이제 이 논문의 핵심인 attention model $f_{att}$들을 살펴보도록하자.</p>
-
-<h3>Stochastic &#8220;Hard&#8221; Attention</h3>
-
-<p>캡션 모델이 i번째 단어를 생성하기 위해 focus attention해야 하는 위치를 $s_t$라고 하는 location variable을 사용해 표현해보자. 우리가 원하는 벡터는 정확하게 focus해야하는 부분 한 부분만 값이 1이고 나머지는 전부 0인 벡터이다.</p>
-<p>첫 번째 attention model인 stochastic &#8220;hard&#8221; attention은 attention location $s_t$를 latent variable로 취급한 다음, 이 값을 $\alpha_t$로 multinoulli distiribution parameterize시킨다. 다시 말하면, 주어진 시간 $t$에서, $s_t$의 $i$번째 element s_{ti}의 값이 1이 될 확률이 $\alpha_{ti}$이 되는 것이며, 주어진 시간 $t$에서 모든 $i$에 대해 $\alpha_{ti}$를 더하면 그 값은 1이 된다. 즉, $\sum_i \alpha_{ti} = 1$ 이다. $s_t$와 $\alpha_t$를 정의하게 되면 $\hat z_t$라는 새로운 random variable을 다음과 같이 정의할 수 있다.</p>
-
-<p>$$p(s_{ti} = 1 | s_{j &#60; t, a}) = \alpha_{ti} \mbox{ and } \hat z_t = \sum_i s_{ti} a_i. $$</p>
-
-<p>우리의 목표는 주어진 feature vector $a$에 대해 가장 확률이 높은 caption $y$를 고르는 것이다. 이 작업은 간단하게 maximum log likelihood $\max_y \log p(y|a)$를 계산하는 것으로 구할 수 있는데, 이 값을 직접 계산하는 대신, 앞에서 정의한 attention location $s_t$를 사용하게 된다면 log likelih
+<p>그럼 이제 LSTM cell 하나에 input으로 들어오는 $Ey_{t-1}, h_{t-1}, \hat z_t$에 대해 알아보자. $h_{t-1}$은 바로 전 hidden state이니 제외하고, $Ey_{t-1} $는 $t-1$ 시점에서 생성된 caption $y_{t-1}$을 embedding matrix $E \in \mathbb R^{m \times K}$로 embedding한 $m$ dimensional vector이다. $E$는 맨 처음에 randomly initialize를 한 이후 train 과정에서 update되는 parameter이다. 마지막으로 $\hat z \in \mathbb R^D$는 context vector라�
