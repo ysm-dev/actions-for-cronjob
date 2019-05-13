@@ -1436,35 +1436,4 @@ volumes:
 &lt;hr&gt;
 &lt;p&gt;&lt;a href=&quot;https://ridibooks.com/v2/Detail?id=2855000005&quot;&gt;리디북스 링크&lt;/a&gt;&lt;/p&gt;</content:encoded></item><item><title><![CDATA[AWS ElasticSearch Service에 있던 데이터를 로컬 ES로 백업하기 + 한글 형태소 분석기 붙이기]]></title><link>https://blog.hyeungshikjung.com/docker-compose-elasticsearch/</link><guid isPermaLink="false">https://blog.hyeungshikjung.com/docker-compose-elasticsearch/</guid><pubDate>Thu, 21 Sep 2017 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;상황: 과제할 때 쓰던 AWS ElasticSearch Service 가 요금이 많이 나와서 데이터를 백업하고자 한다. 그런데 혹시 나중에 코드를 돌려야할 수 있으니 연구실에 노는 컴퓨터에 ES 를 깔아서 옮기고 싶다. 블로그 포스팅들이 많은데 은근히 최근 문서가 없으니 내가 한 번 적어보자.&lt;/p&gt;
 &lt;h3&gt;도커 이미지 찾아보기&lt;/h3&gt;
-&lt;p&gt;공식 사이트에 친절하게 시작할 도커 이미지와 &lt;a href=&quot;https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run-prod-mode&quot;&gt;설명&lt;/a&gt;이 나와있다. 여기에 필요에 따라 몇 줄을 바꾼다. 바꾼 사항은&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;램을 컨테이너 2 기가 / JVM 1 기가로 늘림 (이 컴퓨터는 램이 32 기가다) -&gt; environment 의 &lt;code class=&quot;language-text&quot;&gt;ES_JAVA_OPTS&lt;/code&gt; 랑 &lt;code class=&quot;language-text&quot;&gt;mem_limit&lt;/code&gt;을 수정&lt;/li&gt;
-&lt;li&gt;볼륨을 도커가 설치된 폴더 대신 하드디스크로 (SSD 는 소중하니까) -&gt; volumes&lt;/li&gt;
-&lt;li&gt;키바나 이미지를 붙임세가지 였다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;div class=&quot;gatsby-highlight&quot;&gt;
-      &lt;pre class=&quot;language-yml&quot;&gt;&lt;code class=&quot;language-yml&quot;&gt;version: &amp;#39;2&amp;#39;
-services:
-  elasticsearch1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.1
-    container_name: elasticsearch1
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - &amp;quot;ES_JAVA_OPTS=-Xms1g -Xmx1g&amp;quot;
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    mem_limit: 2g
-    volumes:
-      - esdata1:/usr/share/elasticsearch/data
-    ports:
-      - 9200:9200
-    networks:
-      - esnet
-  elasticsearch2:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.1
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=t
+&lt;p&gt;공식 사이트에 친절하게 시작할 도커 이미지와 &lt;a href=&quot;https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run-prod-mode&quot;&gt;설명&lt;/a&gt;이 나와있다. 여기에 필요에 따라 몇 줄을 바꾼다. 바꾼 사�
