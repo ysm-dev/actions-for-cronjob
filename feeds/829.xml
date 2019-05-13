@@ -1822,13 +1822,4 @@ Caption은 일이 좀 커질 것 같아서..</p>
 <p><img class="center" src="http://SanghyukChun.github.io/images/post/93-3.png" width="300" /></p>
 
 <p>이때 1번 식의 $i_t,f_t ,c_t ,o_t ,h_t $는 각각 input, forget, memory, output, hidden state를 의미한다. 이 논문은 LSTM의 initial memory state와 hidden state를 $a$의 평균 $\bar a = \frac{1}{L}\sum_i^L a_i$을 input으로 하는 두 개의 MLP ($f_{init,c}$ $f_{init,h}$)로 estimate한다고 한다.</p>
-<p>그럼 이제 LSTM cell 하나에 input으로 들어오는 $Ey_{t-1}, h_{t-1}, \hat z_t$에 대해 알아보자. $h_{t-1}$은 바로 전 hidden state이니 제외하고, $Ey_{t-1} $는 $t-1$ 시점에서 생성된 caption $y_{t-1}$을 embedding matrix $E \in \mathbb R^{m \times K}$로 embedding한 $m$ dimensional vector이다. $E$는 맨 처음에 randomly initialize를 한 이후 train 과정에서 update되는 parameter이다. 마지막으로 $\hat z \in \mathbb R^D$는 context vector라고 하는데, 이 context vector는 attention model들에 의해서 결정된다.</p>
-
-<p>Context vector $\hat z_t$는 CNN encoder output $a$와 바로 전 hidden state $h_{t-1}$에 의해 다음과 같이 결정된다.</p>
-
-<p>$$ \hat z_t = \phi (a, \alpha_t), \mbox{ where } \alpha_{ti} = \frac{\exp(f_{att}(a_i, h_{t-1}))}{\sum_{k=1}^L \exp(f_{att}(a_k, h_{t-1}) )}. $$</p>
-
-<p>먼저 $\alpha_t$는 time $t$에서의 $a$의 weight vector를 의미하며, $\alpha_{ti}$는 time $t$에서의 $a$의 $i$번째 element $a_i$에 해당하는 weight value값이다. 이때 weight란, 우리가 주어진 annotation (CNN의 output) 중에서 어느 location에 focus를 맞출 것인지, 혹은 어떤 것이 중요하지 않은지를 결정하는 값으로, 모델에서 &#8216;attention&#8217; 개념이 적용된 부분이다. 위의 식에서 알 수 있듯, softmax로 정의가 되기 때문에, weight $\alpha_t$의 element-wise summation은 1이다. $f_{att}$는 attention model이라는 것으로, weight vector $\alpha$를 계산하기 위한 모델이며, 이 논문은 이 모델을 hard와 soft 두 가지로 정의하였다. $\phi$ function은 주어진 $a$와 그것의 weight vector $\alpha_t$를 사용해 $\hat z_t$를 계산하기 위한 function이다. 정리해보면 다음과 같다.</p>
-
-<ul>
-	<li><p>$\alpha_t$: $a$의 weight vector로, 어디에 &
+<p>그럼 이제 LSTM cell 하나에 input으로 들어오는 $Ey_{t-1}, h_{t-1}, \hat z_t$에 대해 알아보자. $h_{t-1}$은 바로 전 hidden state이니 제외하고, $Ey_{t-1} $는 $t-1$ 시점에서 생성된 caption $y_{t-1}$을 embedding matrix $E \in \mathbb R^{m \times K}$로 embedding한 $m$ dimensional vector이다. $E$는 맨 처음에 randomly initialize를 한 이후 train 과정에서 update되는 parameter이다. 마지막으로 $\hat z \in \mathbb R^D$는 context vector라고 
