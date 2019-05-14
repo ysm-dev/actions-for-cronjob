@@ -466,4 +466,260 @@ $ kubectl expose deployment/kubernetes-bootcamp &#8211;type=&#8221;NodePort&#822
 <p class="p4">$ eval $(docker-machine env myvm1)</p>
 <p class="p4">Swarm init<span class="s2">하는데</span> eth <span class="s2">둘중</span> <span class="s2">하나</span> <span class="s2">선택하란다</span>. <span class="s2">아까</span> <span class="s2">이거</span> <span class="s2">때문에</span> <span class="s2">안됐나</span>??</p>
 <p class="p4">$ docker swarm init</p>
-<p class="p4"><span class="
+<p class="p4"><span class="s2">그럼</span> 192.168…<span class="s2">로</span> <span class="s2">시작하는</span> eth1<span class="s2">로</span> <span class="s2">지정해주지</span></p>
+<p class="p4">$ docker swarm init &#8211;advertise-addr eth1</p>
+<p class="p4">myvm2<span class="s2">를</span> swarm<span class="s2">에</span> join<span class="s2">해주고</span>.. <span class="s2">다시</span> <span class="s2">앱</span> <span class="s2">배포하고</span></p>
+<p class="p4">$ docker-machine ssh myvm2 “<span class="s2">조인</span> <span class="s2">명령어</span>”</p>
+<p class="p4">$ docker stack deploy -c docker-compose.yml getstartedlab</p>
+<p class="p1">서비스상태<span class="s1">, IP</span>다시 확인해보고 브라우저로<span class="s1"> 80, 8080 </span>들어가봤다<span class="s1">.</span></p>
+<p class="p4">$ docker stack ps getstartedlab</p>
+<p class="p4">$ docker service ls</p>
+<p class="p4">$ docker-machine ls</p>
+<p class="p1">이제야 잘 나온다<span class="s1">.</span></p>
+<p class="p1">이제 레디스를 붙여보자</p>
+<p class="p1"><span class="s1">yml</span>수정하기</p>
+<p class="p2"><a href="https://docs.docker.com/get-started/part5/">https://docs.docker.com/get-started/part5/</a></p>
+<p class="p4">myvm1<span class="s2">에</span> ./data <span class="s2">디펙토리</span> <span class="s2">생성</span></p>
+<p class="p4">$ docker-machine ssh myvm1 &#8220;mkdir ./data&#8221;</p>
+<p class="p1">다시 배포</p>
+<p class="p4">$ docker stack deploy -c docker-compose.yml getstartedlab</p>
+<p class="p1">서비스<span class="s1"> ls</span>해보면<span class="s1"> _redis</span>추가되어 돌고있음을 확인할<span class="s1"><span class="Apple-converted-space">  </span></span>수 있다<span class="s1">.</span></p>
+<p class="p4">8080<span class="s2">포트에</span> <span class="s2">접속해서</span> Visualizer<span class="s2">로</span> <span class="s2">봐도</span> <span class="s2">알</span> <span class="s2">수</span> <span class="s2">있다</span></p>
+<p class="p4">$ docker service ls</p>
+<p class="p4">myvm1 IP<span class="s2">를</span> <span class="s2">브라우저로</span> <span class="s2">접속하면</span> Visit<span class="s2">카운트를</span> Redis<span class="s2">에</span> <span class="s2">저장함을</span> <span class="s2">볼</span> <span class="s2">수</span> <span class="s2">있다</span>.</p>
+]]></content:encoded>
+			<wfw:commentRss>https://archive.htrucci.com/22856/docker-%eb%8f%84%ec%bb%a4-%ed%8a%9c%ed%86%a0%eb%a6%ac%ec%96%bc-%eb%94%b0%eb%9d%bc%ed%95%b4%eb%b3%b4%ea%b8%b0/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>[Docker] top-level network &#8220;webnet&#8221; is ignored 오류, service &#8220;web&#8221;: network &#8220;webnet&#8221; is ignored 오류</title>
+		<link>https://archive.htrucci.com/22847/docker-top-level-network-webnet-is-ignored-%ec%98%a4%eb%a5%98-service-web-network-webnet-is-ignored-%ec%98%a4%eb%a5%98/</link>
+		<comments>https://archive.htrucci.com/22847/docker-top-level-network-webnet-is-ignored-%ec%98%a4%eb%a5%98-service-web-network-webnet-is-ignored-%ec%98%a4%eb%a5%98/#respond</comments>
+		<pubDate>Wed, 09 Jan 2019 13:12:19 +0000</pubDate>
+		<dc:creator><![CDATA[htrucci]]></dc:creator>
+				<category><![CDATA[‣ 오늘의 삽질]]></category>
+		<category><![CDATA[도커]]></category>
+		<category><![CDATA[docker]]></category>
+		<category><![CDATA[top-level]]></category>
+		<category><![CDATA[ignored]]></category>
+		<category><![CDATA[tutorial]]></category>
+
+		<guid isPermaLink="false">https://archive.htrucci.com/?p=22847</guid>
+		<description><![CDATA[도커 튜토리얼에 따라 아래 명령어 실행시 오류 발생.. [crayon-5cda06dd8bd38384486775/] top-level network &#8220;webnet&#8221; is ignored,  service &#8220;web&#8221;: network &#8220;webnet&#8221; is ignored  왜인지 모르겠으나, 가운데 옵션 끄면 정상적으로 진행한다.]]></description>
+				<content:encoded><![CDATA[<p>도커 튜토리얼에 따라 아래 명령어 실행시 오류 발생..</p>
+<p></p><pre class="crayon-plain-tag">$ docker stack deploy -c docker-compose.yml getstartedlab</pre><p></p>
+<p>top-level network &#8220;webnet&#8221; is ignored, </p>
+<p>service &#8220;web&#8221;: network &#8220;webnet&#8221; is ignored </p>
+<p>왜인지 모르겠으나, 가운데 옵션 끄면 정상적으로 진행한다.</p>
+<p><a href="https://archive.htrucci.com/wp-content/uploads/2019/01/스크린샷-2019-01-09-오후-10.10.58.png" class="gallery_colorbox"><img class="alignnone wp-image-22848 size-full" src="https://archive.htrucci.com/wp-content/uploads/2019/01/스크린샷-2019-01-09-오후-10.10.58.png"  alt="" width="495" height="383" srcset="https://archive.htrucci.com/wp-content/uploads/2019/01/스크린샷-2019-01-09-오후-10.10.58.png 495w, https://archive.htrucci.com/wp-content/uploads/2019/01/스크린샷-2019-01-09-오후-10.10.58-300x232.png 300w" sizes="(max-width: 495px) 100vw, 495px" /></a></p>
+]]></content:encoded>
+			<wfw:commentRss>https://archive.htrucci.com/22847/docker-top-level-network-webnet-is-ignored-%ec%98%a4%eb%a5%98-service-web-network-webnet-is-ignored-%ec%98%a4%eb%a5%98/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>아스키 아트 만드는 사이트</title>
+		<link>https://archive.htrucci.com/22839/%ec%95%84%ec%8a%a4%ed%82%a4-%ec%95%84%ed%8a%b8-%eb%a7%8c%eb%93%9c%eb%8a%94-%ec%82%ac%ec%9d%b4%ed%8a%b8/</link>
+		<comments>https://archive.htrucci.com/22839/%ec%95%84%ec%8a%a4%ed%82%a4-%ec%95%84%ed%8a%b8-%eb%a7%8c%eb%93%9c%eb%8a%94-%ec%82%ac%ec%9d%b4%ed%8a%b8/#respond</comments>
+		<pubDate>Sun, 06 Jan 2019 16:39:32 +0000</pubDate>
+		<dc:creator><![CDATA[htrucci]]></dc:creator>
+				<category><![CDATA[웹페이지]]></category>
+		<category><![CDATA[아스키아트]]></category>
+
+		<guid isPermaLink="false">https://archive.htrucci.com/?p=22839</guid>
+		<description><![CDATA[멋지네&#8230; http://patorjk.com/software/taag/#p=display&#38;f=Graffiti]]></description>
+				<content:encoded><![CDATA[<p>멋지네&#8230;</p>
+<p><a href="http://patorjk.com/software/taag/#p=display&amp;f=Graffiti">http://patorjk.com/software/taag/#p=display&amp;f=Graffiti</a></p>
+]]></content:encoded>
+			<wfw:commentRss>https://archive.htrucci.com/22839/%ec%95%84%ec%8a%a4%ed%82%a4-%ec%95%84%ed%8a%b8-%eb%a7%8c%eb%93%9c%eb%8a%94-%ec%82%ac%ec%9d%b4%ed%8a%b8/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>[JAVA] 어노테이션 정리해보기</title>
+		<link>https://archive.htrucci.com/22837/java-%ec%96%b4%eb%85%b8%ed%85%8c%ec%9d%b4%ec%85%98-%ec%a0%95%eb%a6%ac%ed%95%b4%eb%b3%b4%ea%b8%b0/</link>
+		<comments>https://archive.htrucci.com/22837/java-%ec%96%b4%eb%85%b8%ed%85%8c%ec%9d%b4%ec%85%98-%ec%a0%95%eb%a6%ac%ed%95%b4%eb%b3%b4%ea%b8%b0/#respond</comments>
+		<pubDate>Sun, 06 Jan 2019 16:37:32 +0000</pubDate>
+		<dc:creator><![CDATA[htrucci]]></dc:creator>
+				<category><![CDATA[‣ 개발자 뇌 개발]]></category>
+		<category><![CDATA[‣ 언어, 프레임워크]]></category>
+
+		<guid isPermaLink="false">https://archive.htrucci.com/?p=22837</guid>
+		<description><![CDATA[@SpringBootApplication @ComponentScan, @Configuration, @EnableAutoConfiguration 세개를 합쳐놓은 것(1.2.0 이후 적용) Class   @EnavleAutoConfiguration 스프링부트 자동구성하도록 Class   @EnableCaching 캐시ON     @EnableBatchProcessing 스프링배치     @EnableWebSecurity 스프링 시큐리티     @EnableRedisHttpSession&#46;&#46;&#46;]]></description>
+				<content:encoded><![CDATA[<table style="width: 1843px;">
+<tbody>
+<tr>
+<td style="width: 201px;">@SpringBootApplication</td>
+<td style="width: 544px;">@ComponentScan, @Configuration, @EnableAutoConfiguration 세개를 합쳐놓은 것(1.2.0 이후 적용)</td>
+<td style="width: 536px;">Class</td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@EnavleAutoConfiguration</td>
+<td style="width: 544px;">스프링부트 자동구성하도록</td>
+<td style="width: 536px;">Class</td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@EnableCaching</td>
+<td style="width: 544px;">캐시ON</td>
+<td style="width: 536px;"> </td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@EnableBatchProcessing</td>
+<td style="width: 544px;">스프링배치</td>
+<td style="width: 536px;"> </td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@EnableWebSecurity</td>
+<td style="width: 544px;">스프링 시큐리티</td>
+<td style="width: 536px;"> </td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@EnableRedisHttpSession</td>
+<td style="width: 544px;">스프링 세션</td>
+<td style="width: 536px;"> </td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@nableJpaRepositories</td>
+<td style="width: 544px;">스프링 JPA</td>
+<td style="width: 536px;"> </td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@Entity</td>
+<td style="width: 544px;">JPA</td>
+<td style="width: 536px;">VO</td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@Id</td>
+<td style="width: 544px;">JPA</td>
+<td style="width: 536px;">VO</td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@Value</td>
+<td style="width: 544px;">프로퍼티 읽어서 변수에 값 세팅할때</td>
+<td style="width: 536px;">Variables</td>
+<td style="width: 534px;">@Value(&#8220;${spring.myip}&#8221;)</td>
+</tr>
+<tr>
+<td style="width: 201px;">@GeneratedValue</td>
+<td style="width: 544px;">JPA</td>
+<td style="width: 536px;">VO</td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@Transient</td>
+<td style="width: 544px;">JPA에서 값을 저장하지 않음</td>
+<td style="width: 536px;">VO</td>
+<td style="width: 534px;"> </td>
+</tr>
+<tr>
+<td style="width: 201px;">@ResponseBody</td>
+<td style="width: 544px;">JSON으로 응답하도록</td>
+<td style="width: 536px;">Controller, Method</td>
+<td style="width: 534px;"> </td>
+</tr>
+</tbody>
+</table>
+]]></content:encoded>
+			<wfw:commentRss>https://archive.htrucci.com/22837/java-%ec%96%b4%eb%85%b8%ed%85%8c%ec%9d%b4%ec%85%98-%ec%a0%95%eb%a6%ac%ed%95%b4%eb%b3%b4%ea%b8%b0/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>[SpringBoot] brew, sdkman CLI설치</title>
+		<link>https://archive.htrucci.com/22835/springboot-sdkman-cli%ec%84%a4%ec%b9%98/</link>
+		<comments>https://archive.htrucci.com/22835/springboot-sdkman-cli%ec%84%a4%ec%b9%98/#respond</comments>
+		<pubDate>Sun, 06 Jan 2019 16:29:47 +0000</pubDate>
+		<dc:creator><![CDATA[htrucci]]></dc:creator>
+				<category><![CDATA[‣ 개발자 뇌 개발]]></category>
+		<category><![CDATA[‣ 언어, 프레임워크]]></category>
+
+		<guid isPermaLink="false">https://archive.htrucci.com/?p=22835</guid>
+		<description><![CDATA[매번 인텔리J를 사용하다보니 좋은 spring cli제공이 되는데도 잘 안쓰게 됨;; sdkman [crayon-5cda06dd8c075135147947/] -x : 현재폴더에 생성 brew [crayon-5cda06dd8c082395642949/] boot 기본 웹app [crayon-5cda06dd8c087968025605/] &#160;]]></description>
+				<content:encoded><![CDATA[<p>매번 인텔리J를 사용하다보니 좋은 spring cli제공이 되는데도 잘 안쓰게 됨;;</p>
+<p>sdkman</p>
+<p></p><pre class="crayon-plain-tag">$ curl -s get.sdkman.io | bash
+$ source "$HOME/.sdkman/bin/sdkman-init.sh"
+$ sdk install springboot
+$ spring --version
+$ mkdir spring-boot-simple
+$ cd spring-boot-simple
+$ spring init -g=com.htrucci.spring -a=spring-boot-simple --package=com.htrucci.spring -name=spring-boot-simple -x
+$ ./mvnw spring-boot:run</pre><p></p>
+<p>-x : 현재폴더에 생성</p>
+<p>brew</p>
+<p></p><pre class="crayon-plain-tag">$ brew tap pivotal/tap
+$ brew intall springboot</pre><p></p>
+<p>
+boot 기본 웹app</p>
+<p></p><pre class="crayon-plain-tag">$ spring init -d=web,thymeleaf,data-jpa,data-rest -g=com.htrucci.spring -a=spring.boot.journal --package-name=com.htrucci.spring -name=spring-boot-journal -x</pre><p></p>
+<p>&nbsp;</p>
+]]></content:encoded>
+			<wfw:commentRss>https://archive.htrucci.com/22835/springboot-sdkman-cli%ec%84%a4%ec%b9%98/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>[Jenkins] Groovy 스크립트로 JOB 이름 일괄 변경하기</title>
+		<link>https://archive.htrucci.com/22832/jenkins-groovy-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8%eb%a1%9c-job-%ec%9d%b4%eb%a6%84-%ec%9d%bc%ea%b4%84-%eb%b3%80%ea%b2%bd%ed%95%98%ea%b8%b0/</link>
+		<comments>https://archive.htrucci.com/22832/jenkins-groovy-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8%eb%a1%9c-job-%ec%9d%b4%eb%a6%84-%ec%9d%bc%ea%b4%84-%eb%b3%80%ea%b2%bd%ed%95%98%ea%b8%b0/#respond</comments>
+		<pubDate>Fri, 28 Dec 2018 06:03:15 +0000</pubDate>
+		<dc:creator><![CDATA[htrucci]]></dc:creator>
+				<category><![CDATA[‣ 개발자 뇌 개발]]></category>
+		<category><![CDATA[‣ 개발도구, 프로젝트관리]]></category>
+		<category><![CDATA[젠킨스]]></category>
+		<category><![CDATA[Jenkins]]></category>
+		<category><![CDATA[Groovy]]></category>
+		<category><![CDATA[JOB]]></category>
+		<category><![CDATA[일괄변경]]></category>
+		<category><![CDATA[이름]]></category>
+
+		<guid isPermaLink="false">https://archive.htrucci.com/?p=22832</guid>
+		<description><![CDATA[개발 Phase등,, 변경에 따라 JOB네임을 일괄 변경해야 할 경우 아래와 같이 작성하여 Script실행 ^^;; [crayon-5cda06dd8c3dc113406097/] &#160;]]></description>
+				<content:encoded><![CDATA[<p>
+개발 Phase등,, 변경에 따라 JOB네임을 일괄 변경해야 할 경우 아래와 같이 작성하여 Script실행 ^^;;</p>
+<p></p><pre class="crayon-plain-tag">// Groovy script to rename job in Hudson
+import hudson.model.*;
+ 
+def QA_JOB_PATTERN = ~/^QA_.*$/; //find all jobs starting with "MY_JOB".
+def TEST_JOB_PATTERN = ~/^TEST_.*$/; //find all jobs starting with "MY_JOB".
+def PRD_JOB_PATTERN = ~/^PROD_.*$/; //find all jobs starting with "MY_JOB".
+def QA_NEW_PART = "CBT_"
+def TEST_NEW_PART = "SANDBOX_"
+def PRD_NEW_PART = "PROD_"
+ 
+(Hudson.instance.items.findAll { job -&gt; job.name =~ QA_JOB_PATTERN }).each { job_to_update -&gt;
+    println ("Updating job " + job_to_update.name);
+    def new_job_name = job_to_update.name.replaceAll('QA_',QA_NEW_PART); //Append new part to the job name
+    println ("New name: " + new_job_name);
+    job_to_update.renameTo(new_job_name);
+    println ("Updated name: " + job_to_update.name);
+    println("="*80);
+}
+(Hudson.instance.items.findAll { job -&gt; job.name =~ TEST_JOB_PATTERN }).each { job_to_update -&gt;
+    println ("Updating job " + job_to_update.name);
+    def new_job_name = job_to_update.name.replaceAll('TEST_',TEST_NEW_PART); //Append new part to the job name
+    println ("New name: " + new_job_name);
+    job_to_update.renameTo(new_job_name);
+    println ("Updated name: " + job_to_update.name);
+    println("="*80);
+}
+(Hudson.instance.items.findAll { job -&gt; job.name =~ PRD_JOB_PATTERN }).each { job_to_update -&gt;
+    println ("Updating job " + job_to_update.name);
+    def new_job_name = job_to_update.name.replaceAll('PRD__',PRD_NEW_PART); //Append new part to the job name
+    println ("New name: " + new_job_name);
+    job_to_update.renameTo(new_job_name);
+    println ("Updated name: " + job_to_update.name);
+    println("="*80);
+}</pre><p></p>
+<p>&nbsp;</p>
+]]></content:encoded>
+			<wfw:commentRss>https://archive.htrucci.com/22832/jenkins-groovy-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8%eb%a1%9c-job-%ec%9d%b4%eb%a6%84-%ec%9d%bc%ea%b4%84-%eb%b3%80%ea%b2%bd%ed%95%98%ea%b8%b0/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+	</channel>
+</rss>
