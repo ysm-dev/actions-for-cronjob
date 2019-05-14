@@ -2138,33 +2138,4 @@ ROI를 사용하게 되면 서로 다른 크기의 feature maps을 동일한 크
 Smooth L1의 경우 L1과 동일하지만, error의 값이 충분히 작을 경우 거의 맞는 것으로 판단하며, loss값은 더 빠른 속도로 줄어들게 됩니다.&lt;/p&gt;
 
 &lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
-\text{smooth}_{L1}(x) = \begin{cases} 0.5 x^2 &amp; \text{if } |x| \lt 1 \\ |x| - 0.5 &amp; \text{otherwise} \end{cases} %]]&gt;&lt;/script&gt;
-
-&lt;h2 id=&quot;training-rpn&quot;&gt;Training RPN&lt;/h2&gt;
-
-&lt;p&gt;하나의 이미지에서 random 으로 256개(batch 크기)의 anchors를 샘플링합니다.
-이때 positive anchors(객체)와 negative anchors(배경)의 비율은 1:1이 되도록 합니다. 만약 그냥 랜덤으로 진행시,
-negative anchors의 갯수가 더 많기 때문에 학습은 어느 한쪽으로 편향되게 학습이 될 것입니다.&lt;/p&gt;
-
-&lt;p&gt;하지만 현실적으로 1:1 비율을 지속적으로 유지시키는 것은 매우 어렵습니다. 대부분의 경우 positive samples의 갯수가 128개를 넘지 못하는 경우인데,
-이 경우 zero-padding을 시켜주거나, 아예 없는 경우는 IoU값이 가장 높은 값을 사용하기도 합니다.&lt;/p&gt;
-
-&lt;p&gt;페이퍼에서는 추가되는 새로운 레이어의 weights값은 0 mean, 0.01 standard deviation을 갖고 있는 gaussian distribution으로 부터 초기화를 합니다
-(BaseNet 에 해당되는 ImageNet 을 제외, 즉 pre-trained model을 사용하기 때문에).
-Learning rate의 경우 처음 60k mini-batches에 대해서는 0.001, 그 다음 20k mini-batches에 대해서는 0.0001을 PASCAL VOC dataset에 적용을 합니다.&lt;/p&gt;
-
-&lt;h1 id=&quot;processing-tips&quot;&gt;Processing Tips&lt;/h1&gt;
-
-&lt;h2 id=&quot;non-maximum-suppression&quot;&gt;Non-Maximum Suppression&lt;/h2&gt;
-
-&lt;p&gt;Faster R-CNN에 대한 학습이 완료된 후, RPN 모델을 예측시키면 아마도 한 객체당 여러개의 proposals (bounding boxes) 값을 얻을 것 입니다. 이유는 anchors자체가 어떤 객체에 중복이 되기 때문에 proposals 또한 여러개가 되는 것 입니다.&lt;/p&gt;
-
-&lt;p&gt;문제를 해결하기 위해서 non-maximum suppression (NMS) 알고리즘을 사용해서 proposals의 갯수를 줄이도록 합니다. NMS를 간단히 설명하면 먼저 IoU값으로 proposals을 모두 정렬시켜놓은뒤,  RoI점수가 가장 높은 proposal과 다른 proposals에 대해서 overlapping을 비교한뒤 overlapping이 높은 것은 특정 threshold이상이면 지워버리며 이 과정을 iterate돌면서 삭제시킵니다.&lt;/p&gt;
-
-&lt;p&gt;직관적으로 설명하면 RoI가 높은 bounding box가 있는데.. 이 놈하고 overlapping 되는 녀석들중 특정 threshold이상이면 proposals에서 삭제시켜버리는 형태입니다. 그러면 서로 오버랩은 되지 않으면서 RoI가 높은 녀석들만 남게 됩니다.&lt;/p&gt;
-
-&lt;p&gt;일반적으로 threshold의 값은 0.6~0.9 정도로 합니다.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/images/faster-rcnn-nms-algo.jpg&quot; class=&quot;img-responsive img-rounded mx-auto d-block img-fluid&quot; /&gt;&lt;/p&gt;
-
-&lt;blockquote&
+\text{smooth}_{L1}(x) = \begin{cases} 0.5 x^2 &amp;
