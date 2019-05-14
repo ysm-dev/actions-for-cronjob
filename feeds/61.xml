@@ -5,7 +5,7 @@
 <link>https://web-front-end.tistory.com/</link>
 <description>Web Front-End 개발자</description>
 <language>ko</language>
-<pubDate>Tue, 14 May 2019 14:47:03 +0900</pubDate>
+<pubDate>Tue, 14 May 2019 15:47:05 +0900</pubDate>
 <generator>TISTORY</generator>
 <managingEditor>권윤학</managingEditor>
 <image>
@@ -2448,4 +2448,169 @@ export class ItemCommentsComponent implements OnInit {
     &amp;lt;div class=&quot;mobile item-header&quot;&amp;gt;
      &amp;lt;!-- Markup that shows only on mobile (to give the app a
     responsive mobile feel). Same attributes as below,
-    nothi
+    nothing really new here (but refer to the source
+    file if you're interested) --&amp;gt;
+    &amp;lt;/div&amp;gt;
+    &amp;lt;div class=&quot;laptop&quot; [class.item-header]=&quot;item.comments_count &amp;gt; 0 || item.type === 'job'&quot; [class.head-margin]=&quot;item.text&quot;&amp;gt;
+      &amp;lt;p&amp;gt;
+        &amp;lt;a class=&quot;title&quot; href=&quot;{{item.url}}&quot;&amp;gt;
+        {{item.title}}
+        &amp;lt;/a&amp;gt;
+        &amp;lt;span *ngIf=&quot;item.domain&quot; class=&quot;domain&quot;&amp;gt;({{item.domain}})&amp;lt;/span&amp;gt;
+      &amp;lt;/p&amp;gt;
+      &amp;lt;div class=&quot;subtext&quot;&amp;gt;
+        &amp;lt;span&amp;gt;
+        {{item.points}} points by
+          &amp;lt;a href=&quot;&quot;&amp;gt;{{item.user}}&amp;lt;/a&amp;gt;
+        &amp;lt;/span&amp;gt;
+        &amp;lt;span&amp;gt;
+          {{item.time_ago}}
+          &amp;lt;span&amp;gt; |
+            &amp;lt;a [routerLink]=&quot;['/item', item.id]&quot;&amp;gt;
+              &amp;lt;span *ngIf=&quot;item.comments_count !== 0&quot;&amp;gt;
+                {{item.comments_count}}
+                &amp;lt;span *ngIf=&quot;item.comments_count === 1&quot;&amp;gt;comment&amp;lt;/span&amp;gt;
+                &amp;lt;span *ngIf=&quot;item.comments_count &amp;gt; 1&quot;&amp;gt;comments&amp;lt;/span&amp;gt;
+              &amp;lt;/span&amp;gt;
+              &amp;lt;span *ngIf=&quot;item.comments_count === 0&quot;&amp;gt;discuss&amp;lt;/span&amp;gt;
+            &amp;lt;/a&amp;gt;
+          &amp;lt;/span&amp;gt;
+        &amp;lt;/span&amp;gt;
+      &amp;lt;/div&amp;gt;
+    &amp;lt;/div&amp;gt;
+    &amp;lt;p class=&quot;subject&quot; [innerHTML]=&quot;item.content&quot;&amp;gt;&amp;lt;/p&amp;gt;
+    &amp;lt;app-comment-tree [commentTree]=&quot;item.comments&quot;&amp;gt;&amp;lt;/app-comment-tree&amp;gt;
+  &amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;component 맨위에는 뉴스&amp;nbsp;정보가 노출되고 그뒤에는 뉴스 내용(&lt;b&gt;item.content&lt;/b&gt;)이 표시됩니다.&amp;nbsp;그런 다음 &lt;b&gt;CommentTreeComponent&lt;/b&gt;의 선택자인 &lt;b&gt;app-comment-tree&lt;/b&gt;에 해당 뉴스 comment(&lt;b&gt;item.comments&lt;/b&gt;)들을&amp;nbsp;입력합니다.&lt;/p&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;pre class=&quot;code&quot;&gt;&lt;code class=&quot;scss&quot;&gt;/* item-comments.component.scss */
+
+$mobile-only: &quot;only screen and (max-width : 768px)&quot;;
+$laptop-only: &quot;only screen and (min-width : 769px)&quot;;
+$tablet-only: &quot;only screen and (max-width: 1024px)&quot;;
+
+.main-content {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  -webkit-transition: opacity .2s ease;
+  transition: opacity .2s ease;
+  box-sizing: border-box;
+  padding: 8px 0;
+  z-index: 0;
+}
+
+.item {
+  box-sizing: border-box;
+  padding: 10px 40px 0 40px;
+  z-index: 0;
+}
+
+@media #{$tablet-only} {
+  .item {
+    padding: 10px 20px 0 40px;
+  }
+}
+
+@media #{$mobile-only} {
+  .item {
+    box-sizing: border-box;
+    padding: 110px 15px 0 15px;
+  }
+}
+
+.head-margin {
+  margin-bottom: 15px;
+}
+
+p {
+  margin: 2px 0;
+}
+
+.subject {
+  word-wrap: break-word;
+  margin-top: 20px;
+}
+
+a {
+  color: #000;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+@media #{$mobile-only} {
+  .laptop {
+    display: none;
+  }
+}
+
+@media #{$laptop-only} {
+  .mobile {
+    display: none;
+  }
+}
+
+.title {
+  font-size: 16px;
+}
+
+.title-block {
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  margin: 0 75px;
+}
+
+@media #{$mobile-only} {
+  .title {
+    font-size: 15px;
+  }
+  .back-button {
+    position: absolute;
+    top: 52%;
+    width: 0.6rem;
+    height: 0.6rem;
+    background: transparent;
+    border-top: .3rem solid #B92B27;
+    border-right: .3rem solid #B92B27;
+    box-shadow: 0 0 0 lightgray;
+    transition: all 200ms ease;
+    left: 4%;
+    transform: translate3d(0, -50%, 0) rotate(-135deg);
+  }
+}
+
+.subtext {
+  font-size: 12px;
+}
+
+.domain, .subtext {
+  color: #696969;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.domain a {
+  color: #b92b27;
+}
+
+.subtext a {
+  color: #b92b27;
+  &amp;amp;:hover {
+    text-decoration: underline;
+  }
+}
+
+.item-details {
+  padding: 10px;
+}
+
+.item-header {
+  border-bottom: 2px solid #b92b27;
+  padding-bottom: 10px;
+}
+
+@media #{$mobile-only} {
+  .item-header {
+    ba
