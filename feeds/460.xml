@@ -1,191 +1,268 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" media="screen" href="/~d/styles/rss2full.xsl"?><?xml-stylesheet type="text/css" media="screen" href="http://feeds.feedburner.com/~d/styles/itemcontent.css"?><rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0" version="2.0">
-  <channel>
-    <title>소용환의 생각저장소</title>
-    <description>소용환의 경험과 생각을 모아두는 개인의 구름 속 저장소입니다. 주로 소프트웨어 개발, 인프라 문제, 클라우드 컴퓨팅에 대한 이야기가 있습니다.
-</description>
-    <link>https://www.sauru.so</link>
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Pronomad&#39;s Blog</title>
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="https://sungyeolwoo.github.io/"/>
+  <updated>2017-09-19T17:18:44.000Z</updated>
+  <id>https://sungyeolwoo.github.io/</id>
+  
+  <author>
+    <name>Pronomad</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>프로젝트로 완성하는 Go 프로그래밍 - Chat</title>
+    <link href="https://sungyeolwoo.github.io/2017/09/20/programming/go/blueprints/chat/"/>
+    <id>https://sungyeolwoo.github.io/2017/09/20/programming/go/blueprints/chat/</id>
+    <published>2017-09-19T15:00:00.000Z</published>
+    <updated>2017-09-19T17:18:44.000Z</updated>
+    
+    <content type="html"><![CDATA[<img src="http://image.yes24.com/momo/TopCate1339/MidCate008/133875384.jpg"/><blockquote>
+<p>Github: <a href="https://github.com/gaebaksal/goblueprints/tree/master/chat" target="_blank" rel="external">https://github.com/gaebaksal/goblueprints/tree/master/chat</a></p>
+</blockquote>
+<h3 id="배울-내용"><a href="#배울-내용" class="headerlink" title="배울 내용"></a>배울 내용</h3><ul>
+<li>HTTP 요청을 처리하기 위한 <code>net/http</code> 패키지</li>
+<li>템플릿 기반 콘텐츠를 사용자의 브라우저에 전달</li>
+<li>Go 인터페이스를 충족하는 자체 <code>http.Handler</code> 타입 구현</li>
+<li>Go의 고루틴을 사용해 애플리케이션이 <code>여러 작업을 동시에 수행</code>하도록 허용</li>
+<li>채널을 사용해 헌재 실행 중인 고루틴 간 정보 공유</li>
+<li>웹 소켓과 같은 최신 기능을 사용하도록 HTTP 요청 업그레이드</li>
+<li>내부 동작을 좀 더 잘 이해하기 위해 애플리케이션에 추적 기능 추가</li>
+<li>테스트 주도 개발(TDD) 방법을 사용해 전체 Go패키지 작성</li>
+<li>노출된(exported) 인터페이스를 통해 비노출(unexported) 타입 반환</li>
+</ul>
+<h3 id="간단한-웹-서버"><a href="#간단한-웹-서버" class="headerlink" title="간단한 웹 서버"></a>간단한 웹 서버</h3><ul>
+<li><p><code>http.HandleFunc</code> 함수는 경로 패턴을 두 번째 인수로 전달해 매핑한다.</p>
+</li>
+<li><p><code>func(w http.ResponseWriter, r *http.Request)</code> 함수의 형태는 Go 표준 라이브러리를 통해 HTTP 요청을 처리하는 일반적인 방법이다.</p>
+</li>
+<li><p><code>package main</code>을 사용하고 있는데 재사용하는 패키지를 제작하는 경우 <code>package chat</code>과 같은 이름을 사용할 수 있다.</p>
+</li>
+<li><figure class="highlight go"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">go</span> run main.<span class="keyword">go</span></div></pre></td></tr></table></figure>
+</li>
+<li><p>보통은 <code>go build</code>를 통해서 바이너리를 만들고 배포하지만 간단하게 실행할 때는 위와 같이 실행 할 수 있다.</p>
+</li>
+</ul>
+<h3 id="템플릿을-통한-로직과-뷰-분리"><a href="#템플릿을-통한-로직과-뷰-분리" class="headerlink" title="템플릿을 통한 로직과 뷰 분리"></a>템플릿을 통한 로직과 뷰 분리</h3><ul>
+<li><p>Go 표준 라이브러리는 <strong>두 개</strong>의 기본 템플릿 패키지를 가지고 있다.</p>
+<ul>
+<li><code>text/template</code>, <code>html/template</code></li>
+<li>둘의 차이점은 <code>html/template</code>은 데이터가 템플릿에 삽입되는 문맥(context)을 이해한다는 점을 제외하면 동일하다.</li>
+<li>이는 <strong>스크립트 주입(Script Injection) 공격</strong>을 방지하고 <strong>URL의 특수 문자를 인코딩</strong>하는 등의 일반적인 문제를 해결해주기 때문에 유용하다.</li>
+</ul>
+</li>
+<li><p>외부 파일을 아주 쉽게 로드할 수 있어 편리하다.</p>
+</li>
+<li><p><code>템플릿 컴파일</code>이라는 것이 존재하는데, 다양한 데이터와 혼합하기 위해 <strong>원본 템플릿을 해석하고 준비하는 하나의 프로세스</strong>이다. 이는 <strong>템플릿을 사용하기 전에 반드시 해야 하며 최초 1회만 수행</strong>하면 된다.</p>
+</li>
+<li><p><code>sync.Once</code> <strong>타입</strong>을 사용해 템플릿을 한 번 컴파일 한다. </p>
+<ul>
+<li><a href="https://thebook.io/006806/ch05/03/03/" target="_blank" rel="external">참고</a></li>
+<li>특정 함수를 한 번만 수행해야할 때 사용한다.</li>
+<li><code>sync.Once</code> 구조체는 다음 메서드를 제공한다.</li>
+<li><figure class="highlight go"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o *Once)</span> <span class="title">Do</span><span class="params">(f <span class="keyword">func</span>()</span>)</span></div></pre></td></tr></table></figure>
+</li>
+<li><p>한 번만 수행해야 하는 함수를 <code>Do()</code> 메서드의 매개변수로 전달하여 실행하면 여러 고루틴에서 실행한다고 해도 해당 함수는 <strong>한 번</strong>만 수행된다.</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="자체-핸들러-사용"><a href="#자체-핸들러-사용" class="headerlink" title="자체 핸들러 사용"></a>자체 핸들러 사용</h3><ul>
+<li><a href="http://golang.site/go/article/111-%EA%B0%84%EB%8B%A8%ED%95%9C-%EC%9B%B9-%EC%84%9C%EB%B2%84-HTTP-%EC%84%9C%EB%B2%84" target="_blank" rel="external">참고</a></li>
+<li><strong>HTTP</strong>를 구현할 때엔 <code>http.HandleFunc</code> 메서드를 이용했었다.</li>
+<li>이것과 비슷하게 <code>http.Handle</code> 메서드를 사용할 수 있다.</li>
+<li><code>HandleFunc</code>는 두 번째 매개변수에 <strong>함수</strong>를 넣어야 하고, <code>Handle</code>은 두 번째 매개변수에 <strong>인터페이스를 만족</strong>시킨 객체를 넣어야한다.</li>
+<li>아래와 같이 <code>Handle</code>의 두번째 매개변수 <strong>Handler Interface</strong>는 구현된 <code>ServeHTTP</code> 메서드를 실행한다.<figure class="highlight go"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// server.go of net/http pacakge</span></div><div class="line"><span class="keyword">type</span> Handler <span class="keyword">interface</span> &#123;</div><div class="line">  ServeHTTP(ResponseWriter, *Request)</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">func</span> <span class="title">Handle</span><span class="params">(pattern <span class="keyword">string</span>, handler Handler)</span></span> &#123; </div><div class="line">  DefaultServeMux.Handle(pattern, handler) </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="서버상의-채팅방-및-클라이언트-모델링"><a href="#서버상의-채팅방-및-클라이언트-모델링" class="headerlink" title="서버상의 채팅방 및 클라이언트 모델링"></a>서버상의 채팅방 및 클라이언트 모델링</h3><ul>
+<li><code>gorilla/websocket</code> 패키지를 이용해서 구현</li>
+<li>Go 채널<blockquote>
+<p>비차단형(non-blocking)이며 스레드로부터 안전한(thread-safe) 방식으로 송신자가 데이터를 전달하고 수신자가 데이터를 읽는 메모리 내(in-memory) 스레드 안전 메시지 대기열(queue)로 생각할 수 있다.</p>
+</blockquote>
+</li>
+<li>thread-safe<blockquote>
+<p>여러 스레드가 동시에 액세스할 때 경쟁 조건(race condition)이 없음을 보장한다.</p>
+</blockquote>
+</li>
+<li>race condition - <a href="http://egloos.zum.com/minjang/v/1148855" target="_blank" rel="external">http://egloos.zum.com/minjang/v/1148855</a></li>
+</ul>
+<h3 id="관용적인-Go를-사용한-동시성-프로그래밍"><a href="#관용적인-Go를-사용한-동시성-프로그래밍" class="headerlink" title="관용적인 Go를 사용한 동시성 프로그래밍"></a>관용적인 Go를 사용한 동시성 프로그래밍</h3><ul>
+<li>공유 메모리를 동기화하거나 변경할 필요가 있을 때, 또는 채널 내 다양한 액티비티에 따라 각기 다른 동작을 실행해야 할 때, 동시성을 위해 제공하는 매우 강력한 기능인 <code>select</code>문을 사용할 수 있다.</li>
+<li><code>select</code>문은  <strong>한 케이스의 코드만 실행한다는 점이 중요</strong>하다. 이것이 한 번에 한 가지만 변경됨을 보장하면서 동기화하는 방법이다.</li>
+</ul>
+<h3 id="채팅방을-HTTP-핸들러로-변환"><a href="#채팅방을-HTTP-핸들러로-변환" class="headerlink" title="채팅방을 HTTP 핸들러로 변환"></a>채팅방을 HTTP 핸들러로 변환</h3><ul>
+<li>웹 소켓을 사용하려면 <code>websocket.Upgrader</code> 타입을 사용해서 <code>HTTP</code>를 <code>WebSocket Protocol</code>로 업그레이드 해야한다.<ul>
+<li>적용하면 클라이언트가 <code>ws://www.example.com/socketserver</code>로 접근할 수 있게 된다.</li>
+</ul>
+</li>
+<li><code>websocket.Upgrader</code>는 재사용이 가능하므로 한 개만 만들면 된다.</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;img src=&quot;http://image.yes24.com/momo/TopCate1339/MidCate008/133875384.jpg&quot;/&gt;&lt;blockquote&gt;
+&lt;p&gt;Github: &lt;a href=&quot;https://github.com/gaebaksal/g
+    
+    </summary>
+    
+      <category term="go" scheme="https://sungyeolwoo.github.io/categories/go/"/>
     
     
-      <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="self" type="application/rss+xml" href="http://feeds.feedburner.com/sauru-so" /><feedburner:info uri="sauru-so" /><atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="hub" href="http://pubsubhubbub.appspot.com/" /><item>
-        <title>CockroachDB 클러스터 가용성 시험</title>
-        <description>CockroachDB는 가용성 확보를 위해 어떻게 동작하는지? - 
-          CockroachDB는 Range라는 일종의 Sharding 기법을 도입하여 사용자의 데이터를 복제하고 그 가용성을 관리함으로써 전지구적 분산 복제 DBMS의 가용성을 보장하고 있다. 이 글에서는 네 개의 Node로 구성된 클러스트를 예로 하여 Node 장애 상황에서 Cockroach가 어떻게 반응하고, 또한 어디까지 가용성을 보장해주는지 시험한 결과를 정리한다. 묶음글을 쓸 때, 보통은 각각의 글을 어떤 주제로 할지,...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/YWlQnV1wh9Y" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Mon, 08 Oct 2018 13:00:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/YWlQnV1wh9Y/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/availablility-of-cockroach/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/availablility-of-cockroach/</feedburner:origLink></item>
+      <category term="go" scheme="https://sungyeolwoo.github.io/tags/go/"/>
     
-      <item>
-        <title>사랑으로 일하기</title>
-        <description>국민대학교 소프트웨어학부 이민석 교수님 - 
-          사랑으로 일하는 사람이 더 늘었으면 좋겠다. 이민석 교수님을 처음 뵈었던 건 거의 십년 쯤 전에 어느 커뮤티니 행사, 아마 lovesera 정진호님이 주로 이끌었던 IgniteSeoul 이었던 것 같은데 발표하신 내용은 이제 전혀 기억나지 않지만 정말 즐거운 시간이었다는 기억은 명확하게 남아있다. 아마도, 인터뷰 중의 이민석 교수는 그런 교수가 아닙니다. 라는 문구가 딱...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/7aa-kC72_XE" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Thu, 04 Oct 2018 11:42:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/7aa-kC72_XE/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/work-with-love/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/work-with-love/</feedburner:origLink></item>
+      <category term="blueprints" scheme="https://sungyeolwoo.github.io/tags/blueprints/"/>
     
-      <item>
-        <title>CockroachDB 클러스터 설치 스크립트</title>
-        <description>...라지만, 알고보면 쉘스크립트 작성 가이드 - 
-          이번 글에서는 (특히 클라우드 컴퓨팅 환경에서) 여러 서버에 CockroachDB를 설치하고 그것을 묶어서 클러스터로 만드는 과정을 단순화하는 스크립트에 대해 정리하려고 한다. 내용은 CockroachDB Cluster의 구성에 초점을 맞추고 있지만, 여기서 다루는 개념과 방법은 소프트웨어의 원격 설치, 자동화된 배치를 준비함에 있어서 공통적으로 참고하거나 적용할 수 있을 것이다. 지난 세 편의 글을 통하여, 클라우드...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/V4a8xNX3Vl0" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Tue, 02 Oct 2018 16:30:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/V4a8xNX3Vl0/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/cockroach-cluster-setup-script/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/cockroach-cluster-setup-script/</feedburner:origLink></item>
+      <category term="golang" scheme="https://sungyeolwoo.github.io/tags/golang/"/>
     
-      <item>
-        <title>CockroachDB Architecture</title>
-        <description>CockroachDB의 구조 설계에 대한 짧은 이해 - 
-          원래는 진행했던 시험의 순서대로, CockroachDB 클러스터의 설치 스크립트에 대해 먼저 살펴보려고 했지만 글을 쓰면서 스스로에게 던지게 되는 질문은 “그래서 Cockroach가 어떻게 생긴 녀석인데?”라는 것이었다. 아! 알긴 안다. 바퀴벌레… 아주 징그럽게 생겼다. 그런데 이름은 징그럽지만 뭔가 정이 가는 이 CockroachDB도 징그럽게 생겼을까? 이 글은 CockroachDB의 생김에 대해, 지금까지 이해한 것을 정리한다....&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/pHJQTYcSZ5I" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Mon, 01 Oct 2018 14:30:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/pHJQTYcSZ5I/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/architecture-of-cockroachdb/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/architecture-of-cockroachdb/</feedburner:origLink></item>
+  </entry>
+  
+  <entry>
+    <title>Notting Hill</title>
+    <link href="https://sungyeolwoo.github.io/2017/09/19/english/LS/notting_hill/objective/"/>
+    <id>https://sungyeolwoo.github.io/2017/09/19/english/LS/notting_hill/objective/</id>
+    <published>2017-09-18T15:00:00.000Z</published>
+    <updated>2017-09-19T17:37:39.000Z</updated>
     
-      <item>
-        <title>CockroachDB 클러스터 구성하기</title>
-        <description>"바퀴벌레 연맹" 구성을 위한 배치/관리 반자동화하기 - 
-          좀 번잡스러운 글이 될 것 같은데, 이번 글은 지난 글에 이어 CockroachDB를 수동/반자동으로 설치하는 과정에 대해 정리한다. 먼저 단일 노드에 대한 수동 설치 과정을 보면서, 노드 구성에 대하여 확인할 것이고, 그 다음에는 세 노드로 구성된 클러스터를 쉘스크립트를 사용하여 원격지에서 자동화하여 배치/관리하는 과정에 대해 정리할 것이다. CockroachDB 맛보기 묶음글은 다음과 같습니다....&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/A39v8XpJgSI" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Fri, 21 Sep 2018 17:20:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/A39v8XpJgSI/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/setup-cockroach-cluster/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/setup-cockroach-cluster/</feedburner:origLink></item>
+    <content type="html"><![CDATA[<img src="http://image.kyobobook.co.kr/images/book/xlarge/709/x9788901215709.jpg"/><h1 id="영어…"><a href="#영어…" class="headerlink" title="영어…"></a>영어…</h1><p>영어에 대해 많은 고민을 했었다.<br>그리고 다양한 방법을 제시하는 많은 책과 글, 영상을 봐왔다.<br>당연히 이 많은 정보는 내 영어 실력을 향상하게 시키지 않았다.</p>
+<p>왜 향상되지 않았을까?<br>어떤 방법이든 공통으로 말하는 내용이 있었다.</p>
+<blockquote>
+<p>바로, <strong>꾸준히 계속하는 것</strong></p>
+</blockquote>
+<p>향상되지 않은 이유는 <code>꾸준히 계속</code> 하지 않았기 때문이다.<br>그렇다면 내가 <code>꾸준히 계속</code> 하지 않는 이유는 무엇일까?<br>목표가 뚜렷하지 않았고(막연하게 영어 잘하고 싶다..), 과정이 <code>지루</code>하다는 점이 문제였다.</p>
+<p>결국, 무엇이든 <code>재미</code>가 있어야 <code>꾸준히 계속</code> 할 수 있다는 점이었고, 그것과 더불어 <code>목표</code>도 구체적이어야 했다.<br>그래서 원서도 읽어보고, 오디오북도 들어보고 했지만 금방 질렸던 것 같다.<br>가장 재미있는 건…. <code>팝송</code>을 부르거나 <code>영화</code>를 보는 것이었다.</p>
+<p>하지만 팝송은 가사 스타일이 다양하고 제대로 된 한글 번역 자료들을 구하기도 어려워서 학습해도 될까? 라는 생각이 들었고, 영화는 처음엔 재미있지만 계속 볼 수 있을까 고민했다. </p>
+<p>결국 이 책을 통해 영화로 하기로 결정했고, <code>어떻게</code> 하면 좋을지에 대한 도움을 받을 수 있었다.<br>사실 더 좋은 방법도 있겠지만 이번에 이 방법을 끝까지 해보고 싶다.</p>
+<p>그럼 시작해보자!</p>
+<h1 id="공부-방법"><a href="#공부-방법" class="headerlink" title="공부 방법"></a>공부 방법</h1><ol>
+<li>영화 선정 </li>
+<li>자막 없이 영화 보기 (1LS)</li>
+<li>한국어 자막으로 이해하기 (1LS)</li>
+<li>영어 자막으로 보면서, 들리지 않는 구간 <code>필기</code></li>
+<li>들리지 않는 구간 <strong>반복</strong>해서 <code>듣고</code>, <code>말하기</code></li>
+<li>모든 장면에 위 4-5번 사이클이 끝나면 자막 없이 97번 보기 (97LS)</li>
+</ol>
+<h1 id="목표"><a href="#목표" class="headerlink" title="목표!"></a>목표!</h1><p><code>크리스마스 이브</code>까지 <strong>100LS</strong>를 완주한다.</p>
+<p>시작일: 2017년 9월 19일<br>목표일: 2017년 12월 24일</p>
+<h1 id="기대하는-3개월-후-내-모습"><a href="#기대하는-3개월-후-내-모습" class="headerlink" title="기대하는 3개월 후 내 모습"></a>기대하는 3개월 후 내 모습</h1><p>영어에 대한 <code>울렁증</code>도 사라지고, <code>자신감</code>이 생겼다.<br>이 영화를 자막 없이 다 듣고 이해할 수 있고, 영어 표현이 몸으로 느껴지고 생생하게 떠오른다.<br>언어교환모임에 나가서 실제 외국인과 대화를 나눈다.</p>
+]]></content>
     
-      <item>
-        <title>CockroachDB 안녕?</title>
-        <description>바퀴벌레, 글로벌 서비스를 위한 SQL 데이터베이스 - 
-          “The SQL database for building global cloud services“라는, 뭔가 관심을 끌기 충분한 문장으로 자신을 설명하고 있는 CockroachDB라는 오픈소스 RDBMS를 우연한 경위로 알게 되었다. 이 글은, 이 CockroachDB Cluster를 구성하고 나서 그 겉을 둘러본 감상을 정리하려고 한다. 사실, 데이터베이스는 내 전문분야도 아닐 뿐더러 관심이 많은 영역도 아니기 때문에 이런 주제로 글을...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/gj1DQFSSx6I" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Thu, 20 Sep 2018 16:30:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/gj1DQFSSx6I/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/say-hello-to-cockroachdb/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/say-hello-to-cockroachdb/</feedburner:origLink></item>
+    <summary type="html">
     
-      <item>
-        <title>Elasticsearch 다시 Indexing하기</title>
-        <description>왜 혼자 바뀌고 그래! - 
-          내가 하고싶어서 한 것이 아니다. 그냥 가만히 두고 싶은 시스템인데… 어쩌다 일이 꼬여서 한참 전에 구성해 두었던 Elastic Stack 기반의 분석시스템을 좀 손보게 됐고, 이 글은 그 과정 중 일부를 기록으로 남기는 것이다. 애초에 괜히 건드렸다… 싶기도 하고, 뭐, 그러면서 하나 더 배우는 거지… 지난 봄, 나름 활발하게 Docker 관련...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/PWqWjuWNDOM" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Mon, 17 Sep 2018 15:40:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/PWqWjuWNDOM/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/reindexing-elasticsearch-index/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/reindexing-elasticsearch-index/</feedburner:origLink></item>
+      &lt;img src=&quot;http://image.kyobobook.co.kr/images/book/xlarge/709/x9788901215709.jpg&quot;/&gt;&lt;h1 id=&quot;영어…&quot;&gt;&lt;a href=&quot;#영어…&quot; class=&quot;headerlink&quot; title=&quot;영어…
     
-      <item>
-        <title>Docker Swarm 다시 보기</title>
-        <description>Docker의 Label과 관련된 몇 가지 재미있는 기능들 - 
-          지난 세 편의 Swarm에 대한 글에서 다루지 못했던 몇 가지 중요한 개념과 기능에 대해서 정리한 글이다. 원래 조금 더 많은 내용을 준비했었는데, 일단 다 줄이고, 재미있는 짜투리 소재 두 가지, Docker의 Label 지원과 이를 Swarm에서 이용하는 것과 Global Mode Service에 대하여 간단히 정리하였다. 라벨! 라벨! 라벨! Engine Label과 Node Label...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/v-2Y7lt_EgM" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Thu, 15 Mar 2018 23:55:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/v-2Y7lt_EgM/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/little-more-about-docker-swarm/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/little-more-about-docker-swarm/</feedburner:origLink></item>
+    </summary>
     
-      <item>
-        <title>Docker Swarm의 고가용성</title>
-        <description>서비스 가용성을 보장하기 위한 Swarm 클러스터 구성 방법 - 
-          Docker의 기본 Orchestration 도구인 Swarm의 기본적인 구성에 대하여 설명한 “Getting Started with Docker Swarm”, 그리고 그 위에 Service를 올리고 관리하는 방식에 대해 정리한 “Docker Swarm에 Service 올려보기“에 이어, 이번 글에서는 이러한 기능을 안정적으로 제공할 수 있도록 고가용성 환경을 꾸미는 방법에 대해 정리하였다. 아… 그림을 조금씩 손봐서 각각의 영역에 맞게 표현해보고...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/XywEnL0J7jg" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Thu, 15 Mar 2018 23:55:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/XywEnL0J7jg/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/high-availability-of-docker-swarm/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/high-availability-of-docker-swarm/</feedburner:origLink></item>
+      <category term="english" scheme="https://sungyeolwoo.github.io/categories/english/"/>
     
-      <item>
-        <title>Docker Swarm에 Service 올려보기</title>
-        <description>Docker Swarm 방식으로 서비스 생명주기 관리하기 - 
-          이번 글에서는, “Getting Started with Docker Swarm“에서 만들어둔 Docker Swarm에 Service를 올려보려고 한다. 시험을 위한 엉터리 Service긴 하지만, Service와 Task가 무엇인지, 그리고 필요에 따라 어떻게 Service를 수평으로 확장하고 다시 줄이는지, Image 교체 등 Service의 업데이트는 어떤 방식으로 처리하게 되는지 알아보고, 이와 함께 Swarm Node에 대한 유지보수를 진행할 때 Swarm은 그...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/OESV7WoNVHs" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Wed, 14 Mar 2018 18:40:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/OESV7WoNVHs/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/run-a-service-on-docker-swarm/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/run-a-service-on-docker-swarm/</feedburner:origLink></item>
     
-      <item>
-        <title>Getting Started with Docker Swarm</title>
-        <description>나무토막 모아서 뗏목 만들기 - 
-          지난 글에서는 여러 Docker Host 들을 손쉽게 관리하기 위한 기술 중 하나로 Docker Machine에 대해 살펴봤다. Docker Machine은 그 초점이 기계를 어떻게 빨리 뿌리고 거둘 것인지에 있는 인프라 관점, 저수준의 관리기능을 제공하는 도구라면, 오늘의 주제인 Docker Swarm은 여러 대의 Docker Host 들을 엮어서 마치 하나인 것처럼 다룰 수 있게 해주는...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/aCC-d9AXdzw" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Tue, 13 Mar 2018 21:30:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/aCC-d9AXdzw/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/getting-started-with-docker-swarm/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/getting-started-with-docker-swarm/</feedburner:origLink></item>
+      <category term="english" scheme="https://sungyeolwoo.github.io/tags/english/"/>
     
-      <item>
-        <title>Docker Machine 다시 보기</title>
-        <description>A Little More About Docker Machine - 
-          Docker Engine을 탑재한 Dockerized Host, Docker Node를 손쉽게 펼쳤다가, 다시 모았다가 하는 용도로 Docker Machine을 적절히 활용할 수 있을지 확인하기 위해 빠른 걸음으로 Docker Machine의 기능을 살펴봤었다. 기왕 보기 시작한 김에, 조금 더 자세히 문서와 CLI 도구의 세부 기능을 들여다 보았다. (Docker Machine의 개요를 담은 “Docker Machine으로 Docker Node 뿌리기”...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/y-lRfauyfzs" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Fri, 09 Mar 2018 21:44:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/y-lRfauyfzs/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/little-more-about-docker-machine/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/little-more-about-docker-machine/</feedburner:origLink></item>
+      <category term="notting hill" scheme="https://sungyeolwoo.github.io/tags/notting-hill/"/>
     
-      <item>
-        <title>Docker Machine으로 Docker Node 뿌리기</title>
-        <description>Docker is Not In My BackYard, But on the Cloud! - 
-          Docker를 개인 목적이 아닌 어느 정도 규모가 있는 서비스를 위해 사용하려고 한다면, Container가 구동될 복수의 Host Node를 어떻게 쉽게 관리할 것인지 등에 대한 약간의 인프라 관점의 접근이 필요하다. 이번 글에서는 클라우드를 포함한 원격지에 Docker Node를 손쉽게 구성하는 방법, Docker Machine에 대해 정리하려고 한다. 지난 몇 편의 묶음글을 통해 Docker와 Container가...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/GQcNE-24Y_c" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Wed, 07 Mar 2018 22:16:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/GQcNE-24Y_c/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/provision-docker-node-with-docker-machine/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/provision-docker-node-with-docker-machine/</feedburner:origLink></item>
+  </entry>
+  
+  <entry>
+    <title>Notting Hill - 1</title>
+    <link href="https://sungyeolwoo.github.io/2017/09/19/english/LS/notting_hill/1/"/>
+    <id>https://sungyeolwoo.github.io/2017/09/19/english/LS/notting_hill/1/</id>
+    <published>2017-09-18T15:00:00.000Z</published>
+    <updated>2017-09-19T17:37:49.000Z</updated>
     
-      <item>
-        <title>DevOps Service: Travis CI</title>
-        <description>Continuous Integration 도구의 대명사 - 
-          지속적 통합 분야에서 가장 유명한 서비스는 아마도 Travis CI인 것 같다. 내 경우에는 소프트웨어 시험이 아닌 이 블로그의 빌드 테스트를 위해 처음 사용하기 시작했었는데, Go 프로그래밍을 시작한 이후에는 소프트웨어 빌드 시험을 위해서도 사용하고 있다. 작년 후반에 만들었던 “현천” 프로젝트의 OAuth2 인증 서비스인 UART의 기반을 업그레이드하다가, 기반환경 및 Travis CI를 이용한...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/XbH8r1R69W8" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Tue, 06 Mar 2018 21:30:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/XbH8r1R69W8/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/travis-ci/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/travis-ci/</feedburner:origLink></item>
+    <content type="html"><![CDATA[<img src="https://images-na.ssl-images-amazon.com/images/I/51T5cdc4mQL.jpg"/><p>So stay with us, because later this afternoon, we’re lucky enough to be talking to Anna Scott.</p>
+<p>Hollywood’s biggest star by far.<br>Miss Scott’s latest film is once again topping the charts.</p>
+]]></content>
     
-      <item>
-        <title>Docker Cloud에서 자동빌드하기</title>
-        <description>Setting Automated Build on Docker Cloud - 
-          ”‘쓸만한’ Docker Image 만들기 - Part 2“에서 Docker Cloud에 Image를 올리는 과정에 대해서 정리하면서, Docker Hub, Docker Cloud 등의 화면을 잠깐 봤다. 떡 본 김에 제사 지낸다고, Docker Cloud에 Image를 올린 김에 Docker Cloud가 제공하는 자동빌드 서비스를 한 번 써봤다. 이 글은, Github의 특정 저장소에 Commit이 일어나면, 이에 반응하여 Docker...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/xxE2TrewSxU" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Wed, 21 Feb 2018 17:30:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/xxE2TrewSxU/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/automated-build-with-docker-cloud/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/automated-build-with-docker-cloud/</feedburner:origLink></item>
+    <summary type="html">
     
-      <item>
-        <title>'쓸만한' Docker Image 만들기 - Part 2</title>
-        <description>Build and Push a Docker Image For Go Development - 
-          “Hello World 급” Image 작성을 맛봤던 “Docker: 나의 첫 Docker Image”, 그리고 Alpine Linux를 활용하여 C Library를 포함한 “운영체계급” 기반 Image를 만들었던 ‘쓸만한’ Docker Image 만들기 - Part 1에 이어, 이번에는 실제 사용을 고려한 Go 언어 개발환경을 위한 Docker Image를 만들고 그것을 Registry에 등록하는 과정을 정리한다. Docker에 대한 이 묶음글은...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/8dWOv0MlKkU" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Tue, 20 Feb 2018 23:00:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/8dWOv0MlKkU/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/build-usable-docker-image-part2/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/build-usable-docker-image-part2/</feedburner:origLink></item>
+      &lt;img src=&quot;https://images-na.ssl-images-amazon.com/images/I/51T5cdc4mQL.jpg&quot;/&gt;&lt;p&gt;So stay with us, because later this afternoon, we’re lucky e
     
-      <item>
-        <title>'쓸만한' Docker Image 만들기 - Part 1</title>
-        <description>Build an Usable Docker Image with Alpine Linux - 
-          설날 연휴가 시작되기 전, Docker: 나의 첫 Docker Image라는 글을 통해 아주 기본적인 Docker Image를 만들어서 그것을 기반으로 Container를 실행하는 예에 대한 글을 올렸다. 이번에는, 예시가 아닌 실제로 활용할 수 있는 Image를 만들고 그것을 Docker Registry에 등록하는 과정에 대하여 기록하려고 한다. 이 글에는 그 과정 중, Alpine Linux를 기반으로 Docker...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/QN6V0EiBrLQ" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Mon, 19 Feb 2018 21:00:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/QN6V0EiBrLQ/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/build-usable-docker-image-part1/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/build-usable-docker-image-part1/</feedburner:origLink></item>
+    </summary>
     
-      <item>
-        <title>Docker: 나의 첫 Docker Image</title>
-        <description>Build and Push my own Docker Image - 
-          프로그램이 메모리에 올라와 제어를 넘겨 받으면 프로세스가 되고, Disk 위의 Kernel Image가 메모리에 올라오면 컴퓨터가 살아난다. 이렇게, 컴퓨터 세상은 깨어 있는 무언가와 그것을 뒷받힘하는 자고 있는 무언가의 쌍으로 이루어져 있다. Docker 역시 이 프랙털 안에 있는데, 메모리에 올라와 깨어 움직이는 Container와, 이것이 본으로 삼는, 저장소에서 잠을 자는 Image가 그것이다. 이...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/QA48BUHxJSM" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Wed, 14 Feb 2018 13:20:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/QA48BUHxJSM/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/build-my-first-docker-image/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/build-my-first-docker-image/</feedburner:origLink></item>
+      <category term="english" scheme="https://sungyeolwoo.github.io/categories/english/"/>
     
-      <item>
-        <title>Docker: Installation and Test Drive</title>
-        <description>Utuntu 위에 Docker 설치하고 맛보기 - 
-          Docker는 Linux 위에서 동작하는 Container 관리 소프트웨어다. 지난 글 Docker: Getting Started with Docker에서는 Container와 Docker의 개념을 간단히 정리했고, 이번 글에서는 Ubuntu Linux 위에 Docker를 설치하고 시운전을 해본 내용을 정리하려고 한다. Docker는 리눅스가 제공하는 자원 격리기술을 이용하는 것이기 때문에, 이미 리눅스가 설치되어있는 상태라면 몇 단계의 간단한 명령 수행 만으로 쉽게...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/oG3_krVJnf4" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Thu, 08 Feb 2018 14:30:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/oG3_krVJnf4/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/docker-installation-and-test-drive/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/docker-installation-and-test-drive/</feedburner:origLink></item>
     
-      <item>
-        <title>Docker: Getting Started with Docker</title>
-        <description>Docker 시작하기 - 
-          예상하지 못했던 여유가 생겨서, 미루고 또 미뤘던 주제를 하나 정리하려고 한다. 이미 많은 사람들에게 친숙한 기술용어가 되어버린 Container, 그리고 그 시대를 이끌고 있는 대표주자인 Docker가 그것인데, 이번 글에서는 Docker의 개념에 대하여 대충 정리하고, 다음 글에서는 Ubuntu 환경에서 Docker를 설치하여 맛을 보는 과정을 짧게 정리하려고 한다. 지구의 Computing 환경은 가상화의 시대를...&lt;img src="http://feeds.feedburner.com/~r/sauru-so/~4/rIPV6dP9mQA" height="1" width="1" alt=""/&gt;</description>
-        <pubDate>Thu, 08 Feb 2018 10:00:00 +0900</pubDate>
-        <link>http://feedproxy.google.com/~r/sauru-so/~3/rIPV6dP9mQA/</link>
-        <guid isPermaLink="false">https://www.sauru.so/blog/getting-started-with-docker/</guid>
-      <feedburner:origLink>https://www.sauru.so/blog/getting-started-with-docker/</feedburner:origLink></item>
+      <category term="english" scheme="https://sungyeolwoo.github.io/tags/english/"/>
     
-  </channel>
-</rss>
+      <category term="notting hill" scheme="https://sungyeolwoo.github.io/tags/notting-hill/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>글을 쓴다는 것..</title>
+    <link href="https://sungyeolwoo.github.io/2017/09/19/talk/once_upon_a_time/"/>
+    <id>https://sungyeolwoo.github.io/2017/09/19/talk/once_upon_a_time/</id>
+    <published>2017-09-18T15:00:00.000Z</published>
+    <updated>2017-09-18T21:38:56.000Z</updated>
+    
+    <content type="html"><![CDATA[<img src="http://1.bp.blogspot.com/-G7W7C_Ioo54/VAUpSQnimrI/AAAAAAAAVeo/ap5Oyc8JkTE/s1600/Writing.jpg"/><p>처음엔 두려웠다. </p>
+<p>그리고 뭔가를 남들과 다른 무언가를 거창하게 해야만 할 것 같았다.<br>내 생각이 틀렸다. </p>
+<p>나는 매일 많은 자료를 보지만 본다고 그게 <code>내 것</code>이 된 건 아니었다. </p>
+<p><code>내 것</code>은 정확하게 이해하고 다시 내가 정리해서 말하고 글로 표현할 수 있어야 비로소 <code>내 것</code>이라고 말할 수 있는 것 아닐까?</p>
+<p>이제부터 사소한 것들도 기록하면서 <code>내 것</code>을 기록해보자.</p>
+<p>더불어 내가 어떻게 나아가고 있는지 이전과 얼마나 달라졌는지 알게 되는 건 덤이다.</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;img src=&quot;http://1.bp.blogspot.com/-G7W7C_Ioo54/VAUpSQnimrI/AAAAAAAAVeo/ap5Oyc8JkTE/s1600/Writing.jpg&quot;/&gt;&lt;p&gt;처음엔 두려웠다. &lt;/p&gt;
+&lt;p&gt;그리고 뭔가를 남들과 다른 
+    
+    </summary>
+    
+      <category term="talk" scheme="https://sungyeolwoo.github.io/categories/talk/"/>
+    
+    
+      <category term="talk" scheme="https://sungyeolwoo.github.io/tags/talk/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>잘못된 커밋을 찾아보자! (git bisect)</title>
+    <link href="https://sungyeolwoo.github.io/2017/09/19/programming/git/bisect/"/>
+    <id>https://sungyeolwoo.github.io/2017/09/19/programming/git/bisect/</id>
+    <published>2017-09-18T15:00:00.000Z</published>
+    <updated>2017-09-18T20:22:31.000Z</updated>
+    
+    <content type="html"><![CDATA[<img src="/images/git.png"/><h2 id="bisect"><a href="#bisect" class="headerlink" title="bisect"></a>bisect</h2><p>프로젝트를 진행하다가 <em>버그가 발견</em>되었다. 이럴때 <strong>어떤 커밋이 문제</strong>인지 알아야하는데 그러려면 <code>git history</code>를 통해 커밋 메시지를 일일히 확인해야 한다. </p>
+<p>이 번거로운 작업을 한다고 생각하면 끔찍하다. </p>
+<p>하지만 git이 누구인가?<br>git의 <code>bisect</code> 명령어를 이용하면 좀 더 수월하게 어떤 문제가 있었는지 찾아볼 수 있다.</p>
+<h3 id="사용법"><a href="#사용법" class="headerlink" title="사용법"></a>사용법</h3><p>이 기능을 사용하기 전에 두가지 준비 사항이 있다. </p>
+<ol>
+<li>문제가 <strong>발생하는</strong> 커밋(ex. 98aa87c) 찾기</li>
+<li>문제가 <strong>발생하지 않는</strong> 커밋(ex. d997763) 찾기 </li>
+</ol>
+<p>위 준비를 마쳤다고 가정하고 아래 명령어를 보면 아주 쉽게 이해할 수 있다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ git bisect start</div><div class="line">$ git bisect good d997763 //문제가 발생하지 않는 커밋</div><div class="line">$ git bisect bad 98aa87c //문제가 발생하는 커밋</div></pre></td></tr></table></figure>
+<p>이렇게 하면 git이 예상하는 특정 커밋으로 변경을 해준다. (2진 트리 검색)<br>그리고 <code>roughly x steps</code>과 같은 메시지가 보일텐데<br>이건 <code>x</code>번의 테스트를 더 거치면 문제되는 커밋을 찾아낼 수 있겠다는 예상 메시지이다.</p>
+<p>이 시점에서 테스트를 해보고 <strong>동일한 문제가 발생</strong>하는지 아니면 <strong>발생하지 않는지</strong> 여부를 git에게 알려주면 된다.</p>
+<p>여전히 문제가 발생한다면 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ git bisect bad</div></pre></td></tr></table></figure>
+<p>문제가 발생하지 않는다면</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ git bisect good</div></pre></td></tr></table></figure>
+<p>라고 입력해주면 git이 점점 범위를 좁혀가면서 찾아준다. </p>
+<h2 id="참고"><a href="#참고" class="headerlink" title="참고"></a>참고</h2><ul>
+<li><a href="http://insanehong.kr/post/debuging-with-git/" target="_blank" rel="external">http://insanehong.kr/post/debuging-with-git/</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;img src=&quot;/images/git.png&quot;/&gt;&lt;h2 id=&quot;bisect&quot;&gt;&lt;a href=&quot;#bisect&quot; class=&quot;headerlink&quot; title=&quot;bisect&quot;&gt;&lt;/a&gt;bisect&lt;/h2&gt;&lt;p&gt;프로젝트를 진행하다가 &lt;em&gt;버그가 발견&lt;/em
+    
+    </summary>
+    
+      <category term="git" scheme="https://sungyeolwoo.github.io/categories/git/"/>
+    
+    
+      <category term="git" scheme="https://sungyeolwoo.github.io/tags/git/"/>
+    
+  </entry>
+  
+</feed>

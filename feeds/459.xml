@@ -1,268 +1,188 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-  <title>Pronomad&#39;s Blog</title>
-  
-  <link href="/atom.xml" rel="self"/>
-  
-  <link href="https://sungyeolwoo.github.io/"/>
-  <updated>2017-09-19T17:18:44.000Z</updated>
-  <id>https://sungyeolwoo.github.io/</id>
-  
-  <author>
-    <name>Pronomad</name>
-    
-  </author>
-  
-  <generator uri="http://hexo.io/">Hexo</generator>
-  
-  <entry>
-    <title>프로젝트로 완성하는 Go 프로그래밍 - Chat</title>
-    <link href="https://sungyeolwoo.github.io/2017/09/20/programming/go/blueprints/chat/"/>
-    <id>https://sungyeolwoo.github.io/2017/09/20/programming/go/blueprints/chat/</id>
-    <published>2017-09-19T15:00:00.000Z</published>
-    <updated>2017-09-19T17:18:44.000Z</updated>
-    
-    <content type="html"><![CDATA[<img src="http://image.yes24.com/momo/TopCate1339/MidCate008/133875384.jpg"/><blockquote>
-<p>Github: <a href="https://github.com/gaebaksal/goblueprints/tree/master/chat" target="_blank" rel="external">https://github.com/gaebaksal/goblueprints/tree/master/chat</a></p>
-</blockquote>
-<h3 id="배울-내용"><a href="#배울-내용" class="headerlink" title="배울 내용"></a>배울 내용</h3><ul>
-<li>HTTP 요청을 처리하기 위한 <code>net/http</code> 패키지</li>
-<li>템플릿 기반 콘텐츠를 사용자의 브라우저에 전달</li>
-<li>Go 인터페이스를 충족하는 자체 <code>http.Handler</code> 타입 구현</li>
-<li>Go의 고루틴을 사용해 애플리케이션이 <code>여러 작업을 동시에 수행</code>하도록 허용</li>
-<li>채널을 사용해 헌재 실행 중인 고루틴 간 정보 공유</li>
-<li>웹 소켓과 같은 최신 기능을 사용하도록 HTTP 요청 업그레이드</li>
-<li>내부 동작을 좀 더 잘 이해하기 위해 애플리케이션에 추적 기능 추가</li>
-<li>테스트 주도 개발(TDD) 방법을 사용해 전체 Go패키지 작성</li>
-<li>노출된(exported) 인터페이스를 통해 비노출(unexported) 타입 반환</li>
-</ul>
-<h3 id="간단한-웹-서버"><a href="#간단한-웹-서버" class="headerlink" title="간단한 웹 서버"></a>간단한 웹 서버</h3><ul>
-<li><p><code>http.HandleFunc</code> 함수는 경로 패턴을 두 번째 인수로 전달해 매핑한다.</p>
-</li>
-<li><p><code>func(w http.ResponseWriter, r *http.Request)</code> 함수의 형태는 Go 표준 라이브러리를 통해 HTTP 요청을 처리하는 일반적인 방법이다.</p>
-</li>
-<li><p><code>package main</code>을 사용하고 있는데 재사용하는 패키지를 제작하는 경우 <code>package chat</code>과 같은 이름을 사용할 수 있다.</p>
-</li>
-<li><figure class="highlight go"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">go</span> run main.<span class="keyword">go</span></div></pre></td></tr></table></figure>
-</li>
-<li><p>보통은 <code>go build</code>를 통해서 바이너리를 만들고 배포하지만 간단하게 실행할 때는 위와 같이 실행 할 수 있다.</p>
-</li>
-</ul>
-<h3 id="템플릿을-통한-로직과-뷰-분리"><a href="#템플릿을-통한-로직과-뷰-분리" class="headerlink" title="템플릿을 통한 로직과 뷰 분리"></a>템플릿을 통한 로직과 뷰 분리</h3><ul>
-<li><p>Go 표준 라이브러리는 <strong>두 개</strong>의 기본 템플릿 패키지를 가지고 있다.</p>
-<ul>
-<li><code>text/template</code>, <code>html/template</code></li>
-<li>둘의 차이점은 <code>html/template</code>은 데이터가 템플릿에 삽입되는 문맥(context)을 이해한다는 점을 제외하면 동일하다.</li>
-<li>이는 <strong>스크립트 주입(Script Injection) 공격</strong>을 방지하고 <strong>URL의 특수 문자를 인코딩</strong>하는 등의 일반적인 문제를 해결해주기 때문에 유용하다.</li>
-</ul>
-</li>
-<li><p>외부 파일을 아주 쉽게 로드할 수 있어 편리하다.</p>
-</li>
-<li><p><code>템플릿 컴파일</code>이라는 것이 존재하는데, 다양한 데이터와 혼합하기 위해 <strong>원본 템플릿을 해석하고 준비하는 하나의 프로세스</strong>이다. 이는 <strong>템플릿을 사용하기 전에 반드시 해야 하며 최초 1회만 수행</strong>하면 된다.</p>
-</li>
-<li><p><code>sync.Once</code> <strong>타입</strong>을 사용해 템플릿을 한 번 컴파일 한다. </p>
-<ul>
-<li><a href="https://thebook.io/006806/ch05/03/03/" target="_blank" rel="external">참고</a></li>
-<li>특정 함수를 한 번만 수행해야할 때 사용한다.</li>
-<li><code>sync.Once</code> 구조체는 다음 메서드를 제공한다.</li>
-<li><figure class="highlight go"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o *Once)</span> <span class="title">Do</span><span class="params">(f <span class="keyword">func</span>()</span>)</span></div></pre></td></tr></table></figure>
-</li>
-<li><p>한 번만 수행해야 하는 함수를 <code>Do()</code> 메서드의 매개변수로 전달하여 실행하면 여러 고루틴에서 실행한다고 해도 해당 함수는 <strong>한 번</strong>만 수행된다.</p>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="자체-핸들러-사용"><a href="#자체-핸들러-사용" class="headerlink" title="자체 핸들러 사용"></a>자체 핸들러 사용</h3><ul>
-<li><a href="http://golang.site/go/article/111-%EA%B0%84%EB%8B%A8%ED%95%9C-%EC%9B%B9-%EC%84%9C%EB%B2%84-HTTP-%EC%84%9C%EB%B2%84" target="_blank" rel="external">참고</a></li>
-<li><strong>HTTP</strong>를 구현할 때엔 <code>http.HandleFunc</code> 메서드를 이용했었다.</li>
-<li>이것과 비슷하게 <code>http.Handle</code> 메서드를 사용할 수 있다.</li>
-<li><code>HandleFunc</code>는 두 번째 매개변수에 <strong>함수</strong>를 넣어야 하고, <code>Handle</code>은 두 번째 매개변수에 <strong>인터페이스를 만족</strong>시킨 객체를 넣어야한다.</li>
-<li>아래와 같이 <code>Handle</code>의 두번째 매개변수 <strong>Handler Interface</strong>는 구현된 <code>ServeHTTP</code> 메서드를 실행한다.<figure class="highlight go"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// server.go of net/http pacakge</span></div><div class="line"><span class="keyword">type</span> Handler <span class="keyword">interface</span> &#123;</div><div class="line">  ServeHTTP(ResponseWriter, *Request)</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">func</span> <span class="title">Handle</span><span class="params">(pattern <span class="keyword">string</span>, handler Handler)</span></span> &#123; </div><div class="line">  DefaultServeMux.Handle(pattern, handler) </div><div class="line">&#125;</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<h3 id="서버상의-채팅방-및-클라이언트-모델링"><a href="#서버상의-채팅방-및-클라이언트-모델링" class="headerlink" title="서버상의 채팅방 및 클라이언트 모델링"></a>서버상의 채팅방 및 클라이언트 모델링</h3><ul>
-<li><code>gorilla/websocket</code> 패키지를 이용해서 구현</li>
-<li>Go 채널<blockquote>
-<p>비차단형(non-blocking)이며 스레드로부터 안전한(thread-safe) 방식으로 송신자가 데이터를 전달하고 수신자가 데이터를 읽는 메모리 내(in-memory) 스레드 안전 메시지 대기열(queue)로 생각할 수 있다.</p>
-</blockquote>
-</li>
-<li>thread-safe<blockquote>
-<p>여러 스레드가 동시에 액세스할 때 경쟁 조건(race condition)이 없음을 보장한다.</p>
-</blockquote>
-</li>
-<li>race condition - <a href="http://egloos.zum.com/minjang/v/1148855" target="_blank" rel="external">http://egloos.zum.com/minjang/v/1148855</a></li>
-</ul>
-<h3 id="관용적인-Go를-사용한-동시성-프로그래밍"><a href="#관용적인-Go를-사용한-동시성-프로그래밍" class="headerlink" title="관용적인 Go를 사용한 동시성 프로그래밍"></a>관용적인 Go를 사용한 동시성 프로그래밍</h3><ul>
-<li>공유 메모리를 동기화하거나 변경할 필요가 있을 때, 또는 채널 내 다양한 액티비티에 따라 각기 다른 동작을 실행해야 할 때, 동시성을 위해 제공하는 매우 강력한 기능인 <code>select</code>문을 사용할 수 있다.</li>
-<li><code>select</code>문은  <strong>한 케이스의 코드만 실행한다는 점이 중요</strong>하다. 이것이 한 번에 한 가지만 변경됨을 보장하면서 동기화하는 방법이다.</li>
-</ul>
-<h3 id="채팅방을-HTTP-핸들러로-변환"><a href="#채팅방을-HTTP-핸들러로-변환" class="headerlink" title="채팅방을 HTTP 핸들러로 변환"></a>채팅방을 HTTP 핸들러로 변환</h3><ul>
-<li>웹 소켓을 사용하려면 <code>websocket.Upgrader</code> 타입을 사용해서 <code>HTTP</code>를 <code>WebSocket Protocol</code>로 업그레이드 해야한다.<ul>
-<li>적용하면 클라이언트가 <code>ws://www.example.com/socketserver</code>로 접근할 수 있게 된다.</li>
-</ul>
-</li>
-<li><code>websocket.Upgrader</code>는 재사용이 가능하므로 한 개만 만들면 된다.</li>
-</ul>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;img src=&quot;http://image.yes24.com/momo/TopCate1339/MidCate008/133875384.jpg&quot;/&gt;&lt;blockquote&gt;
-&lt;p&gt;Github: &lt;a href=&quot;https://github.com/gaebaksal/g
-    
-    </summary>
-    
-      <category term="go" scheme="https://sungyeolwoo.github.io/categories/go/"/>
-    
-    
-      <category term="go" scheme="https://sungyeolwoo.github.io/tags/go/"/>
-    
-      <category term="blueprints" scheme="https://sungyeolwoo.github.io/tags/blueprints/"/>
-    
-      <category term="golang" scheme="https://sungyeolwoo.github.io/tags/golang/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Notting Hill</title>
-    <link href="https://sungyeolwoo.github.io/2017/09/19/english/LS/notting_hill/objective/"/>
-    <id>https://sungyeolwoo.github.io/2017/09/19/english/LS/notting_hill/objective/</id>
-    <published>2017-09-18T15:00:00.000Z</published>
-    <updated>2017-09-19T17:37:39.000Z</updated>
-    
-    <content type="html"><![CDATA[<img src="http://image.kyobobook.co.kr/images/book/xlarge/709/x9788901215709.jpg"/><h1 id="영어…"><a href="#영어…" class="headerlink" title="영어…"></a>영어…</h1><p>영어에 대해 많은 고민을 했었다.<br>그리고 다양한 방법을 제시하는 많은 책과 글, 영상을 봐왔다.<br>당연히 이 많은 정보는 내 영어 실력을 향상하게 시키지 않았다.</p>
-<p>왜 향상되지 않았을까?<br>어떤 방법이든 공통으로 말하는 내용이 있었다.</p>
-<blockquote>
-<p>바로, <strong>꾸준히 계속하는 것</strong></p>
-</blockquote>
-<p>향상되지 않은 이유는 <code>꾸준히 계속</code> 하지 않았기 때문이다.<br>그렇다면 내가 <code>꾸준히 계속</code> 하지 않는 이유는 무엇일까?<br>목표가 뚜렷하지 않았고(막연하게 영어 잘하고 싶다..), 과정이 <code>지루</code>하다는 점이 문제였다.</p>
-<p>결국, 무엇이든 <code>재미</code>가 있어야 <code>꾸준히 계속</code> 할 수 있다는 점이었고, 그것과 더불어 <code>목표</code>도 구체적이어야 했다.<br>그래서 원서도 읽어보고, 오디오북도 들어보고 했지만 금방 질렸던 것 같다.<br>가장 재미있는 건…. <code>팝송</code>을 부르거나 <code>영화</code>를 보는 것이었다.</p>
-<p>하지만 팝송은 가사 스타일이 다양하고 제대로 된 한글 번역 자료들을 구하기도 어려워서 학습해도 될까? 라는 생각이 들었고, 영화는 처음엔 재미있지만 계속 볼 수 있을까 고민했다. </p>
-<p>결국 이 책을 통해 영화로 하기로 결정했고, <code>어떻게</code> 하면 좋을지에 대한 도움을 받을 수 있었다.<br>사실 더 좋은 방법도 있겠지만 이번에 이 방법을 끝까지 해보고 싶다.</p>
-<p>그럼 시작해보자!</p>
-<h1 id="공부-방법"><a href="#공부-방법" class="headerlink" title="공부 방법"></a>공부 방법</h1><ol>
-<li>영화 선정 </li>
-<li>자막 없이 영화 보기 (1LS)</li>
-<li>한국어 자막으로 이해하기 (1LS)</li>
-<li>영어 자막으로 보면서, 들리지 않는 구간 <code>필기</code></li>
-<li>들리지 않는 구간 <strong>반복</strong>해서 <code>듣고</code>, <code>말하기</code></li>
-<li>모든 장면에 위 4-5번 사이클이 끝나면 자막 없이 97번 보기 (97LS)</li>
-</ol>
-<h1 id="목표"><a href="#목표" class="headerlink" title="목표!"></a>목표!</h1><p><code>크리스마스 이브</code>까지 <strong>100LS</strong>를 완주한다.</p>
-<p>시작일: 2017년 9월 19일<br>목표일: 2017년 12월 24일</p>
-<h1 id="기대하는-3개월-후-내-모습"><a href="#기대하는-3개월-후-내-모습" class="headerlink" title="기대하는 3개월 후 내 모습"></a>기대하는 3개월 후 내 모습</h1><p>영어에 대한 <code>울렁증</code>도 사라지고, <code>자신감</code>이 생겼다.<br>이 영화를 자막 없이 다 듣고 이해할 수 있고, 영어 표현이 몸으로 느껴지고 생생하게 떠오른다.<br>언어교환모임에 나가서 실제 외국인과 대화를 나눈다.</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;img src=&quot;http://image.kyobobook.co.kr/images/book/xlarge/709/x9788901215709.jpg&quot;/&gt;&lt;h1 id=&quot;영어…&quot;&gt;&lt;a href=&quot;#영어…&quot; class=&quot;headerlink&quot; title=&quot;영어…
-    
-    </summary>
-    
-      <category term="english" scheme="https://sungyeolwoo.github.io/categories/english/"/>
-    
-    
-      <category term="english" scheme="https://sungyeolwoo.github.io/tags/english/"/>
-    
-      <category term="notting hill" scheme="https://sungyeolwoo.github.io/tags/notting-hill/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Notting Hill - 1</title>
-    <link href="https://sungyeolwoo.github.io/2017/09/19/english/LS/notting_hill/1/"/>
-    <id>https://sungyeolwoo.github.io/2017/09/19/english/LS/notting_hill/1/</id>
-    <published>2017-09-18T15:00:00.000Z</published>
-    <updated>2017-09-19T17:37:49.000Z</updated>
-    
-    <content type="html"><![CDATA[<img src="https://images-na.ssl-images-amazon.com/images/I/51T5cdc4mQL.jpg"/><p>So stay with us, because later this afternoon, we’re lucky enough to be talking to Anna Scott.</p>
-<p>Hollywood’s biggest star by far.<br>Miss Scott’s latest film is once again topping the charts.</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;img src=&quot;https://images-na.ssl-images-amazon.com/images/I/51T5cdc4mQL.jpg&quot;/&gt;&lt;p&gt;So stay with us, because later this afternoon, we’re lucky e
-    
-    </summary>
-    
-      <category term="english" scheme="https://sungyeolwoo.github.io/categories/english/"/>
-    
-    
-      <category term="english" scheme="https://sungyeolwoo.github.io/tags/english/"/>
-    
-      <category term="notting hill" scheme="https://sungyeolwoo.github.io/tags/notting-hill/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>글을 쓴다는 것..</title>
-    <link href="https://sungyeolwoo.github.io/2017/09/19/talk/once_upon_a_time/"/>
-    <id>https://sungyeolwoo.github.io/2017/09/19/talk/once_upon_a_time/</id>
-    <published>2017-09-18T15:00:00.000Z</published>
-    <updated>2017-09-18T21:38:56.000Z</updated>
-    
-    <content type="html"><![CDATA[<img src="http://1.bp.blogspot.com/-G7W7C_Ioo54/VAUpSQnimrI/AAAAAAAAVeo/ap5Oyc8JkTE/s1600/Writing.jpg"/><p>처음엔 두려웠다. </p>
-<p>그리고 뭔가를 남들과 다른 무언가를 거창하게 해야만 할 것 같았다.<br>내 생각이 틀렸다. </p>
-<p>나는 매일 많은 자료를 보지만 본다고 그게 <code>내 것</code>이 된 건 아니었다. </p>
-<p><code>내 것</code>은 정확하게 이해하고 다시 내가 정리해서 말하고 글로 표현할 수 있어야 비로소 <code>내 것</code>이라고 말할 수 있는 것 아닐까?</p>
-<p>이제부터 사소한 것들도 기록하면서 <code>내 것</code>을 기록해보자.</p>
-<p>더불어 내가 어떻게 나아가고 있는지 이전과 얼마나 달라졌는지 알게 되는 건 덤이다.</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;img src=&quot;http://1.bp.blogspot.com/-G7W7C_Ioo54/VAUpSQnimrI/AAAAAAAAVeo/ap5Oyc8JkTE/s1600/Writing.jpg&quot;/&gt;&lt;p&gt;처음엔 두려웠다. &lt;/p&gt;
-&lt;p&gt;그리고 뭔가를 남들과 다른 
-    
-    </summary>
-    
-      <category term="talk" scheme="https://sungyeolwoo.github.io/categories/talk/"/>
-    
-    
-      <category term="talk" scheme="https://sungyeolwoo.github.io/tags/talk/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>잘못된 커밋을 찾아보자! (git bisect)</title>
-    <link href="https://sungyeolwoo.github.io/2017/09/19/programming/git/bisect/"/>
-    <id>https://sungyeolwoo.github.io/2017/09/19/programming/git/bisect/</id>
-    <published>2017-09-18T15:00:00.000Z</published>
-    <updated>2017-09-18T20:22:31.000Z</updated>
-    
-    <content type="html"><![CDATA[<img src="/images/git.png"/><h2 id="bisect"><a href="#bisect" class="headerlink" title="bisect"></a>bisect</h2><p>프로젝트를 진행하다가 <em>버그가 발견</em>되었다. 이럴때 <strong>어떤 커밋이 문제</strong>인지 알아야하는데 그러려면 <code>git history</code>를 통해 커밋 메시지를 일일히 확인해야 한다. </p>
-<p>이 번거로운 작업을 한다고 생각하면 끔찍하다. </p>
-<p>하지만 git이 누구인가?<br>git의 <code>bisect</code> 명령어를 이용하면 좀 더 수월하게 어떤 문제가 있었는지 찾아볼 수 있다.</p>
-<h3 id="사용법"><a href="#사용법" class="headerlink" title="사용법"></a>사용법</h3><p>이 기능을 사용하기 전에 두가지 준비 사항이 있다. </p>
-<ol>
-<li>문제가 <strong>발생하는</strong> 커밋(ex. 98aa87c) 찾기</li>
-<li>문제가 <strong>발생하지 않는</strong> 커밋(ex. d997763) 찾기 </li>
-</ol>
-<p>위 준비를 마쳤다고 가정하고 아래 명령어를 보면 아주 쉽게 이해할 수 있다.</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ git bisect start</div><div class="line">$ git bisect good d997763 //문제가 발생하지 않는 커밋</div><div class="line">$ git bisect bad 98aa87c //문제가 발생하는 커밋</div></pre></td></tr></table></figure>
-<p>이렇게 하면 git이 예상하는 특정 커밋으로 변경을 해준다. (2진 트리 검색)<br>그리고 <code>roughly x steps</code>과 같은 메시지가 보일텐데<br>이건 <code>x</code>번의 테스트를 더 거치면 문제되는 커밋을 찾아낼 수 있겠다는 예상 메시지이다.</p>
-<p>이 시점에서 테스트를 해보고 <strong>동일한 문제가 발생</strong>하는지 아니면 <strong>발생하지 않는지</strong> 여부를 git에게 알려주면 된다.</p>
-<p>여전히 문제가 발생한다면 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ git bisect bad</div></pre></td></tr></table></figure>
-<p>문제가 발생하지 않는다면</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ git bisect good</div></pre></td></tr></table></figure>
-<p>라고 입력해주면 git이 점점 범위를 좁혀가면서 찾아준다. </p>
-<h2 id="참고"><a href="#참고" class="headerlink" title="참고"></a>참고</h2><ul>
-<li><a href="http://insanehong.kr/post/debuging-with-git/" target="_blank" rel="external">http://insanehong.kr/post/debuging-with-git/</a></li>
-</ul>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;img src=&quot;/images/git.png&quot;/&gt;&lt;h2 id=&quot;bisect&quot;&gt;&lt;a href=&quot;#bisect&quot; class=&quot;headerlink&quot; title=&quot;bisect&quot;&gt;&lt;/a&gt;bisect&lt;/h2&gt;&lt;p&gt;프로젝트를 진행하다가 &lt;em&gt;버그가 발견&lt;/em
-    
-    </summary>
-    
-      <category term="git" scheme="https://sungyeolwoo.github.io/categories/git/"/>
-    
-    
-      <category term="git" scheme="https://sungyeolwoo.github.io/tags/git/"/>
-    
-  </entry>
-  
-</feed>
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>gywndi&#039;s database</title>
+	<atom:link href="http://gywn.net/feed/" rel="self" type="application/rss+xml" />
+	<link>http://gywn.net</link>
+	<description>&#62;&#62; database and research</description>
+	<lastBuildDate>Mon, 28 Jan 2019 23:58:03 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>hourly</sy:updatePeriod>
+	<sy:updateFrequency>1</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=4.1.25</generator>
+	<item>
+		<title>PMM팁1탄! MySQL을 READ-ONLY 기준으로 표기해보기.</title>
+		<link>http://gywn.net/2019/01/pmm-tip1-classified-by-mysql-readonly/</link>
+		<comments>http://gywn.net/2019/01/pmm-tip1-classified-by-mysql-readonly/#comments</comments>
+		<pubDate>Mon, 28 Jan 2019 23:58:03 +0000</pubDate>
+		<dc:creator><![CDATA[gywndi]]></dc:creator>
+				<category><![CDATA[MariaDB]]></category>
+		<category><![CDATA[MySQL]]></category>
+		<category><![CDATA[PMM]]></category>
+		<category><![CDATA[Grafana]]></category>
+		<category><![CDATA[pmm]]></category>
+		<category><![CDATA[prometheus]]></category>
+
+		<guid isPermaLink="false">http://gywn.net/?p=2643</guid>
+		<description><![CDATA[Overview 어느덧 1월이 마무리되어가는 이 시점.. 한달 내내 놀다 시간 보내기에는 아쉬움이 많이 남아, 블로그 한두개 정도는 남겨보고자, 아주 간만에 노트북 앞에 앉습니다. 가장 기억 속에 맴도는 주제를 찾던 중, 작년 나름 많은 분석을 했었던 내용들을 한번 몇가지 주제로 정리해보고자 합니다. PMM(Percona Monitoring and Management)이라는 녀석으로 퉁 쳐서 이야기를 했지만, 사실 이번에 이야기할 내용은 Prometheus [&#8230;]]]></description>
+		<wfw:commentRss>http://gywn.net/2019/01/pmm-tip1-classified-by-mysql-readonly/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>[MySQL] Online Alter에도 헛점은 있더구나 &#8211; gdb, mysqld-debug 활용 사례</title>
+		<link>http://gywn.net/2018/10/online-alter-for-varchar/</link>
+		<comments>http://gywn.net/2018/10/online-alter-for-varchar/#comments</comments>
+		<pubDate>Fri, 12 Oct 2018 00:00:52 +0000</pubDate>
+		<dc:creator><![CDATA[gywndi]]></dc:creator>
+				<category><![CDATA[MariaDB]]></category>
+		<category><![CDATA[MySQL]]></category>
+		<category><![CDATA[Research]]></category>
+		<category><![CDATA[mariadb]]></category>
+		<category><![CDATA[online alter]]></category>
+		<category><![CDATA[percona server]]></category>
+
+		<guid isPermaLink="false">http://gywn.net/?p=2620</guid>
+		<description><![CDATA[Overview MySQL에서도 5.6부터는 온라인 Alter 기능이 상당부분 제공되기 시작했습니다. 인덱스과 칼럼 추가/삭제 뿐만 아니라, varchar 경우에는 부분적으로 칼럼 확장이 서비스 중단없이 가능한 것이죠. 물론 오라클 유저들에게는 당연한 오퍼레이션들이, MySQL에서는 두손들고 운동장 20바퀴 돌 정도로 기뻐할만한 기능들입니다. 물론, 대부분의 DDL을 테이블 잠금을 걸고 수행하던 5.5 시절에도 online alter를 위해 트리거 기반의 pt-online-schema-change 툴을 많이들 사용했었기에.. 서비스 [&#8230;]]]></description>
+		<wfw:commentRss>http://gywn.net/2018/10/online-alter-for-varchar/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>MySQL에서 Affected Rows를 병맛나게 활용해보자.</title>
+		<link>http://gywn.net/2018/03/mad-usage-with-mysql-affected-rows/</link>
+		<comments>http://gywn.net/2018/03/mad-usage-with-mysql-affected-rows/#comments</comments>
+		<pubDate>Mon, 26 Mar 2018 23:45:20 +0000</pubDate>
+		<dc:creator><![CDATA[gywndi]]></dc:creator>
+				<category><![CDATA[MariaDB]]></category>
+		<category><![CDATA[MySQL]]></category>
+		<category><![CDATA[affected rows]]></category>
+
+		<guid isPermaLink="false">http://gywn.net/?p=2610</guid>
+		<description><![CDATA[Overview 이제 슬슬 날이 풀려가고 있습니다. 얼어붙은 땅이 녹듯이, 오랜시간 얼어있던 블로그 공간도 잠시마나 녹여볼까 합니다. 사실 지난  “PMM 이야기 1편” 이후 2편, 3편 쭉 써야하지만.. 이노무 귀차니즘과 여기저기 산재한 낙서들을 아직 정리하지 못한 탓에.. 쿨럭.. 사실 오늘 얘기할 내용은 3년도 훨씬 전 내용으로, 블로그로 이미 정리했다고 지금까지 착각을 했던 이야기입니다. 바로 &#8220;Affected Rows&#8221; 값을 [&#8230;]]]></description>
+		<wfw:commentRss>http://gywn.net/2018/03/mad-usage-with-mysql-affected-rows/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>PMM 이야기 1편 &#8211; INTRO</title>
+		<link>http://gywn.net/2018/03/pmm-intro/</link>
+		<comments>http://gywn.net/2018/03/pmm-intro/#comments</comments>
+		<pubDate>Sat, 03 Mar 2018 17:33:28 +0000</pubDate>
+		<dc:creator><![CDATA[gywndi]]></dc:creator>
+				<category><![CDATA[MySQL]]></category>
+		<category><![CDATA[PMM]]></category>
+		<category><![CDATA[Research]]></category>
+		<category><![CDATA[monitoring]]></category>
+		<category><![CDATA[percona]]></category>
+		<category><![CDATA[pmm]]></category>
+		<category><![CDATA[prometheus]]></category>
+
+		<guid isPermaLink="false">http://gywn.net/?p=2589</guid>
+		<description><![CDATA[Overview 정말 오랜만에 글을 써봅니다. 은행이 오픈한지도 어언 8개월째를 훌쩍 접어들었네요. 여전히 MySQL 서버군에는 이렇다할 장애 없이, 무난(?)하게 하루하루를 지내고 있습니다.. (아.. 그렇다고 놀고만 있지는 않았어요!!) 사실 그동안의 경험과 삽질을 바탕으로, 필요성을 느꼈던 다양한 부분을 중앙 매니저에 최대한 녹여보았고, 그 집대성의 결과가 지금 뱅킹 MySQL시스템입니다. MHA 관리, 스키마 관리, 파티션 관리, 패스워드 관리, 백업/복구 관리..아.. [&#8230;]]]></description>
+		<wfw:commentRss>http://gywn.net/2018/03/pmm-intro/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>소소한 데이터 이야기 &#8211; pt-online-schema-change 편 -</title>
+		<link>http://gywn.net/2017/08/small-talk-pt-osc/</link>
+		<comments>http://gywn.net/2017/08/small-talk-pt-osc/#comments</comments>
+		<pubDate>Wed, 23 Aug 2017 22:20:31 +0000</pubDate>
+		<dc:creator><![CDATA[gywndi]]></dc:creator>
+				<category><![CDATA[MariaDB]]></category>
+		<category><![CDATA[MySQL]]></category>
+		<category><![CDATA[online alter]]></category>
+		<category><![CDATA[pt-online-schema-change]]></category>
+
+		<guid isPermaLink="false">http://gywn.net/?p=2557</guid>
+		<description><![CDATA[Overview MySQL 5.6부터는 Online ddl 기능을 제공하기 시작하였지만, 사실은 이전에도 트리거 기반의 online alter 유틸로 서비스 중단없이 테이블 스키마 변경을 수행했었습니다. 이중 percona에서 제공해주는 pt-online-schema-change가 많이들 활용되고 있는데요. 오늘은 돌다리도 망치로 때려가면서 안정성에 신중히 접근한 우리의 케이스에 대해서 데이터 기준으로 얘기를 해보고자 합니다. pt-online-schema-change? 얘기하기에 앞서서, 이 툴에 대해서 다시한번 짚어보겠습니다. 대충 동작 순서는 아래와 [&#8230;]]]></description>
+		<wfw:commentRss>http://gywn.net/2017/08/small-talk-pt-osc/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>데이터쟁이 입장으로 &#8220;슬로우 쿼리&#8221;를 다시 고민해보았습니다.</title>
+		<link>http://gywn.net/2017/08/mysql-slow-log-gather/</link>
+		<comments>http://gywn.net/2017/08/mysql-slow-log-gather/#comments</comments>
+		<pubDate>Mon, 14 Aug 2017 23:13:09 +0000</pubDate>
+		<dc:creator><![CDATA[gywndi]]></dc:creator>
+				<category><![CDATA[MySQL]]></category>
+		<category><![CDATA[slow query]]></category>
+
+		<guid isPermaLink="false">http://gywn.net/?p=2546</guid>
+		<description><![CDATA[Overview 서비스를 하면 당연히 실행이 오래 걸리는 쿼리, 슬로우 쿼리는 발생합니다. 원인은 정말 비효율적인 쿼리인 것도 있겠지만,  때로는 Lock, Disk fault 등등 원인은 다양합니다. DB 내/외부 요소에 의해서, 슬로우 쿼리가 발생하게 되는데.. 이것을 늘 모니터링하고 적시에 바로 최적화 적용을 하는 것이야말로, 안정적인 서비스 최상 품질 보장의 첫 걸음이라고 생각합니다. 물론, 이 관련해서는 여러가지 방법론이 있겠지만, [&#8230;]]]></description>
+		<wfw:commentRss>http://gywn.net/2017/08/mysql-slow-log-gather/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>[MySQL] 바쁜 서비스 투입 전, 이런 캐시 전략 어때요?</title>
+		<link>http://gywn.net/2017/06/mysql-os-cache-management/</link>
+		<comments>http://gywn.net/2017/06/mysql-os-cache-management/#comments</comments>
+		<pubDate>Thu, 15 Jun 2017 21:39:12 +0000</pubDate>
+		<dc:creator><![CDATA[gywndi]]></dc:creator>
+				<category><![CDATA[MySQL]]></category>
+		<category><![CDATA[dentry]]></category>
+		<category><![CDATA[dirty]]></category>
+		<category><![CDATA[memory]]></category>
+		<category><![CDATA[page cache]]></category>
+		<category><![CDATA[swap]]></category>
+		<category><![CDATA[unmap]]></category>
+
+		<guid isPermaLink="false">http://gywn.net/?p=2525</guid>
+		<description><![CDATA[Overview 데이터베이스를 운영한다는 것은 최적의 상태로 리소스를 &#8220;쥐어짜면서&#8221; 가장 효율적으로 데이터를 끄집어내야할텐데요. 지금은 SSD 디스크 도입으로 상당 부분 Disk I/O가 개선되었다지만, 여전히 메모리 효율은 굉장히 중요합니다. 특히나 Page Cache와 같은 항목이 과다하게 메모리를 점유하게 되면.. 다른 프로세스 효율에도 영향을 미칠 뿐만 아니라, 때로는 메모리 부족 현상으로 인하여 스왑 메모리에도 영향을 줄 수 있습니다. 서론은 짧게.. 이번에 [&#8230;]]]></description>
+		<wfw:commentRss>http://gywn.net/2017/06/mysql-os-cache-management/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>[MySQL] 슬레이브 하나 더 추가했을 뿐인데.. :-)</title>
+		<link>http://gywn.net/2017/06/mysql-slave-addition-effect/</link>
+		<comments>http://gywn.net/2017/06/mysql-slave-addition-effect/#comments</comments>
+		<pubDate>Mon, 12 Jun 2017 21:08:18 +0000</pubDate>
+		<dc:creator><![CDATA[gywndi]]></dc:creator>
+				<category><![CDATA[MySQL]]></category>
+		<category><![CDATA[mha]]></category>
+		<category><![CDATA[semi-sync replication]]></category>
+
+		<guid isPermaLink="false">http://gywn.net/?p=2505</guid>
+		<description><![CDATA[Overview MySQL의 꽃중의 꽃은 역시 비동기 방식의 데이터 복제라고 볼 수 있는데요. 지극히 개인적인 생각이기는 하지만, 슬레이브 노드를 데이터 일관성이 반드시 필요한 상황에서의 READ 스케일아웃을 &#8220;제외&#8221;하고는, 지금의 MySQL을 있게한 결정적인 한방이라고 봅니다. 물론 소셜 서비스에 따른 기존 스케일업으로는 도저히 감당할 수 없는 데이터 사이즈와 비용 요소도 직접적인 영향을 주었겠지만요. 뜬구름잡는 얘기는 여기까지로 마무리하고.. 슬레이브 노드를 [&#8230;]]]></description>
+		<wfw:commentRss>http://gywn.net/2017/06/mysql-slave-addition-effect/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>MySQL_5.7의 n-gram? 버그앤런!</title>
+		<link>http://gywn.net/2017/06/mysql_57-ngram-ft-bug-and-learn/</link>
+		<comments>http://gywn.net/2017/06/mysql_57-ngram-ft-bug-and-learn/#comments</comments>
+		<pubDate>Thu, 08 Jun 2017 19:52:06 +0000</pubDate>
+		<dc:creator><![CDATA[gywndi]]></dc:creator>
+				<category><![CDATA[MySQL]]></category>
+		<category><![CDATA[fulltext]]></category>
+		<category><![CDATA[n-gram]]></category>
+
+		<guid isPermaLink="false">http://gywn.net/?p=2486</guid>
+		<description><![CDATA[Overview 바로 얼마전 포스팅에서 n-gram에 대한 간단한 소개를 했었는데.. 아무래도 5.7에 처음으로 소개된 기능인만큼 현재 이슈 사항에 대해서 공유를 해볼 필요가 있어보입니다. (이전 포스팅: http://gywn.net/2017/04/mysql_57-ngram-ft-se/) 제가 겪은 상황과 우회할 수 있는 방안.. 그리고 현재 진행 상황에 대한 내용이예요. ^^ 1. Performance Problem 일단 InnoDB의 n-gram 인덱싱은 두 글자로만 나뉘어서 토큰으로 만들어집니다. 그리고 이 토큰들은 도큐멘트 아이디를 [&#8230;]]]></description>
+		<wfw:commentRss>http://gywn.net/2017/06/mysql_57-ngram-ft-bug-and-learn/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>MySQL_5.7의 n-gram 전문 검색을 이상하지 않게 써보아요.</title>
+		<link>http://gywn.net/2017/04/mysql_57-ngram-ft-se/</link>
+		<comments>http://gywn.net/2017/04/mysql_57-ngram-ft-se/#comments</comments>
+		<pubDate>Tue, 18 Apr 2017 23:47:31 +0000</pubDate>
+		<dc:creator><![CDATA[gywndi]]></dc:creator>
+				<category><![CDATA[MySQL]]></category>
+		<category><![CDATA[Research]]></category>
+		<category><![CDATA[ngram]]></category>
+
+		<guid isPermaLink="false">http://gywn.net/?p=2470</guid>
+		<description><![CDATA[Overview MySQL5.6부터는 InnoDB에서도 전문검색이 가능하기는 하였습니다만.. 아쉽게도 여전히 공백 기준으로 단어들이 파싱이 되는 &#8220;MeCab Full-Text Parser Plugin&#8221; 방식으로 동작합니다. 즉, 한국말처럼 공백만으로 단어를 파싱할 수 없는 언어의 경우에는 크게 매력적이지는 않습니다. InnoDB에서 전문검색 인덱싱이 가능하다는 것은 Transaction이 전제로 이루어지는 것이라고 볼 수 있기에.. 리플리케이션 및 시점 백업/복구 측면에서는 혁신으로 볼 수 있습니다. 반드시 Limit로 끊어서 [&#8230;]]]></description>
+		<wfw:commentRss>http://gywn.net/2017/04/mysql_57-ngram-ft-se/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+	</channel>
+</rss>
+
+<!-- Dynamic page generated in 0.051 seconds. -->
+<!-- Cached page generated by WP-Super-Cache on 2019-05-14 20:49:48 -->

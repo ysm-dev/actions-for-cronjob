@@ -1,720 +1,189 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>endtoendAI</title>
-    <description>We seek to provide high quality information on different aspects of Artificial Intelligence, including Machine Learning, Deep Learning, Reinforcement Learning, and Computer Vision.
-</description>
-    <link>https://www.endtoend.ai/</link>
-    <atom:link href="https://www.endtoend.ai/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 14 May 2019 07:58:48 +0000</pubDate>
-    <lastBuildDate>Tue, 14 May 2019 07:58:48 +0000</lastBuildDate>
-    <generator>Jekyll v3.8.5</generator>
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title></title>
+  
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="https://saystone.github.io/"/>
+  <updated>2019-01-17T04:44:53.423Z</updated>
+  <id>https://saystone.github.io/</id>
+  
+  <author>
+    <name>saystone</name>
     
-      <item>
-        <title>RL Weekly 18: Survey of Domain Randomization Techniques for Sim-to-Real Transfer, and Evaluating Deep RL with ToyBox</title>
-        <description>This week, we introduce a survey of Domain Randomization Techniques for Sim-to-Real Transfer and ToyBox, a suite of redesigned Atari Environments for experimental evaluation of deep RL.</description>
-        <pubDate>Mon, 13 May 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/18</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/18</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>macOS 환경에 Black(Code formatter for Python) 설치하기</title>
+    <link href="https://saystone.github.io/2018/06/18/How-to-setting-up-Python-code-formatter-Black-on-macOS/"/>
+    <id>https://saystone.github.io/2018/06/18/How-to-setting-up-Python-code-formatter-Black-on-macOS/</id>
+    <published>2018-06-18T07:14:31.000Z</published>
+    <updated>2019-01-17T04:44:53.423Z</updated>
     
-      <item>
-        <title>GSoC TensorFlow Part 1: Setting Up TF-Agents</title>
-        <description>I have been accepted to Google Summer of Code program to work on TensorFlow for three months. I will be working on TensorFlow's reinforcement learning library TF-Agents. In this post, I briefly summmarize the steps I took to setup the TF-Agents environment for future reference.</description>
-        <pubDate>Thu, 09 May 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/gsoc/1</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/gsoc/1</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>gsoc</category>
-        
-        
-      </item>
+    <content type="html"><![CDATA[<p>일전에 <a href="/2018/06/11/How-to-setting-up-PHP-CS-Fixer-on-macOS/">PHP 프로젝트에 써봄직한 Code formatter</a>를 소개했습니다. 이번에는 Python 프로젝트에 써볼만한 도구를 소개하려고 합니다. 운영중인 Python 프로젝트는 Python의 문법적 특성으로 인해 PHP 프로젝트보다 상대적으로 깔끔한 코드 베이스를 갖추고 있습니다. 다만, 빠른 기능구현에 집중하다 보니 코딩 컨벤션 측면에선 다소 아쉬운 부분이 있습니다. 조금이라도 일찍 도구를 도입해서 표준화를 시키는게 여러모로 이득이라고 생각하여 리서치를 진행하게 됐습니다.<a id="more"></a></p><p>이 글을 정리하기 위해 구글링을 하던 중 코딩 컨벤션이 무엇인지, 왜 중요한지, 일관성이 있는 기준이 어떤 이점을 가질 수 있는지 아주 잘 설명한 글을 먼저 소개하고 본론으로 들어가도록 하겠습니다.</p><ul><li><a href="https://spoqa.github.io/" target="_blank" rel="noopener">스포카 기술 블로그</a>: <a href="https://spoqa.github.io/2012/08/03/about-python-coding-convention.html" target="_blank" rel="noopener">파이썬 코딩 컨벤션</a></li></ul><hr><p><a href="https://github.com/ambv/black" target="_blank" rel="noopener">Black</a>을 소개합니다. Black은 Python 언어에서 사용할수 있는 Code formatter입니다. <code>The uncompromising code formatter.</code> 라고 소개하고 있는데 다소 엄격해 보이는 문구가 뭔가 마음에 듭니다. 이는 Black이 추구하는 코딩 컨벤션이 개발자가 작성한 코드 스타일과 타협을 하지 않는다고 해석할수 있을것 같아요. 그렇다면, 이 도구는 어떤 코딩 컨벤션을 기준으로 규칙을 정의하는지 궁금해서 소스를 까보았습니다.</p><p>Black의 컨벤션 확인 로직은 <a href="https://github.com/PyCQA/pycodestyle" target="_blank" rel="noopener">pycodestyle</a>을 <a href="https://github.com/PyCQA/pycodestyle/blob/master/pycodestyle.py" target="_blank" rel="noopener">토대로 구현</a>되어 있습니다. <code>pycodestyle</code>은 Python 언어에서 사용하는 linter라고 볼 수 있는데, 컨벤션 규칙을 <a href="https://www.python.org/dev/peps/pep-0008/" target="_blank" rel="noopener">PEP 8</a>를 기준으로 하고 있습니다. 따라서, Black의 컨벤션 규칙은 <code>PEP 8</code>에 맞춰져 있다고 생각하면 될것 같습니다.</p><hr><p>설치 방법은 매우 간단합니다.</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> pip install black</span><br></pre></td></tr></table></figure><p>실행 방법 또한 간단합니다.</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> black blah.py</span><br></pre></td></tr></table></figure><p>각종 실행 옵션은 <a href="https://github.com/ambv/black#command-line-options" target="_blank" rel="noopener">공식 문서</a>를 참고하시면 됩니다.</p><hr><h3 id="귀찮음-덜기"><a href="#귀찮음-덜기" class="headerlink" title="귀찮음 덜기"></a>귀찮음 덜기</h3><p>코드 변경이 생길때마다 매번 CLI로 돌릴 순 없으니 사용하고 있는 에디터에 통합해서 사용해 봅시다. (또는 <a href="https://githooks.com/" target="_blank" rel="noopener">git hook</a>을 써서 커밋 전에 돌릴수도 있겠고요.) 각종 에디터별 플러그인 등은 아래 목록 참고해 주세요!</p><ul><li>PyCharm: <a href="https://github.com/ambv/black#pycharm" target="_blank" rel="noopener">https://github.com/ambv/black#pycharm</a></li><li>Vim: <a href="https://github.com/ambv/black#vim" target="_blank" rel="noopener">https://github.com/ambv/black#vim</a></li><li>VSCode: <a href="https://github.com/ambv/black#visual-studio-code" target="_blank" rel="noopener">https://github.com/ambv/black#visual-studio-code</a></li><li>Atom: <a href="https://atom.io/packages/python-black" target="_blank" rel="noopener">https://atom.io/packages/python-black</a></li></ul><hr><h3 id="Outro"><a href="#Outro" class="headerlink" title="Outro"></a>Outro</h3><p>팀 내 도입 이후 로직을 구현하는 스타일은 서로 다르겠지만, 외형적인 코드의 스타일은 어느정도 표준화 되어가고 있는걸 느꼈습니다. 누가 작성해도 일관성 있는 가독성을 보장하게 되었고 이는 더 나은 생산성과 퀄리티로 이어지길 기대해봅니다. 클린 코드 하세요! :)</p><hr><h3 id="참고"><a href="#참고" class="headerlink" title="참고"></a>참고</h3><ul><li><a href="https://github.com/ambv/black" target="_blank" rel="noopener">Black</a></li><li><a href="https://github.com/PyCQA/pycodestyle" target="_blank" rel="noopener">pycodestyle</a></li><li><a href="https://www.python.org/dev/peps/pep-0008/" target="_blank" rel="noopener">PEP 8</a></li><li><a href="https://github.com/mre/awesome-static-analysis/" target="_blank" rel="noopener">awesome-static-analysis</a></li><li><a href="https://spoqa.github.io/2012/08/03/about-python-coding-convention.html" target="_blank" rel="noopener">파이썬 코딩 컨벤션</a></li></ul>]]></content>
     
-      <item>
-        <title>RL Weekly 17: Information Asymmetry in KL-regularized Objective, Real-world Challenges to RL, and Fast and Slow RL</title>
-        <description>In this issue, we summarize the use of information asymmetry in KL regularized objective to regularize the policy, the challenges of deploying deep RL into real-world systems, and possible insights into psychology and neuroscience from deep RL.</description>
-        <pubDate>Tue, 07 May 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/17</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/17</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+    <summary type="html">
     
-      <item>
-        <title>Using TensorBoard with PyTorch 1.1.0</title>
-        <description>With PyTorch 1.1.0, tensorboard is now natively supported in PyTorch. This post contains detailed instuctions to install tensorboard.</description>
-        <pubDate>Thu, 02 May 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/pytorch-tensorboard</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/pytorch-tensorboard</guid>
-        
-        <category>pytorch</category>
-        
-        
-      </item>
+      &lt;p&gt;일전에 &lt;a href=&quot;/2018/06/11/How-to-setting-up-PHP-CS-Fixer-on-macOS/&quot;&gt;PHP 프로젝트에 써봄직한 Code formatter&lt;/a&gt;를 소개했습니다. 이번에는 Python 프로젝트에 써볼만한 도구를 소개하려고 합니다. 운영중인 Python 프로젝트는 Python의 문법적 특성으로 인해 PHP 프로젝트보다 상대적으로 깔끔한 코드 베이스를 갖추고 있습니다. 다만, 빠른 기능구현에 집중하다 보니 코딩 컨벤션 측면에선 다소 아쉬운 부분이 있습니다. 조금이라도 일찍 도구를 도입해서 표준화를 시키는게 여러모로 이득이라고 생각하여 리서치를 진행하게 됐습니다.
     
-      <item>
-        <title>Collapsible Code Blocks in GitHub Pages</title>
-        <description>Here is a quick guide on using collapsible code blocks in GitHub pages. This might be useful when there is a large output that might be useful only to a few people reading the post.</description>
-        <pubDate>Thu, 02 May 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/collapsible-code-blocks</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/collapsible-code-blocks</guid>
-        
-        <category>blogging</category>
-        
-        
-      </item>
+    </summary>
     
-      <item>
-        <title>RL Weekly 16: Why Performance Plateaus May Occur, and Compressing DQNs</title>
-        <description>In this issue, we introduce 'ray interference,' a possible cause of performance plateaus in deep reinforcement learning conjectured by Google DeepMind. We also introduce a network distillation method proposed by researchers at Carnegie Mellon University.</description>
-        <pubDate>Tue, 30 Apr 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/16</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/16</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
     
-      <item>
-        <title>RL Weekly 15: Learning without Rewards: from Active Queries or Suboptimal Demonstrations</title>
-        <description>In this issue, we introduce VICE-RAQ by UC Berkeley and T-REX by UT Austin and Preferred Networks. VICE-RAQ trains a classifier to infer rewards from goal examples and active querying. T-REX learns reward functions from suboptimal demonstrations ranked by humans.</description>
-        <pubDate>Mon, 22 Apr 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/15</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/15</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      <category term="macOS" scheme="https://saystone.github.io/tags/macOS/"/>
     
-      <item>
-        <title>RL Weekly 14: OpenAI Five and Berkeley Blue</title>
-        <description>In this week's issue, we summarize the Dota 2 match between OpenAI Five and OG eSports and introduce Blue, a new low-cost robot developed by the Robot Learning Lab at UC Berkeley.</description>
-        <pubDate>Mon, 15 Apr 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/14</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/14</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      <category term="code formatter" scheme="https://saystone.github.io/tags/code-formatter/"/>
     
-      <item>
-        <title>RL Weekly 13: Learning to Toss, Learning to Paint, and How to Explain RL</title>
-        <description>In this week's issue, we summarize results from Princeton, Google, Columbia, and MIT on training a robot arm to throw objects. We also look at a model-based DDPG developed by Peking University and Megvii that can reproduce pictures through paint strokes. Finally, we look at an empirical study by Oregon State University about explaining RL to layman.</description>
-        <pubDate>Mon, 01 Apr 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/13</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/13</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      <category term="black" scheme="https://saystone.github.io/tags/black/"/>
     
-      <item>
-        <title>RL Weekly 12: Atari Demos with Human Gaze Labels, New SOTA in Meta-RL, and a Hierarchical Take on Intrinsic Rewards</title>
-        <description>This week, we look at a new demo dataset of Atari games that include trajectories and human gaze. We also look at PEARL, a new meta-RL method that boasts sample efficiency and performance superior to previous state-of-the-art algorithms. Finally, we look at a novel method of incorporating intrinsic rewards.</description>
-        <pubDate>Mon, 25 Mar 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/12</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/12</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      <category term="Python" scheme="https://saystone.github.io/tags/Python/"/>
     
-      <item>
-        <title>RL Weekly 11: The Bitter Lesson by Richard Sutton, the Promise of Hierarchical RL, and Exploration with Human Feedback</title>
-        <description>In this issue, we first look at a diary entry by Richard S. Sutton (DeepMind, UAlberta) on Compute versus Clever. Then, we look at a post summarizing Hierarchical RL by Yannis Flet-Berliac (INRIA SequeL). Finally, we summarize a paper incorporating human feedback for exploration from Delft University of Technology.</description>
-        <pubDate>Tue, 19 Mar 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/11</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/11</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      <category term="linter" scheme="https://saystone.github.io/tags/linter/"/>
     
-      <item>
-        <title>RL Weekly 10: Learning from Playing, Understanding Multi-agent Intelligence, and Navigating in Google Street View</title>
-        <description>In this issue, we look at Google Brain's algorithm of learning by playing, DeepMind's thoughts on multi-agent intelligence, and DeepMind's new navigation environment using Google Street View data.</description>
-        <pubDate>Sun, 10 Mar 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/10</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/10</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      <category term="pycodestyle" scheme="https://saystone.github.io/tags/pycodestyle/"/>
     
-      <item>
-        <title>RL Weekly 9: Sample-efficient Near-SOTA Model-based RL, Neural MMO, and Bottlenecks in Deep Q-Learning</title>
-        <description>In this issue, we look at SimPLe, a model-based RL algorithm that achieves near-state-of-the-art results on Arcade Learning Environments (ALE). We also look at Neural MMO, a new multiagent environment by OpenAI, and an empirical analysis of possible sources of error in deep Q-learning by BAIR.
-</description>
-        <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/9</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/9</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      <category term="PEP 8" scheme="https://saystone.github.io/tags/PEP-8/"/>
     
-      <item>
-        <title>RL Weekly 8: World Discovery Models, MuJoCo Soccer Environment, and Deep Planning Network</title>
-        <description>In this issue, we introduce World Discovery Models and MuJoCo Soccer Environment from Google DeepMind, and PlaNet from Google.</description>
-        <pubDate>Tue, 26 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/8</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/8</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+  </entry>
+  
+  <entry>
+    <title>macOS 환경에 PHP-CS-Fixer 설치하기</title>
+    <link href="https://saystone.github.io/2018/06/11/How-to-setting-up-PHP-CS-Fixer-on-macOS/"/>
+    <id>https://saystone.github.io/2018/06/11/How-to-setting-up-PHP-CS-Fixer-on-macOS/</id>
+    <published>2018-06-11T00:45:30.000Z</published>
+    <updated>2019-01-17T04:44:53.423Z</updated>
     
-      <item>
-        <title>Obstacle Tower 6: Submitting a Random Agent</title>
-        <description>We submit a random agent to the Obstacle Tower Challenge that just began.
-</description>
-        <pubDate>Tue, 12 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/obstacle-tower/6</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/obstacle-tower/6</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>obstacle-tower</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+    <content type="html"><![CDATA[<p>최근, 꽤나 방대하고 복잡한 코드베이스로 이뤄진 PHP 프로젝트를 접하게 되었습니다. 구형 솔루션을 다년간에 걸쳐 커스터마이징한 형태의 프로젝트로, 여러 개발자가 거쳐간 흔적이 코드에 고스란히 남아 있습니다. 프로덕션 레벨에서 돌아가는 버전도 무려 9년전에 릴리즈된 <code>5.2.17</code> 이었으며 방대한 코드량에 비해 코드의 품질 관리를 신경쓸만한 상황이 아니었던지 레거시 코드의 가독성이 매우 절망적인 상황이었습니다. 한 파일에 들여쓰기가 2탭 4탭이 공존하고 탭과 스페이스가 섞여있으면 절망적인 상황… 맞죠?<a id="more"></a></p><p>사태파악 이후 개선의 여지로 무엇보다 코딩 컨벤션을 표준화 시켜야할 필요가 있다고 느꼈습니다. 우선적으로 시작해 볼 수 있는것 중 제일 빠르게 떠올랐던건 앞으로 작성하는 코드라도 linter를 적용 해보는 것이었습니다. 그러다 <a href="https://github.com/FriendsOfPHP/PHP-CS-Fixer" target="_blank" rel="noopener">PHP-CS-Fixer</a>라는 도구를 알게 됐고 더불어 <a href="https://github.com/php-fig/fig-standards" target="_blank" rel="noopener">PSR</a>이라는게 존재한다는걸 알게 됐습니다.</p><p><code>PHP-CS-Fixer</code>는 특정 코딩 표준을 지키도록 기존 코드를 고쳐주는 도구입니다. 위에서 언급한 <code>PSR-*</code> 또는 커뮤니티에서 주도하는 다른 표준 프리셋을 지정하거나 직접 만든 설정을 적용할수도 있습니다.</p><p>linter 보다는 좀 더 나아 보이는 대안이다 싶어 리서치를 진행하여 팀에 제안, 긍정적인 피드백을 받았고 약 한달 전에 팀 내 모든 개발자들이 사용할수 있도록 메뉴얼을 만들고 배포했으며 지난주부터 각자 개발 환경에 도입하여 현재는 잘 사용하고 있습니다! :)</p><hr><h3 id="Getting-started"><a href="#Getting-started" class="headerlink" title="Getting started"></a>Getting started</h3><p>PHP-CS-Fixer를 실행하려면 PHP 버전 5.6 이상이 필요합니다. 따라서 PHP를 먼저 설치해야 하는데요. PHP를 설치하기 전에 PHP 버전 관리 도구를 먼저 설치하고자 합니다. 그런데 PHP 버전 관리 도구를 설치하려면 다른… 아…아닙니다;</p><hr><h3 id="PHP-버전-관리-도구-설치"><a href="#PHP-버전-관리-도구-설치" class="headerlink" title="PHP 버전 관리 도구 설치"></a>PHP 버전 관리 도구 설치</h3><ul><li>요즘 왠만한 언어에는 언어의 버전을 관리할수 있는 도구가 대부분 있습니다. PHP도 마찬가지고 그 중 <a href="https://github.com/phpbrew/phpbrew" target="_blank" rel="noopener">phpbrew</a>라는 도구가 있는데 이를 설치하고자 합니다.</li></ul><figure class="highlight shell"><figcaption><span>installing phpbrew</span><a href="https://github.com/phpbrew/phpbrew#install" target="_blank" rel="noopener">link</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 설치 패키지를 받고 실행 권한을 부여합니다.</span><br><span class="line"><span class="meta">$</span> curl -L -O https://github.com/phpbrew/phpbrew/raw/master/phpbrew</span><br><span class="line"><span class="meta">$</span> chmod +x phpbrew</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> $PATH에 지정되어 어디서든 실행할수 있는 곳으로 이동합니다.</span><br><span class="line"><span class="meta">$</span> sudo mv phpbrew /usr/local/bin/phpbrew</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> phpbrew를 초기화합니다.</span><br><span class="line"><span class="meta">$</span> phpbrew init</span><br></pre></td></tr></table></figure><ul><li>터미널 시작마다 실행하기 위해 <code>.bashrc</code> 또는  <code>.zshrc</code>에 아래 한줄 추가하고 터미널을 재실행합니다.</li></ul><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[[ -e ~/.phpbrew/bashrc ]] &amp;&amp; source ~/.phpbrew/bashrc</span><br></pre></td></tr></table></figure><hr><h3 id="PHP-설치"><a href="#PHP-설치" class="headerlink" title="PHP 설치"></a>PHP 설치</h3><ul><li>PHP <code>5.6</code>의 마지막 stable 버전인 <code>5.6.36</code>을 설치하고자 합니다.</li><li>굳이 <code>5.x</code>일 필요는 없습니다! <code>5.x</code>와 <code>7.x</code>의 환경이 꽤 다르므로 최소 요구 사항에만 맞추려고 했고 프로덕션에도 <code>5.2.17</code>을 사용해서 여기서는 <code>5.x</code>를 선택했습니다.<figure class="highlight shell"><figcaption><span>installing PHP 5.6.36 via phpbrew</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 설치 전에 필요한 몇가지 패키지를 설치합니다.</span><br><span class="line"><span class="meta">$</span> brew install mcrypt mhash libxml2 pcre</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> phpbrew로 PHP 5.6.36 설치(빌드하고 컴파일하는데 시간 좀 걸립니다)</span><br><span class="line"><span class="meta">$</span> phpbrew install 5.6.36 +default</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> PHP 기본 버전을 5.6.36으로 설정</span><br><span class="line"><span class="meta">$</span> phpbrew switch 5.6.36</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> PHP 버전 확인</span><br><span class="line"><span class="meta">$</span> php -v</span><br><span class="line">PHP 5.6.36 (cli) (built: May 11 2018 14:21:46)</span><br><span class="line">Copyright (c) 1997-2016 The PHP Group</span><br><span class="line">Zend Engine v2.6.0, Copyright (c) 1998-2016 Zend Technologies</span><br></pre></td></tr></table></figure></li></ul><hr><h3 id="준비-끝"><a href="#준비-끝" class="headerlink" title="준비 끝!"></a>준비 끝!</h3><ul><li><p>PHP 파일에 적용해봅시다.</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> PHP 인터프리터로 실행</span><br><span class="line"><span class="meta">$</span> php /usr/local/bin/php-cs-fixer fix ~/Projects/my_project/hello.php</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 혹은 직접 실행</span><br><span class="line"><span class="meta">$</span> php-cs-fixer fix ~/Projects/my_project/hello.php</span><br></pre></td></tr></table></figure></li><li><p>위 명령어 실행하면 바뀐 컨벤션으로 파일을 덮어 쓰게됩니다. diff로 바뀐 내용을 확인해 봅니다.</p></li><li>컨벤션 지정, 디버깅 모드, dry-run 등 다양한 옵션이 있습니다. <a href="https://github.com/FriendsOfPHP/PHP-CS-Fixer#usage" target="_blank" rel="noopener">공식 문서</a>를 확인해서 본인 혹은 팀에 잘 맞도록 셋팅해 줍니다.</li></ul><hr><p>좋습니다. 아주 좋아요. 심신이 안정되고 마음의 정화가 찾아오는것 같습니다. 그런데 하나 걸리는게 있습니다. 파일이 바뀔때마다 터미널에 저 명령어를 치려고 여기까지 온게 아니잖아요~? 사용하고 있는 에디터 혹은 <code>git</code>의 <code>pre-commit</code> <a href="https://githooks.com/" target="_blank" rel="noopener">hook</a>을 사용해서 앞으로 더 신경쓰지 말도록 해요. 깔끔한 마무리를 위해 좀 더 시간을 투자해 봅시다.</p><hr><h3 id="Git-pre-commit-hook-설정"><a href="#Git-pre-commit-hook-설정" class="headerlink" title="Git pre-commit hook 설정"></a>Git pre-commit hook 설정</h3><ul><li><a href="https://gist.github.com/saystone/6ae86685f34d632c37a98fc4d36b74d2#file-pre-commit-php" target="_blank" rel="noopener">https://gist.github.com/saystone/6ae86685f34d632c37a98fc4d36b74d2#file-pre-commit-php</a> 내용을 그대로 복사합니다. (혹은 참조해서 취향대로 수정하세요.)</li><li>가져온 내용을 <code>~/Projects/my_project/.git/hooks/pre-commit</code> 파일에 넣고 실행권한을 줍니다.</li></ul><figure class="highlight shell"><figcaption><span>grant executable authority</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> chmod +x ~/Projects/my_project/.git/hooks/pre-commit</span><br></pre></td></tr></table></figure><ul><li>이제 앞으로 커밋을 할때마다 자동으로 <code>pre-commit</code> 파일 내의 스크립트가 실행됩니다. 실패한경우 커밋을 멈추고 알려줍니다!</li><li>예외적으로 hook을 거치지 않고 커밋을 하고싶다면 아래 명령어를 사용하면 됩니다.</li></ul><figure class="highlight shell"><figcaption><span>ignore hook</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> git commit --no-verify</span><br></pre></td></tr></table></figure><hr><h3 id="각종-에디터에-설정"><a href="#각종-에디터에-설정" class="headerlink" title="각종 에디터에 설정"></a>각종 에디터에 설정</h3><ul><li><code>git</code>의 <code>pre-commit</code>을 사용하는 방법이 별로라면 본인이 사용하는 에디터에 설정하는 방법도 있습니다.</li><li>파일을 저장하고 난 후에 자동으로 실행 되도록 하면 딱일것 같네요.</li><li>VSCode: <a href="https://github.com/junstyle/vscode-php-cs-fixer" target="_blank" rel="noopener">https://github.com/junstyle/vscode-php-cs-fixer</a></li><li>Atom: <a href="https://atom.io/packages/php-cs-fixer" target="_blank" rel="noopener">https://atom.io/packages/php-cs-fixer</a></li><li>Vim: <a href="https://github.com/stephpy/vim-php-cs-fixer" target="_blank" rel="noopener">https://github.com/stephpy/vim-php-cs-fixer</a></li><li>PHPStorm: <a href="https://hackernoon.com/how-to-configure-phpstorm-to-use-php-cs-fixer-1844991e521f" target="_blank" rel="noopener">https://hackernoon.com/how-to-configure-phpstorm-to-use-php-cs-fixer-1844991e521f</a></li></ul><hr><h3 id="참고"><a href="#참고" class="headerlink" title="참고"></a>참고</h3><ul><li><a href="https://github.com/FriendsOfPHP/PHP-CS-Fixer" target="_blank" rel="noopener">PHP-CS-Fixer</a></li><li><a href="https://github.com/php-fig/fig-standards" target="_blank" rel="noopener">PHP Framework Interoperability Group</a></li><li><a href="https://github.com/phpbrew/phpbrew" target="_blank" rel="noopener">phpbrew</a></li><li><a href="https://githooks.com/" target="_blank" rel="noopener">Git Hooks</a></li></ul>]]></content>
     
-      <item>
-        <title>RL Weekly 7: Obstacle Tower Challenge, Hanabi Learning Environment, and Spinning Up Workshop</title>
-        <description>This week, we introduce the Obstacle Tower Challenge, a new RL competition by Unity, Hanabi Learning Environment, a multi-agent environment by DeepMind, and Spinning Up Workshop, a workshop hosted by OpenAI.
-</description>
-        <pubDate>Mon, 11 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/7</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/7</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+    <summary type="html">
     
-      <item>
-        <title>Obstacle Tower 5: Possible Improvements to the Baselines</title>
-        <description>We play the Obstacle Tower game to understand the qualities of a successful agent.
-</description>
-        <pubDate>Mon, 04 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/obstacle-tower/5</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/obstacle-tower/5</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>obstacle-tower</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+      &lt;p&gt;최근, 꽤나 방대하고 복잡한 코드베이스로 이뤄진 PHP 프로젝트를 접하게 되었습니다. 구형 솔루션을 다년간에 걸쳐 커스터마이징한 형태의 프로젝트로, 여러 개발자가 거쳐간 흔적이 코드에 고스란히 남아 있습니다. 프로덕션 레벨에서 돌아가는 버전도 무려 9년전에 릴리즈된 &lt;code&gt;5.2.17&lt;/code&gt; 이었으며 방대한 코드량에 비해 코드의 품질 관리를 신경쓸만한 상황이 아니었던지 레거시 코드의 가독성이 매우 절망적인 상황이었습니다. 한 파일에 들여쓰기가 2탭 4탭이 공존하고 탭과 스페이스가 섞여있으면 절망적인 상황… 맞죠?
     
-      <item>
-        <title>Obstacle Tower 4: Understanding the Baselines</title>
-        <description>We briefly introduce Rainbow and PPO, the two baselines that was tested on Obstacle Tower.
-</description>
-        <pubDate>Mon, 04 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/obstacle-tower/4</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/obstacle-tower/4</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>obstacle-tower</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+    </summary>
     
-      <item>
-        <title>Slow Papers: The Obstacle Tower: A Generalization Challenge in Vision, Control, and Planning (Juliani et al., 2019)</title>
-        <description>The rapid pace of research development in Deep Reinforcement Learning has been driven by the presence of fast and challenging simulation environments. These environments often take the form of video games, such as the Atari games provided in the Arcade Learning Environment (ALE). In the past year, however, significant progress has been made in achieving superhuman performance on even the most difficult and heavily studied game in the ALE: Montezumas Revenge. We propose a new benchmark environment, Obstacle Tower: a high visual fidelity, 3D, 3rd person, procedurally generated environment. An agent in the Obstacle Tower must learn to solve both low level control and high-level planning problems in tandem learning from pixels and a sparse reward signal in order to make it as high as possible up the tower. In this paper we outline the environment and provide a set of initial baseline results using current state of the art Deep RL methods as well as human players. In all cases these algorithms fail to produce agents capable of performing anywhere near human level on a set of evaluations designed to test both memorization and generalization ability. As such, we believe that the Obstacle Tower has the potential to serve as a helpful Deep RL benchmark now and into the future.
-</description>
-        <pubDate>Sat, 02 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/slowpapers/obstacle-tower/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/slowpapers/obstacle-tower/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>slowpapers</category>
-        
-        
-      </item>
     
-      <item>
-        <title>Fast Papers: Neural Episodic Control (Pritzel et al., 2017)</title>
-        <description>Deep reinforcement learning methods attain super-human performance in a wide range of environments. Such methods are grossly inefficient, often taking orders of magnitudes more data than humans to achieve reasonable performance. We propose Neural Episodic Control: a deep reinforcement learning agent that is able to rapidly assimilate new experiences and act upon them. Our agent uses a semi-tabular representation of the value function: a buffer of past experience containing slowly changing state representations and rapidly updated estimates of the value function. We show across a wide range of environments that our agent learns significantly faster than other state-of-the-art, general purpose deep reinforcement learning agents.
-</description>
-        <pubDate>Sat, 02 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/fastpapers/1703.01988/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/fastpapers/1703.01988/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>fastpapers</category>
-        
-        
-      </item>
+      <category term="macOS" scheme="https://saystone.github.io/tags/macOS/"/>
     
-      <item>
-        <title>Fast Papers: The Obstacle Tower: A Generalization Challenge in Vision, Control, and Planning (Juliani et al., 2019)</title>
-        <description>The rapid pace of research development in Deep Reinforcement Learning has been driven by the presence of fast and challenging simulation environments. These environments often take the form of video games, such as the Atari games provided in the Arcade Learning Environment (ALE). In the past year, however, significant progress has been made in achieving superhuman performance on even the most difficult and heavily studied game in the ALE: Montezumas Revenge. We propose a new benchmark environment, Obstacle Tower: a high visual fidelity, 3D, 3rd person, procedurally generated environment. An agent in the Obstacle Tower must learn to solve both low level control and high-level planning problems in tandem learning from pixels and a sparse reward signal in order to make it as high as possible up the tower. In this paper we outline the environment and provide a set of initial baseline results using current state of the art Deep RL methods as well as human players. In all cases these algorithms fail to produce agents capable of performing anywhere near human level on a set of evaluations designed to test both memorization and generalization ability. As such, we believe that the Obstacle Tower has the potential to serve as a helpful Deep RL benchmark now and into the future.
-</description>
-        <pubDate>Fri, 01 Feb 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/fastpapers/obstacle-tower/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/fastpapers/obstacle-tower/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>fastpapers</category>
-        
-        
-      </item>
+      <category term="PHP" scheme="https://saystone.github.io/tags/PHP/"/>
     
-      <item>
-        <title>Obstacle Tower 3: Observation Space and Action Space</title>
-        <description>We analyze the observation space and the action space provided by the Obstacle Tower environment.
-</description>
-        <pubDate>Thu, 31 Jan 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/obstacle-tower/3</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/obstacle-tower/3</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>obstacle-tower</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+      <category term="lint" scheme="https://saystone.github.io/tags/lint/"/>
     
-      <item>
-        <title>Obstacle Tower 2: Playing the Game</title>
-        <description>We play the Obstacle Tower game to understand the qualities of a successful agent.
-</description>
-        <pubDate>Wed, 30 Jan 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/obstacle-tower/2</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/obstacle-tower/2</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>obstacle-tower</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+      <category term="phpbrew" scheme="https://saystone.github.io/tags/phpbrew/"/>
     
-      <item>
-        <title>Obstacle Tower 1: Installing the Environment</title>
-        <description>Unity introduced the Obstacle Tower Challenge, a new reinforcement learning contest with a difficult environment. In this post, we guide the readers on installing the environment on Linux using conda.
-</description>
-        <pubDate>Tue, 29 Jan 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/obstacle-tower/1</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/obstacle-tower/1</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>obstacle-tower</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+      <category term="git hooks" scheme="https://saystone.github.io/tags/git-hooks/"/>
     
-      <item>
-        <title>RL Weekly 6: AlphaStar, Rectified Nash Response, and Causal Reasoning with Meta RL</title>
-        <description>This week, we look at AlphaStar, a Starcraft II AI, PSRO_rN, an evaluation algorithm encouraging diverse population of well-trained agents, and a novel Meta-RL approach for causal reasoning. All three results are from DeepMind.
-</description>
-        <pubDate>Mon, 28 Jan 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/6</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/6</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      <category term="pre-commit" scheme="https://saystone.github.io/tags/pre-commit/"/>
     
-      <item>
-        <title>Deep RL Seminar Week 2: Deep Q-Networks</title>
-        <description>This week, we reviewed various improvements made to the Deep Q-Network algorithm.
-</description>
-        <pubDate>Tue, 22 Jan 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/deep-rl-seminar/2</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/deep-rl-seminar/2</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>deep-rl-seminar</category>
-        
-        
-      </item>
+      <category term="code formatter" scheme="https://saystone.github.io/tags/code-formatter/"/>
     
-      <item>
-        <title>RL Weekly 5: Robust Control of Legged Robots, Compiler Phase-Ordering, and Go Explore on Sonic the Hedgehog</title>
-        <description>This week, we look at impressive robust control of legged robots by ETH Zurich and Intel, compiler phase-ordering by UC Berkeley and MIT, and a partial implementation of Uber's Go Explore.
-</description>
-        <pubDate>Mon, 21 Jan 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/5</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/5</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      <category term="PHP CS Fixer" scheme="https://saystone.github.io/tags/PHP-CS-Fixer/"/>
     
-      <item>
-        <title>RL Weekly 4: Generating Problems with Solutions, Optical Flow with RL, and Model-free Planning</title>
-        <description>In this issue, we introduce new curriculum learning algorithm by Uber AI Labs, model-free planning algorithm by DeepMind, and optical-flow based control algorithm by Intel Labs and University of Freiburg.
-</description>
-        <pubDate>Mon, 14 Jan 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/4</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/4</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      <category term="PSR" scheme="https://saystone.github.io/tags/PSR/"/>
     
-      <item>
-        <title>RL Weekly 3: Learning to Drive through Dense Traffic, Learning to Walk, and Summarizing Progress in Sim-to-Real</title>
-        <description>In this issue, we introduce the DeepTraffic competition from Lex Fridman's MIT Deep Learning for Self-Driving Cars course. We also review a new paper on using SAC to control a four-legged robot, and introduce a website summarizing progress in sim-to-real algorithms.
-</description>
-        <pubDate>Mon, 07 Jan 2019 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/3</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/3</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+  </entry>
+  
+  <entry>
+    <title>React Native 앱을 iOS로 실행했을때 `Could not parse the simulator list output` 에러 해결방법</title>
+    <link href="https://saystone.github.io/2018/04/04/Resolving-Could-not-parse-the-simulator-list-output-when-running-React-Native-on-iOS/"/>
+    <id>https://saystone.github.io/2018/04/04/Resolving-Could-not-parse-the-simulator-list-output-when-running-React-Native-on-iOS/</id>
+    <published>2018-04-04T08:25:00.000Z</published>
+    <updated>2019-01-17T04:44:53.423Z</updated>
     
-      <item>
-        <title>PyTorch Implementations of Policy Gradient Methods</title>
-        <description>A well-written baseline is crucial to research. We compare and recommend popular open source implementations of reinforcement learning algorithms in PyTorch.
-</description>
-        <pubDate>Fri, 28 Dec 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/pytorch-pg-implementations/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/pytorch-pg-implementations/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>policy-gradient</category>
-        
-        <category>pytorch</category>
-        
-        
-      </item>
+    <content type="html"><![CDATA[<p>여느때처럼 RN으로 만들어진 앱 디버깅을 하기위해 iOS 시뮬레이터를 아래와 같은 명령어로 실행했습니다. 그러다 처음보는 에러를 만나게 되었습니다. <a id="more"></a></p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> npx react-native run-ios</span><br><span class="line">Scanning folders for symlinks in /Users/saystone/Projects/hsMobile/node_modules (15ms)</span><br><span class="line">Found Xcode workspace 惠首尔.xcworkspace</span><br><span class="line">dyld: Symbol not found: _SimDeviceBootKeyDisabledJobs</span><br><span class="line">  Referenced from: /Applications/Xcode.app/Contents/Developer/usr/bin/simctl</span><br><span class="line">  Expected in: /Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/CoreSimulator</span><br><span class="line"> in /Applications/Xcode.app/Contents/Developer/usr/bin/simctl</span><br><span class="line"></span><br><span class="line">Could not parse the simulator list output</span><br></pre></td></tr></table></figure><hr><h3 id="When-I-meet-the-error-I-am…"><a href="#When-I-meet-the-error-I-am…" class="headerlink" title="When I meet the error. I am…"></a>When I meet the error. I am…</h3><p>보통 처음보는 에러를 만나게 되면 구글링 전에 우선적으로 시도해보게 되는 것들이 있습니다. 이것들은 빠르게 시도해보고 바로 확인해볼수 있어야 의미있기 때문에 얼른 시도해보고 소득이 없으면 지체없이 구글링을 합니다. 이번의 경우엔 빌드는 시작도 못했고 시뮬레이터가 실행되기도 전에 환경적인 요인으로 발생한 문제라고 예상했습니다. 경험상 캐시를 비우거나 의존성 패키지를 다시 설치하는 것만으로도 해결되는 경우가 있으므로 RN이나 npm에서 사용하는 도구들의 캐시를 비우고 다시 설치하는걸 시도해보았지만… 해결되지 않았습니다.</p><hr><h3 id="Problem-solved-but…"><a href="#Problem-solved-but…" class="headerlink" title="Problem solved! but…"></a>Problem solved! but…</h3><p>바로 에러 메세지로 구글링을 해보았습니다. 그랬더니 XCode를 실행해서 추가로 요구되는 필수 컴포넌트를 설치하면 해결된다는 글을 보게 되었습니다. 조금 의아했지만 XCode를 실행했습니다. <code>Install additional required components?</code> 라고 물어봅니다. 설치 버튼을 누르고 잠시 기다리니 설치가 끝났습니다. 다시 터미널로 돌아와서 위의 명령어를 실행했더니… 잘 됩니다.</p><hr><h3 id="xcrun-simctl"><a href="#xcrun-simctl" class="headerlink" title="xcrun? simctl?"></a>xcrun? simctl?</h3><p>해결은 했지만 궁금증은 풀리지 않습니다. XCode의 필수 컴포넌트를 설치하지 않은것과 위의 에러가 어떤 상관관계가 있는지에 대해서 말이죠. 그래서 RN 소스 코드를 살펴보기로 합니다. 위 에러는 RN의 CLI에서 발생한 것이니 에러 메세지를 RN repository에서 찾아보면 뭔가 나오겠거니 싶어서 검색했더니 연관된 코드가 나옵니다.<br><figure class="highlight javascript"><figcaption><span>xcrun simctl list --json devices</span><a href="https://github.com/facebook/react-native/blob/2ad34075f1d048bebb08ef30799ac0d081073150/local-cli/runIOS/runIOS.js#L103-L109" target="_blank" rel="noopener">link</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">  <span class="keyword">var</span> simulators = <span class="built_in">JSON</span>.parse(</span><br><span class="line">  child_process.execFileSync(<span class="string">'xcrun'</span>, [<span class="string">'simctl'</span>, <span class="string">'list'</span>, <span class="string">'--json'</span>, <span class="string">'devices'</span>], &#123;<span class="attr">encoding</span>: <span class="string">'utf8'</span>&#125;)</span><br><span class="line">  );</span><br><span class="line">&#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'Could not parse the simulator list output'</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p><p>코드를 보아하니 <code>simulators</code>라는 변수에 <code>xcrun</code>이라는 명령어에 특정 인자를 던져 child process로 실행시켜 JSON으로 출력되는 결과를 담는건가 봅니다. 짐작하기로는 iOS 디바이스의 목록을 가져오려는것 같은데 일단 <code>xcrun</code>의 정체가 궁금했습니다.<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> man xcrun</span><br><span class="line">...생략</span><br><span class="line">DESCRIPTION</span><br><span class="line">       xcrun provides a means to locate or invoke developer tools from the command-line, without requiring users to modify Makefiles or other-</span><br><span class="line">       wise take inconvenient measures to support multiple Xcode tool chains.</span><br><span class="line">...생략</span><br></pre></td></tr></table></figure></p><p>라고 합니다. command line에서 XCode와 관련된 도구들을 편하게 실행할수 있는 도구 정도로 이해했습니다. 좀 더 깊이 들어가기 위해 직접 명령어를 실행해봅니다. 뭐 안될것 있나요-?<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> xcrun simctl list --json devices</span><br><span class="line">&#123;</span><br><span class="line">  "devices" : &#123;</span><br><span class="line">    "com.apple.CoreSimulator.SimRuntime.iOS-10-3" : [</span><br><span class="line">      &#123;</span><br><span class="line">        "state" : "Shutdown",</span><br><span class="line">        "availability" : " (unavailable, runtime profile not found)",</span><br><span class="line">        "name" : "iPhone 5",</span><br><span class="line">        "udid" : "D37B8124-786F-40F3-96E5-4E38AC350044"</span><br><span class="line">      &#125;,</span><br><span class="line">...생략</span><br></pre></td></tr></table></figure></p><p>어떤 기준인지는 모르겠지만 제가 알고있는 모든 애플 기기의 시뮬레이터 목록이 출력되었습니다. 예측한대로 iOS 디바이스의 목록과 연결 상태를 가져오는 명령어가 맞는것 같습니다. JavaScript 코드단에서는 이 명령어를 <code>try/catch</code> 블럭 내에서 <code>JSON.parse</code>를 사용하여 JSON string -&gt; object 파싱을 시도했는데 파싱에 실패해서 예외가 발생해 <code>Could not parse the simulator list output</code>를 던지고 종료한겁니다. 그렇다면 <code>xcrun simctl</code> 실행 시점(<code>npx react-native run-ios</code>를 실행했을 때)에 JSON string이 아닌 뭔가 다른게 출력되었다는 얘기가 됩니다. 그 메세지가 뭔지 너무 궁금한데 지금으로선 알 방법이 없습니다. <code>xcrun</code>의 소스가 공개되어 있는것도 아니고 그 상황을 재현하기도 어려울뿐더러 <code>xcrun simctl</code>을 실행했을때 발생하는 에러에 대해서도 구글링 해보았지만 딱히 없었습니다. (몇몇 유추되는게 있지만 그게 이건지는 모르겠더라고요.) 아무튼, 추측하기로는 아마 XCode와 관련된 내용이 아닐까 합니다. 좀 찝찝하지만 여기에 더 시간을 쏟고싶지 않아서 이정도로 정리하기로 했습니다. 다만, 다음에 또 이 에러를 만나면 꼭 확인하길 다짐합니다. (아마도 XCode의 필수 컴포넌트가 새로 업데이트 되는 시점이겠죠?)</p><hr><h3 id="Outro"><a href="#Outro" class="headerlink" title="Outro"></a>Outro</h3><p>가만 생각해보니 XCode와 관련해서 간혹 이런 비슷한 경험을 했던것 같습니다. 가령 macOS 내에서 사용하는 특정 개발 도구나 SDK 들을 설치하거나 실행할때 <code>Command Line Tools for XCode</code>를 먼저 설치 하지 않거나 XCode를 한번이라도 실행하지 않으면 더 이상 진행이 안됐던적이 있었던 기억이 있네요.</p><hr><h3 id="참고"><a href="#참고" class="headerlink" title="참고"></a>참고</h3><ul><li><a href="https://gist.github.com/saystone/10fd1c52dc4da80c334534f58593bdaa" target="_blank" rel="noopener">watchman + RN 캐시 + npm 캐시 삭제하고 재설치 한방에</a></li><li><a href="https://joelennon.com/resolving-could-not-parse-the-simulator-list-output-when-running-react-native-apps-on-ios-simulator" target="_blank" rel="noopener">Resolving “Could not parse the simulator list output” when running React Native apps on iOS Simulator</a></li><li><a href="https://github.com/facebook/react-native/blob/2ad34075f1d048bebb08ef30799ac0d081073150/local-cli/runIOS/runIOS.js#L103-L109" target="_blank" rel="noopener">Could not parse the simulator list output</a></li></ul>]]></content>
     
-      <item>
-        <title>RL Weekly 2: Tuning AlphaGo, Macro-strategy for MOBA, Sim-to-Real with conditional GANs</title>
-        <description>In this issue, we discuss hyperparameter tuning for AlphaGo from DeepMind, Hierarchical RL model for a MOBA game from Tencent, and GAN-based Sim-to-Real algorithm from X, Google Brain, and DeepMind.
-</description>
-        <pubDate>Mon, 24 Dec 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/2</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/2</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+    <summary type="html">
     
-      <item>
-        <title>RL Weekly 1: Soft Actor-Critic Code Release; Text-based RL Competition; Learning with Training Wheels</title>
-        <description>In this inaugural issue of the RL Weekly newsletter, we discuss Soft Actor-Critic (SAC) from BAIR, the new TextWorld competition by Microsoft Research, and AsDDPG from University of Oxford and Heriot-Watt University.
-</description>
-        <pubDate>Mon, 17 Dec 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/rl-weekly/1</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/rl-weekly/1</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>rl-weekly</category>
-        
-        
-      </item>
+      &lt;p&gt;여느때처럼 RN으로 만들어진 앱 디버깅을 하기위해 iOS 시뮬레이터를 아래와 같은 명령어로 실행했습니다. 그러다 처음보는 에러를 만나게 되었습니다.
     
-      <item>
-        <title>Slow Papers: Exploration by Random Network Distillation (Burda et al., 2018)</title>
-        <description>We introduce an exploration bonus for deep reinforcement learning methods that is easy to implement and adds minimal overhead to the computation performed. The bonus is the error of a neural network predicting features of the observations given by a fixed randomly initialized neural network. We also introduce a method to flexibly combine intrinsic and extrinsic rewards. We find that the random network distillation (RND) bonus combined with this increased flexibility enables significant progress on several hard exploration Atari games. In particular we establish state of the art performance on Montezuma's Revenge, a game famously difficult for deep reinforcement learning methods. To the best of our knowledge, this is the first method that achieves better than average human performance on this game without using demonstrations or having access the underlying state of the game, and occasionally completes the first level. This suggests that relatively simple methods that scale well can be sufficient to tackle challenging exploration problems.
-</description>
-        <pubDate>Thu, 01 Nov 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/slowpapers/exploration-by-random-network-distillation/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/slowpapers/exploration-by-random-network-distillation/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>slowpapers</category>
-        
-        
-      </item>
+    </summary>
     
-      <item>
-        <title>Slow Papers: A Deeper Look at Experience Replay (Zhang and Sutton, 2017)</title>
-        <description>Recently experience replay is widely used in various deep reinforcement learning (RL) algorithms, in this paper we rethink the utility of experience replay. It introduces a new hyper-parameter, the memory buffer size, which needs carefully tuning. However unfortunately the importance of this new hyper-parameter has been underestimated in the community for a long time. In this paper we did a systematic empirical study of experience replay under various function representations. We showcase that a large replay buffer can significantly hurt the performance. Moreover, we propose a simple O(1) method to remedy the negative influence of a large replay buffer. We showcase its utility in both simple grid world and challenging domains like Atari games.
-</description>
-        <pubDate>Tue, 23 Oct 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/slowpapers/a-deeper-look-at-experience-replay/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/slowpapers/a-deeper-look-at-experience-replay/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>slowpapers</category>
-        
-        
-      </item>
     
-      <item>
-        <title>Slow Papers: Neural Fitted Q Iteration (Riedmiller, 2005)</title>
-        <description>This paper introduces NFQ, an algorithm for efficient and effective training of a Q-value function represented by a multi-layer perceptron. Based on the principle of storing and reusing transition experiences, a model-free, neural network based RL algorithm is proposed. The method is evaluated on three benchmark problems. It is shown empirically, that reasonably few interactions with the plant are neeed to generate control policies of high quality.
-</description>
-        <pubDate>Tue, 02 Oct 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/slowpapers/neural-fitted-q-iteration/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/slowpapers/neural-fitted-q-iteration/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>slowpapers</category>
-        
-        
-      </item>
+      <category term="React Native" scheme="https://saystone.github.io/tags/React-Native/"/>
     
-      <item>
-        <title>AI for Prosthetics Week 9 - 10: Unorthodox Approaches</title>
-        <description>We end the series by exploring possible unorthodox approaches for the competition. These are approaches that deviate from the popular policy gradient methods such as DDPG or PPO.
-</description>
-        <pubDate>Wed, 12 Sep 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/ai-for-prosthetics-9/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/ai-for-prosthetics-9/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>ai-for-prosthetics</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+      <category term="XCode" scheme="https://saystone.github.io/tags/XCode/"/>
     
-      <item>
-        <title>Notes from the ai.x 2018 Conference: Faster Reinforcement Learning via Transfer</title>
-        <description>SK T-Brain hosted the ai.x Conference on September 6th at Seoul, South Korea. At this conference, John Schulman (OpenAI) spoke about faster reinforcement learning via transfer.
-</description>
-        <pubDate>Mon, 10 Sep 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/aix-2018-john-schulman/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/aix-2018-john-schulman/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>conference</category>
-        
-        
-      </item>
+      <category term="xcrun" scheme="https://saystone.github.io/tags/xcrun/"/>
     
-      <item>
-        <title>Pommerman 1: Understanding the Competition</title>
-        <description>Pommerman is one of NIPS 2018 Competition tracks, where the participants seek to build agents to compete against other agents in a game of Bomberman. In this post, we simply explain the basics of Pommerman, leaving reinforcement learning to later posts.
-</description>
-        <pubDate>Sun, 02 Sep 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/pommerman-1/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/pommerman-1/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+      <category term="simctl" scheme="https://saystone.github.io/tags/simctl/"/>
     
-      <item>
-        <title>AI for Prosthetics Week 6: General Techniques of RL</title>
-        <description>This week, we take a step back from the competition and study common techniques used in Reinforcement Learning.
-</description>
-        <pubDate>Mon, 13 Aug 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/ai-for-prosthetics-6/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/ai-for-prosthetics-6/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>ai-for-prosthetics</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+  </entry>
+  
+  <entry>
+    <title>커스텀 도커 이미지로 CircleCI 빌드 시간 단축하기</title>
+    <link href="https://saystone.github.io/2017/10/18/Save-your-CircleCI-build-time-with-custom-docker-image/"/>
+    <id>https://saystone.github.io/2017/10/18/Save-your-CircleCI-build-time-with-custom-docker-image/</id>
+    <published>2017-10-18T10:00:00.000Z</published>
+    <updated>2019-01-17T04:44:53.423Z</updated>
     
-      <item>
-        <title>AI for Prosthetics Week 5: Understanding the Reward</title>
-        <description>The goal of reinforcement learning is defined by the reward signal - to maximize the cumulative reward throughout an episode. In some ways, the reward is the most important aspect of the environment for the agent: even if it does not know about values of states or actions (like Evolutionary Strategies), if it can consistently get high return (cumulative reward), it is a great agent.
-</description>
-        <pubDate>Wed, 25 Jul 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/ai-for-prosthetics-5/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/ai-for-prosthetics-5/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>ai-for-prosthetics</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+    <content type="html"><![CDATA[<p>고객이 증가합니다. 비즈니스 요구사항이 다양해집니다. 규모가 커집니다. 서비스의 성장과 함께 자연스럽게 겪는 일입니다. 이런 상황에서 기술적으로 복잡하거나 어려운 문제를 마주하게 되는데 이를 해결하는 것은 곤욕스러울 때도 있지만 대체로 즐거운 경험으로 남아 있었던것 같습니다… (!?) <a id="more"></a></p><hr><h3 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h3><p>최근 팀 내에서 일부 비즈니스 요구사항을 커버하기 위해 기술적인 도전이라고 볼 수 있는 프로젝트를 진행하기로 결정, 한창 진행 중입니다. DynamoDB의 일부 테이블에 해당하는 데이터는 PostgreSQL에도 함께 적재하도록 처리하는 서버를 만들기로 했는데요. 이런 일련의 과정을 거치는 이유는 DynamoDB로 풀기 힘든 문제들이 당면해 있는 요구사항과 부딪혔기 때문입니다. (RDB에서 어렵지 않게 할 수 있는 통계 및 집계성 쿼리 기능들과 상충합니다.)</p><p>이 프로젝트에서 저는 주로 개발 환경을 만드는 일들을 진행해왔습니다. 몇 가지 나열해 보자면 미리 사용하기로 한 기술들을 조합하여 로컬에서 개발 환경으로 프로젝트를 구동할 수 있도록 데이터베이스를 설정하고 애플리케이션 빌드 및 테스팅, 코드단 스케폴딩을 마련하는 것과 프로덕션 환경에 배포하고 모니터링 할 수 있는 기반을 만들거나 CI를 설정하고 설정한 CI와 저장소를 연동하는 일들이었습니다.</p><hr><h3 id="Stack-that-we-use"><a href="#Stack-that-we-use" class="headerlink" title="Stack that we use"></a>Stack that we use</h3><p>제가 속한 팀에서 운영중인 프로젝트 대부분은 CI를 활용 중이며 CircleCI를 사용하고 있습니다. 서비스간 비동기 처리를 위한 메시지 큐 + 앱 푸시 등을 처리하는 worker, 비즈니스 로직(동적 컨텐츠 반환, 결제 처리, 채팅 연결 등)를 처리하기 위한 GraphQL + 소켓 서버, 고객에게 앱을 제공하기 위한 React Native 클라이언트 등등 대부분 AWS EB + CircleCI + Github 조합으로 빌드, 배포 자동화가 되어 있습니다. 이번에 구축하는 프로젝트 역시 동일한 구성을 사용하기로 했습니다. 종전 프로젝트와 다른 점은 CircleCI 2.0을 사용하는 것인데요. 1.0과 가장 큰 차이는 도커를 native로 지원하는 거라고 볼 수 있을 것 같습니다.</p><p>빌드 과정을 간략하게 설명하자면 특정 브랜치가 푸시되면 CircleCI는 해당 저장소의 <code>.circleci/config.yml</code> 을 기준으로 빌드를 시작합니다. 빌드가 진행되는 동안 작업자가 PR을 작성하면 다른 동료들의 코드 리뷰를 받게 됩니다. 리뷰가 통과되고 빌드가 성공했다면 비로소 master 브랜치에 머지를 할 수 있도록 머지 버튼이 활성화되고, 작업자가 머지를 하면 CircleCI 가 한 번 더 빌드를 시작하고 배포까지 수행합니다. (배포는 master 브랜치 기준으로만 수행합니다.)</p><hr><h3 id="CircleCI-with-Docker"><a href="#CircleCI-with-Docker" class="headerlink" title="CircleCI with Docker"></a>CircleCI with Docker</h3><p>예상하셨겠지만 <code>.circleci/config.yml</code> 파일에는 해당 프로젝트를 빌드하거나 테스트 및 배포를 위한 기반 환경을 설정하고 실행하는 명령들이 있습니다. 이해를 돕기 위해 설정 파일의 변경점를 확인해 보시죠.</p><p><img src="/images/circleci-config-diff.png" alt="config.yml 의 개선 전/후"></p><p>좌측이 개선되기 이전의 설정이고, 우측이 개선된 후의 설정입니다. 아무래도 프로젝트가 막 만들어졌고 <code>awsebcli</code>를 설치하는 데  필요한 도구들 외에 다른 게 없어서 별게 없습니다. 개선되기 전인 좌측을 먼저 볼까요? 도커 컨테이너를 실행하기 위한 이미지는 CircleCI에서 제공하는 <code>circleci/node:8.4.0</code> 를 사용하고 있고 저장소를 <code>checkout</code> 한 후 의존하는 패키지를 설치합니다. 이는 실제로 CircleCI 웹 인터페이스에서 확인하면 아래와 같이 동작합니다.</p><p><img src="/images/circleci-build-before.png" alt="`Install dependencies` 항목 우측의 27초를 주목해주세요!"></p><p>이번엔 변경점의 우측을 봅시다. 좌측과 달리 도커 이미지를 <code>huiseoul/alligator:latest</code> 이걸로 사용할 뿐 다른 의존성 패키지 설치 명령어는 삭제되었습니다. 이미 눈치챈 분들도 있으시겠죠? 맞습니다. 의존성 패키지 설치를 <code>huiseoul/alligator:latest</code> 이 도커 이미지 내에 넣었기 때문입니다.</p><figure class="highlight yml"><figcaption><span>Dockerfile of huiseoul/alligator</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">FROM</span>        <span class="string">circleci/node:8.8.1</span></span><br><span class="line"></span><br><span class="line"><span class="string">RUN</span>         <span class="string">sudo</span> <span class="string">apt-get</span> <span class="string">update</span></span><br><span class="line"><span class="string">RUN</span>         <span class="string">sudo</span> <span class="string">apt-get</span> <span class="string">install</span> <span class="bullet">-y</span> <span class="string">python-pip</span> <span class="string">libpython-dev</span></span><br><span class="line"><span class="string">RUN</span>         <span class="string">sudo</span> <span class="string">easy_install</span> <span class="bullet">--upgrade</span> <span class="string">six</span></span><br><span class="line"><span class="string">RUN</span>         <span class="string">sudo</span> <span class="string">pip</span> <span class="string">install</span> <span class="string">awsebcli</span></span><br></pre></td></tr></table></figure><p><img src="/images/circleci-build-after.png" alt="`Install dependencies` 항목이 사라졌습니다."></p><p>자, 이제 우린 의존성 패키지를 미리 설정해둔 도커 이미지덕에 매 빌드마다 27초를 아끼게 됐습니다. 아이러니하게도 의존성 패키지가 많으면 많을수록 아낄 수 있는 시간이 늘어납니다! 이거야말로 마법 아닙니까!? 더군다나 하루에 빌드하는 횟수까지 고려하면 들이는 노력대비 훌륭한 가성비라고 생각합니다.</p><hr><h3 id="Outro"><a href="#Outro" class="headerlink" title="Outro"></a>Outro</h3><p>이전부터 도커에 관심만 있었지 실제 사용해 본 적은 없습니다. 로컬 머신에 도커를 설치하고 기본 사용법을 익혀 이 프로젝트에 맞게 의존성 패키지 설치 스크립트가 포함된 Dockerfile을 만들어서 이미지를 생성하고 도커 허브의 개인 및 조직 계정을 만들어 공개 저장소에 업로드 하는것까지 채 1시간도 걸리지 않았습니다. 이제 걸음마 수준으로 사용하는 단계지만 실제로 사용해보니 기대만큼 좋은 인상을 얻을 수 있었던것 같습니다. 만약 다음에 새로운 프로젝트를 진행하거나 사용할수 있는 상황이 된다면 적극 사용하게 될것 같습니다.</p><hr><h3 id="참고"><a href="#참고" class="headerlink" title="참고"></a>참고</h3><ul><li><a href="https://docs.docker.com/" target="_blank" rel="noopener">Docker Docs</a></li><li><a href="https://circleci.com/docs/2.0/" target="_blank" rel="noopener">CircleCI 2.0 Docs</a></li></ul>]]></content>
     
-      <item>
-        <title>AI for Prosthetics Week 3-4: Understanding the Observation Space</title>
-        <description>The observation can be roughly divided into five components: the body parts, the joints, the muscles, the forces, and the center of mass. For each body part component, the agent observes its position, velocity, acceleration, rotation, rotational velocity, and rotational acceleration.
-</description>
-        <pubDate>Wed, 18 Jul 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/ai-for-prosthetics-3/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/ai-for-prosthetics-3/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>ai-for-prosthetics</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+    <summary type="html">
     
-      <item>
-        <title>AI for Prosthetics Week 2: Understanding the Action Space</title>
-        <description>Last week, we saw how a valid action has 19 numbers, each between 0 and 1. The 19 numbers represented the amount of force to put to each muscle. I know barely anything about muscles, so I decided to manually go through all the muscles to understand the effects of each muscle...
-</description>
-        <pubDate>Wed, 04 Jul 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/ai-for-prosthetics-2/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/ai-for-prosthetics-2/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>ai-for-prosthetics</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+      &lt;p&gt;고객이 증가합니다. 비즈니스 요구사항이 다양해집니다. 규모가 커집니다. 서비스의 성장과 함께 자연스럽게 겪는 일입니다. 이런 상황에서 기술적으로 복잡하거나 어려운 문제를 마주하게 되는데 이를 해결하는 것은 곤욕스러울 때도 있지만 대체로 즐거운 경험으로 남아 있었던것 같습니다… (!?)
     
-      <item>
-        <title>AI for Prosthetics Week 1: Understanding the Challenge</title>
-        <description>The AI for Prosthetics challenge is one of NIPS 2018 Competition tracks. In this challenge, the participants seek to build an agent that can make a 3D  model of human with prosthetics run. This challenge is a continuation of the Learning to Run challenge (shown below) that was part of NIPS 2017 Competition Track. The challenge was enhanced in three ways...
-</description>
-        <pubDate>Wed, 27 Jun 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/ai-for-prosthetics-1/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/ai-for-prosthetics-1/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>ai-for-prosthetics</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+    </summary>
     
-      <item>
-        <title>Jupyter Notebook extensions to enhance your efficiency</title>
-        <description>Jupyter Notebook is a great tool that allows you to integrate live code, equations, visualizations and narrative text into a document. It is used extensively in data science. However, for developers who have used IDEs with abundant features, the simplicity of Jupyter Notebook might be problematic.
-</description>
-        <pubDate>Tue, 19 Jun 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/jupyter-notebook-extensions-to-enhance-your-efficiency/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/jupyter-notebook-extensions-to-enhance-your-efficiency/</guid>
-        
-        
-      </item>
     
-      <item>
-        <title>Bias-variance Tradeoff in Reinforcement Learning</title>
-        <description>Bias-variance tradeoff is a familiar term to most people who learned machine learning. In the context of Machine Learning, bias and variance refers to  the model: a model that underfits the data has high bias, whereas a model  that overfits the data has high variance. In Reinforcement Learning, we consider another bias-variance tradeoff.
-</description>
-        <pubDate>Sun, 10 Jun 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/bias-variance-tradeoff-in-reinforcement-learning/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/bias-variance-tradeoff-in-reinforcement-learning/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        
-      </item>
+      <category term="circleci" scheme="https://saystone.github.io/tags/circleci/"/>
     
-      <item>
-        <title>I learned DQNs with OpenAI competition</title>
-        <description>On April, OpenAI held a two-month-long competition called the Retro Contest where participants had to develop an agent that can achieve perform well on unseen custom-made stages of Sonic the Hedgehog. The agents were limited to 100 million steps per stage and 12 hours of time on a VM with 6 E5-2690v3  cores, 56GB of RAM, and a single K80 GPU.
-</description>
-        <pubDate>Tue, 05 Jun 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/i-learned-dqns-with-openai-competition/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/i-learned-dqns-with-openai-competition/</guid>
-        
-        <category>reinforcement-learning</category>
-        
-        <category>competition</category>
-        
-        
-      </item>
+      <category term="docker" scheme="https://saystone.github.io/tags/docker/"/>
     
-      <item>
-        <title>Effective Data: Partition</title>
-        <description>To train a good model, you need lots of data. Luckily, over the last few  decades, collecting data has become much easier. However, there is little value to data if you use it incorrectly. Even if you double or triple the dataset manually or through data augmentation, without proper partition of data, you will be left clueless on how helpful adding more data was.
-</description>
-        <pubDate>Sat, 14 Apr 2018 00:00:00 +0000</pubDate>
-        <link>https://www.endtoend.ai/blog/effective-data-partition/</link>
-        <guid isPermaLink="true">https://www.endtoend.ai/blog/effective-data-partition/</guid>
-        
-        <category>machine-learning</category>
-        
-        
-      </item>
+      <category term="ci" scheme="https://saystone.github.io/tags/ci/"/>
     
-  </channel>
-</rss>
+      <category term="build" scheme="https://saystone.github.io/tags/build/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Git 의 submodule 을 사용하여 Hexo 에 테마 추가하기</title>
+    <link href="https://saystone.github.io/2017/04/04/How-to-add-a-theme-on-Hexo-using-submodule/"/>
+    <id>https://saystone.github.io/2017/04/04/How-to-add-a-theme-on-Hexo-using-submodule/</id>
+    <published>2017-04-04T09:04:35.000Z</published>
+    <updated>2019-01-17T04:44:53.422Z</updated>
+    
+    <content type="html"><![CDATA[<p>언젠가 Git을 사용하면서 그런 적이 있다. 내 저장소의 특정 위치에 다른 저장소를 연결하는 방법은 없을까? 간혹 그런 생각이 들 때마다 있겠거니 하고 그냥 넘어갔었는데 마침 이번에 Hexo 를 설치하고 테마를 설정하다 보니 딱 필요한 상황이 생겨서 정리해본다. <a id="more"></a></p><hr><h3 id="submodule"><a href="#submodule" class="headerlink" title="submodule?"></a>submodule?</h3><blockquote><p>A submodule allows you to keep another Git repository in a subdirectory of your repository. The other repository has its own history, which does not interfere with the history of the current repository. This can be used to have external dependencies such as third party libraries for example.</p></blockquote><p>내 저장소의 특정 subdirectory에 다른 Git저장소를 유지해 주고 커밋 히스토리는 각각 따로 관리하게 된다고 이해하면 될 것 같다. (간단하게 리눅스 쉘의 symbolic link를 떠올리면 될 듯)</p><hr><h3 id="Hexo-테마-설치"><a href="#Hexo-테마-설치" class="headerlink" title="Hexo 테마 설치"></a>Hexo 테마 설치</h3><p>Hexo 내부적으로 <a href="https://hexo.io/docs/themes.html" target="_blank" rel="noopener">테마를 기본적으로 지원</a>하고 어떤 종류의 테마가 퍼블리싱 되어 있는지 <a href="https://hexo.io/themes/" target="_blank" rel="noopener">확인</a>도 할 수 있다. 개인적으로 모던하고 심플하고 감성적이면서 확장성 있고 다양한 디바이스를 지원하는(어디서 많이 본 문구 같다…?) 테마를 찾고 있었기 때문에 고르고 골라 <a href="https://github.com/ahonn/hexo-theme-even" target="_blank" rel="noopener">Even</a>이라는 테마를 선택하게 됐다. 테마를 선택했으니 본격적으로 설정해 보자.</p><ol><li><p>설치할 테마의 저장소 URL을 기억해 둔 다음 로컬의 저장소 루트로 이동해서 Git 명령어를 써서 submodule을 추가하자. 마지막 인자는 submodule을 설정할 경로.</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> git submodule add https://github.com/ahonn/hexo-theme-even themes/even</span><br></pre></td></tr></table></figure></li><li><p>별 문제가 없다면 해당 저장소를 클론 받는걸 볼 수 있고 루트에 <code>.gitmodules</code> 파일이 생성되며 <code>./themes/even</code> 디렉토리가 생성된걸 <code>git status</code>로 확인할 수 있다. </p></li><li><p>이제 Hexo 에 <code>나 이 테마 쓸거야~</code> 하고 알려줘야 한다. 루트의 <code>_config.yml</code>을 열어서 <code>theme</code> 속성의 값을 <code>even</code>으로 수정하고 로컬에서 서버를 올려보자.</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> hexo s -o</span><br></pre></td></tr></table></figure></li><li><p>곧 브라우저가 열리고 테마가 잘 반영된걸 확인했다면 커밋 &amp; 푸시로 마무리하자.</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> git commit -m 'feat: add `even` theme' &amp;&amp; git push origin hexo</span><br></pre></td></tr></table></figure></li><li><p>Github으로 발행까지 하면 리모트에 테마가 반영된걸 확인해 볼수 있다!</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> hexo deploy</span><br></pre></td></tr></table></figure></li><li><p>추가로 해당 테마에서 지원하는 여러 가지 부가적인 기능들이 있는데 테마 자체적으로 지원하는 기능 외에도 Hexo에서 지원하는 플러그인 기능까지 활용하고 있다. (SCSS renderer, 본문 검색 등) 자세한 내용은 위키에서 확인할 수 있는데 중국어의 압박이 있으니 인내심을 갖고 설정하자. (같은 메뉴를 몇 번째 클릭하는지…ㅠㅠ)</p></li><li>추후 다른 환경에 자신이 만든 저장소를 클론해야 할 일이 생길 텐데 단순히 클론만 받으면 하위 경로에 있는 submodule까지 클론하지 않는다. 아래 명령어를 사용하여 해결하자.<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> git submodule update --init --recursive</span><br></pre></td></tr></table></figure></li></ol><hr><h3 id="참고"><a href="#참고" class="headerlink" title="참고"></a>참고</h3><ul><li><a href="https://git-scm.com/docs/git-submodule#_description" target="_blank" rel="noopener">Git submodule</a></li><li><a href="https://git-scm.com/book/ko/v2/Git-%EB%8F%84%EA%B5%AC-%EC%84%9C%EB%B8%8C%EB%AA%A8%EB%93%88" target="_blank" rel="noopener">Git submodule(한글)</a></li><li><a href="http://stackoverflow.com/questions/1030169/easy-way-pull-latest-of-all-submodules" target="_blank" rel="noopener">쉽게 모든 submodule 을 pull 받는 방법</a></li><li><a href="https://github.com/ahonn/hexo-theme-even/wiki" target="_blank" rel="noopener">Even 테마 위키</a></li></ul>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;언젠가 Git을 사용하면서 그런 적이 있다. 내 저장소의 특정 위치에 다른 저장소를 연결하는 방법은 없을까? 간혹 그런 생각이 들 때마다 있겠거니 하고 그냥 넘어갔었는데 마침 이번에 Hexo 를 설치하고 테마를 설정하다 보니 딱 필요한 상황이 생겨서 정리해본다.
+    
+    </summary>
+    
+    
+      <category term="hexo" scheme="https://saystone.github.io/tags/hexo/"/>
+    
+      <category term="theme" scheme="https://saystone.github.io/tags/theme/"/>
+    
+      <category term="even" scheme="https://saystone.github.io/tags/even/"/>
+    
+      <category term="submodule" scheme="https://saystone.github.io/tags/submodule/"/>
+    
+      <category term="git" scheme="https://saystone.github.io/tags/git/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>정적 블로그 Hexo 설치하기</title>
+    <link href="https://saystone.github.io/2017/02/13/How-to-inatall-a-static-blog-with-Hexo/"/>
+    <id>https://saystone.github.io/2017/02/13/How-to-inatall-a-static-blog-with-Hexo/</id>
+    <published>2017-02-13T08:31:28.000Z</published>
+    <updated>2019-01-17T04:44:53.422Z</updated>
+    
+    <content type="html"><![CDATA[<p>최근에 부쩍 정적 블로그 엔진에 관심이 생겼다. 이미 워드프레스 기반의 블로그를 갖고 있긴 했지만 그 공간은 개발 이야기와는 동떨어진 컨셉이라 개발 이야기만 할수 있는 블로그를 만들기로 결심했다. 이미 정적 블로그 엔진을 사용하여 블로그를 운영 중인 지인들에게 추천을 받기도 하고 구글링도 해 보니 꽤나 다양한 종류의 엔진들이 포진해 있었다. 기술적으로 무언가를 골라야 하는 상황이 되면 조금이라도 내 상황에 맞게 목적에 부합하는걸 찾고자 하는 성격 탓에 어떨 때는 리서치하는 시간보다 선택하는 시간이 오래 걸리기도 한다. <a id="more"></a> 결과적으로 <a href="https://hexo.io/ko/" target="_blank" rel="noopener">Hexo</a>를 사용하기로 했는데 몇가지 이유가 있다. Node.js 기반이다. 최근 2년여간 주로 Node.js를 사용했기 때문에 익숙하고 편하다. 다른 정적 블로그 엔진보다 설치와 사용법이 간단해 보였다. (이후 <a href="https://www.staticgen.com/" target="_blank" rel="noopener">StaticGen</a>이라는 사이트를 발견해서 결정을 번복할 뻔 했지만, 이미 템플릿이나 설정 등을 모두 마친 상태에서 발견했으므로 더 이상의 고민은 하지 않기로 했다;)</p><hr><h3 id="Hexo-설치"><a href="#Hexo-설치" class="headerlink" title="Hexo 설치"></a>Hexo 설치</h3><ol><li>아래 내용은 Node.js, Yarn, Git이 로컬에 설치돼 있다는 가정하에 설명한다.</li><li><p>다른 정적 블로그 퍼블리싱 도구들이 그렇듯 Hexo도 CLI 기반이다.  <code>hero-cli</code> 패키지를 <code>global</code>로 설치하자.</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> yarn global add hexo-cli</span><br></pre></td></tr></table></figure></li><li><p>Hexo 구동에 필요한 기본 파일들을 설치한다. 직접 디렉토리를 만들거나 특정 디렉토리에 바로 설치할 수 있다. (설치되는 디렉토리, 파일들이 어떤 역할을 하는지 확인하려면 <a href="https://hexo.io/ko/docs/setup.html" target="_blank" rel="noopener">여기</a>를 참고.)</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> hexo init // 현재 디렉토리에 초기화</span><br><span class="line"><span class="meta">$</span> hexo init saystone // 또는 saystone 디렉토리를 생성하고 그 안에 초기화</span><br></pre></td></tr></table></figure></li><li><p>여느 블로그 엔진들이 그렇듯 구동에 필요한 모듈들을 설치한다.</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> yarn</span><br></pre></td></tr></table></figure></li><li><p>준비가 다 됐으니 서버를 올려보자.</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> hexo serve -o</span><br></pre></td></tr></table></figure></li><li><p>곧 브라우저가 열리면서 설치한 블로그를 띄워준다. 친절하게도 포스트 작성, 서버 구동, 정적 파일 생성 및 원격 사이트에 배포하는 방법을 알려주는 포스트를 샘플로 제공하지만, 입맛에 맞게 커스터마이징 하려면 제공해주는 샘플로는 부족하니 이것저것 찾아서 설정해야 하겠다. :)</p></li></ol><hr><h3 id="참고"><a href="#참고" class="headerlink" title="참고"></a>참고</h3><ul><li><a href="https://hexo.io/ko/docs/" target="_blank" rel="noopener">Hexo Official Documentation</a></li><li><a href="https://originerd.github.io/2017/01/21/how-i-set-hexo/" target="_blank" rel="noopener">originerd님의 Hexo 설정기</a></li></ul>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;최근에 부쩍 정적 블로그 엔진에 관심이 생겼다. 이미 워드프레스 기반의 블로그를 갖고 있긴 했지만 그 공간은 개발 이야기와는 동떨어진 컨셉이라 개발 이야기만 할수 있는 블로그를 만들기로 결심했다. 이미 정적 블로그 엔진을 사용하여 블로그를 운영 중인 지인들에게 추천을 받기도 하고 구글링도 해 보니 꽤나 다양한 종류의 엔진들이 포진해 있었다. 기술적으로 무언가를 골라야 하는 상황이 되면 조금이라도 내 상황에 맞게 목적에 부합하는걸 찾고자 하는 성격 탓에 어떨 때는 리서치하는 시간보다 선택하는 시간이 오래 걸리기도 한다.
+    
+    </summary>
+    
+    
+      <category term="static-blog" scheme="https://saystone.github.io/tags/static-blog/"/>
+    
+      <category term="hexo" scheme="https://saystone.github.io/tags/hexo/"/>
+    
+  </entry>
+  
+</feed>

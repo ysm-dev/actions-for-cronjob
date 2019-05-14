@@ -1,687 +1,423 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"><channel><title><![CDATA[개발하는 곰]]></title><link><![CDATA[https://gompro.postype.com]]></link><description><![CDATA[000gan 풀스택 엔지니어로 활동하고 있는 곰프로입니다.
 
+&#34;Talk is cheap. Show me the code&#34;
 
+이메일: junhyung3224@gmail.com
+깃허브: https://github.com/leejh3224]]></description><language>ko</language><pubDate>Tue, 14 May 2019 21:18:38 +0900</pubDate><generator>https://www.postype.com</generator><item><title><![CDATA[[번역] 쉬운 도구는 디버깅하기 쉬운 도구다.]]></title><link><![CDATA[https://gompro.postype.com/post/3787808]]></link><description><![CDATA[<blockquote class="blockquote-type2"><p>이 글은 Martin Tournoij의 글 Easy means easy to debug를 번역한 글입니다. 다수의 의역이 포함되어 있으며, 원문을 읽고 싶으신 분들은 <a href="https://arp242.net/easy.html">Easy means easy to debug</a>을 참조하시기 바랍니다. 또한 이 문서는 <a href="https://creativecommons.org/licenses/by/4.0/">cc-by 4.0</a> 라이센스를 준수합니다.</p></blockquote><p>어떤 프레임워크나 라이브러리, 도구가 "<strong>쉽다</strong>"는 건 무슨 의미일까? 여기엔 다양한 의견이 있겠지만 나는 사용하기 쉬운 도구는 <em>디버깅하기 쉬운 도구</em> 라고 생각한다. 사람들이 프로그램, 프레임워크, 라이브러리, 파일 포맷 등이 사용하기 편하다고 말할 땐, "보세요. 이 정도 노력으로 이 정도 일을 할 수 있어요. 정말 쉽지 않나요?" 같은 식으로 말하곤 한다. 하지만 그것만으론 충분하지 않다.</p><p>코드는 한 번 작성하면 언제나 디버깅 사이클을 거치게 되어 있다. 이는 단순히 코드에서 버그를 찾아내는 것만을 말하진 않는다. 여기에는 코드를 읽고 이해하는 모든 과정이 포함된다. 결국 디버깅을 하려면 코드 전체를 이해해야 한다. 그러니 "디버깅하기 쉽다"는 말에는 "이해하기 쉽다"는 의미도 포함된다.</p><p>사용성 측면의 추상화는 가끔 그 코드가 정확히 어떤 동작을 수행하는지 이해하기 어렵게 만든다. 물론 이는 어떤 상황에선 나쁘지 않은 타협점(tradeoff)일 수 있다. 하지만 나라면 코드를 나중에 더 이해하기 쉽고 디버깅하기 쉬운 방향으로 고치기 위해 더 많은 노력을 쏟을 것 같다. 나중에 돌이켜보면 이런 노력이 그만한 값어치를 했다는 걸 깨닫을 것이다.</p><p>단순함 그 자체가 디버깅하기 쉬운 프로그램을 만드는 건 아니지만 가장 중요한 부분인 것도 사실이다. 질 좋은 문서를 갖추는건 큰 도움이 되지만 좋은 문서를 이용할 수 있는 상황이 흔하지는 않다.</p><p>코드를 이해하기 쉽고 디버깅하기 쉬운 방향으로 고쳤을 때의 이점은 분명하다. 디버깅하기 어려운 프로그램은 버그의 개수가 늘어나지 않더라도 계속 더 이해하기 어려워 진다. 이 때문에 프로그래머는 디버깅에 더 많은 시간을 쏟게 되고, 결국 프로그램은 더 많은 버그를 가지게 될 것이기 때문이다.</p><p>내 관찰에 따르면 회사는 고치기 어려운 버그에 시간을 들이는 일을 효용이 떨어지는 일로 보는 경향(not considered good Return Of Investment)이 있다. 그리고 오픈소스 프로젝트에선 대체적으로 소수의 핵심 인물을 제외하곤 다수가 일회성이나 작은 수정에 불과한 커밋에만 집중한다.</p><p>새로운 사실은 아니다. Brian W. Kernighan과 P. J. Plauger가 1974년 발행한 <em>The Elements of Programming Style</em> 에 따르면:</p><blockquote class="blockquote-type2"><p>모두가 프로그램을 처음 작성하는 것보다 디버깅하는 것이 두 배는 더 힘들다는 사실을 알고 있다. 그럼에도 처음 코드를 작성할 때 온갖 영리한 추상화를 집어넣는다면(as clever as you can be) 나중에 어떻게 디버깅을 할 것인가?</p></blockquote><p>온갖 영리한 추상화를 집어넣은 코드는 디버깅하기 어려운 코드가 된다. 이제 몇 가지 예시를 들텐데, 내 주장은 도구를 사용하는 것 자체가 나쁘다는 것은 아니다. 오히려 아래 예시들은 "사용하기 쉬운" 도구와 "디버깅하기 쉬운" 도구 간에 벌어지는 타혐점(tradeoff)을 분명하게 보여주기 위한 것들이다.</p><ul><li>ORM 라이브러리(주: 데이터베이스 쿼리, 마이그레이션 등을 쉽게 사용하기 위한 라이브러리)를 사용하면 데이터베이스 쿼리를 쉽게 사용할 수 있지만 그와 관련해서 문제가 생겼을 때 이를 고치는 건 그 도구를 사용하지 않을 때보다 어렵다.</li><li>다수의 테스트 라이브러리가 디버깅을 어렵게 만들기도 한다. 루비의 rspec이 좋은 예시인데, 내가 만약 설정을 잘못하게 되면, 그 후에 무엇이 잘못되었는지 파악하려면 꽤 많은 시간을 들여야한다. 이는 에러메시지가 이해하기 어렵기 때문이다. 자세한 것은 <a href="https://arp242.net/testing.html">Testing isn’t everything</a>포스팅을 읽어보기 바란다.</li><li>자바스크립트 프레임워크의 동작 전체를 이해하는 건 어려운 일이다. 영리한 상태 관리는 굉장한 편의성을 제공하고 그 자체로 훌륭한 도구지만, 상태(state)가 예상한 방향대로 변화하지 않으면 관련된 스택오버플로우 질문이나 깃허브 이슈가 있기를 바라면서 한참을 해매야한다. 이런 라이브러리들이 상태 관리를 쉽게 하게끔 도와주는 것은 사실이고 이런 라이브러리를 사용하는게 나쁘다는 건 아니다. 하지만 내가 보기엔 이 도구들은 "사용의 편의성"에만 너무 집중한 나머지 "디버깅의 편의성"을 잃어버린 것 같다.</li><li>도커(Docker)는 사용성을 높여주는 훌륭한 도구지만,</li></ul><figure class="code"><textarea>ERROR: for elasticsearch  Cannot start service elasticsearch:
+oci runtime error: container_linux.go:247: starting container process caused "process_linux.go:258:
+applying cgroup configuration for process caused \"failed to write 898 to cgroup.procs: write
+/sys/fs/cgroup/cpu,cpuacct/docker/b13312efc203e518e3864fc3f9d00b4561168ebd4d9aad590cc56da610b8dd0e/cgroup.procs:
+invalid argument\""</textarea><pre class="cm-s-default" data-type="text/plain"></pre></figure><p class="indent">   이런 에러메시지나</p><figure class="code"><textarea>ERROR: for elasticsearch  Cannot start service elasticsearch: EOF</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>     이런 메시지가 나오면 그저 막막할 수밖에 없다.</p><ul><li>Systemd는 SysV init.d 스크립트보다 쉽다.<br />Lennart Poettering의 책 systemd myths 에서 그는 systemd가 왜 사용하기 쉬운지를 설명하기 위해 아래와 같이 말했다.</li></ul><blockquote class="blockquote-type2"><p>Systemd는 SysV init.d 스크립트보다 쉬운 이유는 쉘 스크립트를 작성하는 것보다 systemd 유닛 파일을 작성하는게 더 쉽기 때문입니다.</p></blockquote><p>내가 그의 의견 전체에 동의하지 않는 것은 아니다. 일반적으로 쉘 스크립트는 길고 장황해서 이해하기 어렵지만 - <a href="https://arp242.net/shell-scripting-trap.html">the shell scripting trap</a> - 그렇다고 하더라도 사용자가 유닛 파일을 작성하기 쉽게 만들려면 상당한 레벨의 추상화가 필요하며,이는 systemd 자체는 그보다 훨씬 복잡하다는 것을 의미한다. 또 사용자도 이러한 복잡성 때문에 불편을 겪을 수 있다. 내가 겪은 <a href="https://unix.stackexchange.com/questions/185495/why-does-systemctl-enable-rpcbind-change-the-volume-of-my-sound-and-how-do-i">이슈</a>와 <a href="https://cgit.freedesktop.org/systemd/systemd/commit/?id=6e392c9c45643d106673c6643ac8bf4e65da13c1">해결책</a>를 한 번 살펴보길 바란다. 결코 이해하기 쉽다고는 말할 수 없을 것이다.</p><div><hr class="hr hr-solid"></div><p>사견:</p><p>프로그래밍을 배우다보면 개발의 목적이 "유용한 것을 만드는 것"에서 "멋진 도구를 사용해보는 것"으로 바뀔 때가 있습니다. 소위 말하는 라이브러리 덕후가 되는 것이죠.</p><p>물론 적은 코드로 많은 일을 할 수 있는 도구는 분명 멋지지만 그 도구의 디버깅 경험(User Experience처럼 개발자에게는 디버깅 경험이 있다고 생각합니다.)이 나쁘다면 훌륭한 도구가 아니라고 생각합니다. 그러다보니 이러니 저러니 해도 많은 사람들이 사용하는 다루기 쉬운 도구로 계속 돌아오는 것 같아요. 이런 저런 불평하다가도 다른 도구를 사용하면서 스택오버플로우 질문 뒤질 것 생각하면...</p><p>개발자라면 누구나 원작자처럼 디버깅하기 어려운 도구때문에 곤란을 겪은 경험이 있을 것이라고 생각합니다. 저한테는 Typescript나 Redux 혹은 Angularjs가 그랬죠. 디버깅하기 어렵다고 그런 도구들을 버릴 수 있는 건 아니지만 언제나 더 디버깅하기 쉬운 도구를 찾게 되는 것 같아요.</p><p>재밌게 읽으셨다면 원작자분의 원문도 읽어보시기 바랍니다. 좋은 인사이트가 담겨있다고 생각해요. 😀</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 10 May 2019 13:00:38 +0900</pubDate></item><item><title><![CDATA[[Typescript] async array methods]]></title><link><![CDATA[https://gompro.postype.com/post/3765793]]></link><description><![CDATA[<p>Node.js의 forEach 혹은 filter는 동기적으로 동작합니다. </p><p>그렇기 때문에 async function과 함께 동작하게 만들려면 약간의 트릭이 필요한데요.</p><p>아래와 같은 식으로 할 수 있습니다.</p><figure class="code"><textarea>// ArrayExt.ts
+Array.prototype.asyncFilter = async function(callback) {
+    const fail = Symbol();
+    return (await Promise.all(
+        this.map(async (item) =&gt; ((await callback(item)) ? item : fail)),
+    )).filter((i) =&gt; i !== fail);
+};
 
+Array.prototype.asyncForEach = async function(callback) {
+    for (let index = 0; index &lt; this.length; index++) {
+        await callback(this[index], index, this);
+    }
+};</textarea><pre class="cm-s-default" data-type="text/typescript"></pre></figure><p>1. 먼저 Array.prototype에 새로운 두 메쏘드, asyncFilter와 asyncForEach를 추가해줍니다.</p><p>2. callback 인자는 이제 promise이기 때문에 Promise.all과 await을 사용할 수 있습니다.</p><p>3. 하지만 prototype만 추가하면 typescript 컴파일러가 아래와 같이 불평을 합니다.</p><figure class="code"><textarea>Property 'asyncFilter' does not exist on type 'any[]'.</textarea><pre class="cm-s-default" data-type="text/typescript"></pre></figure><p>즉, Array 타입에는 asyncFilter라는 프로퍼티가 없다는 것이죠.</p><p>이 경우에는 위의 두 메쏘드에 대한 인터페이스를 정의해줘야합니다.</p><figure class="code"><textarea>interface Array&lt;T&gt; {
+    asyncFilter(
+        callback: (element: T, index?: number, array?: T[]) =&gt; Promise&lt;boolean&gt;,
+    ): Promise&lt;T[]&gt;;
 
+    asyncForEach(
+        callback: (element: T, index?: number, array?: T[]) =&gt; Promise&lt;void&gt;,
+    ): Promise&lt;void&gt;;
+}</textarea><pre class="cm-s-default" data-type="text/typescript"></pre></figure><p>본문에서는 filter와 forEach만 추가했지만 map이나 reduce도 같은 방식으로 할 수 있습니다.</p><p>이제 asyncFilter나 asyncForEach가 필요한 파일에 우리가 만든 ArrayExt.ts 파일을 import 해주기만 하면 됩니다.</p><figure class="code"><textarea>import "./ArrayExt"
 
+// .asyncFilter, .asyncForEach가 추가되었습니다!</textarea><pre class="cm-s-default" data-type="text/typescript"></pre></figure><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Mon, 06 May 2019 10:26:41 +0900</pubDate></item><item><title><![CDATA[[iOS] TabBar shadow 커스터마이징]]></title><link><![CDATA[https://gompro.postype.com/post/3676259]]></link><description><![CDATA[<p>iOS TabBar의 기본 Shadow를 커스터마이징하려면 먼저 기본 shadow 스타일을 빈 이미지로 초기화한 다음 커스텀 스타일을 적용해야 한다.</p><p>그러므로 UITabBarController를 상속하는 CustomTabBarController를 만들고 viewDidLoad에서 스타일을 설정하게 해줬다.</p><figure class="code"><textarea>import UIKit
 
+class CustomTabBarController: UITabBarController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupStyle()
+    }
 
+    func setupStyle() {
+        UITabBar.clearShadow()
+        tabBar.layer.applyShadow(color: .gray, alpha: 0.3, x: 0, y: 0, blur: 12)
+    }
+}</textarea><pre class="cm-s-default" data-type="text/x-swift"></pre></figure><p>다음으로 기본 그림자 스타일을 초기화하는 함수와 그림자를 적용하는 함수는 다른 파일에 아래와 같이 만들어뒀다.</p><figure class="code"><textarea>import Foundation
+import UIKit
 
-<rss version="2.0"
-	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns:dc="http://purl.org/dc/elements/1.1/"
-	xmlns:taxo="http://purl.org/rss/1.0/modules/taxonomy/"
-	xmlns:activity="http://activitystrea.ms/spec/1.0/" >
-<channel>
-	
-		
-			<title><![CDATA[joonlee studio]]></title>
-			<link>https://blog.naver.com/robo813</link>
-			
-				<image>
-					<url><![CDATA[https://blogpfthumb-phinf.pstatic.net/MjAxODA4MDZfODcg/MDAxNTMzNTYwMTEwMDUx.yAYka13JExQvxhLIliB5cq0Rpqz_duFRzM0wi5fotWIg.H8sogH_c3O5hANT519rV2gisKSzzGhZCzM27PR9btqQg.JPEG.robo813/ikW2TsadTny%252BBcyFEW81WQ_thumb_14ab.jpg?type=m2]]></url>
-					<title><![CDATA[joonlee studio]]></title>
-					<link>https://blog.naver.com/robo813</link>
-				</image>
-			
-			<description><![CDATA[고등학생,19 / 생활속에서 소확행을 줄 수 있는 소프트웨어를 만들고 싶습니다. 한글시계 개발 참여, 다용도 무인기 프로젝트 등등 많은 프로젝트를 하고있습니다]]></description>
-			<language>ko</language>
-			<generator>Naver Blog</generator>
-			<pubDate>Tue, 14 May 2019 21:13:38 +0900</pubDate>
+extension CALayer {
+    // Sketch 스타일의 그림자를 생성하는 유틸리티 함수
+    func applyShadow(
+        color: UIColor = .black,
+        alpha: Float = 0.5,
+        x: CGFloat = 0,
+        y: CGFloat = 2,
+        blur: CGFloat = 4
+    ) {
+        shadowColor = color.cgColor
+        shadowOpacity = alpha
+        shadowOffset = CGSize(width: x, height: y)
+        shadowRadius = blur / 2.0
+    }
+}
 
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[Project: RE 베타 테스트 오픈 및 오픈소스 문서화]]></title>
-					<link>https://blog.naver.com/robo813/221500603440</link>
-					<guid>https://blog.naver.com/robo813/221500603440</guid>
-					<description><![CDATA[프로젝트RE를 시작한지도 2개월이 지났습니다.스피커 하드웨어를 간단하게 설계해보았고,안드로이드 어플리케이션도 개발중에 있습니다.오픈소스 프로젝트를 처음 해보는것은 아니지만많은 사람들이 (앱이 아닌)소스를 쓰게하려는 목적을 가진 프로젝트는 이번이 처음이다보니 오픈소스를 사람들에게 어떻게하면 많이 퍼뜨릴까 생각해보았습니다.우선 오픈소스를 사람들이 활용하려면프로그램을 이해해야합니다.그러기 위해선 일종의 설명서가 필요하겠죠그러한 목적을 위해 github의 WIKI를 사용하여문서화 진행을 해보았습니다.문서를 읽고 프로그래머 분들이 소스를 자유롭게 고치는데 도움이 되었으면 합니다.또한 오픈 베타 테스.......]]></description>
-					<pubDate>Fri, 29 Mar 2019 17:32:05 +0900</pubDate>
-					<tag><![CDATA[오픈소스,프로젝트,프로그래밍,어플,앱,스피커,스마트폰,스마트스피커]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[Project: RE업데이트[SW개발]]]></title>
-					<link>https://blog.naver.com/robo813/221495848827</link>
-					<guid>https://blog.naver.com/robo813/221495848827</guid>
-					<description><![CDATA[Probject: RE&quot;오래된 스마트폰으로 스마트 스피커를 만드는 프로젝트&quot;하드웨어는 기본적으로갖추었다고 판단되었고..(하드웨어는 이전 포스트에 있다)이제는 가장 중요한 SW를 만들려고 한다.안드로이드기 때문에안드로이드 스튜디오를 사용하여 JAVA(Kotlin도 가능)로 대부분 프로그램을 구성한다.우선적으로 TTS와 STT를 구현해야한다.둘다 구글에서 제공하는 API를 활용하여 제작하고각종 API를 활용하여 날씨, 음악, 뉴스 관련 정보를 가져올 계획이다.우선 지금 완성된 부분은 TTS와 STT부분이고,샘플 음악을 몇 곡 넣어두어 노래 재생을 하는 정도이다.이 영상 마지막에서 보이듯이노래 재생중 음성인식률이 매우 떨어.......]]></description>
-					<pubDate>Sun, 24 Mar 2019 03:42:47 +0900</pubDate>
-					<tag><![CDATA[스마트,스피커,인공지능,알고리즘,개발자,고딩,고딩개발자,고등학생,프로그램,안드로이드,자바,인디개발자]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[Project:RE 업데이트 [하드웨어 조립]]]></title>
-					<link>https://blog.naver.com/robo813/221471834652</link>
-					<guid>https://blog.naver.com/robo813/221471834652</guid>
-					<description><![CDATA[Re프로젝트를 진행하면서 소프트웨어만 만들고 하드웨어는 나중에 하려했는데..나름 여러 사정으로 하드웨어를 하고 소프트웨어는 조금 미루기로했다.하드웨어는&quot;카카오 미니&quot;를 본떠 데모버전을 제작하였다.사용된 부품은- 3D프린팅된 부품- 20W 풀 레인지 유닛- 2채널 앰프이다.사실 20W까지 전혀 필요 없지만. 시제품이니 만큼내가 원하는 사양으로 제작하였다.만약 이 스피커가 많은 사람들에게 사용되게하려면원래 취지인 &quot;싼 가격에 최신 기술을 보급하자&quot;에 맞게 출력을 줄일 것이고비례적으로 가격도 떨어질 것이다.프린팅된 부품이다스피커 유닛와 앰프 스마트폰이 장착될 메인 보드커버이다.앰프와 전원.......]]></description>
-					<pubDate>Fri, 22 Feb 2019 02:52:22 +0900</pubDate>
-					<tag><![CDATA[스마트,스피커,인공지능,iot,스마트폰,re,새롭게,새로운,카카오,미니]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[New Project : RE]]></title>
-					<link>https://blog.naver.com/robo813/221453438192</link>
-					<guid>https://blog.naver.com/robo813/221453438192</guid>
-					<description><![CDATA[드디어 고등학생의 마지막 관문을 입성한고3 프로그래머 &#x27;이준희&#x27;입니다.저는 초등학교때부터 프로그래밍을 시작해서중학교때 어플리케이션제작에 관심을 가진후2018년 1월에는 우리 한글의 아름다움을 잘 보여주는&quot;한글시계&quot; 안드로이브 버전을 제작한 바 있습니다.오늘 글은 2019년 그리고 아마도.. 앞으로 장기적으로 하게될 프로젝트중 하나인 새로운 프로젝트를 소개하려 합니다.프로젝트 이름은Re입니다.오타가 아니구요 ㅎRe라는 글자는 &quot;다시&quot;, &quot;새롭게&quot;라는 뜻을 가지고 있습니다.또한 기존의 프로그램을 거꾸로 분석하고 설계해 아이디어와 노하우를 추출하여 기술향상과 또 다른 창.......]]></description>
-					<pubDate>Tue, 29 Jan 2019 01:20:19 +0900</pubDate>
-					<tag><![CDATA[안드로이드,스마트폰,스피커,스마트,프로그램,앱,어플,비서,개발,고등학생]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[PROGRAMMING]]></category>
-					<title><![CDATA[BaekJoonOnlineJudge A+B 1000번 C풀이]]></title>
-					<link>https://blog.naver.com/robo813/221437563726</link>
-					<guid>https://blog.naver.com/robo813/221437563726</guid>
-					<description><![CDATA[두 가지 수를 더하는 문제인데일반적인 방식이 아니라 새로운 방식으로 풀어보고 싶었다for문으로 처음 짰지만..이내 while문으로 고쳐썼다.GITHUB : https://github.com/neo81389/AlgorithmLearning백준 : https://www.acmicpc.net/problem/1000]]></description>
-					<pubDate>Wed, 09 Jan 2019 03:12:09 +0900</pubDate>
-					<tag><![CDATA[백준,문제풀이,알고리즘,프로그래밍]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[PROGRAMMING]]></category>
-					<title><![CDATA[BaekjoonOnlineJudge 7576문제 공부]]></title>
-					<link>https://blog.naver.com/robo813/221431533471</link>
-					<guid>https://blog.naver.com/robo813/221431533471</guid>
-					<description><![CDATA[https://www.acmicpc.net/problem/7576내가 푼 방식문제를 어떻게 풀었나?이 문제는 이미 익은 토마토가 안 익은 토마토에게 영향을 줘서 익게 만드는 과정이 총 몇 일 거릴 것인지 묻는 문제이다. 익은 토마토는 동서남북으로만 영향을 줄 수있다.우선 먼저 한것은 배열을 모두 돌면서 안 익은 토마토(0)가 나오면 change함수로 넘어간다.change 함수에선 다시 배열을 돌면서 익은 토마토(1)가 나오면 그 주변을 탐색하고 안 익은 토마토가 나오면익은 토마토로 바꿔준다.다만 처음 배열을 돌때는 익은 토마토를 상징하는 1로 바꾸지만그 다음부턴 날짜 랑 같은 숫잘 채워나간다.그 이유는 하루에 한 칸씩 밖에 영향을 못주는 토마토.......]]></description>
-					<pubDate>Tue, 01 Jan 2019 03:43:17 +0900</pubDate>
-					<tag><![CDATA[백준,알고리즘,7576,정올,정보올림피아드,지역예선,2013,1번]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[잡학다식 글쓰기]]></category>
-					<title><![CDATA[상보 필터]]></title>
-					<link>https://blog.naver.com/robo813/221427149377</link>
-					<guid>https://blog.naver.com/robo813/221427149377</guid>
-					<description><![CDATA[센서로 부터 받아들여지는 데이터 값은 Raw데이터 임으로 정확도가 떨어진다. 특히나 값싼 센서일수록 더하다..센서들이 한번씩 값이 큰 오차를 나타낼 수가 있는데 이러한 불순한 데이터 값은 로켓같은 민감한 기계에선 치명적이다. 자이로 센서와 가속도 센서가 합쳐져 6DOF(Degree Of Freedom)을 가진 기울기 센서는 필터링이 필요한 센서이다. 이 두 센서는 각자 단점을 하나씩 가지고 있고 그 오차 값이 기체에 영향을 크게 미칠 수 있는데 다행이도 이 두 값을 상호보환하여 값을 안정화시킬 수 있다. 이를 상호보황하여 필터링 한다하여 “상보필터(complementary filter)”를 사용하여 값을 안정화 시킨다.상보필터는 가속도 + 자이.......]]></description>
-					<pubDate>Wed, 26 Dec 2018 01:28:41 +0900</pubDate>
-					<tag><![CDATA[include,define,데이터필터링,필터,알고리즘,상보필터]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[잡학다식 글쓰기]]></category>
-					<title><![CDATA[지휘자 직업 조사(학교 수행)]]></title>
-					<link>https://blog.naver.com/robo813/221427147481</link>
-					<guid>https://blog.naver.com/robo813/221427147481</guid>
-					<description><![CDATA[음악을 하면서 협연을 해보았다면 누구든지 “지휘자”라는 사람과 같이 연습을 해보았을것이다. 1. 지휘자란지휘자는 음악가의 한 종류로, 단순히 연주의 시작이나, 템포, 리듬을 통일할 뿐만 아니라, 다이나믹, 아고긱, 프레이징을 비롯한 음악적 표현에 필요한 모든 해석을 연주자에게 지시하여, 작품을 재창조하는 연주가. 즉 관현악이나 합창과 같은 집단적 연주에 대해 몸동작을 통해 통일을 시켜 주는 사람을 말한다.2. 지휘자의 역할지휘자라고 하면 가장 먼저 떠오를 것이 오케스트라이다. 오케스트라를 보면 가장 마지막으로 나와 사람들에게 인사를하고 연주가들 중앙에서 간단한 제스처로 음악을 시작하고 음악을 끝낸다. 이것.......]]></description>
-					<pubDate>Wed, 26 Dec 2018 01:23:15 +0900</pubDate>
-					<tag><![CDATA[음악,음악가,지휘자,작곡]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[잡학다식 글쓰기]]></category>
-					<title><![CDATA[Quantum Computing]]></title>
-					<link>https://blog.naver.com/robo813/221427145636</link>
-					<guid>https://blog.naver.com/robo813/221427145636</guid>
-					<description><![CDATA[영어 오타 및 문법 오류 지적 감사합니다Today we are living in a world that is full of technology. Like Autonomy Driving Car, Al, high speed internet connection. However, this is not the end of technology. Many Scientists, Programmers are trying to make new technology, or improve the tech that we have right now. In this report I’ll introduce one new tech that we don’t know much of them yet, but has a big impact to the world.Now a days we are using computer in a various ways. Doing report, making presentation, solving mathematical problem, or finding a new star. Depends on purpose of usage .......]]></description>
-					<pubDate>Wed, 26 Dec 2018 01:18:19 +0900</pubDate>
-					<tag><![CDATA[양자컴퓨터]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[잡학다식 글쓰기]]></category>
-					<title><![CDATA[생명체를 컴퓨터로 옮기기]]></title>
-					<link>https://blog.naver.com/robo813/221427144507</link>
-					<guid>https://blog.naver.com/robo813/221427144507</guid>
-					<description><![CDATA[요즘 나오는 영화를 보면 인공지능 컴퓨터가 인간을 지배하거나, 인간과 더불어 산다거나, 심지어 인간의 뇌를 컴퓨터에 프로그래밍 시켜낸다는 이야기를 담고 있는 영화를 자주 볼 수 있다. 그런 이야기들은 잘 짜여진 영화의 구성, 뛰어난 CG덕 뿐만은 아닐것이다. 왜냐하면 실제로도 우리가 사는 지금 이 세상에서 인공지능의 비중이 꽤나 크고, 일반인들도 그렇다는 것을 느끼기 때문이다. 이미 인공지능 “왓슨”의 암 진단률은 의사를 뛰어 넘었고, Deep Mind의 알파고는 우리나라 최고의 바둑기사 이세돌을 4:1로 이기고, 얼마안가 세계 1위 기사인 “커제”까지 완승으로 이기며 더 이상 바둑으로 컴퓨터를 이길 수 없는 시대가 와 버렸.......]]></description>
-					<pubDate>Wed, 26 Dec 2018 01:15:23 +0900</pubDate>
-					<tag><![CDATA[생명,컴퓨터,인공지능,프로그래밍,커낵텀]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[잡학다식 글쓰기]]></category>
-					<title><![CDATA[화학이 컴퓨터를 만날때]]></title>
-					<link>https://blog.naver.com/robo813/221427143073</link>
-					<guid>https://blog.naver.com/robo813/221427143073</guid>
-					<description><![CDATA[2013년 노벨화학상은 컴퓨터 프로그램을 만든 3명의 과학자에게 돌아갔다. 노벨 화학상에 컴퓨터 프로그래머라니 좀 이상해 보인다. 그 곳에서 컴퓨터 프로그램을 만든 과학자가 선정된 이유는 무엇일까?바로 “계산 화학”으로 실험을 컴퓨터로 진행할 수 있게 만들었기 때문이다. 화학자들은 화학반응을 예측하고 분석하는 계산 화학을 바탕으로한 컴퓨터 프로그래밍이 실험실에 보급된 뒤 실험게 되었다. 이러써 복잡한 화학반응이 일어나거나 일어나지 않는 이유를 보다 쉽고 정확하게 이해할 수 있게 된 것이다. 계산 화학은 이러한 현실세계에서 실시간으로만 재생 가능하고 뒤로간다거나 빠르게 갈 수 없는 문제 또 그렇게 하여 생겨.......]]></description>
-					<pubDate>Wed, 26 Dec 2018 01:11:50 +0900</pubDate>
-					<tag><![CDATA[화학,컴퓨터,프로그래밍]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[한글시계 개발]]></category>
-					<title><![CDATA[한글시계 Watch Edition개발 예정]]></title>
-					<link>https://blog.naver.com/robo813/221423837884</link>
-					<guid>https://blog.naver.com/robo813/221423837884</guid>
-					<description><![CDATA[한글시계가 작동가능한 OS의 범위가 계속해서 넓어지고 있습니다!오픈소스라는 강점이 정말 잘 드러나는 프로젝트인것 같아 저도 기쁩니다.현재까지 한글시계는Macinotch, Window, Android, Google Chrome, Tizen(삼성 워치 시리즈)에서 작동 가능합니다!작동이 안되는 OS중 대중적인 것이 IOS인데요.이제 그 개발을 시작하려합니다.IOS개발과 함께 Apple Watch를 위한 개발도 같이 할 예정입니다.우선한글시계를 와치에서도 지원하기 위해서 디자인을 우선 새롭게 해야한다고 생각했습니다. 그래서 오늘은 한글시계 와치 시리즈에 사용될 디자인을 소개해드리겠습니다.&lt;&quot;덜&quot;과 &quot;서&quot; 오타가 시안에 있지만.. 양해를.......]]></description>
-					<pubDate>Fri, 21 Dec 2018 02:06:46 +0900</pubDate>
-					<tag><![CDATA[한글시계,워치,스마트워치,개발자,오픈소스,고등학교개발자,고등학생]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[한글시계 개발]]></category>
-					<title><![CDATA[한글시계 디자인 업데이트 예고(현재 난항중..;;)]]></title>
-					<link>https://blog.naver.com/robo813/221423835473</link>
-					<guid>https://blog.naver.com/robo813/221423835473</guid>
-					<description><![CDATA[한글시계 업데이트에 대한 이야기를해야할 것 같아 올립니다.우선 한글시계 안드로이드 버전은 디자인의 개선이 있었습니다. 어떠한 기능보다도 메인 화면의 디자인이 정말 구렸기 때문에... 우선적으로 해결하려 했습니다.고등학생의 시간을 쪼개어 만들다 보니 시간이 꽤 걸린다는점 양해 부탁드립니다.. 한글시계 업데이트 목록+한글시계 색상 선택의 자유도를 많이 개선 시켰습니다.(개발자의 실력이 부족하여 full color를 구현하진 못하였습니다 ㅜ) +날씨 기능을 넣으려고 합니다. +또한 위젯에서 클릭하면 바로 앱으로 넘어가는 기능을 우선적으로 해결하려고 합니다. -다만 또 다시 개발자가 시험기간에 들어가서.. 연장되었습.......]]></description>
-					<pubDate>Fri, 21 Dec 2018 01:57:55 +0900</pubDate>
-					<tag><![CDATA[]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[ShortTermProject]]></category>
-					<title><![CDATA[의료, 건강 정보 관리 시스템 Dr-Friend 개발(미완)]]></title>
-					<link>https://blog.naver.com/robo813/221423833728</link>
-					<guid>https://blog.naver.com/robo813/221423833728</guid>
-					<description><![CDATA[학교 소프트웨어 경시대회에 사용한 프로젝트이다.다른 프로젝트도 있기에당분간 업데이트는 없을 예정이다.개발은 android용 앱과 Web(학교 후배가 해줌)이 제공된다.구글에서 제공하는 Firebase라는 서버를 사용하여 프로젝트를 진행하였다. 개요Medical Information System that records user&#x27;s health data using sensors in phone and other method. Gathered data can be used for early and fast diagnosis.의료 정보 및 건강 정보를 관리 하는 시스템입니다. 웨어러블 디바이스나 다양한 의료 장비에서 받아온 정보와 사용자가 직접 입력한 정보를 데이터 서버에 저장하고 앱에서 쉽게 정보를 확인할 수 있습니다. 사용자는 빠.......]]></description>
-					<pubDate>Fri, 21 Dec 2018 01:51:50 +0900</pubDate>
-					<tag><![CDATA[개발,안드로이드,웹,건강,건강관리,의료,4차산업]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[PROGRAMMING]]></category>
-					<title><![CDATA[JumpPointSearch구현하기(C언어)]]></title>
-					<link>https://blog.naver.com/robo813/221358498491</link>
-					<guid>https://blog.naver.com/robo813/221358498491</guid>
-					<description><![CDATA[얼마전 JPS알고리즘에 대한 글을 쓴적이 있다. 그 글들은 모두 알고리즘에 대한 개념을 정리한 것이었다. JPS와 JPS+에 대하여 공부를 하면서 느낀것은 영문 문서 밖에 없는데 그 영문 문서마저 더 이상 찾을 만한게 없는 지금.. JPS를 더욱더 잘 이해하려면 직접 짜보는 수 밖에는 없다고 생각 했다. 그래서 정말 오랜만에 알고리즘을 직접 짜보기로 했다.. (자게 된 알고리즘은 JPS+, 왜나하면 이게 참고할 자료가 좀 더 자료가 많다. 물론 JPS의 심화형이 JPS+이긴하지만..) 그렇게 해서 알고리즘 구현을 위해 시간을 조금씩 쪼개어 시작한지 일주일하고 반 정도 지났다. 물론 못한 날이 더 많았고.. 할 수 있는 날도 많이 해봤자..1시간 조금.......]]></description>
-					<pubDate>Thu, 13 Sep 2018 22:22:45 +0900</pubDate>
-					<tag><![CDATA[JPS,알고리즘]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[PROGRAMMING]]></category>
-					<title><![CDATA[A*보다 빠른JPS보다 빠른 JPS+]]></title>
-					<link>https://blog.naver.com/robo813/221341534052</link>
-					<guid>https://blog.naver.com/robo813/221341534052</guid>
-					<description><![CDATA[오늘은 JPS+에 대하여 글을 써보려한다. A*는 우리나라에서 많이 알려진 알고리즘이다. 그리고 3주전 JPS에 대한 설명을 한 글을 올렸다. 그 뒤로 JPS+를 공부하는데.. 흐음 뭔가 잘 이해가 안되었다.. 게다가 난 우리나라에서 공부해야한다는 이유만으로도 함부로 못건드리는 "고2"이다.. 개학도 했겠다..이과의 수학공부량이란 살인적이다. (근데 내가 이런말 할 자격이 있는가..? 나 전교권은 아닌데..) 무튼 개인적으론 꽤나 바쁘게 몇 주를 보냈다. 그리고 오랜만에 JPS+에 대한 자료를 다시보니!! 꽤 이해가 되었다! 이것또한.. 한 개가 이해가 안되긴 하다.. (그 부분에 대해 짐작가는 부분이 있긴한데.. 뭔가 확실치 않아서..) ---------.......]]></description>
-					<pubDate>Sun, 19 Aug 2018 02:44:58 +0900</pubDate>
-					<tag><![CDATA[알고리즘,JPS,Astar,길찾기,컴퓨터,노가다,JPSplus]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[기타]]></category>
-					<title><![CDATA[블로그를 잠시 이동했었습니다.. 하지만 다시 네이버로..]]></title>
-					<link>https://blog.naver.com/robo813/221332772373</link>
-					<guid>https://blog.naver.com/robo813/221332772373</guid>
-					<description><![CDATA[블로그를 티스토리로 잠시 이동했었지만.. 아무런 득이 없어보여.. 편집하기도 쉽고 관리도 편한 네이버 블로그로 넘어왔습니다 ㅎㅎ 원래 쓰던 티 스토리 입니다~~ 여기서 쓴 글들 조금식 옮기겠습니다~]]></description>
-					<pubDate>Sun, 05 Aug 2018 00:54:14 +0900</pubDate>
-					<tag><![CDATA[]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[PROGRAMMING]]></category>
-					<title><![CDATA[A* 보다 빠른 JPS 알고리즘]]></title>
-					<link>https://blog.naver.com/robo813/221332759727</link>
-					<guid>https://blog.naver.com/robo813/221332759727</guid>
-					<description><![CDATA[딱 일년전이었을까. 무인 자동차가 크게 발전하면서 뉴스도 많이하니 나의 관심사도 무인자동차에 사용된 기술에 맞춰졌다. 길찾기에 어떤 알고리즘이 사용되는지 찾게되었는데 그때 알게된 것이A*알고리즘이다. (길찾기 알고리즘으로 소개되었더라 물론 저게 진짜로 무인자동차에 적용되는것은 아니다) map에서 최적의 경로를 찾는 방법중에서 내 머릿속에는 "다익스트라"가 가장 빠른 알고리즘이었다.(으으.. 무식) A*알고리즘을 이해하곤 조금 소름끼쳤다..ㅋㅋ 알고리즘에 대해 그닥 많이 알고있지는 않았기에 엄청 신기한 방식으로 이렇게 빠르게 경로를 찾아낸다는것에 엄청 신기해했다. 그리고 일년뒤인 오늘..더한걸 발견했다.. 그것도 여.......]]></description>
-					<pubDate>Sun, 05 Aug 2018 00:18:45 +0900</pubDate>
-					<tag><![CDATA[Astar,알고리즘,컴퓨터공학,JPS,빠르다,게임,맵,길찾기]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[한글시계 개발]]></category>
-					<title><![CDATA[한글시계(For Android) 개발 일지]]></title>
-					<link>https://blog.naver.com/robo813/221199112331</link>
-					<guid>https://blog.naver.com/robo813/221199112331</guid>
-					<description><![CDATA[한글시계가 출시된지도 2주가 넘었습니다. 그동안 926명이 이 앱을 설치해주셨습니다! 감사합니다 2주동안 다양한 에러와 사용자 편의 사항과 관련하여 총 7번의 업데이트가 있었습니다. (그중 2번은 저의 실수로...중복 업로드였지만요) 이상훈님의 한글시계 pc버전을 사용하며 처음에는 멋지다는 이유로 다운을 받았지만 묘하게 한글시계의 글귀가 저를 다독여 주는 듯하였습니다. 그러다 어느날 갑자기 한글시계가 저의 전화기 화면에 올라가 있는 모습을 상상하게 되었습니다. 전화기 화면에 크게 둘것이 없고 항상 텅텅 비어있었는데 아름답게 공간을 채워줄 수 있을것 같아. 곧장 한글시계 위젯을 찾아보았지만 존재하지 않더군요.. 그렇게.......]]></description>
-					<pubDate>Fri, 02 Feb 2018 01:00:15 +0900</pubDate>
-					<tag><![CDATA[한글시계,개발일지]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[한글시계 개발]]></category>
-					<title><![CDATA[한글시계 - ForAndroid]]></title>
-					<link>https://blog.naver.com/robo813/221185766033</link>
-					<guid>https://blog.naver.com/robo813/221185766033</guid>
-					<description><![CDATA[안녕하세요! 이준희입니다. 오랜만에 포스팅을 하네요... 하.. 고2가 되기위한 준비는 정말 힘들군요.. 작년 12월 초쯤 부터 시작해 이제 막 배포가된 앱을 하나 소개해드리려합니다! 바로 "한글시계 For Android"입니다.!원 원래는 pc버전이 존재합니다. 저도 그 프로그램을 잘 쓰고 있었습니다 계속쓰면서 나름 위로라면.. 위로? 또 용기를 저도 모르게 많이 받은것 같습니다 그래서 딱 생각 난것은 바로 "이런게 휴대폰에도 들어오면 좋지 않을까?"입니다 그 뒤로 한글시계 원작자분,, 또 pc버전 개발자분들께 허락을 구하여 결국 개발 하였습니다! 한 달 조금 넘게? 새벽마다 개발을 하였습니다. 다하고 나니 참 뿌듯하네요 또 이렇게 모두를.......]]></description>
-					<pubDate>Mon, 15 Jan 2018 20:26:25 +0900</pubDate>
-					<tag><![CDATA[한글시계,한글,앱,힐링]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[잡학다식 글쓰기]]></category>
-					<title><![CDATA[내가 생각하는 멋진 기술들]]></title>
-					<link>https://blog.naver.com/robo813/221146283748</link>
-					<guid>https://blog.naver.com/robo813/221146283748</guid>
-					<description><![CDATA[Li-Fi 4차 산업혁명에서 가장 중요시 되고 있는것은 초연결, 즉 빠른 연결이다. 지금 보다 더 많은 기기가 인터넷에 연결 될 것이고, 카메라같은 녹화, 촬영 기기들의 화질이 좋아지면서 한 영상이 가지는 양이 커졌다. 이러한 거대한 양을 처리하기위해서 우리가 사용하고 있는 인터넷은 광케이블을 사용해서 10Gb/s의 속도를 낼 수 있지만 단가가 비싸다보니 UTP케이블이라는 것들 사용하고 있다. UTP케이블은 구리선이기 때문에 당연히 속도의 한계가 생길 수 밖에 없다. 이러한 비싼 케이블을 쓰지 않고 대용량 정보의 전달이 가능한 기술 중 Li-Fi라는 기술이 있다. 라이파이는 빛을 사용한 정보 송수신 기술이다. 이 기술은 빛의 깜박임으.......]]></description>
-					<pubDate>Wed, 22 Nov 2017 23:58:53 +0900</pubDate>
-					<tag><![CDATA[미래,인공지능,커낵티드카,완전몰입가상현실,퀀텀컴퓨터,lifi]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[WAG]]></category>
-					<title><![CDATA[MakerFaire과 SOSCON후기(feat.WAG)]]></title>
-					<link>https://blog.naver.com/robo813/221126183136</link>
-					<guid>https://blog.naver.com/robo813/221126183136</guid>
-					<description><![CDATA[오랜만에 글 올립니다! 2주 정도 동안 MakerFaire과 SOSCON(Samsung OpenSource Conference)에 다녀오면서 정신이 없었네요;; 아무튼 긴 여정을 끝내고 이 두 행사에 대한 후기를 작성해보겠습니다 먼저 MakerFaire입니다 MakerFaire는 전세계적인 행사입니다! 한국에는 MakerFaireSeoul이 있듯이 Newyork도 있고 다양합니다(아는게 하나밖에 없음 ㅋㅋ) 이 행사의 취지는 누구든지 자신이 직접 빌드한 모든것은 가지고 나와 사람들에게 보여주고 다른 사람들과 메이킹에 관한 즐거운 이야기를 나누는 행사입니다. 전혀 진지한 행사가 아니기에 가족 나들이로 나오신 분들도 많았습니다. 아이들이 즐겁게 놀 수 있는 부스도 있고 전동 카트를 만.......]]></description>
-					<pubDate>Fri, 27 Oct 2017 00:10:30 +0900</pubDate>
-					<tag><![CDATA[메이커페어,MakerFaire,soscon,opensource,후기,부지런하게살자]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[ShortTermProject]]></category>
-					<title><![CDATA[소니 Alpha시리즈 핫슈 만들기(For GoPro)]]></title>
-					<link>https://blog.naver.com/robo813/221111243006</link>
-					<guid>https://blog.naver.com/robo813/221111243006</guid>
-					<description><![CDATA[오늘은 핫슈(HotShoe)를 디자인하고 프린팅하는 이야기(?)입니다. *핫슈(hotshoe) : 외장 프래시나 뷰파인더를 연결 할 수 있는 확장 단자입니다. 카메라를 좋아하시는 분들중 꽤나 많으신분들이 영상 제작도 좋아하실거라(?)생각하는데요. (오로지 제 개인적인 생각입니다 ㅋㅋ) 저는 사진촬영과 영상제작을 모두 좋아합니다. 그렇기에 항상 미러리스 카메라와 고프로가 같이 제 분신 처럼 다닙니다! 하지만 둘다 따로따로 관리해야한다는 단점이 있어.. 들고다니기 귀찮을때도 있습니다. 물론 휴대폰 카메라도 있고 미러리스도 영상이 촬영되지만 사진을찍으며 촬영도 못하고 미러리스 특성상 동영상 촬영시 빨리 열을 받고, 배터리 용량도 적.......]]></description>
-					<pubDate>Thu, 05 Oct 2017 23:27:16 +0900</pubDate>
-					<tag><![CDATA[소니,알파,핫슈,고프로]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[PROGRAMMING]]></category>
-					<title><![CDATA[FaceDetecing Test(feat.OpenCV)]]></title>
-					<link>https://blog.naver.com/robo813/221105700458</link>
-					<guid>https://blog.naver.com/robo813/221105700458</guid>
-					<description><![CDATA[앞으로 제 드론 프로젝트와 곧 진행할 IOT시스템 프로젝트에도 사용될 이미지 프로세싱을 돌려봤습니다. 이미지 처리에 관한 기본적인 지식들을 접할 수 있는 기회였고 지금 소스는 구글링한걸 그대로 적용한거라.. 제꺼라 할 수 없고(open source라 상관은 없지만), 이 소스에서 버그가 조금 있는것 같아 저에게 딱맞는 소스로 새로 짤것입니다. 일단 이런것도 진행하고 있다는걸 올려두고 싶네요 ㅎㅎ]]></description>
-					<pubDate>Tue, 26 Sep 2017 16:59:59 +0900</pubDate>
-					<tag><![CDATA[]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[WAG]]></category>
-					<title><![CDATA[WAG building log - almost done]]></title>
-					<link>https://blog.naver.com/robo813/221104199668</link>
-					<guid>https://blog.naver.com/robo813/221104199668</guid>
-					<description><![CDATA[하드웨어 빌딩이 거의 끝나갑니다ㅎㅎ 소프트웨어는 이전에 만들었던 소스를 개량하여 사용하기때문에 개발기간은 짧을 것 같습니다. 각기 나눠져있던 파트들을 조립했을 뿐인데 뭔가 엄청많이 했다는 느낌이 드네요 뭐 좋은거지만요ㅎㅎ 미리 조립해둔 컨트롤러들은 메인바디에 장착되었습니다.조립된 사이드 바디와 메인바디에 암(arm)을 장착 시켰고요. 사이드 바디와 arm의 연결 부분도 방수를 해야하기때문에 에폭시 접착제를 사용하였습니다.이렇게요(아 후처리 해야되는데..)모터를 장착 시켰습니다. 저번에 사용한 디자인과 같은 휠을 사용하였고. 모터와 arm은 원래 볼트로 연결되어야하지만 연결부위가 나란히 일치하지 않아서 에폭시.......]]></description>
-					<pubDate>Sun, 24 Sep 2017 20:21:33 +0900</pubDate>
-					<tag><![CDATA[드론,wag,스마트,미래]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[WAG]]></category>
-					<title><![CDATA[WAG building log]]></title>
-					<link>https://blog.naver.com/robo813/221102397478</link>
-					<guid>https://blog.naver.com/robo813/221102397478</guid>
-					<description><![CDATA[WAG프린팅이 모두 끝나고 시험기간이라 예전보단 더디게 제작을 하고 있습니다. 맘 같아선 공부만 하고 싶지만 페어날짜도 맞춰야하니.. 조금 서두르고 있습니다 아 페어라는건 Maker Faire Seoul을 말하는 겁니다 ㅎㅎ 또 SOSCON(Samsung Opensource Conference)도 참여합니다 모두 WAG를 주 프로젝트로 참여하구요 다른 것들은 들고 나갈 수도 있고 안 나갈 수도 있겠네요 각각 10월 21~22일 10월 25~26일입니다. 본론으로 들어가서 조립하는 과정입니다 그냥.. 50퍼센트정도 완료 했네요 바퀴와 모터가 장착되는 부분입니다 저는 이부분을 ARM이라고 부르죠후 처리를 안해서 좀 지저분합니다컨트롤러들을 연결하는 중에 선을 어떻게 정리할까.......]]></description>
-					<pubDate>Thu, 21 Sep 2017 23:43:26 +0900</pubDate>
-					<tag><![CDATA[wag,프로젝트,개인,드론,스마트]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[HOME]]></category>
-					<title><![CDATA[WAG 7th designing making film]]></title>
-					<link>https://blog.naver.com/robo813/221093332814</link>
-					<guid>https://blog.naver.com/robo813/221093332814</guid>
-					<description><![CDATA[]]></description>
-					<pubDate>Sun, 10 Sep 2017 02:48:09 +0900</pubDate>
-					<tag><![CDATA[]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[WAG]]></category>
-					<title><![CDATA[WAG project update! parts printing is done]]></title>
-					<link>https://blog.naver.com/robo813/221092754983</link>
-					<guid>https://blog.naver.com/robo813/221092754983</guid>
-					<description><![CDATA[안녕하세요! 오늘은 오랜만에 WAG에 대한 소식을 들고왔습니다 바로 파트프린팅이 모두 완료되었습니다 메인바디 사이드바디 2개 암바디 4개 총 약 100시간정도 걸렸네요;;ㅋㅋㅋ 프린터를 보통 50mm/s으로 맞춰놓고 하는데 이번 파트들은 잘못되면 큰일 나기에 30mm/s로 천천히 프린팅을 하였습니다 사용된 필라멘트는 ColorFab사의 필라멘트였습니다 어찌어찌 선물받게되어 사용했는데.. 알고보니 어마무시하게 비싸던거군요??? ㅋㅋㅋ 선물해주신분 감사합니다 ㅎㅎ 아 참고로 이렇게 생겼습니다 이제 프린팅된 파트를 소개하겠습니다! 메인바디입니다. 총 47시간이 걸렸습니다무게가 400g 가까이 되었는데 절반이상이 서포트무게였습니다디테.......]]></description>
-					<pubDate>Sat, 09 Sep 2017 02:35:16 +0900</pubDate>
-					<tag><![CDATA[드론,3d,wag,프로젝트]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[HOME]]></category>
-					<title><![CDATA[페이스북 페이지 개설]]></title>
-					<link>https://blog.naver.com/robo813/221091041701</link>
-					<guid>https://blog.naver.com/robo813/221091041701</guid>
-					<description><![CDATA[페이스북에도 블로그 포스팅 내용이 들어갑니다 이 페이지는 영어로 작성하겠습니다 ㅎㅎ https://www.facebook.com/Joonleestudio-138379273429258/]]></description>
-					<pubDate>Wed, 06 Sep 2017 22:37:57 +0900</pubDate>
-					<tag><![CDATA[페이스북,개설,신설,영어,문법바보]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[STSdrone]]></category>
-					<title><![CDATA[STSdrone assembling]]></title>
-					<link>https://blog.naver.com/robo813/221088691353</link>
-					<guid>https://blog.naver.com/robo813/221088691353</guid>
-					<description><![CDATA[안녕하세요 STS drone을 조립해보는 시간입니다 프린팅 장면은.. 아쉽게도 찍지 않았습니다메인바디구요. 구멍부분이 깔끔하지 못해서 드릴로 다시 구멍을 내준 후 찍은사진입니다. 그래도 이미 구멍이 있어서 쉽게 가공할 수 있었습니다.윗판또한 같은 현상으로 드릴을 한번 해주었구요급 전개입니다,,;;ㅋㅋㅋㅋ 파이와 모터를 장착하였습니다.프린팅이 어떻게 됬는지.. 모터가 앞으로 살짝 기우네요윗판입니다. fc보트(중앙)은 볼트로 고정할 수있었지만.. gps와 barometer은 기판의 나사구멍이 작아서 3m양면 접착테이프로 붙였습니다.완성된 드론의 모습입니다. 원하던 크기는 달성했습니다. 드론의 무게도 300배터리와 웹캠, 초음파센서까.......]]></description>
-					<pubDate>Mon, 04 Sep 2017 20:00:00 +0900</pubDate>
-					<tag><![CDATA[드론,초소형,스마트]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[STSdrone]]></category>
-					<title><![CDATA[STSdrone-body design]]></title>
-					<link>https://blog.naver.com/robo813/221084395419</link>
-					<guid>https://blog.naver.com/robo813/221084395419</guid>
-					<description><![CDATA[안녕하세요ㅎㅎ 오늘은 sts드론 프로젝트에 사용될 드론의 디자인을 소개해보겠습니다. 작야야하고, 무게를 줄이는 것이 관건이었습니다. 우선 디자인은 신경쓰지 않고 진행하였기에 전혀 예뻐보이지는 않습니다 각종 부품들은 탈부착이 가능하도록 볼트 너트 구멍을 만들었습니다. 가볍게 만들려고 두께를 줄이다보니 휘어짐이 심할까봐 날개쪽에는 날개의 수직이 되도록 새로운 디자인을 주었습니다라즈베리파이가 바디의 중심이 되고 하나의 프레임이 되도록하여 무게를 최대한 줄이려고 했습니다(이 부분은.. 나중에 조립이 되면 이해가 되실 겁니다)그럼저는 20000]]></description>
-					<pubDate>Tue, 29 Aug 2017 21:30:00 +0900</pubDate>
-					<tag><![CDATA[드론,sts,스마트,디자인,fusion360]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[STSdrone]]></category>
-					<title><![CDATA[new project - droneSTS]]></title>
-					<link>https://blog.naver.com/robo813/221083207152</link>
-					<guid>https://blog.naver.com/robo813/221083207152</guid>
-					<description><![CDATA[안녕하세요ㅎㅎ 오늘은 새로운 프로젝트를 시작하게 되어 포스팅을 하였습니다 아주 특이한 프로젝트는 아니고 앞으로 WAG에 탑재될 센서들을 미리 탑재하여 소프트웨어를 개발하고 안정화 시킨후 wag에 탑재 할 수있는 드론을 만드는 프로젝트입니다. STS는 Small Testing Smart의 약자입니다. 말그대로 이 드론의 목적은 실내에서도 작동이 가능할만큼 작아야하고 테스팅에 사용되는 드론이며 수많은 센서들로 스마트한 기능을 선보여야합니다. 이 프로젝트에 진행되며 사용될 센서들은 아래와 같습니다 먼저 이미지 프로세싱이 가능해야하기 때문에 Raspberry pi 3 B type를 선택하였습니다. 신용카드 한장 정도의 면적에 불과하지만. 1gHz의.......]]></description>
-					<pubDate>Sun, 27 Aug 2017 15:27:40 +0900</pubDate>
-					<tag><![CDATA[드론,스마트,개발]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[HOME]]></category>
-					<title><![CDATA[서울이노베이션파크 FABLAB 세미나 발표]]></title>
-					<link>https://blog.naver.com/robo813/221074125266</link>
-					<guid>https://blog.naver.com/robo813/221074125266</guid>
-					<description><![CDATA[]]></description>
-					<pubDate>Tue, 15 Aug 2017 00:55:36 +0900</pubDate>
-					<tag><![CDATA[이노베이션펩렙,서울,세미나]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[HOME]]></category>
-					<title><![CDATA[서울혁신파크펩렙에서..]]></title>
-					<link>https://blog.naver.com/robo813/221072729350</link>
-					<guid>https://blog.naver.com/robo813/221072729350</guid>
-					<description><![CDATA[안녕하세요 이준희입니다 ㅎㅎ 오늘은 서울혁신파크에 있는 펩렙에가서 세미나를 하였습니다. 제가 하고있는 WAG라는 프로젝트를 꽤 많은 분들 앞에서 소개해드릴 수있는 좋은 시간이었습니다 영메이커페어가 끝나고 거의 바로 드론을 해체해버린터라(또 페어때 착륙을 잘못해서 ㅎㅎ… 부품이 조금 나간것도 있고..) 직접 가져가서 시연할 수는 없었습니다ㅜ 그럴 수있었다면 참좋았으련만.. 앞으로 10월에 있을 페어에는 완성된 WAG말고도 다른 기술들을 접목한 드론들을 가져나갈 계획입니다(펩렙 선생님들.. 보고 계시나요? ㅋㅋ) 예를 들자면, 현재 130급 드론에 Optical Flow센서와 초음파 센서들을 붙여 만든 ACD(Auto Control Drone) 을.......]]></description>
-					<pubDate>Sat, 12 Aug 2017 22:39:31 +0900</pubDate>
-					<tag><![CDATA[]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[WAG]]></category>
-					<title><![CDATA[WAG 7th Design 테스트]]></title>
-					<link>https://blog.naver.com/robo813/221067533526</link>
-					<guid>https://blog.naver.com/robo813/221067533526</guid>
-					<description><![CDATA[안녕하세요! 오늘은 WAG를 실제 프린팅 하기전에 이전 WAG들의 강성을 잘 확인하지 못하고 제작을 하는 바람에 생긴 문제들을 보완 하기위해! Fusion 360의 시뮬레이션 기능으로 테스팅을 해보겠습니다 조건은 1.7kg인 WAG를 1m로 떨어트려 그 힘이 1초간 지속되는 상황을 가정하였습니다 시뮬을 돌리기 앞서 계산을 해야했는데요 물리를 공부하기는 했는데... 다 까먹었네요하하하ㅏㅏㅏ 다시 공부하여서 계산을 해보았습니다계산을 해보자면 I =충격량 V = 속도 F = 힘 t = 시간 m = 질량 I(충격량) = Ft =mv^2 / 2 * t =m * 19.6 / 2 * 1sec =1.7 * 19.6 / 2 * 1 =16.66N Impulse = 16.66N 참고 v^2 = 2 * g * h = 2 * 9.8 * 1 =19.6 이리하여.......]]></description>
-					<pubDate>Sat, 05 Aug 2017 18:09:03 +0900</pubDate>
-					<tag><![CDATA[]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[WAG7차 디자인 프로토타입]]></title>
-					<link>https://blog.naver.com/robo813/221066432225</link>
-					<guid>https://blog.naver.com/robo813/221066432225</guid>
-					<description><![CDATA[이번 프로젝트를 많은 사람들에게 공개하고 탄력을 받아 WAG7차 디자인을 바로 시작하였습니다! 여기서 디자인은 거의 바뀔 것 같지 않으며 앞으로 카메라와 수신기가 장착될 공간만 마련하면 될 것 같습니다. 방수도 지원할 생각이기 때문에 이번 디자인은 엄청난 신경이 쓰이네요 ㅎㅎㅎ 이번 프로토 디자인또한 소스 공개하겠습니다. (가장 아래에 있습니다) 수정할 만한 부분이 있다면 댓글 환영합니다 ㅎㅎ 20000 조금(?)밀린 숙제를 하며 가보겠습니다 !]]></description>
-					<pubDate>Fri, 04 Aug 2017 00:59:07 +0900</pubDate>
-					<tag><![CDATA[WAG,방수,아자아자]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[WAG6차 디자인 스팩 및 디자인 소스]]></title>
-					<link>https://blog.naver.com/robo813/221066429453</link>
-					<guid>https://blog.naver.com/robo813/221066429453</guid>
-					<description><![CDATA[안녕하세요! 이준희입니다. WAG6차 디자인의 결과는 다소 실망스러웠습니더ㅏ ㅜㅜ 왜냐햐면.... 일단 소프트웨어적으로는 진보가 없었구요.. 무게는 확실하게 줄였으나.. 강도가 심히 약해졌습니다. 방수도 못한게 너무나 아쉽구요. 시작한지 3년이 다됬는데 아직도 방수를 못하고 있다뇨... WAG의 스팩 FC : Tarot ZYX-M Main Controller : Arduino mini Battery : MultiStar 5200mAh 4Cell MotorDriver : JMOD_MOTOR-! Receiver : 성지 18CH 리시버 Transmiter : 성지 12CH 트렌스미터 BLDC Motor : SunnySky 980Kv DC Motor : RoboRobo 교육용 200rpm ESC : 30A(상표가 다 떨어져서.. 회사를 모르겠습니다.) Weigh : 1.4~1.5kg Prop : 11inch.......]]></description>
-					<pubDate>Fri, 04 Aug 2017 00:53:02 +0900</pubDate>
-					<tag><![CDATA[메이커,프로젝트,WAG,드론,무인기]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[WAG_프로젝트 초심&영메이커페어]]></title>
-					<link>https://blog.naver.com/robo813/221063309328</link>
-					<guid>https://blog.naver.com/robo813/221063309328</guid>
-					<description><![CDATA[일단 WAG프로젝트가 진행된지는 이제 3년이 되었습니다. 2014년 부터하여 중간에 시험기간이나 여행..등등의 시간을 제외하곤 WAG프로젝트를 했던것 같은데요. 사실 1년이 조금 넘는 시간이 실제로 소요된것 같습니다. 먼저 이 프로젝트는 재난상황이 닥쳤을경우 미리 무인기가 침투하여 사람이나 미래에는 아마 휴머노이드가 구조활동을 벌이기 전에 상황을 알 아 볼 수있는 로봇을 만들자는 취지였습니다. 그러기 위하여 모든 상황에서 작동가능하기 위한 육,해,공을 가리지 않고 작동하는 프로젝트가 시작되었습니다. 첫 WAG는 구르고 비행만을 할 수있었습니다. 다양항 디자인중에서 가장 무게를 줄일 수있는 방법과 앞에는 서보모터를 장착.......]]></description>
-					<pubDate>Mon, 31 Jul 2017 02:00:25 +0900</pubDate>
-					<tag><![CDATA[드론,WAG,메이커페어,메이커,고난,조언,감사]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[WAG6일지_1차]]></title>
-					<link>https://blog.naver.com/robo813/221062542415</link>
-					<guid>https://blog.naver.com/robo813/221062542415</guid>
-					<description><![CDATA[안녕하세요 오랜만에 포스팅하는듯하네요. 사실 요즘 WAG를 다시 시작하게 되었습니다. 그러면서 포스팅을 빠릿하게 못했는데요... 그래서 일단 WAG가 만들어지는거까지 간단하게 포스팅을 하고 이후 빨리 자세한 내용을 포스팅하겠습니다.윗 칸부터 수신부, 컨트롤러부, 전원 분배부, 배터리 슬롯입니다.수신기 신호를 받을 나노입니다. 이렇게 6번째 디자인의WAG가 완성되었습니다. 사실 한달전부터 시작한,... 오랜만에 포스팅이라 WAG를 설명드리자면 Water, Air, Ground의 약자로써 육해공에서 모두 작동가능한 목표를 가진 프로젝트입니다. 개발을 완료하면 재난 구역에서도 사람이나 휴머노이드 보다 먼저 진입하여 미리 상황을 알 수 있.......]]></description>
-					<pubDate>Sat, 29 Jul 2017 17:55:34 +0900</pubDate>
-					<tag><![CDATA[드론,메이커,프로젝트,아두이노]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[잡학다식 글쓰기]]></category>
-					<title><![CDATA["양자역학"에 대한 나의 생각]]></title>
-					<link>https://blog.naver.com/robo813/221053707756</link>
-					<guid>https://blog.naver.com/robo813/221053707756</guid>
-					<description><![CDATA[양자역학 어디선가 많이 들어본듯하면서 그 의미나 뭘 연구하는지는 잘 모르는 영역인듯하다. 그런데 사람들이 잘 관심을 가지진 않는 이 학문에 관심을 가진것은 사실 우리가 정말 이루고 싶은 것들이 이 학문으로부터 비롯된다고 생각하기 때문이다. 예전 부터 순간이동이라는 것은 만화던 영화던 어디서든간에 생각만해도 정말 설레(?)는 상상이었다. 당연히 그 상상을 현실로 바꾸려는 인간의 노력은 수십년이 되도록 진행되었지만. 이론으로만 가능했지 실제로는 가능하기 힘들다는것이 결론이었다. 순간이동이라 하자면 보통 웜홀, 아니면 그냥 아무 이유없이 딱! 나타난다 그 정도라 생각하는데... 웜홀은 엄밀히 말하자면 순간이동이라기.......]]></description>
-					<pubDate>Tue, 18 Jul 2017 00:37:08 +0900</pubDate>
-					<tag><![CDATA[나의생각,양자역학]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[잡학다식 글쓰기]]></category>
-					<title><![CDATA[Li-Fi에 대한 나의 생각]]></title>
-					<link>https://blog.naver.com/robo813/221046968748</link>
-					<guid>https://blog.naver.com/robo813/221046968748</guid>
-					<description><![CDATA[오랜만에 블로그에 새로운 페이지를 생성하였습니다. 이 페이지는 제가 생각이 날때마다 아무거나 막 적는 페이지입니다. 지금 만들어질 것 같은 기술이거나, 현재 각광 받지 못하고있지만 앞으로 꼭 필요 할 것 같은 그런 것들을 적을 것입니다. 많이 구독해(?)주세요 잡 지식은 엄청나게 늘 것 같습니다 ㅎㅎ 이번 글은 라이파이 입니다. 라이 파이라고 하면 Wireless Fidelity를 줄인 말이다. 간단하게 원리를 설명하자면 빛의 깜빡임을 통해 정보 교환을 하는 기술인데 백만 분의 1초 간격으로 깜빡이기 때문에 인간의 눈에는 인지되지 않는다. 왜냐하면 우리눈은 초당 28frame를 찍어 낼 수 있기 때문이다 현재 와이파이보다 100배 가까이 빠.......]]></description>
-					<pubDate>Sat, 08 Jul 2017 19:10:09 +0900</pubDate>
-					<tag><![CDATA[라이파이,미래,전망,순수한,내생각]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[아두이노로 드럼 만들기]]></title>
-					<link>https://blog.naver.com/robo813/221031722713</link>
-					<guid>https://blog.naver.com/robo813/221031722713</guid>
-					<description><![CDATA[안녕하세요 ㅎ 이준희입니다 또 몇일만에 포스팅을 하는 것 같은데요! 몇 일간 진행했던 간단한 프로젝트를 하나 포스팅하려 합니다 바로 드럼만들기입니다! 이 프로젝트는 학교 동아리 활동으로 이번달 까지 꼭 축제때 쓸 작품을 제출하라 하셔서 만든 작품입니다. 제가 드럼을 많이 좋아하고 제 드럼하나 꼭 가지고 싶은 소망이 항상 있었는데요 이번 기회로 한번 만들어 보려합니다 몇일 동안 3d프린팅만 계속 했네요 쩝.. 워낙 부품들이 많아서ㅎㅎ.. 그래도 무사히 프린팅까지 마치고 조립을 앞둔 상태입니다 아래는 진행 상황 사진들 입니다 위 사진에 보이는 것 처럼 빨간색 동그라미 파랑생 동그라미로 나누어 두가지 종류의 joint(한글.......]]></description>
-					<pubDate>Sun, 18 Jun 2017 05:22:22 +0900</pubDate>
-					<tag><![CDATA[드럼,아두이노,전자,멋지다,아침]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[Vibration Watch프로젝트]]></title>
-					<link>https://blog.naver.com/robo813/221026750188</link>
-					<guid>https://blog.naver.com/robo813/221026750188</guid>
-					<description><![CDATA[오랜만입니다 ㅎㅎ 고등학교에 입학하고 제가다니는 학교가 소프트웨어 특수학교다보니 덕분에 sw관련 많은 활동을 했습니다 제가 지금 동시에 진행하는 프로젝트도있고 잠정적으로 일시정지된 프로젝트도있습니다 동시에 진행하는 프로젝트도 빨리빨리 새롭게 포스팅하겠습니다 현재하고있는 프로젝트는 진동 시계 = Vibration Watch입니다 이 프로젝트의 궁극적 목표는 사용자가 시간을 알고 싶은데 회의중이거나 수업중일때 가지고 있는 시계를 쳐다보기가 애매할 때가 분명 종종있고 더구나 벽시계는 더욱이 보기 힘들때가 있습니다 이런 힘든점을 보완하고자 고안해낸 시계입니다 제목그대로 진동을 사용하여 시간을 알려주는 장치인것인데.......]]></description>
-					<pubDate>Sun, 11 Jun 2017 19:54:18 +0900</pubDate>
-					<tag><![CDATA[아두이노,프로그래밍,프로토타입,시계,스마트,진동]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[PROGRAMMING]]></category>
-					<title><![CDATA[구글 파이어베이스를 사용한 실시간 데이터 업데이트]]></title>
-					<link>https://blog.naver.com/robo813/221010638385</link>
-					<guid>https://blog.naver.com/robo813/221010638385</guid>
-					<description><![CDATA[학교 급식 알림 앱을 만들어 보려고 학교 급식 api를 받아오려고했으나;; 대구광역시 교육청이 새로운 패치를 하여 기존 api가 거의 먹통더군요;; 그래서 결국 온라인 데이터 베이스를 활용하여 거기에다가 모든 정보를 입력하려고합니다 찾는 도중에 구글에서 인수한 firebase사에서 지원하는 데이터베이스 시스템이 정말 마음에 들었고 이 방식을 쓰기로 했습니다 실시간으로 정보가 바로바로 업데이트 되는게 정말 매력적이더군요 방식도 정말 쉽구요 이제 삽질만 남았습니닷 ㅎ; 맨 아래는 시현 영상입니다 잡담이 많네요;]]></description>
-					<pubDate>Sun, 21 May 2017 12:25:48 +0900</pubDate>
-					<tag><![CDATA[안드로이드,파이어베이스,시현]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[IT]]></category>
-					<title><![CDATA[new 서피스 프로 노트북 (맥북 판박이??)]]></title>
-					<link>https://blog.naver.com/robo813/220997505847</link>
-					<guid>https://blog.naver.com/robo813/220997505847</guid>
-					<description><![CDATA[겉보기엔 너무 비슷해서 허허.. 올려봣습니다 그래도 스페셜 애디션에선 키보드 자판 주변을 이탈리아산 천(좋은건가여?) 으로 감싸준다네요 허허 그건 좀 뭔가 멋져 보일듯..]]></description>
-					<pubDate>Wed, 03 May 2017 11:22:52 +0900</pubDate>
-					<tag><![CDATA[노트북,윈도우,마이크로소프트,서피스프로]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[PROGRAMMING]]></category>
-					<title><![CDATA[이진검색 알고리즘을 활용한 비밀번호 찾기]]></title>
-					<link>https://blog.naver.com/robo813/220987359862</link>
-					<guid>https://blog.naver.com/robo813/220987359862</guid>
-					<description><![CDATA[안녕하세요 ㅎ 오랜만에 포스팅 해보는것 같군요 요즘 프로그래밍하는 도중 알고리즘 사용을 많이 하게 되서 알고리즘을 원래 배운것 말고도 더 배우고 있습니다. 오늘은 이진 검색이라는 알고리즘을 사용하여 제가 미리 준 비밀번호를 찾는건데요. 엄밀히 말하자면 구하고 싶은 값을 이미 알고 그 값을 그냥 비교하면서 찾아내는 알고리즘으로 실제로 비밀번호를 찾는다거나 할 때는 무용지물인 방식입니다. 이진 검색 방식은 굉장히 간단한데요. 제가 따로 음... 원리를 설명하기에는 너무 시간이 촉박하기에.. 위키 백과의 힘을 좀 빌리겠습니다 ㅎㅎ아래 부터는 제가 만든 소스입니다.]]></description>
-					<pubDate>Wed, 19 Apr 2017 21:07:52 +0900</pubDate>
-					<tag><![CDATA[]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[2D LIDAR SCANNER SOURCE]]></title>
-					<link>https://blog.naver.com/robo813/220969646602</link>
-					<guid>https://blog.naver.com/robo813/220969646602</guid>
-					<description><![CDATA[안녕하세요 ㅎㅎ 이준희입니다 자전거는 부모님이 하하 극구 반대하셔서.. 위험하니까요.. 다 만들고 타지는 못했구요 ㅎㅎ 아아 혹시 그게 뭔지 모르시는 분들을 위해! 아래 링크를 걸어 두었습니다 어떻게 보면 제가 온전히 마무리한 프로젝트는 몇개 안되네요;; 반성해야겠습니다,, 이제 제가 올릴 프로젝트들은 학교 관련 프로젝트라 무조껀 해야하는겁니다 그러니 아마 끝을 보긴 하겠죠?? 제 최종목표는 학교를 안내해주는 로봇을 만드는 것입니다! 그 첫번째로 로봇이 주변환경을 인식하고 장애물을 회피할 수있도록 하기위한 장치를 개발해야했습니다 바로 "2d scanner"이라는 장치로 mapping이라는것을 해야하는데요 스캐너들이 시중에.......]]></description>
-					<pubDate>Wed, 29 Mar 2017 01:57:16 +0900</pubDate>
-					<tag><![CDATA[스캐너,아두이노,프로그래밍]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[PROGRAMMING]]></category>
-					<title><![CDATA[안드로이드 스튜디오가 처음이라면! [플레이 스토어 업로드 편]]]></title>
-					<link>https://blog.naver.com/robo813/220962129458</link>
-					<guid>https://blog.naver.com/robo813/220962129458</guid>
-					<description><![CDATA[이번 영상은 플레이 스토어에 앱을 업로드하는 방법을 설명하겠습니다 ㅎ]]></description>
-					<pubDate>Mon, 20 Mar 2017 00:13:00 +0900</pubDate>
-					<tag><![CDATA[안드로이드스튜디오,프로그래밍,업로드,플레이,스토어]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[3D프린트 픽시 자전거 제작기 <4일 차><부재 : 보완및 점검>]]></title>
-					<link>https://blog.naver.com/robo813/220952613207</link>
-					<guid>https://blog.naver.com/robo813/220952613207</guid>
-					<description><![CDATA[안녕하세요!! 이준희입니다 오늘은 드디어 3D프린트 자전거 프레임이 모두 완성되었습니다!! 아 당연히 여러번의 테스트와 점검을 거쳐서 확실한 안정성을 확보해야겠지만요 ㅎㅎ 보시면 아시겠지만 뭔가 깨끗하지못한 느낌입니다.. 네.. 만들면서 접착제를 너무 덕지덕지 발라서 허허.. 그리고 목 부분의 이음매도 깔끔하지 못하고요.. 더 큰 문제는 메인 연결부 그니깐 가장 아랫부분 파트가 제가 연결하면서 망치를 좀 썻는데요 ㅋㅋ 조각이 좀 났습니다... 뭐 그리하여.. 메인 연결부와 목 부분은 모두 교체 작업을 해야할 것같습니다. 저 단단한 접착제를 어떻게 때낼때도,, 문제긴 하지만요 안전이 더 우선이니깐요 덜 땟구요..조금 비틀어.......]]></description>
-					<pubDate>Tue, 07 Mar 2017 23:55:38 +0900</pubDate>
-					<tag><![CDATA[픽시,3d,3d프린팅,자전거,만들기,diy,삼발이,멋져부러]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>robo813</author>
-					<category><![CDATA[LongTermProject]]></category>
-					<title><![CDATA[3D 프린트 픽시만들기 <3일 차>]]></title>
-					<link>https://blog.naver.com/robo813/220951744770</link>
-					<guid>https://blog.naver.com/robo813/220951744770</guid>
-					<description><![CDATA[안녕하세요! 이준희입니다ㅏㅏ 이제야 일과가 끝났네요 허허 12시 05분 허허허허허ㅓㅓㅓ (고딩은 역시.. 빡셔.. 앞으로 더 빡셔 질껀데;; 어짜냐.) 저번 포스팅에서 말씀드린 대로 사이즈가 부족한 부품을 개선하여서 프린팅하였는데요. 하 하하 뭐 이따구로 되있길레;;;; 나중에 한번더 뽑아야겠습니다 일단. 오늘은 이걸로 끝입니다 ㅎㅎ 끝!]]></description>
-					<pubDate>Tue, 07 Mar 2017 00:08:06 +0900</pubDate>
-					<tag><![CDATA[픽시,만들기,자전거,3d,3d프린터,실패,하하]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-		
-		
-	
-</channel>
-</rss>
+extension UITabBar {
+    // 기본 그림자 스타일을 초기화해야 커스텀 스타일을 적용할 수 있다.
+    static func clearShadow() {
+        UITabBar.appearance().shadowImage = UIImage()
+        UITabBar.appearance().backgroundImage = UIImage()
+        UITabBar.appearance().backgroundColor = UIColor.white
+    }
+}</textarea><pre class="cm-s-default" data-type="text/x-swift"></pre></figure><p>끝!</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/19/15/15/cd0fac44fdb7ee6d93bc0cc1988e5ff8.png?w=1000&q=85" data-width="908" data-height="690" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/19/15/15/cd0fac44fdb7ee6d93bc0cc1988e5ff8.png?w=1000&q=85" alt="" /></a></div></figure><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 19 Apr 2019 15:19:21 +0900</pubDate></item><item><title><![CDATA[삽질 기록#1]]></title><link><![CDATA[https://gompro.postype.com/post/3672221]]></link><description><![CDATA[<p>일을 하다보면 금방 해결책이 생각나지 않는 경우가 있다.</p><p>그리고 경험상 이런 케이스들은 제대로 정리해놓지 않고 지나가면 까먹을 확률이 높다.</p><p><br /></p><p>1. EUC-KR 문자 인코딩</p><p>웬만한 경우에는 문자 인코딩을 건들 필요가 없다.</p><p>Third Party api도 대부분 REST api에 utf-8을 사용하기 때문이다.</p><p>그러나 늘 그렇듯 예외는 존재한다.</p><p>프로젝트에서 고객 실명 인증이 필요한 경우가 생겨서 구글링을 하다보니 NICE평가정보에서 실명확인 서비스를 제공하고 있었다.</p><p>신청을 하고 며칠쯤 지나니 담당자분께서 암호화 모듈과 매뉴얼을 보내주셨다.</p><p>그런데 매뉴얼을 읽으려고 보니 php/jsp/asp 용 매뉴얼만 있고, node.js용 매뉴얼이 없었다.</p><p>그래도 다행히 php용 매뉴얼을 얼추 적용할 수 있는 구조였다.</p><p>(암호화 모듈에 이름, 주민등록번호 및 아이디/패스워드를 넘겨주고 실행코드를 받아오는 식)</p><p>매뉴얼대로 chmod 755를 입력하고 모듈을 실행시켰으나 실행파일이 아니라는 에러만 계속 나길래 파일을 다시 살펴보니 윈도우/리눅스 용 버전 두 개만 있었다.</p><p>담당자분께 물어보니 맥용 모듈이 따로 있었고 메일을 보내니 금방 보내주셨다.</p><p><br /></p><p>이렇게 상황이 일단락된줄 알았으나 이번에는 모듈이 계속 같은 리턴코드만 돌려주는 것이었다.</p><p>리턴코드관련 문서를 읽어보니 에러는 이름, 주민등록번호, 아이디/패스워드 중 하나 이상의 정보가 누락된 경우에 발생한다고 적혀있었다.</p><p>물론 console.log를 찍어보면 모든 값을 정상적으로 받고 있었다.</p><p>그래서 다시 메일을 보내니 euc-kr 인코딩 관련 문제가 아니냐는 답변을 받을 수 있었다.</p><p>젠장... 이제까지 영어 튜토리얼과 외국 api 서비스만으로 개발을 배워온 나에게는 굉장히 생소한 문제였다.</p><p>당연히 인코딩에 대한 개념도 크게 잡혀있지 않았고, 그 필요성도 크게 느끼지 못했다.</p><p>그 결과 아래와 같은 코드가 나오게 되었다.</p><figure class="code"><textarea>function verifyRealName(name, juminNumber) {
+    const encoded = iconv.encode(name, 'euc-kr');
+    const decoded = iconv.decode(encoded, 'euc-kr');
+    
+    return exec(`${exePath} ... ${decoded}`);
+}</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>얼핏 보기에는 문제가 없는 코드처럼 보인다. </p><p>name을 euc-kr로 인코딩한 뒤 다시 디코딩해서 exec 함수에 넘겨준다.</p><p>그러나 내가 간과한 것은 자바스크립트의 스트링 인코딩이 UCS-2/UTF-16과 가장 비슷한 형태라는 점이었다.</p><p>iconv.encode를 통해 인코딩된 버퍼를 decoded라는 변수에 저장하면 euc-kr로 디코딩된 스트링은 UCS-2/UTF-16로 해석되기 때문에 결과적으로 console.log를 호출했을 때 원래의 값으로 보이게 된다.</p><p>그 결과 exec 함수의 인자로 decoded를 넘겨줘봐야 ���� 와 같은 깨진 글자들로 인식할 수밖에 없다.</p><p>이 경우 유일한 해결책은 </p><p>1. 인코딩된 버퍼를 파일로 저장한다.</p><p>2. cat 명령어를 사용해서 저장된 파일을 "그대로" 읽어들인다.</p><p>3. 결과값을 실행명령에 넘긴다.</p><p>가 된다.</p><p>코드로는</p><figure class="code"><textarea>function verifyRealName(name, juminNumber) {
+    const encoded = iconv.encode(name, 'euc-kr');
+    
+    // 인코딩된 버퍼를 임시저장할 경로
+    const tempPath = path.resolve('app/temp');
+    fs.writeFileSync(tempPath, encoded);
+    
+    // command substitution -&gt; `` or $()
+    // 명령어 실행 결과를 다른 명령어의 인자로 넘겨줌
+    // 이 경우에는 cat이 파일에 담긴 바이트를 읽어서 그대로 전달
+    return exec(`${exePath} ... \`cat ${tempPath}\``);
+}</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>이렇게 처리할 수 있다.</p><p>이틀 동안 삽질을 하고 나니 다시 한 번 리눅스와 가깝게 지낼 필요가 있다는 점을 느꼈다.</p><p><br /></p><p>2. nuxt 앱에서 hash link 사용하기</p><p>nuxt는 vue app을 위한 서버사이드렌더링 프레임워크다.</p><p>nuxt의 라우팅 처리는 vue-router를 통해 이뤄지는데, 이 경우 hash anchor (#id) 처리가 전통적인 html 페이지들과는 달라지게 된다.</p><p>전통적인 html 페이지에서 hash anchor는 몇 번을 누르더라도 해당 요소로 이동한다.</p><p>그러나 vue-router를 사용할 경우 scroll behavior에서 hash anchor 처리를 해주더라도 처음 페이지를 로드할 때만 스크롤이 동작할 뿐 두 번째로 링크를 누를 경우에는 아무런 반응이 없다.</p><p>결국 이 문제를 해결할 유일한 방법은 html 요소를 찾은 다음, 요소의 y 위치와 스크롤된 y 위치를 더해서 수동으로 스크롤 함수를 호출하는 것이다.</p><p>이 경우 아래와 같은 방식으로 코드를 작성할 수 있다.</p><figure class="code"><textarea>goToSection(idx) {
+    if (idx === 3) {
+        setTimeout(() =&gt; {
+            // related-items 아이디를 가진 요소를 찾음
+            const [target] = document.querySelector('#related-items').getClientRects();
+            const y = window.scrollY + target.top;
+            
+            // smooth scroll 옵션이 지원되는 브라우저에는 smooth scroll 옵션을 집어넣음.
+            const scrollOptions = scrollHelpers.buildScrollOptions(0, y);
+            window.scroll(scrollOptions);
+            
+            // vuetify 탭은 애니메이션을 사용하므로 약간의 딜레이를 줘서 동작을 자연스럽게 한다.
+        }, 200);
+    }
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>참고)</p><p>1. UTF-8 encoded html pages show � (questions marks) instead of characters<br />(<a href="https://stackoverflow.com/questions/5445137/utf-8-encoded-html-pages-show-questions-marks-instead-of-characters">https://stackoverflow.com/questions/5445137/utf-8-encoded-html-pages-show-questions-marks-instead-of-characters</a>)</p><p>2. Let’s talk about Javascript string encoding</p><p>(<a href="https://kevin.burke.dev/kevin/node-js-string-encoding/">https://kevin.burke.dev/kevin/node-js-string-encoding/</a>)</p><p>3. Convert iso-8859-1 to utf-8 javascript</p><p>(<a href="https://stackoverflow.com/questions/27155419/convert-iso-8859-1-to-utf-8-javascript">https://stackoverflow.com/questions/27155419/convert-iso-8859-1-to-utf-8-javascript</a>)</p><p>4. Backticks vs braces in Bash</p><p>(<a href="https://stackoverflow.com/questions/22709371/backticks-vs-braces-in-bash">https://stackoverflow.com/questions/22709371/backticks-vs-braces-in-bash</a>)</p><p>5. How to handle anchors (bookmarks) with Vue Router?</p><p>(<a href="https://stackoverflow.com/questions/45201014/how-to-handle-anchors-bookmarks-with-vue-router">https://stackoverflow.com/questions/45201014/how-to-handle-anchors-bookmarks-with-vue-router</a>)</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Thu, 18 Apr 2019 16:43:39 +0900</pubDate></item><item><title><![CDATA[직접 부딪히며 배우는 Node.js]]></title><link><![CDATA[https://gompro.postype.com/post/3610754]]></link><description><![CDATA[<h4>패키지 - 개념 및 둘러보기</h4><div><hr class="hr hr-solid-short"></div><p>첫 시간에도 한 번 언급하긴 했습니다만 저희는 express라는 프레임워크를 활용해서 웹 서버를 구축하고 있습니다. 이쯤해서 자주 사용되는 용어들을 정리하고 한 번 짚고 넘어가면 좋을 것 같네요.</p><p>첫 번째 용어는 패키지 입니다.</p><p>패키지는 라이브러리 혹은 모듈이라고도 불리며, 간단히 말해서 이미 다른 개발자가 작성한 코드입니다.</p><p>Node.js는 이런 패키지들을 쉽게 설치/삭제/관리하기 위해서 npm이라는 소프트웨어를 사용하는데요.</p><p>Node.js를 설치하셨다면 자동으로 같이 설치되므로 따로 설치하실 필요는 없습니다.</p><p>한 번 <a href="https://www.npmjs.com/">npm 공식 사이트</a>로 이동해서 구경을 해볼까요?</p><p>저는 머신러닝에도 관심이 많기 때문에 한 번 머신러닝이라고 검색해보겠습니다.</p><p><br /></p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/05/b042c0a810c39ee0f247fa539543f1a0.png?w=1000&q=85" data-width="1349" data-height="779" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/05/b042c0a810c39ee0f247fa539543f1a0.png?w=1000&q=85" alt="" /></a></div></figure><p>이 중 검색결과 최상단에 있는 @tensorflow/tfjs를 눌러 들어가보겠습니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/05/d0ef865eb75ec99a7b26a33eca92ad98.png?w=1000&q=85" data-width="1275" data-height="692" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/05/d0ef865eb75ec99a7b26a33eca92ad98.png?w=1000&q=85" alt="" /></a></div></figure><p>패키지에 대한 설명과 함께 인스톨 커맨드, 주간 다운로드 수, 버전, 마지막으로 버전이 나온 날, 깃헙 저장소 링크 등 수 많은 정보를 찾을 수 있습니다.<br />(오른쪽 패널을 보시면 됩니다!)</p><p>패키지를 사용하면 개발을 빠르게 진행할 수 있습니다. 또 모든 코드를 직접 작성하기보다는 패키지의 도움을 받는 것이 더 나은 경우가 많죠.</p><p>하지만 패키지를 선택할 때는 조금 신중할 필요가 있습니다.</p><p>혹시나 자신이 선택한 패키지가 이전에 전혀 관리가 되지 않는 패키지인 것은 아닌지,</p><p>이 패키지와 비슷한 기능을 하면서도 사용하는 사람이 더 많고, 활발하게 관리가 되는 패키지는 없는지 등을 고려할 필요가 있습니다.</p><p>그러므로 웬만하면 last published가 2년 이내인 라이브러리를 사용할 것을 권장합니다.</p><p>물론 이는 개인적인 권장사항이고 꼭 필요한 기능이라면 이 기준을 충족하지 않더라도 사용해야 합니다.</p><p>끝으로 단 11줄의 코드가 수많은 프로젝트에 패닉을 안겨줬던 left-pad 사건을 소개한 글의 링크를 올립니다.</p><p><a href="http://www.bloter.net/archives/253447">11줄의 코드, 인터넷을 패닉에 빠뜨리다</a></p><p><br /></p><h4>패키지 - 설치/삭제/버전 보기</h4><div><hr class="hr hr-solid-short"></div><p>패키지가 어떤 것이고 어떤 패키지를 사용해야하는지 알아봤으니 이제 본격적으로 패키지를 설치/삭제/관리하는 방법에 대해서 살펴봅시다.</p><p>저는 랜덤하게 스트링을 생성하는 기능을 가진 패키지를 찾고 싶습니다.</p><p>그럴 때 저는 npm ~ 과 같은 형식으로 구글에 검색을 합니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/ef7ae2a38e09fbd2d225e9f68e8d2cf8.png?w=1000&q=85" data-width="1004" data-height="830" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/ef7ae2a38e09fbd2d225e9f68e8d2cf8.png?w=1000&q=85" alt="" /></a></div></figure><p>가장 위에 있는 패키지부터 순서대로 관찰을 하면서 너무 오랫동안 관리가 안 된 패키지는 아닌지 확인합니다. (last publish 날짜를 확인해줍니다.)</p><p>대부분의 패키지가 2~3년 이상 정도 지난 패키지들이라 조금 많이 스크롤을 내리다보니 randomatic이라는 패키지를 발견했습니다.</p><p>last publish도 5달 전이고 weekly downloads도 500만건이 넘어갑니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/0c9366c3833979aab916bd3e05cae1c7.png?w=1000&q=85" data-width="1236" data-height="667" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/0c9366c3833979aab916bd3e05cae1c7.png?w=1000&q=85" alt="" /></a></div></figure><p>이제 npm의 오른쪽 패널 repository라고 적힌데서 깃허브 링크를 타고 넘어가봅시다.</p><p>스크롤을 내리면 간략한 설명과 함께 인스톨 커맨드와 사용법을 볼 수 있습니다.</p><p>많은 패키지들이 이와 비슷한 형식으로 설치 방법 및 사용법 등을 제공하기 때문에 앞으로 자주 마주치게 될 것입니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/34cd23c786af8e78f49e3237c5a261cc.png?w=1000&q=85" data-width="1030" data-height="818" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/34cd23c786af8e78f49e3237c5a261cc.png?w=1000&q=85" alt="" /></a></div></figure><p>npm을 사용해 패키지를 설치할 때는 npm install [package-name] --flag의 형식을 따릅니다.</p><p>flag에 대해서는 시리즈를 진행하면서 차차 알아가보도록 하겠습니다. 만약 궁금하신분이 있으시다면 맨 아래 참조What is the --save option for npm install?을 보시면 됩니다 :)</p><p>이제 다시 코드 샌드박스에 접속해서 화면 우측 아래 터미널/콘솔이라고 적힌 부분에서 + 버튼을 눌러 봅시다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/9b1ae40781f853e8fef0a909c068bac4.png?w=1000&q=85" data-width="545" data-height="335" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/06/9b1ae40781f853e8fef0a909c068bac4.png?w=1000&q=85" alt="" /></a></div></figure><p>새로운 터미널 창이 열렸네요! 이제 여기다가 아까 전에 봤던 인스톨 커맨드를 붙여넣읍시다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/969220c8bacea973f8f8f800a83d18d7.png?w=1000&q=85" data-width="518" data-height="323" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/969220c8bacea973f8f8f800a83d18d7.png?w=1000&q=85" alt="" /></a></div></figure><p>그리고 엔터를 누르고 잠시 기다리면</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/43e3e0410f2d74f3ef405db762852abe.png?w=1000&q=85" data-width="514" data-height="311" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/43e3e0410f2d74f3ef405db762852abe.png?w=1000&q=85" alt="" /></a></div></figure><p>설치가 완료되었네요.</p><p>어떤 점이 달라졌는지 살펴보죠.</p><p>먼저 package.json 파일의 dependencies 필드에 randomatic이 추가되었습니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/d1b3e712e52fb757b35ba0fdb034c3f9.png?w=1000&q=85" data-width="229" data-height="112" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/d1b3e712e52fb757b35ba0fdb034c3f9.png?w=1000&q=85" alt="" /></a></div></figure><p>그리고 package-lock.json이라는 파일이 새로 생겼습니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/dd9c750852302f1e4981518196bc0c07.png?w=1000&q=85" data-width="629" data-height="721" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/dd9c750852302f1e4981518196bc0c07.png?w=1000&q=85" alt="" /></a></div></figure><p>여기서는 길게 설명하지 않고 다만 설치가 완료되면 저런 식으로 package.json에 우리가 설치한 패키지명이 표시된다는 점만 짚고 넘어가겠습니다.</p><p>만약 이미 설치한 패키지를 제거하고 싶다면?</p><p>그 때는</p><figure class="code"><textarea>npm uninstall [package-name]</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>의 형식으로 터미널에 입력해줍니다.</p><p><br /></p><h4>패키지 - 사용하기</h4><div><hr class="hr hr-solid-short"></div><p>먼저</p><figure class="code"><textarea>// const는 자바스크립트 es6 문법으로 상수를 의미합니다!
+// var 대신 const를 사용하는 것이 권장됩니다.
+const randomize = require('randomatic');</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>이 부분을 express 아래에 추가합니다.</p><figure class="code"><textarea>const express = require("express");
+const randomize = require("randomatic");
+...</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>randomatic 저장소의 README의 API 부분을 읽어보니 대충 패턴과 길이 그리고 옵션을 인자로 줄 수 있는 것 같네요.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/a355c2d5be51b94d8583b42eb9205f45.png?w=1000&q=85" data-width="950" data-height="539" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/a355c2d5be51b94d8583b42eb9205f45.png?w=1000&q=85" alt="" /></a></div></figure><p>GET /users 라우트 부분을 아래와 같이 바꿔봅시다.</p><figure class="code"><textarea>...
+
+app.use(express.static("public"));
+
+app.get("/users", (req, res) =&gt; {
+  // 알파벳 대소문자와 숫자로 구성된 10자리 랜덤 스트링을 만듭니다.
+  const randomString = randomize("Aa0", 10);
+  res.send(randomString);
+});
+
+...</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/7a06ca2036edd016766f1d00daef8961.png?w=1000&q=85" data-width="488" data-height="463" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/07/7a06ca2036edd016766f1d00daef8961.png?w=1000&q=85" alt="" /></a></div></figure><p>짝짝짝!</p><p>앞으로도 새로운 패키지를 사용해야될 일이 있다면 지금처럼 깃허브 저장소의 README를 읽고 그래도 사용하면 됩니다.</p><p>만약 패키지를 사용하던 중 예상하지 못한 버그가 발생하거나 README에 나오지 않는 사용법이 궁금하다면 issue를 남길 수도 있습니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/08/a3f939b8e43ef4f1b1730fd0b1c09fc2.png?w=1000&q=85" data-width="1067" data-height="579" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/07/12/08/a3f939b8e43ef4f1b1730fd0b1c09fc2.png?w=1000&q=85" alt="" /></a></div></figure><p>이 저장소는 현재 세 개의 진행 중인 issue가 있는 모양이네요.</p><p>빨간 bug 태그가 붙은 issue도 있고, 로고 사용이나 히브리 문자 기능을 추가하자는 issue도 보이네요.</p><p>이 외에도 사용법을 물어본다거나 (stackoverflow로 가서 찾아보라고 하는 경우도 있지만요…) 하는 것도 가능합니다.</p><p>물론 사용자가 많지 않은 패키지의 경우 많은 issue가 열리지 않고 그만큼 버그 제보나 기능 추가가 더딜 수밖에 없습니다.</p><p>그렇기 때문에 사용자 수(혹은 다운로드 수)가 많고 최근까지 활발하게 관리가 되는 패키지를 사용하는 것이 여러모로 정신건강에 이롭습니다.</p><p><br /></p><h4>마치며</h4><div><hr class="hr hr-solid-short"></div><p>오늘은 패키지와 npm에 대해서 알아보았습니다.</p><p>혹시 이해가 잘 되지 않거나 개선이 필요한 내용이 있다면 알려주세요. 더 좋은 컨텐츠를 제작하는 거름이 됩니다.</p><p>그럼 다음 시간까지 안녕!</p><p><br /></p><h4>참조</h4><div><hr class="hr hr-solid-short"></div><ol><li><a href="http://www.bloter.net/archives/253447">11줄의 코드, 인터넷을 패닉에 빠뜨리다</a></li><li><a href="https://stackoverflow.com/questions/19578796/what-is-the-save-option-for-npm-install">What is the --save option for npm install?</a></li></ol><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Sun, 07 Apr 2019 12:15:36 +0900</pubDate></item><item><title><![CDATA[직접 부딪히며 배우는 Node.js]]></title><link><![CDATA[https://gompro.postype.com/post/3606891]]></link><description><![CDATA[<h4>정적 파일 제공하기</h4><div><hr class="hr hr-solid-short"></div><p>모든 웹사이트에 없어서는 안 될 핵심적인 기능은 html, css, js 파일 혹은 이미지와 같은 정적 파일(static files)을 제공하는 것입니다.</p><p>express를 사용하면 단 한 줄만으로 정적 파일을 제공하는 서버를 만들 수 있습니다.</p><p>src 폴더 바깥에 public이라는 이름의 폴더를 만듭니다.</p><p>폴더는 EXPLORER 패널의 가장 오른쪽 아이콘을 누르고 이름을 입력하면 됩니다.</p><p>그리고 아래 사진처럼 아무 이미지나 새로운 폴더 아래에 저장합니다. (이미지 업로드는 두 번째 아이콘을 누르면 됩니다.)</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/1c66081d73b561ca2c3dede223ed326e.png?w=1000&q=85" data-width="282" data-height="271" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/1c66081d73b561ca2c3dede223ed326e.png?w=1000&q=85" alt="" /></a></div></figure><p>이제 첫 시간에 작성했던 코드를 아래와 같이 수정합니다.</p><figure class="code"><textarea>const express = require("express");
+const app = express();
+
+// 추가된 코드!
+app.use(express.static("public"));
+
+...</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>그리고 브라우저의 url을 <a href="https://qkq47354q9.sse.codesandbox.io/cat.jpeg%EA%B3%BC">https://qkq47354q9.sse.codesandbox.io/cat.jpeg과</a> 같은 식으로 입력하고</p><p>엔터키를 누르면 귀여운 고양이 사진을 볼 수 있습니다! (만약 파일 이름을 다른 식으로 지었다면 그 파일 이름을 확장자까지 정확하게 입력해야합니다.)</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/4465884d919a84ad13c9001e06085663.png?w=1000&q=85" data-width="516" data-height="420" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/4465884d919a84ad13c9001e06085663.png?w=1000&q=85" alt="" /></a></div></figure><p>이제 우리 서버는 정적 파일을 제공할 수 있습니다.</p><p>만약 폴더의 이름이나 위치를 수정하고 싶다면 어떻게 해야 할까요?</p><p>한 번 public폴더의 위치를 src폴더 아래로 옮겨봅시다. (드래그로 폴더를 이동할 수 있습니다.)</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/452023713043f05ce04260e130dab155.png?w=1000&q=85" data-width="273" data-height="183" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/452023713043f05ce04260e130dab155.png?w=1000&q=85" alt="" /></a></div></figure><p>그리고 브라우저의 새로고침 버튼을 누르면?</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/26ebcc4ae3925ab03ee504819db5b202.png?w=1000&q=85" data-width="510" data-height="414" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/26ebcc4ae3925ab03ee504819db5b202.png?w=1000&q=85" alt="" /></a></div></figure><p>위와 같은 에러 메시지를 볼 수 있을 겁니다.</p><p>이는 서버가 cat.jpeg라는 파일이 존재하는 경로를 찾는데 실패했기 때문입니다.</p><p>그러므로 경로를 아래와 같이 수정해줘야합니다.</p><figure class="code"><textarea>app.use(express.static("src/public"));</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>이제 새로고침을 하면 다시 고양이 사진을 볼 수 있습니다 :)</p><p><br /></p><h4>경로?</h4><div><hr class="hr hr-solid-short"></div><p>경로(path)는 웹 개발을 배우는데 있어 핵심적인 개념입니다.</p><p>아까 정적 파일 제공을 배울 때 잘못된 경로를 입력하니 파일을 찾을 수 없었던 것처럼</p><p>경로를 잘못 지정하게 되면 예상하지 못한 결과를 만나게 되기 때문입니다.</p><p>경로란 간단하게 컴퓨터에 존재하는 어떤 파일 혹은 폴더의 위치를 말하는데, 크게 두 가지 형태가 존재합니다.</p><p>첫 번째는 상대경로 입니다.</p><p>상대경로는 ./cat.jpeg와 같은 형태로 사용되며, 맨 앞의 .은 현재 경로를 의미합니다.</p><p>만약 제가 지금 public 폴더에 있다면 위의 ./cat.jpeg는 cat.jpeg파일을 가리키게 됩니다.</p><p>두 번째는 절대경로 입니다.</p><p>절대경로는 public/cat.jpeg와 같은 형태로 사용되며, 서버의 최상위 폴더를 기준으로 한 파일의 절대적인 위치를 말합니다.</p><p>즉 우리의 경우 public이나 src와 같은 폴더처럼 폴더의 가장 상위 폴더를 기준으로 파일의 위치를 말하게 되는 것이죠.</p><figure class="code"><textarea>Q 위에서 작성한 public 폴더의 위치를 상대경로로 나타내면 어떻게 될까요?
+
+A 가장 상위 폴더를 현재 경로로 나타내기 때문에 `./public`과 같이 나타낼 수 있겠죠?</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><h4>라우팅 소개</h4><div><hr class="hr hr-solid-short"></div><p>다음은 express가 제공하는 두 번째 핵심 기능인 라우팅입니다.</p><p>라우팅이란 url을 바꿀 때마다 서버에 새로운 요청을 하고 응답을 받는 일련의 과정을 가르킵니다.</p><p>이해가 잘 안 되시나요?</p><p>예를 들어봅시다.</p><p><a href="https://comic.naver.com/webtoon/weekday.nhn">네이버 웹툰</a>으로 접속을 해봅시다.</p><p>여기서 저는 제가 좋아하는 <a href="https://comic.naver.com/webtoon/list.nhn?titleId=720121&amp;weekday=sat">치즈인더트랩</a>의 페이지로 이동합니다.</p><p>url webtoon의 뒷 부분이 바뀐 걸 눈치채셨나요? 거기에다가 ?글자와 함께 이상한 것들이 잔뜩 생겼군요.</p><p>여기서 한 번 특정 회차로 이동해봅시다.</p><p>1회의 url을 잘 살펴보면 이번에도 아까 달라졌다는 것을 발견할 수 있습니다.</p><p>즉,</p><figure class="code"><textarea>네이버 웹툰 메인
+https://comic.naver.com/webtoon/weekday.nhn
+
+치즈인더트랩 소개
+https://comic.naver.com/webtoon/list.nhn?titleId=720121&amp;weekday=sat
+
+치즈인더트랩 1회
+https://comic.naver.com/webtoon/detail.nhn?titleId=720121&amp;no=1&amp;weekday=sat</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>의 순서로 url이 계속해서 바뀐 것을 알 수 있습니다.</p><p>이는 유저가 계속해서 다른 자원(resource)를 요청했기 때문입니다.</p><p>여기서 자원이란 파일 혹은 서버의 데이터베이스에 저장된 데이터를 의미합니다.</p><p>이는 웹툰의 경우처럼 웹툰 이미지 파일이 될 수도 있고 데이터베이스에 저장된 제 프로필 정보가 될 수도 있겠죠.</p><p>그리고 이처럼 서로 다른 자원을 요청하고 서버가 그 요청에 대한 응답을 돌려주는 과정이 모두 url을 바꿈으로서 이뤄진다는 사실도 알았습니다.</p><p><br /></p><h4>http</h4><div><hr class="hr hr-solid-short"></div><p>라우팅을 이해하고 사용하려면 http가 무엇인지 어느 정도 알 필요가 있습니다.</p><p>http란 간단히 말하면 인터넷 상에서 정보를 주고 받기 위한 규칙입니다.</p><p>웹 사이트의 주소가 http 혹은 https로 시작하는 것은 이들 사이트가 http라는 규칙을 사용하기 때문입니다.</p><p>이전 라우팅 소개에서 유저가 네이터 웹툰의 각 페이지로 이동할 때마다 서로 다른 자원을 요청한다는 이야기를 했습니다.</p><p>이를 조금 더 자세하게 이야기하면</p><p>GET <a href="https://comic.naver.com/webtoon/list.nhn?titleId=720121&amp;weekday=sat">https://comic.naver.com/webtoon/list.nhn?titleId=720121&amp;weekday=sat</a> 요청을 통해 치즈인더트랩의 소개 페이지를 요청했다라고 말할 수 있습니다.</p><p>아래는 모질라 재단의 http 메시지 문서에서 http 요청을 설명한 부분입니다.</p><blockquote class="blockquote-type2"><p>참조: <a href="https://developer.mozilla.org/ko/docs/Web/HTTP/Messages">https://developer.mozilla.org/ko/docs/Web/HTTP/Messages</a></p></blockquote><figure class="code"><textarea>첫번째는 HTTP 메서드로, 영어 동사(GET, PUT,POST) 혹은 명사(HEAD, OPTIONS)를 사용해 서버가 수행해야 할 동작을 나타냅니다. 
+예를 들어, GET은 리소스를 클라이언트로 가져다 달라는 것을 뜻하며, POST는 데이터가 서버로 들어가야 함을 의미(리소스를 새로 만들거나
+수정하기 위해, 또는 클라이언트로 돌려 보낼 임시 문서를 생성하기 위해)합니다.
+
+두번째로 오는 요청 타겟은 주로 URL, 또는 프로토콜, 포트, 도메인의 절대 경로로 나타낼 수도 있으며 이들은 요청 컨텍스트에 의해 특정지어
+집니다. 요청 타겟 포맷은 HTTP 메소드에 따라 달라집니다. 포맷에는 다음과 같은 것들이 있습니다.
+
+origin 형식: 끝에 '?'와 쿼리 문자열이 붙는 절대 경로입니다. 이는 가장 일반적인 형식이며, GET, POST, HEAD, OPTIONS 메서드와
+함께 사용합니다.
+POST / HTTP 1.1
+GET /background.png HTTP/1.0
+HEAD /test.html?query=alibaba HTTP/1.1
+OPTIONS /anypage.html HTTP/1.0
+absolute 형식: 완전한 URL 형식입니다. 프록시에 연결하는 경우 대부분 GET과 함께 사용됩니다.
+GET http://developer.mozilla.org/en-US/docs/Web/HTTP/Messages HTTP/1.1
+authority 형식: 도메인 이름 및 옵션 포트(':'가 앞에 붙습니다)로 이루어진 URL의 authority component 입니다. 
+HTTP 터널을 구축하는 경우에만 CONNECT와 함께 사용할 수 있습니다.
+CONNECT developer.mozilla.org:80 HTTP/1.1
+asterisk 형식: OPTIONS와 함께 별표('*') 하나로 간단하게 서버 전체를 나타냅니다. 
+OPTIONS * HTTP/1.1
+
+마지막으로 HTTP 버전이 들어갑니다. 메시지의 남은 구조를 결정하기 때문에, 응답 메시지에서 써야 할 HTTP 버전을 알려주는 역할을 합니다.</textarea><pre class="cm-s-default" data-type="text/plain"></pre></figure><p>어렵게 느껴질 수 있는 부분이지만 저희가 같이 네이버 웹툰을 보기 위해 여러 페이지를 이동한 과정과 같은 맥락으로 볼 수 있습니다.</p><p>핵심은 서버에 대한 유저의 요청을 http 메서드와 url로 나타낼 수 있다는 것입니다.</p><p>이 부분을 이해하셨다면 이제 본격적으로 express의 라우팅을 배울 수 있습니다.</p><p>더 읽어보기 - <a href="https://developer.mozilla.org/ko/docs/Web/HTTP/Messages">http 메시지</a></p><p><br /></p><h4>express의 라우팅</h4><div><hr class="hr hr-solid-short"></div><p>express에서는 어떤 식으로 라우팅이 이뤄질까요?</p><figure class="code"><textarea>app.use(express.static("public"));
+
+// 여기서부터 코드를 작성해주세요.
+app.get('/users', (req, res) =&gt; {
+  res.send('get user!');
+});
+
+app.get('/users/:userId', (req, res) =&gt; {
+  const userId = req.params.userId; // /users/1 /users/2에서 1, 2 와 같이 users뒤에 오는 경로를 변수에 저장한다.
+  res.send(userId);
+});
+
+app.post('/users', (req, res) =&gt; {
+  res.send('post user!');
+});
+
+app.put('/users', (req, res) =&gt; {
+  res.send('put user!');
+});
+
+app.delete('/users', (req, res) =&gt; {
+  res.send('delete user!');
+});</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>이전 파트에서 얘기했던 것과 비슷하게 http 메서드과 /users와 같이 그에 상응하는 url을 명시해주었습니다.</p><p>그리고 함수의 두 번째 인자로는 req, res 두 개의 인자를 가지는 콜백함수를 이용하여 적절한 응답을 돌려주었습니다.</p><p>이제 위의 코드가 어떤 식으로 동작하는지 살펴봅시다.</p><p>/users로 이동했을 때:</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/6db21f0adc0a919719e5d8003c868fb6.png?w=1000&q=85" data-width="509" data-height="467" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/20/6db21f0adc0a919719e5d8003c868fb6.png?w=1000&q=85" alt="" /></a></div></figure><p>/users/1로 이동했을 때:</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/0397a55f2f2055df6a38e8e853821780.png?w=1000&q=85" data-width="510" data-height="469" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/0397a55f2f2055df6a38e8e853821780.png?w=1000&q=85" alt="" /></a></div></figure><p>아직 세 가지 경우가 더 남았다구요?</p><p>아쉽게도 브라우저에 url을 입력해서 이동하는 방식으로는 get 요청에만 응답할 수 있습니다.</p><p>나머지의 응답값을 보기 위해서는 특별한 프로그램이 필요한데요.</p><p>저는 Postman이라는 프로그램을 사용하겠습니다.</p><p><a href="https://www.getpostman.com/downloads/">다운로드</a>로 이동한뒤 운영체제에 맞는 버전을 설치해줍니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/8c45afc832c3fe46a9eea351816a89a0.png?w=1000&q=85" data-width="952" data-height="594" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/8c45afc832c3fe46a9eea351816a89a0.png?w=1000&q=85" alt="" /></a></div></figure><p>처음 실행하면 위와 같은 화면을 볼 수 있습니다.</p><p>여기서 GET이라고 적힌 부분을 클릭하면 POST, PUT 혹은 DELETE등의 다른 http 메서드를 이용한 요청을 할 수 있습니다.</p><p>한 번 POST 요청을 해볼까요?</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/101915234c8a8a1b658f1832dc229c6a.png?w=1000&q=85" data-width="952" data-height="519" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/21/101915234c8a8a1b658f1832dc229c6a.png?w=1000&q=85" alt="" /></a></div></figure><p>코드에 적힌 대로 응답값을 돌려줍니다.</p><p>2회차 전체 코드:</p><figure class="code"><textarea>const express = require("express");
+const app = express();
+
+app.use(express.static("public"));
+
+app.get("/users", (req, res) =&gt; {
+  res.send("get user!");
+});
+
+app.get("/users/:userId", (req, res) =&gt; {
+  const userId = req.params.userId;
+  res.send(userId);
+});
+
+app.post("/users", (req, res) =&gt; {
+  res.send("post user!");
+});
+
+app.put("/users", (req, res) =&gt; {
+  res.send("put user!");
+});
+
+app.delete("/users", (req, res) =&gt; {
+  res.send("delete user!");
+});
+
+//create a server object:
+app.get("/", function(req, res) {
+  res.write("Hello World!..."); //write a response to the client
+  res.end(); //end the response
+});
+
+app.listen(8080, function() {
+  console.log("server running on 8080");
+}); //the server object listens on port 8080</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p><br /></p><h4>마치며</h4><div><hr class="hr hr-solid-short"></div><p>두 번째 시간에는 정적 파일 제공과 기본적인 라우팅 개념 그리고 라우팅이 express 앱에서 어떤 식으로 동작하는 지를 살펴보았습니다.</p><p>그럼 다음 시간에 봐요~</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Sat, 06 Apr 2019 21:32:22 +0900</pubDate></item><item><title><![CDATA[직접 부딪히며 배우는 Node.js]]></title><link><![CDATA[https://gompro.postype.com/post/3606731]]></link><description><![CDATA[<h4>Node.js란?</h4><figure class="code"><textarea>Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine.</textarea><pre class="cm-s-default" data-type="text/plain"></pre></figure><p>Node.js는 크롬 브라우저의 V8 자바스크립트 엔진 기반의 런타임입니다. 이는 자바스크립를 실행할 수 있는 독립적인 프로그램을 말하죠. 이 말은 다르게 말하면 브라우저 상에서만 동작했던 자바스크립트가 이제는 브라우저 밖에서도 동작한다는 것을 의미합니다.</p><p>이러한 특징 때문에 Node.js를 사용하면 서버와 클라이언트 양 쪽에서 같은 언어를 사용할 수 있습니다. 이는 자바스크립트를 알고 있다면 하나의 웹 애플리케이션을 처음부터 끝까지 만들 수 있다는 것을 의미합니다!</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/58/d8b3427424bcb2fdc498d5bd5ffe90b6.png?w=1000&q=85" data-width="993" data-height="414" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/58/d8b3427424bcb2fdc498d5bd5ffe90b6.png?w=1000&q=85" alt="" /></a></div></figure><p>&lt;티오베 랭킹 7위에 빛나는 자바스크립트&gt;</p><p><a href="https://medium.com/@olinations/the-javascript-runtime-environment-d58fa2e60dd0">자바스크립트 런타임이 궁금하다면?</a></p><p><br /></p><h4>Node.js의 인기</h4><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/59/990c9f47df73c9f31c4e54b9784cb2b2.png?w=1000&q=85" data-width="1169" data-height="621" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/59/990c9f47df73c9f31c4e54b9784cb2b2.png?w=1000&q=85" alt="" /></a></div></figure><p>&lt;구글 트렌드 - 전 세계&gt;</p><p>Node.js의 구글 검색량은 2009년 등장 직후 현재까지 8 ~ 10배 가까이 늘어났으며, Node.js의 가장 대표적인 프레임워크 express.js의 Github 스타 수는 43000여 개에 이릅니다. Node.js가 선풍적인 인기를 끄는 상황은 비단 해외의 일만은 아닙니다. 검색 범위를 우리나라로 변경하더라도 상당수의 기업과 개발자들이 Node.js에 관심을 가지고 있다는 것을 부정할 수는 없죠.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/59/e6994b48b64d9a8600b8cdc096f1cc99.png?w=1000&q=85" data-width="1177" data-height="624" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/20/59/e6994b48b64d9a8600b8cdc096f1cc99.png?w=1000&q=85" alt="" /></a></div></figure><p>&lt;구글 트렌드 - 우리나라&gt;</p><p>구글에 Node.js 구인과 같이 검색하면 아래처럼 무려 60개 이상의 기업이 Node.js 개발자를 모집하는 공고를 냈습니다. 그리고 Node.js는 특히 스타트업에서 큰 인기를 끌고 있습니다. 이는 많은 스타트업들이 빠른 속도로 작업 결과를 낼 수 있는 생산성 높은 언어를 선호하기 때문입니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/00/5759013811cb646b15ff9051b1eda6b0.png?w=1000&q=85" data-width="676" data-height="624" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/00/5759013811cb646b15ff9051b1eda6b0.png?w=1000&q=85" alt="" /></a></div></figure><p>Node.js를 배울 준비가 되셨나요?</p><p><br /></p><h4>들어가기</h4><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/01/c997b59b01e194270f59a4f4ca4909e6.png?w=1000&q=85" data-width="731" data-height="678" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/01/c997b59b01e194270f59a4f4ca4909e6.png?w=1000&q=85" alt="" /></a></div></figure><p><br /></p><figure class="code"><textarea>여: 플러그인을 설치한 뒤로 많은 고객들이 빈 화면만 보인다고 얘기하네요. 하던 일은 잠시 멈추고 이것부터 해결해줬으면 좋겠어요.
+빨간옷 남: 글쎄요, 제 컴푸터에서는 잘 돌아가던걸요.
+여: 오, 그래요? 그럼 다행이네요. 고칠 필요가 없겠어요.
+여: 그냥 모든 고객 분들께 당신 컴퓨터를 쓰라고 하면 될테니까요. 참나!
+파란옷 남: 방금 조금 비꼰 거 같지 않았어?
+빨간옷 남: 아냐 저 정도면 양반이지.</textarea><pre class="cm-s-default" data-type="text/plain"></pre></figure><p>저는 맥북을 사용하고 있습니다. 하지만 제 글을 읽으시는 분들은 윈도우나 리눅스를 사용하고 있을 수도 있죠. 그래서 컴퓨터에 직접 작업환경을 설정하기보다는 웹 IDE를 사용하여 코드 설명과 데모 프로그램 시현 등을 진행하고자 합니다.</p><p>저는 <a href="https://codesandbox.io">codesandbox</a>를 사용하도록 하겠습니다. 계정이 없으신 분들은 링크를 타고 이동하셔서 계정을 생성해주세요. 깃허브 계정이 필요한 모양이니 깃허브 계정이 없다면 그것부터 만들고나서 진행하도록 하죠.</p><p>로그인을 하고나면 아래와 같은 화면이 나옵니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/f8a19bd706cff1302afae1b3e6063010.png?w=1000&q=85" data-width="1319" data-height="631" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/f8a19bd706cff1302afae1b3e6063010.png?w=1000&q=85" alt="" /></a></div></figure><p>이제 기본적인 <a href="https://codesandbox.io/embed/1zq5389zq4?fontsize=14">express 서버 셋업 링크</a>를 타고 들어가서 우측 상단의 Open in Editor 버튼을 눌러줍니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/f401c831be5618550cb91485ef126865.png?w=1000&q=85" data-width="1337" data-height="675" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/f401c831be5618550cb91485ef126865.png?w=1000&q=85" alt="" /></a></div></figure><p>그 다음 또 우측 상단의 Fork 버튼을 누르게 되면 이 저장소의 코드를 수정할 수 있게 됩니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/de0ee93aa296ea39189b2eb97cdb85e4.png?w=1000&q=85" data-width="1335" data-height="637" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/de0ee93aa296ea39189b2eb97cdb85e4.png?w=1000&q=85" alt="" /></a></div></figure><p>뒤로 가기 버튼을 눌러서 메인 화면을 확인해보면 이제 express라는 이름을 가진 샌드박스 (codesandbox에서는 각 저장소를 샌드박스라고 부르는 것 같습니다.)가 보일 겁니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/65d21e5f13eaade4c99622854a5d6193.png?w=1000&q=85" data-width="1316" data-height="564" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2019/04/06/21/03/65d21e5f13eaade4c99622854a5d6193.png?w=1000&q=85" alt="" /></a></div></figure><p>짝짝짝!</p><p><br /></p><h4>Express.js?</h4><p>분명 위에서는 Node.js를 배운다고 했던 것 같은데 갑자기 express.js 샌드박스를 만들었네요. 이는 <a href="https://medium.com/@cainwatson/creating-a-vanilla-node-server-638cb62afaeb">Node.js만으로도 충분히 웹서버를 만들 수 있지만</a>, 수많은 귀찮은 일들을 직접 해야만 합니다. 여기서는 그런 스트레스를 줄이고 웹 서버를 만드는 방법을 배운다는 애초의 목적에 집중하기 위해 express.js를 선택하게 되었습니다.</p><p><br /></p><h4>Hello World</h4><p>src/index.js 파일을 살펴봅시다.</p><figure class="code"><textarea>const express = require("express");
+const app = express();
+
+//create a server object:
+app.get("/", function(req, res) {
+  res.write("Hello World!..."); //write a response to the client
+  res.end(); //end the response
+});
+
+app.listen(8080, function() {
+  console.log("server running on 8080");
+}); //the server object listens on port 8080</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>단 열 줄도 안 되는 코드로 웹 서버 작성을 마쳤습니다. 무슨 마법같은 건 아닙니다.</p><blockquote class="blockquote-type2"><p>이 튜토리얼은 자바스크립트 + 약간의 es6를 이해한다는 전제를 하고 있습니다.<br />만약 그렇지 않다면 코드카데미의 자바스크립트 강의를 먼저 마쳐주세요.<br />첫 줄부터 천천히 살펴봅시다.</p></blockquote><figure class="code"><textarea>const express = require("express");</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>express라는 변수에 express라는 패키지 (라이브러리 혹은 모듈이라고도 합니다. 여기서는 패키지로 통일하도록 하겠습니다.)를 불러왔네요. 그리고</p><figure class="code"><textarea>const app = express();</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>app 변수에 express 서버를 선언했습니다.</p><figure class="code"><textarea>//create a server object:
+app.get("/", function(req, res) {
+  res.write("Hello World!..."); //write a response to the client
+  res.end(); //end the response
+});</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>GET / 라우트를 선언하고, Hello World!...라는 글자를 응답값으로 돌려준뒤, 응답을 마칩니다.</p><figure class="code"><textarea>app.listen(8080, function() {
+  console.log("server running on 8080");
+}); //the server object listens on port 8080</textarea><pre class="cm-s-default" data-type="text/javascript"></pre></figure><p>서버를 8080번 포트에 연결하고, server running on 8080이라는 메시지를 콘솔에 출력합니다.</p><p><br /></p><h4>마치며</h4><p>이렇게 헬로월드 튜토리얼을 마쳤습니다. 그러면 다음 시간까지 안녕!</p><p><br /></p><h4>참조</h4><ul><li>[번역] 자바스크립트의 과거 (<a href="https://wit.nts-corp.com/2014/08/13/1925">https://wit.nts-corp.com/2014/08/13/1925</a>)</li><li>The javascript Runtime Environment (<a href="https://medium.com/@olinations/the-javascript-runtime-environment-d58fa2e60dd0">https://medium.com/@olinations/the-javascript-runtime-environment-d58fa2e60dd0</a>)</li><li>Creating A Vanilla Node Server (<a href="https://medium.com/@cainwatson/creating-a-vanilla-node-server-638cb62afaeb">https://medium.com/@cainwatson/creating-a-vanilla-node-server-638cb62afaeb</a>)</li><li>[IT열쇳말] 노드JS (<a href="http://www.bloter.net/archives/255115">http://www.bloter.net/archives/255115</a>)</li></ul><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Sat, 06 Apr 2019 21:18:40 +0900</pubDate></item><item><title><![CDATA[[번역] 유니코드 문자열을 정규화 해야하는 이유]]></title><link><![CDATA[https://gompro.postype.com/post/3528300]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/%EB%B2%88%EC%97%AD-%EC%9C%A0%EB%8B%88%EC%BD%94%EB%93%9C-%EC%8A%A4%ED%8A%B8%EB%A7%81%EC%9D%84-%EB%85%B8%EB%A9%80%EB%9D%BC%EC%9D%B4%EC%A7%95-%ED%95%B4%EC%95%BC%ED%95%98%EB%8A%94-%EC%9D%B4%EC%9C%A0">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 22 Mar 2019 11:09:33 +0900</pubDate></item><item><title><![CDATA[[책 추천] How Linux Works: What Every Superuser Should Know]]></title><link><![CDATA[https://gompro.postype.com/post/3457094]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/%EC%B1%85-%EC%B6%94%EC%B2%9C-How-Linux-Works-What-Every-Superuser-Should-Know-vxjsznhfd5">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 08 Mar 2019 16:48:38 +0900</pubDate></item><item><title><![CDATA[실용적인 테스트 코드 작성하기 (JS)]]></title><link><![CDATA[https://gompro.postype.com/post/3402076]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/%EC%8B%A4%EC%9A%A9%EC%A0%81%EC%9D%B8-%ED%85%8C%EC%8A%A4%ED%8A%B8-%EC%BD%94%EB%93%9C-%EC%9E%91%EC%84%B1%ED%95%98%EA%B8%B0">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>1,000</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Wed, 27 Feb 2019 16:23:01 +0900</pubDate></item><item><title><![CDATA[Server Side Rendering 레시피 3가지]]></title><link><![CDATA[https://gompro.postype.com/post/2909190]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/Server-Side-Rendering-%EB%A0%88%EC%8B%9C%ED%94%BC-3%EA%B0%80%EC%A7%80">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Thu, 13 Dec 2018 21:18:06 +0900</pubDate></item><item><title><![CDATA[[Machine Learning] 에어비앤비 가격 예측]]></title><link><![CDATA[https://gompro.postype.com/post/2894578]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/Machine-Learning-%EC%97%90%EC%96%B4%EB%B9%84%EC%95%A4%EB%B9%84-%EA%B0%80%EA%B2%A9-%EC%98%88%EC%B8%A1">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Mon, 10 Dec 2018 16:59:23 +0900</pubDate></item><item><title><![CDATA[[HackerRank] Hackerrank In String]]></title><link><![CDATA[https://gompro.postype.com/post/2871671]]></link><description><![CDATA[<p>+ 본 게시물은 velog에서 보실 수 있습니다.</p><p><br /></p><figure class="embed" data-url="https://velog.io/@leejh3224/HackerRank-Hackerrank-In-String">
+<div class="inner">
+<a class="embed-link" href="https://velog.io/@leejh3224/HackerRank-Hackerrank-In-String" target="_blank">
+<div class="embed-img" style="background-image: url('https://images.velog.io/post-images/leejh3224/53ef8bb0-f875-11e8-8150-b5d2c1881964/hackerrank.png');"></div>
+<div class="embed-body">
+<h5 class="embed-title">[HackerRank] Hackerrank In String</h5>
+<p class="embed-text">문제 설명 https://www.hackerrank.com/challenges/hackerrank-in-a-string/problem 시도 최초로 목표로 하는 글자를 찾은 다음에는 최초 목표 글자의 다음 인덱스부터 찾기 시작한다는데서 착안해서 아래와 같이 풀었다. 스택을 사용할 경우의 시간 복잡도는 O(n)으로 전보다 개선되었음을 알 수 있다....</p>
+<cite class="embed-url">https://velog.io</cite>
+</div>
+</a>
+</div>
+</figure>
+<section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Thu, 06 Dec 2018 02:38:13 +0900</pubDate></item><item><title><![CDATA[[HackerRank] Two Characters]]></title><link><![CDATA[https://gompro.postype.com/post/2866644]]></link><description><![CDATA[<p>+ 본 게시물은 velog에서 보실 수 있습니다.</p><figure class="embed" data-url="https://velog.io/@leejh3224/HackerRank-Two-Characters">
+<div class="inner">
+<a class="embed-link" href="https://velog.io/@leejh3224/HackerRank-Two-Characters" target="_blank">
+<div class="embed-img" style="background-image: url('https://images.velog.io/post-images/leejh3224/d8e507b0-f7c0-11e8-90f9-7566cb7959c4/hackerrank.png');"></div>
+<div class="embed-body">
+<h5 class="embed-title">[HackerRank] Two Characters</h5>
+<p class="embed-text">문제 설명 https://www.hackerrank.com/challenges/two-characters/problem 시도 다이내믹 프로그래밍 문제라는 생각이 들어서 dp 배열을 만들어서 어떻게 해볼까 생각했지만 "Alternating"(abab와 같이 서로 교차하면서 바뀌는 문자열)을 어떻게 파악할 수 있을지가 감이 오지 않았다. Discuss...</p>
+<cite class="embed-url">https://velog.io</cite>
+</div>
+</a>
+</div>
+</figure>
+<section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Wed, 05 Dec 2018 00:14:57 +0900</pubDate></item><item><title><![CDATA[[HackerRank] Matrix Layer Rotation]]></title><link><![CDATA[https://gompro.postype.com/post/2857398]]></link><description><![CDATA[<p>+ 본 게시물은 velog<a href="https://velog.io/@leejh3224/Hackerrank-Matrix-Layer-Rotation"></a>에서 보실 수 있습니다.</p><figure class="embed" data-url="https://velog.io/@leejh3224/Hackerrank-Matrix-Layer-Rotation">
+<div class="inner">
+<a class="embed-link" href="https://velog.io/@leejh3224/Hackerrank-Matrix-Layer-Rotation" target="_blank">
+<div class="embed-img" style="background-image: url('https://images.velog.io/post-images/leejh3224/75a5fd00-f64c-11e8-bec6-75e09f38e9d9/hackerrank.png');"></div>
+<div class="embed-body">
+<h5 class="embed-title">[Hackerrank] Matrix Layer Rotation</h5>
+<p class="embed-text">https://www.hackerrank.com/challenges/matrix-rotation-algo/problem 행렬을 돌면서 이전의 x, y 포지션을 받아서 새로운 x, y 포지션을 넘겨주는 함수를 만드는 식으로 접근해봤다. 메인이 되는 함수에서는 행렬을 레이어 by 레이어로 나눠서 반복문을 돌렸다. 여기서 레이어란 아래와 같은 행렬이 있을 때, 를 말한다.</p>
+<cite class="embed-url">https://velog.io</cite>
+</div>
+</a>
+</div>
+</figure>
+<section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Mon, 03 Dec 2018 01:13:05 +0900</pubDate></item><item><title><![CDATA[[알고리즘] Dijkstra in python3]]></title><link><![CDATA[https://gompro.postype.com/post/2772830]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-%EC%BD%94%EB%93%9C-%EC%A0%95%EB%A6%AC-Dijkstra-in-python3-cajoi4a9c3">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 16 Nov 2018 13:22:05 +0900</pubDate></item><item><title><![CDATA[[알고리즘] Bellman-Ford in python3]]></title><link><![CDATA[https://gompro.postype.com/post/2772822]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-Bellman-Ford-in-python3-rtjoiiwlb1">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Fri, 16 Nov 2018 13:19:58 +0900</pubDate></item><item><title><![CDATA[Python meets Economics: 데이터 시각화]]></title><link><![CDATA[https://gompro.postype.com/post/2665807]]></link><description><![CDATA[<p>+ 본 게시물은 <a href="https://velog.io/@leejh3224/Python-meets-Economics-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EC%8B%9C%EA%B0%81%ED%99%94-42jnmui7fp">velog</a>에서 보실 수 있습니다.</p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Wed, 24 Oct 2018 17:19:36 +0900</pubDate></item><item><title><![CDATA[Postcss-preset-env: Use tomorrow’s CSS today]]></title><link><![CDATA[https://gompro.postype.com/post/2657673]]></link><description><![CDATA[<p>이 글은 <a href="https://velog.io/@leejh3224/Postcss-preset-env-Use-tomorrows-CSS-today">velog</a>에서도 보실 수 있습니다.</p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/40/4d8ea543768c2b2d034a09fe082d43f6.png?w=1000&q=85" data-width="300" data-height="185" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/40/4d8ea543768c2b2d034a09fe082d43f6.png?w=1000&q=85" alt="" /></a></div></figure><h4>Postcss?</h4><p><br /></p><p><strong>Postcss</strong>는 css에서 바벨과 같은 역할을 수행하는 도구라고 할 수 있습니다.<br /><br />웹팩이나 걸프와 같은 빌드 도구와 사용할 수 있는 각종 플러그인을 제공하죠.<br /><br />그 중 대표적인 것들로는<br /><br />- autoprefixer: vender-prefix를 추가해줌<br />- stylelint: eslint처럼 문법 검사를 수행<br />- postcss-module: css module 지원<br /><br />등이 있습니다.</p><p><br /></p><p>create-react-app에서도 적극적으로 Postcss를 활용하고 있는데요,<br />웹팩 설정 부분을 찬찬히 살펴보면 Postcss의 여러 플러그인(특히 autoprefixer)을 활용하고 있음을 알 수 있습니다.<br /><br />그래서 flexbox나 grid 같은 속성에 일일히 -moz와 같은 접두사를 붙여주지 않아도 됐던 것이죠.</p><p><br /></p><h4>Postcss-preset-env</h4><p><br /></p><p>제가 오늘 소개할 플러그인은 postcss-preset-env입니다.<br /><br />복잡한 바벨 설정이 preset-env 하나로 거의 대부분 정리되듯이 Postcss를 사용하는 대부분의 use-case가 이 플러그인 하나로 해결됩니다.</p><blockquote class="blockquote-type2"><p><br />create-react-app v2를 사용하시는 분들은 이미 postcss-preset-env가 설정되어 있습니다! 😃<br />아래의 설정은 react-scripts version 1.1.5 기준입니다.</p><p><br /></p></blockquote><p>먼저 eject명령을 수행합니다.</p><figure class="code"><textarea>yarn eject // 질문에 Y를 선택하시면 최종적으로 eject됩니다.</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>이제 폴더를 확인하시면 config폴더가 생성된 것을 확인할 수 있을텐데요,<br /><br />먼저 개발 설정부터 건드려봅시다.<br /><br />webpack.config.dev에 들어가서</p><p><br /></p><figure class="code"><textarea>{
+    loader: require.resolve('postcss-loader'),
+    options: {
+      // Necessary for external CSS imports to work
+      // https://github.com/facebookincubator/create-react-app/issues/2677
+      ident: 'postcss',</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>위와 같은 부분을 찾아줍니다.<br /><br />그리고 아래의 플러그인 설정을</p><p><br /></p><figure class="code"><textarea>plugins: () =&gt; [
+  require('postcss-flexbugs-fixes'),
+  require('postcss-preset-env')({
+    stage: 0, // 모든 기능 사용
+    browsers: [
+      '&gt;1%',
+      'last 4 versions',
+      'Firefox ESR',
+      'not ie &lt; 9', // React doesn't support IE8 anyway
+    ],
+    flexbox: 'no-2009',
+  }),
+],</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>와 같이 바꿔준다음,</p><p><br /></p><figure class="code"><textarea>yarn add postcss-preset-env -D</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>로 설치해줍니다.<br /><br />설정 끝이냐구요? 네! 끝입니다. 정말 간단하죠.<br /><br />이제 App.css를 조금 바꿔봅시다.</p><figure class="code"><textarea>.App {
+  text-align: center;
+
+  &amp; .logo {
+    animation: App-logo-spin infinite 20s linear;
+    height: 80px;
+  }
+
+  &amp; .header {
+    background-color: var(--black);
+    height: 150px;
+    padding: 20px;
+    color: var(--white);
+  }
+
+  &amp; .title {
+    font-size: 1.5em;
+  }
+
+  &amp; .intro {
+    font-size: large;
+  }
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>그리고 App.js를 조금 수정해줍니다.</p><p><br /></p><figure class="code"><textarea>// App-header &gt; App header 와 같이 클래스명을 변경해줍니다.
+&lt;header className="App header"&gt; 
+  &lt;img src={logo} className="App logo" alt="logo" /&gt; 
+  &lt;h1 className="App title"&gt;Welcome to React&lt;/h1&gt;
+&lt;/header&gt;</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>scss를 사용하시던 분이라면 바로 눈치챌 수 있는 부분도 있을텐데요,<br /><br />nesting의 spec이 scss와는 조금 다릅니다.</p><p><br /></p><figure class="code"><textarea>.App {
+  &amp;-logo {
+    /* rules */
+  }
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>와 같이 표현할 경우 .App-logo 클래스를 타겟으로 규칙을 적용합니다.<br /><br />이 같은 경우를 편의상 scss의 name prefix라고 표현하겠습니다.<br /><br />name prefix의 개념은 scss에서는 유효하지만 안타깝게도 css의 nesting module의 최신 spec (Level 3)에서는 그렇지 않습니다.<br /><br />오로지 두 개의 다른 대상을 선택자 혹은 선택자 없이 연결할 때만 nesting을 활용할 수 있습니다.<br /><br />다음은 표준 스펙 문서의 Motivation 부분에 수록된 코드입니다.</p><p><br /></p><figure class="code"><textarea>table.colortable td {
+  text-align:center;
+}
+table.colortable td.c {
+  text-transform:uppercase;
+}
+table.colortable td:first-child, table.colortable td:first-child+td {
+  border:1px solid black;
+}
+table.colortable th {
+  text-align:center;
+  background:black;
+  color:white;
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br />이 부분은 조금 염두에 둬야할 부분이 되겠네요.</p><p><br /></p><figure class="code"><textarea>table.colortable {
+  &amp; td {
+    text-align:center;
+    &amp;.c { text-transform:uppercase }
+    &amp;:first-child, &amp;:first-child + td { border:1px solid black }
+  }
+  &amp; th {
+    text-align:center;
+    background:black;
+    color:white;
+  }
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>이렇게 줄였습니다.</p><p><br /><br />각설하고, 개발 서버를 띄우면 전과 같은 모습의 화면을 볼 수 있습니다.</p><p><br /></p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/47/98b6f030cff0a3de899b92d2b528846c.png?w=1000&q=85" data-width="1518" data-height="664" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/47/98b6f030cff0a3de899b92d2b528846c.png?w=1000&q=85" alt="" /></a></div></figure><p>Tada! 완벽하군요. 전처리기의 힘을 빌려야만 가능했던 rule nesting이 css 확장자에서도 가능해졌습니다.<br /><br />설정이 간편한건 덤이구요.</p><p><br /></p><h4>Stylelint?</h4><p><br /></p><p>create-react-app을 사용하고 있는 분들이라면 eslint의 경고창이 굉장히 익숙하게 느껴지실 겁니다.<br /><br />css도 lint를 통해 코드 품질을 높일 수 있습니다.<br /><br />다시 webpack 설정을 열어볼까요?<br /><br />마지막으로 설정했던 부분에 아래와 같이 stylelint를 추가해줍니다.</p><p><br /></p><figure class="code"><textarea>plugins: () =&gt; [
+  require('stylelint')({
+    configFile: `${process.cwd()}/.stylelintrc.json`,
+  }),
+  require('postcss-flexbugs-fixes'),
+  require('postcss-preset-env')({</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>그리고 src 디렉토리 바깥에 .stylelintrc.json 파일을 생성해주시고,<br /><br />아래의 내용을 추가해줍니다.</p><p><br /></p><figure class="code"><textarea>{
+  "extends": "stylelint-config-standard"
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>마지막으로 필요한 플러그인들을 설치해줍니다.</p><p><br /></p><figure class="code"><textarea>yarn add stylelint stylelint-config-standard -D</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>끝!</p><p><br /></p><p><strong>vscode 사용자들을 위한 팁</strong><br />마켓에서 postcss를 검색하면 다운로드 수가 가장 많은 플러그인은 postcss syntax 지만 syntax highlighting이 잘 되지 않습니다. 대신 language postcss를 추천합니다.</p><p><br /></p><h4>기능 둘러보기</h4><p><br /></p><p>모든 기능은 <a href="https://preset-env.cssdb.org/features">이 곳</a>에서 확인하실 수 있습니다.</p><p>유용한 기능들이 정말 많았지만 제가 미리 써보고 가장 괜찮았던 기능 몇 가지만 먼저 소개하겠습니다.</p><p><br /></p><p><strong>첫 번째</strong>는 <a href="https://developer.mozilla.org/ko/docs/Web/CSS/Using_CSS_variables">css 변수</a>입니다.<br /><br />오랫동안 scss와 같은 전처리기를 사용해야하는 이유였던 변수를 css에서 바로 사용해볼 수 있습니다.</p><p><br /></p><figure class="code"><textarea>:root {
+    --h1-font-size: 2.25rem;
+}
+
+h1 {
+    font-size: var(--h1-font-size);
+}
+
+/* 블락 레벨 사용 */
+.box {
+  --padding: 24px;
+
+  padding: var(--padding);
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>위의 예시처럼 `:root` 가상 선택자를 사용하면 전역변수로 사용할 수 있으며, 블락 레벨에서 사용하는 것도 가능합니다.<br /><br />문법은 --변수명이며, -로 단어 사이를 구분해줍니다.<br /><br />사용할 때는 var(변수명)과 같이 할 수 있습니다.<br /><br />css 변수는 padding이나 margin을 계산할 때 굉장히 유용하게 활용할 수 있습니다.</p><p><br /></p><figure class="code"><textarea>:root {
+    --base-padding: 8px;
+}
+
+.box {
+    /* 80px의 padding이 추가되었습니다! */
+    padding: calc(var(--base-padding) * 10);
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p><strong>두 번째</strong>는 custom media query와 custom selector입니다.<br /><br /><br />사용법은 아래와 같습니다.</p><figure class="code"><textarea>@custom-media --narrow-window (30em &lt;= width &lt; 50em);
+@custom-selector :--heading h1, h2, h3, h4, h5, h6;
+
+:--heading {
+  text-align: center;
+
+  /* nesting과 결합하면 더욱 표현력 좋게 나타낼 수 있습니다. */
+  @media (--narow-window) {
+      text-align: right;
+  }
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><figure class="code"><textarea>@custom-media --narrow-window (30em &lt;= width &lt; 50em);</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br />이 부분을 눈여겨 보신 분들도 있을 텐데요, <a href="https://www.w3.org/TR/mediaqueries-4/#range-context">media query ranges spec</a>에 따라 일반적으로 범위를 표현하듯이 범위를 나타낼 수 있게 되었습니다.</p><p><br /></p><figure class="code"><textarea>@custom-media --narrow-window (30em &lt;= width) and (width &lt; 50em);</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>대신 말이죠.</p><p><br /></p><p><strong>세 번째</strong>는 두 개의 새로운 선택자입니다.<br /><br />- :<strong>matches </strong>: 1개 이상의 클래스를 매치할 수 있습니다.<br /><br />- :<strong>not </strong>: 해당되는 클래스를 제외하고 매치합니다.<br /><br />이런 선택자가 유용한 경우는 보통 list에서 마지막 아이템이나 첫 아이템을 제외하고 스타일링을 할 때입니다.</p><p><br /></p><figure class="code"><textarea>ul {
+  &amp; li:not(:last-child) {
+      padding-bottom: 16px;
+  }
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>이제 더 이상 마지막 아이템에 들어간 padding-bottom을 없애기 위해 추가적인 룰을 더하지 않아도 됩니다.<br /><br />만세!<br /><br />네 번째는<a href="https://www.w3.org/TR/css-logical-1/"> logical property/values</a> 입니다.<br /><br />이 spec은 React Native를 다뤄봤다면 익숙할 수평, 수직 방향의 padding 혹은 margin을 더하기 위한 속성입니다.<br /><br />spec의 기본적인 내용은 글을 쓰는 순서에 따라 서로 다른 방향으로 요소를 정렬하기 때문에 right나 left같은 단어 대신 start나 end를 사용한다는 것인데요,<br /><br />아래 그림을 보시죠.</p><p><br /></p><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/53/7aa94702da64eae4773f478dc6567f88.png?w=1000&q=85" data-width="1572" data-height="924" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/22/17/53/7aa94702da64eae4773f478dc6567f88.png?w=1000&q=85" alt="" /></a></div></figure><p>&lt;출처&gt; W3C css spec<br /><br />위처럼 글을 쓰는 방향에 따라 border나 margin, padding 등이 다르게 적용된다는 것이죠.<br /><br />이 속성은 마치 flexbox처럼 x축과 y축에 따라 영향을 주는 방향이 결정되는데요,<br /><br />글쓰는 방향 (dir)을 바꾸지 않았다면 x축은 inline, y축은 block으로 생각할 수 있습니다.<br /><br />그러므로</p><p><br /></p><figure class="code"><textarea>.box {
+    border-block: 1px solid black;
+    padding-block: 24px;
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>와 같이 설정하면,</p><p><br /></p><figure class="code"><textarea>.box {
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+    padding-top: 24px;
+    padding-bottom: 24px;
+}</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>와 같이 변환됩니다.<br /><br />수평 padding이나 margin을 줘야할 때가 굉장히 잦은데 저런 식으로 간편하게 해결할 수 있게 되었습니다.<br /><br />이상으로 기능 소개를 마치겠습니다.</p><p><br /></p><h4>CSS의 미래?</h4><p><br /></p><p>css는 css3를 통해 굉장한 변화를 겪었습니다.<br /><br />정말 많은 property가 생기고 자연스러운 애니메이션, 유용한 레이아웃 도구 등이 생겨났죠.<br /><br />아마 앞으로도 더 많은 변화를 겪을 것이고, 웹 개발자로서 항상 새로운 spec에 관심을 두고 지켜봐야한다고 생각합니다.<br /><br />css를 잘 다룬다는 것은 사실 얼마나 spec에 대해 잘 알고 있으냐와 같은 말입니다.<br /><br />모두 즐거운 css 합시다!</p><p><br /></p><p>참고<br />- spec 을 알아야하는 이유: <a href="https://css-tricks.com/forums/topic/why-cant-we-center-something-vertically-using-margin-auto-0/">왜 margin: auto는 수직방향으로 정렬하지 않나요?</a><br />- <a href="https://www.w3.org/Style/CSS/specs.en.html">w3c css spec 둘러보기</a></p><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"><li class="product-item"><i class="fal fa-code"></i><span class="ml-1">코드</span><b>12</b><span>줄</span></li></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Mon, 22 Oct 2018 17:56:52 +0900</pubDate></item><item><title><![CDATA[페이지네이션, 커서 기반? 페이지 기반?]]></title><link><![CDATA[https://gompro.postype.com/post/2650985]]></link><description><![CDATA[<p>이 글은 <a href="https://velog.io/@leejh3224/%ED%8E%98%EC%9D%B4%EC%A7%80%EB%84%A4%EC%9D%B4%EC%85%98-%EC%BB%A4%EC%84%9C%EA%B8%B0%EB%B0%98-%ED%8E%98%EC%9D%B4%EC%A7%80%EA%B8%B0%EB%B0%98"><u>Velog</u></a> 에서도 보실 수 있습니다.</p><h4><br /></h4><figure class="photoset column-1 individual normal"><div class="photoset-inner"><a target="_blank" href="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/21/13/03/115c5cac27c2ba91d3c550ef56a80b31.png?w=1000&q=85" data-width="557" data-height="406" data-caption="" class="photo"><img src="https://d2ufj6gm1gtdrc.cloudfront.net/2018/10/21/13/03/115c5cac27c2ba91d3c550ef56a80b31.png?w=1000&q=85" alt="" /></a></div></figure><h4>들어가며</h4><p><br /></p><p>페이지네이션(Pagination) 이란 한정된 네트워크 자원을 효율적으로 활용하기 위해 쿼리의 결과값으로 리턴된 리소스를 `분할하여 전달`하는 것을 의미한다.<br /><br />즉, 데이터베이스에 만 개의 투두(todo) 아이템이 있을 때, 한 번에 만 개를 돌려주는 대신 0번부터 49번까지 50개씩 돌려주는 것을 의미한다. 여기서 다음 요청이 들어오면 50번부터 99번까지, 또 다음 요청이 들어오면 100번부터 149번까지 돌려준다. 이렇게 함으로써 네트워크의 낭비를 막고, 빠른 응답을 기대할 수 있게 된다.<br /><br />전통적인 페이지네이션 방식은 현재의 위치를 의미하는 offset (page) 과 한 번응답 시 돌려줄 갯수를 의미하는 limit(per_page), 두 가지의 파라미터를 이용한다. 그러므로 전통적인 페이지네이션을 통한 get요청은 아래와 같은 모습을 띈다.</p><figure class="code"><textarea>https://todo.com/todos?offset=5&amp;limit=30 // 페이지는 5번, 갯수는 30개!</textarea><pre class="cm-s-default" data-type="text"></pre></figure><h4><br /></h4><h4>SNS의 시대</h4><p><br /></p><p>전통적인 페이지네이션은 오랜 기간 잘 작동해왔다. 문제는 페이스북이나 인스타그램과 같이 잦은 수정/생성/삭제가 반복되는 SNS 서비스가 등장하면서 더 이상 효율적으로 작동하지 못하게 되었다는 것이다.<br /><br />예를 들어 유저가 1페이지를 요청하여 5개의 아이템을 돌려준 상황을 가정하자. 그리고 30분쯤 후에 유저가 2페이지를 요청한다고 할 때, 만약 그 사이에 3개의 새로운 아이템이 추가된다면 2개의 아이템이 중복으로 전송된 셈이 된다.</p><figure class="code"><textarea>Item 1 - 10
+
+Read #1 page = 1, count = 5
+Item 10 - 6
+
++ 3 Item
+
+Read #2 page = 2, count = 5
+Item 13 - 9 // 2개의 중복 발생!</textarea><pre class="cm-s-default" data-type="text"></pre></figure><h4><br /></h4><h4>Cursor based pagination</h4><p><br /></p><p>이 같은 문제를 해결하기 위해 트위터는 커서 기반 페이지네이션을 활용했다. 커서 기반 페이지네이션이란 무엇일까? 쉽게 생각해보면 우리가 흔히 책을 읽을 때 사용하는 책갈피를 생각해볼 수 있다. 책갈피를 끼워두면 굳이 앞에서부터 페이지를 셀 필요 없이 곧장 읽은 데부터 다시 읽을 수 있다. 이전에 읽은 부분으로 넘어가는 것도 어렵지 않다. 책갈피가 Index의 역할을 하기 때문이다.<br /><br />이쯤에서 트위터의 구현 방식을 살펴보자.<br />트위터는 끊임없이 변하는 타임라인을 효율적으로 읽어들이기 위해서 max_id라는 인자를 활용한다. 즉, 이전에 읽어들인 트윗의 아이디 중에서 가장 작은 아이디를 다음 요청에 count와 함께 전달하는 것이다.<br /><br />이는 다음과 같다.</p><figure class="code"><textarea>초기: Tweet 1 - 10
+
+Read #1, count = 5
+Tweet 10 - 6
+
++ 2 Tweets
+
+Read #2, max_id = 6, count = 5
+Tweet 6 - 2
+-&gt; 새로운 트윗이 추가되더라도 max_id부터 읽어들이기 때문에 상관없음.</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p>여기서 주목할 점은 max_id를 활용함으로써 중복되는 트윗의 수를 최소한으로 유지할 수 있다는 점이다. (늘 max_id에 해당되는 트윗만 중복됨)</p><h4><br /></h4><h4>More optimization?</h4><p><br /></p><p>다음과 같은 경우를 생각해보자.</p><figure class="code"><textarea>초기: Tweet 1-10까지 읽음. Tweet 11-18번이 추가됨.
+
+Read #1, count = 5
+Tweet 18 - 14
+
+Read #2, count = 5, max_id = 14
+Tweet 14 - 10, 두 개의 중복 발생!</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>위의 경우와는 달리 두 개의 중복이 발생하고 말았다. 이는 10번 트윗을 읽었다는 것을 전달하지 않았기 때문에 발생한 문제이다.<br /><br />트위터는 since_id라는 인자를 활용해서 이 상황을 해결했다. </p><p>since_id를 활용하면 상황은 아래와 같이 달라진다.</p><p><br /></p><figure class="code"><textarea>초기: Tweet 1-10까지 읽음. Tweet 11-18번이 추가됨.
+
+Read #1, count = 5, since_id = 10
+Tweet 18 - 14
+
+Read #2, count = 5, max_id = 14, since_id = 10
+Tweet 14 - 11, 더 이상 10번을 읽어들이지 않음!</textarea><pre class="cm-s-default" data-type="text"></pre></figure><p><br /></p><p>이미 10번 트윗을 읽었다는 정보가 전달됐기 때문에 더 이상 이미 읽은 트윗을 전달하지 않는다.</p><h4><br /></h4><h4>결론</h4><p><br /></p><p>전통적인 페이지네이션 방식은 오랫동안 네트워크 낭비를 줄여주는 기능을 담당해왔다. 하지만 실시간성을 띄는 SNS 서비스의 등장으로 리소스가 자주 수정/생성/삭제되는 상황이 늘어나자 중복 전송의 가능성이 커졌다. 트위터는 커서 기반 페이지네이션을 통해 실시간으로 변화하는 타임라인 상에서 리소스의 중복 전송을 효과적으로 막아냈다.</p><p><br /></p><blockquote class="blockquote-type2"><p><strong>참고</strong><br />트위터 API 문서: Get Tweet timelines<br />(<a href="https://developer.twitter.com/en/docs/tweets/timelines/guides/working-with-timelines.html">https://developer.twitter.com/en/docs/tweets/timelines/guides/working-with-timelines.html</a>)</p></blockquote><section class="pay pay-purchase"><div class="message"><p>다음 내용이 궁금하세요? 이 포스트를 구매하시면 아래에 이어지는 내용을 감상할 수 있습니다.</p><ul class="product-list"></ul></div><div class="purchase-footer"><span class="sr-only">가격</span><span class="payment-price"><b>100</b> <small>포인트</small></span><button class="btn btn-purchase" type="button" data-post-user-id="411170">구매하기</button></div></section>]]></description><author><![CDATA[이준형]]></author><pubDate>Sun, 21 Oct 2018 13:03:31 +0900</pubDate></item></channel></rss>

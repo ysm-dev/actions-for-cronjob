@@ -1,1984 +1,687 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<?xml version="1.0" encoding="UTF-8" ?>
+
+
+
+
+
+
+
+
+<rss version="2.0"
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:taxo="http://purl.org/rss/1.0/modules/taxonomy/"
+	xmlns:activity="http://activitystrea.ms/spec/1.0/" >
 <channel>
-<title>기억보단 기록을</title>
-<link>https://jojoldu.tistory.com/</link>
-<description>Java, Spring, Web, 객체지향 등을 익히고 공유합니다.</description>
-<language>ko</language>
-<pubDate>Tue, 14 May 2019 20:15:33 +0900</pubDate>
-<generator>TISTORY</generator>
-<managingEditor>창천향로</managingEditor>
-<image>
-<title>기억보단 기록을</title>
-<url>http://cfile5.uf.tistory.com/image/2237674457FB7EA2154E38</url>
-<link>https://jojoldu.tistory.com</link>
-<description>Java, Spring, Web, 객체지향 등을 익히고 공유합니다.</description>
-</image>
-<item>
-<title>테스트 코드에선 LocalDate.now()를 쓰지말자.</title>
-<link>https://jojoldu.tistory.com/416</link>
-<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; 
-&lt;p&gt;여러 사람의 코드를 볼때 가끔 테스트 코드에서  &lt;code&gt;LocalDate.now()&lt;/code&gt; 를 사용하는걸 종종 보게 됩니다.  &lt;br /&gt;
-아무래도 편하게 작성할 수 있다보니 사용된것 같지만, 이는 좋은 패턴이 아닙니다.  &lt;br /&gt;
-그래서 예제로 &lt;strong&gt;테스트 코드에서 LocalDate.now()를 쓰면 안되는 이유&lt;/strong&gt;를 소개하겠습니다.&lt;/p&gt;
-&lt;h2 id=&quot;예제&quot;&gt;예제&lt;/h2&gt;
-&lt;p&gt;예를 들어 다음과 같은 코드가 있다고 가정합니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;배송 예정일&lt;/strong&gt;을 구합니다.&lt;/li&gt;
-&lt;li&gt;배송 예정일은 &lt;strong&gt;주문일 +3 영업일&lt;/strong&gt;입니다.&lt;/li&gt;
-&lt;li&gt;즉, 월요일에 주문했다면 +3일인 목요일을, 목요일에 주문 했다면 금/월/화로 되어 화요일이 배송 예정일이 됩니다.&lt;/li&gt;
-&lt;li&gt;주말외에 공휴일 판단을 위해 &lt;strong&gt;공휴일 여부 판단 엔티티&lt;/strong&gt;가 존재합니다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;위 조건을 만족하는 2개의 엔티티 클래스들입니다.  &lt;/p&gt;&lt;p&gt;첫번째는 &lt;strong&gt;공휴일 여부를 가지는 엔티티&lt;/strong&gt;입니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Getter
-@NoArgsConstructor
-@Entity
-public class DeliveryDay {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private LocalDate date;
-
-    private boolean isHoliday;
-
-    @Builder
-    public DeliveryDay(LocalDate date, boolean isHoliday) {
-        this.date = date;
-        this.isHoliday = isWeekend(date) || isHoliday;
-    }
-
-    private boolean isWeekend(LocalDate date) {
-        return date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY;
-    }
-
-    public boolean isBusinessDay() {
-        return !isHoliday;
-    }
-
-    public boolean isAfter (LocalDate compare) {
-        return this.date.isAfter(compare);
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;ul&gt;
-&lt;li&gt;주말임을 판단하는 &lt;code&gt;isWeekend&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;영업일을 판단하는 &lt;code&gt;isBusinessDay&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;엔티티의 날짜가 파라미터의 날짜보다 이후인지 판단하는 &lt;code&gt;isAfter&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;로 구성되어있습니다.  &lt;/p&gt;&lt;p&gt;두번째 엔티티는 &lt;strong&gt;배송예정일을 계산해주는 엔티티&lt;/strong&gt;입니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public class DeliveryDayCalendar {
-    private static final int CYCLE_DAY = 3;
-
-    private final List&amp;lt;DeliveryDay&amp;gt; candidates;
-
-    public DeliveryDayCalendar(List&amp;lt;DeliveryDay&amp;gt; candidates) {
-        this.candidates = candidates;
-    }
-
-    public DeliveryDay getExpectedArriveDate(LocalDate orderDate) {
-        List&amp;lt;DeliveryDay&amp;gt; businessDates = candidates.stream()
-                .filter(d -&amp;gt; d.isAfter(orderDate))
-                .filter(DeliveryDay::isBusinessDay)
-                .collect(Collectors.toList());
-
-        return businessDates.get(CYCLE_DAY-1);
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;주기 (&lt;code&gt;CYCLE_DAY&lt;/code&gt;)를 3일로 하여 &lt;strong&gt;영업일 기준 +3일을 계산&lt;/strong&gt;하여 예정일을 구합니다.  &lt;/p&gt;&lt;p&gt;자 이제 이 엔티티들을 테스트 코드로 검증해보겠습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;    @Test
-    public void 배송도착일자_계산_공휴일은_제외한다_now() {
-        //given
-        LocalDate date = LocalDate.now();
-
-        List&amp;lt;DeliveryDay&amp;gt; days = Arrays.asList(
-                new DeliveryDay(date.plusDays(1), false),
-                new DeliveryDay(date.plusDays(2), false),
-                new DeliveryDay(date.plusDays(3), false)
-        );
-
-        DeliveryDayCalendar calendar = new DeliveryDayCalendar(days);
-
-        //when
-        DeliveryDay expectedArriveDate = calendar.getExpectedArriveDate(date);
-
-        //then
-        assertThat(expectedArriveDate.getDate()).isEqualTo(date.plusDays(3));
-    }&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;코드에 나와있듯이 &lt;code&gt;LocalDate.now()&lt;/code&gt;로 &lt;strong&gt;기준 날짜를 생성&lt;/strong&gt;하고, +3일까지의 날짜를 생성합니다.  &lt;br /&gt;
-이 테스트 코드를 수행해보면!&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99E4EB4A5CCD251D16&quot; alt=&quot;test1&quot;&gt;&lt;/p&gt;&lt;p&gt;정상적으로 테스트 코드가 성공하는 것을 확인할 수 있습니다.  &lt;/p&gt;&lt;p&gt;그럼 이 테스트 코드가 왜 문제일까요?  &lt;/p&gt;&lt;p&gt;D+3일에 대한 내용이 잘 검증되었고, 비지니스 로직도 깔끔하게 호출되었는데 말이죠.&lt;/p&gt;
-&lt;h2 id=&quot;문제점&quot;&gt;문제점&lt;/h2&gt;
-&lt;p&gt;이 코드는 &lt;strong&gt;간혈적으로 실패&lt;/strong&gt;합니다.  &lt;br /&gt;
-2019.05.07에 실행할때와 2019.05.10에 실행할때 둘의 결과는 다릅니다.  &lt;br /&gt;
-2019.05.07에 실행할때는 성공하지만, 2019.05.10에 실행할때는 실패합니다.    &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9985B3385CCD251D17&quot; alt=&quot;test2&quot;&gt; &lt;/p&gt;&lt;p&gt;이유는 &lt;strong&gt;날짜가 주말이면 isHoliday가 false라도 false로 지정&lt;/strong&gt;하기 때문입니다.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9917C04E5CCD251D09&quot; alt=&quot;code1&quot;&gt;&lt;/p&gt;&lt;p&gt;즉, 날짜에 따라 &lt;strong&gt;성공할수도 있고, 아닐수도 있습니다&lt;/strong&gt;.  &lt;/p&gt;&lt;p&gt;이런 테스트는 좋은 테스트가 아닙니다.  &lt;/p&gt;&lt;p&gt;&lt;strong&gt;테스트 코드는 언제 어느때든 항상 같은 결과를 만들어야 합니다&lt;/strong&gt;  &lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;이런 테스트를 &lt;a href=&quot;https://coupa.ng/bg70mO&quot;&gt;Effective Unit Testing&lt;/a&gt; 에서는 &lt;strong&gt;양치기 테스트&lt;/strong&gt;라고 합니다.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;해결책&quot;&gt;해결책&lt;/h2&gt;
-&lt;p&gt;이 문제를 해결하려면 아래와 같이 &lt;strong&gt;테스트 코드에서 날짜를 고정&lt;/strong&gt;하면 됩니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;    @Test
-    public void 배송도착일자_계산_공휴일은_제외한다_of() {
-        //given
-        LocalDate date = LocalDate.of(2019,5,7);
-
-        List&amp;lt;DeliveryDay&amp;gt; days = Arrays.asList(
-                new DeliveryDay(date.plusDays(1), false),
-                new DeliveryDay(date.plusDays(2), false),
-                new DeliveryDay(date.plusDays(3), false)
-        );
-
-        DeliveryDayCalendar calendar = new DeliveryDayCalendar(days);
-
-        //when
-        DeliveryDay expectedArriveDate = calendar.getExpectedArriveDate(date);
-
-        //then
-        assertThat(expectedArriveDate.getDate()).isEqualTo(date.plusDays(3));
-    }&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;테스트 날짜가 2019.05.07로 고정되어 있기 때문에, &lt;strong&gt;언제 어느때든 테스트 결과는 동일&lt;/strong&gt;하게 나옵니다.  &lt;/p&gt;&lt;p&gt;이렇게 변경한 테스트 코드 역시 정상적으로 성공하는 것을 확인할 수 있습니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99D5E0365CCD251D0D&quot; alt=&quot;test3&quot;&gt;&lt;/p&gt; &lt;/article&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-5349709105365293&quot;
-     data-ad-slot=&quot;5488859360&quot;
-     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-    (adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;
-&lt;br/&gt;&lt;br/&gt;
-&lt;div style=&quot;font-size:18px;text-align:justify;word-wrap:break-word;color:#2d6594;font-weight:normal;text-decoration:none&quot;&gt;
-    &lt;p&gt; IntelliJ &amp; 안드로이드 스튜디오의 기본기를 배우고 싶다면 아래 영상을 참고해보세요!&lt;/p&gt;
-    &lt;div style=&quot;text-align:center&quot;&gt;
-        &lt;a href=&quot;http://bit.ly/2NTJBeR&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;
-            &lt;img src=&quot;https://d81pi4yofp37g.cloudfront.net/wp-content/uploads/IDEA2.jpg&quot; width=&quot;385&quot; height=&quot;250&quot;&gt;
-        &lt;/a&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;br/&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
-&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://jojoldu.tistory.com/416&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
-&lt;/div&gt;
-</description>
-<category>Java</category>
-<category>localDate.now</category>
-<category>Test</category>
-<category>unit testing</category>
-<category>단위 테스트</category>
-<category>테스트 코드</category>
-<author>창천향로 창천향로</author>
-<guid>https://jojoldu.tistory.com/416</guid>
-<comments>https://jojoldu.tistory.com/416#entry416comment</comments>
-<pubDate>Fri, 03 May 2019 19:33:48 +0900</pubDate>
-</item>
-<item>
-<title>더티 체킹 (Dirty Checking)이란?</title>
-<link>https://jojoldu.tistory.com/415</link>
-<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt;
-&lt;p&gt;Spring Data Jpa와 같은 ORM 구현체를 사용하다보면 &lt;strong&gt;더티 체킹이란 단어를 종종 듣게 됩니다&lt;/strong&gt;.  &lt;/p&gt;&lt;p&gt;더티 체킹이란 단어를 처음 듣는분들을 몇번 만나게 되어 이번 시간엔 더티 체킹이 무엇인지 알아보겠습니다.&lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;모든 코드는 &lt;a href=&quot;https://github.com/jojoldu/blog-code/tree/master/jpa-theory&quot;&gt;Github&lt;/a&gt;에 있습니다.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;예를 들어 다음과 같은 코드가 있습니다.  &lt;br /&gt;
-(Spring Data Jpa가 익숙하시겠지만, 네이티브한 코드 먼저 보고 가겠습니다.)&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Slf4j
-@RequiredArgsConstructor
-@Service
-public class PayService {
-
-    public void updateNative(Long id, String tradeNo) {
-        EntityManager em = entityManagerFactory.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        tx.begin(); //트랜잭션 시작
-        Pay pay = em.find(Pay.class, id);
-        pay.changeTradeNo(tradeNo); // 엔티티만 변경
-        tx.commit(); //트랜잭션 커밋
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;코드를 보시면 &lt;strong&gt;별도로 데이터베이스에 save 하지 않습니다&lt;/strong&gt;.  &lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;트랜잭션이 시작되고&lt;/li&gt;
-&lt;li&gt;엔티티를 조회하고&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;엔티티의 값을 변경&lt;/strong&gt;하고&lt;/li&gt;
-&lt;li&gt;트랜잭션을 커밋합니다.&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;여기서 &lt;strong&gt;데이터베이스에 update 쿼리에 관한 코드는 어디에도 없습니다&lt;/strong&gt;.  &lt;/p&gt;&lt;p&gt;자 그리고 이 코드가 어떻게 작동하는지 테스트 코드를 작성해보겠습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;RunWith(SpringRunner.class)
-@SpringBootTest
-public class PayServiceTest {
-
-    @Autowired
-    PayRepository payRepository;
-
-    @Autowired
-    PayService payService;
-
-    @After
-    public void tearDown() throws Exception {
-        payRepository.deleteAll();
-    }
-
-    @Test
-    public void 엔티티매니저로_확인() {
-        //given
-        Pay pay = payRepository.save(new Pay(&quot;test1&quot;,  100));
-
-        //when
-        String updateTradeNo = &quot;test2&quot;;
-        payService.updateNative(pay.getId(), updateTradeNo);
-
-        //then
-        Pay saved = payRepository.findAll().get(0);
-        assertThat(saved.getTradeNo()).isEqualTo(updateTradeNo);
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;이 테스트 코드를 수행보시면, 아래와 같은 로그를 확인할 수 있습니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99056C4F5CC6747003&quot; alt=&quot;update&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;save&lt;/strong&gt; 메소드로 변경 사항을 저장하지 않았음에도 update 쿼리가 실행되었습니다.  &lt;br /&gt;
-이유는 &lt;strong&gt;Dirty Checking&lt;/strong&gt; 덕분인데요.  &lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;여기에서 Dirty란 &lt;strong&gt;상태의 변화가 생긴&lt;/strong&gt; 정도로 이해하시면 됩니다.  &lt;br /&gt;
-  즉, Dirty Checking이란 &lt;strong&gt;상태 변경 검사&lt;/strong&gt; 입니다.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;JPA에서는 트랜잭션이 끝나는 시점에 &lt;strong&gt;변화가 있는 모든 엔티티 객체&lt;/strong&gt;를 데이터베이스에 자동으로 반영해줍니다.  &lt;/p&gt;&lt;p&gt;이때 변화가 있다의 기준은 &lt;strong&gt;최초 조회 상태&lt;/strong&gt;입니다.  &lt;/p&gt;&lt;p&gt;JPA에서는 엔티티를 조회하면 해당 엔티티의 조회 상태 그대로 &lt;strong&gt;스냅샷&lt;/strong&gt;을 만들어놓습니다.  &lt;br /&gt;
-그리고 트랜잭션이 끝나는 시점에는 이 &lt;strong&gt;스냅샷과 비교해서 다른점이 있다면 Update Query를 데이터베이스&lt;/strong&gt;로 전달합니다.  &lt;/p&gt;&lt;p&gt;당연히 이런 상태 변경 검사의 대상은 &lt;strong&gt;영속성 컨텍스트가 관리하는 엔티티에만&lt;/strong&gt;적용 됩니다.  &lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;detach된 엔티티 (준영속)&lt;/li&gt;
-&lt;li&gt;DB에 반영되기 전 처음 생성된 엔티티 (비영속)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;등 준영속/비영속 상태의 엔티티는 Dirty Checking 대상에 포함되지 않습니다.  &lt;br /&gt;
-즉, &lt;strong&gt;값을 변경해도 데이터베이스에 반영되지 않는다&lt;/strong&gt;는 것이죠.  &lt;br /&gt;
-Spring Data Jpa와 &lt;code&gt;@Transactional&lt;/code&gt;이 함께 할 경우엔 다음과 같습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Slf4j
-@RequiredArgsConstructor
-@Service
-public class PayService {
-
-    private final PayRepository payRepository;
-
-    @Transactional
-    public void update(Long id, String tradeNo) {
-        Pay pay = payRepository.getOne(id);
-        pay.changeTradeNo(tradeNo);
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;그리고 테스트 코드를 작성해서 실행해보면!&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Test
-public void SpringDataJpa로_확인() {
-    //given
-    Pay pay = payRepository.save(new Pay(&quot;test1&quot;,  100));
-
-    //when
-    String updateTradeNo = &quot;test2&quot;;
-    payService.update(pay.getId(), updateTradeNo);
-
-    //then
-    Pay saved = payRepository.findAll().get(0);
-    assertThat(saved.getTradeNo()).isEqualTo(updateTradeNo);
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;아래와 같이 정상적으로 update 쿼리가 수행됨을 확인할 수 있습니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99A24A335CC674710B&quot; alt=&quot;update2&quot;&gt;&lt;/p&gt;
-&lt;h2 id=&quot;변경-부분만-update하고-싶을땐&quot;&gt;변경 부분만 update하고 싶을땐?&lt;/h2&gt;
-&lt;p&gt;Dirty Checking으로 생성되는 update 쿼리는 기본적으로 &lt;strong&gt;모든 필드&lt;/strong&gt;를 업데이트합니다.  &lt;/p&gt;&lt;p&gt;JPA에서는 &lt;strong&gt;전체 필드를 업데이트하는 방식을 기본값&lt;/strong&gt;으로 사용합니다.  &lt;br /&gt;
-전체 필드를 업데이트하는 방식의 장점은 다음과 같습니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;생성되는 쿼리가 같아 &lt;strong&gt;부트 실행시점에 미리 만들어서 재사용&lt;/strong&gt;가능합니다.&lt;/li&gt;
-&lt;li&gt;데이터베이스 입장에서 쿼리 재사용이 가능하다&lt;ul&gt;
-&lt;li&gt;동일한 쿼리를 받으면 이전에 파싱된 쿼리를 재사용한다.&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;출처: &lt;a href=&quot;https://coupa.ng/bg5M4j&quot;&gt;김영한님의 자바 ORM 표준 JPA 프로그래밍&lt;/a&gt;  &lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;다만, 필드가 20~30개 이상인 경우엔 이런 전체 필드 Update 쿼리가 부담스러울 수 있습니다.&lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;사실 이런 경우 정규화가 잘못된 경우일 확률이 높습니다.  &lt;br /&gt;
-  한 테이블에 필드 30개는 확실히 많습니다.  &lt;br /&gt;
-  현재 운영중인 정산 서비스에는 데이터양이나 복잡도가 국내에서 손꼽히지만 15개 넘는 필드를 가진 테이블은 없습니다.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;그래서 이런 경우엔 &lt;code&gt;@DynamicUpdate&lt;/code&gt;로 &lt;strong&gt;변경 필드만 반영&lt;/strong&gt;되도록 할 수 있습니다.  &lt;/p&gt;&lt;p&gt;엔티티 최상단에 아래와 같이 &lt;code&gt;@DynamicUpdate&lt;/code&gt; 를 선언해주시면 됩니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Getter
-@NoArgsConstructor
-@Entity
-@DynamicUpdate // 변경한 필드만 대응
-public class Pay {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String tradeNo;
-    private long amount;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;그리고 다시 테스트 코드를 수행해서 로그를 확인해보면!&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99BD7A4C5CC6747009&quot; alt=&quot;update3&quot;&gt;&lt;/p&gt;&lt;p&gt;변경분 (&lt;code&gt;trade_no&lt;/code&gt;)만 Update 쿼리에 반영된 것을 확인할 수 있습니다.&lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-5349709105365293&quot;
-     data-ad-slot=&quot;5488859360&quot;
-     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-    (adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;
-&lt;br/&gt;&lt;br/&gt;
-&lt;div style=&quot;font-size:18px;text-align:justify;word-wrap:break-word;color:#2d6594;font-weight:normal;text-decoration:none&quot;&gt;
-    &lt;p&gt; IntelliJ &amp; 안드로이드 스튜디오의 기본기를 배우고 싶다면 아래 영상을 참고해보세요!&lt;/p&gt;
-    &lt;div style=&quot;text-align:center&quot;&gt;
-        &lt;a href=&quot;http://bit.ly/2NTJBeR&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;
-            &lt;img src=&quot;https://d81pi4yofp37g.cloudfront.net/wp-content/uploads/IDEA2.jpg&quot; width=&quot;385&quot; height=&quot;250&quot;&gt;
-        &lt;/a&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;br/&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
-&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://jojoldu.tistory.com/415&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
-&lt;/div&gt;
-</description>
-<category>JPA</category>
-<category>dirty checking</category>
-<category>JPA</category>
-<category>더티체킹</category>
-<category>트랜잭션</category>
-<author>창천향로 창천향로</author>
-<guid>https://jojoldu.tistory.com/415</guid>
-<comments>https://jojoldu.tistory.com/415#entry415comment</comments>
-<pubDate>Mon, 29 Apr 2019 12:50:09 +0900</pubDate>
-</item>
-<item>
-<title>Spring batch &amp; JPA에서 N+1 문제 해결</title>
-<link>https://jojoldu.tistory.com/414</link>
-<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; 
-&lt;p&gt;안녕하세요? 이번 시간엔 Spring batch에서 N+1 문제 해결을 진행해보려고 합니다.  &lt;br /&gt;
-모든 코드는 &lt;a href=&quot;https://github.com/jojoldu/blog-code/tree/master/spring-batch-n1&quot;&gt;Github&lt;/a&gt;에 있기 때문에 함께 보시면 더 이해하기 쉬우실 것 같습니다.  &lt;br /&gt;
-(공부한 내용을 정리하는 &lt;a href=&quot;https://github.com/jojoldu/blog-code&quot;&gt;Github&lt;/a&gt;와 세미나+책 후기를 정리하는 &lt;a href=&quot;https://github.com/jojoldu/review&quot;&gt;Github&lt;/a&gt;, 이 모든 내용을 담고 있는 &lt;a href=&quot;http://jojoldu.tistory.com/&quot;&gt;블로그&lt;/a&gt;가 있습니다. )&lt;br /&gt;&lt;/p&gt;
-&lt;h2 id=&quot;1-테스트-환경&quot;&gt;1. 테스트 환경&lt;/h2&gt;
-&lt;p&gt;프로젝트는 SpringBoot Batch + Lombok + Spock으로 구성됩니다.  &lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;스프링부트의 버전은 2.1.3 입니다.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;해당 기술들이 처음이셔도 기존에 사용되던 기술과 크게 다르지 않기 때문에 보시는데 어려움이 없으실 것 같습니다.  &lt;/p&gt;&lt;p&gt;다음은 기본적인 Entity와 Repository를 생성하겠습니다.  &lt;br /&gt;
-엔티티는 총 4개로 구성됩니다.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99487B3A5CBAA2F733&quot; alt=&quot;관계도&quot;&gt;&lt;/p&gt;&lt;p&gt;3개의 엔티티의 코드는 다음과 같습니다.  &lt;br /&gt;
-(굳이 안보셔도 됩니다.)&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@NoArgsConstructor
-@Getter
-@Entity
-public class Store {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String name;
-    private String address;
-
-    @OneToMany(mappedBy = &quot;store&quot;, cascade = ALL)
-    private List&amp;lt;Product&amp;gt; products = new ArrayList&amp;lt;&amp;gt;();
-
-    @OneToMany(mappedBy = &quot;store&quot;, cascade = ALL)
-    private List&amp;lt;Employee&amp;gt; employees = new ArrayList&amp;lt;&amp;gt;();
-
-    public Store(String name, String address) {
-        this.name = name;
-        this.address = address;
-    }
-
-    public void addProduct(Product product){
-        this.products.add(product);
-        product.updateStore(this);
-    }
-
-    public void addEmployee(Employee employee){
-        this.employees.add(employee);
-        employee.updateStore(this);
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@NoArgsConstructor
-@Getter
-@Entity
-public class Product {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String name;
-    private long price;
-
-    @ManyToOne
-    @JoinColumn(name = &quot;store_id&quot;, foreignKey = @ForeignKey(name = &quot;FK_PRODUCT_STORE&quot;))
-    private Store store;
-
-    public Product(String name, long price) {
-        this.name = name;
-        this.price = price;
-    }
-
-    public void updateStore(Store store){
-        this.store = store;
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@NoArgsConstructor
-@Getter
-@Entity
-public class Employee {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String name;
-    private LocalDate hireDate;
-
-    @ManyToOne
-    @JoinColumn(name = &quot;store_id&quot;, foreignKey = @ForeignKey(name = &quot;FK_EMPLOYEE_STORE&quot;))
-    private Store store;
-
-    public Employee(String name, LocalDate hireDate) {
-        this.name = name;
-        this.hireDate = hireDate;
-    }
-
-    public void updateStore(Store store){
-        this.store = store;
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;그리고 배치의 Writer로 저장될 &lt;code&gt;StoreHistory&lt;/code&gt;를 생성합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@NoArgsConstructor
-@Getter
-@Entity
-public class StoreHistory {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String storeName;
-    private String productNames;
-    private String employeeNames;
-
-    public StoreHistory(Store store, List&amp;lt;Product&amp;gt; products, List&amp;lt;Employee&amp;gt; employees) {
-        this.storeName = store.getName();
-        this.productNames = products.stream()
-                .map(Product::getName)
-                .collect(Collectors.joining( &quot;,&quot; ));
-
-        this.employeeNames = employees.stream()
-                .map(Employee::getName)
-                .collect(Collectors.joining( &quot;,&quot; ));
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;엔티티가 다 생성되었으니 배치 코드를 작성하겠습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Configuration
-@ConditionalOnProperty(name = &quot;job.name&quot;, havingValue = JOB_NAME)
-public class StoreBackupBatchConfiguration {
-
-    public static final String JOB_NAME = &quot;storeBackupBatch&quot;;
-    private static final String STEP_NAME = JOB_NAME+&quot;Step&quot;;
-
-    private EntityManagerFactory entityManagerFactory;
-    private JobBuilderFactory jobBuilderFactory;
-    private StepBuilderFactory stepBuilderFactory;
-
-    public StoreBackupBatchConfiguration(EntityManagerFactory entityManagerFactory, JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory) {
-        this.entityManagerFactory = entityManagerFactory;
-        this.jobBuilderFactory = jobBuilderFactory;
-        this.stepBuilderFactory = stepBuilderFactory;
-    }
-
-    @Value(&quot;${chunkSize:1000}&quot;)
-    private int chunkSize; // Parameter로 chunkSize를 던지면 해당 값으로, 없으면 1000을 기본으로
-
-    private static String ADDRESS_PARAM = null;
-
-    @Bean
-    public Job job() {
-        return jobBuilderFactory.get(JOB_NAME)
-                .start(step())
-                .build();
-    }
-
-    @Bean
-    @JobScope
-    public Step step() {
-        return stepBuilderFactory.get(STEP_NAME)
-                .&amp;lt;Store, StoreHistory&amp;gt;chunk(chunkSize)
-                .reader(reader(ADDRESS_PARAM))
-                .processor(processor())
-                .writer(writer())
-                .build();
-    }
-
-    @Bean
-    @StepScope
-    public JpaPagingItemReader&amp;lt;Store&amp;gt; reader (
-            @Value(&quot;#{jobParameters[address]}&quot;) String address) {
-
-        Map&amp;lt;String, Object&amp;gt; parameters = new LinkedHashMap&amp;lt;&amp;gt;();
-        parameters.put(&quot;address&quot;, address+&quot;%&quot;);
-
-        JpaPagingItemReader&amp;lt;Store&amp;gt; reader = new JpaPagingItemReader&amp;lt;&amp;gt;();
-        reader.setEntityManagerFactory(entityManagerFactory);
-        reader.setQueryString(&quot;select s From Store s where s.address like :address&quot;);
-        reader.setParameterValues(parameters);
-        reader.setPageSize(chunkSize);
-
-        return reader;
-    }
-
-    public ItemProcessor&amp;lt;Store, StoreHistory&amp;gt; processor() {
-        return item -&amp;gt; new StoreHistory(item, item.getProducts(), item.getEmployees());
-    }
-
-    public JpaItemWriter&amp;lt;StoreHistory&amp;gt; writer() {
-        JpaItemWriter&amp;lt;StoreHistory&amp;gt; writer = new JpaItemWriter&amp;lt;&amp;gt;();
-        writer.setEntityManagerFactory(entityManagerFactory);
-        return writer;
-    }
-
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;조건(&lt;code&gt;like %address&lt;/code&gt;)에 맞는 &lt;code&gt;Store&lt;/code&gt;를 조회하여 &lt;code&gt;StoreHistory&lt;/code&gt;로 복사하는 단순한 배치 프로그램입니다.  &lt;br /&gt;
-배치 코드를 테스트할 테스트 코드를 작성하겠습니다.  &lt;/p&gt;&lt;p&gt;먼저 스프링배치 테스트 환경을 위해 설정파일을 하나 생성합니다.  &lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@EnableBatchProcessing
-@Configuration
-@EnableAutoConfiguration
-@ComponentScan
-@ConditionalOnProperty(name = &quot;job.name&quot;, havingValue = JOB_NAME)
-public class TestJobConfiguration {
-
-    @Bean
-    public JobLauncherTestUtils jobLauncherTestUtils() {
-        return new JobLauncherTestUtils();
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;이를 기반으로 테스트 클래스를 추가합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@SpringBootTest
-@TestPropertySource(properties = &quot;job.name=storeBackupBatch&quot;)
-class StoreBackupBatchConfigurationTest extends Specification {
-
-    @Autowired
-    JobLauncherTestUtils jobLauncherTestUtils
-
-    @Autowired
-    StoreRepository storeRepository
-
-    @Autowired
-    StoreHistoryRepository storeHistoryRepository
-
-    def &quot;Store 정보가 StoreHistory로 복사된다&quot; () {
-        given:
-        Store store1 = new Store(&quot;서점&quot;, &quot;서울시 강남구&quot;)
-        store1.addProduct(new Product(&quot;책1_1&quot;, 10000L))
-        store1.addProduct(new Product(&quot;책1_2&quot;, 20000L))
-        store1.addEmployee(new Employee(&quot;직원1&quot;, LocalDate.now()))
-        storeRepository.save(store1)
-
-        Store store2 = new Store(&quot;서점2&quot;, &quot;서울시 강남구&quot;)
-        store2.addProduct(new Product(&quot;책2_1&quot;, 10000L))
-        store2.addProduct(new Product(&quot;책2_2&quot;, 20000L))
-        store2.addEmployee(new Employee(&quot;직원2&quot;, LocalDate.now()))
-        storeRepository.save(store2)
-
-        Store store3 = new Store(&quot;서점3&quot;, &quot;서울시 강남구&quot;)
-        store3.addProduct(new Product(&quot;책3_1&quot;, 10000L))
-        store3.addProduct(new Product(&quot;책3_2&quot;, 20000L))
-        store3.addEmployee(new Employee(&quot;직원3&quot;, LocalDate.now()))
-        storeRepository.save(store3)
-
-        JobParameters jobParameters = new JobParametersBuilder()
-                .addString(&quot;address&quot;, &quot;서울&quot;)
-                .toJobParameters()
-        when:
-        JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParameters)
-
-        then:
-        jobExecution.status == BatchStatus.COMPLETED
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;그럼 이제 테스트를 실행해보겠습니다.  &lt;/p&gt;
-&lt;h2 id=&quot;2-문제-상황&quot;&gt;2. 문제 상황&lt;/h2&gt;
-&lt;p&gt;테스트를 실행해보시면 테스트는 성공적으로 통과하지만, 로그에 문제가 있어 보입니다.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9919244A5CBAA2F805&quot; alt=&quot;N_1문제발생&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;code&gt;Store&lt;/code&gt;와 &lt;code&gt;Product&lt;/code&gt;, &lt;code&gt;Employee&lt;/code&gt;가 1대다 관계다보니 &lt;code&gt;reader.read()&lt;/code&gt;과정에서 자연스레 JPA N+1 문제가 발생했습니다.  &lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;JPA N+1 문제란?  &lt;br /&gt;
-   &lt;code&gt;@OneToMany&lt;/code&gt; 등에서 하위 엔티티들을 Lazy Loading으로 가져올때마다 자식 조회 쿼리가 추가로 발생하는 이슈 (&lt;a href=&quot;http://jojoldu.tistory.com/165&quot;&gt;참고&lt;/a&gt;)&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;이 문제를 해결하기 위해 &lt;code&gt;join fetch&lt;/code&gt;를 추가하겠습니다.  &lt;br /&gt;
-먼저 &lt;code&gt;Product&lt;/code&gt; 만 걸어보겠습니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99214C455CBAA2F907&quot; alt=&quot;product만&quot;&gt;&lt;/p&gt;&lt;p&gt;이 쿼리를 자세히 확인해보면&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;sql language-sql&quot;&gt;select store0_.id as id1_2_0_, products1_.id as id1_1_1_, store0_.address as address2_2_0_, store0_.name as name3_2_0_, products1_.name as name2_1_1_, products1_.price as price3_1_1_, products1_.store_id as store_id4_1_1_, products1_.store_id as store_id4_1_0__, products1_.id as id1_1_0__ 
-from store store0_ 
-inner join product products1_ on store0_.id=products1_.store_id 
-where store0_.address like ?&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;한번의 &lt;code&gt;join&lt;/code&gt;이 발생한것을 알 수 있습니다.  &lt;/p&gt;&lt;p&gt;자 그럼 여기서 추가로 Product외에 다른 자식 엔티티인 &lt;code&gt;Employee&lt;/code&gt;에도 &lt;code&gt;join fetch&lt;/code&gt;를 걸어보겠습니다.  &lt;br /&gt;
-그리고 테스트를 수행해보면!&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/996DB9385CBAA2F830&quot; alt=&quot;employee추가&quot;&gt;&lt;/p&gt;&lt;p&gt;예상치 못한 &lt;code&gt;MultipleBagFetchException&lt;/code&gt;을 만나게 됩니다.  &lt;br /&gt;
-즉, 한번에 &lt;strong&gt;2개 이상의 자식 엔티티에는&lt;/strong&gt; &lt;code&gt;join fetch&lt;/code&gt;을 사용할 수 없어 문제가 발생하였습니다.  &lt;/p&gt;&lt;p&gt;이 문제는 꼭 &lt;code&gt;join fetch&lt;/code&gt;에서만 발생하진 않습니다.  &lt;br /&gt;
-엔티티 클래스의 &lt;code&gt;FetchType&lt;/code&gt;을 &lt;code&gt;Eager&lt;/code&gt;로 두고 있어도 발생할 수 있습니다.  &lt;br /&gt;
-가장 편한 해결책은 Lazy Loading 하는 것이지만, 앞에서 보신것처럼  JPA N+1 문제가 발생해서 성능상 큰 문제가 발생합니다.  &lt;br /&gt;
-이러지도 저러지도 못하는 상황에서 해결할 수 있는 방법이 없을까요?&lt;/p&gt;
-&lt;h2 id=&quot;3-해결&quot;&gt;3. 해결&lt;/h2&gt;
-&lt;h3 id=&quot;3-1-default_batch_fetch_size&quot;&gt;3-1. default_batch_fetch_size&lt;/h3&gt;
-&lt;p&gt;Hibernate에서는 &lt;strong&gt;여러 자식들이 있을때 N+1 문제를 회피&lt;/strong&gt;하기 위해  &lt;code&gt;hibernate.default_batch_fetch_size&lt;/code&gt; 라는 옵션이 있습니다.  &lt;/p&gt;&lt;p&gt;src/&lt;strong&gt;test&lt;/strong&gt;/resources/application.yml에 다음과 같은 옵션을 추가합니다.  &lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;&lt;strong&gt;테스트 환경&lt;/strong&gt;에서 옵션을 적용하려면 test/resources에 적용해야만 합니다.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99BE503F5CBAA2F704&quot; alt=&quot;옵션&quot;&gt;&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;yml language-yml&quot;&gt;spring:
-  jpa:
-    properties:
-      hibernate.default_batch_fetch_size: 1000&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;이 &lt;strong&gt;&lt;code&gt;batch-size&lt;/code&gt; 옵션은 하위 엔티티를 로딩할때 한번에 상위 엔티티 ID를 지정한 숫자만큼 &lt;code&gt;in Query&lt;/code&gt;로 로딩&lt;/strong&gt;해줍니다.  &lt;br /&gt;
-현재 프로젝트를 예로 들면 &lt;code&gt;batch-size:1000&lt;/code&gt;으로 되어있으면, 상위 엔티티인 &lt;strong&gt;Store의 id 1000개를 in Query&lt;/strong&gt;로 &lt;code&gt;Product&lt;/code&gt; 와 &lt;code&gt;Employee&lt;/code&gt;를 조회하게 됩니다.  &lt;/p&gt;&lt;p&gt;설명한대로 옵션이 작동하는지 &lt;strong&gt;JpaRepository&lt;/strong&gt;로 테스트해보겠습니다.  &lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@RequiredArgsConstructor
-@Service
-public class StoreService {
-
-    private final StoreRepository storeRepository;
-
-    @Transactional(readOnly = true)
-    public long find() {
-        List&amp;lt;Store&amp;gt; stores = storeRepository.findAll();
-        long productSum = stores.stream()
-                .map(Store::getProducts)
-                .flatMap(Collection::stream)
-                .mapToLong(Product::getPrice)
-                .sum();
-
-        stores.stream()
-                .map(Store::getEmployees)
-                .flatMap(Collection::stream)
-                .map(Employee::getName)
-                .collect(Collectors.toList());
-
-        return productSum;
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;서비스 메소드에 트랜잭션을 걸고, Store의 Product와 Employee를 사용하여 &lt;strong&gt;N+1이 발생하는지 체크&lt;/strong&gt;합니다.&lt;/p&gt;&lt;p&gt;테스트 코드는 다음과 같습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@SpringBootTest
-class StoreServiceTest extends Specification{
-    @Autowired
-    StoreRepository storeRepository
-
-    @Autowired
-    StoreService storeService
-
-    @Test
-    void &quot;Repository 의 BatchSize&quot; () {
-        given:
-        Store store1 = new Store(&quot;서점&quot;, &quot;서울시 강남구&quot;)
-        store1.addProduct(new Product(&quot;책1_1&quot;, 10000L))
-        store1.addProduct(new Product(&quot;책1_2&quot;, 20000L))
-        store1.addEmployee(new Employee(&quot;직원1&quot;, LocalDate.now()))
-        store1.addEmployee(new Employee(&quot;직원2&quot;, LocalDate.now()))
-        storeRepository.save(store1)
-
-        Store store2 = new Store(&quot;서점2&quot;, &quot;서울시 강남구&quot;)
-        store2.addProduct(new Product(&quot;책2_1&quot;, 10000L))
-        store2.addProduct(new Product(&quot;책2_2&quot;, 20000L))
-        store2.addEmployee(new Employee(&quot;직원2_1&quot;, LocalDate.now()))
-        store2.addEmployee(new Employee(&quot;직원2_2&quot;, LocalDate.now()))
-        storeRepository.save(store2)
-
-        when:
-        long size = storeService.find()
-
-        then:
-        size == 60000L
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;테스트 코드를 실행해보겠습니다.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/998676385CBAA2F902&quot; alt=&quot;default1&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;in Query로 product와 employee가 조회&lt;/strong&gt;됩니다!  &lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;in query 확인을 위해 Query 포맷팅 옵션을 추가한 상태입니다.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;혹시 원래 그런건 아닌지 의심될수 있으니, &lt;strong&gt;옵션을 제거하고 다시 돌려봅니다&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/996CFA365CBAA2F932&quot; alt=&quot;default2&quot;&gt;&lt;/p&gt;&lt;p&gt;옵션을 제거하니 N+1이 다시 발생하는 것을 알 수 있습니다.  &lt;/p&gt;&lt;p&gt;자 그럼 &lt;strong&gt;hibernate.default_batch_fetch_size가 JPA에서 정상 작동&lt;/strong&gt;하는 것을 확인했으니, Batch에서도 그런지 확인해보겠습니다.  &lt;/p&gt;&lt;p&gt;옵션을 다시 추가한 뒤에 &lt;strong&gt;Batch Test&lt;/strong&gt;를 진행해봅니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99077B3C5CBAA2F83A&quot; alt=&quot;default3&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;배치에서는 작동하지 않습니다!&lt;/strong&gt;  &lt;/p&gt;&lt;p&gt;왜 그럴까요?  &lt;/p&gt;&lt;p&gt;혹시 JpaPagingItemReader만 안되는것일까요?&lt;/p&gt;
-&lt;h3 id=&quot;3-2-hibernate-테스트&quot;&gt;3-2. Hibernate 테스트&lt;/h3&gt;
-&lt;p&gt;JpaPagingItemReader에서만 안되는지 Hibernate Item Reader에서 테스트해보겠습니다.  &lt;/p&gt;&lt;p&gt;Batch 코드에서 ItemReader 부분을 다음과 같이 변경합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Bean
-@StepScope
-public HibernatePagingItemReader&amp;lt;Store&amp;gt; reader(@Value(&quot;#{jobParameters[address]}&quot;) String address) {
-    Map&amp;lt;String, Object&amp;gt; parameters = new LinkedHashMap&amp;lt;&amp;gt;();
-    parameters.put(&quot;address&quot;, address + &quot;%&quot;);
-    SessionFactory sessionFactory = entityManagerFactory.unwrap(SessionFactory.class);
-
-    HibernatePagingItemReader&amp;lt;Store&amp;gt; reader = new HibernatePagingItemReader&amp;lt;&amp;gt;();
-    reader.setQueryString(&quot;FROM Store s WHERE s.address LIKE :address&quot;);
-    reader.setParameterValues(parameters);
-    reader.setSessionFactory(sessionFactory);
-    reader.setFetchSize(chunkSize);
-    reader.setUseStatelessSession(false);
-
-    return reader;
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;그리고 다시 테스트를 돌려보겠습니다.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/997827475CBAA2F939&quot; alt=&quot;hibernate1&quot;&gt;&lt;/p&gt;&lt;p&gt;HibernatePaingItemReader에서는 &lt;strong&gt;옵션이 잘 작동합니다&lt;/strong&gt;.  &lt;br /&gt;
-음.. HibernatePaingItemReader에서만 잘 작동하는걸까요?  &lt;/p&gt;&lt;p&gt;&lt;strong&gt;HibernateCursorItemReader&lt;/strong&gt; 에서도 작동하는지 확인해봅니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;    @Bean
-    @StepScope
-    public HibernateCursorItemReader&amp;lt;Store&amp;gt; reader(@Value(&quot;#{jobParameters[address]}&quot;) String address) {
-        Map&amp;lt;String, Object&amp;gt; parameters = new LinkedHashMap&amp;lt;&amp;gt;();
-        parameters.put(&quot;address&quot;, address+&quot;%&quot;);
-        SessionFactory sessionFactory = entityManagerFactory.unwrap(SessionFactory.class);
-
-        HibernateCursorItemReader&amp;lt;Store&amp;gt; reader = new HibernateCursorItemReader&amp;lt;&amp;gt;();
-        reader.setQueryString(&quot;FROM Store s WHERE s.address LIKE :address&quot;);
-        reader.setParameterValues(parameters);
-        reader.setSessionFactory(sessionFactory);
-        reader.setFetchSize(chunkSize);
-        reader.setUseStatelessSession(false);
-
-        return reader;
-    }&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99AFAE435CBAA2F905&quot; alt=&quot;hibernate2&quot;&gt;&lt;/p&gt;&lt;p&gt;HibernateCursorItemReader에서도 정상 작동합니다.  &lt;/p&gt;&lt;p&gt;즉, ORM Reader 중 &lt;strong&gt;JpaPagingItemReader에서만 작동되지 않습니다&lt;/strong&gt;.  &lt;/p&gt;&lt;p&gt;JpaPagingItemReader에서는 해결이 안될까요?  &lt;/p&gt;
-&lt;h3 id=&quot;3-3-custom-jpapagingitemreader&quot;&gt;3-3. Custom JpaPagingItemReader&lt;/h3&gt;
-&lt;p&gt;왜 JpaPagingItemReader에서만 안될까요?  &lt;br /&gt;
-코드를 살펴보면 Hibernate Item Reader와는 차이가 나는 코드가 하나 있습니다.  &lt;br /&gt;
-다른 PagingItemReader의 경우 &lt;strong&gt;트랜잭션을 Chunk에 맡깁니다&lt;/strong&gt;.  &lt;br /&gt;
-하지만 JpaPagingItemReader의 &lt;strong&gt;트랜잭션을 Reader에서 진행&lt;/strong&gt;합니다.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/999BEE375CBAA2F92D&quot; alt=&quot;custom1&quot;&gt;&lt;/p&gt;&lt;p&gt;이러다보니 &lt;strong&gt;트랜잭션 안에서만 작동하는 hibernate.default_batch_fetch_size&lt;/strong&gt;가 &lt;strong&gt;단일 객체에서만&lt;/strong&gt; 발동하게 됩니다.  &lt;/p&gt;&lt;p&gt;스프링배치는 이미 &lt;strong&gt;Chunk 단위로 트랜잭션&lt;/strong&gt; 을 보장하고 있기 때문에, JpaPagingItemReader 내부의 트랜잭션을 걷어내겠습니다.  &lt;/p&gt;&lt;p&gt;JpaPagingItemReader 코드를 고칠순 없기 때문에, 직접 Custom Reader를 생성합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public class JpaPagingFetchItemReader &amp;lt;T&amp;gt; extends AbstractPagingItemReader&amp;lt;T&amp;gt; {
-    private EntityManagerFactory entityManagerFactory;
-
-    private EntityManager entityManager;
-
-    private final Map&amp;lt;String, Object&amp;gt; jpaPropertyMap = new HashMap&amp;lt;&amp;gt;();
-
-    private String queryString;
-
-    private JpaQueryProvider queryProvider;
-
-    private Map&amp;lt;String, Object&amp;gt; parameterValues;
-
-    private boolean transacted = true;//default value
-
-    public JpaPagingFetchItemReader() {
-        setName(ClassUtils.getShortName(JpaPagingFetchItemReader.class));
-    }
-
-    /**
-     * Create a query using an appropriate query provider (entityManager OR
-     * queryProvider).
-     */
-    private Query createQuery() {
-        if (queryProvider == null) {
-            return entityManager.createQuery(queryString);
-        }
-        else {
-            return queryProvider.createQuery();
-        }
-    }
-
-    public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
-        this.entityManagerFactory = entityManagerFactory;
-    }
-
-    /**
-     * The parameter values to be used for the query execution.
-     *
-     * @param parameterValues the values keyed by the parameter named used in
-     * the query string.
-     */
-    public void setParameterValues(Map&amp;lt;String, Object&amp;gt; parameterValues) {
-        this.parameterValues = parameterValues;
-    }
-
-    /**
-     * By default (true) the EntityTransaction will be started and committed around the read.
-     * Can be overridden (false) in cases where the JPA implementation doesn't support a
-     * particular transaction.  (e.g. Hibernate with a JTA transaction).  NOTE: may cause
-     * problems in guaranteeing the object consistency in the EntityManagerFactory.
-     *
-     * @param transacted indicator
-     */
-    public void setTransacted(boolean transacted) {
-        this.transacted = transacted;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        super.afterPropertiesSet();
-
-        if (queryProvider == null) {
-            Assert.notNull(entityManagerFactory, &quot;EntityManager is required when queryProvider is null&quot;);
-            Assert.hasLength(queryString, &quot;Query string is required when queryProvider is null&quot;);
-        }
-    }
-
-    /**
-     * @param queryString JPQL query string
-     */
-    public void setQueryString(String queryString) {
-        this.queryString = queryString;
-    }
-
-    /**
-     * @param queryProvider JPA query provider
-     */
-    public void setQueryProvider(JpaQueryProvider queryProvider) {
-        this.queryProvider = queryProvider;
-    }
-
-    @Override
-    protected void doOpen() throws Exception {
-        super.doOpen();
-
-        entityManager = entityManagerFactory.createEntityManager(jpaPropertyMap);
-        if (entityManager == null) {
-            throw new DataAccessResourceFailureException(&quot;Unable to obtain an EntityManager&quot;);
-        }
-        // set entityManager to queryProvider, so it participates
-        // in JpaPagingItemReader's managed transaction
-        if (queryProvider != null) {
-            queryProvider.setEntityManager(entityManager);
-        }
-
-    }
-
-    @Override
-    @SuppressWarnings(&quot;unchecked&quot;)
-    protected void doReadPage() {
-        if (transacted) {
-            entityManager.clear();
-        }//end if
-
-        Query query = createQuery().setFirstResult(getPage() * getPageSize()).setMaxResults(getPageSize());
-
-        if (parameterValues != null) {
-            for (Map.Entry&amp;lt;String, Object&amp;gt; me : parameterValues.entrySet()) {
-                query.setParameter(me.getKey(), me.getValue());
-            }
-        }
-
-        if (results == null) {
-            results = new CopyOnWriteArrayList&amp;lt;&amp;gt;();
-        }
-        else {
-            results.clear();
-        }
-
-        if (!transacted) {
-            List&amp;lt;T&amp;gt; queryResult = query.getResultList();
-            for (T entity : queryResult) {
-                entityManager.detach(entity);
-                results.add(entity);
-            }//end if
-        } else {
-            results.addAll(query.getResultList());
-        }//end if
-    }
-
-    @Override
-    protected void doJumpToPage(int itemIndex) {
-    }
-
-    @Override
-    protected void doClose() throws Exception {
-        entityManager.close();
-        super.doClose();
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9999E13D5CBAA2F929&quot; alt=&quot;custom2&quot;&gt;&lt;/p&gt;&lt;p&gt;TransactionManager를 사용하는 코드를 모두 제거한 ItemReader를 만들고, 이를 사용합니다.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99D198385CBAA2F836&quot; alt=&quot;custom3&quot;&gt;&lt;/p&gt;&lt;p&gt;다시 테스트 코드를 돌려보면!&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/998CA23F5CBAA2F836&quot; alt=&quot;custom4&quot;&gt;&lt;/p&gt;&lt;p&gt;성공적으로 &lt;code&gt;hibernate.default_batch_fetch_size&lt;/code&gt; 옵션이 적용된 것을 확인할 수 있습니다.  &lt;/p&gt;&lt;p&gt;Chunk 단위 트랜잭션 관리가 안되는지 확인해볼까요?&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/998FE6375CBAA2F935&quot; alt=&quot;custom5&quot;&gt;&lt;/p&gt;&lt;p&gt;위 ItemReader를 쓰더라도 &lt;strong&gt;Chunk 단위 트랜잭션 관리는 정상&lt;/strong&gt; 입니다.&lt;/p&gt;&lt;p&gt;이 방법으로 쓰면 될까요?  &lt;br /&gt;
-아쉽게도, 이 방법에는 &lt;strong&gt;어떤 사이드 이펙트가 있는지 알 수 없습니다&lt;/strong&gt;.&lt;br /&gt;
-그래서 아직까지 추천하기가 어렵습니다.&lt;/p&gt;
-&lt;h2 id=&quot;4-결론&quot;&gt;4. 결론&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;join fetch&lt;/code&gt;는 &lt;strong&gt;하나의 자식에만 적용&lt;/strong&gt;가능&lt;/li&gt;
-&lt;li&gt;Spring Data의 JpaRepository / Spring Batch의 HibernateItemReader에서는&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;hibernate.default_batch_fetch_size&lt;/code&gt;로 N+1 문제를 피할 수 있다.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;@BatchSize&lt;/code&gt;도 가능&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Spring Boot 2.1.3 (Spring Batch 4.1.1)까지는 &lt;code&gt;hibernate.default_batch_fetch_size&lt;/code&gt; 옵션이 &lt;strong&gt;JpaPagingItemReader에서 작동하지 않는다&lt;/strong&gt;.&lt;/li&gt;
-&lt;li&gt;Custom하게 수정해서 쓸 순 있지만, 검증되지 않은 방식&lt;/li&gt;
-&lt;/ul&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;현재 해당 내용의 수정을 &lt;a href=&quot;https://github.com/spring-projects/spring-batch/pull/713&quot;&gt;PR&lt;/a&gt;로 보냈습니다.  &lt;br /&gt;
-  Merge되면 이 블로그의 내용은 수정 될 수 있습니다.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;참고&quot;&gt;참고&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;&lt;a href=&quot;http://www.thoughts-on-java.org/tips-to-boost-your-hibernate-performance/&quot;&gt;7 tips-to-boost-your-hibernate-performance/&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://vladmihalcea.com/2013/10/22/hibernate-facts-multi-level-fetching/&quot;&gt;hibernate-facts-multi-level-fetching&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;&lt;a href=&quot;http://kwonnam.pe.kr/wiki/java/hibernate/performance&quot;&gt;권남 위키&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://prasanthmathialagan.wordpress.com/2017/04/20/beware-of-hibernate-batch-fetching/&quot;&gt;beware-of-hibernate-batch-fetching&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-5349709105365293&quot;
-     data-ad-slot=&quot;5488859360&quot;
-     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-    (adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;
-&lt;br/&gt;&lt;br/&gt;
-&lt;div style=&quot;font-size:18px;text-align:justify;word-wrap:break-word;color:#2d6594;font-weight:normal;text-decoration:none&quot;&gt;
-    &lt;p&gt; IntelliJ &amp; 안드로이드 스튜디오의 기본기를 배우고 싶다면 아래 영상을 참고해보세요!&lt;/p&gt;
-    &lt;div style=&quot;text-align:center&quot;&gt;
-        &lt;a href=&quot;http://bit.ly/2NTJBeR&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;
-            &lt;img src=&quot;https://d81pi4yofp37g.cloudfront.net/wp-content/uploads/IDEA2.jpg&quot; width=&quot;385&quot; height=&quot;250&quot;&gt;
-        &lt;/a&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;br/&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
-&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://jojoldu.tistory.com/414&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
-&lt;/div&gt;
-</description>
-<category>Spring</category>
-<category>Hibernate Item Reader</category>
-<category>JPA</category>
-<category>JpaItemReader</category>
-<category>N+1</category>
-<category>Spring Batch</category>
-<category>스프링배치</category>
-<author>창천향로 창천향로</author>
-<guid>https://jojoldu.tistory.com/414</guid>
-<comments>https://jojoldu.tistory.com/414#entry414comment</comments>
-<pubDate>Sat, 20 Apr 2019 13:41:29 +0900</pubDate>
-</item>
-<item>
-<title>오늘의 질문 2019.04.03</title>
-<link>https://jojoldu.tistory.com/413</link>
-<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt;
-&lt;h2 id=&quot;q1&quot;&gt;Q.1&lt;/h2&gt;
-&lt;p&gt;Q. 신입을 백엔드 개발로만 사용하는 곳이 있는지.  &lt;/p&gt;&lt;p&gt;제가 알고 있는 대부분의 서비스 회사가 &lt;strong&gt;완전히 백엔드만 하는 팀은 많지 않습니다&lt;/strong&gt;.  &lt;br /&gt;
-실제 B2C 서비스의 프론트 엔드를 만들진 않지만, 본인 팀 서비스의 &lt;strong&gt;어드민 / 모니터링&lt;/strong&gt; 등은 직접 만들기 때문에 웹프론트 엔드를 대부분은 다루고 있습니다.  &lt;/p&gt;&lt;p&gt;단지, 주력으로 쓰는게 아니라서 꼭 Vue, React 등을 &lt;strong&gt;필수로 사용하지 않을 뿐&lt;/strong&gt;입니다.  &lt;/p&gt;&lt;p&gt;&lt;strong&gt;백엔드 개발자라고 해서 배우면 안되는 기술은 없습니다&lt;/strong&gt;.  &lt;br /&gt;
-필요한게 있다면 &lt;strong&gt;직접 만들 수 있는&lt;/strong&gt; 마음가짐이 필요합니다.  &lt;br /&gt;
-운영팀, 기획팀이 자주 요청하는 데이터가 있다면 &lt;strong&gt;통계 화면을 만들어서&lt;/strong&gt; 그 화면을 확인하시라고 얘기하는 일을 당연하게 생각하시면 좋습니다.  &lt;/p&gt;&lt;p&gt;&lt;strong&gt;중점적으로 공부할것과 아닌것의 차이&lt;/strong&gt;이지, 어떤 기술이든 피할수는 없습니다.  &lt;/p&gt;
-&lt;h2 id=&quot;q2&quot;&gt;Q.2&lt;/h2&gt;
-&lt;p&gt;Q. 백엔드 개발자가 되기 위한 첫 직장은 어떠한 형태의 기업을 가야하는지.  &lt;/p&gt;&lt;p&gt;&lt;strong&gt;365일 24시간&lt;/strong&gt; 서비스를 하는 회사가 가장 좋다고 생각합니다.  &lt;br /&gt;
-그런곳을 가야 &lt;strong&gt;어떻게하면 무정지 시스템을 운영할 수 있는지, 대용량/대규모 트래픽을 다룰 수 있는지&lt;/strong&gt;를 경험해볼 수 있습니다.  &lt;/p&gt;&lt;p&gt;&lt;strong&gt;6시 퇴근하면 더이상 컴퓨터 안봐도 되는 회사&lt;/strong&gt;로는 안가는게 좋습니다.  &lt;br /&gt;
-문제 해결 능력을 전혀 키울수 없습니다.  &lt;/p&gt;&lt;p&gt;규모가 작고 매출이 작은 것은 큰 문제가 되지 않습니다.  &lt;/p&gt;&lt;p&gt;예를 들어 &lt;strong&gt;모 SI 대기업 회사의 경우 작년에 매출 10조&lt;/strong&gt;를 찍었습니다.  &lt;br /&gt;
-반면에 &lt;strong&gt;매출 100억 스타트업&lt;/strong&gt;이 있다고 합시다.  &lt;br /&gt;
-둘을 비교해서 신입 개발자분이 더 성장할 수 있는 곳이 어디냐고 하면 전 스타트업 손을 들어줍니다.  &lt;/p&gt;&lt;p&gt;똑같은 년차인데 &lt;strong&gt;문제 해결 능력이&lt;/strong&gt; 극명히 차이나는걸 자주 봤습니다.  &lt;br /&gt;
-더군다나 해당 대기업에선 4년차,5년차면 &lt;strong&gt;주니어&lt;/strong&gt;이지만, 스타트업에선 팀 리드 개발자일 확률이 높습니다.  &lt;br /&gt;
-&lt;strong&gt;그만큼 책임져야할 부분이 많고, 기술적 도전 과제&lt;/strong&gt;를 더 자주 만나게 됩니다.  &lt;/p&gt;&lt;p&gt;결국 현재 &lt;strong&gt;기술 커뮤니티와 기술 선도&lt;/strong&gt;를 하고 있는 기업이 어디인지 확인해보시면 좋습니다.  &lt;/p&gt;&lt;p&gt;백엔드 개발자로 실력을 키우는것 보다는 &lt;strong&gt;더 좋은 개발자가 될 수 있는 회사&lt;/strong&gt;를 선택하시면 됩니다.  &lt;/p&gt;
-&lt;h2 id=&quot;q3&quot;&gt;Q.3&lt;/h2&gt;
-&lt;p&gt;Q. 2번과 같은 기업이 있다면 어느 기업이 있는지.  &lt;/p&gt;&lt;p&gt;모두가 알고 있는 서비스 기업들입니다.  &lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;네이버&lt;/li&gt;
-&lt;li&gt;카카오&lt;/li&gt;
-&lt;li&gt;라인&lt;/li&gt;
-&lt;li&gt;쿠팡&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;이외에도 점점 성장중인 스타트업들이 있습니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;우아한형제들&lt;/li&gt;
-&lt;li&gt;야놀자&lt;/li&gt;
-&lt;li&gt;토스&lt;/li&gt;
-&lt;li&gt;8퍼센트&lt;/li&gt;
-&lt;li&gt;지그재그&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;등등이 있습니다.  &lt;/p&gt;&lt;p&gt;개인적으로 위에서 언급한 회사들의 채용 정보를 큐레이션 하고 있으니 참고하셔도 좋습니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://github.com/jojoldu/junior-recruit-scheduler&quot;&gt;주니어 개발자 채용정보&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;백엔드 개발자로서 역량을 키우고 싶다면 SI회사는 되도록이면 피하는게 좋습니다.  &lt;br /&gt;
-자사 서비스를 하지 않기 때문에 아무래도 위에서 언급한 역량을 키우는데 한계가 있습니다.  &lt;/p&gt;&lt;p&gt;아래 글들을 참고하시면 도움이 되실것 같습니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://brunch.co.kr/@javajigi/4&quot;&gt;자바지기 박재성님의 글&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://blog.naver.com/gngh0101/221295043724&quot;&gt;주니어 개발자분의 회고록&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://jojoldu.tistory.com/277&quot;&gt;3번째 직장에 오기까지&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt; &lt;/article&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-5349709105365293&quot;
-     data-ad-slot=&quot;5488859360&quot;
-     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-    (adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;
-&lt;br/&gt;&lt;br/&gt;
-&lt;div style=&quot;font-size:18px;text-align:justify;word-wrap:break-word;color:#2d6594;font-weight:normal;text-decoration:none&quot;&gt;
-    &lt;p&gt; IntelliJ &amp; 안드로이드 스튜디오의 기본기를 배우고 싶다면 아래 영상을 참고해보세요!&lt;/p&gt;
-    &lt;div style=&quot;text-align:center&quot;&gt;
-        &lt;a href=&quot;http://bit.ly/2NTJBeR&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;
-            &lt;img src=&quot;https://d81pi4yofp37g.cloudfront.net/wp-content/uploads/IDEA2.jpg&quot; width=&quot;385&quot; height=&quot;250&quot;&gt;
-        &lt;/a&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;br/&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
-&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://jojoldu.tistory.com/413&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
-&lt;/div&gt;
-</description>
-<category>생각정리</category>
-<category>백엔드 개발자</category>
-<category>신입 개발자</category>
-<category>자바 개발자</category>
-<category>채용</category>
-<category>취업</category>
-<category>커리어</category>
-<author>창천향로 창천향로</author>
-<guid>https://jojoldu.tistory.com/413</guid>
-<comments>https://jojoldu.tistory.com/413#entry413comment</comments>
-<pubDate>Thu, 04 Apr 2019 12:26:12 +0900</pubDate>
-</item>
-<item>
-<title>일급 컬렉션 (First Class Collection)의 소개와 써야할 이유</title>
-<link>https://jojoldu.tistory.com/412</link>
-<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; 
-&lt;p&gt;최근 &lt;a href=&quot;https://edu.nextstep.camp/&quot;&gt;클린코드 &amp;amp; TDD 강의&lt;/a&gt;의 리뷰어로 참가하면서 많은 분들이 공통적으로 어려워 하는 개념 한가지를 발견하게 되었습니다.  &lt;br /&gt;
-바로 &lt;strong&gt;일급 컬렉션&lt;/strong&gt;인데요.  &lt;br /&gt;
-왜 객체지향적으로, 리팩토링하기 쉬운 코드로 갈려면 일급 컬렉션이 필요한지에 대해 많은 분들이 공감하지 못하는걸 보게 되었습니다.  &lt;/p&gt;&lt;p&gt;그래서 이번 시간에는 일급 컬렉션 (First Class Collection) 이 무엇인지, 어떤 장점들이 있는지에 대해 소개드립니다.  &lt;/p&gt;&lt;p&gt;일급 컬렉션이란 단어는 &lt;a href=&quot;https://coupa.ng/bgRZDf&quot;&gt;소트웍스 앤솔로지&lt;/a&gt; 의 &lt;strong&gt;객체지향 생활체조&lt;/strong&gt; 파트에서 언급이 되었습니다.  &lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;규칙 8: 일급 콜렉션 사용&lt;br /&gt;
-  이 규칙의 적용은 간단하다. &lt;br /&gt;
-  콜렉션을 포함한 클래스는 반드시 다른 멤버 변수가 없어야 한다. &lt;br /&gt;
-  각 콜렉션은 그 자체로 포장돼 있으므로 이제 콜렉션과 관련된 동작은 근거지가 마련된셈이다.&lt;br /&gt;
-  필터가 이 새 클래스의 일부가 됨을 알 수 있다. &lt;br /&gt;
-  필터는 또한 스스로 함수 객체가 될 수 있다. &lt;br /&gt;
-  또한 새 클래스는 두 그룹을 같이 묶는다든가 그룹의 각 원소에 규칙을 적용하는 등의 동작을 처리할 수 있다. &lt;br /&gt;
-  이는 인스턴스 변수에 대한 규칙의 확실한 확장이지만 그 자체를 위해서도 중요하다. &lt;br /&gt;
-  콜렉션은 실로 매우 유용한 원시 타입이다. &lt;br /&gt;
-  많은 동작이 있지만 후임 프로그래머나 유지보수 담당자에 의미적 의도나 단초는 거의 없다. - 소트웍스 앤솔로지 객체지향 생활체조편&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;간단하게 설명드리자면, 아래의 코드를&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;Map&amp;lt;String, String&amp;gt; map = new HashMap&amp;lt;&amp;gt;();
-map.put(&quot;1&quot;, &quot;A&quot;);
-map.put(&quot;2&quot;, &quot;B&quot;);
-map.put(&quot;3&quot;, &quot;C&quot;);&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;아래와 같이 &lt;strong&gt;Wrapping&lt;/strong&gt; 하는 것을 얘기합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public class GameRanking {
-
-    private Map&amp;lt;String, String&amp;gt; ranks;
-
-    public GameRanking(Map&amp;lt;String, String&amp;gt; ranks) {
-        this.ranks = ranks;
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;strong&gt;Collection을 Wrapping&lt;/strong&gt;하면서, &lt;strong&gt;그 외 다른 멤버 변수가 없는 상태&lt;/strong&gt;를 일급 컬렉션이라 합니다.  &lt;br /&gt;
-Wrapping 함으로써 다음과 같은 이점을 가지게 됩니다.&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;strong&gt;비지니스&lt;/strong&gt;에 종속적인 &lt;strong&gt;자료구조&lt;/strong&gt;&lt;/li&gt;
-&lt;li&gt;Collection의 &lt;strong&gt;불변성&lt;/strong&gt;을 보장&lt;/li&gt;
-&lt;li&gt;상태와 행위를 한 곳에서 관리&lt;/li&gt;
-&lt;li&gt;이름이 있는 컬렉션&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;하나 하나 소개드리겠습니다.&lt;/p&gt;
-&lt;h2 id=&quot;1-비지니스에-종속적인-자료구조&quot;&gt;1. 비지니스에 종속적인 자료구조&lt;/h2&gt;
-&lt;p&gt;예를 들어 다음과 같은 조건으로 &lt;strong&gt;로또 복권 게임&lt;/strong&gt;을 만든다고 가정하겠습니다.  &lt;/p&gt;&lt;p&gt;로또 복권은 다음의 조건이 있습니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;6개의 번호가 존재&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;보너스 번호는 이번 예제에서 제외&lt;/strong&gt;하겠습니다.&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;6개의 번호는 서로 중복되지 않아야 함&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;일반적으로 이런 일은 &lt;strong&gt;서비스 메소드&lt;/strong&gt;에서 진행합니다.&lt;br /&gt;
-그래서 구현을 해보면 아래처럼 됩니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99CB784E5CD0EA8B30&quot; alt=&quot;structure1&quot;&gt;&lt;/p&gt;&lt;p&gt;서비스 메소드에서 비지니스 로직을 처리했습니다.  &lt;br /&gt;
-이럴 경우 큰 문제가 있는데요.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;로또 번호가 필요한 모든 장소에선 검증로직&lt;/strong&gt;이 들어가야만 합니다.  &lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;List&amp;lt;Long&amp;gt;&lt;/code&gt; 으로 된 데이터는 모두 검증 로직이 필요할까요?  &lt;/li&gt;
-&lt;li&gt;신규 입사자분들은 어떻게 이 검증로직이 필요한지 알 수 있을까요?&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;등등 &lt;strong&gt;모든 코드와 도메인을 알고 있지 않다면&lt;/strong&gt; 언제든 문제가 발생할 여지가 있습니다.  &lt;/p&gt;&lt;p&gt;그렇다면 이 문제를 어떻게 깔끔하게 해결할 수 있을까요?  &lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;6개의 숫자로만 이루어져야만 하고&lt;/li&gt;
-&lt;li&gt;6개의 숫자는 서로 중복되지 않아야만 하는&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;이런 자료구조가 없을까요?  &lt;br /&gt;
-없으니 저희가 직접 만들면 됩니다.  &lt;/p&gt;&lt;p&gt;아래와 같이 &lt;strong&gt;해당 조건으로만 생성 할 수 있는 자료구조&lt;/strong&gt;를 만들면 위에서 언급한 문제들이 모두 해결됩니다.  &lt;/p&gt;&lt;p&gt;그리고 이런 클래스를 우린 &lt;strong&gt;일급 컬렉션&lt;/strong&gt;이라고 부릅니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99B2793E5CD0EA8D36&quot; alt=&quot;structure2&quot;&gt;&lt;/p&gt;&lt;p&gt;이제 로또 번호가 필요한 모든 로직은 이 일급 컬렉션만 있으면 됩니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9976E04C5CD0EA8B2E&quot; alt=&quot;structure3&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;비지니스에 종속적인 자료구조&lt;/strong&gt;가 만들어져, 이후 발생할 문제가 최소화 되었습니다.&lt;/p&gt;
-&lt;h2 id=&quot;2-불변&quot;&gt;2. 불변&lt;/h2&gt;
-&lt;p&gt;일급 컬렉션은 &lt;strong&gt;컬렉션의 불변을 보장&lt;/strong&gt;합니다.  &lt;/p&gt;&lt;p&gt;여기서 &lt;code&gt;final&lt;/code&gt;을 사용하면 안되나요?  라고 하시는 분들이 계신데요.  &lt;br /&gt;
-Java의 &lt;code&gt;final&lt;/code&gt;은 정확히는 불변을 만들어주는 것은 아니며, &lt;strong&gt;재할당만 금지&lt;/strong&gt; 합니다.  &lt;/p&gt;&lt;p&gt;아래 테스트 코드를 참고해봅시다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;    @Test
-    public void final도_값변경이_가능하다() {
-        //given
-        final Map&amp;lt;String, Boolean&amp;gt; collection = new HashMap&amp;lt;&amp;gt;();
-
-        //when
-        collection.put(&quot;1&quot;, true);
-        collection.put(&quot;2&quot;, true);
-        collection.put(&quot;3&quot;, true);
-        collection.put(&quot;4&quot;, true);
-
-        //then
-        assertThat(collection.size()).isEqualTo(4);
-    }&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;이를 실행해보면!&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99F1823C5CD0EA8B3B&quot; alt=&quot;immutable1&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;값이 추가&lt;/strong&gt;되는걸을 확인할 수 있습니다.  &lt;br /&gt;
-이미 &lt;code&gt;collection&lt;/code&gt;은 &lt;strong&gt;비어있는 HashMap&lt;/strong&gt;으로 선언되었음에도 값이 변경될수 있다는것이죠.  &lt;/p&gt;&lt;p&gt;추가로 테스트해볼까요?&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;    @Test
-    public void final은_재할당이_불가능하다() {
-        //given
-        final Map&amp;lt;String, Boolean&amp;gt; collection = new HashMap&amp;lt;&amp;gt;();
-
-        //when
-        collection = new HashMap&amp;lt;&amp;gt;();
-
-        //then
-        assertThat(collection.size()).isEqualTo(4);
-    }&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;이 코드는 바로 컴파일에러가 발생합니다.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99BF844D5CD0EA8B34&quot; alt=&quot;immutable2&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;final로 할당된 코드에 재할당할순 없기 때문&lt;/strong&gt;이죠.  &lt;/p&gt;&lt;p&gt;보신것처럼 Java의 final은 &lt;strong&gt;재할당만 금지&lt;/strong&gt;합니다.  &lt;br /&gt;
-이외에도 &lt;code&gt;member.setAge(10)&lt;/code&gt; 과 같은 코드 역시 작동해버리니 &lt;strong&gt;반쪽짜리&lt;/strong&gt;라 할 수 있겠습니다.  &lt;/p&gt;&lt;p&gt;요즘과 같이 소프트웨어 규모가 커지고 있는 상황에서 &lt;strong&gt;불변 객체&lt;/strong&gt;는 아주 중요합니다.  &lt;br /&gt;
-각각의 객체들이 &lt;strong&gt;절대 값이 바뀔일이 없다&lt;/strong&gt;는게 보장되면 그만큼 코드를 이해하고 수정하는데 &lt;strong&gt;사이드 이펙트가 최소화&lt;/strong&gt;되기 때문입니다.  &lt;/p&gt;&lt;p&gt;Java에서는 final로 그 문제를 해결할 수 없기 때문에 &lt;strong&gt;일급 컬렉션&lt;/strong&gt; (Frist Class Collection)과 &lt;strong&gt;래퍼 클래스&lt;/strong&gt; (Wrapper Class) 등의 방법으로 해결해야하만 합니다.  &lt;/p&gt;&lt;p&gt;그래서 아래와 같이 &lt;strong&gt;컬렉션의 값을 변경할 수 있는 메소드가 없는 컬렉션&lt;/strong&gt;을 만들면 &lt;strong&gt;불변 컬렉션&lt;/strong&gt;이 됩니다.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99D80B4C5CD0EA8B1C&quot; alt=&quot;immutable3&quot;&gt;&lt;/p&gt;&lt;p&gt;이 클래스는 &lt;strong&gt;생성자와 getAmountSum()&lt;/strong&gt; 외에 다른 메소드가 없습니다.  &lt;br /&gt;
-즉, 이 클래스의 사용법은 &lt;strong&gt;새로 만들거나 값을 가져오는 것&lt;/strong&gt;뿐인거죠.  &lt;br /&gt;
-List라는 컬렉션에 접근할 수 있는 방법이 없기 때문에 &lt;strong&gt;값을 변경/추가가 안됩니다&lt;/strong&gt;.  &lt;/p&gt;&lt;p&gt;이렇게 일급 컬렉션을 사용하면, 불변 컬렉션을 만들수 있습니다.&lt;/p&gt;
-&lt;h2 id=&quot;3-상태와-행위를-한곳에서-관리&quot;&gt;3. 상태와 행위를 한곳에서 관리&lt;/h2&gt;
-&lt;p&gt;일급 컬렉션의 세번째 장점은 &lt;strong&gt;값과 로직이 함께 존재&lt;/strong&gt;한다는 것입니다.  &lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;이 부분은 예전에 소개 드린 &lt;a href=&quot;http://woowabros.github.io/tools/2017/07/10/java-enum-uses.html&quot;&gt;Enum&lt;/a&gt;의 장점과도 일맥상통합니다.  &lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;예를 들어 여러 Pay들이 모여있고, 이 중 &lt;strong&gt;NaverPay 금액의 합&lt;/strong&gt;이 필요하다고 가정해보겠습니다.  &lt;br /&gt;
-일반적으로는 아래와 같이 작성합니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99AF33435CD0EA8C30&quot; alt=&quot;merge1&quot;&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;List에 데이터를 담고&lt;/li&gt;
-&lt;li&gt;Service 혹은 Util 클래스에서 필요한 로직 수행&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;이 상황에서는 문제가 있습니다.&lt;br /&gt;
-결국 &lt;code&gt;pays&lt;/code&gt; 라는 컬렉션과 계산 로직은 &lt;strong&gt;서로 관계&lt;/strong&gt;가 있는데, 이를 &lt;strong&gt;코드로 표현이 안됩니다&lt;/strong&gt;.  &lt;/p&gt;&lt;p&gt;Pay타입의 &lt;strong&gt;상태에 따라&lt;/strong&gt; 지정된 메소드에서만 계산되길 원하는데, 현재 상태로는 강제할 수 있는 수단이 없습니다.  &lt;br /&gt;
-지금은 &lt;strong&gt;Pay타입의 List라면&lt;/strong&gt; 사용될 수 있기 때문에 히스토리를 모르는 분들이라면 실수할 여지가 많습니다.   &lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;똑같은 기능을 하는 &lt;strong&gt;메소드를 중복 생성&lt;/strong&gt;할 수 있습니다.&lt;ul&gt;
-&lt;li&gt;히스토리가 관리 안된 상태에서 신규화면이 추가되어야 할 경우 계산 메소드가 있다는 것을 몰라 다시 만드는 경우가 빈번합니다.&lt;/li&gt;
-&lt;li&gt;만약 기존 화면의 계산 로직이 변경 될 경우, 신규 인력은 2개의 메소드의 로직을 다 변경해야하는지, 해당 화면만 변경해야하는지 알 수 없습니다.&lt;/li&gt;
-&lt;li&gt;관리 포인트가 증가할 확률이 매우 높습니다.&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;계산 메소드를 누락할 수 있습니다.&lt;ul&gt;
-&lt;li&gt;리턴 받고자 하는 것이 Long 타입의 값이기 때문에 &lt;strong&gt;꼭 이 계산식을 써야한다고 강제할 수 없습니다&lt;/strong&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;결국에 &lt;strong&gt;네이버페이 총 금액을 뽑을려면 이렇게 해야한다는 계산식을 컬렉션과 함께 두어야&lt;/strong&gt; 합니다.  &lt;br /&gt;
-만약 네이버페이 외에 카카오 페이의 총금액도 필요하다면 더더욱 &lt;strong&gt;코드가 흩어질 확률이 높습니다&lt;/strong&gt;.  &lt;/p&gt;&lt;p&gt;그래서 이 문제 역시 일급 컬렉션으로 해결합니다.  &lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public class PayGroups {
-    private List&amp;lt;Pay&amp;gt; pays;
-
-    public PayGroups(List&amp;lt;Pay&amp;gt; pays) {
-        this.pays = pays;
-    }
-
-    public Long getNaverPaySum() {
-        return pays.stream()
-                .filter(pay -&amp;gt; PayType.isNaverPay(pay.getPayType()))
-                .mapToLong(Pay::getAmount)
-                .sum();
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;만약 &lt;strong&gt;다른 결제 수단들의 합이 필요&lt;/strong&gt;하다면 아래와 같이 &lt;strong&gt;람다식으로 리팩토링&lt;/strong&gt; 가능합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;public class PayGroups {
-    private List&amp;lt;Pay&amp;gt; pays;
-
-    public PayGroups(List&amp;lt;Pay&amp;gt; pays) {
-        this.pays = pays;
-    }
-
-    public Long getNaverPaySum() {
-        return getFilteredPays(pay -&amp;gt; PayType.isNaverPay(pay.getPayType()));
-    }
-
-    public Long getKakaoPaySum() {
-        return getFilteredPays(pay -&amp;gt; PayType.isKakaoPay(pay.getPayType()));
-    }
-
-    private Long getFilteredPays(Predicate&amp;lt;Pay&amp;gt; predicate) {
-        return pays.stream()
-                .filter(predicate)
-                .mapToLong(Pay::getAmount)
-                .sum();
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;이렇게 PayGroups라는 일급 컬렉션이 생김으로 &lt;strong&gt;상태와 로직이 한곳에서 관리&lt;/strong&gt; 됩니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9909A6495CD0EA8B35&quot; alt=&quot;merge1&quot;&gt;&lt;/p&gt;
-&lt;h2 id=&quot;4-이름이-있는-컬렉션&quot;&gt;4. 이름이 있는 컬렉션&lt;/h2&gt;
-&lt;p&gt;마지막 장점은 &lt;strong&gt;컬렉션에 이름을 붙일 수 있다&lt;/strong&gt;는 것입니다.  &lt;br /&gt;
-이 장점에 대해서는 크게 메리트를 못느끼실 수도 있는데요.  &lt;br /&gt;
-저는 요즘 이것 역시 장점이라고 생각되어서 언급하게 되었습니다.  &lt;/p&gt;&lt;p&gt;&lt;strong&gt;같은 Pay들의 모임이지만 네이버페이의 List와 카카오페이의 List는 다릅니다&lt;/strong&gt;.  &lt;br /&gt;
-그렇다면 이 둘을 구분할려면 어떻게 해야할까요?  &lt;br /&gt;
-가장 흔한 방법은 &lt;strong&gt;변수명을 다르게 하는 것입니다&lt;/strong&gt;.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/993B324B5CD0EA8B31&quot; alt=&quot;named1&quot;&gt;&lt;/p&gt;&lt;p&gt;위 코드의 단점은 뭘까요?  &lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;검색이 어려움&lt;ul&gt;
-&lt;li&gt;네이버페이 그룹이 어떻게 사용되는지 검색 시 &lt;strong&gt;변수명으로만 검색할 수 있습니다&lt;/strong&gt;&lt;/li&gt;
-&lt;li&gt;이 상황에서 검색은 거의 불가능합니다.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;네이버페이의 그룹&lt;/strong&gt;이라는 뜻은 &lt;strong&gt;개발자마다 다르게 지을 수 있기 때문&lt;/strong&gt;입니다.&lt;/li&gt;
-&lt;li&gt;네이버페이 그룹은 어떤 검색어로 검색이 가능할까요?&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;명확한 표현이 불가능&lt;ul&gt;
-&lt;li&gt;변수명에 불과하기 때문에 &lt;strong&gt;의미를 부여하기가 어렵습니다&lt;/strong&gt;&lt;/li&gt;
-&lt;li&gt;이는 개발팀/운영팀간에 의사소통시 보편적인 언어로 사용하기가 어려움을 얘기합니다.&lt;/li&gt;
-&lt;li&gt;중요한 값임에도 &lt;strong&gt;이를 표현할 명확한 단어가 없는것&lt;/strong&gt;이죠.&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;위 문제 역시 일급 컬렉션으로 쉽게 해결할 수 있습니다.  &lt;/p&gt;&lt;p&gt;네이버페이 그룹과 카카오페이 그룹 각각의 일급 컬렉션을 만들면 &lt;strong&gt;이 컬렉션 기반으로 용어사용과 검색&lt;/strong&gt;을 하면 됩니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99BAF7335CD0EA8B34&quot; alt=&quot;named2&quot;&gt;&lt;/p&gt;&lt;p&gt;개발팀/운영팀 내에서 사용될 표현은 이제 이 컬렉션에 맞추면 됩니다.  &lt;br /&gt;
-검색 역시 이 컬렉션 클래스를 검색하면 모든 사용 코드를 찾아낼 수 있습니다.&lt;/p&gt;
-&lt;h2 id=&quot;마무리&quot;&gt;마무리&lt;/h2&gt;
-&lt;p&gt;어떠셨나요?  &lt;br /&gt;
-일급 컬렉션을 왜 써야하는지 조금은 공감이 가시나요?  &lt;br /&gt;
-Enum과 마찬가지로 일급 컬렉션은 객체지향 코드로 가기 위해 꼭 익혀야할 방법 중 하나입니다.  &lt;/p&gt;&lt;p&gt;앞으로도 종종 리뷰어로 활동하면서 어려워 하시는 개념에 대해 정리해서 공유드리겠습니다.  &lt;br /&gt;
-끝까지 읽어주셔서 감사합니다!&lt;/p&gt; &lt;/article&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-5349709105365293&quot;
-     data-ad-slot=&quot;5488859360&quot;
-     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-    (adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;
-&lt;br/&gt;&lt;br/&gt;
-&lt;div style=&quot;font-size:18px;text-align:justify;word-wrap:break-word;color:#2d6594;font-weight:normal;text-decoration:none&quot;&gt;
-    &lt;p&gt; IntelliJ &amp; 안드로이드 스튜디오의 기본기를 배우고 싶다면 아래 영상을 참고해보세요!&lt;/p&gt;
-    &lt;div style=&quot;text-align:center&quot;&gt;
-        &lt;a href=&quot;http://bit.ly/2NTJBeR&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;
-            &lt;img src=&quot;https://d81pi4yofp37g.cloudfront.net/wp-content/uploads/IDEA2.jpg&quot; width=&quot;385&quot; height=&quot;250&quot;&gt;
-        &lt;/a&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;br/&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
-&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://jojoldu.tistory.com/412&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
-&lt;/div&gt;
-</description>
-<category>Java</category>
-<category>first class collection</category>
-<category>객체지향</category>
-<category>객체지향 생활체조</category>
-<category>소트웍스 앤솔로지</category>
-<category>일급컬렉션</category>
-<author>창천향로 창천향로</author>
-<guid>https://jojoldu.tistory.com/412</guid>
-<comments>https://jojoldu.tistory.com/412#entry412comment</comments>
-<pubDate>Mon, 01 Apr 2019 03:32:20 +0900</pubDate>
-</item>
-<item>
-<title>AWS Credentials were refreshed 발생시 해결 방법</title>
-<link>https://jojoldu.tistory.com/410</link>
-<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; 
-&lt;p&gt;S3를 사용하는 젠킨스 서버에서 갑자기 아래와 같은 에러가 발생했습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;bash language-bash&quot;&gt;fatal error: Credentials were refreshed, but the refreshed credentials are still expired.&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;EC2에 등록된 인증 방식이 만료되었다는 의미인데요.  &lt;br /&gt;
-저는 &lt;strong&gt;access_key와 secret_key를 등록하지 않았습니다&lt;/strong&gt;.  &lt;br /&gt;
-그럼에도 발생한것이죠.  &lt;/p&gt;&lt;p&gt;이유는 IAM Role로 할당한 것 역시 인증 방식으로 보기 때문입니다.  &lt;/p&gt;&lt;p&gt;그래서 이를 갱신하겠습니다.  &lt;br /&gt;
-EC2의 IAM 교체를 선택합니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/998416365C95B78F2B&quot; alt=&quot;update1&quot;&gt;&lt;/p&gt;&lt;p&gt;갱신을 해야하니 아래와 같이 진행합니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;기존과 다른 Role&lt;/strong&gt;을 선택해서 저장&lt;/li&gt;
-&lt;li&gt;저장 완료 되면 다시 &lt;strong&gt;기존 Role 선택해서 저장&lt;/strong&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;여기서 &lt;strong&gt;기존과 같은 Role을 선택&lt;/strong&gt;하는 이유는 EC2에 할당된 인증이 만료 된 것이지, &lt;strong&gt;Role 자체가 만료된 건 아닙니다&lt;/strong&gt;.  &lt;/p&gt;&lt;p&gt;동일한 정책을 가진 Role을 계속 만들긴 귀찮으니 기존걸 다시 선택하시면 됩니다.  &lt;/p&gt;&lt;p&gt;갱신하셨으면 &lt;strong&gt;꼭! EC2를 재부팅하셔야 됩니다&lt;/strong&gt;.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;bash language-bash&quot;&gt;sudo reboot&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;부팅이 끝났다면 간단한 aws cli를 실행해봅니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99CAFD4B5C95B78F01&quot; alt=&quot;check&quot;&gt;&lt;/p&gt;&lt;p&gt;정상적으로 cli가 실행됐다면, 최종적으로 key 등록까지 확인합니다.  &lt;/p&gt;&lt;p&gt;아래와 같이 &lt;strong&gt;iam-role&lt;/strong&gt; 로 저장되어있는게 확인되면 정상적으로 갱신된 것입니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/990CDC435C95B78F01&quot; alt=&quot;check2&quot;&gt;&lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-5349709105365293&quot;
-     data-ad-slot=&quot;5488859360&quot;
-     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-    (adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;
-&lt;br/&gt;&lt;br/&gt;
-&lt;div style=&quot;font-size:18px;text-align:justify;word-wrap:break-word;color:#2d6594;font-weight:normal;text-decoration:none&quot;&gt;
-    &lt;p&gt; IntelliJ &amp; 안드로이드 스튜디오의 기본기를 배우고 싶다면 아래 영상을 참고해보세요!&lt;/p&gt;
-    &lt;div style=&quot;text-align:center&quot;&gt;
-        &lt;a href=&quot;http://bit.ly/2NTJBeR&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;
-            &lt;img src=&quot;https://d81pi4yofp37g.cloudfront.net/wp-content/uploads/IDEA2.jpg&quot; width=&quot;385&quot; height=&quot;250&quot;&gt;
-        &lt;/a&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;br/&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
-&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://jojoldu.tistory.com/410&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
-&lt;/div&gt;
-</description>
-<category>DevOps</category>
-<category>aws</category>
-<category>but the refreshed credentials are still expired</category>
-<category>Credentials were refreshed</category>
-<category>S3</category>
-<author>창천향로 창천향로</author>
-<guid>https://jojoldu.tistory.com/410</guid>
-<comments>https://jojoldu.tistory.com/410#entry410comment</comments>
-<pubDate>Sat, 23 Mar 2019 13:35:28 +0900</pubDate>
-</item>
-<item>
-<title>젠킨스에서 실패한 Job 무시하기</title>
-<link>https://jojoldu.tistory.com/409</link>
-<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; 
-&lt;p&gt;젠킨스에서 파이프라인을 사용할 경우 여러개의 Job을 수행합니다. &lt;/p&gt;&lt;p&gt;일반적으로 젠킨스의 파이프라인은 빌드-배포에 맞춰져있어, 앞의 Job이 실패하면 뒤 Job들이 실행하지 않도록 하는 것을 기본으로 합니다.  &lt;/p&gt;&lt;p&gt;이때 각 Job이 실패하더라도 뒤에 있는 Job들을 계속 실행할 수 있는 방법이 필요할때가 있는데요.  &lt;/p&gt;&lt;p&gt;예를 들어 Batch 작업들이 순차적으로 실행되지만, 각 Batch들이 서로 연관관계가 없을 경우 앞이 실패한 것과 무관하게 실행되길 원합니다.  &lt;br /&gt;
-이럴때 실패를 무시하고 다음 Job을 실행하는 방법을 소개드립니다.&lt;/p&gt;
-&lt;h2 id=&quot;1-scripted-문법&quot;&gt;1. Scripted 문법&lt;/h2&gt;
-&lt;p&gt;Scripted 문법은 Groovy 언어를 사용하는 것과 비슷하다고 말씀드렸는데요.  &lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;참고: &lt;a href=&quot;https://jojoldu.tistory.com/356&quot;&gt;젠킨스 파이프라인 정리 - 2. Scripted 문법 소개&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;일반적인 프로그래밍 언어에서 예외가 발생했을때 처리하는 것처럼 &lt;code&gt;try~catch&lt;/code&gt;로 실패를 예외처럼 잡고 다음을 실행할 수 있습니다.  &lt;/p&gt;&lt;p&gt;아래와 같이 &lt;strong&gt;stage2에서 실패&lt;/strong&gt;하는 부분을 &lt;code&gt;try~catch&lt;/code&gt;로 감쌌습니다.  &lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;groovy language-groovy&quot;&gt;node {
-    stage('stage1') {
-        sh 'echo 111'
-    }
-
-    stage('stage2') {
-        try {
-            sh 'exit 1'
-        } catch (e) {
-            sh 'echo stage2 Fail!!'
-        }
-    }
-    stage('stage3') {
-        sh 'echo 333'
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;이 파이프라인을 실행해보면 아래와 같이 성공적으로 stage2와 stage3이 실행되는 것을 확인할 수 있습니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99517F405C7F0CD426&quot; alt=&quot;scripted1&quot;&gt;&lt;/p&gt;&lt;p&gt;콘솔 로그도 함께 확인해보시면 &lt;code&gt;catch&lt;/code&gt;의 코드가 잘 실행된 것을 알수있죠?&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9982643F5C7F0CD429&quot; alt=&quot;scripted2&quot;&gt;&lt;/p&gt;
-&lt;h2 id=&quot;2-declarative-문법&quot;&gt;2. Declarative 문법&lt;/h2&gt;
-&lt;p&gt;두번째는 Declarative 문법에서 실패를 무시하는 방법입니다.  &lt;br /&gt;
-Declarative 문법은 Scripted과 달리 &lt;strong&gt;정적&lt;/strong&gt;인 문법입니다.  &lt;/p&gt;
-&lt;h2 id=&quot;2-1-기본-사용법&quot;&gt;2-1. 기본 사용법&lt;/h2&gt;
-&lt;p&gt;Declarative 문법은 딱딱 정해진 룰 내에서만 작동하는데, 실패난 경우 이를 잡아낼 수 있는 방법을 아직까지 찾지 못했습니다.  &lt;br /&gt;
-그래서 위에서 사용한 방법처럼 &lt;code&gt;try ~ catch&lt;/code&gt;를 사용합니다.  &lt;/p&gt;&lt;p&gt;단, Declarative 문법의 경우 &lt;code&gt;try ~ catch&lt;/code&gt;를 사용하기 위해서는 &lt;code&gt;script&lt;/code&gt; 선언자가 필요합니다.  &lt;br /&gt;
-위 선언자가 있으면 &lt;strong&gt;Declarative 문법내에서 Scripted 문법을 사용&lt;/strong&gt;할 수 있습니다.  &lt;/p&gt;&lt;p&gt;예를 들어 위에서 사용한 코드는 Declarative 문법에선 아래와 같이 사용할 수 있습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;groovy language-groovy&quot;&gt;pipeline {
-    agent any
-    stages {
-        stage(&quot;1&quot;) {
-            steps {
-                sh 'echo 111'
-            }
-        }
-        stage(&quot;2&quot;) {
-            steps {
-                script {
-                    try {
-                        sh 'exit 1'
-                    } catch (e) {
-                        sh 'echo stage2 Fail!!'
-                    }
-                }
-            }
-        }
-        stage(&quot;3&quot;) {
-            steps {
-                sh 'echo 333'
-            }
-        }
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;한번 실행해보면 정상적으로 &lt;code&gt;try~catch&lt;/code&gt;가 작동되는 것을 확인할 수 있습니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9950C1405C7F0CD426&quot; alt=&quot;declarative1&quot;&gt;&lt;/p&gt;
-&lt;h3 id=&quot;2-2-post-캐치가-가능한가&quot;&gt;2-2. POST 캐치가 가능한가&lt;/h3&gt;
-&lt;p&gt;그럼 여기서 궁금한게 생기는데요.  &lt;br /&gt;
-이렇게 &lt;code&gt;try~catch&lt;/code&gt;로 잡아낸다면 &lt;code&gt;post&lt;/code&gt;에서 &lt;code&gt;failure&lt;/code&gt;로 후처리가 가능할까요?  &lt;br /&gt;
-한번 테스트해보겠습니다.  &lt;br /&gt;
-코드는 아래와 같이 &lt;code&gt;post&lt;/code&gt;부분만 더 추가하였습니다.  &lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;groovy language-groovy&quot;&gt;pipeline {
-    agent any
-    stages {
-        stage(&quot;1&quot;) {
-            steps {
-                sh 'echo 111'
-            }
-        }
-        stage(&quot;2&quot;) {
-            steps {
-                script {
-                    try {
-                        sh 'exit 1'
-                    } catch (e) {
-                        sh 'echo stage2 Fail!!'
-                    }
-                }
-            }
-        }
-        stage(&quot;3&quot;) {
-            steps {
-                sh 'echo 333'
-            }
-        }
-    }
-    post {
-        failure {
-            echo '&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt; [Fail!!!!]'
-        }
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;일반적으로는 Job이 실패할 경우 &lt;code&gt;post&lt;/code&gt;영역의 &lt;code&gt;failure&lt;/code&gt; 코드가 실행됩니다.  &lt;br /&gt;
-하지만 아래와 같이 &lt;code&gt;try ~ catch&lt;/code&gt;로 실패를 잡은 뒤 실행해보면!&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/990F4C415C7F0CD427&quot; alt=&quot;declarative2&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;post의 failure는 작동하지 않는것&lt;/strong&gt;을 확인할 수 있습니다.  &lt;/p&gt;
-&lt;h3 id=&quot;2-3-job-pipeline&quot;&gt;2-3. Job Pipeline&lt;/h3&gt;
-&lt;p&gt;만약 젠킨스내의 다른 Job들을 실행해야 한다면, 아래와 같이 사용할 수 있습니다.&lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;step1, step2, step3 Job이 생성되어있어야만 합니다.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;pre&gt;&lt;code class=&quot;groovy language-groovy&quot;&gt;pipeline {
-    agent any
-    stages {
-        stage(&quot;1&quot;) {
-            steps {
-                build(job: 'step1')
-            }
-        }
-        stage(&quot;2&quot;) {
-            steps {
-                script {
-                    try {
-                        build(job: 'step2')
-                    } catch (e) {
-                        sh 'echo stage2 Fail!!'
-                    }
-                }
-            }
-        }
-        stage(&quot;3&quot;) {
-            steps {
-                build(job: 'step3')
-            }
-        }
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;수행해보면 실패처리가 잘된것을 확인할 수 있습니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99B716445C7F0CD42B&quot; alt=&quot;declarative3&quot;&gt;&lt;/p&gt;&lt;p&gt;로그도 같이 확인해봅니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99B603445C7F0CD42B&quot; alt=&quot;declarative4&quot;&gt;&lt;/p&gt;&lt;p&gt;여러 Job들이 순차적으로 일어나고 콘솔 역시 정상적으로 출력되는 것을 확인할 수 있습니다.  &lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-5349709105365293&quot;
-     data-ad-slot=&quot;5488859360&quot;
-     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-    (adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;
-&lt;br/&gt;&lt;br/&gt;
-&lt;div style=&quot;font-size:18px;text-align:justify;word-wrap:break-word;color:#2d6594;font-weight:normal;text-decoration:none&quot;&gt;
-    &lt;p&gt; IntelliJ &amp; 안드로이드 스튜디오의 기본기를 배우고 싶다면 아래 영상을 참고해보세요!&lt;/p&gt;
-    &lt;div style=&quot;text-align:center&quot;&gt;
-        &lt;a href=&quot;http://bit.ly/2NTJBeR&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;
-            &lt;img src=&quot;https://d81pi4yofp37g.cloudfront.net/wp-content/uploads/IDEA2.jpg&quot; width=&quot;385&quot; height=&quot;250&quot;&gt;
-        &lt;/a&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;br/&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
-&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://jojoldu.tistory.com/409&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
-&lt;/div&gt;
-</description>
-<category>DevOps</category>
-<category>DEC</category>
-<category>Declarative</category>
-<category>fail ignore</category>
-<category>Jenkins</category>
-<category>Pipeline</category>
-<category>try catch</category>
-<category>젠킨스</category>
-<category>파이프라인</category>
-<author>창천향로 창천향로</author>
-<guid>https://jojoldu.tistory.com/409</guid>
-<comments>https://jojoldu.tistory.com/409#entry409comment</comments>
-<pubDate>Wed, 06 Mar 2019 08:57:09 +0900</pubDate>
-</item>
-<item>
-<title>SI 개발자의 ‘험난하지만 즐거운’ 스타트업 적응기</title>
-<link>https://jojoldu.tistory.com/408</link>
-<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; 
-&lt;p&gt;OKKY에서 진행한 스타트업 취업 시리즈 3탄!&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://okky.kr/article/320556&quot;&gt;SI 벗어나기 세미나(2016년)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://okky.kr/article/394551&quot;&gt;OKKY 취업준비생 Meetup 참석 후기!(2017년)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;SI 개발자의 ‘험난하지만 즐거운’ 스타트업 적응기 세미나에 다녀왔습니다.  &lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://okky.kr/article/542938&quot;&gt;세미나 링크&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;저는 7시 15분쯤 도착했는데요.  &lt;br /&gt;
-이미 많은 분들이 자리를 잡고 두번째 연사이신 오종인님의 이야기를 듣고 있던 것을 보고 진짜 인기있는 주제임을 실감했습니다.  &lt;/p&gt;
-&lt;p&gt;아무래도 평일 저녁이라 신청하지 못하신 분들도 계실것 같습니다.  전체 내용을 담진 못했지만, 그래도 어떤 발표와 질문이 오고갔었는지 궁금하셨던 분들은 참고해보세요 :)&lt;/p&gt;
-&lt;h2 id=&quot;1-si-인프라-시스템-개발자의-서비스-개발사-적응기&quot;&gt;1. SI 인프라 시스템 개발자의 서비스 개발사 적응기&lt;/h2&gt;
-&lt;p&gt;연사소개&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9957674C5C751C592D&quot; alt=&quot;1&quot;&gt;&lt;/p&gt;
-&lt;h3 id=&quot;1-1-발표&quot;&gt;1-1. 발표&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;서비스 개발자로 느낀점&lt;ul&gt;
-&lt;li&gt;답답한점&lt;/li&gt;
-&lt;li&gt;요구 사항이 없다&lt;/li&gt;
-&lt;li&gt;계획은 없다.&lt;/li&gt;
-&lt;li&gt;상황에 따라 변한다&lt;/li&gt;
-&lt;li&gt;검증팀이 없다&lt;/li&gt;
-&lt;li&gt;좋은점&lt;/li&gt;
-&lt;li&gt;개발자는 &lt;strong&gt;개발도 잘해야&lt;/strong&gt; 한다&lt;/li&gt;
-&lt;li&gt;고객사가 아닌 &lt;strong&gt;고객이 최우선&lt;/strong&gt;이다&lt;/li&gt;
-&lt;li&gt;배포는 공지후 주간 작업&lt;/li&gt;
-&lt;li&gt;자택, 휴가 등 눈치 없는 근무 환경&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;서비스 개발을 하고 싶다면 마인드부터..&lt;ul&gt;
-&lt;li&gt;수동적인 자세 -&amp;gt; 능동적인 자세&lt;/li&gt;
-&lt;li&gt;실시간 장애 대응&lt;/li&gt;
-&lt;li&gt;시장은 우리 생각대로 따라가 주지 않는다.&lt;/li&gt;
-&lt;li&gt;비지니스를 먼저 이해해야 능동적으로 일을 할 수 있었음&lt;/li&gt;
-&lt;li&gt;생존이 우선이다.&lt;ul&gt;
-&lt;li&gt;하고 싶은 일보다 &lt;strong&gt;필요한 일을 한다&lt;/strong&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;고객 입장&lt;/strong&gt;에서 생각한다.&lt;/li&gt;
-&lt;li&gt;지금일이 앞으로 &lt;strong&gt;자신의 연봉을 책임진다&lt;/strong&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;스타트업 회사는 인력 Pool이 넉넉하지 않다.&lt;ul&gt;
-&lt;li&gt;다양한 요구는 나한테 기회&lt;ul&gt;
-&lt;li&gt;데이터 분석, 포스 설치&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Tool 적극적 활용&lt;ul&gt;
-&lt;li&gt;사내 위키&lt;/li&gt;
-&lt;li&gt;슬랙 알람&lt;/li&gt;
-&lt;li&gt;업무는 지라&lt;/li&gt;
-&lt;li&gt;형상 관리는 Bitbucket&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;SI 회사 업무가 서비스회사에서 필요한 경우가 있음&lt;ul&gt;
-&lt;li&gt;정산 업무&lt;/li&gt;
-&lt;li&gt;데이터가 틀린데, 왜 틀리죠?&lt;/li&gt;
-&lt;li&gt;분석하고 검증하는데 도움이 되었음&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;새로운 시작&lt;ul&gt;
-&lt;li&gt;다시 취업전선으로 뛰어들며 만난 상황들&lt;ul&gt;
-&lt;li&gt;A-Z까지 개발 가능하세요?&lt;/li&gt;
-&lt;li&gt;개발자 1명인데 CTO 가능하세요?&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;취업에서 얘기한 메리트&lt;ul&gt;
-&lt;li&gt;저는 서비스 만들어 봤습니다.&lt;/li&gt;
-&lt;li&gt;500만 회원 서비스 다루어 봤습니다.&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;현재 회사는 내가 원하는 모습과 비슷하여 합류&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;SI회사보다 서비스 개발자가 더 낫다는이야기는 아님&lt;ul&gt;
-&lt;li&gt;회사에 도움이 되는 개발자가 좋은 개발자&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;어제보다 좋은 오늘을 생각하며 일하는 중&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&quot;2-스타트업-생생-뒷담화&quot;&gt;2. 스타트업 생생 뒷담화&lt;/h2&gt;
-&lt;p&gt;연사소개&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99DB81455C751C5933&quot; alt=&quot;2&quot;&gt;&lt;/p&gt;
-&lt;h3 id=&quot;2-1-발표&quot;&gt;2-1. 발표&lt;/h3&gt;
-&lt;p&gt;&quot;스타트업 생생 뒷담화&quot;를 할려고 했지만, 설문조사의 결과를 보니 별로 관심 없어 보임.  &lt;br /&gt;
-그래서 &lt;strong&gt;설문 조사에 나온 질문을 통해 Q &amp;amp; A를 진행&lt;/strong&gt;&lt;/p&gt;
-&lt;h3 id=&quot;q--a&quot;&gt;Q &amp;amp; A&lt;/h3&gt;
-&lt;p&gt;Q. 서비스 회사의 특성을 설명해주셨는데, 서비스업의 문화 때문인지 규모가 커서 그런것인지?&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;조연종&lt;ul&gt;
-&lt;li&gt;서비스가 시작하는 단계를 발표함&lt;/li&gt;
-&lt;li&gt;이후 어느정도 규모가 커지면 이렇게 급하게 일을 진행하진 않음&lt;/li&gt;
-&lt;li&gt;안정화 단계에 들어가면 코드리뷰 등을 통해 서비스 안정화를 진행하게 됨&lt;/li&gt;
-&lt;li&gt;현재 우리 서비스가 어느 단계에 있냐에 따라 달라질것 같음&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Q. 요구 사항이 명확하지 않고 소원을 바라는걸 보게 되는데, 스타트업도 실제로 그런지?&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;조연종&lt;ul&gt;
-&lt;li&gt;갑이 요구하는 것은 어떻게든 쫓아가면서 물어보면 명확하게 정의할 수 있음&lt;/li&gt;
-&lt;li&gt;하지만 서비스의 고객의 요구는 명확하지 않음&lt;/li&gt;
-&lt;li&gt;어떻게 쫓아갈 수 없어서 항상 물명확함&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Q. 스타트업 및 B2C 개발자에 관해 알고 싶습니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;김수보&lt;ul&gt;
-&lt;li&gt;SI 현장은 분업화&lt;/li&gt;
-&lt;li&gt;스타트업은 그렇지 않음. 필요한 일을 해야함&lt;/li&gt;
-&lt;li&gt;익혀야할 스킬들의 차이가 있음&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;이민석&lt;ul&gt;
-&lt;li&gt;SI를 하다가 임베디드 소프트웨어 회사에서 넘어감&lt;/li&gt;
-&lt;li&gt;스타트업 및 B2C 서비스는 영업이 일을 가져옴&lt;/li&gt;
-&lt;li&gt;스타트업 및 B2C 서비스에 점점 좋은 개발 프로세스가 생기고 있음 (코드리뷰 등)&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Q. 서비스 기업과 SI 기업에서 개발자로 일할때 차이를 알고 싶습니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;오종인&lt;ul&gt;
-&lt;li&gt;두부자르듯이 구분지울수 있는것은 아님&lt;/li&gt;
-&lt;li&gt;스타트업들이 개발자가 없어 SI 회사에 일을 맡길때가 있고, SI 외주를 하는 스타트업이 있을 수도 있음    &lt;/li&gt;
-&lt;li&gt;어떤건 이렇다라고 확실하게 얘기할수는 없다는 것을 먼저 얘기함&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;이민석&lt;ul&gt;
-&lt;li&gt;요즘 스타트업 동네는 개발자들이 정말 부족함&lt;/li&gt;
-&lt;li&gt;그래서 SI에 맡기는 일이 종종 있음&lt;/li&gt;
-&lt;li&gt;기술력이 있는 SI회사는 스타트업들의 외주를 받아서 함&lt;/li&gt;
-&lt;li&gt;어떤 SI회사는 정기적으로 새로운 기술을 연습하는 운동을 함&lt;/li&gt;
-&lt;li&gt;이것저것 많은것을 해야하는게 스타트업이라서 역량을 키우는데는 좋다고 생각함&lt;/li&gt;
-&lt;li&gt;SI는 한회사라고 생각해야하고, 스타트업은 &lt;strong&gt;업계 전체에 취업&lt;/strong&gt;한다는 마음으로 봐야함&lt;ul&gt;
-&lt;li&gt;스타트업이 1만개라면 나는 1만개 회사에 취업하는 것&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;사실 요즘은 개발자가 뭘 하든 굶어죽진 않는 환경&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;김수보&lt;ul&gt;
-&lt;li&gt;서비스 기업은 SI회사보다는 전망이 밝은 편&lt;/li&gt;
-&lt;li&gt;스타트업은 스톡옵션이 있으니 대박날 확률이 어쨌든 존재하는 편&lt;/li&gt;
-&lt;li&gt;SI회사는 일감만 존재한다면 계속 일할 수 있음&lt;/li&gt;
-&lt;li&gt;창업 도전은 절대 사라지지 않음&lt;ul&gt;
-&lt;li&gt;창업의 아이디어를 만들어 달라는 요청은 계속 있을것&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;나이 60넘어서는 개발이 아닌 다른일을 하겠다고 하면 SI도 나쁘지 않음&lt;/li&gt;
-&lt;li&gt;실리콘벨리 도전을 하고싶다면 서비스 기업으로 가야함&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Q. 스타트업 취업할때 투자처가 안정적인지 어떻게 확인하는지?&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;이민석&lt;ul&gt;
-&lt;li&gt;당연히 질문해도 되는 문제&lt;/li&gt;
-&lt;li&gt;요즘은 그런 내용을 확인해볼 수 있는 사이트도 많음&lt;/li&gt;
-&lt;li&gt;인터넷에 &quot;무슨무슨 회사 투자&quot; 로만 검색해도 상당히 자료가 나옴&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Q. SI와 스타트업에는 어떤 사람이 어울릴지?&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;조연종&lt;ul&gt;
-&lt;li&gt;신기술에 대해 거부감없이 도입할 수 있는 사람이 스타트업에 어울림&lt;/li&gt;
-&lt;li&gt;예로 SI 개발자분들 중에 엘라스틱을 써보신 분들은 많이 없음&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;이민석&lt;ul&gt;
-&lt;li&gt;개발자들을 보면, 젊을때는 호기심이 많아 공부하기엔 스타트업이 좋음&lt;/li&gt;
-&lt;li&gt;새로운 기술을 봤을때 가슴이 뛰는 시기가 있음&lt;/li&gt;
-&lt;li&gt;그럴때 스타트업으로 가야함&lt;/li&gt;
-&lt;li&gt;SI에서는 사실 그럴 확률이 낮음&lt;/li&gt;
-&lt;li&gt;SI회사를 다니는 후배나 학생들을 보면 그 회사에 매몰되는 경우를 자주 봄&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Q. 이직 노하우를 배우고 싶습니다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;오종인&lt;ul&gt;
-&lt;li&gt;이브레인을 통하세요.&lt;/li&gt;
-&lt;li&gt;컨설팅까지는 무료이니 한번 만나보시길&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;김수보&lt;ul&gt;
-&lt;li&gt;이사철에 이사해라&lt;/li&gt;
-&lt;li&gt;봄가을에 취업하기 좋음&lt;/li&gt;
-&lt;li&gt;스타트업/서비스 기업으로 가실땐 면접에서 &lt;strong&gt;많이 물어보라&lt;/strong&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;조연종&lt;ul&gt;
-&lt;li&gt;다 개발할줄 알아야 이직할 수 있음&lt;/li&gt;
-&lt;li&gt;내가 갖고 있는 기술이 서비스에 어떤 도움이 되는지 어필할것&lt;/li&gt;
-&lt;li&gt;현재 속해 있는 회사에서 했던일/잘했던일/못했던 일들을 정리할 것&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;이민석&lt;ul&gt;
-&lt;li&gt;현재 스타트업 시장은 개발자가 갑&lt;/li&gt;
-&lt;li&gt;면접관들은 여러분이 &lt;strong&gt;얼마나 빨리 배우는지&lt;/strong&gt;를 보고 싶어함&lt;/li&gt;
-&lt;li&gt;알고리즘 공부법&lt;ul&gt;
-&lt;li&gt;쉬운 문제는 무조건 풀어봐야함&lt;/li&gt;
-&lt;li&gt;어려운 문제는 답을 빨리 보고 문제 푸는 훈련을 하면 됨&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;요즘은 젊은 분들이 이직기를 정말 많이 씀&lt;ul&gt;
-&lt;li&gt;그분들의 이직기를 보면 도움이 많이 됨&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;오종인님의 쉬어가는 스타트업 이야기&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;SI 회사 vs 스타트업&lt;ul&gt;
-&lt;li&gt;SI회사는 일반적으로 오라클&lt;/li&gt;
-&lt;li&gt;스타트업은 MySQL&lt;/li&gt;
-&lt;li&gt;돈으로 해결할 것이냐, 내가 해결할 것이냐&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;스타트업?&lt;ul&gt;
-&lt;li&gt;불확실한 환경과&lt;/li&gt;
-&lt;li&gt;제한된 자원을 바탕으로&lt;/li&gt;
-&lt;li&gt;빠른 성장을 이루어야 하는&lt;/li&gt;
-&lt;li&gt;혁신기업&lt;/li&gt;
-&lt;li&gt;혹독한 환경에서&lt;/li&gt;
-&lt;li&gt;전문성까지 갖춰야 하는&lt;/li&gt;
-&lt;li&gt;인적자본 중심의 지식집약적인 조직&lt;/li&gt;
-&lt;li&gt;자유롭고 재미있는 부분은 극히 일부분&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;성공에 대한 준비와 실패 대비 양쪽을 해야함&lt;ul&gt;
-&lt;li&gt;간단하게 구성했다가 서비스가 너무 잘되서 서버가 폭파한다면?&lt;/li&gt;
-&lt;li&gt;서비스가 잘될거라 예상하고 대규모 아키텍처를 구성했더니 고객은 없어서 서버비용이 너무 많아지면?&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;애자일&lt;/li&gt;
-&lt;li&gt;DevOps&lt;/li&gt;
-&lt;li&gt;기술 동냥&lt;ul&gt;
-&lt;li&gt;모든걸 다 알수는 없음&lt;/li&gt;
-&lt;li&gt;많이 질문 할 것&lt;/li&gt;
-&lt;li&gt;주변에 잘하는 사람들을 많이 둘것&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Q. 취준생으로 스타트업 지원 준비사항&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;이민석&lt;ul&gt;
-&lt;li&gt;신입을 필요로 하는 문화는 조금씩 사라지는 중&lt;/li&gt;
-&lt;li&gt;신입이 아닌 취업을 해야함&lt;/li&gt;
-&lt;li&gt;개인 프로젝트를 해야함&lt;/li&gt;
-&lt;li&gt;학생들에게 이 이야기를 하면 &lt;strong&gt;기획&lt;/strong&gt;을 하고 있음&lt;ul&gt;
-&lt;li&gt;그럴 필요 없음&lt;/li&gt;
-&lt;li&gt;잘돌아가는 것을 만들필요가 있음&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;어느 스타트업이 좋은지 모르기 때문에 커뮤니티에 참가해야해서 사람들이 어떻게 얘기하는지 들어봐야함&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Q. Spring 개발자로 회사에 왔는데, 관계 없는 다른 일을 하고 있으면 이직시에 도움이 되나?&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;김수보&lt;ul&gt;
-&lt;li&gt;회사 생활 대부분이 이렇게 우당탕탕 지나감&lt;/li&gt;
-&lt;li&gt;같이 고생하는 사람들이 있으면 무엇이든 배울게 있음&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;이민석&lt;ul&gt;
-&lt;li&gt;지금 하고 있는 일을 블로그에 쓰라&lt;/li&gt;
-&lt;li&gt;기술적으로 정리&lt;/li&gt;
-&lt;li&gt;요즘은 깃헙에 블로그를 만들어서 쓰시는 분들이 많음&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Q. 질좋은 개발, 협업의 방향&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;김수보&lt;ul&gt;
-&lt;li&gt;SI하다가 서비스에 가면 충격을 받음&lt;/li&gt;
-&lt;li&gt;체계가 없었음&lt;/li&gt;
-&lt;li&gt;대신 상대가 뭘 하는지 알아야 의사소통이 가능 함&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Q. SM 고급 운영과 스타트업의 과장자리 중 어디가 나을까요?  &lt;br /&gt;
-월급 차이는 100~200이 차이납니다.  &lt;br /&gt;
-초기 안정화 되지 않은 스타트업은 SI와 마찬가지로 야근을 많이 하는데, 그럴꺼면 SM 고급 운영 자리가 더 낫지 않나요?  &lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;김수보&lt;ul&gt;
-&lt;li&gt;아마 이 질문에 대한 고민을 가장 먼저 하고 있는 세대가 나인것 같음&lt;/li&gt;
-&lt;li&gt;IT 시장엔 크게 2가지가 있음&lt;ul&gt;
-&lt;li&gt;기술노동과 제품&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;기술 노동은 나이 먹으면 못함&lt;ul&gt;
-&lt;li&gt;나이 먹었는데 과연 젊은 친구들과 비교해서 빨리 배우고, 빨리 개발할 수 있을까?&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;SI는 분업화가 되어 있어 언젠간 시장에서 찾지 않고, 은퇴할 수 밖에 없음&lt;/li&gt;
-&lt;li&gt;나이 &lt;strong&gt;70까지 꾸준히 월 300~400벌어야만&lt;/strong&gt; 하면 어떡하지?&lt;ul&gt;
-&lt;li&gt;제품을 만들어서 팔아야함&lt;/li&gt;
-&lt;li&gt;그 제품은 게임일수도 있고, 웹서비스일수도 있음&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;서비스를 만들어 놀아도 돈이 들어올 수 있는 구조를 만들어야함&lt;/li&gt;
-&lt;li&gt;어느게 더 낫다고 볼 순 없음&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;오종인&lt;ul&gt;
-&lt;li&gt;개발에 욕심이 있다면 스타트업으로 가야함&lt;/li&gt;
-&lt;li&gt;그리고 실제로 스타트업이 더 많은 연봉을 제시할때도 있음 (무조건은 아님)&lt;/li&gt;
-&lt;li&gt;4대 보험 등을 비롯한 복지로 들어가는 비용까지 고려하면 100~200차이로 프리하면 안됨&lt;ul&gt;
-&lt;li&gt;300이상 차이나면 고려해볼까말까함&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Pay로 비교대상은 아님&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-5349709105365293&quot;
-     data-ad-slot=&quot;5488859360&quot;
-     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-    (adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;
-&lt;br/&gt;&lt;br/&gt;
-&lt;div style=&quot;font-size:18px;text-align:justify;word-wrap:break-word;color:#2d6594;font-weight:normal;text-decoration:none&quot;&gt;
-    &lt;p&gt; IntelliJ &amp; 안드로이드 스튜디오의 기본기를 배우고 싶다면 아래 영상을 참고해보세요!&lt;/p&gt;
-    &lt;div style=&quot;text-align:center&quot;&gt;
-        &lt;a href=&quot;http://bit.ly/2NTJBeR&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;
-            &lt;img src=&quot;https://d81pi4yofp37g.cloudfront.net/wp-content/uploads/IDEA2.jpg&quot; width=&quot;385&quot; height=&quot;250&quot;&gt;
-        &lt;/a&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;br/&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
-&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://jojoldu.tistory.com/408&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
-&lt;/div&gt;
-</description>
-<category>세미나</category>
-<category>OKKY</category>
-<category>SI개발자</category>
-<category>개발자</category>
-<category>서비스회사</category>
-<category>스타트업</category>
-<category>커리어 변경</category>
-<author>창천향로 창천향로</author>
-<guid>https://jojoldu.tistory.com/408</guid>
-<comments>https://jojoldu.tistory.com/408#entry408comment</comments>
-<pubDate>Tue, 26 Feb 2019 20:00:42 +0900</pubDate>
-</item>
-<item>
-<title>@Reuqest Body에서는 Setter가 필요없다?</title>
-<link>https://jojoldu.tistory.com/407</link>
-<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; 
-&lt;p&gt;회사에서 근무하던중 새로오신 신입 개발자분이 저에게 하나의 질문을 했습니다.  &lt;br /&gt;&lt;b&gt;
-POST 요청시에 &lt;code&gt;Setter&lt;/code&gt;가 필요없는것 같다고.  &lt;/b&gt;&lt;/p&gt;&lt;p&gt;여태 제가 알던것과는 달라서 어떻게 된 일인지 궁금했습니다.  &lt;br /&gt;
-정말 POST 요청시에는 Setter가 필요없을까요?  &lt;br /&gt;
-그럼 GET 요청시에는 Setter가 필요할까요?  &lt;/p&gt;&lt;p&gt;한번 확인해보겠습니다.  &lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;모든 코드는 &lt;a href=&quot;https://github.com/jojoldu/blog-code/tree/master/spring-boot-tips&quot;&gt;Github&lt;/a&gt;에 있으니 참고하세요&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;1-post-요청-테스트&quot;&gt;1. Post 요청 테스트&lt;/h2&gt;
-&lt;p&gt;첫번째로 POST 요청시 Setter가 필요없는지 먼저 테스트해봅니다.  &lt;br /&gt;
-테스트해볼 RequestDto는 아래와 같습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Getter
-@ToString
-@NoArgsConstructor
-public class RequestSetterDto {
-    private String name;
-    private Long amount;
-
-    @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = &quot;yyyy-MM-dd&quot;, timezone = &quot;Asia/Seoul&quot;)
-    private LocalDate date;
-
-    private RequestType requestType;
-
-    @Builder
-    public RequestSetterDto(@Nonnull String name, @Nonnull Long amount) {
-        this.name = name;
-        this.amount = amount;
-    }
-
-    public RequestSetterDto(String name, Long amount, LocalDate date, RequestType requestType) {
-        this.name = name;
-        this.amount = amount;
-        this.date = date;
-        this.requestType = requestType;
-    }
-
-    @AllArgsConstructor
-    public enum RequestType {
-        GET (&quot;get&quot;),
-        POST (&quot;post&quot;);
-
-        private String method;
-    }
-
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;다양한 타입을 테스트해보기 위해 &lt;code&gt;String&lt;/code&gt;, &lt;code&gt;Long&lt;/code&gt;, &lt;code&gt;LocalDate&lt;/code&gt;, &lt;code&gt;Enum&lt;/code&gt; 4가지 타입을 모두 사용했습니다.  &lt;br /&gt;
-보시는것처럼 &lt;strong&gt;Setter는 선언하지 않았습니다&lt;/strong&gt;  &lt;/p&gt;&lt;p&gt;그리고 이 DTO를 수신할 Controller를 생성합니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Slf4j
-@RestController
-public class RequestDtoSetterController {
-
-    @PostMapping(&quot;/request/setter&quot;)
-    public RequestSetterDto postRequestSetter (@RequestBody RequestSetterDto requestSetterDto) {
-        log.info(requestSetterDto.getName() + &quot; : &quot; + requestSetterDto.getAmount());
-
-        return requestSetterDto;
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;자 그럼 이 코드들을 테스트할 테스트 코드를 작성해보겠습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-@RunWith(SpringRunner.class)
-@WebMvcTest(RequestDtoSetterController.class)
-public class RequestDtoSetterControllerTest {
-
-    @Autowired
-    private MockMvc mvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Test
-    public void RequestBody에서는_setter가_없어도된다() throws Exception {
-        String content = objectMapper.writeValueAsString(new RequestSetterDto(&quot;jojoldu&quot;, 1000L));
-        mvc
-                .perform(post(&quot;/request/setter&quot;)
-                        .content(content)
-                        .contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(content().json(content));
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Post로 Request Dto에 값을 채워 보냈으니&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Setter가 없어도 되면 정상적으로 값이 채워져서 테스트가 통과될것이며&lt;/li&gt;
-&lt;li&gt;Setter가 있어야만 하면 값이 &lt;code&gt;null&lt;/code&gt;로 채워져 테스트가 실패할 것입니다.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;테스트를 돌려보면!&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9958B1375C751AED23&quot; alt=&quot;post1&quot;&gt;&lt;/p&gt;&lt;p&gt;Setter없이 성공적으로 값이 들어가는 것을 확인할 수 있습니다.  &lt;br /&gt;
-이게 어떻게 된 일인지 &lt;code&gt;@RequestBody&lt;/code&gt; 어노테이션을 시작으로 코드를 탐색하기 시작했습니다.  &lt;/p&gt;&lt;p&gt;이 글을 보고 계신 대부분의 개발자분들은 아시겠지만, Spring 에서 JSON 형변환을 담당하는 것이 &lt;code&gt;Jackson2HttpMessageConverter&lt;/code&gt;입니다.  &lt;br /&gt;
-즉, &lt;code&gt;@RequestBody&lt;/code&gt;로 JSON 데이터가 넘어오면 이 JSON을 Java Object로 변환은 &lt;code&gt;Jackson2HttpMessageConverter&lt;/code&gt; 에서 해줍니다.  &lt;/p&gt;&lt;p&gt;코드를 조금만 까보시면 아래와 같이 &lt;code&gt;read&lt;/code&gt; 메소드에서 데이터를 생성하는 것을 볼 수 있는데요.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99F1883A5C751AEE22&quot; alt=&quot;post2&quot;&gt;&lt;/p&gt;&lt;p&gt;이때 Converter에서는 &lt;code&gt;ObjectMapper&lt;/code&gt;를 사용해서 Object로 전환해줍니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/992304475C751AED2D&quot; alt=&quot;post3&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;code&gt;ObjectMapper&lt;/code&gt;가 전환을 해주니, &lt;strong&gt;Setter가 없어도 값이 할당&lt;/strong&gt;됩니다.  &lt;/p&gt;&lt;p&gt;실제로 그런지 확인해볼까요?&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99A0E24C5C751AEE27&quot; alt=&quot;post4&quot;&gt;&lt;/p&gt;&lt;p&gt;ObjectMapper로 Setter없이 &lt;code&gt;readValue&lt;/code&gt;를 했더니 값이 제대로 할당된 것을 확인할 수 있습니다.  &lt;/p&gt;&lt;p&gt;즉, 정리하자면 &lt;strong&gt;JSON으로 데이터가 넘어올 경우 Jackson2HttpMessageConverter의 ObjectMapper를 사용하여 Setter가 없어도 값이 할당된다&lt;/strong&gt;가 됩니다.  &lt;/p&gt;&lt;p&gt;이제 Post용 DTO에서는 더이상 Setter를 쓸 필요가 없겠죠?&lt;/p&gt;
-&lt;h2 id=&quot;2-get-요청-테스트&quot;&gt;2. Get 요청 테스트&lt;/h2&gt;
-&lt;p&gt;그럼 Jackson2HttpMessageConverter를 사용하지 않는 경우엔 어떻게 될까요?  &lt;/p&gt;&lt;p&gt;Get 메소드의 DTO에서도 Setter가 필요없는지 확인해보겠습니다.  &lt;/p&gt;&lt;p&gt;DTO는 1번째와 같은 DTO를 사용하며, Controller는 아래와 같습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;    @GetMapping(&quot;/request/setter&quot;)
-    public RequestSetterDto getRequestSetter (RequestSetterDto requestSetterDto) {
-        log.info(requestSetterDto.getName() + &quot; : &quot; + requestSetterDto.getAmount());
-
-        return requestSetterDto;
-    }&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;그리고 이를 테스트할 코드는 아래와 같습니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;    @Test
-    public void Get에서는_setter가_없어도된다() throws Exception {
-        String content = objectMapper.writeValueAsString(new RequestSetterDto(&quot;jojoldu&quot;, 1000L,  LocalDate.of(2019,2,22), RequestSetterDto.RequestType.GET));
-        MultiValueMap&amp;lt;String, String&amp;gt; params = new LinkedMultiValueMap&amp;lt;&amp;gt;();
-        params.put(&quot;name&quot;, Arrays.asList(&quot;jojoldu&quot;));
-        params.put(&quot;amount&quot;, Arrays.asList(&quot;1000&quot;));
-        params.put(&quot;date&quot;, Arrays.asList(&quot;2019-02-22&quot;));
-        params.put(&quot;requestType&quot;, Arrays.asList(&quot;GET&quot;));
-
-        mvc
-                .perform(get(&quot;/request/setter&quot;)
-                        .params(params)
-                        .contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(content().json(content));
-    }&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;테스트를 수행해보면!&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99AEE1465C751AEE35&quot; alt=&quot;get1&quot;&gt;&lt;/p&gt;&lt;p&gt;테스트가 실패하는 것을 확인할 수 있습니다.  &lt;/p&gt;&lt;p&gt;자 그럼 Get요청은 어떻게 데이터가 할당되는지 확인해보겠습니다.  &lt;/p&gt;&lt;p&gt;Get 요청의 경우 JSON 데이터가 아닌 &lt;strong&gt;Query Parameter&lt;/strong&gt;입니다.  &lt;br /&gt;
-그래서 &lt;code&gt;Jackson2HttpMessageConverter&lt;/code&gt;를 사용하지 않는데요.  &lt;br /&gt;
-이럴 경우 Spring에서는 &lt;code&gt;WebDataBinder&lt;/code&gt;를 사용합니다.  &lt;br /&gt;
-이 클래스를 차근차근 따라가보면 아래와 같은 코드를 확인할 수 있습니다.  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9991184A5C751AED29&quot; alt=&quot;get2&quot;&gt;&lt;/p&gt;&lt;p&gt;기본값으로 값을 할당하는 방법이 &lt;strong&gt;Java Bean&lt;/strong&gt; 방식이라고 합니다.  &lt;br /&gt;
-Java Bean이라 하면 &lt;strong&gt;Setter&lt;/strong&gt;를 통해서 값을 할당하는것을 얘기하죠?  &lt;br /&gt;
-즉, 별다른 설정이 없다면 Spring 에서는 &lt;code&gt;WebDataBinder&lt;/code&gt;의 &lt;strong&gt;기본 값 할당 방법인 Java Bean&lt;/strong&gt; 방식을 사용하니 Setter가 없으면 작동하지 않습니다.  &lt;/p&gt;
-&lt;h2 id=&quot;3-get에서-setter-사용하지-않기&quot;&gt;3. Get에서 Setter 사용하지 않기?&lt;/h2&gt;
-&lt;p&gt;위 2번에서 나온 문제를 해결하여 &lt;strong&gt;Get 요청시에도 Setter를 안써도 되는 방법&lt;/strong&gt;이 있을까요?  &lt;/p&gt;&lt;p&gt;정답은 &lt;code&gt;initBeanPropertyAccess&lt;/code&gt;아래에 있습니다.  &lt;br /&gt;
-바로 &lt;code&gt;initDirectFieldAccess&lt;/code&gt;를 사용하는 것인데요.  &lt;br /&gt;
-해당 메소드를 사용하면 값 할당 방법은 &lt;strong&gt;setter가 아닌 Field에 직접 접근&lt;/strong&gt;합니다.  &lt;/p&gt;&lt;p&gt;사용하는 방법은 간단합니다.  &lt;br /&gt;
-전체 Controller에서 사용할 수 있게 &lt;code&gt;ControllerAdvice&lt;/code&gt;에 선언하시면 됩니다.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;java language-java&quot;&gt;@Slf4j
-@ControllerAdvice
-public class WebControllerAdvice {
-
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        binder.initDirectFieldAccess();
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;이렇게 변경후 다시 Get 테스트를 수행해보면!&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/9999E6385C751AED22&quot; alt=&quot;get3&quot;&gt;&lt;/p&gt;&lt;p&gt;성공적으로 통과하는 것을 확인할 수 있습니다.&lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-5349709105365293&quot;
-     data-ad-slot=&quot;5488859360&quot;
-     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-    (adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;
-&lt;br/&gt;&lt;br/&gt;
-&lt;div style=&quot;font-size:18px;text-align:justify;word-wrap:break-word;color:#2d6594;font-weight:normal;text-decoration:none&quot;&gt;
-    &lt;p&gt; IntelliJ &amp; 안드로이드 스튜디오의 기본기를 배우고 싶다면 아래 영상을 참고해보세요!&lt;/p&gt;
-    &lt;div style=&quot;text-align:center&quot;&gt;
-        &lt;a href=&quot;http://bit.ly/2NTJBeR&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;
-            &lt;img src=&quot;https://d81pi4yofp37g.cloudfront.net/wp-content/uploads/IDEA2.jpg&quot; width=&quot;385&quot; height=&quot;250&quot;&gt;
-        &lt;/a&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;br/&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
-&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://jojoldu.tistory.com/407&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
-&lt;/div&gt;
-</description>
-<category>Spring</category>
-<category>get</category>
-<category>model attribute</category>
-<category>post</category>
-<category>requestBody</category>
-<category>setter</category>
-<category>Spring</category>
-<category>스프링</category>
-<author>창천향로 창천향로</author>
-<guid>https://jojoldu.tistory.com/407</guid>
-<comments>https://jojoldu.tistory.com/407#entry407comment</comments>
-<pubDate>Tue, 26 Feb 2019 19:54:38 +0900</pubDate>
-</item>
-<item>
-<title>내가 추천하는 크롬 익스텐션 10선</title>
-<link>https://jojoldu.tistory.com/406</link>
-<description>&lt;article class=&quot;markdown-body entry-content&quot; itemprop=&quot;text&quot;&gt; 
-&lt;p&gt;주변에서 자주 듣는 질문중 하나가 크롬 익스텐션 추천입니다.  &lt;br /&gt;개인적으로 주변 개발자분들께 추천하는 플러그인들을 정리해보았습니다.&lt;/p&gt;
-&lt;h2 id=&quot;1-black-menu&quot;&gt;1. Black Menu&lt;/h2&gt;
-&lt;p&gt;첫번째로 추철할 메뉴는 &lt;a href=&quot;https://chrome.google.com/webstore/detail/black-menu-for-google/eignhdfgaldabilaaegmdfbajngjmoke?hl=ko&quot;&gt;Black Menu&lt;/a&gt;입니다.  &lt;br /&gt;
-기획/마케팅 직군분들은&amp;nbsp;많이들 아실텐데요.&lt;br /&gt;
-개발직군에선 그렇게 유명하지 않아서 첫번째로 추천드리게 되었습니다.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Google의 모든 제품을 화면내에서 바로 사용&lt;/strong&gt;할 수 있습니다&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/994F5E455C6A95D71A&quot; alt=&quot;1-1&quot;&gt;&lt;/p&gt;&lt;p&gt;저 같은 경우&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;구글 번역을 바로 사용할때&lt;/li&gt;
-&lt;li&gt;GA를 보고 싶을때&lt;/li&gt;
-&lt;li&gt;구글 애드센스를 보고 싶을때&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;등등 &lt;strong&gt;별도의 창을 열지않아도&lt;/strong&gt; 바로 실행해볼 수 있어 적극 사용중입니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99C00A4A5C6A95D711&quot; alt=&quot;1-2&quot;&gt;&lt;/p&gt;&lt;p&gt;사내 오피스가 구글 드라이브인 분들이라면 더더욱 많은 기능을 편하게 쓰실 수 있을 것 같습니다.&lt;/p&gt;
-&lt;h2 id=&quot;2-edit-this-cookie&quot;&gt;2. Edit this Cookie&lt;/h2&gt;
-&lt;p&gt;두번째는 &lt;a href=&quot;https://chrome.google.com/webstore/detail/editthiscookie/fngmhnnpilhplaeedifhccceomclgfbg&quot;&gt;Edit This Cookie&lt;/a&gt; 입니다.&lt;/p&gt;&lt;p&gt;편하게 &lt;strong&gt;쿠키 변조, 삭제, 등록&lt;/strong&gt;을 해주는 플러그인입니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99C4663A5C6A95D72C&quot; alt=&quot;2-1&quot;&gt;&lt;/p&gt;&lt;p&gt;크롬이나 파이어폭스에서 쿠키를 변조하는것은 많이 불편합니다.&lt;br /&gt;
-이 부분을 아주 쉽게 해결해주기 때문에 웹 개발자라면 적극 사용하시길 추천합니다.&lt;/p&gt;&lt;p&gt;저 같은 경우 이전 회사에서 기획자분들께 테스트로 쿠키 변조/삭제가 필요할때 이 플러그인을 소개시켜드려 덕을 많이 봤습니다.&lt;/p&gt;
-&lt;h2 id=&quot;3-authenticator&quot;&gt;3. Authenticator&lt;/h2&gt;
-&lt;p&gt;3번째는 &lt;a href=&quot;https://chrome.google.com/webstore/detail/authenticator/bhghoamapcdpbohphigoooaddinpkbai?hl=ko&quot;&gt;Authenticator&lt;/a&gt; 입니다.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;AWS MFA&lt;/strong&gt;를 사용하시는 분들의 필수 플러그인입니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/991B7F445C6A95D70D&quot; alt=&quot;3-1&quot;&gt;&lt;/p&gt;&lt;p&gt;AWS의 계정에 MFA를 적용하면 보안성이 높아지지만, 매번 OTP 번호를 발급받아야하는데요.&lt;br /&gt;
-휴대폰 OTP로 하기엔 불편함이 많습니다.&lt;br /&gt;
-크롬 내에서 바로 번호를 발급 받을 수 있어 편하게 MFA를 사용할 수 있습니다.&lt;/p&gt;&lt;p&gt;AWS를 사용하시는 분들의 필수 플러그인이라고 생각합니다.&lt;/p&gt;
-&lt;h2 id=&quot;4-json-viewer&quot;&gt;4. JSON Viewer&lt;/h2&gt;
-&lt;p&gt;4번째는 &lt;a href=&quot;https://chrome.google.com/webstore/detail/json-viewer/gbmdgpbipfallnflgajpaliibnhdgobh?hl=ko&quot;&gt;JSON Viwer&lt;/a&gt;입니다.&lt;/p&gt;&lt;p&gt;아래와 같이 브라우저 내에서 &lt;strong&gt;JSON을 포맷팅&lt;/strong&gt;해서 보여주는 플러그인입니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99D4073E5C6A95D815&quot; alt=&quot;4-1&quot;&gt;&lt;/p&gt;&lt;p&gt;테마도 여러개라 저 같은 경우 Daracula를 사용해서 IntelliJ와 유사한 느낌으로 쓰고 있습니다.&lt;br /&gt;
-최근엔 IntelliJ의 &lt;a href=&quot;https://jojoldu.tistory.com/266&quot;&gt;.http&lt;/a&gt;를 사용하기 때문에 사용할 일이 거의 없지만 브라우저에서 JSON 데이터를 확인할 일이 있으신 분들은 설치해서 사용해보시길 추천합니다.&lt;/p&gt;
-&lt;h2 id=&quot;5-livereload&quot;&gt;5. LiveReload&lt;/h2&gt;
-&lt;p&gt;5번째는 &lt;a href=&quot;https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei?hl=ko&quot;&gt;LiveReload&lt;/a&gt;입니다.  &lt;/p&gt;&lt;p&gt;프론트엔드 개발시 빠질수 없는 플러그인인데요.  &lt;br /&gt;
-웹 프론트 개발시 수정사항을 자동으로 반영해주는 역할을 합니다.  &lt;br /&gt;
-(실제로는 새로고침을 자동으로 해주는거나 마찬가지지만..)  &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/993211395C6A95D83C&quot; alt=&quot;5-1&quot;&gt;&lt;/p&gt;&lt;p&gt;좋은 점은 Freemarker와 같은 서버 템플릿 엔진 역시 Devtools가 있으면 적용할 수 있습니다.&lt;br /&gt;
-개인적으로 프론트엔드 개발시에 적극적으로 사용하는 플러그인이라 많은 분들이 사용해보셨으면 합니다.&lt;/p&gt;&lt;p&gt;Spring Boot + Devtools를 사용하시는 분들은 아래의 링크를 참고해서 적극 사용해보세요.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://haviyj.tistory.com/11&quot;&gt;Spring Boot에서 적용방법&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&quot;6-tooltip-dictionary&quot;&gt;6. Tooltip Dictionary&lt;/h2&gt;
-&lt;p&gt;6번째 플러그인은 &lt;a href=&quot;https://chrome.google.com/webstore/detail/tooltip-dictionary-englis/hcidimjcobcnahiceedndikkenbibpop&quot;&gt;Tooltip Dictionary&lt;/a&gt; 입니다.&lt;/p&gt;&lt;p&gt;크롬내에서 마우스가 있는 &lt;strong&gt;포커스 영역의 단어를 번역&lt;/strong&gt;해줍니다. &lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99B4974B5C6A95D811&quot; alt=&quot;6-1&quot;&gt;&lt;/p&gt;&lt;p&gt;기술 문서를 볼때 전체 영역의 번역이 아닌 부분 번역으로 읽고싶을때 아주 유용한 플러그인입니다.&lt;br /&gt;
-개발자분들은 영문 기술 문서를 볼일이 많기 때문에 정말 유용하게 쓰실 수 있습니다.&lt;/p&gt;
-&lt;h2 id=&quot;7-sourcegraph&quot;&gt;7. Sourcegraph&lt;/h2&gt;
-&lt;p&gt;7번째 추천 플러그인은 &lt;a href=&quot;https://chrome.google.com/webstore/detail/sourcegraph/dgjhfomjieaadpoljlnidmbgkdffpack&quot;&gt;Sourcegraph&lt;/a&gt; 입니다.&lt;/p&gt;&lt;p&gt;Github에서 코드를 볼때 아주 유용하게 사용할 수 있는데요.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;해당 코드(ex: 클래스등)가 선언된 곳으로 바로 이동하고 싶을때&lt;/li&gt;
-&lt;li&gt;해당 코드(ex: 클래스등)를 사용하는 곳으로 바로 이동하고 싶을때&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;바로 이동하는 기능을 지원합니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99C466465C6A95D70C&quot; alt=&quot;7-1&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99869C4D5C6A95D714&quot; alt=&quot;7-2&quot;&gt;&lt;/p&gt;&lt;p&gt;젯브레인의 코드리뷰 전용 Upsource 만큼 파워풀한 기능을 지원하진 않지만, 위 플러그인으로 최대한 유사하게 사용해볼 수 있으니 Github 사용자들은 꼭 설치하시길 바랍니다.&lt;/p&gt;
-&lt;blockquote&gt;
-  &lt;p&gt;꼭 Github 사용자가 아니더라도 Github의 오픈소스 코드들을 분석할때도 유용하니 참고하세요.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;8-octotree&quot;&gt;8. Octotree&lt;/h2&gt;
-&lt;p&gt;8번째는 &lt;a href=&quot;https://chrome.google.com/webstore/detail/octotree/bkhaagjahfmjljalopjnoealnfndnagc?hl=en-US&quot;&gt;Octotree&lt;/a&gt; 입니다.  &lt;/p&gt;&lt;p&gt;IDE의 프로젝트 탭처럼 Github 프로젝트를 볼때 전체 구조를 좌측 사이바에 노출시켜줍니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/995F7C425C6A95D81D&quot; alt=&quot;8-1&quot;&gt;&lt;/p&gt;&lt;p&gt;전체 구조를 확인할때나, 한번에 특정 파일로 이동할때 굉장이 유용합니다.&lt;br /&gt;
-7번 Sourcegraph와 함께 Github의 오픈소스 프로젝트를 분석할때 자주 사용하는 추천 플러그인 입니다.&lt;/p&gt;
-&lt;h2 id=&quot;9-jetbrains-ide-support&quot;&gt;9. JetBrains IDE Support&lt;/h2&gt;
-&lt;p&gt;9번째는 &lt;a href=&quot;https://chrome.google.com/webstore/detail/jetbrains-ide-support/hmhgeddbohgjknpmjagkdomcpobmllji&quot;&gt;JetBrains IDE Support&lt;/a&gt;) 입니다.&lt;/p&gt;&lt;p&gt;젯브레인의 IDE (IntelliJ, WebStorm 등) 사용시 &lt;strong&gt;웹 프론트엔드의 디버깅을 IDE내에서 가능하도록 지원&lt;/strong&gt;하는 플러그인입니다.&lt;/p&gt;&lt;p&gt;아래는 젯브레인의 시연 영상입니다.&lt;/p&gt;
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/kJh9lGbTSGI&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
-&lt;p&gt;젯브레인의 IDE (IntelliJ, WebStorm 등)를 사용하시는 분들께는 정말 큰 도움이 될 플러그인입니다.&lt;br /&gt;
-저는 최근엔 웹 프론트엔드 작업을 할일이 없어 거의 사용하지 않지만, 이전에 JS 개발을 할때는 적극 사용한 플러그인입니다.&lt;/p&gt;
-&lt;h2 id=&quot;10-momentum&quot;&gt;10. Momentum&lt;/h2&gt;
-&lt;p&gt;마지막 추천 플러그인은 &lt;a href=&quot;https://chrome.google.com/webstore/detail/momentum/laookkfknpbbblfpciffpaejjkokdgca?hl=ko&amp;amp;utm_source&quot;&gt;모멘텀&lt;/a&gt;입니다.&lt;/p&gt;&lt;p&gt;매일 새로운 풍경 사진을 배경으로 제공해주는 플러그인입니다.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://t1.daumcdn.net/cfile/tistory/99D28C505C6A95D81D&quot; alt=&quot;10-1&quot;&gt;&lt;/p&gt;&lt;p&gt;특별한 기능 보다는 일할때마다 리프레시 되는 느낌이 좋아 계속 사용중인 플러그인입니다.&lt;br /&gt;
-산뜻한 느낌을 원하시는 분이시라면 한번 사용해보시길 추천합니다.&lt;/p&gt;
-&lt;h2 id=&quot;마무리&quot;&gt;마무리&lt;/h2&gt;
-&lt;p&gt;제가 추천하는 10개의 플러그인들을 소개드렸습니다.  &lt;br /&gt;
-이외에도 좋은 플러그인들이 많은데요.&lt;br /&gt;
-다음 기회에 추가로 된 플러그인들을 정리해서 소개드리겠습니다.&lt;/p&gt;&lt;p&gt;감사합니다.&lt;/p&gt; &lt;/article&gt;&lt;p&gt;&lt;br /&gt;&lt;/p&gt;&lt;div class=&quot;tt_adsense_bottom&quot; style=&quot;margin-top:30px&quot;&gt;&lt;script async src=&quot;//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js&quot;&gt;&lt;/script&gt;
-&lt;!-- 반응형 --&gt;
-&lt;ins class=&quot;adsbygoogle&quot;
-     style=&quot;display:block&quot;
-     data-ad-client=&quot;ca-pub-5349709105365293&quot;
-     data-ad-slot=&quot;5488859360&quot;
-     data-ad-format=&quot;auto&quot;&gt;&lt;/ins&gt;
-&lt;script&gt;
-    (adsbygoogle = window.adsbygoogle || []).push({});
-&lt;/script&gt;
-&lt;br/&gt;&lt;br/&gt;
-&lt;div style=&quot;font-size:18px;text-align:justify;word-wrap:break-word;color:#2d6594;font-weight:normal;text-decoration:none&quot;&gt;
-    &lt;p&gt; IntelliJ &amp; 안드로이드 스튜디오의 기본기를 배우고 싶다면 아래 영상을 참고해보세요!&lt;/p&gt;
-    &lt;div style=&quot;text-align:center&quot;&gt;
-        &lt;a href=&quot;http://bit.ly/2NTJBeR&quot; target=&quot;_blank&quot; class=&quot;tx-link&quot;&gt;
-            &lt;img src=&quot;https://d81pi4yofp37g.cloudfront.net/wp-content/uploads/IDEA2.jpg&quot; width=&quot;385&quot; height=&quot;250&quot;&gt;
-        &lt;/a&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;br/&gt;&lt;/div&gt;&lt;div style=&quot;text-align:left; padding-top:10px;clear:both&quot;&gt;
-&lt;iframe src=&quot;//www.facebook.com/plugins/like.php?href=https://jojoldu.tistory.com/406&amp;amp;layout=standard&amp;amp;show_faces=true&amp;amp;width=310&amp;amp;action=like&amp;amp;font=tahoma&amp;amp;colorscheme=light&amp;amp;height=65&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; style=&quot;border:none; overflow:hidden; width:310px; height:65px;&quot; allowTransparency=&quot;true&quot;&gt;&lt;/iframe&gt;
-&lt;/div&gt;
-</description>
-<category>개발환경</category>
-<category>black menu</category>
-<category>Chrome</category>
-<category>쿠키</category>
-<category>크롬</category>
-<category>플러그인</category>
-<author>창천향로 창천향로</author>
-<guid>https://jojoldu.tistory.com/406</guid>
-<comments>https://jojoldu.tistory.com/406#entry406comment</comments>
-<pubDate>Mon, 18 Feb 2019 20:24:19 +0900</pubDate>
-</item>
+	
+		
+			<title><![CDATA[개발자의 하루]]></title>
+			<link>https://blog.naver.com/edy5016</link>
+			
+				<image>
+					<url><![CDATA[https://blogpfthumb-phinf.pstatic.net/MjAxODAyMDdfMTI0/MDAxNTE4MDA3MDU4MjAz.dgFc3LzLExZaeq0Ah3mt_PLVjBv3CYe98EowL-wc9v4g.97TJEJH9lbH0VHBdzoye1_L4N59KOFV6N9OyIHxLFoog.JPEG.edy5016/o-APPLE-IPHONE-570.jpg?type=m2]]></url>
+					<title><![CDATA[개발자의 하루]]></title>
+					<link>https://blog.naver.com/edy5016</link>
+				</image>
+			
+			<description><![CDATA[자기소개를 입력하세요.]]></description>
+			<language>ko</language>
+			<generator>Naver Blog</generator>
+			<pubDate>Tue, 14 May 2019 21:18:30 +0900</pubDate>
+
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[Spring boot(게시판)]]></category>
+					<title><![CDATA[3.스프링 부트-local 소스 코드를 github에 올리기]]></title>
+					<link>https://blog.naver.com/edy5016/221281876810</link>
+					<guid>https://blog.naver.com/edy5016/221281876810</guid>
+					<description><![CDATA[local에 소스 코드가 있는데 개발 서버/ 실 서버에 배포 할 때 바로 하는 것이 아니라 중간에 local에있는 코드를 git/svn(버전관리시스템)에 저장한다음 개발 서버/실 서버에 전달하는 방식으로 배포를 한다. 개발서버나 실서버는 git/svn에서 받아서 반영하면 된다. github 편하게 사용할 수 있는 GUI 툴 --&gt; SourceTree https://ko.atlassian.com/software/sourcetree https://github.com/계정 가입후 로그인. git 이랑 clone 되었다. git에는 모든 코드를 저장할 필요가 없다. maven 과 같은 자동으로 생성되는 빌드들은 github에 올릴 필요가 없다. ignore 기능을 활용해서 제거한다.]]></description>
+					<pubDate>Wed, 23 May 2018 01:04:51 +0900</pubDate>
+					<tag><![CDATA[스프링부트,springboot,깃허브에올리기,github]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[Spring boot(게시판)]]></category>
+					<title><![CDATA[2.스프링 부트 - HTML 페이지 개발]]></title>
+					<link>https://blog.naver.com/edy5016/221281779457</link>
+					<guid>https://blog.naver.com/edy5016/221281779457</guid>
+					<description><![CDATA[BootstrapPom.xml 에 Bootstrap 의존성 추가.jar 파일로 html에 추가.index.htmlform.html]]></description>
+					<pubDate>Tue, 22 May 2018 22:35:24 +0900</pubDate>
+					<tag><![CDATA[스프링부트,springboot,html개발]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[Spring boot(게시판)]]></category>
+					<title><![CDATA[1.스프링 부트 게시판 - 개발 환경 세팅]]></title>
+					<link>https://blog.naver.com/edy5016/221281770257</link>
+					<guid>https://blog.naver.com/edy5016/221281770257</guid>
+					<description><![CDATA[ctrl+n Group - 일반적으로 도메인명 사용. Web, mustache, devtools - 의존성 추가방금설정 된 것은 pom.xml에 설정되어 있다. 이 설정에 따라서 프로젝트들과 의존관계과 있는 것들이 연결이 된다. start를 눌러서 서버 실행가능 resource -&gt; static - &gt; index.htmlLiveReloadLiveReload : sts에서 변경사항이 생겼을때 자동으로 인식해서 자동으로 refresh 하는 역할을 해줌. 이부분 눌러서 커넥션]]></description>
+					<pubDate>Tue, 22 May 2018 22:22:52 +0900</pubDate>
+					<tag><![CDATA[springboot,스프링부트,개발환경세팅]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[angular  마스터북]]></category>
+					<title><![CDATA[7.앵귤러 HTTP]]></title>
+					<link>https://blog.naver.com/edy5016/221281218507</link>
+					<guid>https://blog.naver.com/edy5016/221281218507</guid>
+					<description><![CDATA[■ 목차소개앵귤러는 외부 API를 사용하기 위한 자체 HTTP 라이브러를 제공한다. 외부 서버를 호출 할 때는 사용자가 계속해서 페이지와 소통하도록 하는 것이 중요하다. 다시 말해, HTTP 요청이 외부 서버로부터 리턴될 때까지 페이지가 멈춰 있으면 안된다. 아런 결과를 얻으러면 HTTP 요청이 비동기(asynchronous)여야 한다. 지금껏 비동기 코드는 동기(sychronous) 코드에 비해 다루기가 까다로웠다. 자바스크립트에서 비동기 코드를 처리할 수 있는 방식은 일반적으로 세가지로 나뉜다. 1. 콜백(callback) 2. 프로미스(promise) 3. 옵저버블(observable) 앵귤러 2에서 선호되는 비동기 코드 처리 방식은 옵저버블이다. @angular/common/http.......]]></description>
+					<pubDate>Tue, 22 May 2018 02:59:31 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[스프링 기본]]></category>
+					<title><![CDATA[스프링 PropertySource]]></title>
+					<link>https://blog.naver.com/edy5016/221280995381</link>
+					<guid>https://blog.naver.com/edy5016/221280995381</guid>
+					<description><![CDATA[Environment에서 살펴 볼 첫 번째 기능은 프로퍼티 값을 제공하는 기능이다. 스프링 컨테이너가 기본으로 사용하는 Environment의 구현체는 다수의 PropertySource로 부터 프로퍼티 값을 읽어온다. 실제 Environment로부터 프로퍼티를 읽어오는 과정은 아래와 같다. ● Environment의 프로퍼티 읽는 과정 o.s.core.env.MutablePropertySources에 두 개 이상의 PropertySource가 등록되어 있을 경우, 프로퍼티 값을 구할 때까지 등록된 순서에 따라 차례대로 확인한다. 예를 들어 이름이 JAVA_HOME인 환경 변수가 존재하고, 위의 그림에서 PropertySource의 우선 순위가 왼쪽이 높고 오른쪽이 낮다고 가정해보자. 이 때 Environment로부터 "JAVA_H.......]]></description>
+					<pubDate>Mon, 21 May 2018 20:06:34 +0900</pubDate>
+					<tag><![CDATA[스프링,spring,스프링property]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[스프링 기본]]></category>
+					<title><![CDATA[스프링 profile 사용]]></title>
+					<link>https://blog.naver.com/edy5016/221280993916</link>
+					<guid>https://blog.naver.com/edy5016/221280993916</guid>
+					<description><![CDATA[보통 로컬 개발 환경, 통합 테스트 환경, 실제 운영 환경은 동일하지 않다. 데이터베이스 IP 정보, 디렉토리 경로, 외부 서비스 URL 등이 동일하지 않다. 단순히 DB IP/사용자 정보만 바뀌는 경우라면, 프로퍼티 파일에 DB정보를 기록하고 &lt;context:property-placeholder&gt;를 사용하면 될 것이다. 이 경우 사용할 DB 정보가 변경되면 프로퍼티 파일에서 값을 알맞게 변경해주면 된다. 하지만, 환경이 바뀔 때마다 프로퍼티 파일을 수정하는 방법은 좋아보이지 않는다. 더 나은 방법은 각 환경에 맞는 설정 정보를 따로 만들고, 환경에 따라 알맞은 설정 정보를 사용하는 것이다. 스프링의 프로필(profile)은 정확하게 이를 위한 기능이다. 스.......]]></description>
+					<pubDate>Mon, 21 May 2018 20:04:03 +0900</pubDate>
+					<tag><![CDATA[스프링,스프링profile,profile,spring]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[스프링 기본]]></category>
+					<title><![CDATA[스프링 Environment 사용]]></title>
+					<link>https://blog.naver.com/edy5016/221280992935</link>
+					<guid>https://blog.naver.com/edy5016/221280992935</guid>
+					<description><![CDATA[스프링 빈은 Environment에 직접 접근해서 Environment가 제공하는 프로퍼티를사용할 수 있다. 스프링 빈 객체에서 Environment에 접근할 필요가 있다면, 다음의 두 가지 방법 중 하나를 사용하면 된다. · o.s.context.EnvironmentAware 인터페이스를 구현 · @Autowired 애노테이션을 Environment 필드에 적용 EnvironmentAware 인터페이스는 다음과 같이 정의되어 있다. 스프링 빈 객체가 EnvironmentAware 인터페이스를 구현하고 있을 경우, 스프링 컨테이너는 빈 객체를 생성한 뒤에 빈 객체의 setEnvironment() 메서드를 호출해서 컨테이너가 사용하는 Environment 객체를 전달한다. 따라서, EnvironmentAware 인터페이스를 구현한 스프링 빈.......]]></description>
+					<pubDate>Mon, 21 May 2018 20:02:25 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[스프링 기본]]></category>
+					<title><![CDATA[스프링 메시지 국제화 처리]]></title>
+					<link>https://blog.naver.com/edy5016/221280991974</link>
+					<guid>https://blog.naver.com/edy5016/221280991974</guid>
+					<description><![CDATA[웹 어플리케이션은 화면에 다양한 텍스트 메시지를 출력한다. 게시글 목록을 보여 줄 때 각 컬럼에 '제목', '번호'와 같은 메시지를 사용하고, 특정 기능을 성공적으로 수행한 경우에도 그 결과를 메시지로 출력해서 알려 주게 된다. 만약 개발해야 할 어플리케이션이 다국어를 지원해야 한다면, 각 언어에 맞는 메시지가 화면에 출력되어야 할 것이다. 스프링은 메시지의 국제화를 지원하기 위해 o.s.context.MessageSource 인터페이스를 제공하고 있다. MessageSource 인터페이스에는 지역 및 언어에 따라 알맞은 메시지를 구할 수 있는 메서드가 다음과 같이 정의되어 있다. 각 getMessage() 메서드는 Locale에 따라 알맞은 메시지를 리턴한다.......]]></description>
+					<pubDate>Mon, 21 May 2018 20:00:49 +0900</pubDate>
+					<tag><![CDATA[스프링,국제화처리,국제화,spring]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[스프링 기본]]></category>
+					<title><![CDATA[스프링 빈 객체의 라이프사이클]]></title>
+					<link>https://blog.naver.com/edy5016/221280377077</link>
+					<guid>https://blog.naver.com/edy5016/221280377077</guid>
+					<description><![CDATA[스프링 컨테이너는 빈 객체를 생성하고, 프로퍼티를 할당하고, 초기화를 수행하고 사용이 끝나면 소멸시키는 일련의 과정을 관리한다. 예를 들어 데이터베이스에 대한 커넥션 풀을 제공하는 빈은 사용되기 전에 일정 개수의 커넥션을 연결해야 하고, 어플리케이션 종료 시점에는 열려 있는 커넥션을 모두 닫아야 하는데 스프링 컨테이너는 이런 커넥션 생성과 종료 시점을 제어하게 된다. 스프링 컨테이너는 다음의 두 가지 방식을 이용해서 빈의 라이프사이클을 관리할 수 있다. ○ 스프링이 제공하는 특정 인터페이스를 상속받아 빈을 구현한다. ○ 스프링 설정에서 특정 메서드를 호출하라고 지정한다. 스프링은 라이프사이클에 특화된 인터페.......]]></description>
+					<pubDate>Mon, 21 May 2018 01:50:49 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[스프링 기본]]></category>
+					<title><![CDATA[스프링 빈 객체 범위(Scope)]]></title>
+					<link>https://blog.naver.com/edy5016/221280376150</link>
+					<guid>https://blog.naver.com/edy5016/221280376150</guid>
+					<description><![CDATA[스프링의 빈은 범위(scope)를 갖는데 , 주요 범위에는 다음의 두 가지가 있다. · 싱글톤(singleton) 범위 · 프로토타입(prototype) 범위 이 범위는 생성되는 빈 객체의 생명주기와 관련되는데, 이 절에서는 이 범위에 대한 내용을 알아볼 것이다. 위에 언급한 두 개의 범위 외에 웹 어플리케이션에서 사용되는 요청(request) 범위와 세션(session) 범위가 존재하는데 실제 프로젝트에서는 잘 사용되지 않는 편이다. 1. 싱글톤 범위별도 설정을 하지 않을 경우 스프링은 빈 객체를 한 번만 생성한다. getBean() 메서드를 두 번 이상 호출해서 빈을 구하면 매번 동일한 빈 객체를 리턴한다. 예를 들어 아래와 같은 XML 설정이 있다고 하자. 이 XML .......]]></description>
+					<pubDate>Mon, 21 May 2018 01:47:49 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[angular  마스터북]]></category>
+					<title><![CDATA[6.앵귤러 의존성주입]]></title>
+					<link>https://blog.naver.com/edy5016/221278417195</link>
+					<guid>https://blog.naver.com/edy5016/221278417195</guid>
+					<description><![CDATA[■ 목차프로그램의 덩치가 커지면 앱의 특정 부분이 다른 모듈과 소통할 수밖에 없다. 모듈 A에 모듈 B가 반드시 필요할 때, B를 가리켜 A의 의존성(dependency)이라고 부른다. 이런 의존성 파일에 액세스할 때는 단순히 import를 사용하는 것이 일반적이다. 대부분 import만으로도 충분하다. 하지만 좀 더 정교한 방법으로 의존성 파일들을 제공받아야 할 때도 있다. ○ 테스트 동안 B의 구현을 MockB로 대체한다. ○ B 클래스의 '단일 인스턴스'를 앱 전체에서 공유한다.(예: 싱글턴 패턴) ○ B 클래스의 '새 인스턴스'를 사용할 때마다 만든다(예: 팩토리 패턴) 의존성 주입은 이런 문제들을 해결할 수 있다. 의존성 주입(Dependency Injectio.......]]></description>
+					<pubDate>Fri, 18 May 2018 02:27:03 +0900</pubDate>
+					<tag><![CDATA[의존성주입,의존성,앵귤러,앵귤러마스터북,angular,앵귤러의존성주입]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[angular  마스터북]]></category>
+					<title><![CDATA[5.앵귤러 폼(form)]]></title>
+					<link>https://blog.naver.com/edy5016/221278396941</link>
+					<guid>https://blog.naver.com/edy5016/221278396941</guid>
+					<description><![CDATA[■ 목차폼은 중요하다. 그리고 복잡하다.○ 폼 입력은 데이터를 페이지나 서버에서 수정하기 위한 것이다. ○ 변경된 내용이 페이지 내 다른 곳에 반영되기도 해야 한다. ○ 사용자는 정해진 구조대로만 입력하지 않는다. 따라서 입력 내용을 검증해야 한다. ○ 입력 예시나 혹시 있을지 모를 오류를 분명하게 적시하는 UI여야 한다. ○ 종속된 필드가 있으면 로직이 복잡해진다. ○ DOM 셀렉터에 의존하지 않고 폼을 테스트할 수 있어야 한다. 다행히 앵귤러는 이와 관련한 각종 도구를 지원하고 있다. ● FormControl은 폼에 입력된 내용을 캡슐화하고, 이를 처리할 수 있는 객체를 제공한다. ● Validator는 일정 방식에 따라 입력 내용을 검.......]]></description>
+					<pubDate>Fri, 18 May 2018 00:54:59 +0900</pubDate>
+					<tag><![CDATA[angular,앵귤러,앵귤러폼,앵귤러form]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[angular  마스터북]]></category>
+					<title><![CDATA[4.앵귤러 내장 지시자]]></title>
+					<link>https://blog.naver.com/edy5016/221274970953</link>
+					<guid>https://blog.naver.com/edy5016/221274970953</guid>
+					<description><![CDATA[■ 목차ngIfngIf 지시자는 어떤 요소를 일정 조건에 따라 표시하거나 숨길 때 사용한다. 여기서 조건은 지시자에 전달하는 '수식'의 결과에 따라 저장된다. 수식의 결과가 거짓이면 해당 요소는 DOM에서 제거된다. ngSwitch경우에 따라서는 일정 조건에 따라 서로 다른 요소들을 렌더링 해야 한다. 이런 상황에서 다음처럼 ngIf를 몇 번씩 사용해도 문제는 없다. 이런 상황 떄문에 앵귤러는 ngSwitch 지시자를 도입했다. ngSwitch 지시자는 프로그래밍 언어의 switch문과 그개념이 서로 같다. ○ 알고 있는 결과를 기술한다. 이때 ngSwitchCase 지시자를 사용한다. ○ 아직 모르는 다른 경우들은 ngSwitchDefault로 처리한다. app/src//src/app/n.......]]></description>
+					<pubDate>Sun, 13 May 2018 23:24:12 +0900</pubDate>
+					<tag><![CDATA[앵귤러,angular,지시자,앵귤러지시자]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[oracle]]></category>
+					<title><![CDATA[PCTFREE와 PCTUSED]]></title>
+					<link>https://blog.naver.com/edy5016/221271600181</link>
+					<guid>https://blog.naver.com/edy5016/221271600181</guid>
+					<description><![CDATA[ * PCTFREE란?- 사용가능한 Block 공간 중에서 데이터 Row의 Update 등 데이터의 변경에 대비해서 확보해 놓은 BLOCK의 %값입니다. - PCTFREE의 Default 값은 10%입니다. - PCTFREE와 PCTUSED의 합이 100을 초과하지 않는 범위내에서 0~99까지 값을 PCTFREE값을 PCTFREE 값으로 사용할 수 있습니다. ● PCTFREE가 적을 경우 - 기존 테이블 행 갱신에 의한 확장을 위해 적은 공간을 확보합니다. - 많은 ROW가 한 BLOCK안에 INSERT 될 수 있습니다. - 수정이 적은 SEGMENT에 적합합니다. ● PCTFREE가 클 경우 - BLOCK당 적은 ROW가 INSERT됩니다. 즉 같은 ROW를 입력하기 위해 많은 BLOCK이 필요합니다. - ROW의 조각을 자주 CACHING할 필요가 없.......]]></description>
+					<pubDate>Wed, 09 May 2018 14:56:16 +0900</pubDate>
+					<tag><![CDATA[oracle,db,pctfree,pctused]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring]]></category>
+					<title><![CDATA[스프링 - 커스텀 어노테이션]]></title>
+					<link>https://blog.naver.com/edy5016/221267980575</link>
+					<guid>https://blog.naver.com/edy5016/221267980575</guid>
+					<description><![CDATA[]]></description>
+					<pubDate>Fri, 04 May 2018 12:15:01 +0900</pubDate>
+					<tag><![CDATA[커스텀어노테이션생성,스프링]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[angular  마스터북]]></category>
+					<title><![CDATA[3.앵귤러 컴포넌트]]></title>
+					<link>https://blog.naver.com/edy5016/221267396988</link>
+					<guid>https://blog.naver.com/edy5016/221267396988</guid>
+					<description><![CDATA[■ 목차 애플리케이션앵귤러 애플리케이션은 컴포넌트의 트리 구조, 그 이상도 그 이하도 아니다. 이 트리 구조의 루트에서 최상위 컴포넌트는 애플리케이션 그 자체다. 브라우저가 앱을 시동(booting, 다시말해 '부트스트래핑') 할 때 렌덩링하는 것이 바로 애플리케이션이다. ○ 컴포넌트의 장점 중 하나로 컴포넌트는 구성 가능(composable) 하다는 점을 들 수 있다. ○ 컴포넌트는 구조적으로 부모/자식 트리 관계이므로 각 컴포넌트는 자신의 자식 컴포넌트를 재귀적으로 렌더링한다. 제품 모델앵귤러에서 가장 핵심적인 사실은 특정 모델 라이브러리가 규정되지 않는다. 앵귤러는 서로 다른 여러 모델((과 데이터 아키텍처)의 지원이 유연.......]]></description>
+					<pubDate>Thu, 03 May 2018 17:38:11 +0900</pubDate>
+					<tag><![CDATA[angular3장,angular,컴포넌트,component,앵귤러컴포넌트]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[스프링 빈 객체 범위(Scope)]]></title>
+					<link>https://blog.naver.com/edy5016/221235632234</link>
+					<guid>https://blog.naver.com/edy5016/221235632234</guid>
+					<description><![CDATA[스프링의 빈은 범위(scope)를 갖는데 , 주요 범위에는 다음의 두 가지가 있다. · 싱글톤(singleton) 범위 · 프로토타입(prototype) 범위 이 범위는 생성되는 빈 객체의 생명주기와 관련되는데, 이 절에서는 이 범위에 대한 내용을 알아볼 것이다. 위에 언급한 두 개의 범위 외에 웹 어플리케이션에서 사용되는 요청(request) 범위와 세션(session) 범위가 존재하는데 실제 프로젝트에서는 잘 사용되지 않는 편이다. 1. 싱글톤 범위별도 설정을 하지 않을 경우 스프링은 빈 객체를 한 번만 생성한다. getBean() 메서드를 두 번 이상 호출해서 빈을 구하면 매번 동일한 빈 객체를 리턴한다. 예를 들어 아래와 같은 XML 설정이 있다고 하자. 이 XML .......]]></description>
+					<pubDate>Fri, 23 Mar 2018 15:40:40 +0900</pubDate>
+					<tag><![CDATA[스프링,개발자의하루,빈객체범위,scope,빈scope,spring,sts,eclipse]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[javascript 개념]]></category>
+					<title><![CDATA[프로토타입 이해하기]]></title>
+					<link>https://blog.naver.com/edy5016/221235386688</link>
+					<guid>https://blog.naver.com/edy5016/221235386688</guid>
+					<description><![CDATA[https://medium.com/@bluesh55/javascript-prototype-이해하기-f8e67c286b67]]></description>
+					<pubDate>Fri, 23 Mar 2018 10:34:21 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[스프링 빈 객체의 라이프사이클]]></title>
+					<link>https://blog.naver.com/edy5016/221234919074</link>
+					<guid>https://blog.naver.com/edy5016/221234919074</guid>
+					<description><![CDATA[스프링 컨테이너는 빈 객체를 생성하고, 프로퍼티를 할당하고, 초기화를 수행하고 사용이 끝나면 소멸시키는 일련의 과정을 관리한다. 예를 들어 데이터베이스에 대한 커넥션 풀을 제공하는 빈은 사용되기 전에 일정 개수의 커넥션을 연결해야 하고, 어플리케이션 종료 시점에는 열려 있는 커넥션을 모두 닫아야 하는데 스프링 컨테이너는 이런 커넥션 생성과 종료 시점을 제어하게 된다. 스프링 컨테이너는 다음의 두 가지 방식을 이용해서 빈의 라이프사이클을 관리할 수 있다. ○ 스프링이 제공하는 특정 인터페이스를 상속받아 빈을 구현한다. ○ 스프링 설정에서 특정 메서드를 호출하라고 지정한다. 스프링은 라이프사이클에 특화된 인터페.......]]></description>
+					<pubDate>Thu, 22 Mar 2018 17:52:29 +0900</pubDate>
+					<tag><![CDATA[개발자의하루,스프링빈,스프링,스프링라이프사이클,lifecycle]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[스프링 MessageSource를 이용한 메시지 국제화 처리]]></title>
+					<link>https://blog.naver.com/edy5016/221234846871</link>
+					<guid>https://blog.naver.com/edy5016/221234846871</guid>
+					<description><![CDATA[웹 어플리케이션은 화면에 다양한 텍스트 메시지를 출력한다. 게시글 목록을 보여 줄 때 각 컬럼에 '제목', '번호'와 같은 메시지를 사용하고, 특정 기능을 성공적으로 수행한 경우에도 그 결과를 메시지로 출력해서 알려 주게 된다. 만약 개발해야 할 어플리케이션이 다국어를 지원해야 한다면, 각 언어에 맞는 메시지가 화면에 출력되어야 할 것이다. 스프링은 메시지의 국제화를 지원하기 위해 o.s.context.MessageSource 인터페이스를 제공하고 있다. MessageSource 인터페이스에는 지역 및 언어에 따라 알맞은 메시지를 구할 수 있는 메서드가 다음과 같이 정의되어 있다. 각 getMessage() 메서드는 Locale에 따라 알맞은 메시지를 리턴한다.......]]></description>
+					<pubDate>Thu, 22 Mar 2018 16:26:27 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[Environment를 스프링 빈에서 사용하기]]></title>
+					<link>https://blog.naver.com/edy5016/221225026646</link>
+					<guid>https://blog.naver.com/edy5016/221225026646</guid>
+					<description><![CDATA[스프링 빈은 Environment에 직접 접근해서 Environment가 제공하는 프로퍼티를사용할 수 있다. 스프링 빈 객체에서 Environment에 접근할 필요가 있다면, 다음의 두 가지 방법 중 하나를 사용하면 된다. · o.s.context.EnvironmentAware 인터페이스를 구현 · @Autowired 애노테이션을 Environment 필드에 적용 EnvironmentAware 인터페이스는 다음과 같이 정의되어 있다. 스프링 빈 객체가 EnvironmentAware 인터페이스를 구현하고 있을 경우, 스프링 컨테이너는 빈 객체를 생성한 뒤에 빈 객체의 setEnvironment() 메서드를 호출해서 컨테이너가 사용하는 Environment 객체를 전달한다. 따라서, EnvironmentAware 인터페이스를 구현한 스프링 빈.......]]></description>
+					<pubDate>Fri, 09 Mar 2018 09:48:32 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[스프링 profile]]></title>
+					<link>https://blog.naver.com/edy5016/221224411429</link>
+					<guid>https://blog.naver.com/edy5016/221224411429</guid>
+					<description><![CDATA[보통 로컬 개발 환경, 통합 테스트 환경, 실제 운영 환경은 동일하지 않다. 데이터베이스 IP 정보, 디렉토리 경로, 외부 서비스 URL 등이 동일하지 않다. 단순히 DB IP/사용자 정보만 바뀌는 경우라면, 프로퍼티 파일에 DB정보를 기록하고 &lt;context:property-placeholder&gt;를 사용하면 될 것이다. 이 경우 사용할 DB 정보가 변경되면 프로퍼티 파일에서 값을 알맞게 변경해주면 된다. 하지만, 환경이 바뀔 때마다 프로퍼티 파일을 수정하는 방법은 좋아보이지 않는다. 더 나은 방법은 각 환경에 맞는 설정 정보를 따로 만들고, 환경에 따라 알맞은 설정 정보를 사용하는 것이다. 스프링의 프로필(profile)은 정확하게 이를 위한 기능이다. 스.......]]></description>
+					<pubDate>Thu, 08 Mar 2018 13:39:20 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[Environment와 PropertySource]]></title>
+					<link>https://blog.naver.com/edy5016/221218530427</link>
+					<guid>https://blog.naver.com/edy5016/221218530427</guid>
+					<description><![CDATA[Environment에서 살펴 볼 첫 번째 기능은 프로퍼티 값을 제공하는 기능이다. 스프링 컨테이너가 기본으로 사용하는 Environment의 구현체는 다수의 PropertySource로 부터 프로퍼티 값을 읽어온다. 실제 Environment로부터 프로퍼티를 읽어오는 과정은 아래와 같다. ● Environment의 프로퍼티 읽는 과정 o.s.core.env.MutablePropertySources에 두 개 이상의 PropertySource가 등록되어 있을 경우, 프로퍼티 값을 구할 때까지 등록된 순서에 따라 차례대로 확인한다. 예를 들어 이름이 JAVA_HOME인 환경 변수가 존재하고, 위의 그림에서 PropertySource의 우선 순위가 왼쪽이 높고 오른쪽이 낮다고 가정해보자. 이 때 Environment로부터 "JAVA_H.......]]></description>
+					<pubDate>Wed, 28 Feb 2018 12:11:38 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[css]]></category>
+					<title><![CDATA[3.CSS3_PositionAbsolute_position 속성에 absolute 속성값을 주어 부모 요소로부터 절대좌표를 갖는 박스 만들기]]></title>
+					<link>https://blog.naver.com/edy5016/221205189669</link>
+					<guid>https://blog.naver.com/edy5016/221205189669</guid>
+					<description><![CDATA[]]></description>
+					<pubDate>Fri, 09 Feb 2018 19:54:44 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[css]]></category>
+					<title><![CDATA[2.CSS3_PositionFixed_position 속성에 fixed 속성값을 주어 브라우저에 고정된 박스 만들기]]></title>
+					<link>https://blog.naver.com/edy5016/221205179904</link>
+					<guid>https://blog.naver.com/edy5016/221205179904</guid>
+					<description><![CDATA[정리 : fixed는 항상 웹브라우저에서 고정]]></description>
+					<pubDate>Fri, 09 Feb 2018 19:38:41 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[css]]></category>
+					<title><![CDATA[1. CSS3 텍스트 색상,너비 와 높이설정, 특정태그에 css 적용]]></title>
+					<link>https://blog.naver.com/edy5016/221203675648</link>
+					<guid>https://blog.naver.com/edy5016/221203675648</guid>
+					<description><![CDATA[● CSS3 텍스트 색상● 너비 와 높이설정● 특정태그에 css 적용]]></description>
+					<pubDate>Wed, 07 Feb 2018 23:59:42 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[python 장고]]></category>
+					<title><![CDATA[05.Model AND Model Fileds]]></title>
+					<link>https://blog.naver.com/edy5016/221192977841</link>
+					<guid>https://blog.naver.com/edy5016/221192977841</guid>
+					<description><![CDATA[● SQL - Query : 정보 수집에 대한 요청에 쓰이는 컴퓨터 언어 (위키백과) - SQL : 관계형 데이터베이스 관리 시스템 (Relational Database Management System) 의 데이터를 관리하기 위해 설계된 특수 목적으로 프로그래밍 언어 (위키백과) - RDBMS 종류 : PostgreSQL, MySQL, MariaDB 등 - 장고 모델은 RDBMS만을 지원 - 장고 모델을 통해 SQL을 생성/실행 ● Django Model- Django 내장 ORM - SQL을 직접 작성하지 않아도, 장고 모델을 통해 데이터베이스로의 접근 (조회/추가/수정/삭제) - (중요) SQL을 몰라도 된다는 것은 아님. 최소한 내가 짠 코드가 어떤 SQL을 만들어내는 지는 검증해야함. - &lt;파이썬 클래스&gt; 와 &lt;데이터베이.......]]></description>
+					<pubDate>Thu, 25 Jan 2018 09:10:35 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[python 장고]]></category>
+					<title><![CDATA[04 . view , Overview]]></title>
+					<link>https://blog.naver.com/edy5016/221192977331</link>
+					<guid>https://blog.naver.com/edy5016/221192977331</guid>
+					<description><![CDATA[● View #ref&#8226; URLConf에 매핑된 Callable Object &#8226; 첫번째 인자로 HttpRequest 인스턴스를 받습니다. &#8226; 필히 HttpResponse 인스턴스를 리턴해야합니다. &#8226; 크게 Function Based View와 Class Based View로 구분 ● FBV (Function Based View ) 샘플 예시● CBV (Class Based View ) 샘플 예시 django.views.generic 뷰 사용패턴을 일반화시켜놓은 뷰의 모음 .as_view() 클래스함수1를 통해, FBV를 생성해주는 클래스]]></description>
+					<pubDate>Thu, 25 Jan 2018 09:09:40 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[javascript&#160;예제]]></category>
+					<title><![CDATA[자바스크립트 예제]]></title>
+					<link>https://blog.naver.com/edy5016/221191696560</link>
+					<guid>https://blog.naver.com/edy5016/221191696560</guid>
+					<description><![CDATA[● 타이머와 함수 클로저 사용하기결과:● 경과 시간 구하기 이벤트 사이에 경과한 시간을 구하기. -&gt; 첫번째 이벤트 발생할 때 Date 객체를 생성하고, 두 번째 이벤트가 발생할 때 다른 새 Date객체를 생성한다. 그러고 나서 두 번째 객체에서 첫 번째 객체를 빼면된다. 뺀값은 밀리초 단위. 따라서 초단위로 변환하려면 1000으로 나눈다. Date 객체 인스턴스에서는 뺄셈 계산만 할 수 있다. ● 10 진수 값을 16진수 값으로 변환하기 자바스크립트의 숫자는 기본적으로 10진수 이다. 그러나 16진수, 8진수 등과 같이 다른 진수로 변환할 수 있다. 16진수 숫자는 0x(숫자0과 소문자x) 로 시작하고, 8 진수 숫자는 언제나 숫자 0으로 시작한다.......]]></description>
+					<pubDate>Tue, 23 Jan 2018 17:35:30 +0900</pubDate>
+					<tag><![CDATA[자바스크립트,javascript,개발자의하루,자바스크립트예제,테이블숫자모두더하기,타이머함수]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[jquery&#160;실습]]></category>
+					<title><![CDATA[Jquery 가로메뉴 활용]]></title>
+					<link>https://blog.naver.com/edy5016/221190880927</link>
+					<guid>https://blog.naver.com/edy5016/221190880927</guid>
+					<description><![CDATA[가로메뉴 마우스 올릴시 서브메뉴 활성 over 이미지 적용 및 해체basic.css mystyle.css htmlscript]]></description>
+					<pubDate>Mon, 22 Jan 2018 18:41:55 +0900</pubDate>
+					<tag><![CDATA[제이쿼리,개발자의하루,jquery,jquery실습,제이쿼리실습,가로메뉴,가로메뉴활용,가로메뉴실습]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[javascript&#160;패턴]]></category>
+					<title><![CDATA[리터럴과 생성자]]></title>
+					<link>https://blog.naver.com/edy5016/221188812890</link>
+					<guid>https://blog.naver.com/edy5016/221188812890</guid>
+					<description><![CDATA[● 객체 리터럴자바스크립트에서 '객체'라고 하면 단순히 이름-값 쌍의 해시 테이블을 생각하면 된다. 다른 언어에서 '연관 배열'이라 불리는 것과 유사하다. 원시 데이터 타입과 객체 모두 값이 될 수 있다. 함수도 값이 될 수 있으며 이런 함수는 메서드라고 부른다. 자바스크립트에서 생성한 객체 ( 다시 말해 사용자가 정의한 네이티브 객체 ) 는 언제라도 변경 할 수 있으며, 내장 네이티브 객체의 프로퍼티들도 대부분 변경이 가능하다 . 빈 객체를 정의해놓고 기능을 추가해 나갈 수도 있다. 객체 리터럴 표기법은 이처럼 필요에 따라 객체를 생성할 때 이상적이다. 이 예제는 백지와도 같은 빈객체에서 시작한다. 그리고 나서 프로퍼티와.......]]></description>
+					<pubDate>Fri, 19 Jan 2018 17:05:34 +0900</pubDate>
+					<tag><![CDATA[객체,객체리터럴,생성자함수,생성자,자바스크립트,개발자의하루,자바스크립트패턴,javascript,객체와리터럴,에러객체]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[javascript&#160;예제]]></category>
+					<title><![CDATA[ISO 8601 형식의 날짜를 Date 객체에 사용 가능한 형식으로 변환하기]]></title>
+					<link>https://blog.naver.com/edy5016/221188048166</link>
+					<guid>https://blog.naver.com/edy5016/221188048166</guid>
+					<description><![CDATA[ISO 8601은 날짜와 시간을 표기하는 국제표준 규격이다. API를 제공하는 프로그램이 ISO 8601을 요구하는 것은 자주 있는 일이다. 또한 API로 주고 받는 대부분의 날짜가 지역 시간보다는 UTC를 따르는 것도 흔한 일이다. --&gt; 숫자가 아닌 모든 문자를 특정한 하나의 문자로 변환해준다. ISO 형식의 월은 1에서 12까지의 값을 갖는다. 자바스크립트 Date 객체에서 월의 값을 사용하려면 1을 뺴서 월을 수정해주어야 한다. UTC설정을 유지하려면 Date 객체의 UTC() 메서드를 사용해 세계 표준시의 날짜를 생성한 다음 , Date 생성자로 전달한다. 모든 날짜 값을 일일이 나열하는 대신 apply() 메서드를 사용할 수 있다. 이메서드는 첫 번째 값.......]]></description>
+					<pubDate>Thu, 18 Jan 2018 18:14:15 +0900</pubDate>
+					<tag><![CDATA[자바스크립트,date,UTC,javascript,개발자의하루,ISO8601,Date객체,날짜]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[javascript&#160;패턴]]></category>
+					<title><![CDATA[자바스크립트 패턴]]></title>
+					<link>https://blog.naver.com/edy5016/221186359330</link>
+					<guid>https://blog.naver.com/edy5016/221186359330</guid>
+					<description><![CDATA[● 유지보수 가능한 코드 작성 발견 즉시 버그를 고칠 수 있다면 가장 좋다. 코드가 어떤 일을 수행하는지가 머릿속에 아직 생생하기 때문이다. 그렇지 않으면 개발자는 다른작업으로 넘어가버리고 이코드에 대해서는 전부 다 잊어버린다. 얼마간 시간이 흐른 다음에 코드를 다시들여다 볼 때는 다음과 같은 이유로 시간이 든다. - 문제를 다시 학습하고 이해하는데 걸리는 시간 - 이 문제를 해결하는 코드를 이해하는데 걸리는 시간 프로젝트나 회사의 규모가 클 경우 또 다른 문제가 있다. 실제로 버그를 고치는 사람과 버그를 만든 사람, 버그를 발견한 사람이 전부 다 다른 사람일 수 있다. 유지보수가 가능한 코드란 다음과 같은 특징을 지.......]]></description>
+					<pubDate>Tue, 16 Jan 2018 18:53:26 +0900</pubDate>
+					<tag><![CDATA[자바스크립트,자바스크립트패턴,javascript,javascriptPattern,자바스크립트패턴기초,개발자의하루,함수호이스팅,동료리뷰,swtich패턴,단일var]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[javascript 개념]]></category>
+					<title><![CDATA[자바스크립트 참조 타입]]></title>
+					<link>https://blog.naver.com/edy5016/221183621846</link>
+					<guid>https://blog.naver.com/edy5016/221183621846</guid>
+					<description><![CDATA[참조 값(객체) 이란 특정 '참조 타입'의 인스턴스이다. ECMAScript 에서 참조 타입은 데이터와 기능을 그룹으로 묶는 구조이다. 객체는 특정 참조 타입의 '인스턴스' 이다. 객체를 생성할 때는 new 연산자 뒤에 셍성자를 쓴다. 이 코드는 참조 타입 Object의 인스턴스를 생성해서 변수 person에 할당한다. 생성자는 Object() 이며 기본 프로퍼티와 메서드만 가진 단순한 객체를 생성했다. ● Object 타입Object 타입은 ECMAScript 에서 가장 많이 쓰이는 타입이다. Object의 인스턴스에 많은 기능이 들어있지는 않지만 애플리케이션에 사용할 데이터를 저장하고 전송하는 목적에는 안성맞춤이다. Object의 인스턴스를 명시적으로 생성하는 방법은.......]]></description>
+					<pubDate>Fri, 12 Jan 2018 15:13:57 +0900</pubDate>
+					<tag><![CDATA[자바스크립트,javascript,개발자의하루,참조타입,자바스크립트참조타입,javascript참조타입,배열,filter,reduce,map]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[python&#160;자동화]]></category>
+					<title><![CDATA[파이썬 이메일보내기]]></title>
+					<link>https://blog.naver.com/edy5016/221182492100</link>
+					<guid>https://blog.naver.com/edy5016/221182492100</guid>
+					<description><![CDATA[[ 메세지를 보내는 다양한 방법 ]이메일 : 다양한 포맷의 메세지를 보낼 수 있음. AWS SES &#8226; 대량 발송 시에는 대량 발송 서비스를 이용 &#8226; 일반 네이버메일/지메일 계정을 통해 대량 발송 시, 스팸우려해 발송거부 가능성 &#8226; 주로 쇼핑몰에서 활용 &#8226; SMTP1 프로토콜이나 특정 서비스의 API를 활용 &#8226; 가장 손쉽게 보낼 수 있으나, 건당 발송비용이 발생 &#8226; 선거/마트 홍보 문자 등 &#8226; 서비스 업체의 open api를 활용 &#8226; SMS (단문 메세지 80byte ) , LMS (장문 메세지), MMS (멀티미디어 메세지) 별 로 가격 상이 &#8226; 메세지 발송에는 추가 비용이 없음. &#8226; 서비스 업체의 OpenAPI를 통해 발.......]]></description>
+					<pubDate>Thu, 11 Jan 2018 04:42:52 +0900</pubDate>
+					<tag><![CDATA[python,파이썬,파이썬자동화,이메일,이메일보내기,smtp,파이썬smtp,python자동화,pythonsmtp]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[javascript 개념]]></category>
+					<title><![CDATA[자바스크립트 변수와 스코프 , 메모리]]></title>
+					<link>https://blog.naver.com/edy5016/221182119117</link>
+					<guid>https://blog.naver.com/edy5016/221182119117</guid>
+					<description><![CDATA[● 원시 값과 참조 값 변수에 값을 할당하면 자바스크립트 엔진은 해당 값이 원시 데이터인지 참조인지 판단한다. 원시 타입은 Undefined와 Null, boolean , 숫자, 문자열이다. 이 변수들은 값으로 접근한다. 참조 값은 메모리에 저장된 객체이다. 객체를 조작할 때는 사실 객체 자체가 아니라 해당 객체에 대한 참조를 조작한다. ● 동적 프로퍼티 참조 값을 다룰 때는 언제든 프로퍼티와 메서드를 추가하거나 바꾸고 삭제 할 수 있다. 객체를 생성후 person 변수에 저장 했다. 다음에는 name이란 프로퍼티를 추가하고 문자열 "Lee"를 할당했다. 이 시점부터 객체가 파괴되거나 프로퍼티를 명시적으로 제거하기 전까지는 해당 프로퍼티에 접근할.......]]></description>
+					<pubDate>Wed, 10 Jan 2018 16:52:21 +0900</pubDate>
+					<tag><![CDATA[개발자의하루,자바스크립트,javascript,스코프체인,자바스크립트메모리,식별자,동적프로퍼티,가비지콜렉션,실행컨텍스트,스코프]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[python 장고]]></category>
+					<title><![CDATA[장고 앱 , URLConf ,  Template, ngrok]]></title>
+					<link>https://blog.naver.com/edy5016/221181023502</link>
+					<guid>https://blog.naver.com/edy5016/221181023502</guid>
+					<description><![CDATA[&#8226; 장고 프로젝트 : &lt;장고 프로젝트 Rule&gt; 에 따라, 파일/디렉토리 구성이 된 디렉토리 &#8226; &lt;장고 앱 Rule&gt; 에 따라, 파일/디렉토리 구성이 된 디렉토리 &#8226; 하나의 장고 프로젝트의 다수의 장고 앱 [ 장고 프로젝트 구조 ] [ 장고 앱 구조 ] [ 첫번째 앱 &lt;blog&gt; 앱 생성 ] &#8226; 앱 디렉토리 생성 : shell&gt; python manage.py startapp blog &#8226; django/conf/app_template 구성으로 생성 &#8226; 앱을 프로젝트에 등록 : 아래와 같이 myproj/settings.py 을 편집하 여, INSTALLED_APPS 항목 끝에 blog 앱이름을 추가 주의 : 콤마에 유의 # myproj/settings.py 파일 [ 첫 뷰 blog.views.post_list 구현 ].......]]></description>
+					<pubDate>Tue, 09 Jan 2018 10:47:22 +0900</pubDate>
+					<tag><![CDATA[파이썬,장고,urlconf,개발자의하루,ngrok,장고앱,장고구조]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[python 장고]]></category>
+					<title><![CDATA[파이썬 장고 설치 및 소개]]></title>
+					<link>https://blog.naver.com/edy5016/221181002905</link>
+					<guid>https://blog.naver.com/edy5016/221181002905</guid>
+					<description><![CDATA[[ 파이썬 설치 ] 파이썬 3.4 이상 &#8226; 처음부터 pyenv, venv, virtualenv를 구지 쓰지 않아도됨. &#8226; 윈도우에서 데이터분석이나 머신러닝을 같이 하실려면, Anaconda Python 64비트 추천 [ 파이썬 버전 확인 ] 쉘&gt; python --version Python 3.5.2 :: Anaconda custom (x86_64) 윈도우에서는 PowerShell 보다는 명령프롬프트가 지원이 좋습니다. 주의 : 맥/리눅스에서는 python 명령으로 파이썬2가 실행될 수 있습니다. 그럴 때에는 python3 명령을 입력해보세요. 환경변수 PATH에 대한 명확 한 이해가 필요합니다. [ 장고 설치 ] &#8226; 장고 1.10 이상 &#8226; Django 에서의 LTS (Long Term Support) 버전 &#8226; 대개 3년동안 업.......]]></description>
+					<pubDate>Tue, 09 Jan 2018 10:20:37 +0900</pubDate>
+					<tag><![CDATA[파이썬,python,장고,장고설치,개발자의하루,python설치,파이썬설치,장고프로젝트,프로젝트]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[jquery&#160;실습]]></category>
+					<title><![CDATA[jquery 가로메뉴 실습]]></title>
+					<link>https://blog.naver.com/edy5016/221178705006</link>
+					<guid>https://blog.naver.com/edy5016/221178705006</guid>
+					<description><![CDATA[[ 가로 메뉴 1 ] css html스크립트 ( 상위 메뉴 hover시 하위 매뉴 나오게 기능 구현) 결과 : [ 가로 메뉴 2 : 디폴트로 메뉴페이지 활성화 ]html,css 동일 script 결과 : [ 스르르 슬라이딩 메뉴 ] css html script 결과: 이미지는 아무거나 넣어서~~~]]></description>
+					<pubDate>Fri, 05 Jan 2018 18:59:32 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[@Configuration , 컴포넌트 스캔]]></title>
+					<link>https://blog.naver.com/edy5016/221178644753</link>
+					<guid>https://blog.naver.com/edy5016/221178644753</guid>
+					<description><![CDATA[[ @Configuration과 의존 설정 ]@Configuration 애노테이션을 이용할 경우, 여러 클래스에 빈 정보를 나눠서 설정할 수 있다. 예를 들어 다음 코드를 보자. Config2 클래스는 UserRepository 타입의 빈을 정의하고 있고, Config1 클래스에 정의된 두 개의 빈(pwChangeSvc와 authenticationService)은 UserRepository 타입의 빈을 필요로 한다. @Configuration을 이용한 설정에서는 @Bean 애노테이션이 적용된 메서드를 호출하는 방법으로 의존 객체를 참조하게 되는데, 다른 @Configuration 클래스에 정의된 @Bean의 경우는 이 방법을 사용할 수 없다. 이렇게 다른 @Configuration 클래스에 정의한 빈을 참조해야 할 때, 앞서 살펴본 @Autowired .......]]></description>
+					<pubDate>Fri, 05 Jan 2018 17:37:16 +0900</pubDate>
+					<tag><![CDATA[스프링,개발자의하루,spring,aop,어노테이션,fillter,type,컴포넌트스캔,컴포넌트,Configuration]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring 활용]]></category>
+					<title><![CDATA[jqgrid 사용법]]></title>
+					<link>https://blog.naver.com/edy5016/221178507544</link>
+					<guid>https://blog.naver.com/edy5016/221178507544</guid>
+					<description><![CDATA[[ jqgrid ajax 기본틀 ] [ optionName , optionValue에 들어갈 jqGrid option ] [ jqGrid 자체 옵션 ] [j [ jqGrid - formatter 옵션으로 컬럼 내용 변경 ] jqGrid를 사용하면서 데이터를 json 형식으로 변환해야 하기 때문에 데이터를 표현을 변경해주는 formatter 옵션이 있다. colModel 에서 컬럼을 정의할 때 옵션으로 함수를 삽입해서 데이터를 함수를 통해 가공, 변경 하는 것이다. jqgrid javascript //cell는 현재 셀의 값을 그대로 가져옵니다. //Object는 현재 셀이 포함되어있는 row를 가져옵니다. //options는 해당 데이터를 date포맷이나 다른 포맷으로 변경할 수 있습니다.]]></description>
+					<pubDate>Fri, 05 Jan 2018 14:52:52 +0900</pubDate>
+					<tag><![CDATA[jqgrid,개발자의하루,스프링,ajax,자바스크립트,jqgridformatter]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[@Autowired , @Resource , @Inject  의존 자동 설정]]></title>
+					<link>https://blog.naver.com/edy5016/221172770013</link>
+					<guid>https://blog.naver.com/edy5016/221172770013</guid>
+					<description><![CDATA[[ @Autowired , @Resource , @Inject 차이점 ] 의존 자동 설정 사용할 전처리기를 따로 등록하기 보다는 &lt;context:anotation-config&gt; 태그를 사용한다. [ @Autowired 애노테이션 ] @Autowired 애노테이션은 생성자,필드,메서드의 세곳에 적용이 가능하다. 스프링은 필드,메서드,생성자 등에 @Autowired 애노테이션이 적용되어 있으면, 해당 하는 타입의 스프링 빈객체를 알맞게 연결해준다. XML 설정을 보면, orderService 빈은 erpClientFactory 프로퍼티의 값을 설정하고 있지 않다. 하지만 setErpClientFactory() 메서드에 @Autowired 애노테이션이 적용되어 있으므로 스프링은 동일한 타입을 갖는 "ecFactory" 빈을 erpClientFactory 프.......]]></description>
+					<pubDate>Thu, 28 Dec 2017 11:11:41 +0900</pubDate>
+					<tag><![CDATA[개발자의하루,Autowired,Named,Qualifier,Inject,Resource,required,스프링,spring,애노테이션]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[의존관계설정방법 및 Bean Life cycle , Bean scope ,외부 파일을 이용한 빈 설정]]></title>
+					<link>https://blog.naver.com/edy5016/221172084504</link>
+					<guid>https://blog.naver.com/edy5016/221172084504</guid>
+					<description><![CDATA[[의존 관계 설정 방법] - JAVA를 이용한 설정방법(어노테이션을 이용한다. @Configuration, @Bean) : 어노테이션(Annotation:Metadata) -JDK5 부터 등장한 개념 ex)@Override 어노테이션은 . 컴파일러에게 정보를 알려주거나 . 컴파일 할 떄와 설치(deployment)시의 작업을 지정하거나 . 실행할 때 별도의 처리가 필요한 경우 사용한다. 클래스,메소드,변수 등 모든 요소에 선언이 가능하다. ○ @Configuration : 클래스 앞에 선언하는데, "이 클래스는 스프링 설정에 사용되는 클래스입니다" 라고 알려주는 어노테이션 ○ @Bean : 메소드 앞에 선언, "객체를 생성" Player.java ConfigApp.java MainBaseBall.java [ 스프링 컨테이너 생명주기 ] .......]]></description>
+					<pubDate>Wed, 27 Dec 2017 13:17:29 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[스프링 DI 와 IOC]]></title>
+					<link>https://blog.naver.com/edy5016/221171193976</link>
+					<guid>https://blog.naver.com/edy5016/221171193976</guid>
+					<description><![CDATA[[스프링 프레임웍이란?] - 스프링은 엔터프라이즈 어플리케이션에서 필요로하는 여러가지 기능들을 제공하는 프레임워크이다. - J2E가 제공하는 기능들을 스프링에서 자원을 하고 있기 때문에 국내에서는 가장 인기 있는 프레임웍으로 자리를 잡았다. - 스프링은 J2E에서 제공하는 기능 외에 DI나 AOP와 같은 기능을 지원한다. ## 특징 = &gt; 스프링은 경량의 프레임워크 - 자바의 객체를 담고 있는 컨테이너 - 외부에서 생성하는 객체를 컨테이너라함 - 객체의 생성, 소멸과 같은 생명주기를 관리한다. a 객체 --&gt; b 객체 메소드 (안녕하세요.) a가 B를 의존한다. 종속적인 문제가생겨서 DI 가나왔다. &gt;DI (Dependency Injection) 의존성.......]]></description>
+					<pubDate>Tue, 26 Dec 2017 11:07:59 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring&#160;기본]]></category>
+					<title><![CDATA[스프링 AOP]]></title>
+					<link>https://blog.naver.com/edy5016/221168782457</link>
+					<guid>https://blog.naver.com/edy5016/221168782457</guid>
+					<description><![CDATA[[ AOP : 관점 지향 프로그래밍 ] : 기존의 OOP를 보완 한 개념(핵심사항과 공통관심사항을 분리하여 구현) 예&gt; 은행업무 --&gt; 핵심 입/출 ,계좌이체 + 부가적인 작업 (누가 입금,출금했는지 정보남겨야됨 + 보안 + 인증 + 중복체크 ) 부가적인 작업들을 따로모아서 모듈로 관리함 primary concern : 핵심 관심사항 이라고 한다. core concern AOP는 primary concern과 cross-cutting concern을 별도의 코드로 구현해서 최종적으로 이들을 조합해서 완성하는 것 주요 용어 - 핵심관심 사항(core concern) : 비지니스 로직 (주 업무) - 공통관심 사항(횡단관심사항 : cross-cutting concern ) : 부가적인 기능(보조 업무) * 비지니스로직은 co.......]]></description>
+					<pubDate>Fri, 22 Dec 2017 11:03:10 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[jquery&#160;실습]]></category>
+					<title><![CDATA[jquery - 기본적인 세로 메뉴 시작]]></title>
+					<link>https://blog.naver.com/edy5016/221165868831</link>
+					<guid>https://blog.naver.com/edy5016/221165868831</guid>
+					<description><![CDATA[jquery 파일 다운로드해서 포함시키던가 cdn 받아서 하시면됩니다. jquery cdn : &lt;script src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"&gt;&lt;/script&gt; 공식홈페이지에서 최신버전 다운을 수 있는 링크 - http://jquery.com/download/ 위 링크에서 Download the compressed, production jQuery x.x.x 처럼 되어있는 것을 받으면 무난합니다. 2017년 11월 1일(수) 47일 전 기준 최신 버전 jQuery 3.2.1 다운로드 링크 - https://code.jquery.com/jquery-3.2.1.min.js 아래는 모든 제이쿼리 버전을 보거나 다운 받을 수 있는 페이지 입니다. https://code.jquery.com/jquery/ 1.x 마지막 버전 링크 (jQuery Core 1.12.4) .......]]></description>
+					<pubDate>Mon, 18 Dec 2017 16:48:46 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[javascript 개념]]></category>
+					<title><![CDATA[함수형 프로그래밍]]></title>
+					<link>https://blog.naver.com/edy5016/221163934477</link>
+					<guid>https://blog.naver.com/edy5016/221163934477</guid>
+					<description><![CDATA[[ 자바스크립트 함수형 프로그래밍] 함수형 프로그래밍 가능한이유 - 일급 객체로서의 함수 - 클로저 결과 : 1 2 3 함수가 일급 객체로 취급되기 때문에 함수의 인자로 함수를 넘기고, 결과로 함수를 반환할 수있다. 게다가 변수 str 값이 영향을 받지 않게 하려고 클로저를 사용하였다. get_encrypted() 함수에서 반환하는 익명 함수가 클로저이다. 이클로저에서 접근하는 변수 str은 외부에서는 접근할 수 없으므로 클로저로 함수형 프로그래밍의 개념을 정확히 구현해 낼 수 있다. ○ 배열의 각 원소 총합 구하기 ○ 배열의 각 원소를 모두 곱한값 위의 두예제는 명령형 프로그래밍 방식으로 작성된 코드이다. 다음예제로 함수형 프로그래밍을.......]]></description>
+					<pubDate>Fri, 15 Dec 2017 17:50:15 +0900</pubDate>
+					<tag><![CDATA[]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[javascript 개념]]></category>
+					<title><![CDATA[자바스크립트 객체지향 프로그래밍]]></title>
+					<link>https://blog.naver.com/edy5016/221163118651</link>
+					<guid>https://blog.naver.com/edy5016/221163118651</guid>
+					<description><![CDATA[[ 클래스 , 생성자 , 메서드 ] 클래스,생성자,메서드 모두 함수로 구현이 가능하다. 함수Person이 클래스이자 생성자의 역할을 한다. 자바스크립트에서 클래스 기반의 객체지향 프로그램은 기본적인 형태가 이와 같다. 클래스 및 생성자의 역할을 하는 함수가 있고, 사용자는 new 키워드로 인스턴스를 생성하여 사용할 수 있다. 생성된 me는 Person의 인스턴스로서 name변수가 있고, getName()과 setName() 함수가 있다. Person을 생성자로 하여 여러개의 객체를 생성한다고 가정해보자. var me = new Person("me"); var you = new Person("you); 각객체는 자기영역에서 공통적으로 사용할 수 있는 setName() 함수와 getName() 함수를 따로 생성.......]]></description>
+					<pubDate>Thu, 14 Dec 2017 17:55:49 +0900</pubDate>
+					<tag><![CDATA[자바스크립트,개발자의하루,자바스크립트객체,객체및상속,자바스크립트객체및상속,객체,상속,클로저,프로토타입상속,클래스상속]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[javascript 개념]]></category>
+					<title><![CDATA[실행 컨텍스트와 클로저]]></title>
+					<link>https://blog.naver.com/edy5016/221161415051</link>
+					<guid>https://blog.naver.com/edy5016/221161415051</guid>
+					<description><![CDATA[[ 실행 컨택스트 개념 ] ECMAScript 에서는 실행 컨텍스트를 실행 가능한 코드를 형상화하고 구분하는 추상적인 개념 . 콜 스택과 연관하여 정의하면 , 실행 가능한 자바스크립트 코드 블록이 실행되는 환경이라고 할 수 있다. 이 컨텍스트 안에 실행에 필요한 여러 가지 정보를 담고 있다. 실행 컨텍스트가 형성되는 경우 세가지가 있다. 1. 전역 코드 2. eval() 함수로 실행되는 코드 3. 함수 안의 코드를 실행할 경우 대부분 프로그래머는 함수로 실행 컨택스를 만듬. 이 코드 블록 안에 변수 및 객체, 실행 가능한 코드가 있다. 이 코드가 실행되면 실행 컨텍스트가 생성되고, 실행 컨텍스트는 스택 안에 하나씩 차곡차곡 쌓이고, 제일 위에.......]]></description>
+					<pubDate>Tue, 12 Dec 2017 17:58:11 +0900</pubDate>
+					<tag><![CDATA[자바스크립트,javascript,개발자의하루,setTimeout,스코프체인,라이브러리]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+				<item>
+					<author>edy5016</author>
+					<category><![CDATA[spring 활용]]></category>
+					<title><![CDATA[폼검증 (validatate)]]></title>
+					<link>https://blog.naver.com/edy5016/221160143839</link>
+					<guid>https://blog.naver.com/edy5016/221160143839</guid>
+					<description><![CDATA[[ Validator(인터페이스를 구현한 객체) ] - 서버단에서 검증하는것 객체(커멘드객체) 에담아서 한번에 검증 Client Controller form -----------&gt; Validator 가져와서 유효성 체크 -----&gt; 검증된후 뷰 에전달 객체 실패면 form 에 [ 유효성 검사 ] # Validator : org.springframework.validation.Validator 인터페이스 . 구현 메소드 - boolean supports(Class&lt;?&gt; arg0) : Validator가 해당 클래스에 대한 값 검증을 지원하는지의 여부를 리턴한다. - void validate( Object target, Errors erros ) : target 객체에 대한 검증을 실행하는 메소드 ,검증결과에 문제 있을 경우에는 errors 객체에 에러 정보를 저장 form에서 넘어온 t.......]]></description>
+					<pubDate>Mon, 11 Dec 2017 02:09:17 +0900</pubDate>
+					<tag><![CDATA[스프링,스프링폼검증,validate]]></tag>
+					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
+					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
+				</item>
+			
+		
+		
+	
 </channel>
 </rss>

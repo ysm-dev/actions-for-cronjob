@@ -1,645 +1,178 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
-	xmlns:content="http://purl.org/rss/1.0/modules/content/"
-	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
-	xmlns:dc="http://purl.org/dc/elements/1.1/"
-	xmlns:atom="http://www.w3.org/2005/Atom"
-	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
-	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
-	>
-
-<channel>
-	<title>kazikai&#039;s 개발자블로그</title>
-	<atom:link href="http://blog.kazikai.net/?feed=rss2" rel="self" type="application/rss+xml" />
-	<link>http://blog.kazikai.net</link>
-	<description>매일 매일 성장하는 개발자가 되자</description>
-	<lastBuildDate>Thu, 03 Aug 2017 01:45:41 +0000</lastBuildDate>
-	<language>ko-KR</language>
-	<sy:updatePeriod>hourly</sy:updatePeriod>
-	<sy:updateFrequency>1</sy:updateFrequency>
-	<generator>http://wordpress.org/?v=4.1</generator>
-	<item>
-		<title>URI 인코딩 하기 (escape vs encodeURI vs encodeURIComponent)</title>
-		<link>http://blog.kazikai.net/?p=194</link>
-		<comments>http://blog.kazikai.net/?p=194#comments</comments>
-		<pubDate>Tue, 25 Jul 2017 15:32:21 +0000</pubDate>
-		<dc:creator><![CDATA[kazikai]]></dc:creator>
-				<category><![CDATA[javaScript]]></category>
-
-		<guid isPermaLink="false">http://blog.kazikai.net/?p=194</guid>
-		<description><![CDATA[달마다 2번씩은 포스팅을 해보려고 노력중이라.. 자바스크립트 개발에 입문한지 얼마 안됐을때  했던 실수를 꺼내본다. ( 리마인드 차원에서도..) 지금은 mdn 이나 다른 공식 문서를 보고 JS 기본 함수를 항상 사용하는데 당시에는 다른 사람의 코드나 stackoverflow 의 만들어놓은 코드를 참조 하다가 인코딩 하는 곳에서도 내장 함수가 다르게 사용되는 것을 보고 의문을 가졌었다. 일반적으로 간단히 인코딩을 위해서 알려진 내장 함수는 3가지가 [&#8230;]]]></description>
-				<content:encoded><![CDATA[<p>달마다 2번씩은 포스팅을 해보려고 노력중이라.. 자바스크립트 개발에 입문한지 얼마 안됐을때  했던 실수를 꺼내본다. ( 리마인드 차원에서도..)</p>
-<p>지금은 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript">mdn</a> 이나 다른 공식 문서를 보고 JS 기본 함수를 항상 사용하는데 당시에는 다른 사람의 코드나 stackoverflow 의 만들어놓은 코드를 참조 하다가 인코딩 하는 곳에서도 내장 함수가 다르게 사용되는 것을 보고 의문을 가졌었다.</p>
-<p>일반적으로 간단히 인코딩을 위해서 알려진 내장 함수는 3가지가 있는데</p>
-<ul style="list-style-type: circle;">
-<li>escape()</li>
-<li>encodeURI()</li>
-<li>encodeURIComponent()</li>
-</ul>
-<p>이렇게 3가지다. 물론 해당 인코딩을 디코딩 하는 함수는 다음과 같다.</p>
-<ul style="list-style-type: circle;">
-<li>unescape()</li>
-<li>decodeURI()</li>
-<li>decodeURIComponent()</li>
-</ul>
-<p>하지만 이 3가지  비슷하면서도 차이점이 있어서 개발시에 잘 판단해서 사용해야 한다.</p>
-<p>즉 용도가 다르단 말이다.</p>
-<p>우선 escape 를 보게되면 해당 함수는 더이상 사용하지 말아야 한다.</p>
-<p>왜냐하면 해당 함수는 deprecated 된 함수인데. <a title="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/escape" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/escape">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/escape</a></p>
-<p>링크를 보더라도 웹 표준 스펙에서 제거 되었다는 내용을 확인할 수 있다.<br />
-일부 브라우저에서는 하위 호환성 때문에 지금도 존재하지만. 해당 함수는</p>
-<p>encodeURI/ encodeURIComponent 로 교체 되어서 더이상 사용하면 안되는 함수다.</p>
-<p>그럼 encodeURI 와 encodeURIComponent 함수의 차이점을 살펴 보면  아래 표현된 문자를 제외하고 인코딩을 하게 된다.</p>
-<table>
-<tbody>
-<tr>
-<td>encodeURI</td>
-<td>
-<ul>
-<ul style="text-align: center;">; , / ? : @ &amp; = + $ &#8211; _ . ! ~ * &#8216; ( ) # a-z 0-9</ul>
-</ul>
-</td>
-</tr>
-<tr>
-<td>encodeURIComponet</td>
-<td>
-<p style="text-align: center;"> &#8211; _ . ! ~ * &#8216; ( ) a-z 0-9</p>
-<div class="post-text"></div>
-</td>
-</tr>
-</tbody>
-</table>
-<p>&nbsp;</p>
-<p>즉</p>
-<pre>encodeURI("=")  === "="  // true
-encodeURIComponent("=") === "="  //false
-encodeURIComponent("=") === "%3D"  //false</pre>
-<p>처럼 다른 결과가 나오게 되며 비슷해 보이지만 전혀 다른 용도로 사용한다.</p>
-<p>URI 를 인코딩 하는경우 즉 path 의 경우에는 encodeURI 를 사용하지만 파라미터를 인코딩 하는 경우에는 encodeURIComponent 를 사용해야 한다.</p>
-<p>https://kazikai.net/list?page=1&amp;size=10 과 같은  api를 인코딩 한다고 가정했을때 2개의 결과는 전혀 다른 결과가 나오게 된다.</p>
-<p>보통 프론트엔드 개발시에 ( 요즘엔 Node.js 를 이용한 백엔드 개발에서도..) URI를 인코딩 하는 경우가 빈번하기 때문에 아마 이런 실수를 한 코드가 오픈소스에서도 종종 발견된다. 실제로 stackoverflow 나 다른 개발 커뮤니티에서는 해당 방식에 대한 질문이 종종 올라온다. ( 2017년도에는 별로없는데 2016년까지는 꽤 있다. 나만 헷갈린게 아닌가보다. )</p>
-<p>즉 비슷해 보이지만. 항상 공식문서를 읽고 상황에 맞는 함수를 사용하자.</p>
-<p>3줄 요약</p>
-<ol style="list-style-type: lower-roman;">
-<li><span style="color: #0000ff;"><strong>escape/unesape 는 쓰지말자 </strong></span></li>
-<li><span style="color: #0000ff;"><strong>encodeURI 는 URI 전체 인코딩 할때 </strong></span></li>
-<li><span style="color: #0000ff;"><strong>URI 의 파라미터 인코딩 할때는 encodeURIComponent </strong></span></li>
-</ol>
-]]></content:encoded>
-			<wfw:commentRss>http://blog.kazikai.net/?feed=rss2&#038;p=194</wfw:commentRss>
-		<slash:comments>0</slash:comments>
-		</item>
-		<item>
-		<title>Date 객체의 toISOString 메소드</title>
-		<link>http://blog.kazikai.net/?p=106</link>
-		<comments>http://blog.kazikai.net/?p=106#comments</comments>
-		<pubDate>Tue, 13 Jun 2017 11:56:47 +0000</pubDate>
-		<dc:creator><![CDATA[kazikai]]></dc:creator>
-				<category><![CDATA[javaScript]]></category>
-		<category><![CDATA[프론트엔드개발삽질]]></category>
-		<category><![CDATA[Date객체]]></category>
-		<category><![CDATA[toISOString]]></category>
-
-		<guid isPermaLink="false">http://blog.kazikai.net/?p=106</guid>
-		<description><![CDATA[자바스크립트에서 많이 사용하고 있는 Date 객체의 경우에는 toISOString 이라는 메소드를 지원한다. 평소에는 해당 메소드를 쓸일이 없지만 Date 함수를 통해 만들어진 Date 객체의 경우에는 yyyymmdd 형태가 아니기 때문에 간혹 보다보면 아래와 같은 코드로 사용하는 경우가 많다. let currentDate = new Date(); let currentDay = currentDate.toISOString().substr( 0, 10 ); // currentDate == 'YYYY-MM-DD' 와 포맷으로 리턴 실제로 [&#8230;]]]></description>
-				<content:encoded><![CDATA[<p>자바스크립트에서 많이 사용하고 있는 Date 객체의 경우에는 toISOString 이라는 메소드를 지원한다.</p>
-<p>평소에는 해당 메소드를 쓸일이 없지만 Date 함수를 통해 만들어진 Date 객체의 경우에는 yyyymmdd<br />
-형태가 아니기 때문에 간혹 보다보면 아래와 같은 코드로 사용하는 경우가 많다.</p>
-<pre>let currentDate = new Date();
-let currentDay = currentDate.toISOString().substr( 0, 10 );
-// currentDate == 'YYYY-MM-DD' 와 포맷으로 리턴</pre>
-<p>실제로 Date 객체를 계산하거나 전달할때 상당히 유용한 방법이라 대부분 많이 사용하고  있다.<br />
-(심지어 오픈소스에서도..) 다만 이 메소드가 생각보다 치명적인 오류가 될 수있다.</p>
-<p>즉 사용할때 조심해야 할 부분이 있다.<br />
-우선 현재 날짜를 다음과 같이 2월 1일로 수정하자 시간은 오전 2~3시 정도로 잡으면 된다.</p>
-<p><img class="alignnone  wp-image-202" src="http://blog.kazikai.net/wp-content/uploads/2017/06/스크린샷-2017-02-01-오전-2.42.23.png" alt="스크린샷 2017-02-01 오전 2.42.23" width="777" height="665" /></p>
-<p>그 다음 브라우저 콘솔을 열어서 위 스크립트를 쳐보자</p>
-<p>결과가 어떻게 나오는가?</p>
-<p>예상했던 결과는 &#8216;2017-02-01&#8242; 일 것이다.<br />
-( 2017은 연도에 따라 변경될 수 있겠지만 2월 1일이므로 2월1일로 예상했을 것이다. )</p>
-<p>하지만 이 결과는 2017-01-31 로 나오게 된다. (?)</p>
-<p><a href="http://blog.kazikai.net/wp-content/uploads/2017/06/스크린샷-2017-02-01-오전-2.43.11.png"><img class="alignnone size-full wp-image-203" src="http://blog.kazikai.net/wp-content/uploads/2017/06/스크린샷-2017-02-01-오전-2.43.11.png" alt="스크린샷 2017-02-01 오전 2.43.11" width="844" height="238" /></a></p>
-<p>그래서 다시 currentDate 를 쳐보면<br />
-currentDate는 Wed Feb 01 2017 03:16:07 GMT+0900 (KST) 와 같이 정상적으로 2월 1일이 리턴되는데<br />
-정확한 날짜가 currentDate객체에 저장되었는데도 결과값이 다르게 나온다.</p>
-<p><span style="color: #ff0000;"><strong> 그렇다면 이 2개의 결과가 다른 이유는 무엇일까?</strong></span></p>
-<p><span style="color: #0000ff;"><strong>이 이유는 Date 객체의 toISOString 메소드는  ISO 포맷의 문자열로 반환하는데 </strong></span><br />
-<span style="color: #0000ff;"><strong>이때 ISO 포맷은 타임존으로 UTC 타임존의 zero offset을  사용하게 되면서 발생하게 된다. </strong></span></p>
-<p>즉 우리가 사용하는 타임존이 아닌 UTC 타임존으로 나오게 되고 날짜가 다르게 표현될 수도 있다.<br />
-우리 나라 시간은 해당 시간의 UTC+09:00 기준으로 나오기 때문에 9시간을 더해야 맞다.</p>
-<p>조금 더 헷갈리면 아래의 코드를 쳐보면 알 수 있다.</p>
-<pre>currentDate.toUTCString();</pre>
-<p><a href="http://blog.kazikai.net/wp-content/uploads/2017/06/스크린샷-2017-02-01-오전-2.43.17.png"><img class="alignnone size-full wp-image-204" src="http://blog.kazikai.net/wp-content/uploads/2017/06/스크린샷-2017-02-01-오전-2.43.17.png" alt="스크린샷 2017-02-01 오전 2.43.17" width="590" height="76" /></a></p>
-<p>역시 1월 31일로 나오게 된다.  여기에 9시간을 더하면 다음날 3시16분이 되므로 위에 currentDate 에 저장된 값과 일치 하게 된다.</p>
-<p>오픈 소스들에서 문제가 안된이유는 아마도 오픈소스 소유자들의 국가들은 UTC 타임존이 zero offset이라 이슈가 되지 않아서 그럴 것 이고<br />
-<span style="color: #0000ff;"><strong>결론적으로 toISOString() 은 UTC 타임존 zero offset을 사용하지 않는 국가에서 사용할때는 문제가 되므로 함부로 사용하면 안된다. </strong></span></p>
-<p>&nbsp;</p>
-]]></content:encoded>
-			<wfw:commentRss>http://blog.kazikai.net/?feed=rss2&#038;p=106</wfw:commentRss>
-		<slash:comments>0</slash:comments>
-		</item>
-		<item>
-		<title>MongoDB에서 쉽게 데이터 옮기기</title>
-		<link>http://blog.kazikai.net/?p=188</link>
-		<comments>http://blog.kazikai.net/?p=188#comments</comments>
-		<pubDate>Thu, 25 May 2017 14:08:43 +0000</pubDate>
-		<dc:creator><![CDATA[kazikai]]></dc:creator>
-				<category><![CDATA[MongoDB]]></category>
-		<category><![CDATA[mongoDB]]></category>
-		<category><![CDATA[mongoexport]]></category>
-		<category><![CDATA[mongoimport]]></category>
-		<category><![CDATA[마이그레이션]]></category>
-
-		<guid isPermaLink="false">http://blog.kazikai.net/?p=188</guid>
-		<description><![CDATA[작년에 한창 텔레그램 봇이 주목받을때  같이 스터디 하는 분들과 개인 토이 프로젝트를 만든다음 공유하는 자리를 가졌었다. 나는 그때 당시에 클리앙 알뜰구매 봇 을 하나 공유했는데. http://telegram.me/hotdeal_bot 대략 Node.js 랑 MongoDB 를 이용해서 만들었었다. 사실 간단하게 웹페이지 크롤링 한다음 저장해놓고 있고 저장할때 ( 새로운놈이라고 판단되면) 봇 사용자한테 알려주는 로직인데 당시에 webhook 형태로 만드려고 ( https만 지원) 이것저것 [&#8230;]]]></description>
-				<content:encoded><![CDATA[<p>작년에 한창 텔레그램 봇이 주목받을때  같이 스터디 하는 분들과<br />
-개인 토이 프로젝트를 만든다음 공유하는 자리를 가졌었다.</p>
-<p>나는 그때 당시에 클리앙 알뜰구매 봇 을 하나 공유했는데. <a href="http://telegram.me/hotdeal_bot">http://telegram.me/hotdeal_bot</a></p>
-<p>대략 Node.js 랑 MongoDB 를 이용해서 만들었었다.</p>
-<p>사실 간단하게 웹페이지 크롤링 한다음 저장해놓고 있고 저장할때 ( 새로운놈이라고 판단되면)<br />
-봇 사용자한테 알려주는 로직인데 당시에 webhook 형태로 만드려고 ( https만 지원) 이것저것 설정을 바꾸어서 재밌게 만들었다.</p>
-<p>이 봇이 대략적으로 지금 10개월 정도 운영중인데..<br />
-( 사용자는 500명 좀 안됨 당시에 한번 글 쓰고 나서 공유 안하는데도 계속 사용자는 조금씩 증가한다. )<br />
-채널 형태로 만들 수도 있었지만 나중에 확장성(?) 을 생각해서 봇 형태로 유지했었다.</p>
-<p>그리고 사용자들이 내 봇한테 /noti 를 날리면 해당 유저를 등록해놓고 그 유저한테 개인 메시지 보내듯이 할 수 있어서 뭔가 더 뿌듯하기도 했고..</p>
-<p>아무튼 히스토리는 이렇고 위 봇이 돌고있는 서버는 DigtialOcean의 가장 낮은 사양 ( 한달에 5불) 이다.</p>
-<p>이 가상서버는 512메가의 메모리를 가지고 있는데.<br />
-최근에 클리앙도 업데이트했고 간혹가다가 Node 가 뻗는 이슈가 있어서 마음의 짐처럼  가지고 있다가 로그를 좀 살펴봤는데</p>
-<p><strong>뻗는 이유가 2개 였다.</strong></p>
-<p><strong>1. DB 에 url을 업데이트 하고 user 정보를 업데이트 하는데 mongoDB 서비스가 갑자기 죽어 버릴때 노드가 재시작</strong><br />
-<strong> 2. 텔레그램  API를 통해 메시지를 전달할때 정의되지 않은 오류 또는 가상버서 메모리 leak이 발생해서 노드가 재시작</strong></p>
-<p>위 2가지 이유였는데. 일단 1번이 시급했기 때문에<br />
-digitalOcean이 아닌 fun25 란 곳의 가상서버로 mongoDB 서비스를  옮기는 작업이 필요했다. ( 여기는 메모리가 4기가. 다만 포트가 제한적이다. 1년치가 66000원 인데 이것저것 개인 프로젝트 하고 놀기 딱 좋다.<br />
-이 블로그도 fun25에서 돌고 있다. 사실 봇도 fun25에서 돌리고 싶은데.. 포트가 digitialOcean은 다 열려있어서 더 해보고싶은게 있다. )</p>
-<p>그래서 mongoDB 의 데이터를 이전하는 찾아 봤는데 생각보다 간단해서 놀라웠다.</p>
-<p>우선 해당 서버에서 아래와 같이 치고   이전하고 싶은  db와 collection을 찾아둔다.</p>
-<pre>$ mongose
-> show dbs;
-> show collections; 
-
-여기서 만약 mongoDB 가 port가 다르게 되어있다면 --port 12000 와 같이 mongose 명령어 뒤에 붙혀 주면 된다. 
-
-그다음 다시 mongose를 나가서 아래와 같이 명령어를 입력하면 된다.</pre>
-<pre>$ mongoexport -h <strong>127.0.0.1:27000</strong> -d <strong>dbName</strong> -c <strong>collectionName</strong> -o <strong>filename</strong>.json</pre>
-<p>위에서 127.0.0.1:27000은 mongoDB가 돌고있는 서비스 호스트와 포트고 dbName은 해당 데이터가 저장되어있는 db이름 그리고 collectionName은 저장되어있는 collection이름으로<br />
-변경해주면 된다. 물론 filename은 원하는데로 변경해주면 된다.</p>
-<ul>
-<li>mongoexport 의 옵션</li>
-</ul>
-<pre>-h[--host] 호스트
--u[--username] 아이디 인증이 없다면 없어도 된다. 
--p[--password] 비밀번호
--d[--db] 디비이름
--c[--collection] 사용할 컬렉션명
--q[--query] query필터
--o[--out] output 파일</pre>
-<p>그 다음 이전하게 될 서버에 mongoDB가 떠있는지 확인하고 아래와 같이 명령어를 입력해주면 된다.</p>
-<pre>$ mongoimport -h <strong>127.0.0.1:27017</strong> -d <strong>dbName</strong> -c <strong>collectionName</strong> --file <strong>filename</strong>.json
-
-</pre>
-<ul>
-<li>mongoimport 의 옵션은</li>
-</ul>
-<pre>-h[--host] 호스트
--u[--username] 아이디 인증 없다면 없어도 된다.
--p[--password] 비밀번호 
--d[--db] 디비이름
--c[--collection]  컬렉션명
--f[--fields] 필드명
---file 파일명
---drop 컬렉션을 처음 드랍할때
---upsert 이미 존재할때는 update 아닐경우 insert</pre>
-<p>위 명령어만 끝나면 생각보다 이전이 쉽게 된다.</p>
-]]></content:encoded>
-			<wfw:commentRss>http://blog.kazikai.net/?feed=rss2&#038;p=188</wfw:commentRss>
-		<slash:comments>0</slash:comments>
-		</item>
-		<item>
-		<title>native vs lodash vs underscore in javaScript(&gt;ES5)</title>
-		<link>http://blog.kazikai.net/?p=180</link>
-		<comments>http://blog.kazikai.net/?p=180#comments</comments>
-		<pubDate>Thu, 25 May 2017 13:17:02 +0000</pubDate>
-		<dc:creator><![CDATA[kazikai]]></dc:creator>
-				<category><![CDATA[javaScript]]></category>
-		<category><![CDATA[Node.js]]></category>
-		<category><![CDATA[Array.forEach]]></category>
-		<category><![CDATA[es6]]></category>
-		<category><![CDATA[forEach]]></category>
-		<category><![CDATA[lodash]]></category>
-		<category><![CDATA[native array]]></category>
-		<category><![CDATA[underscore]]></category>
-
-		<guid isPermaLink="false">http://blog.kazikai.net/?p=180</guid>
-		<description><![CDATA[예전부터 정리해보고 싶었던 주제인데. 드디어 정리하게된다. ( 사실 많이 늦은 내용이지만.. 내 생각을 정리하는 용도로..) javaScript 로 개발을 하다가 다양한 데이터를 다루다 보면은 ( 주로 서버에서 내려오는 . 또는 로그나.. ) lodash나 underscore 라는 라이브러리를 많이 사용하게 된다. 내가 프로젝트의 메인 역할을 할때는 개인적으로 lodash나 underscore를 선호하지 않았는데 이유는 다음과 같다. ( 누군가 include를 했었어도 [&#8230;]]]></description>
-				<content:encoded><![CDATA[<p>예전부터 정리해보고 싶었던 주제인데. 드디어 정리하게된다. ( 사실 많이 늦은 내용이지만.. 내 생각을 정리하는 용도로..)</p>
-<p>javaScript 로 개발을 하다가 다양한 데이터를 다루다 보면은 ( 주로 서버에서 내려오는 . 또는 로그나.. ) lodash나 underscore 라는 라이브러리를 많이 사용하게 된다.</p>
-<p>내가 프로젝트의 메인 역할을 할때는 개인적으로 lodash나 underscore를 선호하지 않았는데 이유는 다음과 같다.<br />
-( 누군가 include를 했었어도 나는 native로 ..)</p>
-<ol>
-<li>일반적으로 크기가 큰 데이터는 배열 형태이다. ( 주로 내가 다뤘던 )</li>
-<li>배열은 데이터를 처리하기 유용한 메소드를 기본적으로 제공한다.</li>
-<li>물론 이 메소드들은 ES5이상에서 주로 많이 쓰이며 ES6에서는 더 많이 제공한다.</li>
-<li>SUGAR 라이브러리들이 아무리 좋아도 성능으로 native를 따라올수가 없다.</li>
-<li>사실 웬만한 데이터 처리는 직접 짜서 쓰는게 낫다고 생각한다.</li>
-</ol>
-<p>간단하게 forEach를 가지고 이 이야기를 해보자.</p>
-<p>Array가 보유 하고 있는 forEach 메소드는 배열을 순회하면서 데이터를 처리할때 아주 유용하다.<br />
-ES5 일 때 코드 는 아래와 같다.</p>
-<pre>var array = [1,2,3,4,5,6]
-array.forEach(function(v){ 
-    console.log( v+1); 
-});
-</pre>
-<p>물론 ES6 일경우에는 더욱더 코드가 줄어든다.</p>
-<pre>const array = [1,2,3,4,5,6]
-array.forEach(v =&gt; console.log(v+1)); 
-</pre>
-<p>보기에도 깔끔하고 ES6(ES2015)로 가면 저런 Native 메소드를 안쓸 이유가 없다. 추가적으로 forEach와 비슷한 역할을 하는 메소드로는 jQuery의 $.each 가 있는데 이 메소드는주로 ES5 문법을 지원하지 않는 브라우저에서 (IE 계열.. 7,8 ) Array.forEach대신 $.each를 많이 사용해서 오래된 코드들을 보면 대부분 사용하고있다.</p>
-<pre>*물론 $().each() 와는 조금 다르다. $() 는 chainIng을 지원하기 때문에 $().each() 의 경우에는 $.each()와 다르게 장점이 존재한다.
-*추가로 Angular에서 Angular.forEach로도 사용가능하다. (angular는 jqlite 가 포함되어있기 때문에 .)</pre>
-<p>이렇듯이 같은 역할(?) 을 하는 메소드들이 여러가지가 있지만. 나는 Array.forEach()를 선호했다.<br />
-이유는 라이브러리의 의존성을 줄이는것도 목적이지만. 속도 이슈에서 native 메소드가 더 좋기때문이기도 했다.</p>
-<p>그렇다면 이 글에서 다루고자 하는  lodash와 underscroe 와 같은 라이브러리를 보자</p>
-<p>lodash도 그렇고 unserscore도 그렇고 forEach 역할을 하는 메소드들은 당연히 존재한다.</p>
-<p>lodash</p>
-<pre>_.forEach( array, v =&gt; console.log( v +1 ) );</pre>
-<p>underscore 는</p>
-<pre>_.each( array, v =&gt; console.log( v +1 ) );</pre>
-<p>코드로만 봤을때는 별 차이가 없고 차이는 배열을 인자로 전달한다는 것이다. 사실 이 부분이 차이가 있는데<br />
-array.forEach() 방식으로 인해 array 가 Array type이 아닌 경우에는 &#8220;undefined&#8221; 오류가 난다.</p>
-<p>이런 문제는  $.each()도, lodash나 underscore 모두 발생하지 않는다. ( 스크립트가 뻗지 않는다는 것이다. )<br />
-이건 실제로 프로젝트를 할때  array 의 값이 서버에서 제대로 오지 않거나. 중간에 다른 모듈에서 제대로 값이 전달되지 않았을때<br />
-JS의 특성상 중간에 멈춰 버리기때문에 사실 치명적이다.</p>
-<p>예를들어 native 의 document.getElementsByClassName() 같은 선택자로 리턴된값을  forEach를 적용하게 되면<br />
-해당 값은 array 같이 보이지만 실제로는 Array Type이 아닌 array-like object 이기 때문에 forEach메소드가 없고 오류가 발생하게 된다.</p>
-<p>http://stackoverflow.com/questions/24266313/using-foreach-on-an-array-from-getelementsbyclassname-results-in-typeerror-und</p>
-<p>위 링크와 비슷한 일이 실제로 많이 발생한다.</p>
-<p>이러한 실수를 줄여주려면 개발자가 예외처리를 잘하고 타입에 대해 항상 생각하고 개발을 해야 한다.<br />
-다만 lodash, underscroe 와 같은 라이브러리를 사용하면 이러한 처리를 따로 해줄 필요가 없는것이다.</p>
-<p>그리고 위에서 언급 하지 않은 lodash나 underscore가 native 에 비해 장점이 하나 더있다.<br />
-그건 바로 다양한 메소드 제공인데. 현재 2017.05.25 기준으로 .underscore는 100개 이상의 메소드가 제공되며 lodash 또한 정말 많은 메소드들이<br />
-제공된다. 이건 native가 따라올 수 없는 부분이며 분명히 이점이 된다. ( 참고 : <a href="https://colintoh.com/blog/lodash-10-javascript-utility-functions-stop-rewriting">https://colintoh.com/blog/lodash-10-javascript-utility-functions-stop-rewriting</a>)</p>
-<p>또한 lodash나 underscore 는 Array 타입의 객체만 사용할 수 있는게 아니라. 다양한 Object 데이터 타입에서도 사용 가능하다.<br />
-이건 데이터 처리를 하는데 있어서 엄청난 장점이다.</p>
-<p>결론적으로 다음과 같이 정리할 수 있다.</p>
-<p>Native</p>
-<ul>
-<li>장점 : 빠르다, 코드 유지/보수가 편하다, 브라우저 호환성 (ES5는 대부분 지원하니.)</li>
-<li>단점:  예외처리를 잘해야한다, Array 타입밖에 지원안함, 복잡한 데이터 처리에는 직접 메소드를 만들어서 써야한다.</li>
-</ul>
-<p>lodash/underscroe</p>
-<ul>
-<li>장점: 다양한 메소드 제공으로 생산성이 향상된다, 스크립트가 뻗는 경우가 없다, 객체도 지원하므로 데이터 처리에 용이하다.</li>
-<li>단점: 무겁다, native에 비해서는 느리다,  협업할때 상대방이 익숙하지 않은 메소드는 doc을 한번 살펴봐야 한다. 최신 v8엔진 에서만 지원한다.(lodash경우)</li>
-</ul>
-<p><strong>결론을 내리자면( 개인적인 견해 )프론트엔드의 경우에는 초기 로딩 속도로 리소스의 양을 많이 줄여야되는데 ( 특히 모바일 ) 프론트엔드에서의 데이터 처리는 대부분 한정적이며, 다른 사람과의 협업할때는 Native 가 더 좋기 때문에 프론트엔드 프로젝트 ( 특히 모바일) 의 경우에는 굳이 이런 라이브러리를 쓰는걸  나는 앞으로도 최대한 지양할 것 같다. 다만 Node.js 를 활용한 백단 작업에서는 스크립트가 뻗는 오류가 프론트보다는 위험하고 , 데이터 처리가 많으며 라이브러리가 많은게 부담이 덜 되므로 잘 사용하면 생산성을 많이 올려줄 것이라고 본다</strong></p>
-]]></content:encoded>
-			<wfw:commentRss>http://blog.kazikai.net/?feed=rss2&#038;p=180</wfw:commentRss>
-		<slash:comments>0</slash:comments>
-		</item>
-		<item>
-		<title>Node.js 개발할때 Babel 도움없이 ES6(ES2015) 를 사용하고 싶을때 참고할만한 사이트</title>
-		<link>http://blog.kazikai.net/?p=164</link>
-		<comments>http://blog.kazikai.net/?p=164#comments</comments>
-		<pubDate>Tue, 04 Apr 2017 14:45:44 +0000</pubDate>
-		<dc:creator><![CDATA[kazikai]]></dc:creator>
-				<category><![CDATA[javaScript]]></category>
-		<category><![CDATA[Node.js]]></category>
-		<category><![CDATA[babel]]></category>
-		<category><![CDATA[es6]]></category>
-		<category><![CDATA[node.green]]></category>
-
-		<guid isPermaLink="false">http://blog.kazikai.net/?p=164</guid>
-		<description><![CDATA[최근 들어 팀을 옮기게 되면서.. 드디어. 내가 원하던 Node.js개발을 업무로 담당하게 되었다. 사실 옮기기전에 해당 Repo의 소스코드를 면밀히 분석하고 결정했는데. 무엇보다도 마음에 들었던 부분은 해당 코드가 ES6로 전환하는 중이였고 대부분의 코드가 ES6 기준으로 작성되어있는 부분이였다.( +로 js 로 fe/be 모두 구성되어있다는 점도 매력적 ) (사실 서비스 릴리즈가 급박한 이전 팀 상황에서는 기존 레가시 코드를 ES6로 [&#8230;]]]></description>
-				<content:encoded><![CDATA[<p>최근 들어 팀을 옮기게 되면서.. 드디어. 내가 원하던 Node.js개발을 업무로 담당하게 되었다.</p>
-<p>사실 옮기기전에 해당 Repo의 소스코드를 면밀히 분석하고 결정했는데. 무엇보다도 마음에 들었던 부분은 해당 코드가 ES6로 전환하는 중이였고 대부분의 코드가 ES6 기준으로 작성되어있는 부분이였다.( +로 js 로 fe/be 모두 구성되어있다는 점도 매력적 ) (사실 서비스 릴리즈가 급박한 이전 팀 상황에서는 기존 레가시 코드를 ES6로 바꾸기가 만만치 않았다. 물론 신규로 작성되는 페이지는 나도 ES6를 작성하고 있었지만. 신규 페이지는 잘 없고 거의 유지/보수/운영 업무라 ES5로 코딩하는 비율이 70%는 넘었다.  )</p>
-<p>그런데 신기한 점은 물론 외부에 오픈된 서비스는 아니지만 해당 Node.js 버전이 7.x 버전을 사용하고 있었다는 점이였다. 이 이유에 대해 알아보니 ES6를 babel없이 사용하고 싶어서 였는데. 문득 궁금해졌다.</p>
-<p>과연 Node.js 의 어느 버전까지 es6를 babel과 같은 syntax transformers 도구에 의지 안하고 마음껏(?) 사용할 수 있을까?</p>
-<p>결론은 <a href="http://node.green/">http://node.green/</a> 를  참고하면 버전을 선택하는 의사결정에 도움이 될것 같다.</p>
-<p><a href="http://blog.kazikai.net/wp-content/uploads/2017/04/1.png"><img class="alignnone size-full wp-image-166" src="http://blog.kazikai.net/wp-content/uploads/2017/04/1.png" alt="1" width="610" height="61" /></a></p>
-<p>해당 사이트의 제일 위 화면을 캡쳐한것인데 쓰고싶은 es6 feature에 대해 어느 버전의 Node.js 가 어디까지 지원하는지 확인할 수있다.</p>
-<p>결론적으로.  6.10.1 버전과 7.5 버전은 es6 를 사용하는데 차이가 없으며. 만약 쓰고자하는 feature가 es6 중에 일부분이라면 ( 주로 공개된 arrow, let,const, class, rest parameter, 등이라면 ) 6.4.0도 괜찮은 선택이고 LTS 인 6.10.1 버전을 쓰는게 외부에 오픈된 서비라면 더 나은 선택일 수도 있다.</p>
-<p>물론 개인적인 의견으로는 요즘 webpack2 가 너무나도 좋게 컴파일을 해주고 있기 때문에.. babel을 웬만하면 쓰는게 좋을것 같다. (기존 레가시가 없다면..)</p>
-]]></content:encoded>
-			<wfw:commentRss>http://blog.kazikai.net/?feed=rss2&#038;p=164</wfw:commentRss>
-		<slash:comments>0</slash:comments>
-		</item>
-		<item>
-		<title>IE8 에서 :checked 가 css 에서 활용 안되기 때문에 발생하는 이슈</title>
-		<link>http://blog.kazikai.net/?p=111</link>
-		<comments>http://blog.kazikai.net/?p=111#comments</comments>
-		<pubDate>Tue, 04 Apr 2017 14:22:25 +0000</pubDate>
-		<dc:creator><![CDATA[kazikai]]></dc:creator>
-				<category><![CDATA[CSS]]></category>
-		<category><![CDATA[HTML]]></category>
-		<category><![CDATA[javaScript]]></category>
-		<category><![CDATA[프론트엔드개발삽질]]></category>
-
-		<guid isPermaLink="false">http://blog.kazikai.net/?p=111</guid>
-		<description><![CDATA[해당 포스트는 사실 제작년에 알았던 이슈이고.. 작년에 팀분들과 이야기 하다가 정리했던 이슈인데 작성만 해놨다가 이제야 올리게 된다. ( 반성..) 그래도 나름 신기했던 동작이였고, 나중에 누군가에게는 도움이 될것 같아서 정리해둔다. 보통 HTML5 에서는 checked, selected, disabled, readonly 등의 attribute 를 사용할때 아래와 같이 쓰게 된다.  &#60;input type="checkbox" checked&#62; &#60;!-- 이렇게 쓰는걸 선호함 --&#62; &#60;input type="checkbox" checked="checked"&#62; [&#8230;]]]></description>
-				<content:encoded><![CDATA[<p>해당 포스트는 사실 제작년에 알았던 이슈이고..<br />
-작년에 팀분들과 이야기 하다가 정리했던 이슈인데 작성만 해놨다가 이제야 올리게 된다. ( 반성..)</p>
-<p>그래도 나름 신기했던 동작이였고, 나중에 누군가에게는 도움이 될것 같아서 정리해둔다.</p>
-<p>보통 HTML5 에서는 checked, selected, disabled, readonly 등의 attribute 를 사용할때 아래와 같이 쓰게 된다.</p>
-<pre> &lt;input type="checkbox" checked&gt; &lt;!-- 이렇게 쓰는걸 선호함 --&gt;
- &lt;input type="checkbox" checked="checked"&gt;</pre>
-<p>위에서 checked attribute 만 선언 하는것은</p>
-<p>아래의 코드는 기본적으로 HTML5 에서 동일하게 취급되기 때문이다.</p>
-<pre> &lt;input type="checkbox" checked&gt;
- &lt;input type="checkbox" checked=""&gt;
- &lt;input type="checkbox" checked="checked"&gt;</pre>
-<p>이 이유는 checked attribute 는 boolean attribute 이기 때문이기도 한데 추가하자면 XHTML에서는 checked=&#8221;checked&#8221; 가 유효하지만 HTML5에서는 같은 결과를 내기 때문에 checked 하나만 쓰게 된다.<br />
-프로젝트를 할때 checked=&#8221;checked&#8221; 로 퍼블리싱 되어 오는 경우도 있지만. 같은 팀에서 협업할때 checked 형태를 더 선호하고 convention도 이렇게 되어있어서 나는 개인적으로 checked 하나만 사용하는것을 좋아한다.</p>
-<p>그렇다면 input 이 checked 되었을 경우에 css 적으로 효과를 준다면 어떤 선택자를 쓰게될까?<br />
-해당 선택자는 다음과 같다.</p>
-<pre>input:checekd{
-
-}</pre>
-<p>여기 까지 보자면 뭐가 문제가 있나? 생각 되지만.  문제는 IE8 같은 오래된 브라우저에서 발생한다.</p>
-<p>바로<strong> :checked</strong> 선택자가 동작하지 않는다. 그렇다면 이 경우 fallback 을 하기 위해서 <span style="color: #0000ff;"><strong> [checked]</strong></span> 선택자를 사용하는 방법이 있다.</p>
-<pre>input[checked]{
-// 
-}</pre>
-<p>이렇게 되면 IE8 이하의 브라우저에서도 해당 이슈를 해결 할 수 있다.</p>
-<p>다만 이런 방법이 또다른 오류를 발생하게 하는데 주로 jQuery로 이 checked 속성을 이용해서 작업할때 발생하게 된다.</p>
-<p>예를들어 아래의 코드가 문제가 된다는 것이다.</p>
-<pre>//[checked] 선택자 안먹음. 
-//:checked는동작
-var isChecked; 
-// isChecked 는 true 또는 false
-// 주로 요소들끼리 이벤트가 연결되어있는 경우 사용  
-if ( isChecked ){
-  $( "input" ).prop( "checked", true ); // checked 적용 
-} else {
-  $( "input" ).prop( "checked", false ); // checked 해제 
-};</pre>
-<p>&nbsp;</p>
-<p>보통 jQuery로 DOM 조작을 하는경우 2가지 method 를 많이 쓰게 되는데 이 2개의 메소드는<strong>$().prop()</strong>과 <strong>$().attr()</strong> 이다. ( + $().removeAttr() 도 )</p>
-<p>prop과 attr 가 혼용되기도 하고 실제로 많은 개발자들이 헷갈려 하기도 한다.</p>
-<p>부연 설명을 하자면.  jQuery 1.6 이하의 버전에서는 attr 로 이 prop의 역할도 일부 수행하고 있었기 때문에 주로 개발자들이 헷갈려했고 이 이슈는 1.6 이후의 버전부터 해당 역할이 분리되었으며 jQuery 공식 사이트에서도 해당 이슈에 대해 설명하고 있다.<a href="http://api.jquery.com/prop/"> http://api.jquery.com/prop/</a></p>
-<p>그렇기 때문에 대부분 jQuery를 자주 쓰는 개발자 또는 prop과 attr 의 차이를 잘 아는 사람일수록 attr 보다 input 의 checked property를 제어할때는 prop을 사용한다.  다시 말하면 checked 와 같은  property를 조작 하려면 prop 메소드를 쓰는게 맞다. ( js 로 dom의 checked 효과를 제어 하려면. )</p>
-<p>&nbsp;</p>
-<p>다만 위의 [checked]와 같이 IE8 대응 코드가 들어가게 된다면 prop 메소드는 제대로 된 checked 효과를 주지 못한다.</p>
-<p>그렇기 때문에 이 경우에는 attr() 메소드를 사용해야 하고 attr( &#8220;checked&#8221;, &#8220;checked&#8221; ) 메소드를 사용했기 때문에 해당 효과를 제거 하고 싶다면 removeAttr( &#8220;checked&#8221; )를 사용해야 한다.</p>
-<p>즉 위 코드는 아래와 같이 수정되어야 한다.</p>
-<pre>//[checked] 선택자 안먹음. 
-//:checked는동작
-var isChecked; 
-// isChecked 는 true 또는 false
-// 주로 요소들끼리 이벤트가 연결되어있는 경우 사용  
-if ( isChecked ){
-  $( "input" ).attr( "checked", "checked" ); // checked 적용 
-} else {
-  $( "input" ).removeAttr( "checked" ); // checked 해제 
-};</pre>
-<p>정리하자면 2가지가 핵심이다.</p>
-<p><span style="color: #0000ff;"><strong>1. input 의 propery를 컨트롤 하려면 prop() 메소드가 맞다. (jQuery 기준)</strong></span><br />
-<span style="color: #0000ff;"><strong>2. 단 해당 input 요소가 checked 되었을때 특정 효과를 주는 스타일링이 있다면 (css) </strong></span><br />
-<span style="color: #0000ff;"><strong>그리고 해당 서비스가 IE8 이라면!  호환성을 위해 [checked]선택자와 removeAttr() , attr() 을 사용하자 </strong></span></p>
-<p>물론  IE8 때문에 매번 prop대신 attr을 사용하기 싫다면 prop으로 기본 처리를 하고 IE 8이하인 경우에만 removeAttr(), attr() 로 fallback 하게 짜도 된다.</p>
-<p>( 선택자는 [checked] ,:checked 둘다 사용해서 css 를 사용해야 한다. IE8 이하만 따로 CSS 를 만들어 관리하는 방법도 있다. )</p>
-<p>&nbsp;</p>
-]]></content:encoded>
-			<wfw:commentRss>http://blog.kazikai.net/?feed=rss2&#038;p=111</wfw:commentRss>
-		<slash:comments>1</slash:comments>
-		</item>
-		<item>
-		<title>IE8 을 타겟 브라우저에서 제외하며.. IE 회고</title>
-		<link>http://blog.kazikai.net/?p=134</link>
-		<comments>http://blog.kazikai.net/?p=134#comments</comments>
-		<pubDate>Tue, 01 Nov 2016 09:43:28 +0000</pubDate>
-		<dc:creator><![CDATA[kazikai]]></dc:creator>
-				<category><![CDATA[CSS]]></category>
-		<category><![CDATA[HTML]]></category>
-		<category><![CDATA[javaScript]]></category>
-		<category><![CDATA[개인적개발일기]]></category>
-		<category><![CDATA[프론트엔드개발삽질]]></category>
-		<category><![CDATA[base64]]></category>
-		<category><![CDATA[IE7]]></category>
-		<category><![CDATA[IE7버그]]></category>
-		<category><![CDATA[IE8]]></category>
-		<category><![CDATA[IE8버그]]></category>
-		<category><![CDATA[IE회고]]></category>
-		<category><![CDATA[셀렉터]]></category>
-
-		<guid isPermaLink="false">http://blog.kazikai.net/?p=134</guid>
-		<description><![CDATA[금년도에 프로젝트를 하면서 가장 역사적(?) 인 사건을 하나 꼽으라면.. (angualr,gulp,등등이 있지만..) IE8 을 대상 브라우저에서 제외 시키기로 결정했다는 점이다. 사실 이 부분은 기존의 프로젝트가 탄생했을때부터 문제가 되었던 부분이며 해당 프로젝트는. IE7 을 지원했고, IE7 에서 너무 극악으로 성능이 떨어져 어쩔수 없이 (+ 사용자도 없고..) 제외 했지만. IE8 도 만만치 않은 놈이라. 생각보다 너무 많은 고생을 [&#8230;]]]></description>
-				<content:encoded><![CDATA[<p>금년도에 프로젝트를 하면서 가장 역사적(?) 인 사건을 하나 꼽으라면.. (angualr,gulp,등등이 있지만..)</p>
-<p>IE8 을 대상 브라우저에서 제외 시키기로 결정했다는 점이다.</p>
-<p>사실 이 부분은 기존의 프로젝트가 탄생했을때부터 문제가 되었던 부분이며 해당 프로젝트는. IE7 을 지원했고,<br />
-IE7 에서 너무 극악으로 성능이 떨어져 어쩔수 없이 (+ 사용자도 없고..) 제외 했지만. IE8 도 만만치 않은 놈이라. 생각보다 너무 많은 고생을 했다.</p>
-<p>제외에 대한 근거로는</p>
-<ol>
-<li>사용자가 거의 없음</li>
-<li>성능이 원하는 만큼 안나옴</li>
-<li>개발 리소스가 너무 많이 들어감</li>
-</ol>
-<p>이였지만. 한마디로 요약하자면 &#8220;IE8에 들어가는 리소스를 다른데 투입하면 완성도를 더 높힐수 있다&#8221; 였다.</p>
-<p>이러한 근거로 기획팀을 설득했고. 접속자중에 실 사용자가 없다는게 파악되면서 결국에는 IE8을 대상 브라우저에서 제외시키기로 하였다.</p>
-<p>결론적으로는 IE8을 제외 하면서 angular.js 도 사용가능하게 되었고. jQuery도 일부 버전 업데이트 가능하게 되었고 얻은게 더 많은것 같다.</p>
-<p>다만.. 그동안 IE8 에서 고생했던 부분을 블로그에 짤막히(?) 정리해보고자 한다. 대략적으로 생각나는 이슈는 아래와 같다.</p>
-<ol>
-<li>셀렉터 이슈
-<ol>
-<li>pseudo 셀렉터가 잘 먹지 않으며</li>
-<li>멀티 셀렉터도 잘 먹지 않는다.</li>
-<li>즉.. 믿고 쓸수 있는건 id, class</li>
-<li>이건 나중에 정리하자</li>
-</ol>
-</li>
-<li><span style="color: #3366ff;"><a style="color: #3366ff;" href="http://blog.kazikai.net/?p=77">base64이슈 </a></span>
-<ol>
-<li>base64로 인코딩 된 이미지의 용량 제한이 발생</li>
-</ol>
-</li>
-<li>Hover 이벤트 동작 안함
-<ol>
-<li>$().is(&#8220;:hover&#8221;) 가 IE 78 에서는 동작안함</li>
-<li>정리 예정</li>
-</ol>
-</li>
-<li>change 이벤트 오류 (IE7에서 발생 )
-<ol>
-<li>IE7에서는 change 이벤트가 정상동작안함</li>
-<li>jQuery에서는 click 이벤트로 fallback</li>
-<li>이것에 대한 side effect 정리.</li>
-</ol>
-</li>
-<li>property와 attribute 의 차이  $().prop을 써야하나?  $().attr()을 써야하나?
-<ol>
-<li>이건 jQuery 공식문서에도 나와있는데 다시 정리 필요</li>
-<li>여기 해당 이슈에 대해 일부 정리 <a href="http://blog.kazikai.net/?p=111">http://blog.kazikai.net/?p=111</a></li>
-</ol>
-</li>
-<li>localStorage 이슈
-<ol>
-<li>localStorage가 지원되지 않아. $.jStorage 를 사용했는데 여기에도 조심해야 할 이슈 있음</li>
-</ol>
-</li>
-<li>window.opener 이슈
-<ol>
-<li>window opener 로 창을 열고 데이터를 전달할때</li>
-<li>JSON형태의 데이터는 동작을 보장하지 못함</li>
-<li>IE 7,8,9, 심지어 10 에서도 자주 나타남</li>
-<li>결국 데이터 전달할때는 JSON.stringify()로 .. 문자열로 변환해야함</li>
-<li>관련 포스팅은<span style="color: #3366ff;"><a style="color: #3366ff;" href="http://blog.kazikai.net/?p=70"> IE8과 9에서 발생하는 javascript memory leak 이슈</a></span></li>
-</ol>
-</li>
-</ol>
-<p>이제는 IE8 이하 브라우저를 대상으로 개발하는 경우가  없겠지만.. 나중을 위해 리마인드.( 다시 볼일 없기를..)</p>
-]]></content:encoded>
-			<wfw:commentRss>http://blog.kazikai.net/?feed=rss2&#038;p=134</wfw:commentRss>
-		<slash:comments>0</slash:comments>
-		</item>
-		<item>
-		<title>자바스크립트에서 == 동작원리</title>
-		<link>http://blog.kazikai.net/?p=142</link>
-		<comments>http://blog.kazikai.net/?p=142#comments</comments>
-		<pubDate>Tue, 01 Nov 2016 09:21:26 +0000</pubDate>
-		<dc:creator><![CDATA[kazikai]]></dc:creator>
-				<category><![CDATA[javaScript]]></category>
-		<category><![CDATA[==]]></category>
-		<category><![CDATA[JavaScript]]></category>
-		<category><![CDATA[toString]]></category>
-		<category><![CDATA[자바스크립트]]></category>
-
-		<guid isPermaLink="false">http://blog.kazikai.net/?p=142</guid>
-		<description><![CDATA[자바스크립트 란 언어가 다른 프로그래밍 언어와 다른 이유는 여러가지가 있지만. 기존의 초급자들한테 가장 다가오는것중에 하나는 == 과 === 의 존재이다. 일반적으로 비교연산자 == 은 다른 프로그래밍 언어에서도 자주 쓰이는데. 자바스크립트는 유독 === 이 존재하며 JSHINT, JSLINT, ESLINT 등의 정적 검사도구에서 조차 === 을 권장하고 또는 == 을 안티패턴으로 정의하기도 한다. == 과 === 의 차이는 [&#8230;]]]></description>
-				<content:encoded><![CDATA[<p>자바스크립트 란 언어가 다른 프로그래밍 언어와 다른 이유는 여러가지가 있지만.</p>
-<p>기존의 초급자들한테 가장 다가오는것중에 하나는 == 과 === 의 존재이다.</p>
-<p>일반적으로 비교연산자 == 은 다른 프로그래밍 언어에서도 자주 쓰이는데. 자바스크립트는 유독 === 이 존재하며</p>
-<p>JSHINT, JSLINT, ESLINT 등의 정적 검사도구에서 조차 === 을 권장하고 또는 == 을 안티패턴으로 정의하기도 한다.</p>
-<p>== 과 === 의 차이는 그럼 무엇일까?</p>
-<p>가장 쉬운 답변은 &#8220;===&#8221; 은 타입까지 검사한다 ( 스펙 문서에 보면 identically eqaulity 라고 되어있다. ) 라고 할수 있다. 그럼 == 의 로직은 어떻게 동작하는 것일까?</p>
-<p>다시 말하면</p>
-<p>5 == &#8220;5&#8221; 가 어떻게 true 가 되는지에 대한 정리를 하고자 한다.</p>
-<p>우선  2 개의 값이 서로 다른 타입일 경우에는 타입을 강제로 변환하며,<br />
-같은 타입일 경우에는 데이터 타입을 변환 하지 않는다.</p>
-<p>즉 숫자와 문자열을 비교할 경우에는 문자열이 숫자로 변환되고 비교 연산이 수행된다.</p>
-<p>아래의 예제를 보면 그 사실을 확인 할 수있다.</p>
-<pre>"0x15" == 21 // true</pre>
-<p>16진수가 10진수로 변환되며 비교연산이 수행 되는것이다. 즉 문자열-&gt;Number()를 사용한것과 같이 수행 됨</p>
-<p>Boolean 타입의 경우에는 먼저 숫자로 변환된다음 변환된다.</p>
-<p>true 는 1 false 는 0 으로 변환된다.</p>
-<pre>false == "" //true</pre>
-<p>위의 예제를 보면 조금더 이해가 쉽다.</p>
-<p>그다음  마지막으로 객체의 경우는 다음과 같은 연산을 수행한다.</p>
-<ol>
-<li>해당 객체에 valueOf 메소드가 있다면 valueOf() 호출 비교 연산 수행
-<ol>
-<li>valueOf 는 특정 객체의 primitive Value를 리턴하는 함수</li>
-</ol>
-</li>
-<li>valueOf() 메소드가 없다면 toString()을 호출 한후 비교연산 수행</li>
-</ol>
-<p>이 연산이 끝난다음  같다면 true로 리턴되는 것이다.</p>
-<p>재밌는(?) 예제가 있는데 아래 코드를 보자</p>
-<pre>var a = {};
-a.toString = function(){ 
-    return "hello" 
-};
-var b = "hello";
- 
-a == b // true;</pre>
-<p>즉 toString() 메소드가 == 연산에서 호출 되는것을 확인할 수 있다.</p>
-<p>이 연산은 + 로 두가지의 값이 더해질테도 이용되는데 + 연산일경우 한쪽이 string이면 다른 한쪽은 강제로 toString()연산후에 값이 만들어진다.</p>
-<pre>var c = "hello";
-var d = {};
-d.toString = function(){ 
-    return "kazikai"; 
-};
-c + d // "hellokazikai";
-
-</pre>
-<p>위 코드를 보면 조금 더 이해가 쉽다.</p>
-<p>즉 다시 정리하자면</p>
-<p>== 는 모든 값을 Number 화 시킨다음 비교</p>
-<p>다만  객체의 경우에는 valueOf 메소드를 호출해서 얻은 데이터로 비교 만약에 valueOf 가 없다면 toString()을 호출 하고 비교함</p>
-]]></content:encoded>
-			<wfw:commentRss>http://blog.kazikai.net/?feed=rss2&#038;p=142</wfw:commentRss>
-		<slash:comments>0</slash:comments>
-		</item>
-		<item>
-		<title>요즘 하는 개발 이야기..</title>
-		<link>http://blog.kazikai.net/?p=137</link>
-		<comments>http://blog.kazikai.net/?p=137#comments</comments>
-		<pubDate>Mon, 22 Aug 2016 15:54:29 +0000</pubDate>
-		<dc:creator><![CDATA[kazikai]]></dc:creator>
-				<category><![CDATA[개인적개발일기]]></category>
-
-		<guid isPermaLink="false">http://blog.kazikai.net/?p=137</guid>
-		<description><![CDATA[2016년이 벌써 반이나 지나버렸다. 연초에 세웠던 계획들의 이행률이 아직 50%도 안된다..( 처참하다..) 그래도 개인 프로젝트를 해봐서 뭔가 실행을 했다는것이 나름 이룬 성과인건데..(node.js로..) 아직 세워놨던 목표에 비하면 너무 부족하다. 요즘에는 기존의 jQuery + handlbars형태로 이루어졌던 프로젝트를 (by assemble) angular.js 형태로 1차로 변환하는 작업을 해왔고 신규 프로젝트에서는 angular.js 만 독립적으로 사용하면서 gulp 로 빌드 도구를 새롭게 사용해봤다. [&#8230;]]]></description>
-				<content:encoded><![CDATA[<p>2016년이 벌써 반이나 지나버렸다.<br />
-연초에 세웠던 계획들의 이행률이 아직 50%도 안된다..( 처참하다..)</p>
-<p>그래도 개인 프로젝트를 해봐서 뭔가 실행을 했다는것이 나름 이룬 성과인건데..(node.js로..) 아직 세워놨던 목표에 비하면 너무 부족하다.</p>
-<p>요즘에는 기존의 jQuery + handlbars형태로 이루어졌던 프로젝트를 (by assemble)<br />
-angular.js 형태로 1차로 변환하는 작업을 해왔고<br />
-신규 프로젝트에서는 angular.js 만 독립적으로 사용하면서 gulp 로 빌드 도구를 새롭게 사용해봤다. (이전에 사용은 해봤지만 내가 구축은 안했음..)<br />
-Grunt를 초창기부터 써왔는데 왜 gulp로 변경해왔고 어떤부분이 좋아졌는지는 나중에 정리를 한번 해야겠다.</p>
-<p>또 다른 신규프로젝트는 모바일 웹페이지 형태였는데 Single Page Application형태로 작업을 했으며, 여기에는 angular, gulp,bower 등의 기술을 사용했다.</p>
-<p>업무적으로 그동안 다른사람과 협업했던것을 벗어나 2개의 프로젝트는 나혼자만 진행했는데 이게 내 실력향상에 많은 도움이 되는것 같다는 생각이 든다.</p>
-<p>남은 하반기동안 블로그도 많이 업데이트해야겠다.</p>
-]]></content:encoded>
-			<wfw:commentRss>http://blog.kazikai.net/?feed=rss2&#038;p=137</wfw:commentRss>
-		<slash:comments>0</slash:comments>
-		</item>
-		<item>
-		<title>Iframe 이 있는 페이지에서 뒤로가기 실행시 비정상으로 동작하는 경우</title>
-		<link>http://blog.kazikai.net/?p=74</link>
-		<comments>http://blog.kazikai.net/?p=74#comments</comments>
-		<pubDate>Thu, 10 Mar 2016 02:21:14 +0000</pubDate>
-		<dc:creator><![CDATA[kazikai]]></dc:creator>
-				<category><![CDATA[HTML]]></category>
-		<category><![CDATA[javaScript]]></category>
-		<category><![CDATA[프론트엔드개발삽질]]></category>
-
-		<guid isPermaLink="false">http://blog.kazikai.net/?p=74</guid>
-		<description><![CDATA[화면 개발시에 iframe은 계륵 같은 존재라고 생각한다. css 를 분리하고 유지/보수 를 따로 할수 있으므로. ( 또한 배포도..) 서비스에는 상당히 유용하지만.  실제 서비스에 활용했을때는 생각보다 이슈가 많이 발생한다. 이 이슈도 개발인 서비스에서 부득이하게 iframe을 사용했을때 발생했던 문제이다. 일단 대부분의 iframe 주소는 정적으로 사용되게 되는데 &#60; iframe src="{{주소}}" &#62; &#60;/ifame&#62; 이 주소가 API 형식으로 특정 데이터를 [&#8230;]]]></description>
-				<content:encoded><![CDATA[<p>화면 개발시에 iframe은 계륵 같은 존재라고 생각한다.</p>
-<p>css 를 분리하고 유지/보수 를 따로 할수 있으므로. ( 또한 배포도..)<br />
-서비스에는 상당히 유용하지만.  실제 서비스에 활용했을때는 생각보다 이슈가 많이 발생한다.</p>
-<p>이 이슈도 개발인 서비스에서 부득이하게 iframe을 사용했을때 발생했던 문제이다.</p>
-<p>일단 대부분의 iframe 주소는 정적으로 사용되게 되는데</p>
-<pre>&lt; iframe src="{{주소}}" &gt; &lt;/ifame&gt;</pre>
-<p>이 주소가 API 형식으로 특정 데이터를 받아와서 삽입 되었을때 문제가 발생하였다.</p>
-<p>대략적인 흐름은 다음과 같다.</p>
-<ol>
-<li>부모창 Loading</li>
-<li>부모창 api 호출</li>
-<li>api 결과값에 있는 주소로 iframe 의 src 변경 ( $(&#8220;iframe&#8221;).attr(&#8220;src&#8221;, &#8220;주소&#8221;); )</li>
-<li>iframe도 로딩</li>
-</ol>
-<p>이러한 흐름을 갖고 있는 화면을 만들었는데. 이상하게 간헐적으로..<br />
-해당 페이지에서 뒤로가기 버튼을 눌렀을때. 부모창의 이전 페이지로 가야 하는데 iframe 의 창이 부모창의 모습이 나와있는 형태로 보이는 이슈가 발생했다. 즉 아래 화면처럼 ..</p>
-<p><a href="http://blog.kazikai.net/wp-content/uploads/2016/03/1.png"><img class="alignnone wp-image-151 size-full" src="http://blog.kazikai.net/wp-content/uploads/2016/03/1.png" alt="" width="793" height="706" /></a><a href="http://blog.kazikai.net/wp-content/uploads/2016/03/스크린샷-2016-03-10-오전-10.58.10.png"><br />
-</a></p>
-<p>사실 저 이슈는<strong> 개발 PC에서는 거의 발생하지 않았고 성능이 느린 윈도우 PC 에서 주로 발생</strong>하여서, 개인적으로는 브라우저 버그 또는 특정 플랫폼 버그( 윈도우&#8230;) 라고 생각하고 해결할 생각이 없었다.</p>
-<p>하지만 시간이 남아 처음부터 다시 생각했고 문제의 원인을 찾았다.</p>
-<p>문제는<span style="color: #0000ff;"> # 이라는 값 때문</span>이였는데. iframe 의 src 값은 비어있기 때문에 초기 값은 &#8220;&#8221; 즉 null 값이 들어갈수 밖에 없었고. 이게 웹 유효성 검사에서. 지적당해서 해당 값에 의미없는  값인 &#8220;#&#8221; 이 들어가게 되었다.  이게 api를 통해 iframe 주소 값을 받아오게 되면</p>
-<pre>$( "iframe" ).attr( "src", "" );</pre>
-<p>란 javascript로 변경 되었는데. 이게 타이밍 이슈가 있는 로직이였다.</p>
-<p>설명을 다시 하자면.  # 은 자기자신 즉 현재 부모창을 가르키는 역할을 하는데 iframe 에 값이 없는것이 아니라. 현재 부모창을 다시 한번 로드하는 형태이다.</p>
-<p>대부분의 api 는 빠르게 요청되어서.<br />
-<strong>1. api로 주소 받아온다음<br />
-</strong><strong style="line-height: 1.6471;">2. iframe 다시 로드<br />
-</strong><strong style="line-height: 1.6471;">되는데. 일부 느린 PC에서는 1번 부분보다 자식창의 현재 # 값의 로딩이 더 빠른경우가 발생했다. </strong></p>
-<p>그 이후에 2번이 로딩 되니 당연히 iframe의 주소 히스토리는<strong style="line-height: 1.6471;"><br />
-</strong>1)# , 2)새롭게 로드된 화면  순서일수 밖에 없으며 뒤로가기를 누르고나 history.back(), history.go(-1)을 하게 되면 1) 번 #으로 돌아갈수밖에 없다. ( 그래서 위에 화면처럼 나온다. )</p>
-<p>이제 문제를 확인했으니. 해당 이슈를 회피하거나. 근본적인 이슈를 제거 해야 한다.<br />
-HTML에 src에 값이 들어가있지 않으면.. 특정 QA를 통과할수가 없으므로. #은 무조건 사용해야 하는 상황이기 때문에 javascript로 처리해야 하는데&#8230;</p>
-<p>그래서 아래 코드를 바꿔 보기로  했다.</p>
-<pre>$("iframe").attr("src","새로운주소");</pre>
-<p>아예 iframe  자식 화면의 브라우저 히스토리를 갱신해버리면 # 값으로 뒤로 갈 이유가 없을것이라고 판단 위 코드를  다음과 같이 변경 했는데 결과적으로 문제가 해결되었다.</p>
-<pre>$("iframe").get(0).contentWindow.location.replace("새로운주소");</pre>
-<p>위 코드는 iframe 의 히스토리를 날려버리기때문에 뒤로가기했을때 전혀 문제가 발생하지 않는다.</p>
-<p>별거 아닌 코드인것 같지만. 생각보다 이슈 찾고 고민하느냐고 삽질을 많이했다. 특히 위 이슈는 재현이 안되므로..</p>
-<p>정리하면.</p>
-<p><span style="color: #0000ff;"><strong>1. 동적으로 iframe 주소가 로딩되는경우</strong></span><br />
-<span style="color: #0000ff;"><strong> 2. $().attr() 방식보다는</strong></span><br />
-<span style="color: #0000ff;"><strong> 3. DOM기본 함수의 location.replace를 사용하자.</strong></span></p>
-<p>&nbsp;</p>
-]]></content:encoded>
-			<wfw:commentRss>http://blog.kazikai.net/?feed=rss2&#038;p=74</wfw:commentRss>
-		<slash:comments>1</slash:comments>
-		</item>
-	</channel>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>한로니</title>
+    <link>https://brunch.co.kr/@@SQo</link>
+    <description />
+    <language>ko</language>
+    <pubDate>Tue, 14 May 2019 12:18:56 GMT</pubDate>
+    <generator>Kakao Brunch</generator>
+    <image>
+      <title />
+      <url>https://img1.daumcdn.net/thumb/C100x100/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fguest%2Fimage%2FYxUWvk5btpiDEy4KyRqRN1cXMms.jpg</url>
+      <link>https://brunch.co.kr/@@SQo</link>
+      <width>100</width>
+      <height>100</height>
+    </image>
+    <item>
+      <title>언더그라운드</title>
+      <link>https://brunch.co.kr/@@SQo/32</link>
+      <description>온갖 분진과 소음으로 터널을 가득 채운 후 전동차가 멈춰 섰다. 그보다 먼저 지하철 선로로 내려가기 전에는 의식적으로 크게 숨을 들이마셔서 폐를 한 껏 부풀려 최대한 숨을 참는다. '여행자의 들뜬 마음으로 채워도 모자랄 곳을 알 수 없는 티끌에게 내어줄 수는 없지.'라며 들숨을 참아보지만 이내 캑캑하고 입을 삐죽이며 지하철에 올라탄다. 가끔 우주선 내부를 &lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2FSQo%2Fimage%2F4fsm2FabE_UEddliT9X1qlvqFN0.JPG" width="500" /&gt;</description>
+      <pubDate>Wed, 16 Aug 2017 22:15:00 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/32</guid>
+    </item>
+    <item>
+      <title>맥주의 발견</title>
+      <link>https://brunch.co.kr/@@SQo/31</link>
+      <description>맥주를 들이킬 때 목 안에서 톡톡 터지는 탄산이 내가 아는 맥주 맛의 전부일 정도로 나는 맥주를 잘 알지 못한다. 에일의 진하고 쌉싸름한 풍미를 알게 된 것도 최근의 일이다. 한 번은 J가 벨기에 맥주를 한 박스 주문한 적이 있다. 맥주 가게에서 좀처럼 찾아볼 수 없는 술이기도 하고, 가격이 비싼 편이어서 직접 주문을 했다고 한다. 대게 즉흥적 판단으로 술&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2FSQo%2Fimage%2F7SEwSGyZ2Bp4IGW1SQXECazR3dY.JPG" width="500" /&gt;</description>
+      <pubDate>Sun, 16 Jul 2017 16:15:26 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/31</guid>
+    </item>
+    <item>
+      <title>어썸블로그, 안드로이드 괴발개발기</title>
+      <link>https://brunch.co.kr/@@SQo/29</link>
+      <description>자연주의 시골 동네 우붓에 발을 디딘지도 어느덧 2주가 지났다. 2월 6일부터 19일까지 2주 동안 이름하여 &amp;quot;라이스 필드&amp;quot; 스프린트를 진행했는데 이 기간 동안 내가 주로 시간을 할애한 작업물에 대한 이야기다.  1. 여행을 떠나기 전 만난 B군이 &amp;quot;야, 내가 어썸블로그라는 서버를 만들었는데 한번 써봐.&amp;quot;라는 말이 시작이었다. 이게 뭐냐면 한국의 유명한 개&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2FSQo%2Fimage%2Fz0ANiJJwWO7PDVbcSw1LolcquW0.png" width="500" /&gt;</description>
+      <pubDate>Tue, 21 Feb 2017 00:45:53 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/29</guid>
+    </item>
+    <item>
+      <title>어쩌다 세계여행 - 발리, 우붓 편 #1 - 설명충의 우붓 이모저모</title>
+      <link>https://brunch.co.kr/@@SQo/28</link>
+      <description>날씨 발리는 10월과 3월 사이가 우기다. 10일 정도 머물러보니 아침에 햇빛이 쨍쨍하다가도 오후쯤이 되면 굵은 빗줄기가 한 두 차례씩 내린다. 이른 아침, 늦은 밤을 제외하고는 항상 뜨겁고, 습하다. 더군다나 우붓에는 에어컨이 설치된 카페, 음식점, 상점이 많은 편이 아니어서 하루 종일 땀샘이 쉴 겨를이 없다. 이 곳에서 숙소를 세 번 옮겼는데 하나같이</description>
+      <pubDate>Sun, 19 Feb 2017 11:28:12 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/28</guid>
+    </item>
+    <item>
+      <title>미립자 뉴스 #8</title>
+      <link>https://brunch.co.kr/@@SQo/27</link>
+      <description>구글 인스턴트 앱 라이브 테스트 작년 구글 I/O에서 소개됐던 구글 인스턴트 앱이 라이브 테스트를 진행 중이다. 인스턴트 앱은 사용자가 앱을 설치하지 않고도 해당 앱을 즉각적으로 실행할 수 있는 기술이다. 구글 플레이 서비스가 앱의 일부분을 다운로드하고 실행하는 형태로 서비스 된다. 인스턴트 앱 기술이 보급화 되면 모바일 웹의 영역이였던 부분이 인스턴트 앱</description>
+      <pubDate>Fri, 27 Jan 2017 03:06:47 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/27</guid>
+    </item>
+    <item>
+      <title>미립자 뉴스 #7</title>
+      <link>https://brunch.co.kr/@@SQo/26</link>
+      <description>슬랙 스레드 기능 지원 존재감 있는 커뮤니케이션 툴인 슬랙이 스레드 기능을 지원한다. 슬랙은 기본적으로 채팅방 형태이기 때문에 특정 주제를 기반으로 글을 묶는 기능이 없었다. 그래서 논의 중인(혹은 논의됐던) 주제가 어디서부터 시작됐고, 어디에서 끝이 났는지를 알기가 쉽지 않았는데 이번 업데이트를 통해 이런 불편함이 해소될 것으로 예상된다.  Fabric</description>
+      <pubDate>Thu, 19 Jan 2017 16:08:05 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/26</guid>
+    </item>
+    <item>
+      <title>미립자 뉴스 #6</title>
+      <link>https://brunch.co.kr/@@SQo/25</link>
+      <description>Kickstarter 앱 오픈소스 공개 크라우드 펀딩 서비스인&amp;nbsp;대인배&amp;nbsp;Kickstarter에서 안드로이드, 아이폰 앱의 소스코드를 공개했다. 안드로이드의 경우는 RxJava, Dagger2, MVVM 패턴을 사용하고 있는 게 눈에 띈다. 최신 트렌드의 기술 스택을 탐구하기 좋은 자료로 보인다.  페이스북 즉시 인증 기능 추가 페이스북의 Accout Kit에</description>
+      <pubDate>Mon, 26 Dec 2016 16:47:51 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/25</guid>
+    </item>
+    <item>
+      <title>미립자 뉴스 #5</title>
+      <link>https://brunch.co.kr/@@SQo/24</link>
+      <description>구글 File-by-File Patching 기술 소개 구글이 구글 플레이에서 앱 업데이트 시 앱 사이즈를 평균 65% 줄이는 File-by-File Patching 기술을 소개했다. 테스트 결과에 의하면 Netflix의&amp;nbsp;경우 앱 업데이트 사이즈가 90% 가량 줄어드는 효과를 보이기도 했다. 내 뱃살도 이렇게 줄어들면 좋겠다.&amp;nbsp;참고로 올해 초에 발표한 bs</description>
+      <pubDate>Tue, 13 Dec 2016 15:38:48 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/24</guid>
+    </item>
+    <item>
+      <title>이직</title>
+      <link>https://brunch.co.kr/@@SQo/23</link>
+      <description>익숙한 곳에서 낯선 곳으로, 오랜 곳에서 새로운 곳으로, 머무름에서 출발을 떠올리는 여행은 이직과&amp;nbsp;어디인지 모르게 닮아있다. 심리상태는 또 어떠한가? 기대와 걱정에 잠 못 이루는 여행 전야제처럼 새로운 직장으로의 출근을 앞둔 잠자리는 눈을 감고, 양을 세어보아도 쉽게 잠이 오지 않는다.재레드 다이어몬드가 대약진이라 설명한 호모 사피엔스의 7만년 전 세계 각</description>
+      <pubDate>Mon, 14 Nov 2016 17:16:37 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/23</guid>
+    </item>
+    <item>
+      <title>형광등 - 내 방 여행하는 법</title>
+      <link>https://brunch.co.kr/@@SQo/22</link>
+      <description>나는 방구석구석을 밝게 비추는 것을 소임으로 여기는 형광등이 싫다. 게다가 집 안 제일 높은 곳에 위치해 있는 것도 마음에 들지 않는다. 수명 다한 형광등을 교체하느라 위태롭게 의자에 오를 때마다 균형을 잃고 넘어져 머리가 깨지지는 않을까 걱정을 해야 하니 여간 신경 쓰이는 게 아니다. 쓰레기장으로 가는 길에 깨트리기라도 한다면 경비 아저씨에게 혼쭐이 날</description>
+      <pubDate>Wed, 12 Oct 2016 14:23:01 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/22</guid>
+    </item>
+    <item>
+      <title>RxJava, 마블 다이어그램</title>
+      <link>https://brunch.co.kr/@@SQo/20</link>
+      <description>마블 다이어그램,&amp;nbsp;Rx를 공부하면 필연적으로 마주하게 되는 도표다.&amp;nbsp;리액티브 세상에서 일어나는 모든 일들(비동기 데이터 흐름)은 마블 다이어그램으로 시각화된다. 따라서 이 도표를 익히는 것은 RxJava, RxSwift, RxJs, RxRuby 등 Rx의 다양한 포트들을 다루기 위한 첫걸음이라 할 수 있다. 이번 포스트에서는 마블 다이어그램에 대해서 살펴본&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2FSQo%2Fimage%2FnYWEQDBFYVyGyg5uN6H0YP3vWXw.png" width="500" /&gt;</description>
+      <pubDate>Sun, 10 Jul 2016 11:02:10 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/20</guid>
+    </item>
+    <item>
+      <title>미립자 뉴스 #4</title>
+      <link>https://brunch.co.kr/@@SQo/19</link>
+      <description>안드로이드 누가 안드로이드 N의 코드 네임이 누가로 정해졌다. 누가바가 생각나는데 그 아이스크림이랑 연관이 있는지는 모르겠다. 사진을 찾아보니 터키에서 먹었던 로쿰과 비슷한 맛일 &lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2FSQo%2Fimage%2FNWbNnuKsB5ksbShSIreGSTqAKcw.jpeg" width="470" /&gt;</description>
+      <pubDate>Sat, 02 Jul 2016 13:49:39 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/19</guid>
+    </item>
+    <item>
+      <title>RxJava, Observable 생성하기</title>
+      <link>https://brunch.co.kr/@@SQo/18</link>
+      <description>RxJava에서는 옵저버블을 생성하는 다양한 방법을 제공한다. 기존 함수의 결과 값을 옵저버블로 발행하거나 리스트의 값을 하나씩 발행할 수도 있으며 옵저버블 생성을 구독이 발생할 때로 지연시킬 수도 있다. 심지어 아무것도 발행하지 않고 종료하거나, 에러를 발행하는 옵저버블을 생성할 수도 있는데 이번 포스트에서는 옵저버블을 생성하는 방법에 대해 알아본다.  &lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2FSQo%2Fimage%2FrRJfoEWA1zixjuCJQbaIF_qvBRc.png" width="500" /&gt;</description>
+      <pubDate>Tue, 28 Jun 2016 00:34:03 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/18</guid>
+    </item>
+    <item>
+      <title>RxJava, Observable과 생명주기</title>
+      <link>https://brunch.co.kr/@@SQo/17</link>
+      <description>옵저버블에는 생명주기가 있다. 이 생명주기는 옵저버에 의해 구독, 구독&amp;nbsp;해지 또는&amp;nbsp;아이템을 발행하거나&amp;nbsp;발행이 끝나면 완료가 되는 일련의 상태로 볼 수 있다. Rx에서는 각각의 상태에 대응하는 콜백을 등록할 수 있는데 이런 생명주기 콜백이 호출되는 시점을 정리해보았다. 이 콜백들을 응용하는 방법은&amp;nbsp;Grokking&amp;nbsp;Andoid의 글이 도움된다.  doOnSub&lt;img src= "https://img1.daumcdn.net/thumb/R1280x0/?fname=http%3A%2F%2Ft1.daumcdn.net%2Fbrunch%2Fservice%2Fuser%2FSQo%2Fimage%2F9A4tkSEG8goqdhdCZjpw1iB8pdg.png" width="500" /&gt;</description>
+      <pubDate>Sat, 25 Jun 2016 01:45:04 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/17</guid>
+    </item>
+    <item>
+      <title>호모 사피엔스 연대기 - &amp;lt;사피엔스&amp;gt; 유발 하라리</title>
+      <link>https://brunch.co.kr/@@SQo/14</link>
+      <description>1. 이명현의 '별 헤는 밤'에 이런 내용이 나온다. 현재 우주의 나이는 137억 년이다. 천문학자 칼 세이건은 이를 좀 더 쉽게 설명하기 위해 137억 년을 1년으로 축약해서 설명한다. 그는 우주의 시작을 1월 1일 0시, 현재를 12월 31일 밤 12시라고 가정한다. (중략) 인류가 등장한 것은 12월 31일 밤 10시 30분이다. 1년의 끝자락 1시간</description>
+      <pubDate>Wed, 22 Jun 2016 22:58:55 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/14</guid>
+    </item>
+    <item>
+      <title>과소비 인간의 회의</title>
+      <link>https://brunch.co.kr/@@SQo/13</link>
+      <description>한 번도 입어본 적 없는 옷, 박스채 방치 중인 한정판 게임 피규어, 몇 번 신지 않은 신발들, 먼지만 쌓여가는 베이스, 스르륵 넘겨보기만 한 책, 조립하다만 레고. 과소비 인간의 이사 준비는 괴롭다. 소비의 책임을 질량으로 측정할 수 있다면 아마 최근 일주일의 무게가 가장 무거웠을 것이다.  언제 간 쓰일 거라며 모아둔 종류별 전선 뭉치들은 꿈틀거리는 운</description>
+      <pubDate>Mon, 13 Jun 2016 08:21:43 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/13</guid>
+    </item>
+    <item>
+      <title>미립자 뉴스 #3</title>
+      <link>https://brunch.co.kr/@@SQo/11</link>
+      <description>숫자로 보는 모뉴먼트 밸리 독창적이고 몽환적이며 아름답기까지 한 게임으로 유명한 모뉴먼트 밸리가 인포그래픽을 발표했다. 2년 동안 170억 가량의 수익이 발생했고, 수익의 73%가 iOS에서 발생했다.&amp;nbsp;돈을 벌려면 iOS 개발을 해야 하나 싶기도 하다. 미드 하우스 오브 카드에 게임이 노출된 이후 가장 높은 수익(8천만원 가량)을 기록됐다. 미드, TV의</description>
+      <pubDate>Fri, 27 May 2016 08:54:56 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/11</guid>
+    </item>
+    <item>
+      <title>미립자 뉴스 #2</title>
+      <link>https://brunch.co.kr/@@SQo/9</link>
+      <description>지난밤 구글 IO 키노트를 끝까지 시청하지 못하고 잠들었지만 기억을 더듬어 미립자 뉴스 두 번째 소식을 정리해보았다.  구글 홈 가정용 Siri라고 설명하면 이해가 쉬울 것 같다. 대화하듯 명령을 내리면 음악을 재생하고, 거실의 조명을 제어하거나 오븐의 타이머 설정 비행기 예약 등 스케줄을 관리를 하는 역할을 한다. 가가호호 차세대 가전제품으로써 구글 홈이</description>
+      <pubDate>Fri, 20 May 2016 02:36:26 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/9</guid>
+    </item>
+    <item>
+      <title>미립자 뉴스 #1</title>
+      <link>https://brunch.co.kr/@@SQo/8</link>
+      <description>구글 IO 2016 구글 IO 2016 행사가 몇 시간 앞으로 다가왔다. 올해 기조연설은 유튜브를 통해 VR 기기로 시청할 수 있는데&amp;nbsp;VR 대중화 시대를 여는 첫걸음이 될지도&amp;nbsp;모르겠다. 방구석에 처박혀있는 카드보드를 오랜만에 꺼내보자.  구글 스페이스 출시 웨이브, 플러스에 이어 새로운 소셜 네트워크 서비스인 구글 스페이스가 출시됐다. 안드로이드 앱을 설치</description>
+      <pubDate>Wed, 18 May 2016 09:22:29 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/8</guid>
+    </item>
+    <item>
+      <title>알래스카로부터 - &amp;lt;여행하는 나무&amp;gt; 호시노 미치오</title>
+      <link>https://brunch.co.kr/@@SQo/6</link>
+      <description>1.나를 성장시키는 것은 줄곧 이별이라고 생각해왔는데 &amp;lt;여행하는 나무&amp;gt;를 읽으면 '여행'이라는 단어를 성장지침서 제일 앞으로 이동시켜야겠다.싶다. 고등학교 때 이 책을 읽었더라면 이별보다는 여행을 더 많이 했을 것이고, 지금보다는 더 밝은 사람이 됐을 거라는 헛된 망상을 해보았다. 미지의 세계인 알래스카에 이끌린 것처럼 이 책을 읽으면 호시노 미치오의 삶에</description>
+      <pubDate>Sun, 27 Mar 2016 10:23:34 GMT</pubDate>
+      <author>한로니</author>
+      <guid>https://brunch.co.kr/@@SQo/6</guid>
+    </item>
+  </channel>
 </rss>

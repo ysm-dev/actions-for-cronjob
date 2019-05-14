@@ -1,699 +1,1881 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title><![CDATA[Junho Cho - Tech Maketh Man Sexy]]></title><description><![CDATA[Tech Maketh Man Sexy: We share our technical knowledge.]]></description><link>http://tmmse.xyz/</link><image><url>http://tmmse.xyz/favicon.png</url><title>Junho Cho - Tech Maketh Man Sexy</title><link>http://tmmse.xyz/</link></image><generator>Ghost 1.22</generator><lastBuildDate>Thu, 27 Sep 2018 05:09:54 GMT</lastBuildDate><atom:link href="http://tmmse.xyz/author/junho/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title><![CDATA[Normalization layer]]></title><description><![CDATA[<div class="kg-card-markdown"><p>What is Batch Normalization?<br>
+Instance Normalization?<br>
+Conditional Batch Normalization?<br>
+Conditional Instance Normalization?</p>
+<p><strong>Batch Normalization</strong> is first introduced by Sergey Ioffe, Christian Szegedy. <strong>It increased image classification performance significantly.</strong></p>
+<ul>
+<li><a href="https://arxiv.org/abs/1502.03167">arxiv</a><br>
+<img src="https://dynalist.io/u/bDoKdkIJlMClpWgljrA2Vve_" alt="Pasted image"></li>
+</ul>
+<p>Interested in &quot;Conditional Batch Normalization (CBN)&quot;, here's wrap up of <code>normalization</code> layers.</p>
+<p>refer to &quot;Arbitrary Style Transfer in</p></div>]]></description><link>http://tmmse.xyz/2018/04/12/normalization-layer/</link><guid isPermaLink="false">5acea89f95309e21a0de4127</guid><category><![CDATA[Deep Learning]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Thu, 12 Apr 2018 01:58:46 GMT</pubDate><media:content url="https://images.unsplash.com/photo-1521411515611-f4dd6e7ef4fb?ixlib=rb-0.3.5&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=1080&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ&amp;s=f464883a0dacdf170e0fcac2fee9ea7d" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="https://images.unsplash.com/photo-1521411515611-f4dd6e7ef4fb?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ&s=f464883a0dacdf170e0fcac2fee9ea7d" alt="Normalization layer"><p>What is Batch Normalization?<br>
+Instance Normalization?<br>
+Conditional Batch Normalization?<br>
+Conditional Instance Normalization?</p>
+<p><strong>Batch Normalization</strong> is first introduced by Sergey Ioffe, Christian Szegedy. <strong>It increased image classification performance significantly.</strong></p>
+<ul>
+<li><a href="https://arxiv.org/abs/1502.03167">arxiv</a><br>
+<img src="https://dynalist.io/u/bDoKdkIJlMClpWgljrA2Vve_" alt="Normalization layer"></li>
+</ul>
+<p>Interested in &quot;Conditional Batch Normalization (CBN)&quot;, here's wrap up of <code>normalization</code> layers.</p>
+<p>refer to &quot;Arbitrary Style Transfer in Real-time with Adaptive Instance Normalization&quot;<br>
+Well compared in this paper.</p>
+<ul>
+<li><a href="https://github.com/xunhuang1995/AdaIN-style">Torch</a></li>
+<li><a href="https://github.com/naoto0804/pytorch-AdaIN/blob/master/function.py">pytorch</a></li>
+<li><a href="https://github.com/leehomyc/Style-Transfer-Adaptive-Instance-Normalization">pytorch</a></li>
+<li><a href="https://arxiv.org/pdf/1703.06868.pdf">arxiv</a></li>
+</ul>
+<h2 id="batchnormalizationbn">Batch Normalization (BN)</h2>
+<p>$$\text{BN}(x)=\gamma (\frac{x-\mu(x)}{\sigma(x)})+\beta$$</p>
+<p>$\gamma, \beta \in \mathbb{R}^C$ are affine parameters learned from data;<br>
+mean ad standard deviation, computed across <strong>batch size and spatial dimensions indenpedently for each feature channel</strong></p>
+<p>$\mu_c(x)=\frac{1}{NHW}\sum\limits_{n=1}^N \sum\limits_{h=1}^H \sum\limits_{w=1}^W x_{nchw}$<br>
+$\sigma_c(x)=\sqrt{\frac{1}{NHW}\sum\limits_{n=1}^N \sum\limits_{h=1}^H \sum\limits_{w=1}^W (x_{nchw}-\mu_c(x))^2+\epsilon}$</p>
+<h2 id="instancenormalizationin">Instance Normalization (IN)</h2>
+<p>$$\text{IN}(x)=\gamma (\frac{x-\mu(x)}{\sigma(x)})+\beta$$</p>
+<p>$\mu_{nc}(x)=\frac{1}{HW} \sum\limits_{h=1}^H \sum\limits_{w=1}^W x_{nchw}$<br>
+$\sigma_{nc}(x)=\sqrt{\frac{1}{HW} \sum\limits_{h=1}^H \sum\limits_{w=1}^W (x_{nchw}-\mu_{nc}(x))^2+\epsilon}$</p>
+<p>While <code>BN</code> takes average among channels, <code>IN</code> takes average in each channels. Thus, each channels won't be affected. Image generation is very dependent on channels compared to image classification. <code>IN</code> takes very important parts in image generation. State-of-the-art such as CycleGAN, StarGAN ... uses <code>IN</code> instead of <code>BN</code>.</p>
+<blockquote>
+<p>In my opinion, <code>BN</code> is good for discrminative job and <code>IN</code> for generative job.</p>
+</blockquote>
+<p>Here's difference between <code>BN</code> and <code>IN</code><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-06-075151.jpg" alt="Normalization layer"></p>
+<h2 id="conditionalbatchnormalizationcbn">Conditional Batch Normalization (CBN)</h2>
+<p>First instoduced from <a href="https://arxiv.org/pdf/1707.00683.pdf">Modulating early visual processing by language</a>.<br>
+in NIPS2017. <code>CBN</code> is introduced from Auron Courville's lab.</p>
+<p><img src="https://dynalist.io/u/oqmDSTTlNweF4AvRkBCXD63a" alt="Normalization layer"></p>
+<blockquote>
+<p>Also predict delta value of $\mu$ and $\sigma$ on <code>BN</code>. Thus, $\mu$ and $\sigma$ of <code>BN</code> will be conditioned to some other Neural Net (questions, query, ...).</p>
+</blockquote>
+<h2 id="conditionalinstancenormalizationcin">Conditional Instance Normalization (CIN)</h2>
+<p>$$\text{CIN}(x;s)=\gamma^s (\frac{x-\mu(x)}{\sigma(x)})+\beta^s, s \in {1,2,3,...,S}$$<br>
+Surprisingly, the network can generate images in completely different styles by using the same convolutional parameters but different affine parameters in IN layers.</p>
+<blockquote>
+<p><code>CIN</code> is would be good for conditional image generation (sytle transfer for given style. Compute style and use the $\mu$ and $\sigma$ for image generation.)</p>
+</blockquote>
+<p>Ulyanov et al. [52] attribute the success of <code>IN</code> to its <strong>invariance to the contrast of the content image</strong>. However, <code>IN</code> takes place in the feature space, therefore it should have <strong>more profound impacts than a simple contrast normalization in the pixel space</strong>. Perhaps even more surprising is the fact that the <strong>affine parameters in <code>IN</code> can completely change the style of the output image</strong>.</p>
+<h5 id="adaptiveinstancenormalizationadain">Adaptive Instance Normalization (AdaIN)</h5>
+<p><code>AdaIN</code> has no learnable affine parameters. Instead, it adaptively computes the affine parameters from the style input:<br>
+$$\text{AdaIN}(x;s)=\sigma(y) (\frac{x-\mu(x)}{\sigma(x)})+\mu(y)$$<br>
+in which we simply scale the normalized content input with $\sigma(y)$, and shift it with $\mu(y)$.</p>
+<blockquote>
+<p>In my opinion, we already use the term <code>Conditional Normalization</code> instead of <code>Adative Normalization</code>.</p>
+</blockquote>
+<ul>
+<li><a href="https://github.com/naoto0804/pytorch-AdaIN/blob/master/function.py">codeblock in github1</a></li>
+<li><a href="https://github.com/leehomyc/Style-Transfer-Adaptive-Instance-Normalization/blob/master/AdaptiveInstanceNormalization.py">codeblock in github2</a></li>
+</ul>
+<h1 id="applications">Applications</h1>
+<h2 id="filmvisualreasoningwithageneralconditioninglayer">FiLM: Visual Reasoning with a General Conditioning Layer</h2>
+<p>by <a href="https://arxiv.org/find/cs/1/au:+Perez_E/0/1/0/all/0/1">Ethan Perez</a>, <a href="https://arxiv.org/find/cs/1/au:+Strub_F/0/1/0/all/0/1">Florian Strub</a>, <a href="https://arxiv.org/find/cs/1/au:+Vries_H/0/1/0/all/0/1">Harm de Vries</a>, <a href="https://arxiv.org/find/cs/1/au:+Dumoulin_V/0/1/0/all/0/1">Vincent Dumoulin</a>, <a href="https://arxiv.org/find/cs/1/au:+Courville_A/0/1/0/all/0/1">Aaron Courville</a><br>
+AAAI 2018. Code available at this http URL . Extends arXiv:1707.03017.</p>
+<p>This work outperforms Deepmind's &quot;relation network&quot; VQA task.</p>
+<p><a href="https://github.com/ethanjperez/film">github</a></p>
+<h2 id="conditionalinstancenormalizationusedfromalearnedrepresentationforartisticstyle">Conditional Instance Normalization used from &quot;A LEARNED REPRESENTATION FOR ARTISTIC STYLE&quot;</h2>
+<p>Vincent Dumoulin &amp; Jonathon Shlens &amp; Manjunath Kudlur, <strong>Google Brain</strong><br>
+<img src="https://dynalist.io/u/qTfFm0m8pyxW_z4DA-mH6VU9" alt="Normalization layer"></p>
+<p>Outputs multiple style trasfered output with a single network.</p>
+<h2 id="augmentedcycleganlearningmanytomanymappingsfromunpaireddata">Augmented CycleGAN: Learning Many-to-Many Mappings from Unpaired Data</h2>
+<p>by <strong>Amjad Almahairi</strong>, Sai Rajeswar, Alessandro Sordoni, Philip Bachman, <strong>Aaron Courville</strong></p>
+<p>Submitted to ICML2018, <a href="https://arxiv.org/abs/1802.10151">arXiv:1802.10151v1</a></p>
+<p>Uses <code>CIN</code> for many-to-many mapping.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[Google HackFair 돌아보기 - MetaMong]]></title><description><![CDATA[<div class="kg-card-markdown"><p>2015년 석사 입학 후 연말쯤에 소소하게 했던 프로젝트. 예전 인터뷰했던게 생각나서 공유.<br>
+<a href="https://developers-kr.googleblog.com/2016/01/google-hackfair-2-metamong.html">인터뷰 link</a></p>
+<h3 id="0">0.</h3>
+<p><a href="http://googledevkr.blogspot.kr/2015/10/hack.html">Google HackFair</a>는 구글 기술을 이용해서 만든 다양한 결과물들을 전시하고 공유하는 행사입니다. 지난 12월 5일, 프로젝트 참가자분들은 안드로이드, Cardboard, TensorFlow 등 다양한 구글 기술을 사용한 재미있는 프로젝트를 전시하고 풍성한 볼거리와 기술력 그리고 범상치 않은 업력(</p></div>]]></description><link>http://tmmse.xyz/2018/04/12/google-hackfair-interview/</link><guid isPermaLink="false">5ac1fc45f12fab7def40648d</guid><category><![CDATA[Computer Vision]]></category><category><![CDATA[Deep Learning]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Thu, 12 Apr 2018 00:29:37 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/04/20151205_180738.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2018/04/20151205_180738.jpg" alt="Google HackFair 돌아보기 - MetaMong"><p>2015년 석사 입학 후 연말쯤에 소소하게 했던 프로젝트. 예전 인터뷰했던게 생각나서 공유.<br>
+<a href="https://developers-kr.googleblog.com/2016/01/google-hackfair-2-metamong.html">인터뷰 link</a></p>
+<h3 id="0">0.</h3>
+<p><a href="http://googledevkr.blogspot.kr/2015/10/hack.html">Google HackFair</a>는 구글 기술을 이용해서 만든 다양한 결과물들을 전시하고 공유하는 행사입니다. 지난 12월 5일, 프로젝트 참가자분들은 안드로이드, Cardboard, TensorFlow 등 다양한 구글 기술을 사용한 재미있는 프로젝트를 전시하고 풍성한 볼거리와 기술력 그리고 범상치 않은 업력(?)을 선보였습니다.<br>
+행사에 참가하지 못한 분들도, 개발자들의 열정과 즐거움을 느껴볼 수 있도록, 구글 코리아 개발자 블로그를 통해 HackFair에 참가한 다양한 프로젝트 중 몇 가지를 골라, 프로젝트 참가자분들과의 인터뷰 내용을 소개해 드리려고 합니다. 두 번째로 소개해 드릴 프로젝트는 구글이 최근에 오픈 소스로 공개한 Machine Intelligence 라이브러리 TensorFlow를 활용한 MetaMong팀 입니다.</p>
+<h3 id="1">1. 간단한 팀 소개를 부탁합니다.</h3>
+<p>저희는 고등학교 친구들(순서대로 전영배, 조준호, 지완규)이 모여서 이번 구글 핵페어에 참가하게 된 메타몽입니다.</p>
+<p><img src="https://lh6.googleusercontent.com/bY2WwJw0yddjYdpQiceOBP-1nMykpzkjtCIUm9l7a0omHOIxUwUf5-BSGhtg0i-QkXewKnOxbytGSgQWTij-18WbUepiHLVNpl1XGcM96qSILPWxEZE5NhNi0wG6MSVscI8LQ0S6" alt="Google HackFair 돌아보기 - MetaMong"></p>
+<h3 id="2">2. 프로젝트 소개를 부탁합니다.</h3>
+<p>사람들은 닮은 얼굴에 관심이 많습니다. 처음 보는 사람에게 연예인 누구를 닮았다고 덕담을 해주기도 하고, 아버지는 자신의 닮은 아들의 얼굴을 보고 행복해하죠. 이런 닮은 얼굴을 기술적으로 해석해서 “이 세상에 나랑 닮은 사람을 찾아주는 메타몽”이란 서비스를 기획하게 되었습니다.</p>
+<iframe src="https://player.vimeo.com/video/146582399" width="640" height="360" frameborder="0" webkitallowfullscreen="" mozallowfullscreen="" allowfullscreen></iframe>
+<p>최근에 급부상하는 딥러닝이란 기계학습으로 인공지능 관점에서 얼굴을 인식하고 가장 닮은 얼굴을 찾아주며, 앱을 통해 사용하기 쉽게 구현하였습니다. 전영배 학생이 메타몽의 안드로이드 앱을 멋있는 머티리얼 디자인으로 구현하였고, 조준호 학생이 서비스 기획 및 얼굴 인식을 하고 닮은 사람을 찾아내 주는 알고리즘 부분을 구현, 지완규 학생이 서비스의 전체적인 부분, 서버와 얼굴 탐지, 한국인 얼굴 크롤링, 메타몽 웹서버 등을 구현했습니다.</p>
+<p><img src="https://lh6.googleusercontent.com/jboEa7-OToEMTEdoVSjNlqXThjBWmFXs3JK6YNUaXfhbZ9bpoO6YPKnAuzU-FO_JUcSEHDDrETmIjAyqmfNTCceyJvtO1MEOaLqWY4C6ssRXWXhh_wDQWQQUtXd5GUxYXdr5cUp-" alt="Google HackFair 돌아보기 - MetaMong"><br>
+<img src="https://lh4.googleusercontent.com/RffhNn769_Gts-xuCYsQ0nKcSdBG9i8XiteICNDGtJhskR9xUX5GIeG250gAT2Yby4tAik8oXh4HDp3AKiI61cKnToZtN7J1WWMCh9qHYxCqkwVNCBcXrXdfwbOQJZUTWV268Mgn" alt="Google HackFair 돌아보기 - MetaMong"></p>
+<h3 id="3hackfair">3. 프로젝트를 시작하게 된 동기와 HackFair에 참가하시게 된 계기가 궁금합니다.</h3>
+<p>저희는 각자의 독자적인 전문성을 가지고 힘을 합쳐서 재밌는 서비스를 개발해보고 싶었습니다. 마침 HackFair는 저희의 목적에 딱 맞는 프로젝트여서 재밌게 진행 할 수 있었습니다. 그리고 넥서스5x가 너무나 가지고 싶었습니다. ^^</p>
+<h3 id="4">4. 프로젝트 진행 중 기술적으로 가장 어려웠던 부분은 어떤 것이었나요? 그리고 어떻게 해결하셨나요?</h3>
+<p>아무래도 기계학습 같은 다소 장벽이 높은 알고리즘을 적용하느라 저희 수준에서 구현 가능한 범위가 무엇인지 아는 것이 가장 어려웠습니다. 조준호 학생이 관련 분야의 석사과정 중이라 얼굴인식 분야의 논문을 참고하여 팀에서 유용하게 사용할 수 있는 딥러닝 알고리즘 및 모델을 구현할 수 있었습니다. 또한, 닮은 얼굴을 찾아내야 하므로 얼굴 데이터셋이 굉장히 많이 필요한데요, 이 부분을 지완규 학생이 웹에서 한국인 얼굴만 크롤링하고 얼굴만 찾아내는 기능을 구현해서 양질의 데이터셋을 모을 수 있었습니다. 머티리얼 디자인의 “머” 자도 모르던 전영배 학생이 고군분투하며 깔끔한 인터페이스로 모든 디바이스에서 버그 없이 앱이 작동할 수 있도록 수고해주었습니다.</p>
+<h3 id="5tensorflowtensorflow">5. 구글에서 최근에 발표한, TensorFlow 라이브러리를 활용하셨습니다. TensorFlow에 관해 간단히 설명해주실 수 있을까요?</h3>
+<p>TensorFlow는 기계학습을 위한 라이브러리로 얼마전 구글이 오픈소스로 공개해서 많은 관심을 받고 있는 라이브러리입니다. 아직 공개된 지 얼마 안 되어 많은 개발자와 연구자들이 라이브러리 활용과 개선을 위해 열심히 기여하고 있습니다.</p>
+<h3 id="6tensorflow">6. 공개된 지 시간이 별로 지나지 않아, 참고할 자료도 많지 않았을 텐데 TensorFlow 라이브러리를 적용하신 특별한 이유가 있나요?</h3>
+<p>저희가 Google HackFair을 진행하면서 Google의 기술을 사용해보고 싶었는데 마침 핵페어를 진행할 때 갓 공개가 되어 뜨거운 관심을 받던 TensorFlow를 꼭 써보고 싶었습니다. TensorFlow는 얼굴에서 의미 있는 특징점(feature)을 뽑을 때 사용하였습니다. 즉 얼굴을 인식해주는 부분을 TensorFlow가 해주었습니다.</p>
+<h3 id="7tensorflow">7. TensorFlow를 사용하려고 하는 다른 개발자분들과 공유하고 싶은 내용이 있으신가요?</h3>
+<p>딥러닝 분야에는 이미 많은 라이브러리가 있는데 Google에서 많은 연구자들을 끌어모으기 위해 TensorFlow를 오픈소스로 공개했습니다. 공식 홈페이지의 Tutorial에서 매우 자세하게 설명되어 있으므로 참고하시면 큰 도움이 될 것 같습니다. 또한 많은 개발자/연구자들의 관심사이기 때문에 GitHub에서 활발하게 논의되고 있습니다. 설치도 다른 라이브러리에 비해 굉장히 쉽습니다. 특히 TensorBoard를 이용해 원하는 기능을 구현할 때, 데이터 학습을 쉽게 모니터링 할 수 있습니다. 단일 GPU 머신 등에서는 다른 라이브러리보다 조금 느리다고 하지만 알고리즘 구현이 다른 라이브러리와 비교해 쉽고 구글같은 분산 컴퓨팅 환경에서도 좋은 성능으로 쓸 수 있다는 장점이 있습니다. 또한 딥러닝에는 많은 변형 알고리즘들이 생기고 있는데 TensorFlow는 프레임워크가 굉장히 유연해서 널리 사용될 것으로 기대됩니다.</p>
+<h3 id="8">8. 향후 프로젝트를 발전시킬 추가적인 계획이 있으신가요?</h3>
+<p>사람들은 서로 닮은 사람을 찾고 SNS에서 공유를 많이 합니다. 어쩌면 저희 서비스가 닮은 사람들을 이어주는 SNS가 될 수 있다고 생각합니다.</p>
+<h3 id="9hackfair">9. 마지막으로 HackFair 행사에 관한 소감 한마디 부탁합니다.</h3>
+<p>메타몽은 졸업을 앞둔 대학생(지완규)과 석사 과정 중인 대학원생(조준호, 전영배)들이 각자의 개인 시간을 할애하며 학업과 병행한 프로젝트였습니다. 이번 프로젝트를 통해 고등학교 친구들이 다시 모여 재밌게 진행하고 전시를 통해 좋은 결실로 맺을 수 있어서 너무나 보람찬 추억이 되었습니다. 그리고 뼛속까지 공대생들의 속 터지는 디자인을 귀여운 감성으로 변신 시켜준 하영이에게 고마움을 표하고 싶습니다. 지하영 학생이 메타몽의 아기자기한 귀여운 로고, 명함을 디자인해주고 굉장히 높은 퀄리티의 영상을 밤을 새가며 제작해준 작업해준 덕분에 메타몽이 핵페어에서 더 빛났습니다. 그리고 또랑또랑한 목소리로 동영상의 나레이션을 맡아준 김예진양에게도 다시 한번 고맙습니다.</p>
+<p>각 분야의 전문성을 살린 협업에서 의미가 많았던 것 같습니다. 아무리 간단한 서비스라도 혼자 다 할 수는 없습니다. 똑똑하고 성실한 친구들과 밤새가며 서로 머리를 맞대며, 서로 배우고 아는 것을 공유하며 한 단계 더 성장한 연구자/개발자가 된 것 같습니다.<br>
+핵페어를 통해 우리가 가진 기술로 대중에게 재미를 주는 과정이 즐거웠습니다. 우리의 재능이 미술이나 음악 같은 예술은 아님에도 우리가 만든 기술 기반의 서비스를 자랑스럽게 보여줄 수 있던 핵페어 행사에 고맙습니다.</p>
+<h1 id=""></h1>
+<p>자신과 닮은 사람을 보고 즐거워하고 서로 놀리는 관람객 분들께서 메타몽을 참신하고 재밌게 생각해주셔서 감사합니다. 좋은 사람들과 좋은 인연을 가질 기회가 되었던 구글 핵페어, 다음 핵페어 행사가 있다면 당연히 다시 한번 더 재밌는 프로젝트로 참가하겠습니다!</p>
+</div>]]></content:encoded></item><item><title><![CDATA[ComboGAN : Image Translation with GAN (7)]]></title><description><![CDATA[<div class="kg-card-markdown"><p><a href="https://arxiv.org/abs/1712.06909">arixv: ComboGAN: Unrestrained Scalability for Image Domain Translation</a><br>
+<a href="https://openreview.net/forum?id=r1UXpPoLz">accpeted to ICLR2018 workshop</a><br>
+<a href="https://www.reddit.com/r/MachineLearning/comments/7la3ux/r_combogan_unrestrained_scalability_for_image/">reddit</a><br>
+<a href="https://github.com/AAnoosheh/ComboGAN">github</a></p>
+<h1 id="scalibilityissueformultidomains">Scalibility issue for multi domains</h1>
+<h1 id=""></h1>
+<p>CycleGAN : Two-domain models <strong>taking days to train</strong> on current hardware, <strong>the number of domains quickly becomes limited by the time and resources</strong> required to process them.<br>
+Propose a <strong>multi-component image translation</strong></p></div>]]></description><link>http://tmmse.xyz/2018/04/09/image-translation-with-gan-7/</link><guid isPermaLink="false">5acb07be95309e21a0de411f</guid><category><![CDATA[Computer Vision]]></category><category><![CDATA[Deep Learning]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Mon, 09 Apr 2018 06:28:16 GMT</pubDate><content:encoded><![CDATA[<div class="kg-card-markdown"><p><a href="https://arxiv.org/abs/1712.06909">arixv: ComboGAN: Unrestrained Scalability for Image Domain Translation</a><br>
+<a href="https://openreview.net/forum?id=r1UXpPoLz">accpeted to ICLR2018 workshop</a><br>
+<a href="https://www.reddit.com/r/MachineLearning/comments/7la3ux/r_combogan_unrestrained_scalability_for_image/">reddit</a><br>
+<a href="https://github.com/AAnoosheh/ComboGAN">github</a></p>
+<h1 id="scalibilityissueformultidomains">Scalibility issue for multi domains</h1>
+<h1 id=""></h1>
+<p>CycleGAN : Two-domain models <strong>taking days to train</strong> on current hardware, <strong>the number of domains quickly becomes limited by the time and resources</strong> required to process them.<br>
+Propose a <strong>multi-component image translation model</strong> and training scheme which <strong>scales linearly - both in resource consumption and time</strong> required - with the number of domains.</p>
+<h1 id="differencewithstargan">Difference with StarGAN</h1>
+<p>So StarGAN uses a single generator and a single discriminator, which is adequate when the domains are actually slight variations of each other, such as human faces with different hair colors or smiles, as a shared network can potentially make use of common features. During the course of our own trial-and-error, we found using a StarGAN-like approach starts to break down when the domains are not so similar.</p>
+<p>ComboGAN increases the number of model parameters as more domains are added, thus being able to scale up a large number of domains, at which StarGAN could be constrained by the one-model setup.</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-165614.png" alt=""><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-165701.png" alt=""><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-165936.png" alt=""></p>
+<p>Decouple Generator. $y=G_{YX}(x)=Decoder_Y(Encoder_X(x))$<br>
+$Encoder_X(x)$ can be cached</p>
+<p>One generator per domain, linearly increase. with $n$-domains, CycleGAN : $n(n-1)$ Generators needed, ComboGAN :  $n$ Generators.<br>
+Training iterations, model capacity also reduces.<br>
+the # of Discrimitors are same as CycleGAN. In the case of more than two domains, the encoder output has to be suitable for all other decoders, meaning encoders cannot specialize.<br>
+Implies the encoders must put image into shared representation. Encoder sould make central content. (similar to my work PaletteNet)</p>
+<h1 id="results">Results</h1>
+<p><img src="https://dynalist.io/u/VnRi1fKGi011FcVLHBBPl5cL" alt="Pasted image"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-171905.jpg" alt=""></p>
+</div>]]></content:encoded></item><item><title><![CDATA[StarGAN : Image Translation with GAN (6)]]></title><description><![CDATA[<div class="kg-card-markdown"><h2 id="starganacceptedascvpr2018oralpresentation">StarGAN : accepted as CVPR2018 oral presentation.</h2>
+<p><a href="https://github.com/yunjey/StarGAN">github</a><br>
+<a href="https://arxiv.org/abs/1711.09020">arxiv</a></p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144205.png" alt=""><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144217.png" alt=""></p>
+<p>(a) Each domain shift needs generators. (b) Share one generator and use latent code of each domain</p>
+<p>The previous limitation of pix2pix, DTN, CycleGAN &amp; DiscoGAN, BicycleGAN is that <strong>they only handle two domains: the source and the target. But, there are</strong></p></div>]]></description><link>http://tmmse.xyz/2018/04/05/image-translation-with-gan-6/</link><guid isPermaLink="false">5ac4e07b95309e21a0de4111</guid><category><![CDATA[Computer Vision]]></category><category><![CDATA[Deep Learning]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Wed, 04 Apr 2018 15:53:41 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/04/2018-04-04-144205.png" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><h2 id="starganacceptedascvpr2018oralpresentation">StarGAN : accepted as CVPR2018 oral presentation.</h2>
+<img src="http://tmmse.xyz/content/images/2018/04/2018-04-04-144205.png" alt="StarGAN : Image Translation with GAN (6)"><p><a href="https://github.com/yunjey/StarGAN">github</a><br>
+<a href="https://arxiv.org/abs/1711.09020">arxiv</a></p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144205.png" alt="StarGAN : Image Translation with GAN (6)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144217.png" alt="StarGAN : Image Translation with GAN (6)"></p>
+<p>(a) Each domain shift needs generators. (b) Share one generator and use latent code of each domain</p>
+<p>The previous limitation of pix2pix, DTN, CycleGAN &amp; DiscoGAN, BicycleGAN is that <strong>they only handle two domains: the source and the target. But, there are multi-domains in general</strong>. Not only summer &amp; winter, there are spring and fall. <strong>With $n$ domains, It's not practical to learn all $n(n-1)$ generators.</strong></p>
+<h1 id="contribution">Contribution</h1>
+<ul>
+<li>GAN that learns the mappings among <strong>multiple domains using only a single generator and a discriminator</strong>, training effectively from images of all domains.</li>
+<li>Successfully <strong>learn multi-domain image translation between multiple datasets by utilizing a mask vector</strong> method that enables StarGAN to control all available domain labels.</li>
+<li>Provide both <strong>qualitative and quantitative results on facial attribute transfer and facial expression synthesis</strong> tasks using StarGAN, showing its superiority over baseline models.</li>
+</ul>
+<h1 id="overview">Overview</h1>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144228.png" alt="StarGAN : Image Translation with GAN (6)"></p>
+<ul>
+<li>Translate an input image $x$ into an output image $y$ conditioned on the target domain label $c$.
+<ul>
+<li>When training, translate $y$ back to $x$ with given orginal domain label $c'$.</li>
+</ul>
+</li>
+<li>$D_{src}(x)$ as a probability distribution over sources given by $D$</li>
+</ul>
+<p>\begin{equation}<br>
+D:x \rightarrow ({D_{src}(x), D_{cls}(x)})<br>
+\end{equation}</p>
+<p>Discriminator produces probability distributions over both sources and domain labels.</p>
+<p>\begin{equation}<br>
+G(x,c) \rightarrow y<br>
+\end{equation}</p>
+<h2 id="adversarialloss">Adversarial Loss</h2>
+<p>\begin{equation}<br>
+\mathcal{L}_{adv}=\mathbb{E}_x[\log D_{src}(x)] + \mathbb{E}_{x,c}[\log(1-D_{src}(G(x,c)))]<br>
+\end{equation}<br>
+Add auxiliary classifier on top of $D$, <a href="https://arxiv.org/abs/1610.09585">ACGAN</a></p>
+<h3 id="domainclassificationloss">Domain Classification Loss</h3>
+<h5 id="adomainclassificationlossofrealimagesusedtooptimized">A domain classification loss of real images used to optimize $D$</h5>
+<p>\begin{equation}<br>
+\mathcal{L}^r_{cls}=\mathbb{E}_{x,c'}[-\log D_{cls}(c'|x)]<br>
+\end{equation}</p>
+<ul>
+<li>$D_{cls}(c'|x)$ : a probability distrbution over domain labels computed by $D$</li>
+<li>input image and domain label pair $(x,c')$ given by training dataset</li>
+<li>$D$ learns to classify a real image $x$ to its corresponding original domain $c'$</li>
+</ul>
+<h5 id="adomainclassificationlossoffakeimagesusedtooptimizeg">A domain classification loss of fake images used to optimize $G$</h5>
+<p>\begin{equation}<br>
+\mathcal{L}^f_{cls}=\mathbb{E}_{x,c'}[-\log D_{cls}(c|G(x,c))]<br>
+\end{equation}</p>
+<ul>
+<li>identical to $\mathcal{L}^f_{cls}=\mathbb{E}_{x,c'}[-\log D_{cls}(c|y)]$ by $G(x,c) \rightarrow y$</li>
+<li>$G$ minimizes $\mathcal{L}^f_{cls}$ to $y$ classified as target domain $c$</li>
+</ul>
+<h5 id="reconstructionloss">Reconstruction loss</h5>
+<p>\begin{equation}<br>
+\mathcal{L}_{rec} = \mathbb{E}_{x,c,c'}  [||x - G(G(x,c),c')||_1]<br>
+\end{equation}</p>
+<p>Note that a single generator used twice.</p>
+<h5 id="fullobjective">Full Objective</h5>
+<p>\begin{equation}<br>
+\mathcal{L}_{D}=-\mathcal{L}_{adv}+ \lambda_{cls}\mathcal{L}^r_{cls}<br>
+\end{equation}<br>
+\begin{equation}<br>
+\mathcal{L}_{G}=\mathcal{L}_{adv}+\lambda_{cls}\mathcal{L}^f_{cls}+\lambda_{rec}\mathcal{L}_{rec}<br>
+\end{equation}</p>
+<p>$\lambda_{cls}=1, \lambda_{rec}=10$</p>
+<h1 id="trainingwithmultipledatasets">Training with Multiple Datasets</h1>
+<p><strong>StarGAN</strong> simultaneously incorporates multiple datsets of different types of labels (gender/hair color and facial expression). An issue when learning from multiple datasets, however, is that the label information is only partially known to each dataset.</p>
+<blockquote>
+<p>CelebA : hair color and gender, RaFD : facial expressions</p>
+</blockquote>
+<p>Label vector $c'$ is required when reconstructing the input image $x$ from the translated image $G(x, c)$ (See $\mathcal{L}^f_{cls}$). Mask vector $m$ allows StarGAN ignore unspecified labels.</p>
+<blockquote>
+<p>$n$ : # of datasets, $m$ is $n$-dim one-hot vector</p>
+</blockquote>
+<p>Unified label $\tilde{c}=[c_1, ... , c_n, m]$, all concatenated, here with 2 datasets, $n=2$.</p>
+<p>$G$ learns to <em>ignore</em> the unspecified labels... wich are zero vectors <em>focus</em> on the explicitly given label.</p>
+<p>Extended auxiliary classifier of the $D$ over labels for all dataset. Only minimize to the know label.</p>
+<h1 id="implementation">Implementation</h1>
+<p>Replace Vanilla GAN loss $\mathcal{L}_{adv}$ with Wasserstein GAN with gradient penalty.<br>
+\begin{equation}<br>
+\mathcal{L}_{adv} =\mathbb{E}_x [D_{src}(x)] - \mathbb{E}_{x,c} [D_{src}(G(x,c))] - \lambda_{gp}\mathbb{E}_{\hat{x}} [(||\nabla_{\hat{x}} D_{src}(\hat{x})||_2 - 1)^2]<br>
+\end{equation}</p>
+<p>$\lambda_{gp} = 10$ and $\hat{x}$ is sampled uniformly along a straight line between a pair of a real and generated images.</p>
+<p>Structure from <a href="http://tmmse.xyz/image-translation-with-gan-4">CycleGAN</a>, 2 Convs of 2-strided, 6 ResBlock, 2 Deconv of 2-strided.<br>
+Instance Norm for $G$ no norm for $D$, leverage PatchGANs  (sec7.2).</p>
+<h1 id="experiments">Experiments</h1>
+<p>3 types of experiemtns.</p>
+<ul>
+<li>Compare recent methods on facial attribute transfer by user studies
+<ul>
+<li>DIAT, CycleGAN, IcGAN (cGAN). Trained multiple models for every pair of two different domains.</li>
+</ul>
+</li>
+<li>Classification experiment</li>
+<li>Empirical results that StarGAN can learn image-to-image translation from multiple dataset</li>
+</ul>
+<p><strong>CelebA</strong><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144313.png" alt="StarGAN : Image Translation with GAN (6)"></p>
+<blockquote>
+<p>H+G : cross domain models like DIAT, CycleGAN transfer over again. H then G.</p>
+</blockquote>
+<p>One possible reason is the regularization effect of StarGAN through a multi-task learning framework. In other words, rather than training a model to perform a fixed translation (e.g., brown- to-blond hair), which is prone to <strong>overfitting</strong>. This allows model to learn <strong>reliable features universally applicable to multiple domains of images</strong> with different facial attribute values.</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144324.png" alt="StarGAN : Image Translation with GAN (6)"></p>
+<p>Transfer in gender : DIAT, StarGAN are similar but G+A shows significant. StarGAN handles multi-attribute transfer tasks, trained to randomly generating image of a target domain label.</p>
+<p><strong>RaFD</strong><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144358.png" alt="StarGAN : Image Translation with GAN (6)"></p>
+<p>Superiority of StarGAN in the image quality is due to its <strong>implicit data augmentation effect from a multi-task learning setting</strong>. (Good explanation but not verified.)</p>
+<p>RaFD images contain a relatively small size of samples, e.g., 500 images per domain. When trained on two domains, DIAT and CycleGAN can only use 1,000 training images at a time, but StarGAN can use 4,000 images in total from all the available domains for its training. This allows StarGAN to properly learn how to maintain the quality and sharpness of the generated output.</p>
+<p>Similar to the concept how &quot;Google Translate&quot; learns human language by training multiple languages together and map into some what central lanuage feature space. But still, not fully verified.</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144533.png" alt="StarGAN : Image Translation with GAN (6)"></p>
+<p><strong>CelebA + RaFD</strong><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144415.png" alt="StarGAN : Image Translation with GAN (6)"></p>
+<ul>
+<li>StarGAN-SNG (Single) only on RaFD, StarGAN-JNT (Joint) on CelebA and RaFD.</li>
+<li>StarGAN-JNT can leverage both datasets. By utilizing both CelebA and RaFD, StarGAN-JNT can improve these low-level tasks, which is beneficial to learning facial expression synthesis.</li>
+</ul>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144559.png" alt="StarGAN : Image Translation with GAN (6)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144605.png" alt="StarGAN : Image Translation with GAN (6)"></p>
+<ul>
+<li>$m$ mask vector wrongly applied on second row.</li>
+<li>'Young' attribute is masked thus became old.</li>
+</ul>
+<h1 id="appendix">Appendix</h1>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2018-04-04-144642.png" alt="StarGAN : Image Translation with GAN (6)"></p>
+<h1 id="mythought">My thought</h1>
+<p><strong>Actually, StarGAN not only deals with multi-domains but also multi-attributes.</strong> Thus it is more impressive and general setting, because domains can't be overlapped but attributes can be.</p>
+<p>Masking vector is a little bit wierd but works good in practice.</p>
+<p><strong>I still wonder how StarGAN, which I think it as a good assemble of cGAN + ACGAN, produces such high quality results.</strong> Maybe I underestimated the power of GAN, and using auxiliary classifier to augment dataset approach helped GAN training a lot. Generator might indeed learned the data distribution better than those in CycleGAN, or changing face might be easy problem for GAN.</p>
+<p>To be fair, we also need to try CycleGAN with single generator concept as StarGAN and apply on other dataset (day2night, horse2zebra). Then, <strong>see if StarGAN concept really avoid overfitting and make reliable features universally applicable to multiple domains of images with implicit data augmentation</strong>.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[BicycleGAN : Image Translation with GAN (5)]]></title><description><![CDATA[<div class="kg-card-markdown"><h2 id="limitationsofpix2pixdtndiscogancyclegan">Limitations of pix2pix, DTN, DiscoGAN &amp; CycleGAN?</h2>
+<ul>
+<li>They produce single answer.</li>
+<li>They are deterministic models.
+<ul>
+<li>Translates an image in one-to-one</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fpa9y2frdcj31400kajtc.jpg" alt="right fit"></p>
+<ul>
+<li>Paired set, One-to-One : pix2pix (CVPR2017)</li>
+<li>Unpaired set, One-to-One : DTN (ICLR2017), CycleGAN (ICCV2017)</li>
+<li>Paired set, One-to-Many : ???</li>
+</ul>
+<h1 id="bicyclegan">BicycleGAN:</h1>
+<p>Toward Multimodal Image-to-Image Translation (NIPS2017)<br>
+<a href="https://github.com/junyanz/BicycleGAN">BicycleGAN github</a></p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpa9zhv6ivj30os07yabc.jpg" alt="inline"><br>
+<img src="https://junyanz.github.io/BicycleGAN/index_files/day2night.gif" alt="fit"><br>
+<img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpa9zpkf7aj31200p6ait.jpg" alt="inline"></p>
+<h2 id="easyapproach">Easy approach:</h2>
+<ul>
+<li>Adopt stochastically sampled noise $N(</li></ul></div>]]></description><link>http://tmmse.xyz/2018/04/03/image-translation-with-gan-5/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf7706</guid><category><![CDATA[Computer Vision]]></category><category><![CDATA[Deep Learning]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Tue, 03 Apr 2018 04:24:31 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/04/day2night.gif" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><h2 id="limitationsofpix2pixdtndiscogancyclegan">Limitations of pix2pix, DTN, DiscoGAN &amp; CycleGAN?</h2>
+<ul>
+<li>They produce single answer.</li>
+<li>They are deterministic models.
+<ul>
+<li>Translates an image in one-to-one</li>
+</ul>
+</li>
+</ul>
+<img src="http://tmmse.xyz/content/images/2018/04/day2night.gif" alt="BicycleGAN : Image Translation with GAN (5)"><p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fpa9y2frdcj31400kajtc.jpg" alt="BicycleGAN : Image Translation with GAN (5)"></p>
+<ul>
+<li>Paired set, One-to-One : pix2pix (CVPR2017)</li>
+<li>Unpaired set, One-to-One : DTN (ICLR2017), CycleGAN (ICCV2017)</li>
+<li>Paired set, One-to-Many : ???</li>
+</ul>
+<h1 id="bicyclegan">BicycleGAN:</h1>
+<p>Toward Multimodal Image-to-Image Translation (NIPS2017)<br>
+<a href="https://github.com/junyanz/BicycleGAN">BicycleGAN github</a></p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpa9zhv6ivj30os07yabc.jpg" alt="BicycleGAN : Image Translation with GAN (5)"><br>
+<img src="https://junyanz.github.io/BicycleGAN/index_files/day2night.gif" alt="BicycleGAN : Image Translation with GAN (5)"><br>
+<img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpa9zpkf7aj31200p6ait.jpg" alt="BicycleGAN : Image Translation with GAN (5)"></p>
+<h2 id="easyapproach">Easy approach:</h2>
+<ul>
+<li>Adopt stochastically sampled noise $N(z)$ to the deterministic generator</li>
+<li>Hope noise act as latent code to produce diverse results</li>
+</ul>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fpaa7m2wjkj30n20eyt9o.jpg" alt="BicycleGAN : Image Translation with GAN (5)"><br>
+<img src="https://ws4.sinaimg.cn/large/006tNc79gy1fpaae06sovj314006cmyk.jpg" alt="BicycleGAN : Image Translation with GAN (5)"></p>
+<h3 id="howeveritcausesmodecollapse">However, it causes mode collapse</h3>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fpaaeq1d28j30y20eo78u.jpg" alt="BicycleGAN : Image Translation with GAN (5)"></p>
+<ul>
+<li>Generates from multiple noises but mapped to similar outputs</li>
+<li>Generator do not care noise</li>
+<li>Generate learns to ignore random noise when conditioned on relevant context (input image)</li>
+</ul>
+<h2 id="encoder">Encoder</h2>
+<ul>
+<li>Encourage bijection between the output &lt;-&gt; latent space</li>
+<li>Disturb two different latent codes to generate same output.
+<ul>
+<li>Avoid mode collapse</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fpaaiosreqj30zs0f640q.jpg" alt="BicycleGAN : Image Translation with GAN (5)"></p>
+<h2 id="conditionalvariationalautoencodergan">Conditional Variational Autoencoder-GAN</h2>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fpaam8bn1sj30rc0f6dha.jpg" alt="BicycleGAN : Image Translation with GAN (5)"><br>
+<img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpaalwfmobj3186086wjx.jpg" alt="BicycleGAN : Image Translation with GAN (5)"></p>
+<ul>
+<li>Encoder predicts Gaussian</li>
+<li>Encoding is trained with real data (B)</li>
+<li>Generator takes latent code with rich info of $B$ and input $A$.</li>
+<li>At test time, generated from random latent code may produce unrealistic image.</li>
+<li>Generator never see random noise.</li>
+<li>Discriminator never see samples from generated from random noise</li>
+</ul>
+<h2 id="conditionallatentregressorgan">Conditional Latent Regressor GAN</h2>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fpaat3h3x0j30o20e40tv.jpg" alt="BicycleGAN : Image Translation with GAN (5)"><br>
+<img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpaatil0yaj310a04s3zb.jpg" alt="BicycleGAN : Image Translation with GAN (5)"></p>
+<ul>
+<li>Encoder is latent code regressor.</li>
+<li>Generated sample is encoded and mapped back to random noise.</li>
+<li>Latent code is easily and randomly sampled, as test time.</li>
+<li>Generator never sees ground truth $B$.</li>
+<li>More vulnerable to mode collapse, probably small dimension of $z$ and $L_1$ loss on $z$ and $\hat{z}$ is not enough to prevent generator easily fool discriminator?</li>
+</ul>
+<h1 id="bicyclegan">BicycleGAN</h1>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fpaaukzcrmj314k0gin09.jpg" alt="BicycleGAN : Image Translation with GAN (5)"></p>
+<h3 id="trainbothmodeltogetherwithbenefitofcyclelossinzandb">Train both model together, with benefit of cycle-loss in $z$ and $B$.</h3>
+<h2 id="result">Result</h2>
+<ul>
+<li>Pix2pix + noise : similar realistic outputs</li>
+<li>cVAE-GAN : adds variation but artifacts caused from random sample at test</li>
+<li>cLR-GAN : less variant in output and sometimes mode collapse</li>
+<li>BicycleGAN : hybrid results both diverse and realistic</li>
+</ul>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fpaavasw1pj313q0g00xq.jpg" alt="BicycleGAN : Image Translation with GAN (5)"></p>
+<h2 id="quantativeexperiment">Quantative experiment</h2>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fpaavpgf1fj30ye0dg42l.jpg" alt="BicycleGAN : Image Translation with GAN (5)"></p>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li>Propose solution to mode collapse in the conditional generative setting</li>
+<li>Combine multiple objectives for encouraging a bijective mapping between the latent and output spaces</li>
+<li>Produce both realistic and diverse</li>
+<li>Latent code could be replaced with user controllable parameter in the future</li>
+</ul>
+<h2 id="trends">Trends</h2>
+<ul>
+<li>Paired set, One-to-One : <a href="http://tmmse.xyz/2018/04/02/image-translation-with-gan-2">pix2pix</a> (CVPR2017)</li>
+<li>Unpaired set, One-to-One : <a href="http://tmmse.xyz/2018/04/02/image-translation-with-gan-3">DTN</a> (ICLR2017), <a href="http://tmmse.xyz/2018/04/02/image-translation-with-gan-4">DiscoGAN</a> (ICML2017), <a href="http://tmmse.xyz/2018/04/02/image-translation-with-gan-4">CycleGAN</a> (ICCV2017)</li>
+<li>Paired set, One-to-Many : BicycleGAN (NIPS2017)</li>
+<li>In the future:
+<ul>
+<li>Unpaired set, One-to-Many : <a href="https://arxiv.org/abs/1802.10151">Augmented CycleGAN</a> (probabily ICML2018 submitted), <a href="https://arxiv.org/abs/1711.05139">XGAN</a> (ICLR2018 <a href="https://openreview.net/forum?id=rkWN3g-AZ">rejected</a>)</li>
+<li>Multi domains. Not only a source domain to a target domain: <a href="http://tmmse.xyz/2018/04/05/image-translation-with-gan-6">StarGAN</a> (CVPR2018 accepted)</li>
+<li>User controllable noise vector in BicycleGAN</li>
+</ul>
+</li>
+</ul>
+</div>]]></content:encoded></item><item><title><![CDATA[Ghost : changing font, 폰트 바꾸기]]></title><description><![CDATA[<div class="kg-card-markdown"><h1 id="inshort">In short;</h1>
+<p>Assuming you have Ghost v1.0.0 (or above) with default theme, Casper.<br>
+Default font is Georgia. We will change font with <a href="https://fonts.google.com">Google Web fonts</a>.</p>
+<pre><code>cd {your-ghost-dir}/content/themes/casper    # move to theme directory
+npm install gulp-cli -g                      # install gulp globally
+npm install                                  # install npm packages in theme</code></pre></div>]]></description><link>http://tmmse.xyz/2018/04/03/ghost-changing-font/</link><guid isPermaLink="false">5ac2434caafb670aa2e1f0c0</guid><category><![CDATA[ghost]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Mon, 02 Apr 2018 15:34:27 GMT</pubDate><media:content url="https://images.unsplash.com/photo-1468404166635-56e2d75ee491?ixlib=rb-0.3.5&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=1080&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ&amp;s=87f6659e311927a1102ebbb48f241db0" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><h1 id="inshort">In short;</h1>
+<img src="https://images.unsplash.com/photo-1468404166635-56e2d75ee491?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ&s=87f6659e311927a1102ebbb48f241db0" alt="Ghost : changing font, 폰트 바꾸기"><p>Assuming you have Ghost v1.0.0 (or above) with default theme, Casper.<br>
+Default font is Georgia. We will change font with <a href="https://fonts.google.com">Google Web fonts</a>.</p>
+<pre><code>cd {your-ghost-dir}/content/themes/casper    # move to theme directory
+npm install gulp-cli -g                      # install gulp globally
+npm install                                  # install npm packages in theme dir
+gulp                                  # execute gulp. monitoring changes in theme
+</code></pre>
+<p>And <strong>remove every  <code>font-family : Georgia, serif;</code> in <code>./assets/css/screen.css</code></strong><br>
+For ex)</p>
+<pre><code>.post-card-excerpt {
+    font-family: Nanum Gothic, serif;
+}
+</code></pre>
+<p>to</p>
+<pre><code>.post-card-excerpt {
+}
+</code></pre>
+<p>The changes in <code>./assets/css/screen.css</code> will be compiled to <code>./assets/built/screen.css</code> by <code>gulp</code>.<br>
+<strong>And restart your blog at theme directory by <code>ghost restart</code></strong></p>
+<blockquote>
+<p>So, if you don't want to <code>npm install</code> anything, <strong>probabily</strong> removing all <code>font-family : Georgia, serif;</code> in <code>./assets/built/screen.css</code> also works.</p>
+</blockquote>
+<p>Then, find favorite font in <a href="https://fonts.google.com">Google Web fonts</a>. I picked <code>Nanum Gothic</code> font. <strong>Inject following code</strong> at the first row of <code>Blog Header</code> into in Labs,  <code>http://your-blog.com/ghost/#/settings/code-injection/</code></p>
+<pre><code class="language-html">&lt;link href='https://fonts.googleapis.com/css?family=Nanum+Gothic' rel='stylesheet' type='text/css'&gt;
+&lt;style&gt;
+body,  
+h1, h2, h3, h4, h5, h6,  
+.main-nav a,
+.subscribe-button,
+.page-title,
+.post-meta,
+.read-next-story .post:before,
+.pagination,
+.site-footer,{
+    font-family:&quot;Nanum Gothic&quot;, sans-serif;
+}
+[class^=&quot;icon-&quot;]:before, [class*=&quot; icon-&quot;]:before {
+	font-family:&quot;Nanum Gothic&quot;, sans-serif;
+&lt;/style&gt;
+</code></pre>
+<p>Done.</p>
+<hr>
+<h1 id="">우리말로 길게 말해서;</h1>
+<p>어느 <a href="https://blog.lorentzca.me/change-ghost-blog-font/">일본 블로그</a>를 자동 한글 번역해서 봤는데, 참고해서 해봄. code injection을 통해서하는데, 목표는 구글 웹포트의 Nanum gothic을 사용하는 것. <a href="https://fonts.google.com">구글 웹폰트</a> 그리고 <a href="http://makebct.net/%EA%B5%AC%EA%B8%80%EC%9B%B9%ED%8F%B0%ED%8A%B8-%EB%B6%88%EB%9F%AC%EC%98%A4%EA%B8%B0/?cat=148/">무료 사용 가능 한글 구글 웹폰트</a>에서 원하는 폰트를 찾는다.</p>
+<p>나눔고딕은</p>
+<pre><code class="language-html">&lt;link href='https://fonts.googleapis.com/css?family=Nanum+Gothic' rel='stylesheet' type='text/css'&gt;
+&lt;style&gt;
+body,  
+h1, h2, h3, h4, h5, h6,  
+.main-nav a,
+.subscribe-button,
+.page-title,
+.post-meta,
+.read-next-story .post:before,
+.pagination,
+.site-footer,{
+    font-family:&quot;Nanum Gothic&quot;, sans-serif;
+}
+[class^=&quot;icon-&quot;]:before, [class*=&quot; icon-&quot;]:before {
+	font-family:&quot;Nanum Gothic&quot;, sans-serif;
+&lt;/style&gt;
+</code></pre>
+<p>그리고 내가 더 좋아하는 <strong>나눔바른고딕</strong>은</p>
+<pre><code class="language-html">&lt;link href='https://cdn.rawgit.com/openhiun/hangul/14c0f6faa2941116bb53001d6a7dcd5e82300c3f/nanumbarungothic.css' rel='stylesheet' type='text/css'&gt;
+&lt;style&gt;
+body,  
+h1, h2, h3, h4, h5, h6,  
+.main-nav a,
+.subscribe-button,
+.page-title,
+.post-meta,
+.read-next-story .post:before,
+.pagination,
+.site-footer,
+[class^=&quot;icon-&quot;]:before, [class*=&quot; icon-&quot;]:before {
+	font-family:&quot;Nanum Barun Gothic&quot;, sans-serif;
+&lt;/style&gt;
+</code></pre>
+<p>를 code injection에서 <code>Blog Header</code>에서 맨 처음에 삽입해준다.</p>
+<p>그러나 이상하게도 블로그 제목만 반영되는 현상 발견..<br>
+블로그 front 페이지 abstract와 포스트의 메인 컨텐츠의 폰트가 바뀌지 않음 발견. 보니까 안바뀌는 폰트가 Georgia이었다. ghost의 theme폴더에서 <code>./asset/css/screen.css</code> 파일에서 <code>Georgia</code> 폰트를 발견했다.</p>
+<p>특히 그부분에서 문제가 됬던 파트들, <code>.post-card-excerpt</code>, <code>.post-full-content</code> 등에서 <code>Georgia</code>로 고정되어 있음을 알수있었다. 따라서 그 부분  <code>font-family : Georgia, serif;</code>를 원하는 폰트로 바꾸거나 아니면 아예 삭제한다.</p>
+<p>그리고 css파일이 바뀔때마다 테마 홈 디렉토리에서 <code>ghost restart</code> 해준다.</p>
+<p>하지만 그래도 반영이 안되는데. 왜냐하면 <code>./default.hbs</code>에서 <code>&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;{{asset &quot;built/screen.css&quot;}}&quot; /&gt;</code> 로 built된 css만 반영되기 때문이다.</p>
+<p>그래서 built가 무엇인가 하니 <code>./READEME.md</code>에서 자동으로 css의 폴더를 compile한 것이라 한다. 즉 <code>./assets/built/screen.css</code>는 <code>./assets/css/screen.css</code>를 압축시킨 동일한 code이다. 이는 <a href="https://brettdewoody.com/optimizing-ghost-pagespeed/">css의 inlining을 통해 optimize한다</a> 라는 글에서 힌트를 얻었다.</p>
+<p>따라서 <code>./assets/built/screen.css</code> 문제되는 부분의 <code>Georgia</code>를 <code>Nanum Gothic</code>으로 바꿔주면 되는데 테마 개발 의도랑 다르니 그냥 테마 <code>READEME.md</code>가 하라는대로 하자.</p>
+<p>그래서 우선 gulp가 필요한데, 지속적으로 테마의 file들을 보다가 수정사항이 있으면 자동으로 compile해주는 것이라 보면 된다. 전역 설치해줘야 하니 <code>npm install gulp-cli -g</code>. 테마 폴더에서 <code>npm install</code> 후 <code>gulp</code>실행 계속 켜져있는다.</p>
+<p>그럼 아까 했던 바꿨던 <code>Georgia</code>를 <code>Nanum Gothic</code>으로 바꾼게 compile되는 것이 확인되면 블로그 폰트도 바뀌는 것을 확인할 수 있다.</p>
+<p>나는 거기에 <code>code block</code>의 폰트까지 내가 좋아하는 Ubuntu로 바꾸었다. 만족감 에헿.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[Ghost 1.0.0 로 업그레이드 + 밀린 포스트들]]></title><description><![CDATA[<div class="kg-card-markdown"><h1 id="1">1</h1>
+<p>귀찮아서 업그레이드를 미루고 있었는데, 거대 업데이트를 한참 전에 했길래 간만에 업그레이드했다. 간만에 블로그 만지작 거리는게 재밌었는데 이내 업그레이드는 커다란 귀찮음을 가져다주었다. 결론적으로 서버의 리눅스가 Ubuntu 16.04가 아니면 자잘한 에러가 많다. 이번 버전부터 <code>ghost-cli</code>를 통해 v1이상에서 쉽게 업그레이드가 가능토록 cli를 지원한다. <a href="http://tmmse.xyz/2018/04/01/command-line-interface/">역시 갓갓 cli다</a>.</p>
+<p>그리고 힘들게 Nginx등을 설정해줬었는데(</p></div>]]></description><link>http://tmmse.xyz/2018/04/02/ghost-upgrade-more-posts/</link><guid isPermaLink="false">5ac19dd093c7ee06e8cf77a4</guid><category><![CDATA[ghost]]></category><category><![CDATA[Getting Started]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Mon, 02 Apr 2018 03:23:04 GMT</pubDate><media:content url="https://images.unsplash.com/photo-1428790067070-0ebf4418d9d8?ixlib=rb-0.3.5&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=1080&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ&amp;s=8a82be049adf657ff185b90e1954c62b" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><h1 id="1">1</h1>
+<img src="https://images.unsplash.com/photo-1428790067070-0ebf4418d9d8?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ&s=8a82be049adf657ff185b90e1954c62b" alt="Ghost 1.0.0 로 업그레이드 + 밀린 포스트들"><p>귀찮아서 업그레이드를 미루고 있었는데, 거대 업데이트를 한참 전에 했길래 간만에 업그레이드했다. 간만에 블로그 만지작 거리는게 재밌었는데 이내 업그레이드는 커다란 귀찮음을 가져다주었다. 결론적으로 서버의 리눅스가 Ubuntu 16.04가 아니면 자잘한 에러가 많다. 이번 버전부터 <code>ghost-cli</code>를 통해 v1이상에서 쉽게 업그레이드가 가능토록 cli를 지원한다. <a href="http://tmmse.xyz/2018/04/01/command-line-interface/">역시 갓갓 cli다</a>.</p>
+<p>그리고 힘들게 Nginx등을 설정해줬었는데(<a href="http://tmmse.xyz/2015/12/12/blogging-platform-ghost-start/">처음 블로그 글에서 소개</a>), 이제 <code>systemd</code>와 <code>systemctl</code>을 통해서 편하게 <code>ghost-cli</code>에 있는 <code>ghost start</code> 커맨드로 쉽게 블로그 서버를 운영할 수 있다. 그리고 사실 저런걸 몰라도, 설치과정에서 다 해주기 때문에 굉장히 편하다. 근데 그 설치가 ubuntu 16.04이어야 편하게 됬다. 재작년에 Digital Ocean에서 대여하기 시작한 서버는 14.04여서 업그레이드가 귀찮아서 어떻게든 해볼랬는데 결국은 업그레이드했다. 이게 벌써 재작년이라니 새삼스럽다.</p>
+<p>Ghost 업그레이드는 굉장히 쉬운편이다. 전에 있던 <code>contents</code>폴더와 json파일을 백업해두고 <code>ghost-cli</code>설치후 그냥 json파일 import후 <code>contents</code>에 있던 이미지들을 도로 넣어주면 끝났다. 업그레이드하니 이쁜 블로그를 보니, 컨텐츠는 있었지만 여태 귀찮아서 안한 포스트들을 결국 다 뱉어내는 동기부여가 되었다.</p>
+<h1 id="2">2</h1>
+<p>그래서 이번에 슬라이드르 작업해서 발표했던 <a href="http://tmmse.xyz/2018/04/01/command-line-interface/">Command Line Interface</a>와 <a href="http://tmmse.xyz/2018/04/02/image-translation-with-gan-1/">Image Translation with GAN</a>을 재정리해서 다루었다.</p>
+<p>사실 쓸 컨텐츠는 무지하게 많다.</p>
+<ul>
+<li>작년에 자취방을 이사하면서 생긴 공간에 엄청난 <strong><a href="http://tmmse.xyz/2017/07/23/home-automation-memo">Home Automation</a>을 한 작업내용과 결과</strong>와</li>
+<li>작년 말에 아름답게 떡상했던 <s>(그리고 올해 초부터 지금까지 지옥가는)</s> <strong>Bitcoin</strong>과 관련되어 열심히 공부했던 블록체인 프로젝트들 및 암호학...</li>
+<li>그리고 내가 연구하고 있는 Computer Vision 및 Deep Learning</li>
+</ul>
+<p>공부한 것을 풀어내어 공유하는 일은 별도의 힘이 들어가는 고된 작업이다.<br>
+같이 운영하는 <a href="http://tmmse.xyz/author/park/">박종현<s>장박</s></a>은 회사다니면서 열심히 계속 글써주니 블로그가 안죽은 거 같아서 다행스럽게 생각하기도한다.</p>
+<p>블로깅을 통해서 의외로 많은 결실들을 맺었기 때문에 다시금 내 노트에 정리했던걸 다듬어 공유해봐야겠다.</p>
+</div>]]></content:encoded></item><item><title><![CDATA[CycleGAN : Image Translation with GAN (4)]]></title><description><![CDATA[<div class="kg-card-markdown"><h3 id="unpairedimagetoimagetranslationusingcycleconsistentadversarialnetworkscycleganfromucberkeleypix2pixupgrade">Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks (CycleGAN) from UC Berkeley (pix2pix upgrade)</h3>
+<h1 id="">&amp;</h1>
+<h3 id="learningtodiscovercrossdomainrelationswithgenerativeadversarialnetworksdiscoganfromsktbrain">Learning to Discover Cross-Domain Relations with Generative Adversarial Networks (DiscoGAN) from SK T-Brain</h3>
+<h2 id="discogancyclegan">DiscoGAN &amp; CycleGAN</h2>
+<ul>
+<li>Almost Identical concept.</li>
+<li>DiscoGAN came 15 days earlier. Low resolution ($64 \times 64$)</li>
+<li>CycleGAN has better qualitative results ($256 \times</li></ul></div>]]></description><link>http://tmmse.xyz/2018/04/02/image-translation-with-gan-4/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf7705</guid><category><![CDATA[Computer Vision]]></category><category><![CDATA[Deep Learning]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Mon, 02 Apr 2018 02:53:39 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/04/CycleGAN.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><h3 id="unpairedimagetoimagetranslationusingcycleconsistentadversarialnetworkscycleganfromucberkeleypix2pixupgrade">Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks (CycleGAN) from UC Berkeley (pix2pix upgrade)</h3>
+<h1 id="">&amp;</h1>
+<h3 id="learningtodiscovercrossdomainrelationswithgenerativeadversarialnetworksdiscoganfromsktbrain">Learning to Discover Cross-Domain Relations with Generative Adversarial Networks (DiscoGAN) from SK T-Brain</h3>
+<h2 id="discogancyclegan">DiscoGAN &amp; CycleGAN</h2>
+<ul>
+<li>Almost Identical concept.</li>
+<li>DiscoGAN came 15 days earlier. Low resolution ($64 \times 64$)</li>
+<li>CycleGAN has better qualitative results ($256 \times 256$) and quantative experiments.</li>
+</ul>
+<h2 id="differencefromdtn">Difference from DTN</h2>
+<ul>
+<li>No $f$-constancy. Do not need pre-trained context encoder</li>
+<li>Only need dataset $S$ and $T$ by proposing <strong>cycle-consistency</strong></li>
+</ul>
+<h2 id="discogan">DiscoGAN</h2>
+<img src="http://tmmse.xyz/content/images/2018/04/CycleGAN.jpg" alt="CycleGAN : Image Translation with GAN (4)"><p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-31-014136.jpg" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-31-013857.jpg" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<h3 id="withoutcrossdomainmatchingganhasmodecollapse">without cross domain matching, GAN has mode collapse</h3>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-31-014006.jpg" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<h3 id="learnprojectiontomodeindomainbwhiletwodomainshaveonetoonerelation">learn projection to mode in domain $B$, while two domains have one-to-one relation</h3>
+<h2 id="typicalganissuemodecollapse">Typical GAN issue: Mode collapse</h2>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-152828.jpg" alt="CycleGAN : Image Translation with GAN (4)"><img src="http://3.bp.blogspot.com/--_KSBB_yBJI/WKj7tRhju1I/AAAAAAAABUg/t7VHBDDPSrARfASSNRV1xF0EOP1kRevRACK4B/s1600/unrolled-GAN-mode-collapse-2.PNG" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<ul>
+<li>top is ideal case, bottom is mode collapse failure case</li>
+<li>Toy problem of 2-dim Gaussian mixture model</li>
+<li>5 modes of domain A to 10 modes of domain B</li>
+</ul>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-152956.jpg" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<ul>
+<li>GAN, GAN + const show injective mapping &amp; mode collapse</li>
+<li>DiscoGAN shows bijective mapping &amp; generate all 10 modes of B.</li>
+</ul>
+<h2 id="proposeddiscogan">proposed DiscoGAN</h2>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-153025.jpg" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<h3 id="cycleganhassimilarcontributiononthispoint">CycleGAN has similar contribution on this point</h3>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-162701.jpg" alt="CycleGAN : Image Translation with GAN (4)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-11-074834.jpg" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<h2 id="results">Results</h2>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-162138.jpg" alt="CycleGAN : Image Translation with GAN (4)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-162222.jpg" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<p>codes and more results in</p>
+<ul>
+<li><a href="https://github.com/SKTBrain/DiscoGAN">https://github.com/SKTBrain/DiscoGAN</a></li>
+<li><a href="https://github.com/carpedm20/DiscoGAN-pytorch">https://github.com/carpedm20/DiscoGAN-pytorch</a></li>
+</ul>
+<h3 id="cyclegan">CycleGAN</h3>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-162623.jpg" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<p>Use more GAN techniques: LSGAN, use image buffer of previous generated samples</p>
+<p><img src="https://junyanz.github.io/CycleGAN/images/painting2photo.jpg" alt="CycleGAN : Image Translation with GAN (4)"><br>
+<img src="https://junyanz.github.io/CycleGAN/images/objects.jpg" alt="CycleGAN : Image Translation with GAN (4)"><br>
+<img src="https://junyanz.github.io/CycleGAN/images/photo_enhancement.jpg" alt="CycleGAN : Image Translation with GAN (4)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-11-074213.jpg" alt="CycleGAN : Image Translation with GAN (4)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-11-074708.jpg" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<h3 id="failurecase">failure case</h3>
+<p><img src="https://junyanz.github.io/CycleGAN/images/failure_putin.jpg" alt="CycleGAN : Image Translation with GAN (4)"></p>
+<p>CycleGAN demonstrates more experiments!<br>
+project page : <a href="https://junyanz.github.io/CycleGAN/">https://junyanz.github.io/CycleGAN/</a><br>
+code available with Torch and PyTorch</p>
+</div>]]></content:encoded></item><item><title><![CDATA[DTN : Image Translation with GAN (3)]]></title><description><![CDATA[<div class="kg-card-markdown"><h1 id="2unsupervisedcrossdomainimagegenerationdtn">2. Unsupervised Cross-Domain Image Generation (DTN)</h1>
+<p>published to <strong>ICLR2017</strong> by Yaniv Taigman, Adam Polyak, Lior Wolf</p>
+<p>Learn $ G: S \rightarrow T $ of two related domains, $ S $ and $ T $ without labels! (labels of images are usually expensive)</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-29-155516.jpg" alt="inline"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-100007.jpg" alt="inline"><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-121602.jpg" alt="inline"></p>
+<h2 id="baselinemodel">Baseline model</h2>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-29-161854.jpg" alt="inline 80%"><br>
+$ D $ : discriminator, $ G $ : generator,<br>
+$ f $ : context encoder. outputs feature. (128-dim)</p>
+<p>\begin{equation}</p></div>]]></description><link>http://tmmse.xyz/2018/04/02/image-translation-with-gan-3/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf7704</guid><category><![CDATA[Computer Vision]]></category><category><![CDATA[Deep Learning]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Mon, 02 Apr 2018 02:50:24 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/04/C2ytKoaVQAAV_zC.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><h1 id="2unsupervisedcrossdomainimagegenerationdtn">2. Unsupervised Cross-Domain Image Generation (DTN)</h1>
+<img src="http://tmmse.xyz/content/images/2018/04/C2ytKoaVQAAV_zC.jpg" alt="DTN : Image Translation with GAN (3)"><p>published to <strong>ICLR2017</strong> by Yaniv Taigman, Adam Polyak, Lior Wolf</p>
+<p>Learn $ G: S \rightarrow T $ of two related domains, $ S $ and $ T $ without labels! (labels of images are usually expensive)</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-29-155516.jpg" alt="DTN : Image Translation with GAN (3)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-100007.jpg" alt="DTN : Image Translation with GAN (3)"><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-121602.jpg" alt="DTN : Image Translation with GAN (3)"></p>
+<h2 id="baselinemodel">Baseline model</h2>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-29-161854.jpg" alt="DTN : Image Translation with GAN (3)"><br>
+$ D $ : discriminator, $ G $ : generator,<br>
+$ f $ : context encoder. outputs feature. (128-dim)</p>
+<p>\begin{equation}<br>
+R_{GAN} = \max_D \mathbb{E}_{x\sim\mathcal{D}_S} \log[1-D(G(x))] + \mathbb{E}_{x\sim\mathcal{D}_T} \log[D(x)]<br>
+\end{equation}</p>
+<p>\begin{equation}<br>
+R_{CONST} = \mathbb{E}_{x\sim\mathcal{D}_S} d(f(x),f(G(x)))<br>
+\end{equation}</p>
+<p>$f$-constancy : Does $x, G(x)$ have similar context?<br>
+$ d $ : distance metric. ex) MSE<br>
+$ f $ : &quot;Pretrained&quot; context encoder. <em>Parameter fixed</em>.<br>
+$f$ can be pretrained with classification task on $S$</p>
+<p>Minimize two Risks : $ R_{GAN}$ and  $ R_{CONST} $</p>
+<p>Experimentally, Baseline model didn't produce desirable results.<br>
+Thus, similar but more elaborate architecture proposed</p>
+<h2 id="proposeddomaintransfernetworkdtn">Proposed &quot;Domain Transfer Network (DTN)&quot;</h2>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-29-142809.jpg" alt="DTN : Image Translation with GAN (3)"></p>
+<p>First, <strong>$ f $ : the context encoder</strong> now encode as $f(x)$ then $g$ will generate from it :  $ G = g(f(x)) $</p>
+<p>$g$ focuses to generate from given context $f(x)$</p>
+<p>Second, for $x \in \mathbf{t}$, $x$ is also encoded by $f$ and applied $g$</p>
+<p>&quot;Pretrained $f$ on $S$&quot; would not be good as much as on $T$. But enough for context encoding purpose<br>
+$ L_{TID}$ : $G(x)$ should be similar to $x$<br>
+Also $D$ takes $G(x)$ and performs ternary (3-class) classification. (one real, two fakes)</p>
+<h2 id="losses">Losses</h2>
+<h3 id="discriminatorlossl_d">Discriminator loss : $L_D$</h3>
+<p>\begin{equation}<br>
+L_D = -\mathbb{E}_{x \in \mathbf{s}} \log D_1 (G(x)) - \mathbb{E}_{x \in \mathbf{t}} \log D_2 (G(x)) - \mathbb{E}_{x \in \mathbf{t}} \log D_3 (x)<br>
+\end{equation}</p>
+<p>$D_i(x): Probability$<br>
+$D_1(x)$ : generated from $S$? /  $D_2(x)$ : generated from $T$? / $D_3(x)$ : sample from $T$?</p>
+<h3 id="generatoradversariallossl_gang">Generator : Adversarial Loss $L_{GANG}$</h3>
+<p>\begin{equation}<br>
+L_{GANG} = - \mathbb{E}_{x \in \mathbf{s}} \log D_3 (G(x)) - \mathbb{E}_{x \in \mathbf{t}} \log D_3(G(x))<br>
+\end{equation}</p>
+<p>Fool $D$ to classify as sample from $T$</p>
+<h3 id="generatorl_constandidentitypreservingl_tid">Generator : $L_{CONST}$ and Identity preserving $ L_{TID}$</h3>
+<p>\begin{equation}<br>
+L_{CONST} = \sum_{x \in \mathbf{s}} d(f(x),f(g(f(x)))<br>
+\end{equation}<br>
+, in feature level</p>
+<p>\begin{equation}<br>
+L_{TID} = \sum_{x \in \mathbf{t}} d_2(x,G(x))<br>
+\end{equation}<br>
+,  in pixel level</p>
+<p>$d, d_2$ used as MSE in this work</p>
+<p>\begin{equation}<br>
+L_{G} = L_{GANG} + \alpha L_{CONST}+ \beta L_{TID} + \gamma L_{TV}<br>
+\end{equation}</p>
+<p>$L_{TV}$ is for output smoothing.</p>
+<p>$L_G$ minimized over $g$<br>
+$L_D$ minimized over $D$</p>
+<h2 id="experiments">Experiments</h2>
+<ol>
+<li>Street View House Numbers (SVHN) $\rightarrow$ MNIST</li>
+<li>Face $\rightarrow$ Emoji<br>
+Both cases, $S$ and $T$ domains differ considerably<br>
+SVHN $\rightarrow$ MNIST<br>
+Pretrain $f$ on $SVHN_{f_TRAIN}$<br>
+Learn $G: SVHN_{DTN_TRAIN} \rightarrow MNIST_{TEST}$<br>
+Train a MNIST classifier on $MNIST_{TRAIN}$.  will be used as evaluation purpose later<br>
+Domain transfer on $SVHN_{TEST}$ : $G(SVHN_{TEST})$</li>
+</ol>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-114629.jpg" alt="DTN : Image Translation with GAN (3)"></p>
+<h3 id="f">$f$</h3>
+<ul>
+<li>4 convs (each filters 64,128,256,128) / max pooling / ReLU</li>
+<li>input $32 \times 32$ RGB / output 128-dim vector.</li>
+<li>$f$ do not need to be very powerful classifier.</li>
+<li>achieves 4.95% error on SVHN test set</li>
+<li>Weaker in $T$ : 23.92% error on MNIST.</li>
+<li>Learn analogy of unlabeled examples</li>
+</ul>
+<h3 id="g">$g$</h3>
+<ul>
+<li>Inspired by DCGAN</li>
+<li>SVHN-trained $f$'s 128D representation $\rightarrow 32\times32$</li>
+<li>four blocks of deconv, BN, ReLU. TanH at final.</li>
+<li>$$ L_{G} = L_{GANG} + \alpha L_{CONST}+ \beta L_{TID} + \gamma L_{TV}  $$</li>
+</ul>
+<p>$\alpha=\beta=15, \gamma=0$<br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-100007.jpg" alt="DTN : Image Translation with GAN (3)"><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-100056.jpg" alt="DTN : Image Translation with GAN (3)"></p>
+<h3 id="evaluatedtn">Evaluate DTN</h3>
+<p>Train classifier on $MNIST_{TRAIN}$.<br>
+Architecture same as $f$<br>
+MNIST performance 99.4% test set.<br>
+Evaluate by testing MNIST classifier on $ G(\mathbf{s}_{TEST}) = { G(x)|x \in \mathbf{s}_{TEST} } $ using $Y$ : $\mathbf{s}_{TEST}$ label.</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-114629.jpg" alt="DTN : Image Translation with GAN (3)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-100214.jpg" alt="DTN : Image Translation with GAN (3)"></p>
+<h2 id="experimentsunseendigits">Experiments: Unseen Digits</h2>
+<p>Study the ability of DTN to overcome omission of a class in samples.<br>
+For example, class '3' Ablation applied on</p>
+<ol>
+<li>training DTN, domain $S$</li>
+<li>training DTN, domain $T$</li>
+<li>training $f$.</li>
+</ol>
+<p>But '3' exists in testing DTN! Compare results.<br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-115440.jpg" alt="DTN : Image Translation with GAN (3)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-111009.jpg" alt="DTN : Image Translation with GAN (3)"><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-111020.jpg" alt="DTN : Image Translation with GAN (3)"><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-111048.jpg" alt="DTN : Image Translation with GAN (3)"><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-111102.jpg" alt="DTN : Image Translation with GAN (3)"><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-111120.jpg" alt="DTN : Image Translation with GAN (3)"><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-111137.jpg" alt="DTN : Image Translation with GAN (3)"><br>
+(a) The input images. (b) Results of our DTN. (c)  3 was not in SVNH. (d) 3 was not in MNIST. (e) 3 was not shown in both SVHN and MNIST. (f) The digit 3 was not shown in SVHN, MNIST and during the training of f.</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-115645.jpg" alt="DTN : Image Translation with GAN (3)"></p>
+<h2 id="domainadaptation">Domain Adaptation</h2>
+<p>$S$ labeled, $T$ unlabeled, want to train classifier of $T$<br>
+Train k-NN classifier<br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-31-052449.jpg" alt="DTN : Image Translation with GAN (3)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-104539.jpg" alt="DTN : Image Translation with GAN (3)"></p>
+<h3 id="facerightarrowemoji">Face $\rightarrow$Emoji</h3>
+<ul>
+<li>face from <a href="http://vintage.winklerbros.net/facescrub.html">Facescrub</a>/<a href="http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html">CelebA</a></li>
+<li>emoji gained from <a href="https://www.bitmoji.com">bitmoji.com</a>, not publicized<br>
+preprocess on emoji with heuristics. Align face.</li>
+<li>$f$ from DeepFace pretrained network. (Taigman et al. 2014) the author's previous work</li>
+<li>$f(x)$ is 256-dim</li>
+<li>$g$ outputs $64 \times 64$</li>
+<li>SR (Dong et al. 2015) to upscale final output.</li>
+</ul>
+<h3 id="results">Results</h3>
+<p>choose $\alpha=100, \beta=1, \gamma=0.05$ via validation<br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-31-010439.jpg" alt="DTN : Image Translation with GAN (3)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-121602.jpg" alt="DTN : Image Translation with GAN (3)"></p>
+<p>Original style transfer can't solve it</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-122508.jpg" alt="DTN : Image Translation with GAN (3)"></p>
+<p>DTN also can style transfer.<br>
+DTN is more general than Styler Transfer method.</p>
+<h2 id="limitations">Limitations</h2>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-123135.jpg" alt="DTN : Image Translation with GAN (3)"></p>
+<ul>
+<li>$f$ usually can be trained in one domain, thus asymmetric.</li>
+<li>Handle two domains differently.
+<ul>
+<li>$T \rightarrow S$ is bad.</li>
+</ul>
+</li>
+<li>Bounded by $f$. Needs pre-trained context encoder.</li>
+<li>any better way to learn context without pretraining?</li>
+<li>Any more $S \rightarrow T$ tasks?</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li>Demonstrate Domain Transfer, as an unsupervised method.</li>
+<li>Can be generalized to various $S \rightarrow T$ problems.</li>
+<li>$f$-constancy to maintain context of domain $S$ &amp; $T$</li>
+<li>Simple domain adaptation and good performance</li>
+<li>inspiring work to future domain adaptation research</li>
+</ul>
+<p>More open reviews at <a href="https://openreview.net/forum?id=Sk2Im59ex&amp;noteId=Sk2Im59ex">OpenReview.net</a></p>
+</div>]]></content:encoded></item><item><title><![CDATA[pix2pix : Image Translation with GAN (2)]]></title><description><![CDATA[<div class="kg-card-markdown"><h1 id="imagetoimagetranslationwithconditionaladversarialnetworkspix2pix">Image-to-Image Translation with Conditional Adversarial Networks (pix2pix)</h1>
+<p>published to <strong>CVPR2017</strong> by Phillip Isola, Jun-Yan Zhu, Tinghui Zhou, Alexei A. Efros</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120245.jpg" alt="fit"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120608.jpg" alt="inline"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120352.jpg" alt="inline"></p>
+<h2 id="learnpairwiseimagesofsandtlikebelow">Learn pair-wise images of $S$ and $T$ like below</h2>
+<ul>
+<li>BW &amp; Color image</li>
+<li>Street Scene &amp; Label</li>
+<li>Facade &amp; Label</li>
+<li>Aerial &amp; Map</li>
+<li>Day &amp; Night</li>
+<li>Edges &amp; Photo</li>
+</ul>
+<p>source</p></div>]]></description><link>http://tmmse.xyz/2018/04/02/image-translation-with-gan-2/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf7703</guid><category><![CDATA[Computer Vision]]></category><category><![CDATA[Deep Learning]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Mon, 02 Apr 2018 02:38:14 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/04/edges2cats.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><h1 id="imagetoimagetranslationwithconditionaladversarialnetworkspix2pix">Image-to-Image Translation with Conditional Adversarial Networks (pix2pix)</h1>
+<img src="http://tmmse.xyz/content/images/2018/04/edges2cats.jpg" alt="pix2pix : Image Translation with GAN (2)"><p>published to <strong>CVPR2017</strong> by Phillip Isola, Jun-Yan Zhu, Tinghui Zhou, Alexei A. Efros</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120245.jpg" alt="pix2pix : Image Translation with GAN (2)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120608.jpg" alt="pix2pix : Image Translation with GAN (2)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120352.jpg" alt="pix2pix : Image Translation with GAN (2)"></p>
+<h2 id="learnpairwiseimagesofsandtlikebelow">Learn pair-wise images of $S$ and $T$ like below</h2>
+<ul>
+<li>BW &amp; Color image</li>
+<li>Street Scene &amp; Label</li>
+<li>Facade &amp; Label</li>
+<li>Aerial &amp; Map</li>
+<li>Day &amp; Night</li>
+<li>Edges &amp; Photo</li>
+</ul>
+<p>source image $x \in S$, target image (label)  $y \in T$ is pair-wise.</p>
+<h3 id="thusitissupervisedlearning">thus it is Supervised Learning</h3>
+<h2 id="generatorofpix2pix">Generator of pix2pix</h2>
+<p>$G(x,z)$ where $x$: image and $z$: noise<br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-132923.jpg" alt="pix2pix : Image Translation with GAN (2)"><br>
+Use U-Net shaped network</p>
+<ul>
+<li>known to be powerful at segmentation task</li>
+<li>use spatial information from features of bottom layer</li>
+<li>use dropout as noise in decoder part</li>
+</ul>
+<h2 id="discriminatorofpix2pix">Discriminator of pix2pix</h2>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-132829.jpg" alt="pix2pix : Image Translation with GAN (2)"></p>
+<h2 id="lossfunction">Loss function</h2>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fpbew5684gj30pi0ckdgk.jpg" alt="pix2pix : Image Translation with GAN (2)"><br>
+$x$: source image, $y$: target image, $z$: noise</p>
+<h3 id="useadversariallossandl1loss">Use Adversarial loss and L1 loss</h3>
+<p>\begin{equation}<br>
+\mathcal{L}_{cGAN}(G,D) = \mathbb{E}_{x,y \sim p_{data}(x,y)}[\log D(x,y)] +  \mathbb{E}_{x \sim p_{data}(x), z \sim p_z(z)}[\log (1-D(x,G(x,z)))]<br>
+\end{equation}</p>
+<p>\begin{equation}<br>
+\mathcal{L}_{L1}(G) = \mathbb{E}_{x,y \sim p_{data}(x,y),z \sim p_z(z)}[||y-G(x,z)||_1]<br>
+\end{equation}</p>
+<h2 id="result">Result</h2>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-143108.jpg" alt="pix2pix : Image Translation with GAN (2)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-143305.jpg" alt="pix2pix : Image Translation with GAN (2)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-143347.jpg" alt="pix2pix : Image Translation with GAN (2)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-143449.jpg" alt="pix2pix : Image Translation with GAN (2)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-143510.jpg" alt="pix2pix : Image Translation with GAN (2)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-143530.jpg" alt="pix2pix : Image Translation with GAN (2)"><br>
+Do <a href="https://affinelayer.com/pixsrv/">demo</a>!<br>
+<code>https://affinelayer.com/pixsrv/</code></p>
+</div>]]></content:encoded></item><item><title><![CDATA[Image Translation with GAN (1)]]></title><description><![CDATA[<div class="kg-card-markdown"><h1 id="problemstatementofimagetranslation">Problem statement of Image Translation</h1>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120608.jpg" alt="inline"></p>
+<h3 id="learngsrightarrowt">Learn $G: (S \rightarrow T)$</h3>
+<p>$G$ that convert an image of source domain $S$ to an image of target domain $T$<br>
+Domain Adaptation/Transfer of an image.</p>
+<h3 id="pairedandunpaireddataset">Paired and Unpaired dataset</h3>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpa9gc6l7bj30ds08ut9i.jpg" alt="inline"></p>
+<h3 id="imagetranslationsandtarepairwiselabeledindataset">Image Translation: $S$ and $T$ are pair-wise labeled in dataset</h3>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120245.jpg" alt="inline"></p>
+<h3 id="imagetranslationsandtarenotpairwisedindataset">Image Translation: $S$ and</h3></div>]]></description><link>http://tmmse.xyz/2018/04/01/image-translation-with-gan-1/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76fd</guid><category><![CDATA[Computer Vision]]></category><category><![CDATA[Deep Learning]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Sun, 01 Apr 2018 08:05:56 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2018/04/horse2zebra.gif" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><h1 id="problemstatementofimagetranslation">Problem statement of Image Translation</h1>
+<img src="http://tmmse.xyz/content/images/2018/04/horse2zebra.gif" alt="Image Translation with GAN (1)"><p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120608.jpg" alt="Image Translation with GAN (1)"></p>
+<h3 id="learngsrightarrowt">Learn $G: (S \rightarrow T)$</h3>
+<p>$G$ that convert an image of source domain $S$ to an image of target domain $T$<br>
+Domain Adaptation/Transfer of an image.</p>
+<h3 id="pairedandunpaireddataset">Paired and Unpaired dataset</h3>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpa9gc6l7bj30ds08ut9i.jpg" alt="Image Translation with GAN (1)"></p>
+<h3 id="imagetranslationsandtarepairwiselabeledindataset">Image Translation: $S$ and $T$ are pair-wise labeled in dataset</h3>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120245.jpg" alt="Image Translation with GAN (1)"></p>
+<h3 id="imagetranslationsandtarenotpairwisedindataset">Image Translation: $S$ and $T$ are not pair-wised in dataset</h3>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-121602.jpg" alt="Image Translation with GAN (1)"></p>
+<p><img src="https://github.com/junyanz/CycleGAN/raw/master/imgs/horse2zebra.gif" alt="Image Translation with GAN (1)"><br>
+<img src="https://junyanz.github.io/CycleGAN/images/objects.jpg" alt="Image Translation with GAN (1)"></p>
+<h1 id="beforestyletransferneuralartwasprominent">Before, Style Transfer (NeuralArt) was prominent</h1>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-120857.jpg" alt="Image Translation with GAN (1)"></p>
+<p>But it largely depends on textual information of an target style</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-121911.jpg" alt="Image Translation with GAN (1)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-10-121932.jpg" alt="Image Translation with GAN (1)"></p>
+<h1 id="howtolearnmoregeneralimagetranslation">How to learn more general Image Translation?</h1>
+<h3 id="generativeadversarialnetwork">Generative Adversarial Network</h3>
+<p><img src="https://raw.githubusercontent.com/torch/torch.github.io/master/blog/_posts/images/out.gif" alt="Image Translation with GAN (1)"><br>
+<img src="https://cdn-images-1.medium.com/max/800/1*-gFsbymY9oJUQJ-A3GTfeg.png" alt="Image Translation with GAN (1)"><br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-03-30-070136.jpg" alt="Image Translation with GAN (1)"></p>
+<p>\begin{equation}<br>
+\min_G \max_D V(D,G) = \mathbf{E}_{x\sim p_{\text{data}}(x)} [\log D(x)] + \mathbf{E}_{z\sim p_{z}}(z)[\log (1 - D(G(z)))].<br>
+\end{equation}</p>
+<h3 id="alsohonorablementiondeepconvolutionalgandcgan">also honorable mention : Deep Convolutional GAN (DCGAN)</h3>
+<h1 id="twomajorproblemsofimagetranslation">Two major problems of Image Translation</h1>
+<ol>
+<li>Convert to which domain?
+<ul>
+<li>learn which &quot;$G: (S \rightarrow T)$&quot;?</li>
+</ul>
+</li>
+<li>How to learn the dataset?
+<ul>
+<li>how to properly form dataset?</li>
+<li>pair-wise Supervised? or Unsupervised?</li>
+</ul>
+</li>
+</ol>
+<h3 id="todaypresentingsotaofimagetranslationpapersof">Today, presenting SOTA of Image Translation papers of</h3>
+<ul>
+<li><a href="http://tmmse.xyz/2018/04/02/image-translation-with-gan-2/">pix2pix</a>: Image-to-Image Translation with Conditional Adversarial Networks (CVPR2017)</li>
+<li><a href="http://tmmse.xyz/2018/04/02/image-translation-with-gan-3/">Domain Transfer Network</a>: Unsupervised Cross-Domain Image Generation (ICLR2017)</li>
+<li><a href="http://tmmse.xyz/2018/04/03/image-translation-with-gan-4/">CycleGAN &amp; DiscoGAN</a>: CycleGAN: Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks (ICCV2017) &amp; DiscoGAN: Learning to Discover Cross-Domain Relations with Generative Adversarial Networks (ICML2017)</li>
+<li><a href="http://tmmse.xyz/2018/04/04/image-translation-with-gan-5/">BicycleGAN</a>: Toward Multimodal Image-to-Image Translation (NIPS2017)</li>
+</ul>
+</div>]]></content:encoded></item><item><title><![CDATA[Command Line Interface]]></title><description><![CDATA[<div class="kg-card-markdown"><p>dotfiles and materials available at <a href="https://github.com/junhocho/junhosetting">@junhocho</a><sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup></p>
+<h1 id="guicui">GUI보다 좋은 CUI,</h1>
+<p>CUI. Command Line Interface를 쓰시면 어디서든 쉽게, 인터넷만 있고, Terminal이나 Putty가 있으면 개발을 할 수 있다.</p>
+<p><img src="https://www.teamviewer.com/resources/images/screenshots/win-mainwindow.png" alt="fit left"></p>
+<p>이런 팀뷰어 없이도 말이다.</p>
+<h1 id="cli">CLI. 그래서 어떻게?</h1>
+<h3 id="tmuxvim">( Tmux + VIM ) 를 사용하자</h3>
+<p><img src="https://lucaguidi.com/images/tmux-tdd.gif" alt="right bg"></p>
+<p>CLI를 사용하는 이유.</p>
+<ol>
+<li>Portable (인터넷이 구리면 팀뷰어는 힘들지)</li>
+<li>Simple</li>
+<li>Automated (원하는 기능은 다</li></ol></div>]]></description><link>http://tmmse.xyz/2018/04/01/command-line-interface/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76f4</guid><category><![CDATA[Linux]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Sun, 01 Apr 2018 05:15:57 GMT</pubDate><media:content url="https://images.unsplash.com/photo-1515704089429-fd06e6668458?ixlib=rb-0.3.5&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=1080&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ&amp;s=4e45131a3333adf14948887756627ace" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="https://images.unsplash.com/photo-1515704089429-fd06e6668458?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ&s=4e45131a3333adf14948887756627ace" alt="Command Line Interface"><p>dotfiles and materials available at <a href="https://github.com/junhocho/junhosetting">@junhocho</a><sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup></p>
+<h1 id="guicui">GUI보다 좋은 CUI,</h1>
+<p>CUI. Command Line Interface를 쓰시면 어디서든 쉽게, 인터넷만 있고, Terminal이나 Putty가 있으면 개발을 할 수 있다.</p>
+<p><img src="https://www.teamviewer.com/resources/images/screenshots/win-mainwindow.png" alt="Command Line Interface"></p>
+<p>이런 팀뷰어 없이도 말이다.</p>
+<h1 id="cli">CLI. 그래서 어떻게?</h1>
+<h3 id="tmuxvim">( Tmux + VIM ) 를 사용하자</h3>
+<p><img src="https://lucaguidi.com/images/tmux-tdd.gif" alt="Command Line Interface"></p>
+<p>CLI를 사용하는 이유.</p>
+<ol>
+<li>Portable (인터넷이 구리면 팀뷰어는 힘들지)</li>
+<li>Simple</li>
+<li>Automated (원하는 기능은 다 자동화 시킬 수 있다)</li>
+<li>and <strong>Cool</strong> (남들이 보면 해커인줄 알꺼야)</li>
+</ol>
+<p>그리고 당신이</p>
+<ul>
+<li><strong>server</strong>가 있고 (노트북과 인터넷만 있으면 어딜가도 괜찮아)</li>
+<li><strong>mac</strong>이 있고 (iTerm2는 편하고 이쁘니까)</li>
+<li><strong>blogger</strong></li>
+<li><strong>computer geek</strong></li>
+</ul>
+<p>답은 CLI.</p>
+<p><img src="http://i.giphy.com/26AHM8fwpxlAWJdGE.gif" alt="Command Line Interface"><br>
+드루와드루와</p>
+<h3 id="thispresentationareinspiredbynicknisiandyoutubelink">This presentation are inspired by <a href="https://github.com/nicknisi/vim-workshop">@nicknisi</a> and <a href="https://www.youtube.com/watch?v=5r6yzFEXajQ">youtube link</a></h3>
+<h1 id="coverage">Coverage</h1>
+<ol>
+<li>Ubuntu and ZSH (The OS 그리고 Shell)</li>
+<li>Vim	(The editor)</li>
+<li>Tmux (The workspace)</li>
+</ol>
+<p><a href="https://github.com/junhocho/junhosetting">공유할 만한 zsh, tmux, vim 설정 파일들, 클릭</a></p>
+<h1 id="sshsecureshell"><strong>SSH</strong>: Secure Shell</h1>
+<p><strong>Secure connection to server</strong></p>
+<p>Host(server) IP : <strong><code>147.46.89.175</code></strong> (for ex)<br>
+User ID	: <strong><code>bctjv-[yourname]</code></strong><br>
+password : <strong><code>bctjv</code></strong></p>
+<h1 id="login">Login !</h1>
+<ul>
+<li>Linux/macOS : <code>ssh bctjv-[yourname]@147.46.89.175</code></li>
+<li>Windows : use <a href="http://www.putty.org">putty</a><br>
+<img src="http://screenshots.en.sftcdn.net/en/scrn/20000/20678/putty-7.jpg" alt="Command Line Interface"></li>
+</ul>
+<h3 id="opensshssh">OpenSSH 가 서버에 설치 되어 있어야 ssh 접속 가능</h3>
+<p><code>sudo apt-get install openssh-server</code></p>
+<h3 id="ubuntulinux">Ubuntu (Linux)</h3>
+<ul>
+<li>One of Linux</li>
+<li>Commonly used in Deep Learning libraries</li>
+<li><a href="http://webdir.tistory.com/101">link about Directories  : tmp, root, var, usr, home, bin</a></li>
+</ul>
+<h3 id="simplecommands">Simple commands. 등등...</h3>
+<p><code>mv</code> , <code>cp</code> , <code>rm</code> , <code>mkdir</code> , <code>rmdir</code><br>
+<code>ls -lh</code>, <code>df -lh</code>, <code>du -sh ./*</code>, <code>whoami</code><br>
+<code>cp *.py /path/to/dest/</code><br>
+<code>rm -rf /다/지워/버리겠다/*.txt</code><br>
+<code>sudo apt-get install tmux</code></p>
+<p>이런 커맨드도 있음.</p>
+<p><code>cowsay</code><br>
+<code>cmatrix</code><br>
+<a href="http://www.tecmint.com/20-funny-commands-of-linux-or-linux-is-fun-in-terminal/">funny commands</a></p>
+<p><img src="https://www.dropbox.com/s/q3x64a5qa435hn3/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202016-11-08%2000.55.50.png?raw=1" alt="Command Line Interface"></p>
+<h3 id="somesignals">Some Signals</h3>
+<pre><code class="language-bash"># ==== Ex1) ====, $은 터미널에 쳐볼 것.
+$ yes yell!
+&lt;C-c&gt;   # Control - c. 돌아가고 있는 프로세스를 꺼버린다.
+# ==== Ex2) ====
+$ python -c '
+c = 0
+while True: print c; c= c+1'
 
+&lt;C-z&gt;   # Control - z. 터미널상에서 잠깐 멈추고 백그라운드로!
+$ fg    # 다시 아까 돌아가던 foreground로
+# ==== Ex 3) ====
+$ python
+&lt;C-d&gt;   # Control - d. 아예 꺼버리기
+</code></pre>
+<h3 id="">파일 권한과 소유권</h3>
+<ul>
+<li>directory and file / <a href="http://brothernsister.tistory.com/27">permission, ownership</a></li>
+</ul>
+<p>다음 상황에서</p>
+<p><img src="https://www.dropbox.com/s/kyqn1svnox8dtok/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202016-11-09%2020.46.06.png?raw=1" alt="Command Line Interface"></p>
+<p>^<code>Workspace</code> : <code>drwxrwxr-x</code> : directory and has 775 permision<br>
+<code>.zshrc</code> : <code>-rw-r--r--</code> : file and has 644 permision<br>
+<code>hello.py</code> : <code>-rwxr-xr--</code> : file and has 754 permision</p>
+<ul>
+<li>change permssion : <code>$ chmod 755 hello.py</code> : 755는 이진법으로 111 101 101, 즉 rwxr-xr-x. 숫자 세개가 각 나, 그룹, 나머지를 뜻함. 그래서 나는 rwx (읽고 쓰고 실행 권한 있음), 그룸과 나머지는 r-x (읽고 실행 권한만 있음.)</li>
+<li>change ownership : <code>$ chown userid hello.py</code></li>
+</ul>
+<p><code>sudo 어떤커맨드</code> : borrow sudo privilege and command</p>
+<h3 id="executable">추가로) 쉘 스크립트를 <strong>executable</strong>하게 바꾸기.</h3>
+<p>Write on top of shell script<br>
+<code>#!bin/bash</code> if shell script,<br>
+<code>#!bin/usr/python</code> if python script.<br>
+<strong><code>chmod +x script</code></strong></p>
+<p>then the script is executable as <strong><code>$ ./script</code></strong></p>
+<h3 id="donotabusesudo">Do not abuse sudo 👎</h3>
+<p>^permission이 없는 것은 sudo 명령어로 해결가능.<br>
+하지만 함부로 사용 No<br>
+linux를 root 계정을 사용하는 것은 안전하지 않음.<br>
+보통 모든 유저에게 sudo 권한을 주진 않음.</p>
+<h1 id="shell">Shell : 리눅스 터미널 소통 창구</h1>
+<ul>
+<li>Default shell is <code>bash shell</code> 그 유명한 배시쉘</li>
+<li><code>bash shell</code> made in 1989 which is pretty <em>uncomfortable</em>. 불편해</li>
+</ul>
+<h1 id="zsh">그래서 <code>zsh</code>을 써보자</h1>
+<ul>
+<li>manage zsh with <a href="http://ohmyz.sh">http://ohmyz.sh</a></li>
+</ul>
+<p><img src="http://i.giphy.com/bmeGvNXq71kGs.gif" alt="Command Line Interface"></p>
+<h1 id="whyzsh">Why ZSH?</h1>
+<ol>
+<li>smart autocomplete</li>
+<li>highly customizable</li>
+<li>Bundled functions, helpers, plugin, themes : ex) git</li>
+</ol>
+<h3 id="installzsh">Install zsh</h3>
+<pre><code class="language-bash"># 지금은 안될 수도 있음! oh-my-zsh를 참고하자! http://ohmyz.sh
+sudo apt-get install git # git 설치 ( 코드 개발 플랫폼 )
+sudo apt-get install zsh # zsh 설치
+cd # 홈폴도로 이동.
+sh -c &quot;$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)&quot; # install
+sudo chsh -s /usr/bin/zsh [your-id] # change your default shell into zsh
+</code></pre>
+<h3 id="gitclonejunhosettingfirst">커스터마이즈를 해보자! git clone <code>Junhosetting</code> first</h3>
+<pre><code class="language-bash">cd # move to home folder
+git clone https://github.com/junhocho/junhosetting #Star it
+cd junhosetting
+vi install.txt  # peek vim
+</code></pre>
+<h3 id="vi">엥? vi?</h3>
+<p>특히 <strong>Vim</strong> : improved Vi. vi는 에디터. vi커맨드가 곧 vim임<br>
+<em>Vim quit?</em> <s>[Alt F4]</s> 가 아닌 다음처럼</p>
+<pre><code>:q 		# vim quit
+:wq		# save and quit. identical to &lt;shift-ZZ&gt;
+</code></pre>
+<pre><code>1 # Zsh setup
+2 zsh autojump - https://github.com/wting/autojump.git
+3 zsh syntax highlighting - https://github.com/zsh-users/zsh-syntax-highlighting.git
+4  
+5
+6 #alias-tips
+7 $ cd ${ZSH_CUSTOM1:-$ZSH/custom}/plugins            # 커스텀 플러그인 폴더로 이동
+8 $ git clone https://github.com/djui/alias-tips.git  # 저장소를 로컬로 복사
+9 $ $EDITOR ~/.zshrc                                  # 에디터로 파일을 에디터로 불러들임
+10 plugins=(git ... alias-tips) 추가
+11 ...
+</code></pre>
+<h3 id="">더 해보자</h3>
+<p><a href="https://github.com/zsh-users/zsh-syntax-highlighting.git">ZSH syntax highlight</a> : 맞는 커맨드면 초록색, 틀린 커맨드면 빨간색</p>
+<pre><code class="language-bash">cd
+# get source of zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
+# put codes in .zshrc
+echo &quot;source ${(q-)PWD}/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh&quot; &gt;&gt; ${ZDOTDIR:-$HOME}/.zshrc
+# activate it now
+source ./zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
+# this refreshes your .zshrc modofication to your current environment
+source ~/.zshrc # dotfiles locate in home folder
+</code></pre>
+<p>It highlights if your command is valid</p>
+<p>또 좋은 <a href="https://github.com/wting/autojump.git">autojump</a> : 내가 자주 가는 디렉토리로 j 커맨드로 빠르고 쉽게 이동.</p>
+<h3 id="somemoreusefulcommands">some more useful commands</h3>
+<pre><code class="language-bash">ls . | wc -l                        # how many files in this directory.
+du -sh ./*                          # how big are folders and files in this directory
+df -lh                              # list my Filesystem in human readable format
+ln -s [target-folder] [make-link]   # make symbolic link
+grep -nr --color &quot;keyword-to-find&quot; * # locate &quot;keyword-to-find&quot;
 
+unzip some.zip                      # unzip
+tar -xvf some.tar.gz                # untar
+echo $CUDA_HOME                     # print some environment variable
+wget https://goo.gl/ka7Yz5          # download file in web
+wget http://www.ekn.kr/data/photos/20150938/art_1442387799.jpg # Download jpg image
+python print-experiment-output.py 2&gt;&amp;1 | tee experiment.log # Store all print output in experiment.log
+which python                        # useful to locate command
 
+history                             # my command history
+pstree                              # process tree
+htop                                # system monitoring
+nvidia-smi                          # gpu monitoring
+who                                 # which users are online?
+</code></pre>
+<h2 id="alias">Alias</h2>
+<ul>
+<li>커맨드 단축해버리기!</li>
+<li><code>alias wn=&quot;watch nvidia-smi&quot;</code> 을 .zshrc에 넣어놓으면. 앞으로 <code>wn</code>으로 <code>watch nvidia-smi</code>를 빠르게 실행 가능.</li>
+</ul>
+<h3 id="youdonthavetimetotypegrepnrcolorkeywordtofind">You don't have time to type : <code>grep -nr --color &quot;keyword-to-find&quot; *</code></h3>
+<ul>
+<li>put your alias at the end of <code>.zshrc</code></li>
+</ul>
+<pre><code class="language-bash">cd
+cat junhosetting/alias &gt;&gt; ~/.zshrc # Copy paste alias to end of .zshrc
+tail ~/.zshrc # print some lines of the end of .zshrc
+source ~/.zshrc # refresh this environment
 
+grepn &quot;key-word-to-find&quot; * # Check the alias working
+</code></pre>
+<h2 id="port">Port</h2>
+<p>Well know ports : <code>22 : SSH</code> / <code>80 : HTTP</code> / <code>3389 : Window rdp</code> ...<br>
+<a href="https://github.com/junhocho/junhosetting/blob/master/portforward">Portforward</a> from CLIENT to SERVER : <code>ssh -L localhost:$2:localhost:$2 $1</code></p>
+<pre><code class="language-bash"># Ex) Do this at SERVER.
+Jupyter notebook --no-browser --port 8888 # random ports 8888
+# Do this at CLIENT
+ssh -L localhost:8888:localhost:8888 junho@147.46.89.175
+# Open web-browser in CLIENT and connect to `localhost:8888`
+</code></pre>
+<p><a href="http://tmmse.xyz/vnc-setup/">VNC (GUI)</a> :  Use GUI safely with SSH</p>
+<h2 id="scpmovefilebetweenclientandserver"><strong>SCP:</strong> Move file between client and Server</h2>
+<p>use it in CLIENT (unix) terminal.<br>
+because Client : 유동 ip / Server : 고정 ip</p>
+<pre><code class="language-bash">scp /client/A host:~/path/dest/B
+# Client의 파일 A를 host의 경로 B로 옮긴다.
+scp host:~/path/dest/A /client/B
+# Host의 파일 A를 Client의 B로 옮긴다.
+scp -r junho@147.46.89.175:~/Downloads/WordCount ~/Workspace/
+# -r 은 재귀적으로. 서버의 WordCount 디렉토리와 안의
+# 모든 파일을 내 client의 Workspace의 복사
+</code></pre>
+<p>Windows는 WinSCP</p>
+<p><img src="https://winscp.net/pad/screenshot.png" alt="Command Line Interface"></p>
+<h3 id="killingprocess">Killing Process</h3>
+<pre><code class="language-bash">$ python -c '
+c = 0
+while True: print c; c= c+1'
 
+&lt;C-z&gt; # go to sleep and background.
+$ ps aux | grep python # print process that contains `python`
+</code></pre>
+<p><img src="https://www.dropbox.com/s/6iot6o239wp10z6/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202016-11-08%2001.46.20.png?raw=1" alt="Command Line Interface"></p>
+<p><strong><code>kill -9 [process-id]</code></strong> : 356 in this case</p>
+<p>process killed!</p>
+<h1 id="2vim">2. Vim</h1>
+<p><img src="http://www.unixstickers.com/image/cache/data/stickers/vim/vim.sh-600x600.png" alt="Command Line Interface"></p>
+<p>유명한 IDE들,<br>
+<img src="http://cdn03.androidauthority.net/wp-content/uploads/2015/08/ASFeaturedPic.png" alt="Command Line Interface"><br>
+Visua Studio , Eclipse, Webstorm, Android studio, Pycharm, ZeroBaneStudio는 좋지만 client일때 좋음. server에서 사용하기는 힘들다.</p>
+<h3 id="sshvim">SSH에서는 VIM만큼 편한게 없다!</h3>
+<h2 id="vim">Vim</h2>
+<ul>
+<li>Vim : improved Vi.</li>
+<li>probably already installed in your system</li>
+<li>Highly customizable</li>
+<li>setting file : <a href="https://github.com/junhocho/junhosetting/blob/master/vimrc#L19">.vimrc</a></li>
+</ul>
+<h3 id="modalediting">Modal editing</h3>
+<p><img src="http://d.pr/i/15nA1+" alt="Command Line Interface"></p>
+<ul>
+<li>Normal - navigate the structure of the file <code>&lt;esc&gt;</code></li>
+<li>Insert - editing the file <code>i, o, a, s, ...</code></li>
+<li>Visual - highlight portions of the file to manipulate at once <code>v, shift-v, ctrl-v</code></li>
+<li>Ex - command mode <code>:, /, ?</code></li>
+</ul>
+<h3 id="vim">vim에서 마우스는 사용할 필요가 없다.</h3>
+<h3 id="hjkl"><code>h j k l</code></h3>
+<h3 id="">⬅️ ⬇️ ⬆️ ➡️</h3>
+<h2 id="12jmovedown12tiemsnumbersaffect"><code>12j</code> : move down 12 tiems, numbers affect</h2>
+<ul>
+<li><code>:29</code> : move to line 29</li>
+<li><code>:set number</code> : show line numbers</li>
+<li><code>:set nonumber</code> : <code>no</code> usually the opposite of command</li>
+</ul>
+<p>그외에</p>
+<ul>
+<li><code>^e</code> - scroll the window down</li>
+<li><code>^y</code> - scroll the window up</li>
+<li><code>^f</code> - scroll down one page</li>
+<li><code>^b</code> - scroll up one page</li>
+<li><code>H</code> - move cursor to the top of the window</li>
+<li><code>M</code> - move cursor to the middle of the window</li>
+<li><code>L</code> - move cursor to the bottom of the window</li>
+<li><code>zz</code> : move window so that my cursor is at center</li>
+<li><code>u</code> : undo</li>
+<li><code>^r</code> : redo</li>
+<li><code>:w</code> : save</li>
+<li><code>:q</code> : quit</li>
+<li><code>:wq</code> : save and quit</li>
+<li><code>gg</code> - go to top of file</li>
+<li><code>G</code> - go to bottom of file</li>
+</ul>
+<p><img src="https://i.stack.imgur.com/7Cu9Z.jpg" alt="Command Line Interface"><br>
+vim의 learning curve.... 입문부터 고수까지 빡셈... 하지만 익숙하면 너무 편하다.</p>
+<p>다음의 중요한 3 요소</p>
+<h3 id="textobjects">text objects</h3>
+<ul>
+<li><code>w</code> - words</li>
+<li><code>s</code> - sentences</li>
+<li><code>p</code> - paragraphs</li>
+</ul>
+<h3 id="motions">Motions</h3>
+<ul>
+<li><code>a</code>- all</li>
+<li><code>i</code> - in</li>
+<li><code>t</code> - 'til</li>
+<li><code>f</code> - find forward</li>
+<li><code>F</code> - find backward</li>
+</ul>
+<h3 id="commands">Commands</h3>
+<ul>
+<li><code>d</code> - delete (also cut)</li>
+<li><code>c</code> - change (delete, then place in insert mode)</li>
+<li><code>y</code> - yank (copy)</li>
+<li><code>v</code> - visually select</li>
+</ul>
+<p>이것들로</p>
+<h2 id="commandtextobjectormotion"><code>{command}{text object or motion}</code> 조합으로 아주 편리하게 사용가능하다.</h2>
+<h2 id="diwdeleteinword"><code>diw</code> : delete in word</h2>
+<h2 id="cawchangeallword"><code>caw</code> : change all word</h2>
+<h2 id="yiyankalltextinsideparentheses"><code>yi)</code> : yank all text inside parentheses</h2>
+<h2 id="vavisuallyselectallinsidedoublequotesincludingdoublequotes"><code>va&quot;</code> : visually select all inside doublequotes including doublequotes</h2>
+<p>방금 한 커맨드 또 하는 건 The DOT command <code>.</code>로 된다.</p>
+<h2 id="additionalcommands">Additional commands</h2>
+<ul>
+<li><code>dd</code> / <code>yy</code> - delete/yank the current line</li>
+<li><code>D</code> / <code>C</code> - delete/change until end of line</li>
+<li><code>^</code> / <code>$</code> - move to the beginning/end of line</li>
+<li><code>I</code> / <code>A</code> - move to the beginning/end of line and insert</li>
+<li><code>o</code> / <code>O</code> - insert new line above/below current line and insert</li>
+<li><code>J</code> - delete line break. pretty useful</li>
+<li><code>p</code> - paste</li>
+<li><code>*</code> on word - find all this words.</li>
+<li><code>^a</code> on number - increment</li>
+</ul>
+<h2 id="vimmacro">근데 vim의 포텐에는 끝이 없다: Macro</h2>
+<p>A sequence of commands recorded to a register</p>
+<h3 id="recordamacro">Record a macro</h3>
+<ul>
+<li><code>q{register}</code></li>
+<li>(do the things)</li>
+<li><code>q</code></li>
+</ul>
+<h3 id="playamacro">Play a macro</h3>
+<ul>
+<li><code>@{register}</code></li>
+</ul>
+<h3 id="marking">텍스트에서 지금 커서의 위치를 marking해놓고 돌아오는게 가능</h3>
+<ul>
+<li><code>mk</code> : mark position at <code>k</code></li>
+</ul>
+<pre><code> `k : move cursor to position k
+</code></pre>
+<hr>
+<h2 id="exmode">Ex mode에서 가능한 편리한 커맨드들</h2>
+<ul>
+<li><code>/someword</code> : find <code>someword</code></li>
+<li><code>:spl</code> / <code>:vspl</code> : split (horizontal or vertical) vim pane</li>
+<li><code>^w + w/arrow</code> : move pane in vim</li>
+<li><code>:e.</code> : file tree</li>
+<li><code>:%s/foo/bar/g</code> : replace all <code>foo</code> to <code>bar</code></li>
+</ul>
+<h3 id="vimrc">: 로 시작하는 것들은 vimrc에서 초기 명령어로도 사용 가능.</h3>
+<ul>
+<li><code>:syntax on</code> : syntax on</li>
+<li><code>:set paste</code> : paste mode. Useful when using vim <code>indent</code> option</li>
+<li><code>:set cursorline</code> : show cursor with underline</li>
+</ul>
+<p>vimrc는 vim의 세팅 파일.</p>
+<pre><code class="language-bash">cp ~/junhosetting/vimrc ~/.vimrc
+</code></pre>
+<h2 id="pluginsinstallwhatyouneedvim">Plugins : install what you need. vim 편리의 끝판왕</h2>
+<ul>
+<li><a href="https://github.com/gmarik/vundle">vundle</a> - plugin manager</li>
+<li><a href="https://github.com/scrooloose/nerdtree">nerdtree</a> - file drawer</li>
+<li><a href="https://github.com/kien/ctrlp.vim">ctrlp</a> - fuzzy file finder</li>
+<li><a href="https://github.com/tpope/vim-fugitive">fugitive</a> - git tool</li>
+<li><a href="https://github.com/scrooloose/syntastic">syntastic</a> - syntax checker / linter</li>
+</ul>
+<h2 id="vimcustomizable">Vim은 엄청나게 <strong>customizable</strong>하다.</h2>
+<p><img src="http://d.pr/i/R5c+" alt="Command Line Interface"></p>
+<h3 id="notanideitsvim">Not an IDE. It's <strong>VIM</strong></h3>
+<p>Install Vundle with plugins</p>
+<pre><code class="language-bash">cd
+git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+# clone in ~/.vim/bundle/ and setup your vimrc with plugins
+vi # then do :PluginInstall
+# Test :NERDTree with &lt;F2&gt; in vim
+# Test if autocomplete works
+</code></pre>
+<p><img src="https://www.dropbox.com/s/w61ntwzc452e0ia/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202016-11-10%2002.49.25.png?raw=1" alt="Command Line Interface"></p>
+<h3 id="ctagssourcecodeinspection">ctags : Source code inspection</h3>
+<pre><code class="language-bash">sudo apt-get install ctags
+cd your-project
+ctags -R . # will produce `tags` in the folder
+vi code.cpp
+&lt; C - t &gt; # to go inside declration
+&lt; C - ] &gt; # to go back
+</code></pre>
+<h1 id="3tmuxterminalmultiplexer">3. Tmux : Terminal Multiplexer</h1>
+<h3 id="vimtmux">vim + tmux</h3>
+<p><img src="http://d.pr/i/R5c+" alt="Command Line Interface"></p>
+<h3 id="whytmux">Why Tmux?</h3>
+<ul>
+<li>Don't want to stop your SSH session.
+<ol>
+<li>Experiment session</li>
+<li>Downloading big file</li>
+<li>web-server</li>
+</ol>
+</li>
+<li>Extendable Workspace</li>
+<li>And Maintain your session</li>
+<li>Co-operation</li>
+</ul>
+<pre><code class="language-bash">tmux new -s [session-name]	  # create new session
+tmux ls                       # list existing session
+tmux attch -t [session-name]	# attach existing session
+</code></pre>
+<p><code>tmux new -s py-practice</code><br>
+<strong><code>&lt;C-b&gt;</code></strong> : Tmux binding-key.</p>
+<ul>
+<li>will change it to <strong><code>&lt;C-a&gt;</code></strong> unless you have flexible finger bone</li>
+</ul>
+<p><code>&lt;C-b&gt; c</code> , <strong><code>bind c</code></strong> : New window<br>
+<strong><code>bind d</code></strong> : dettach from working session</p>
+<h3 id="letsconfiguretmux">Let's configure Tmux.</h3>
+<ul>
+<li><a href="http://www.haruair.com/blog/2124">ref1</a>, <a href="https://blog.outsider.ne.kr/699">ref2</a></li>
+<li><a href="https://github.com/junhocho/junhosetting/blob/master/tmux.conf">.tmux.conf</a></li>
+</ul>
+<pre><code class="language-bash">cp ~/junhosetting/tmux.conf ~/.tmux.conf  #  dotfile로 이름바꿔서 복붙
+tmux source .tmux.conf    # If you have working tmux session
+# Now your Tmux looks better and &lt;C-a&gt; is the binding-key
+</code></pre>
+<p><strong><code>tmux new -s [session-name]</code></strong></p>
+<p><code>bind c</code> : new window<br>
+<code>bind n</code> : Next window<br>
+<code>bind p</code> : Previous window<br>
+<code>bind %</code> : vertical split pane<br>
+<code>bind &quot;</code> : horizontal split pane<br>
+<code>bind h(jkl, arrow)</code> : move my cursor pane to pane<br>
+<code>bind [</code> : copy-mode / <code>q</code> : copy-mode exit<br>
+<code>exit</code> / <code>&lt;C-d&gt;</code> : quit pane</p>
+<h3 id="synchronizepanes">Synchronize-panes</h3>
+<p><code>bind :setw synchronize-panes</code></p>
+<p><img src="http://d.pr/i/vRVt+" alt="Command Line Interface"></p>
+<h3 id="">화면 쪼개기!</h3>
+<p><code>bind %</code> and <code>bind &quot;</code></p>
+<p><img src="http://d.pr/i/12gE5+" alt="Command Line Interface"></p>
+<h1 id="">결론</h1>
+<h3 id="linuxgittmuxvim">답은 linux + GIT + tmux + vim</h3>
+<p>참고할만한  dotfiles들</p>
+<ul>
+<li><a href="https://github.com/junhocho/junhosetting">junhocho/dotfiles</a></li>
+<li><a href="https://github.com/nicknisi/dotfiles">nicknisi/dotfiles</a></li>
+<li><a href="https://github.com/bryanforbes/dotfiles">bryanforbes/dotfiles</a></li>
+<li><a href="https://github.com/jason0x43/dotfiles">jason0x43/dotfiles</a></li>
+</ul>
+<p>dotfiles and materials available at <a href="https://github.com/junhocho/junhosetting">@junhocho</a><sup class="footnote-ref"><a href="#fn1" id="fnref1:1">[1:1]</a></sup></p>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>Inspired from <a href="https://github.com/nicknisi/vim-workshop">@nicknisi</a> <a href="#fnref1" class="footnote-backref">↩︎</a> <a href="#fnref1:1" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+</div>]]></content:encoded></item><item><title><![CDATA[PaletteNet]]></title><description><![CDATA[<div class="kg-card-markdown"><p><strong>Junho Cho</strong>, Sangdoo Yun, Kyoungmu Lee and Jin Young Choi, <strong>PaletteNet: Image Recolorization with Given Color Palette</strong> <em>The IEEE Conference on Computer Vision and Pattern Recognition</em> <strong>(CVPR) Workshops</strong>, <em>NITRE2017</em>, July, 2017.</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-07-26-NTIRE_junho.png" alt=""></p>
+<p><a href="https://www.dropbox.com/s/66ynt8dcs7cw0e0/NTIRE_junho.pdf?dl=0">poster better resolution</a></p>
+<p><a href="https://www.dropbox.com/s/7cw0xxc1yl81ug8/11.pdf?dl=0">paper</a></p>
+</div>]]></description><link>http://tmmse.xyz/2017/07/27/palettenet/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76fe</guid><category><![CDATA[Deep Learning]]></category><category><![CDATA[Computer Vision]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Wed, 26 Jul 2017 23:54:21 GMT</pubDate><media:content url="http://tmmse.xyz/content/images/2017/07/img-palette-pairs2.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="http://tmmse.xyz/content/images/2017/07/img-palette-pairs2.jpg" alt="PaletteNet"><p><strong>Junho Cho</strong>, Sangdoo Yun, Kyoungmu Lee and Jin Young Choi, <strong>PaletteNet: Image Recolorization with Given Color Palette</strong> <em>The IEEE Conference on Computer Vision and Pattern Recognition</em> <strong>(CVPR) Workshops</strong>, <em>NITRE2017</em>, July, 2017.</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-07-26-NTIRE_junho.png" alt="PaletteNet"></p>
+<p><a href="https://www.dropbox.com/s/66ynt8dcs7cw0e0/NTIRE_junho.pdf?dl=0">poster better resolution</a></p>
+<p><a href="https://www.dropbox.com/s/7cw0xxc1yl81ug8/11.pdf?dl=0">paper</a></p>
+</div>]]></content:encoded></item><item><title><![CDATA[Home Automation memo]]></title><description><![CDATA[<div class="kg-card-markdown"><h1 id="">중요!</h1>
+<p><a href="https://www.qoo10.com/item/XIAOMI-%EC%95%8C%EB%9C%B0%EC%83%81%ED%92%88-%EC%83%A4%EC%98%A4%EB%AF%B8-%EB%A9%80%ED%8B%B0%ED%83%AD-%EB%AA%A8%EC%9D%8C%EC%A0%84-%EC%83%A4%EC%98%A4%EB%AF%B8-5%EA%B5%AC-%EB%A9%80%ED%8B%B0%ED%83%AD-%EC%83%A4%EC%98%A4%EB%AF%B8-USB-%EB%A9%80%ED%8B%B0%ED%83%AD-%ED%99%94%EC%9D%B4%ED%8A%B8-%EB%B8%94%EB%9E%99-%EC%83%A4%EC%98%A4%EB%AF%B8-%EC%8A%A4%EB%A7%88%ED%8A%B8-%EC%86%8C%EC%BC%93-%EC%83%A4%EC%98%A4%EB%AF%B8/458021699">샤오미 멀티탭 특가</a></p>
+<p><img src="https://www.dropbox.com/s/7etu4n28x9t6k75/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202017-01-28%2001.44.26.png?raw=1" alt=""></p>
+<h1 id="">예산</h1>
+<ul>
+<li>조명
+<ul>
+<li>필립스 휴 2 + 브릿지 = 90</li>
+<li><strong>샤오미 스탠드 = 28.1 ( 37.5 - 5.9 () - 3.5 (PAYCO) )</strong> (Qoo10. 그전에 G9가 39로 젤쌌음)</li>
+<li>샤오미 전구 RGBW 26 중고나라 대리구매 (32.6  / 중고나라 20)</li>
+<li><s>샤오미 전구 W 17 + 10(배송비)</s></li>
+</ul>
+</li>
+<li>음성인식
+<ul>
+<li>에코닷2 = 70</li>
+<li><strong>구글홈 = 160</strong></li></ul></li></ul></div>]]></description><link>http://tmmse.xyz/2017/07/23/home-automation-memo/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76fc</guid><category><![CDATA[home automation]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Sat, 22 Jul 2017 20:36:41 GMT</pubDate><content:encoded><![CDATA[<div class="kg-card-markdown"><h1 id="">중요!</h1>
+<p><a href="https://www.qoo10.com/item/XIAOMI-%EC%95%8C%EB%9C%B0%EC%83%81%ED%92%88-%EC%83%A4%EC%98%A4%EB%AF%B8-%EB%A9%80%ED%8B%B0%ED%83%AD-%EB%AA%A8%EC%9D%8C%EC%A0%84-%EC%83%A4%EC%98%A4%EB%AF%B8-5%EA%B5%AC-%EB%A9%80%ED%8B%B0%ED%83%AD-%EC%83%A4%EC%98%A4%EB%AF%B8-USB-%EB%A9%80%ED%8B%B0%ED%83%AD-%ED%99%94%EC%9D%B4%ED%8A%B8-%EB%B8%94%EB%9E%99-%EC%83%A4%EC%98%A4%EB%AF%B8-%EC%8A%A4%EB%A7%88%ED%8A%B8-%EC%86%8C%EC%BC%93-%EC%83%A4%EC%98%A4%EB%AF%B8/458021699">샤오미 멀티탭 특가</a></p>
+<p><img src="https://www.dropbox.com/s/7etu4n28x9t6k75/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202017-01-28%2001.44.26.png?raw=1" alt=""></p>
+<h1 id="">예산</h1>
+<ul>
+<li>조명
+<ul>
+<li>필립스 휴 2 + 브릿지 = 90</li>
+<li><strong>샤오미 스탠드 = 28.1 ( 37.5 - 5.9 () - 3.5 (PAYCO) )</strong> (Qoo10. 그전에 G9가 39로 젤쌌음)</li>
+<li>샤오미 전구 RGBW 26 중고나라 대리구매 (32.6  / 중고나라 20)</li>
+<li><s>샤오미 전구 W 17 + 10(배송비)</s></li>
+</ul>
+</li>
+<li>음성인식
+<ul>
+<li>에코닷2 = 70</li>
+<li><strong>구글홈 = 160 —&gt; 155</strong></li>
+<li><strong>라즈베리파이 = 40 (3)</strong>  (중고나라)</li>
+<li><strong>USB 마이크 = 29.9</strong> (쿠팡이 최저가)</li>
+<li><strong>sd 카드 = 8.3 x2</strong></li>
+</ul>
+</li>
+<li>제품
+<ul>
+<li><strong>스위처 35.5</strong>  (<a href="https://www.switcher.kr">제품링크</a> , <a href="https://storyfunding.daum.net/project/11696">펀딩</a> 을 통한 영구구매로 가능. 본래 렌탈방식)</li>
+<li>
+<img src="https://ww2.sinaimg.cn/large/006tNbRwgy1fc5l54ml8wj30ru0vmq5j.jpg" style="width: 300px;">
+</li>
+<li>샤오미 Wifi 스마트 멀티탭 6구  18</li>
+</ul>
+</li>
+<li>그외에 …
+<ul>
+<li>규조토 매트 17.5</li>
+<li>건조대 28.9</li>
+<li>화장실 선반 11.6</li>
+<li>부직포 7.36</li>
+<li>4포트 충전기 9.74</li>
+<li>LED 벽시계 28.9</li>
+<li>가구
+<ul>
+<li>게이트레그 <a href="http://www.11st.co.kr/product/SellerProductDetail.tmall?method=getSellerProductDetail&amp;prdNo=1598863362&amp;NaPm=ct=iy7io608%7Cci=934d3c0901dfbef225d073df41549008d7410a07%7Ctr=sls%7Csn=17703%7Chk=f18e556d7a1e0b0c1015528cd143bed13c0a7670&amp;utm_term=&amp;utm_campaign=-&amp;utm_source=%B3%D7%C0%CC%B9%F6_PCS&amp;utm_medium=%B0%A1%B0%DD%BA%F1%B1%B3">11번가</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="task">Task</h2>
+<ol>
+<li>조명</li>
+<li>에어콘, 티비 컨트롤</li>
+<li>Chromecast Netflix, google music</li>
+</ol>
+<h1 id="">배치</h1>
+<h2 id="">전원</h2>
+<p>4구 멀티탭 2개<br>
+3구 긴거, 짧은거<br>
+2구</p>
+<h3 id="2">책상 2</h3>
+<ul>
+<li>4구 1
+<ul>
+<li>공유기</li>
+<li>컴퓨터</li>
+<li>모니터</li>
+<li>스탠드</li>
+</ul>
+</li>
+<li>2구
+<ul>
+<li>티비</li>
+<li>3구
+<ul>
+<li>4 포트 USB 충전기</li>
+<li>스피커</li>
+<li>맥북</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="">천장</h3>
+<ul>
+<li>4구
+<ul>
+<li>헤어드라이기</li>
+<li>공유기</li>
+<li>천장 조명</li>
+<li>충전기 / 청소기</li>
+</ul>
+</li>
+</ul>
+<h3 id="2">현관 2</h3>
+<ul>
+<li>냉장고</li>
+<li>3구
+<ul>
+<li>무드등</li>
+<li>시계</li>
+<li>전자렌지 / 라면포트 /라즈베리파이</li>
+</ul>
+</li>
+</ul>
+<h1 id="">조사</h1>
+<p><a href="http://blog.amaorche.com/37">http://blog.amaorche.com/37</a></p>
+<p>스마트 전구 특집 <a href="https://brunch.co.kr/@yyja/248">https://brunch.co.kr/@yyja/248</a></p>
+<p>형광등 갈아끼기<br>
+소켓 <a href="https://brunch.co.kr/@yyja/242">https://brunch.co.kr/@yyja/242</a><br>
+<a href="http://auto.danawa.com/news/?Work=detail&amp;no=3214220">http://auto.danawa.com/news/?Work=detail&amp;no=3214220</a><br>
+<a href="http://jejuin.tistory.com/1812">http://jejuin.tistory.com/1812</a><br>
+<a href="http://duga.tistory.com/1963">http://duga.tistory.com/1963</a><br>
+<a href="http://btsweet.blogspot.kr/2016/05/install-led-light.html">http://btsweet.blogspot.kr/2016/05/install-led-light.html</a><br>
+<a href="http://www.cnet.co.kr/view/91655">http://www.cnet.co.kr/view/91655</a></p>
+<h2 id="23">스타터 킷 23만</h2>
+<p>브릿지 7만 전구 8~9만 ?휴 램프 설치는 간단하다. 일반 백열전구(E26, 26mm) 규격에 소비전력이 10W 이상인 전구 소켓만 있으면 된다.<br>
+<a href="http://www.cnet.co.kr/view/91655">http://www.cnet.co.kr/view/91655</a></p>
+<p><a href="http://www.clien.net/cs2/bbs/board.php?bo_table=use&amp;wr_id=640706">http://www.clien.net/cs2/bbs/board.php?bo_table=use&amp;wr_id=640706</a></p>
+<p>스탠드. 샤오미 미지아.</p>
+<h2 id="">샤오미 에코 연동</h2>
+<p><a href="https://www.youtube.com/watch?v=23DHbgFc89g">https://www.youtube.com/watch?v=23DHbgFc89g</a><br>
+<a href="https://www.youtube.com/watch?v=18fD6zXEmno">https://www.youtube.com/watch?v=18fD6zXEmno</a><br>
+<a href="https://www.youtube.com/watch?v=GlTucBuikCc">https://www.youtube.com/watch?v=GlTucBuikCc</a><br>
+<a href="https://www.youtube.com/watch?v=AJ2vFY-vRsE">https://www.youtube.com/watch?v=AJ2vFY-vRsE</a><br>
+a brief introduction to the Smart Home...</p>
+<p>Using the Amazon Echo and the Energenie MiHome Gateway you are now able to control your home with the use of your voice.</p>
+<p>Energenie - <a href="https://energenie4u.co.uk">https://energenie4u.co.uk</a></p>
+<p>리모콘 삼만오천<br>
+<a href="https://directjapan.qoo10.com/item/XIAOMI-XIAOMI-%EC%83%A4%EC%98%A4%EB%AF%B8-%EB%A7%8C%EB%8A%A5-%EB%A6%AC%EB%AA%A8%EC%BB%A8-%EC%BB%A8%ED%8A%B8%EB%A1%A4%EB%9F%AC-%EC%9B%90%EA%B2%A9%EC%A0%9C%EC%96%B4-%EB%AF%B8%ED%8B%B0%EB%B9%84-%EC%83%A4%EC%98%A4%EB%AF%B8-TV-%EC%8A%A4%EB%A7%88%ED%8A%B8-%ED%99%88/441078519">https://directjapan.qoo10.com/item/XIAOMI-XIAOMI-샤오미-만능-리모컨-컨트롤러-원격제어-미티비-샤오미-TV-스마트-홈/441078519</a><br>
+리뷰 - <a href="http://blog.naver.com/twophase/220790203872">http://blog.naver.com/twophase/220790203872</a></p>
+<p>멀티탭</p>
+<p><a href="https://directjapan.qoo10.com/item/XIAOMI-%EC%95%8C%EB%9C%B0%EC%83%81%ED%92%88-%EC%83%A4%EC%98%A4%EB%AF%B8-%EB%A9%80%ED%8B%B0%ED%83%AD-%EB%AA%A8%EC%9D%8C%EC%A0%84-%EC%83%A4%EC%98%A4%EB%AF%B8-5%EA%B5%AC-%EB%A9%80%ED%8B%B0%ED%83%AD-%EC%83%A4%EC%98%A4%EB%AF%B8-USB-%EB%A9%80%ED%8B%B0%ED%83%AD-%ED%99%94%EC%9D%B4%ED%8A%B8-%EB%B8%94%EB%9E%99-%EC%83%A4%EC%98%A4%EB%AF%B8-%EC%8A%A4%EB%A7%88%ED%8A%B8-%EC%86%8C%EC%BC%93-%EC%83%A4%EC%98%A4%EB%AF%B8/458021699">https://directjapan.qoo10.com/item/XIAOMI-알뜰상품-샤오미-멀티탭-모음전-샤오미-5구-멀티탭-샤오미-USB-멀티탭-화이트-블랙-샤오미-스마트-소켓-샤오미/458021699</a></p>
+<p>qoo10</p>
+<p><a href="https://directjapan.qoo10.com/item/XIAOMI-%EC%83%A4%EC%98%A4%EB%AF%B8-%EC%8A%A4%EB%A7%88%ED%8A%B8-%ED%99%88-%EC%84%B8%ED%8A%B8-%EC%95%8C%EB%9C%B0%EC%83%81%ED%92%88-%EC%8A%A4%EB%A7%88%ED%8A%B8-%EB%B0%A9%EB%B2%94-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%8A%A4%EB%A7%88%ED%8A%B8%ED%99%88-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%83%A4%EC%98%A4%EB%AF%B8-%EC%8A%A4%EB%A7%88%ED%8A%B8-%ED%99%88-%ED%82%A4%ED%8A%B8-%EA%B2%8C%EC%9D%B4%ED%8A%B8%EC%9B%A8%EC%9D%B4-%EB%8F%84%EC%96%B4%EA%B0%90%EC%A7%80%EC%84%BC%EC%84%9C/454601613?stcode=77">https://directjapan.qoo10.com/item/XIAOMI-샤오미-스마트-홈-세트-알뜰상품-스마트-방범-시스템-스마트홈-시스템-샤오미-스마트-홈-키트-게이트웨이-도어감지센서/454601613?stcode=77</a></p>
+<h2 id="tasker">Tasker</h2>
+<h1 id="">교육</h1>
+<p><img src="http://ideafactory.snu.ac.kr/uploads/ckeditor/pictures/285/content___16.jpg" alt=""></p>
+<h1 id="raspberrypiblexiamiyeelight">Raspberry Pi - BLE Xiami Yeelight</h1>
+<p><a href="https://www.youtube.com/watch?v=V0TJXxDzO_4">https://www.youtube.com/watch?v=V0TJXxDzO_4</a><br>
+If you able to use Wireshark well, Yes.</p>
+<p><a href="http://www.guillier.org/blog/2015/04/reverse-engineering-of-a-ble-bulb/">http://www.guillier.org/blog/2015/04/reverse-engineering-of-a-ble-bulb/</a></p>
+<p><a href="https://www.youtube.com/watch?v=UhrUUW4zATY">https://www.youtube.com/watch?v=UhrUUW4zATY</a></p>
+<p>리모트 컨트롤</p>
+<p>로지텍하모니허브<br>
+<a href="https://www.reddit.com/r/amazonecho/comments/4dltfw/opinion_what_is_the_best_ir_blaster_device_to_use/">https://www.reddit.com/r/amazonecho/comments/4dltfw/opinion_what_is_the_best_ir_blaster_device_to_use/</a></p>
+<p>Alexa 그냥 <a href="http://lifehacker.com/how-to-build-your-own-amazon-echo-with-a-raspberry-pi-1787726931">http://lifehacker.com/how-to-build-your-own-amazon-echo-with-a-raspberry-pi-1787726931</a><br>
+<a href="http://lifehacker.com/build-a-raspberry-pi-powered-diy-amazon-echo-1762678229">http://lifehacker.com/build-a-raspberry-pi-powered-diy-amazon-echo-1762678229</a></p>
+<p><a href="https://www.raspberrypi.org/blog/amazon-echo-homebrew-version/">https://www.raspberrypi.org/blog/amazon-echo-homebrew-version/</a></p>
+<h1 id="raspberrypi">Raspberry Pi</h1>
+<p><a href="http://jhcompany.tistory.com/1">http://jhcompany.tistory.com/1</a></p>
+<p><a href="https://github.com/alexa/alexa-avs-sample-app/issues/2">1B+ 모델에서 가능하게 하기</a></p>
+<h3 id="raspbianos">RaspbianOS (비추)</h3>
+<ol>
+<li>
+<p>SD-card format with SDformatter</p>
+<ul>
+<li><a href="https://www.sdcard.org/downloads/formatter_4/eula_mac/index.html">https://www.sdcard.org/downloads/formatter_4/eula_mac/index.html</a></li>
+<li>그리고 Mac에 꽂아</li>
+</ul>
+</li>
+<li>
+<p>Rasbian 취향대로 다운</p>
+<ul>
+<li><a href="https://www.raspberrypi.org/downloads/raspbian/">download</a></li>
+</ul>
+</li>
+<li>
+<p><a href="https://www.raspberrypi.org/documentation/installation/installing-images/mac.md">Mac 설치 법</a> 따라서 CLI로 설치.</p>
+<ul>
+<li>꽤 걸리는데 Ctrl-T로 확인 가능.</li>
+<li><img src="https://www.dropbox.com/s/y2dzvljvygk9jwz/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202017-01-13%2000.06.08.png?raw=1" alt=""></li>
+</ul>
+</li>
+<li>
+<p>Rasberry Pi에 꼽고 확인</p>
+</li>
+</ol>
+<h3 id="noobs">NOOBS (추천)</h3>
+<p>를 받아서 sd카드에 복붙 후 부팅.</p>
+<ol>
+<li><code>sudo raspi-config</code></li>
+<li><code>sudo apt-get install tightvncserver</code></li>
+<li>
+<pre><code class="language-bash">sudo apt-get install xserver-xorg-core xserver-xorg-input-all \
+xserver-xorg-video-fbdev libx11-6 x11-common \
+x11-utils x11-xkb-utils x11-xserver-utils xterm lightdm openbox
+</code></pre>
+</li>
+</ol>
+<h1 id="googlehome">Google Home</h1>
+<p>Nexus5X 에서 Google Assistant 가능.<br>
+<a href="http://lifehacker.com/how-to-get-google-assistant-on-any-phone-running-androi-1787706402">http://lifehacker.com/how-to-get-google-assistant-on-any-phone-running-androi-1787706402</a></p>
+<p>구글홈 - 넥서스5 - 여러앱 - 넷플릭스<br>
+<a href="https://www.youtube.com/watch?v=whb2xS9dIjM">https://www.youtube.com/watch?v=whb2xS9dIjM</a></p>
+<p><a href="http://www.androidpolice.com/2016/08/20/psa-can-control-youtube-playback-google-now/">Google Now - Chromecast</a></p>
+<h2 id="commands"><a href="https://www.cnet.com/how-to/google-home-complete-list-of-commands/">Commands</a></h2>
+<ul>
+<li>
+<p><strong>Basic commands</strong></p>
+<ul>
+<li>Ask for help: &quot;OK Google, help.&quot;</li>
+<li>Control the volume: &quot;OK Google, turn it up&quot; or, &quot;Louder&quot; or, &quot;Turn it to 11.&quot; (Yes, the max is 11.)</li>
+<li>Halt an action: &quot;OK Google, stop&quot; or, &quot;Pause&quot; or, &quot;Be quiet.&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>Tools</strong></p>
+<ul>
+<li>Roll a die: &quot;OK Google, roll a die&quot; or, &quot;OK Google, roll a 12-sided die.&quot;</li>
+<li>Flip a coin: &quot;OK Google, flip a coin.&quot;</li>
+<li>Math: &quot;OK Google, what's 354 times 11?&quot;</li>
+<li>Measurements: &quot;OK Google, how many liters are in 4 gallons.&quot;</li>
+<li>Time: &quot;OK Google, what time is it?&quot;</li>
+<li>Location: &quot;OK Google, where am I?&quot;</li>
+<li>Translations: &quot;OK Google, how do you say [word] in [language]?&quot;</li>
+<li>International time: &quot;OK Google, what time is it in [city]?&quot;</li>
+<li>Currency conversion: &quot;OK Google, how much is 100 Euros in dollars?&quot;</li>
+<li>Alarm: &quot;OK Google, set an alarm for [time].&quot;</li>
+<li>Snooze alarm: &quot;OK Google, snooze alarm.&quot;</li>
+<li>Cancel alarm: &quot;OK Google, cancel my alarm for [time].&quot;</li>
+<li>Timer: &quot;OK Google, set a timer for [time].&quot;</li>
+<li>Check timer: &quot;OK Google, how much time is left on my timer?&quot;</li>
+<li>Recipes: &quot;OK Google, how do I make [dish]&quot;</li>
+<li>Add to shopping list: &quot;OK Google, add [item] to my shopping list.&quot;</li>
+<li>Check shopping list: &quot;OK Google, what's on my shopping list?&quot;</li>
+<li>Daily briefing: &quot;OK Google, good morning.&quot; (includes personalized greeting, info on weather, traffic, and curated news stories)</li>
+<li><a href="https://www.cnet.com/tags/uber/"><strong>Uber</strong></a>: &quot;OK Google, order an Uber.&quot;</li>
+<li>Tune an instrument: &quot;OK Google, tune my instrument&quot; or &quot;OK Google, play an F sharp.&quot; (If you don't specify &quot;flat&quot; or &quot;sharp,&quot; you must say &quot;note&quot; after stating which note you want Google Home to play, such as &quot;play an A note.&quot;)</li>
+</ul>
+</li>
+<li>
+<p><strong>Search</strong></p>
+<ul>
+<li>Stocks: &quot;OK Google, how are Alphabet's stocks doing?&quot;</li>
+<li>Weather: &quot;OK Google, how's the weather today?&quot; or, &quot;Do I need an umbrella today?&quot;</li>
+<li>Traffic: &quot;OK Google, what's the traffic like on the way to work?&quot;</li>
+<li>Words: &quot;OK Google, what does [word] mean?&quot;</li>
+<li>Spelling: &quot;OK Google, spell [word].&quot;</li>
+<li>Special events: &quot;OK Google, when is [event]?&quot; (Easter, for example)</li>
+<li>People: &quot;OK Google, who is [person]?&quot;</li>
+<li>Facts: &quot;OK Google, how tall is [person]?&quot;</li>
+<li>Things: &quot;OK Google, what is [thing]?&quot;</li>
+<li>Places: &quot;OK Google, what country is [location] in?&quot;</li>
+<li>Animal sounds: &quot;OK Google, what does [animal] sound like?&quot;</li>
+<li>Distance: &quot;OK Google, how far is [business name] from here?&quot;</li>
+<li>Restaurants: &quot;OK Google, what are the nearest restaurants to me?&quot;</li>
+<li>Businesses: &quot;OK Google, are there any [business type] around here?&quot;</li>
+<li>Business information: &quot;OK Google, how late is [business] open?&quot; or &quot;Is [business] open now?&quot;</li>
+<li>Quotes: &quot;OK Google, give me a quote&quot; or, &quot;Give me a love quote.&quot;</li>
+<li>Medical information: &quot;OK Google, what is a torn meniscus?&quot;</li>
+<li>Calories: &quot;OK Google, how many calories are in [food item]?&quot;</li>
+<li>Authors: &quot;OK Google, who wrote [book title]?&quot;</li>
+<li>Inventors: &quot;OK Google, who invented [item]?&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>Media</strong></p>
+<ul>
+<li>Play music: &quot;OK Google, play some music&quot; or, &quot;Play some [genre] music.&quot;</li>
+<li>Play an artist or song: &quot;OK Google, play [artist]&quot; or, &quot;Play [song].&quot;</li>
+<li>Play a song by lyrics: &quot;OK Google, play the song that goes, 'Is this the real life?'&quot;</li>
+<li>Play a Google Play playlist or album: &quot;OK Google, play some indie music&quot; or, &quot;OK Google, play [album].&quot;</li>
+<li>Ask what's playing: &quot;OK Google, what song is this?&quot; or, &quot;OK Google, what album is this?&quot;</li>
+<li>Get more information: &quot;OK Google, when did this album come out?&quot;</li>
+<li>Fast forward and rewind: &quot;OK Google, skip forward 2 minutes&quot; or, &quot;Skip backward 30 seconds.&quot;</li>
+<li>Play music through other <a href="https://www.cnet.com/topics/speakers/"><strong>speakers</strong></a> using <a href="https://www.cnet.com/products/chromecast-audio/"><strong>Chromecast</strong></a>: &quot;OK Google, cast [song] onto [speaker name].&quot;</li>
+<li>Play music on Spotify: &quot;OK Google, play [artist] on Spotify.&quot;</li>
+<li>Play music on <a href="https://www.cnet.com/tags/pandora/"><strong>Pandora</strong></a>: &quot;OK Google, play [artist] on Pandora.&quot;</li>
+<li>Like or dislike a song on Pandora: &quot;OK Google, dislike this song.&quot;</li>
+<li>Play music on <a href="https://www.cnet.com/products/youtube-music/preview/"><strong>YouTube Music</strong></a>: &quot;OK Google, play [artist] on YouTube.&quot;</li>
+<li>Play stations on TuneIn: &quot;OK Google, play [station] on TuneIn.&quot;</li>
+<li>Play videos on YouTube using Chromecast: &quot;OK Google, play [video] on the [TV name].&quot;</li>
+<li>Pull up lists on YouTube: &quot;OK Google, let's look at what's trending on YouTube on [TV name].&quot;</li>
+<li>Play a movie or TV show on Netflix using Chromecast: &quot;OK Google, play [show or movie title] on the [TV name].&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>Entertainment</strong></p>
+<ul>
+<li>Sports updates: &quot;OK Google, who is [team] playing next?&quot; or &quot;Did the [team] win last night?&quot;</li>
+<li>Sports scores: &quot;OK Google, what was the score for the last [team] game?&quot;</li>
+<li>Team information: &quot;OK Google, tell me about [team].&quot;</li>
+<li>Movies: &quot;OK Google, what movies came out last Friday?&quot;</li>
+<li>Casting for movies: &quot;OK Google, what actors are in [movie]?&quot;</li>
+<li>Shows by network: &quot;Hey Google, what shows are on [network]?&quot;</li>
+<li>News: &quot;OK Google, what's today's news?&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>Smart home</strong></p>
+<p>Google works with only a few smart home devices/platforms at present: <a href="https://www.cnet.com/tags/philips/"><strong>Philips</strong></a> Hue, <a href="https://www.cnet.com/tags/nest/"><strong>Nest</strong></a>, <a href="https://www.cnet.com/tags/smartthings/"><strong>SmartThings</strong></a>, Chromecast and IFTTT. The roster of integrations will likely expand as time goes on. Even with these limited integrations, though, the flexibility of SmartThings and especially IFTTT allow the Google Home to control a wide variety of <a href="https://www.cnet.com/topics/gadgets/"><strong>gadgets</strong></a> using 3rd-party triggers. For now, here are the built-in Google Home commands for smart home gadgets.</p>
+<ul>
+<li>Turn Philips Hue lights on/off: &quot;OK Google, turn on/off my lights.&quot;</li>
+<li>Dim Hue lights: &quot;OK Google, dim my lights to fifty percent.&quot;</li>
+<li>Change Hue colors: &quot;OK Google, turn my lights [color].&quot;</li>
+<li>Control Nest thermostat: &quot;OK Google, turn the temperature to [temp].&quot;</li>
+<li>Make incremental changes: &quot;OK Google, raise the temperature 1 degree.&quot;</li>
+<li>Customize trigger phrases for IFTTT. For example: &quot;OK Google, let's get this party started.&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>Third-party Actions</strong></p>
+<p>Earlier this month, Google rolled out what it calls <a href="https://www.cnet.com/how-to/how-to-use-third-party-actions-on-google-home/"><strong>Actions for Google Assistant</strong></a>. These are third-party services and integrations that work much like Alexa skills, except you don't have to activate them one by one. Actions are enabled by default.</p>
+<p>You can find the full list of Actions in the Google Home app by going to <strong>More settings &gt; Services</strong>. You will also find sample invocations there, which will tell you how to interact with the different services available.</p>
+<ul>
+<li>21 Blackjack: &quot;OK Google, let me talk to 21 Blackjack.&quot;</li>
+<li>Best Dad Jokes: &quot;OK Google, talk to Best Dad Jokes.&quot;</li>
+<li>Domino's: &quot;OK Google, talk to Domino's and get my Easy Order.&quot;</li>
+<li>Product Hunt: &quot;OK Google, talk to Product Hunt.&quot;</li>
+<li>Tender: &quot;OK Google, can I talk to Tender about drinks like an old fashioned?&quot;</li>
+<li>Todoist: &quot;OK Google, tell me what my next task is with Todoist.&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>Easter eggs</strong></p>
+<ul>
+<li>&quot;Hey Google, always be closing.&quot;</li>
+<li>&quot;Hey Google, what is your quest?&quot;</li>
+<li>&quot;Hey Google, I am your father.&quot;</li>
+<li>&quot;Hey Google, set phasers to kill.&quot;</li>
+<li>&quot;Hey Google, are you SkyNet?&quot;</li>
+<li>&quot;Hey Google, make me a sandwich.&quot;</li>
+<li>&quot;Hey Google, up up down down left right left right B A Start.&quot;</li>
+<li>&quot;Hey Google, do a barrel roll.&quot;</li>
+<li>&quot;Hey Google, it's my birthday.&quot;</li>
+<li>&quot;Hey Google, it's not my birthday.&quot;</li>
+<li>&quot;Hey Google, did you fart?&quot;</li>
+</ul>
+</li>
+</ul>
+<h2 id="apiai"><a href="https://api.ai/blog/2016/12/08/build-conversation-actions-for-the-google-assistant/">API.AI</a></h2>
+<h3 id="flaskassistantservingapiaisdk"><a href="https://github.com/treethought/flask-assistant">Flask-assistant. serving API.AI SDK</a></h3>
+<p><a href="http://flask-assistant.readthedocs.io/en/latest/">tutorial</a><br>
+<a href="http://flask-assistant.readthedocs.io/en/latest/quick_start.html">QuickStart</a></p>
+<p><a href="https://developers.google.com/actions/develop/apiai/tutorials/getting-started">Actions on Google - tutorial</a></p>
+<ul>
+<li><a href="https://www.youtube.com/playlist?list=PLOU2XLYxmsIKgPTizdYWPPYEpU96FCJrQ">Youtube</a></li>
+</ul>
+<p><a href="https://api.ai/blog/2016/12/08/build-conversation-actions-for-the-google-assistant/">Build Conversational Actions for Google Assistant Users</a></p>
+<h2 id="pixelphone">Pixel phone</h2>
+<p><a href="https://forum.xda-developers.com/android/software/guide-how-to-enable-google-assistant-t3477879">넥서스 5x Google assistant</a></p>
+<ul>
+<li>부트로더 언락시 은행앱 안되서 보류</li>
+</ul>
+<p>갤럭시 S4 mini 를 누가로 올리고? --&gt; 적외선 리모콘<br>
+<a href="http://ppomppu.co.kr/zboard/view.php?id=phone&amp;no=2637349">cm 올리기 - 누가는 아님</a><br>
+<a href="http://www.cyanogenmods.org/forums/topic/galaxy-s4-mini-cm14-cyanogenmod-14-nougat-7-0-rom/">누가</a><br>
+<a href="http://blog.naver.com/PostView.nhn?blogId=ekfsla1177&amp;logNo=220830443801">누가 한글</a><br>
+<a href="http://forums.androidcentral.com/samsung-galaxy-s4/333746-ir-universal-remote-control-app-s4-s4-mini.html">IR Universal Remote Control-Watch On app</a><br>
+<a href="https://www.youtube.com/watch?v=0D6lrsZUWc0">더 쉬워보이는 TWRP flashing</a></p>
+<h1 id="alexa">Alexa</h1>
+<p><a href="https://github.com/alexa/alexa-avs-sample-app/wiki/Create-Security-Profile">공통으로 앱제작</a><br>
+<a href="http://blueidblues.tistory.com/33">캘린더 등록</a></p>
+<p>IoTWonders</p>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=YbkFIlrF_XM">Amazon Echo Custom Skill</a></li>
+<li><a href="https://www.youtube.com/watch?v=9237RZAOUqc&amp;list=PLD1gjwwK_VNaQB6xzYtuwrNnh20-KTYQV">Jarvis Skill</a></li>
+</ul>
+<h2 id="alexaskills">Alexa Skills</h2>
+<h3 id="flaskalexa"><a href="https://alexatutorial.com/flask-ask/">Flask-alexa</a></h3>
+<ol>
+<li><a href="https://github.com/johnwheeler/flask-ask">github</a></li>
+<li><a href="https://youtu.be/DFiCsMcipr4?list=PLQVvvaa0QuDe3E0TlV7q7bFyMqbnO5-TL">sentdex tutorial</a></li>
+<li><a href="https://youtu.be/cXL8FDUag-s?list=PL6LVC9c1eflVHEbiNb0_dQF0LGLLrZtNL">JohnWheeler tutorial</a></li>
+<li><a href="https://developer.amazon.com/blogs/post/Tx14R0IYYGH3SKT/Flask-Ask-A-New-Python-Framework-for-Rapid-Alexa-Skills-Kit-Development">Ngrok 까지 사용한 memory game 예제</a></li>
+</ol>
+<p>John Wheeler란 사람이 만든 것. Echo를 Python으로 프로그래밍 가능.</p>
+<p>Today's guest post comes from <a href="https://twitter.com/johnwheeler_">John Wheeler</a>, the creator of <a href="https://alexatutorial.com/flask-ask/">Flask-Ask</a>. John has been programming for two decades and has written for O'Reilly and IBM developerWorks.</p>
+<p>This post introduces <a href="https://github.com/johnwheeler/flask-ask">Flask-Ask</a>, a new Python micro-framework that significantly lowers the bar for developing Alexa skills. Flask-Ask is a <a href="http://flask.pocoo.org/extensions/">Flask extension</a> that makes building voice user interfaces with the <a href="https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit">Alexa Skills Kit</a> easy and fun. We'll learn it by building a simple game that asks you to repeat three numbers backwards. Knowing Python and Flask are not required, but some experience programming will help.</p>
+<p>If you prefer the video walkthrough of this post, check it out <a href="https://www.youtube.com/watch?v=cXL8FDUag-s">here</a>.</p>
+<h2 id="macalexa">macAlexa</h2>
+<p>Product ID : macAlexa</p>
+<p>Client ID:amzn1.application-oa2-client.a971e925f29742a29bcad3efef93fdd5</p>
+<p>Client Secret:470f972acb198dc6731b0ebd38cd20ba42e2fd54c965633bfa65148c9aa3a2a3</p>
+<pre><code>➜  app git:(master) ✗ keytool -list -v -alias androiddebugkey -keystore keystore.jks
+키 저장소 비밀번호 입력:
+별칭 이름: androiddebugkey
+생성 날짜: Jan 13, 2017
+항목 유형: PrivateKeyEntry
+인증서 체인 길이: 1
+인증서[1]:
+소유자: CN=Junho, OU=tmmsexy, O=Unknown, L=Unknown, ST=Unknown, C=US
+발행자: CN=Junho, OU=tmmsexy, O=Unknown, L=Unknown, ST=Unknown, C=US
+일련 번호: 51105628
+적합한 시작 날짜: Fri Jan 13 16:07:34 KST 2017, 종료 날짜: Tue May 31 16:07:34 KST 2044
+인증서 지문:
+	 MD5: A4:C4:87:E1:F6:59:89:FF:3F:1F:D6:3E:A4:0C:B4:B9
+	 SHA1: 29:FE:C9:42:D4:28:7B:7B:6E:B8:EA:F7:A7:C1:1A:45:6F:52:40:0E
+	 SHA256: 4B:B3:A3:25:EB:C9:F2:59:E7:90:4B:BC:EC:A2:F8:08:94:03:D5:BB:54:F5:A5:10:C9:99:ED:7F:F9:51:98:82
+	 서명 알고리즘 이름: SHA1withRSA
+	 버전: 3
 
+확장:
 
-<rss version="2.0"
-	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns:dc="http://purl.org/dc/elements/1.1/"
-	xmlns:taxo="http://purl.org/rss/1.0/modules/taxonomy/"
-	xmlns:activity="http://activitystrea.ms/spec/1.0/" >
-<channel>
-	
-		
-			<title><![CDATA[그로스해킹]]></title>
-			<link>https://blog.naver.com/chowin21</link>
-			
-				<image>
-					<url><![CDATA[https://blogpfthumb-phinf.pstatic.net/20160718_156/chowin21_146880295180122rLz_JPEG/2015-11-01%2B00.38.32.jpg?type=m2]]></url>
-					<title><![CDATA[그로스해킹]]></title>
-					<link>https://blog.naver.com/chowin21</link>
-				</image>
-			
-			<description><![CDATA[그로스해커(조중현 )
-T 010-3944-4663
-E lion.cho@techroad.io
-P1 https://chaineers.io/
-P2 https://techroad.io/
-FB https://www.fb.com/chowin21
-KB chowin21
+#1: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: C8 B5 18 A3 84 1C 64 CB   FA 5A 37 96 8F 5F 15 8D  ......d..Z7.._..
+0010: 31 8C 0B 2D                                        1..-
+]
+]
+</code></pre>
+<p>는 하다가 안되서 버림.</p>
+<h2 id="pialexa">piAlexa</h2>
+<p>Security Profile Description<br>
+Choose a description for your security profile for Amazon services to use in communicating with you.	piAlexa Description<br>
+Security Profile ID</p>
+<ul>
+<li>amzn1.application.7b12d1fc8bc84d86a55862b294377da5</li>
+</ul>
+<p>Client ID</p>
+<ul>
+<li>amzn1.application-oa2-client.5adcc0ce71df427a9bdcb28eecdd39ae</li>
+</ul>
+<p>Client Secret</p>
+<ul>
+<li>7750995176a0b0c034ee29cb10ecbcf7c0619f3e25a2c7d116fa51eb3837ed81</li>
+</ul>
+<p>Client ID:amzn1.application-oa2-client.5adcc0ce71df427a9bdcb28eecdd39ae</p>
+<p>Client Secret:7750995176a0b0c034ee29cb10ecbcf7c0619f3e25a2c7d116fa51eb3837ed81</p>
+<h3 id="1bnode">1 B+ node 문제</h3>
+<p>먼저 node 삭제 <a href="https://www.raspberrypi.org/forums/viewtopic.php?f=66&amp;t=130217">참고</a></p>
+<pre><code class="language-basg">sudo apt-get remove nodered
+sudo apt-get remove nodejs nodejs-legacy
+sudo apt-get remove npm   # if you installed npm
+</code></pre>
+<h3 id="3b">3 B+ 모델</h3>
+<p><a href="http://guzene.tistory.com/184">bluetooth 설정</a></p>
+<p><a href="https://www.raspberrypi.org/magpi/bluetooth-audio-raspberry-pi-3/">디폴트 블투스피커</a></p>
+<p><a href="http://maker1st.tistory.com/2">wifi 설정 국가 US로</a></p>
+<p><a href="http://forums.rasplay.org/topic/196/%EA%B3%B5%EC%A7%80-raspberrypi-model-3b-wifi-issue">내 공유기 N104T는 지원을안함</a></p>
+<h1 id="remotecontrol">Remote Control</h1>
+<p>갤럭시 S4 mini : Tasker로 해보기<br>
+그리고 안되면<br>
+xiaomi controller --&gt; 보장없음</p>
+<p><a href="https://www.youtube.com/watch?v=SuB_lRmvChs">ChromeCast 로 TV 켜기. Anynet HDMI-CEC</a></p>
+<h1 id="tv">TV</h1>
+<p><a href="http://11q.kr/g5s/bbs/board.php?bo_table=s21&amp;wr_id=3799">KODI (XBMC 신버전) iptv 체널및 한글 설정,홈화면 TV시청메뉴 나오게 설정하기 / 원도우10에서 TV 시청하기</a></p>
+<p><a href="http://psychoria.tistory.com/482">자작NAS</a></p>
+<p><a href="http://ibblog.tistory.com/22">KODI / XMBC</a></p>
+<p><a href="https://www.youtube.com/watch?v=5LgtZEaRCMw&amp;feature=youtu.be">Rasberry Pi</a></p>
+<p><a href="https://www.youtube.com/watch?v=9237RZAOUqc&amp;list=PLD1gjwwK_VNaQB6xzYtuwrNnh20-KTYQV">KODI - JARVIS</a></p>
+<h1 id="beamprojector">Beam Projector</h1>
+<p>고로 전 에이서 h6510bd 사용중. 3d도 잘나와서 좋네요. 아 그리고 사실거면 스크린도 무조건 사세요</p>
+<h2 id="mpcl1a51">소니 MP-CL1A : 51만</h2>
+<p><img src="https://tmmsexy.s3.amazonaws.com/imgs/2017-05-22-070439.jpg" alt=""></p>
+<p>플레이스테이션4 슬림과 소니 MP-CL1A의 연결과 사용, 기존의 TV나 모니터에 연결해서 플레이스테이션을 즐기시던 분들에게는 새로운 경험이 되지 않을 까 싶습니다. 보통 프로젝터중에 FHD해상도를 가지는 프로젝터는 찾기 어렵기도 하고, 가격도 높은편입니다. 소니 MP-CL1A는 와이드한 화각의 FHD해상도 (1920 x 720)을 지원하기 때문에 플레이스테이션4 슬림으로 게임을 할 때 모자람이 없는 스펙이라고 생각합니다. 실제 게임을 해봤을 때도 모니터로 했을 때와 별다른 차이점이 없었고, 오히려 어두운 밤에 할 때는 더 큰 화면에서 즐기다보니 몰입감이 더 좋았습니다.</p>
+<p>소니 MP-CL1A 모바일프로젝터와 소니 플레이스테이션4 슬림의 조합, 어떠셨나요? MP-CL1A가 모바일, 휴대용프로젝터로 출시되었지만, 집에서 플레이스테이션과 사용하는데도 문제 없었습니다. 보다 큰 화면에서 플레이스테이션을 즐기기를 원하시는 분들에게 좋은 조합이 될 것 같습니다.</p>
+<h2 id="fhd">빔프로젝터 FHD</h2>
+<p>벤큐 W2000 이나 뷰소닉 PRO7827 옵토마 HT210 중 고르시면될것같네요 ㅎㅎ</p>
+<p><a href="http://m.blog.naver.com/mo_ko_zy/220794124525">W1110</a></p>
+<p>벤큐 W1070+가 우리나라에서 보급형FHD 프로젝터 시장에 큰 돌풍을 일으 켰죠. 그당시에 저는 LG미니빔 600안시 프로젝터를 사용하고 있던터라 홈시어터용 프로젝터에는 관심이 없었습니다. 아파트로 이사 후 홈시어터 프로젝터에 관심이 생기고 W1070+의 후속작 W1110을 알게되고 구매하게 되었습니다.</p>
+<p><a href="http://lagneid.tistory.com/87">옵토마 FHD HD141X</a></p>
+<h1 id="telegram">Telegram</h1>
+<p><a href="http://bakyeono.net/post/2015-08-24-using-telegram-bot-api.html">Telegram Bot. Official API - 박연오 telegram-cli</a></p>
+</div>]]></content:encoded></item><item><title><![CDATA[TensorFlow-v1.0.0 + Keras 설치 (Windows/Linux/macOS)]]></title><description><![CDATA[<div class="kg-card-markdown"><p>참고 :<a href="https://groups.google.com/forum/#!topic/keras-users/_hXfBOjXow8">https://groups.google.com/forum/#!topic/keras-users/_hXfBOjXow8</a></p>
+<p>선요약:</p>
+<pre><code class="language-bash"># export PATH=~/anaconda/bin:$PATH # MAC
+conda create -n tf python=3.5  
+# 17/3/1 기준으로 윈도우에서 3.5 버전만 TensorFlow/Keras가 지원
+activate tf # Windows
+# source activate tf  : Linux/macOS
 
-[외주급건] 
-https://open.kakao.com/o/gELX1Dg
+# 여기서부터 (tf) 환경. 설치 순서 중요
+pip install</code></pre></div>]]></description><link>http://tmmse.xyz/2017/03/01/tensorflow-keras-installation-windows-linux-macos/</link><guid isPermaLink="false">5abff3c293c7ee06e8cf76f9</guid><category><![CDATA[Deep Learning]]></category><category><![CDATA[macOS]]></category><category><![CDATA[TensorFlow]]></category><category><![CDATA[Keras]]></category><category><![CDATA[Linux]]></category><category><![CDATA[Windows]]></category><dc:creator><![CDATA[Junho Cho]]></dc:creator><pubDate>Tue, 28 Feb 2017 17:16:13 GMT</pubDate><media:content url="https://tmmsexy.s3.amazonaws.com/2017-02-28-anders-jilden-108186.jpg" medium="image"/><content:encoded><![CDATA[<div class="kg-card-markdown"><img src="https://tmmsexy.s3.amazonaws.com/2017-02-28-anders-jilden-108186.jpg" alt="TensorFlow-v1.0.0 + Keras 설치 (Windows/Linux/macOS)"><p>참고 :<a href="https://groups.google.com/forum/#!topic/keras-users/_hXfBOjXow8">https://groups.google.com/forum/#!topic/keras-users/_hXfBOjXow8</a></p>
+<p>선요약:</p>
+<pre><code class="language-bash"># export PATH=~/anaconda/bin:$PATH # MAC
+conda create -n tf python=3.5  
+# 17/3/1 기준으로 윈도우에서 3.5 버전만 TensorFlow/Keras가 지원
+activate tf # Windows
+# source activate tf  : Linux/macOS
 
+# 여기서부터 (tf) 환경. 설치 순서 중요
+pip install tensorflow   # pip install tensorflow-gpu : GPU 버전
+conda install pandas matplotlib scikit-learn 
+pip install keras
+conda install jupyter notebook  
 
-]]></description>
-			<language>ko</language>
-			<generator>Naver Blog</generator>
-			<pubDate>Tue, 14 May 2019 21:13:51 +0900</pubDate>
-
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[대문]]></category>
-					<title><![CDATA[야후가 망한건 경영을 매우 잘해서이다.]]></title>
-					<link>https://blog.naver.com/chowin21/221532182967</link>
-					<guid>https://blog.naver.com/chowin21/221532182967</guid>
-					<description><![CDATA[야후가 망한건 경영을 매우 잘해서이다.2012년 야후 코리아 철수, 2016년 야후가 망한 이유로 텀블벅등 여러 경쟁에서 실패 해서 라고 했다. 그런데 숫자만 보면 경영을 너무 잘해서 망했다. 라는 표현이 더 적절할것같다.무슨 말이냐 하면 알리바바닷컴에 투자를 했던것이 대박을 쳤던것이다. http://www.bloter.net/archives/110944 2012년 기준으로 1조에 샀던 주식이 7조가 되었다는 이야기이다. 그후 4년이 지난 2016년기준으로 http://www.itworld.co.kr/news/102950 가지고있던 지분이 32조가 되었다. 이때 야후는 모든 자산을 팔게 되었다. 더이상 경영 하는것보다는, 아무것도 안하고 알리바바 주주를 잘하는것, 알리바바 주식판.......]]></description>
-					<pubDate>Wed, 08 May 2019 09:58:24 +0900</pubDate>
-					<tag><![CDATA[테크로드,비지니스모델,스트림뉴스,야후]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[그로스해킹트렌드]]></category>
-					<title><![CDATA[삼성 이재용이 프로게이머 하겠다고 한다면 - 판다TV 사례]]></title>
-					<link>https://blog.naver.com/chowin21/221531897924</link>
-					<guid>https://blog.naver.com/chowin21/221531897924</guid>
-					<description><![CDATA[DAU250만명 서비스 정리하고 프로게이머 전향(삼성 이재용이 프로게이머 하겠다고 한 사례로도 볼수있음)판다TV라는 중국에서 5위하는 스트리밍 서비스이다. 아프리카TV는 DAU가 100만이고 판다TV는 DAU250만으로 아프리카TV보다 더많은 유저와 텐션을 가진 기업인데 이 사업주가 사업을 정리하고 프로게이머로 전향한다고 합니다. 그 이유가 궁금 하시다면 아래를 보세요이 글의 목적: 중국에 영향을 많이 받는 한국에서 비지니스방향 잡기위해서 학습을 위함이 글의 목표: 이 소식을 통해 기회로 삼고 할수있는 일 찾기출처: https://www.youtube.com/watch?v&#x3D;pn7FRjxVOLM[한줄요약] 직접적으로 밝혀진건 없으나 부패혐의로 사업 정리.......]]></description>
-					<pubDate>Wed, 08 May 2019 08:30:00 +0900</pubDate>
-					<tag><![CDATA[테크로드,스트림뉴스]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[대문]]></category>
-					<title><![CDATA[MS망했나 ? 싶었는데 애플을 제치고 시가총액 1위를 탈환]]></title>
-					<link>https://blog.naver.com/chowin21/221531106769</link>
-					<guid>https://blog.naver.com/chowin21/221531106769</guid>
-					<description><![CDATA[MS망했나 ? 싶었는데 애플을 제치고 시가총액 1위를 탈환이 글의 목적 : 소식전달이 글의 목표 : 사업가로서 사업방향을 정한다면 어떤기준으로 정해야할까에 대한 힌트출처: https://www.youtube.com/watch?v&#x3D;k0JvZpQkgWg&amp;t&#x3D;35s요약: Azure 덕분에 1등을 탈환했다. AWS 를 이겼다기보단 같이 시장을 키우고있다는점에서 더 유의미하다.-5월7일날짜 기준으로는 애플이 다시 탈환 왔다갔다 ~MS가 기부를 많이하고 개인PC시장의 압도적인 점유율 고려한다면 성장가능성은 클것.-MS시가총액을 Max로보면 별 위기가 없어보이지만 2008년부터 아이폰 나오고 모바일 시장변화에 적응하지못해서 주가 회복을 하지못했던것 상기 해보.......]]></description>
-					<pubDate>Tue, 07 May 2019 09:20:00 +0900</pubDate>
-					<tag><![CDATA[테크로드,MS,애플]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[그로스해킹트렌드]]></category>
-					<title><![CDATA[MCN 넥스트는 긱이코노미 에이전트컴퍼니 일까요 ?]]></title>
-					<link>https://blog.naver.com/chowin21/221531151224</link>
-					<guid>https://blog.naver.com/chowin21/221531151224</guid>
-					<description><![CDATA[MCN 넥스트는 긱이코노미 에이전트컴퍼니 일까요 ?-MCN하면 1인 크리에이티브를 떠올립니다. -여캠 남캠 공영방송 혹은 케이블방송보다. 더 다채로운 다양한 형태의 컨텐츠 맞춤형 컨텐츠 -그리고 그들을 돕는 그룹인 다이아TV, 루키스트엔터테인먼트등-결국 유튜브의 컨텐츠는 폭발적으로 성장 했습니다. -그 다음은 뭘까요?이 글의 목적: 스트림 시장 영상 시장이 커짐에 따라 생기는 새로운 니즈찾기이 글의 목표: 유튜브 특화한 서비스 개발-기존의 MCN은 종합관리 소속사로서 광고부터 해당 크리에이터를 키우기위한 단계를 거쳤다.-이제는 단순히 컨텐츠에서 전문직으로까지 그 범위가 넓어지고있다-전문직의 경우 단순히 MCN의 소속.......]]></description>
-					<pubDate>Tue, 07 May 2019 08:50:00 +0900</pubDate>
-					<tag><![CDATA[테크로드,스트림뉴스]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[개발자구인]]></category>
-					<title><![CDATA[개발자 채용 - 실리콘 밸리의 기여주의 방법]]></title>
-					<link>https://blog.naver.com/chowin21/221531086889</link>
-					<guid>https://blog.naver.com/chowin21/221531086889</guid>
-					<description><![CDATA[가까운 미래에는 스포츠 이적처럼 직장에서도 이적시장이 활발해지지않을까요 ?2019년 5월 LG의 인재가 SK로 유출된다는 기사1.https://m.post.naver.com/viewer/postView.nhn?volumeNo&#x3D;10538498&amp;memberNo&#x3D;347668852. https://www.mk.co.kr/news/business/view/2019/05/290370/2018년 7월 중국으로 인재유출 기사http://biz.newdaily.co.kr/site/data/html/2018/07/08/2018070800041.html2017년 2016년 2015년 http://news.chosun.com/site/data/html_dir/2016/08/08/2016080801521.htmlhttps://www.hankyung.com/news/article/2015120366991이 글의 목적: 그 힌트로 실리콘 밸리의 이적 시장(이직시장)을 들수있지않을까.......]]></description>
-					<pubDate>Tue, 07 May 2019 08:50:00 +0900</pubDate>
-					<tag><![CDATA[테크로드,태용,HR,실리콘밸리]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[테크트렌드]]></category>
-					<title><![CDATA[로봇회사 사례 - ruxrobo]]></title>
-					<link>https://blog.naver.com/chowin21/221527313016</link>
-					<guid>https://blog.naver.com/chowin21/221527313016</guid>
-					<description><![CDATA[안랩 대표 안철수의 초창기의 모습은 기술의 대한 전문성과 당장의 이익보단 쫓기보단 대외적인 이익에 더 가치를 두어서 언론의 집중아 받았다. ( *현재의 기업가로서 정치가로서의 평가는 논외)문득 초창기 모습을 이 대표를 통해서 보게되는 것 같다. 28이란 젊은 나이에 1천가치의 회사를 운영중인 오상훈 대표에 대해서 알리고자 한 마디를 전달 할까 합니다.*6분44초부터 1분간만 시간을 할애하시면 내용전달이 가능합니다. -문제점이있으면 대충넘어가지않고 좋은 품질의 제품을 만들려는 의지와 접근태도 그리고 실제로 높은 퀄리티의 제품의 완성도를 만들어내는것.-현실적으로 이렇게 하기 위해선 충분한 대가가 상응해야한다-넓게.......]]></description>
-					<pubDate>Thu, 02 May 2019 08:40:00 +0900</pubDate>
-					<tag><![CDATA[테크로드,4차산업,robot,luxrobo]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[베트남개발센터]]></category>
-					<title><![CDATA[베트남 유튜브 광고 하기 - youtube로 베트남 고객 유치]]></title>
-					<link>https://blog.naver.com/chowin21/221527456219</link>
-					<guid>https://blog.naver.com/chowin21/221527456219</guid>
-					<description><![CDATA[베트남에 진출하려는 기업들이 많아지고 있다 그러다 보니 우주의 먼지같은 영향력을 가진 저에게도 베트남 진출에 대한 문의가 꽤나 자주 연락이 오고 있습니다. 최소한의 예산으로 개인이 베트남을 대상으로 광고하고 운영할수 있는 최소한의 서비스를 진행중입니다. 광고 집행에 대한 이야기를 하고자 합니다.이 글의 목적 : 베트남에 유튜브로 광고하기 경험공유 이 글의 목표 : 베트남 진출 전환비용 낮추기 ( Conversion Cost) 이 글의 대상 - 베트남 진출 을 하려는 분- 베트남에 광고 하시려는 분- 유튜브 스트리밍 사업화에 관심 있으신분결과가 궁금하신분을 위해 광고 성과만 이야기하자면 1명의 구독자를 늘리기위해 1,500원이 소.......]]></description>
-					<pubDate>Thu, 02 May 2019 08:30:00 +0900</pubDate>
-					<tag><![CDATA[테크로드,하이베트남,hivietnam,15minstour,베트남홍보,베트남유튜브홍보,베트남광고,베트남광고하기,베트남유저확보,베트남고객확보,베트남진출]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[그로스해킹트렌드]]></category>
-					<title><![CDATA[유튜브 트렌드 - 유튜브로 공부하기 유튜브로 놀기]]></title>
-					<link>https://blog.naver.com/chowin21/221527517477</link>
-					<guid>https://blog.naver.com/chowin21/221527517477</guid>
-					<description><![CDATA[카테고리별의 순서는 인사이트의 깊이와 가치 순입니다. 구독자수와 뷰수는 인사이트가 깊다면 역전될거라는 것에 확신하기 때문입니다. (허나 주관적이라는것 !) 이 글의 대상 : 제 자신을 위함, 유튜브로 학습을 좋은 자료가 많아지고있으나 봐야할 채널이 많아짐에따라 관리가 필요 하게되었다.이 글의 목적 : 유튜브만이 지식습득이 다가아니다. 블로그, 브런치, 미디엄, 등이있다.이 글의 목표: 다르게 이야기하자면 책은 그중에 하나이다. 책 많이 읽어라 라는 말은 하지말자. ( 내 스스로에게 말하는것이다.) 지식은 체득이 중요하다고 본다. 체득을 위해선 보고 쓰고 사용해야할것이다. 책을 쓰기도하고 논문을 쓰고 특허를 내며 사업.......]]></description>
-					<pubDate>Thu, 02 May 2019 08:10:00 +0900</pubDate>
-					<tag><![CDATA[개발공부,경제공부,자금조달,스타트업,노는컨텐츠,영어공부,테크로드]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인개발]]></category>
-					<title><![CDATA[블록체인 활용 사례 - 건축분야 (기록)]]></title>
-					<link>https://blog.naver.com/chowin21/221526261114</link>
-					<guid>https://blog.naver.com/chowin21/221526261114</guid>
-					<description><![CDATA[이 글의 대상 -블록체인활용 사례를 찾는분-블록체인비지니스 모델을 찾는분건축분야에서의 사용-가장 인상적이었던 것은 &quot;건축&quot;에서 위 변조 강화를 하여 활용하는 사례였습니다.-거래대금도 크고 기존의 시장도 크고 해외개발의 경우 불투명했던 거래 정보들이 블록체인 사용에 적합한 것으로 시장에서 판단이 되는 것 같습니다. -물론 이 분야는 이미 삼성SDS가 꽉 잡고 하고 있고 각종 구축 사업으로 돈을 벌고 있어서 소규모의 개발 집단이 하기에는 어렵지 않을까라는 것에 스스로에게 의문을 들어봅니다.서적meta정보 위변조성-전체 글을 다 쓸 수는 없겠지만, 메타정보인 저자 이름과 날짜 ISBN 을 기록함으로써, 책을 처.......]]></description>
-					<pubDate>Tue, 30 Apr 2019 15:46:47 +0900</pubDate>
-					<tag><![CDATA[테크로드,블록체인사례,블록체인,블록체인건축,블록체인서적활용,블록체인도서활용]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[그로스해킹트렌드]]></category>
-					<title><![CDATA[구글드라이브 무제한으로 사용가능한 서비스 출시]]></title>
-					<link>https://blog.naver.com/chowin21/221522761222</link>
-					<guid>https://blog.naver.com/chowin21/221522761222</guid>
-					<description><![CDATA[어찌닷컴이 구글드라이브를 용량제한없으 무제한으로 사용할수있는 서비스(앱)을 출시 했다고 밝혔다. 이 제품은 구글드라이브 개인용으로 사용시 용량에따라 월5천원 1만원 사용하던 것을 월 1천원으로 사용하도록돕는 서비스(앱)이다. 구체적인 방법으로 구글 시스템의 프로모션과 리셀러 시스템을 활용한 것으로 볼수있다.또한 Gsuite basic 사용자들을 위해 용량을 무제한으로 사용할 수 있도록 4%의 리셀러 할인도 제공하고있다. 사용방법 영상으로 보기 https://www.youtube.com/watch?v&#x3D;9XnPlmpkqVU구글드라이브 무제한 사용 하기 공식블로그 : https://blog.naver.com/gsuite-reseller어찌닷컴 소개어찌닷컴에서 판매하는 Goo.......]]></description>
-					<pubDate>Mon, 29 Apr 2019 08:10:00 +0900</pubDate>
-					<tag><![CDATA[테크로드,어찌닷컴,구글드라이브,구글드라이브무제한,gsuite,gsuite비용절감]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[오프라인모임]]></category>
-					<title><![CDATA[해커톤및 경진대회 정보 공유 - 2019년 5월]]></title>
-					<link>https://blog.naver.com/chowin21/221522708973</link>
-					<guid>https://blog.naver.com/chowin21/221522708973</guid>
-					<description><![CDATA[안녕하세요,개인적으로 정리해 본 다음 해커톤 및 경진대회 정보를 공유드립니다. 출처: 이명상 블로그1. 2019 &lt;예술 해커톤 : 공연정보데이터 활용 사업 아이디어 구성&gt; https://www.gokams.or.kr:442/02_apply/event_apply01.aspx?Idx&#x3D;858&amp;flag&#x3D;0&amp;page&#x3D;1&amp;txtKeyword&#x3D;&amp;ddlKeyfield&#x3D;T ~05.10 18시 접수2. 교통데이터공모전 data.ex.co.kr data.ex.co.kr ~05.31 접수3. 스마트섬유아이디어공모전 http://www.techtex.or.kr/etc/propose.asp ~05.31 접수4. 2019전국청년창업아이디어경진대회 - 광주과학기술원오룡관 https://www.onoffmix.com/event/175308 ~05.10 18시 접수5. 국토교통.......]]></description>
-					<pubDate>Fri, 26 Apr 2019 08:00:00 +0900</pubDate>
-					<tag><![CDATA[테크로드,해커톤,이명상]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[그로스해킹트렌드]]></category>
-					<title><![CDATA[마케터를 위한 빅데이터 분석 솔루션]]></title>
-					<link>https://blog.naver.com/chowin21/221521993178</link>
-					<guid>https://blog.naver.com/chowin21/221521993178</guid>
-					<description><![CDATA[지우컴퍼니가 마케터를 위한 빅데이터 솔루션 WORK543을 출시했다고 밝혔다.이 제품은 마케터가 데이터 관련 업무를 복잡한 과정 없이 빠르고 편하게 수행할 수 있게 돕는 통합 빅데이터 솔루션. 클릭 몇 번만으로 온라인상 SNS나 커뮤니티에 올라온 정보를 간편하게 수집하고 정제할 수 있으며 연관어와 언급량, 감정 같은 분석 보거서 UI를 제공한다. 추출한 데이터는 내려 받아 분석하거나 별도 보고서를 작성할 필요 없이 곧바로 공유할 수도 있다. 그 밖에 데이터 전문가가 직접 맞춤형 분석 보고서와 컨설팅을 제공하는 상품도 이용할 수 있다.이 제품은 별도 설치 없이 브라우저상에서 이용할 수 있다. 4월 22일부터 한 달간 제한 기능.......]]></description>
-					<pubDate>Thu, 25 Apr 2019 08:00:00 +0900</pubDate>
-					<tag><![CDATA[work543,lab543,빅데이터,빅데이터솔류션,r언어,빅데이터툴]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[자금조달]]></category>
-					<title><![CDATA[인도 진출을 계획하시는분 계시나요 ?]]></title>
-					<link>https://blog.naver.com/chowin21/221519833426</link>
-					<guid>https://blog.naver.com/chowin21/221519833426</guid>
-					<description><![CDATA[인도 진출을 계획하시는분 계시나요 ?월1000달러 지원을 해주는 사업이 있어서 공유합니다www.k-startup.go.kr/com…/announcement/announcementDetail.do…#테크로드]]></description>
-					<pubDate>Tue, 23 Apr 2019 16:10:00 +0900</pubDate>
-					<tag><![CDATA[테크로드]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[아세안동향]]></category>
-					<title><![CDATA[쓰리랑카 테러 이유 - 한줄요약]]></title>
-					<link>https://blog.naver.com/chowin21/221519867913</link>
-					<guid>https://blog.naver.com/chowin21/221519867913</guid>
-					<description><![CDATA[한 줄: 불교도의 극단주의자들이 기독교에대한 악감정에 의한 테러로 의심되고있다.이 글의 대상: -가깝고도 먼나라 쓰리랑카 테러 가 어떤 이유가인지 알고싶은분-쓰리랑카에 사업을 준비하시는분Q 왜 쓰리랑카는 기독교에대해서 악감정을 가지고있나 ?16세기 식민지시절 때부터 네덜란드, 영국, 포르투칼등의 영향으로 악감정을 이어 왔던것으로 보인다. 출처: https://www.yna.co.kr/view/AKR20190422087500077?input&#x3D;1195m#테크로드 #쓰리랑카테러 ]]></description>
-					<pubDate>Mon, 22 Apr 2019 16:42:02 +0900</pubDate>
-					<tag><![CDATA[테크로드,쓰리랑카테러]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[비지니스모델]]></category>
-					<title><![CDATA[유동자산 2조 괴물 빗썸의 올해 재무 성적표는 어떨까?]]></title>
-					<link>https://blog.naver.com/chowin21/221519829587</link>
-					<guid>https://blog.naver.com/chowin21/221519829587</guid>
-					<description><![CDATA[유동자산 2조 괴물 빗썸의 올해 재무 성적표는 어떨까?(4월11일기준 2018년12월31일가지)-결론부터 이야기하자면 -2000억-이유는 가상화폐 폭락-매출성적표는 17%상승-저점이다 생각하고 구매하는 사람들 생길듯 ?(스타트업이라면 스스로에게 투자를 하는걸 권장드림.)-회원예치금 1.3조-&gt;2300억으로 줄어둠 (거래소들은 예치금만보고도 가격 모텐텀을 알수있을듯)-옴니텔 미수금 51억 ? -주석을 보니 재미있는것도있네요 빗썸보유 5백억회원, 회원예치금 1300억 -해킹사고에 회원예치금보다 더 보유하고있다는주장과 조금 달라보입니다.(물론 기준에따라 다를거라봅니다.)(전달해들은것과 실제 감사보고서 보니 느낌은 다르네요)(2017년에.......]]></description>
-					<pubDate>Mon, 22 Apr 2019 16:00:58 +0900</pubDate>
-					<tag><![CDATA[빗썸,가상화폐거래소,암호화화폐거래소,코인거래소,빗썸수익,빗썸재무재표]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인투자]]></category>
-					<title><![CDATA[가상화폐 뉴스 - 비트코인 채굴 재조명 , 채굴 올인원 마인비 취재]]></title>
-					<link>https://blog.naver.com/chowin21/221519245204</link>
-					<guid>https://blog.naver.com/chowin21/221519245204</guid>
-					<description><![CDATA[▶ 채굴 비지니스는 전망이 어둡다? &quot;비트코인 채굴방식인 POW(Proof of Work 이하 POW로 표기)는 환경파괴에 악영향을 준다&quot; 라는 형태의 기사들을 한번쯤은 들었을겁니다. (비트코인 채굴 비지니스에 관심을 두는 사람이라면) 이런 단점을 보완 하기위해 POS와 DPOS등 여러 가지 방법의 제안에 대해서 2017년~2018년 우리는 접했습니다.출처 https://steemit.com/kr/@maa/pow-pos-poi허나 비트코인 채굴방식인 POW로 생산된 가상화폐들은 &quot;원가&quot;라는 것이 생기고 그 가치를 보전 받을수 있게 되기 때문에 자발적으로 마이너들이 참여하게 됩니다. 눈에 보이는 실질적 보상을 받기 때문에 비트코인 채굴방식 같은 POW 합.......]]></description>
-					<pubDate>Mon, 22 Apr 2019 08:00:00 +0900</pubDate>
-					<tag><![CDATA[가상화폐뉴스,채굴비지니스,비트코인채굴,마인비,채굴기업,비트코인,이더리움,POW채굴,POW합의알고리즘,라이트코인]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인]]></category>
-					<title><![CDATA[블록체인 슈퍼스타는 언제 ? - 무안타 신기록사례에서본다면]]></title>
-					<link>https://blog.naver.com/chowin21/221514596187</link>
-					<guid>https://blog.naver.com/chowin21/221514596187</guid>
-					<description><![CDATA[타율 0.79 로 1,700억을 받는다면 ?이 글의 대상: 신사업을 준비하는사람 -타율이 3할4할이 되어야지 높은 돈을 받습니다.-그런데 62연속 무안타를 함에도 불구하고 1,700억을 받는사람이있습니다.-무안타를 62연속을 고액의 돈을 받는사람이 하니 유명해진것인데, 이 때문에 야구에 관심없는 사람들까지도 관심을 가지게 되었다고 합니다. -메이저리그는 현재 인기가 점차 줄고 있는중 15년만에 관중 7천만명 이하 기록-이런와중 무안타 신기록이 미국의 모든 스포츠를통틀어 관심 1위로 등극함. -모든 사업에는 타이밍이 있는것같습니다-타이밍에는 이슈몰이가 존재했습니다-닷컴버블이후 2008년 아이폰등장으로 지속상승을 기록함-블.......]]></description>
-					<pubDate>Tue, 16 Apr 2019 00:55:15 +0900</pubDate>
-					<tag><![CDATA[테크로드,블록체인,크리스데이비스,메이저리그,블록체인지수,비트코인지수,나스닥지수]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인개발]]></category>
-					<title><![CDATA[블록체인의 새로운 비지니스 모델 "밤이사" 등장할듯?]]></title>
-					<link>https://blog.naver.com/chowin21/221507425670</link>
-					<guid>https://blog.naver.com/chowin21/221507425670</guid>
-					<description><![CDATA[블록체인의 새로운 비지니스 모델 &quot;밤이사&quot; 등장할듯?헬기 추락사고 블록체인기업 대표 사망 3천억 증발*콜드월렛의 위치와 비번은 대표만 알고있었음인도에서 블록체인기업 대표 사망 1500억증발한국에서 거래소 해킹 500억 증발일본 거래소해킹 등등 이런사례 들을 봤을때-곧 블록체인기업들 대상으로 아래와같은 비지니스가 나오지 않을까싶습니다. -일본에서 자살의 순화된혹은 진화된 방법으로서 새로운 신분까지도 만들어주는 서비스가 있다고하네요 -미국드라마 브레이킹 베드라는것으로 소개가되기도했는데 실제로 존재한다고합니다.밤이사 https://www.youtube.com/watch?v&#x3D;y5TsIby8Mzs브레이킹베드 https://namu.wiki.......]]></description>
-					<pubDate>Sun, 07 Apr 2019 07:06:37 +0900</pubDate>
-					<tag><![CDATA[테크로드,넥스트메디컬]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인개발]]></category>
-					<title><![CDATA[ICO마케팅의 키워드를 뽑아보면 뭐가있을까요]]></title>
-					<link>https://blog.naver.com/chowin21/221501331661</link>
-					<guid>https://blog.naver.com/chowin21/221501331661</guid>
-					<description><![CDATA[ICO마케팅의 키워드를 뽑아보면 뭐가있을까요 ?저는 무조건 사기라고 생각합니다.심지어 제가 블록체인정부사업을 하고있음에도 불구하고.이 글의 목적: 해당기업의 마케팅기업으로서의 브랜딩 살펴보기이 글의 목표: 블록체인 사업이 바닥을 치고 있는 상황속에서 마케팅회사와 ICO를 하고자하는 기업의 상생방법찾기. 이 글의 대상: 마케팅회사과 발주사요약: ICO마케팅은 영화개봉처럼 단발성의 마케팅이다.거래소마케팅이나, 제품을 기반으로한 마케팅과는 성격이 다르다. ICO마케팅은 퍼포먼스 마케팅에 가장 적합할거라 본다. 실재 수행해본기업이 하는것이 좋겠지만 레벨이 서로 맞아야할것이다. ICO마케팅에대서 영감을 얻고자하는.......]]></description>
-					<pubDate>Sat, 30 Mar 2019 18:18:36 +0900</pubDate>
-					<tag><![CDATA[테크로드]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[자금조달]]></category>
-					<title><![CDATA[시장조사 시 필요한 사이트]]></title>
-					<link>https://blog.naver.com/chowin21/221497528753</link>
-					<guid>https://blog.naver.com/chowin21/221497528753</guid>
-					<description><![CDATA[요약: 필요한 데이터의 근거는 많을수록좋고 찾을수록 계속 나오는것같습니다-통계청 (국내시장조사시)-한국정보진흥원 , 서류 심사에서 들어가는 객관전자료들 -코트라 해외 경쟁사 시장조사시 -DART 정제된자료 경쟁 상장사 기준으로 찾을때http://dart.fss.or.kr/-앱 웹개발시 사이즈 결정시 참고 사이트http://gs.statcounter.com/screen-resolution-stats/desktop/viet-nam/#monthly-201710-201810-삼성경제연구소 무료보고서중 최고-구글트렌드-네이버 키워드 트렌드 -랭키닷컴-특허청 (경쟁사분석유리) -구글에서 ㅇㅇㅇ 보고서.pdf 이렇게 치면 정제된 유료데이터도 얻을수있습니다. #테크로드 #공짜창업 ]]></description>
-					<pubDate>Tue, 26 Mar 2019 09:39:04 +0900</pubDate>
-					<tag><![CDATA[테크로드,공짜창업]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[자금조달]]></category>
-					<title><![CDATA[2019년 기술료 계산법]]></title>
-					<link>https://blog.naver.com/chowin21/221494514653</link>
-					<guid>https://blog.naver.com/chowin21/221494514653</guid>
-					<description><![CDATA[요약: 받은 금액에 최대 20%, 예를 들어 1억을 지원받았다면 최대 2천만 원을 기술료 납부하게 됩니다.근거자료: 2019년 기술료 납부 변경 안내사항 2019년 기술료 납부 변경 영상이 글의 대상 : R&amp;D 사업을 한 번도 안 해본 사람이 글의 목표: 이해하기 쉽게!!! 쓰기.(예시글도 있고 온라인에 올라온 글이 있지만 실제로 당장 받을지 말지 결정해야 하는 상황에서 이중 3중 확인을 해야 하기에 담당자와 통화 후 주변 관련 분들 모두에게 확인 후 정리합니다. ) 질문: 기술료 5년간 납부와 최대 20%라는 게 1억을 받으면 1억을 기술료 납부를 한다는 건가요?답:1년 차에 20%인 2천만 원 을 내면 기술료 납부는 끝납니다.연구 성공 후 매.......]]></description>
-					<pubDate>Fri, 22 Mar 2019 11:50:00 +0900</pubDate>
-					<tag><![CDATA[테크로드]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[베트남개발센터]]></category>
-					<title><![CDATA[베트남 쇼핑몰 비지니스]]></title>
-					<link>https://blog.naver.com/chowin21/221478013563</link>
-					<guid>https://blog.naver.com/chowin21/221478013563</guid>
-					<description><![CDATA[쇼핑몰 개발도중 주문이 계속 들어오면 어떻게하죠 ? 이 글의 대상: 베트남 쇼핑몰 사업을 하고자하는사람이 글의 목적: 현 베트남 쇼핑몰 비지니스 상황 전달이 글의 목표: 베트남에서 1만원이라 캐쉬 만들기 베트남친구에게 고민하나를 최근 들었습니다.풀스택 개발자 친구인데 창업 아이템으로 이런저런 제품을 만든지 3년째 아이템을 하나 잡았는데 홍보도 하지 않았는데 주문이 하나둘씨 들어오고 있다는 것입니다. 이걸 좋아해야 할지 말아야할지 고민하다가 저에게 이야기를 하게 되었습니다. 한국시장이라면 아래와같은 물음표가 붙습니다.1. &quot;결제&quot;베트남과 동남아시아는 한국과 다르게 현금 결제가 많습니다.쇼핑몰에.......]]></description>
-					<pubDate>Fri, 01 Mar 2019 21:38:20 +0900</pubDate>
-					<tag><![CDATA[하이베트남,테크로드]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[웹개발툴]]></category>
-					<title><![CDATA[json 에디터]]></title>
-					<link>https://blog.naver.com/chowin21/221473263059</link>
-					<guid>https://blog.naver.com/chowin21/221473263059</guid>
-					<description><![CDATA[아래의 참고링크를 공유하나, 사용할수없다면 위의 키워드를 사용해보세요 사용방법접속후 text tab에 입력후#json개발 #웹개발툴 #개발툴 #워드프레스]]></description>
-					<pubDate>Sun, 24 Feb 2019 00:37:00 +0900</pubDate>
-					<tag><![CDATA[json개발,웹개발툴,개발툴,워드프레스]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[워드프레스]]></category>
-					<title><![CDATA[wordpress local ERR_SSL_PROTOCOL_ERROR]]></title>
-					<link>https://blog.naver.com/chowin21/221473056462</link>
-					<guid>https://blog.naver.com/chowin21/221473056462</guid>
-					<description><![CDATA[이 글의 목적: local 워드프레스 작업중 &quot; ERR_SSL_PROTOCOL_ERROR &quot; 가 나오며 진행이 안될경우에 대해서 해결 방법1.plugin SSL관련된것 폴더이름을 변경2.브라우저 캐쉬 삭제3.크롬의 경우 탭을 닫았다가 새로 열기 (기존창을 리프레쉬 하면 여전히 캐쉬 데이터 문제)4.DB 의 site url 을 local로 변경출처https://wordpress.stackexchange.com/questions/271832/how-to-migrate-a-https-wordpress-installation-to-localhosthttps://wordpress.org/support/topic/https-issue-after-migration-to-local-host/#워드프레스 #wordpress]]></description>
-					<pubDate>Sat, 23 Feb 2019 18:41:46 +0900</pubDate>
-					<tag><![CDATA[워드프레스,wordpress]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[워드프레스]]></category>
-					<title><![CDATA[워드프레스 discy테마 - up down 버튼 안보일때]]></title>
-					<link>https://blog.naver.com/chowin21/221472536910</link>
-					<guid>https://blog.naver.com/chowin21/221472536910</guid>
-					<description><![CDATA[이 글의 목적: up down 버튼 부분적으로 안보이는것 해결, 둘째 관리자에서 option저장 안될때 이 글의 목표: copy&amp;paste해결방법 요약: 1. max_input_vars value to 3000 으로 변경2. inner question 과 loop 차이점 구분 이해필요, 추신. 알면 30분 모르면 1주일 ... 흐아 고도화된 솔류션 ... 그냥 개발 하는게 나을수도, 허나.. 새로만들려면 어마어마한 시간비용이들고 완성도까지 고려한다면... 참아보자.-끝-#AWS #discy]]></description>
-					<pubDate>Fri, 22 Feb 2019 22:35:29 +0900</pubDate>
-					<tag><![CDATA[AWS,discy]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[AWS-서버관리]]></category>
-					<title><![CDATA[AWS php.ini 위치및 max_input_vars value 수정]]></title>
-					<link>https://blog.naver.com/chowin21/221472530574</link>
-					<guid>https://blog.naver.com/chowin21/221472530574</guid>
-					<description><![CDATA[이 글의 목표: copy&amp;paste로 끝내기해야할것: AWS linux에서 max_input_vars value to 3000 으로 수정하기1.SSH접속2.php.ini찾고 수정하기 현재사용중인 파일은 php-7.0.ini였다. 버전이나 환경등에 따라 다르다. 3.max_input_vars value 찾고 수정하기&quot; / &quot; (슬러쉬) 눌러스 문구를 찾으면 된다. 1000 이란숫자가 default에서 몇번 검색하니 나왔다. 눈으로 찾지마라, 멘탈붕괴된다. VI사용방법을 배워서 해라, 자주사용하지않으니 명령어들이 기억나지않을것이다.링크참고해라 vi 사용법 4.reboot하기a.sudo reboot b.sudo apache restart5.테스트하기#AWS #AWS리눅스 #awsphp위치찾기]]></description>
-					<pubDate>Fri, 22 Feb 2019 22:25:57 +0900</pubDate>
-					<tag><![CDATA[AWS,AWS리눅스,awsphp위치찾기]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[워드프레스]]></category>
-					<title><![CDATA[워드프레스 - 테마 업데이트이후 - translate 적용이 안될때]]></title>
-					<link>https://blog.naver.com/chowin21/221471856259</link>
-					<guid>https://blog.naver.com/chowin21/221471856259</guid>
-					<description><![CDATA[개요: 워드프레스 개발중, 테마 업데이트이후 , 텍스트변경 ( 번역 ) 이 잘 작동하지않거나, 적용해도 안먹거나, 글씨들이 달라진경우에 대한 대처 방법.1.테마 제작 업체에 문의한다.2.logo translate를 사용한다면 &quot;sync&quot;라는 버튼이 눌러보아라 이걸 누르면 해결된다. 뭐가 merge했다면서.자 이걸 알면 당신은 3일을 번것이다. 모르면 이거 하나로 3일을 혹은 그 이상을 소모할수있다.#워드프레스 #워드프레스테마업데이트트러블슈팅 #워드프레스텍스트변경 ]]></description>
-					<pubDate>Fri, 22 Feb 2019 04:45:37 +0900</pubDate>
-					<tag><![CDATA[워드프레스,워드프레스테마업데이트트러블슈팅,워드프레스텍스트변경]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[프로젝트소식]]></category>
-					<title><![CDATA[저작권보호블록체인 딜코인 의 비트 소닉 거래소 상장]]></title>
-					<link>https://blog.naver.com/chowin21/221471157833</link>
-					<guid>https://blog.naver.com/chowin21/221471157833</guid>
-					<description><![CDATA[얼마 전 기사이다. 지드래곤의 음원이 중국에서 76만 2천여 장이 판매될 정도로 인기였으나 이에 대한 저작권료는 한 푼도 지급이 되지 않았다. -도입 저작권법이 글로벌로 갈 때 수금을 제때 적시에 적합하게 하지 못한다는 문제점은 하루 이틀 이야기는 아니다. 특히 중국이라는 큰 시장에서의 저작권보호가 무시당하는 것은 작은 이슈가 아닐 것이다. 만약 이를 해결할 수 있는 솔루션이 있다면 어떤 것이 있고 어떤 프로젝트가 있을까?  블록체인 개발자로서 관심사는 “글로벌 저작권보호 솔루션&quot;이다. 문제는 확실하게 놓여있다. 시장도 상당히 크게 자리 잡아 있다 하지만 여전히 해결하지 못하고 있는 상황에서 어떤 솔루션이.......]]></description>
-					<pubDate>Thu, 21 Feb 2019 11:15:52 +0900</pubDate>
-					<tag><![CDATA[ContentsDeal,KPOP,StarKST,저작권보호블록체인,음원블록체인,블록체인,비트소닉]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[자금조달]]></category>
-					<title><![CDATA[스타트업 자금조달 농기계 시장 230조]]></title>
-					<link>https://blog.naver.com/chowin21/221470075798</link>
-					<guid>https://blog.naver.com/chowin21/221470075798</guid>
-					<description><![CDATA[4차 산업(융합 ICT) 시대에 가장 큰 변화는 노동구조 변화일 것이 글의 목적: 기계화 이후 융합 ICT(4차 산업)이 가져올 노동구조의 변화에 대해서 예측을 하고 대응을 하고자 하는 바램.이 글의 목표: AI가 4차 산업의 다는 아닐 겁니다. 정량적으로 숫자를 보고 앞으로 10년 짧게는 3년간 무엇에 집중해야 할지 영감을 얻는 계기가 되길 바랍니다.1. 아래의 영상은 기계를 통해 수익을 극대화를 할 수 있게 된 사례에 대한 것을 볼 수 있습니다. 흔하게 알 수 있는 일은 아니어서 공유를 합니다.2. 나오는 숫자들은 약간의 과장성, 혹은 잘못된 정보가 전달될 수도 있으니 자체 검증을 하거나, 가려 들길 바랍니다. 3.4만 평 기준 약 1억.......]]></description>
-					<pubDate>Wed, 20 Feb 2019 01:44:57 +0900</pubDate>
-					<tag><![CDATA[스타트업,자금조달,테크로드]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인개발]]></category>
-					<title><![CDATA[미술품 코인 개발 완료 이후]]></title>
-					<link>https://blog.naver.com/chowin21/221469197996</link>
-					<guid>https://blog.naver.com/chowin21/221469197996</guid>
-					<description><![CDATA[이 글의 목적: 포에버 로즈 와 동일한 코인 개발 완료 이후 활성화에 대한 이야기이 글의 목표: 개발이 다가 아니다, 개발 이후 가치를 만드는 작업은 더 어려울 수도 혹은 아주 어려운 작업이라는 것을 말하고자 합니다.개요: 2018년 2월에 이런 기사가 올라왔습니다. 10억에 팔린 미술품 코인 예술에도 거래가 가능해지는가?에 대한 내용입니다.(출처 https://tokenpost.kr/article-1611) 현재 거래소 외에 돈을 버는 서비스가 없으니 눈이 갈 수밖에 없었고, 미술품 거래 용도로 사용하기 위해 저희팀은 개발에 착수 시작했습니다.어떻게 개발했나?1. ERC-721 제안을 기준으로 개발2.815에 맞춰서 815개가 각자 다른 속성을 가짐 유일무일.......]]></description>
-					<pubDate>Tue, 19 Feb 2019 02:33:25 +0900</pubDate>
-					<tag><![CDATA[블록체인,이더리움,미술품,포에버,블록체인개발,이더리움개발,미술품코인,미술품코인개발,포에버로즈]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인개발]]></category>
-					<title><![CDATA[코인 개발 소스 공개 (주의 메인넷개발 과는 다릅니다)]]></title>
-					<link>https://blog.naver.com/chowin21/221469190899</link>
-					<guid>https://blog.naver.com/chowin21/221469190899</guid>
-					<description><![CDATA[목적: 중국에 비해 한국의 블록체인 개발력은 안타깝게도 뒤떨어져있습니다. 이 기회를 통해 코인 공개가 조금이나 마 기여했으면 하는 바람입니다.(너무 거창한것같긴합니다만, 사실 안 타깝기도하고, 화도나고하는건 사실이네요 그렇다고 변하는건 없지만요)목표: 코인개발과 관련하여 자료가 잘 없어서 조금이나마 도움이 될까해서 기록을 남겨봅니다.추가적으로 :코인 개발과 메인 넷 개발은 다른데 이 코인 소스 공개와 코인 개발을 함으로써개발자들 특히 일반 대중들이 메인 넷 개발과의 차이를알게되는 계기가 되길 바랍니다. 적어도 이렇게 실제 개발한 사람이 소스를 공개하고이 차이를 말한다면 조금은 이해를 해주시겠죠 ? 너무.......]]></description>
-					<pubDate>Tue, 19 Feb 2019 02:09:07 +0900</pubDate>
-					<tag><![CDATA[코인개발,블록체인개발,메인넷개발,메인넷개발차이]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[긱이코노미]]></category>
-					<title><![CDATA[매칭 AI 가능성과 한계]]></title>
-					<link>https://blog.naver.com/chowin21/221467702278</link>
-					<guid>https://blog.naver.com/chowin21/221467702278</guid>
-					<description><![CDATA[매칭 AI 가능성과 한계 이 글의 목적: AI 활용한 비즈니스 설계를 위해 이 글의 목표: AI 가 만능이 아니라는 것과 사용할 때와 사용하지 말아야 하는 것을 구분하기 위함 개요:구글이 job 매칭을 해주는 서비스를 개발했다면 유료로 사용을 하실 건가요? 무료라고 할지라도 믿으시겠어요? 내용:구글이니까 뭐 한 번은 사용해볼 수는 있을 것 같습니다. 하지만 구조적인 문제가 있습니다. 매칭은 적절했지만, 기업이 원하지 않거나 구직자가 사소한 문제 등으로 매칭이 안 이루어질 수 있습니다. 그리고 미스매칭의 경험은 서비스의 불신으로 확장됩니다. 전형적인 레몬시장이고 구조적으로 해결되기가 힘듭니다. 기술의 한계는 여기서 발생.......]]></description>
-					<pubDate>Sun, 17 Feb 2019 05:29:14 +0900</pubDate>
-					<tag><![CDATA[긱이코노미,긱시장,대니얼핑크,다니얼핑크,매칭AI]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인개발]]></category>
-					<title><![CDATA[블록체인에 정보기록 개발하기]]></title>
-					<link>https://blog.naver.com/chowin21/221467580642</link>
-					<guid>https://blog.naver.com/chowin21/221467580642</guid>
-					<description><![CDATA[개요판문점선언을 블록체인에 기록했다는데 이걸 만약 직접 개발 한다면 어떻게 해야할까요 ?블록체인에 정보기록을하는 사례들이 많아 지고있습니다, 예를들면, 결혼식을 기념해서 메타정보및 서약서를 블록체인에 올린다거나유서를 비석에 남기듯이 비트코인에 남겨서 영원이 기록되게 한다거나. 이러한 정보기록에 대한 개요를 확인할 수 있습니다결과물판문점 이더리움에 기록함 관련자료다루는내용UXTO 기록방법과 마이너입장에서의 장단점P2SH 기록방법그외 정보기록을 하는방법과 효율적인 방법에대한 논문내용공유비트코인에 이미지를 기록하는방법과 실제 사례 단문의 글과 장문의 글을 쓰는 방법과 사례와 실제 구현 모습OP_RETURN.......]]></description>
-					<pubDate>Sat, 16 Feb 2019 23:27:04 +0900</pubDate>
-					<tag><![CDATA[비트코인개발,블록체인개발,이더리움개발]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인개발]]></category>
-					<title><![CDATA[비트코인(블록체인) 마이닝 개발 강의]]></title>
-					<link>https://blog.naver.com/chowin21/221467578762</link>
-					<guid>https://blog.naver.com/chowin21/221467578762</guid>
-					<description><![CDATA[개요마이닝개발 하려면 어떻게 해야할까요 ? 궁금해서 공부를 해서 정리를 하고 실제 구현도 해보았습니다. 3달정도 걸린것같네요 한국어로 자료가 잘없고 영어로도 자료가 정리된것이 없어서 고생을 많이 하긴 했지만 마이닝 개발을 하시는분들에게 조금이나마 도움이되었으면 합니다.다루는내용비트코인을 하드포크한 이더리움, 라이트코인, 모네로코인 등 많은 코인들이 비트코인을 하드포크하며 참고를 하였습니다.이 강의는 POW를 하는 코인 대상으로 마이닝하는것에 대한 내용을 다릅니다.결과물이 강의 이후 결과물로 라이트코인을 하드포크해서 만든 사례는 https://scan.techroad.io 에서 참고할수있습니다.(물론 현 강의만으로는 부.......]]></description>
-					<pubDate>Sat, 16 Feb 2019 23:24:03 +0900</pubDate>
-					<tag><![CDATA[블록체인마이닝개발,비트코인마이닝개발,마이닝개발,마이닝풀개발,마이닝샘플개발]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인개발]]></category>
-					<title><![CDATA[이더리움 개발 도 커 세팅 방법]]></title>
-					<link>https://blog.naver.com/chowin21/221467575835</link>
-					<guid>https://blog.naver.com/chowin21/221467575835</guid>
-					<description><![CDATA[개요이더리움 개발(블록체인 개발)을 하기 위해서 무엇부터 해야 할까요? 블록체인 개발을 위한 도커 설정하는 법부터 해야겠지요?(물론 로커를 안 해도 상관은 없지만, 안 하고 차이의 생산성은 매우 큰 것 같습니다.)온라인에서 확인은 아래에서 확인할 수 있습니다. [강의 약 1시간]https://www.youtube.com/watch? v&#x3D;9WUUJY11n34&amp;t&#x3D;1098s2018년 11월 3주 차 오프라인에서 스터디에서 발표 한 내용입니다.질문 있으시면 댓글로 남겨주세요 다루는 내용도커가 뭐지?도커와 VMS 차이점실제 구현 방법도커의 작동원리도커에 이더리움 설치해보기이더리움 개발을 위한 개발 세팅 방법참고매주 화요일마다 블록체인 역삼역에서.......]]></description>
-					<pubDate>Sat, 16 Feb 2019 23:19:23 +0900</pubDate>
-					<tag><![CDATA[이더리움,블록체인,비트코인,이더리움개발,블록체인개발,비트코인개발]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[자금조달]]></category>
-					<title><![CDATA[스타트업 자금조달 연재 소개]]></title>
-					<link>https://blog.naver.com/chowin21/221457558888</link>
-					<guid>https://blog.naver.com/chowin21/221457558888</guid>
-					<description><![CDATA[개요창업자로서 왜 내 서류는 매번 광탈할까요? 내 아이템은 기발한데 담당자들이 너무 모르는 것 같습니다. 몇 번의 시행착오를 겪고 소액의 정부과제를 받긴 했는데, 2차 성장을 위해 투자가 이루어지지 않고 계시나요?. &#x27;상대평가에 의해 안타깝다 다음에 연락하라&#x27;라고 하나요? 정책 자금은 민간에서 인정받으면 투자한다고 하고 민간은 정책 자금 인정받은 것에 투자한다고 하는데 답답하신가요? 사실 우리는 이미 답을 알고 있습니다. 매력적인 회사가 되면 됩니다. 그런데 그게 하루아침에 됩니까? 쉽지 않은 이야기죠. 반대 입장인 정책결정 담당자는, 매번 똑같은 아이디어 비슷한 아이디어라고 합니다. 그런데 우린 그 아이.......]]></description>
-					<pubDate>Sun, 03 Feb 2019 04:57:18 +0900</pubDate>
-					<tag><![CDATA[자금조달,테크로드]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[유튜브]]></category>
-					<title><![CDATA[유튜브 채널 늘리기]]></title>
-					<link>https://blog.naver.com/chowin21/221457222406</link>
-					<guid>https://blog.naver.com/chowin21/221457222406</guid>
-					<description><![CDATA[이 글의 대상: 미래의 나이 글의 목표: 유튜브 채널을 여러개 운용하고 싶은사람 , 한아이디로 유튜브 채널 운영하고싶은사람.결론:주의: 왼쪽이다, 오른쪽이 아니다, 오른쪽의 계정 버튼을 누르면 다른 내용의 설정이 나온다.개요: 가장쉬운방법은 구글 이메일을 하나더 만드는것이다. 하지만 제작에 필요한 파일을 공유, 영상 공유등을 하려면 한 아이디가 편하다. 물론 작업자의 아이디를 추가해서 접근 가능하게 하는방법도 있다. 지금당장은 지원 하지않지만 유튜브 영상을 다국어로 제작해서 올릴때 혹은 재 편집을 하고자할때 시간을 줄여줄수 있지 않을까 싶다.]]></description>
-					<pubDate>Sat, 02 Feb 2019 16:25:06 +0900</pubDate>
-					<tag><![CDATA[유튜브,유튜브스튜디오]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[그로스해킹트렌드]]></category>
-					<title><![CDATA[Vibe 다운로드 - 아이폰 국가 설정 변경]]></title>
-					<link>https://blog.naver.com/chowin21/221456861803</link>
-					<guid>https://blog.naver.com/chowin21/221456861803</guid>
-					<description><![CDATA[이 글의 대상: 미래의 나이 글의 목표: 국가 설정과 vibe 사용하기 위한 예외 설정.아이폰 유저인데 vibe 검색해도 안 나올 때 혹은, &#x27;US location is not avaiable&#x27;이란 메시지가 나오면서 엉뚱한 화면이 나올 때.원인: 국가 설정이 한국이 아닐 때 나옵니다, 서울에서 살고 있어도 현재 위치가 한국이어도 국가 설정이 미국이라면 검색에 나오지 않음, 이름이 같은 엉뚱한 제품만 검색이 됩니다. 따라서 아이폰 국가 설정을 변경 하십시오해결 방법: 설정 메뉴를 아무리 봐도 국가 설정이 어디 있는지 모르겠다면 아래 클릭주의할 점으로, 메뉴의 그림이 아래의 공식 설명서와 약간 다를 수 있습니다.인내심을 가지고 차근차.......]]></description>
-					<pubDate>Sat, 02 Feb 2019 00:16:28 +0900</pubDate>
-					<tag><![CDATA[vibe,인간지능,인공지능]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[AWS-서버관리]]></category>
-					<title><![CDATA[AWS 관리 4 - cloudflare 캐쉬 지우기]]></title>
-					<link>https://blog.naver.com/chowin21/221451897464</link>
-					<guid>https://blog.naver.com/chowin21/221451897464</guid>
-					<description><![CDATA[부제: 캐쉬가 자동으로 지워지긴하나 DNS변경시에는 30분이상 혹은 더 많은 시간이 필요할수있다.심지어 테스트를 위해 프라이빗 크롬 브라우저를 띄어도 에러만 날경우가있다. 이때 캐쉬지우기가 필요하다. -홈페이지는 빠르면 1분안에 5분이면 거의 자동으로 변경된다.목적: 미래의 나를 위해 정리목표: AWS 설치부터 홈페이지 랜딩까지 copy &amp; paste로 끝낼 수 있도록, 최대한 전문용어 제외흩어져있는 자료 정리해서 한 번에 보기 쉽게대상: AWS을 통한 개발하고자 하는 사람 개요이 문서를 참고 이후 어떤 모습을 기대할 수 있는가?결과물자 이제 뭐 해야 하지?사전 사항1. Cloudflare 가입수행하기-&gt; 해당 도메인 선택.......]]></description>
-					<pubDate>Sun, 27 Jan 2019 00:22:06 +0900</pubDate>
-					<tag><![CDATA[클라우드플레어,cloudflare,AWS,서버관리]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[AWS-서버관리]]></category>
-					<title><![CDATA[AWS 관리 2 - git 설치 독립적으로 구성하기]]></title>
-					<link>https://blog.naver.com/chowin21/221451745314</link>
-					<guid>https://blog.naver.com/chowin21/221451745314</guid>
-					<description><![CDATA[대상: AWS을 통한 개발하고자 하는 사람 목적: 미래의 나를 위해 정리목표: AWS 설치부터 홈페이지 랜딩까지 copy &amp; paste로 끝낼 수 있도록, 최대한 전문용어 제외흩어져있는 자료 정리해서 한 번에 보기 쉽게부제: aws git 설치 빠르게 하기, 개요AWS git 설치방법 독립적으로 설치하기 (aws codecommit 사용하지 않음)이 문서를 참고 이후 어떤 모습을 기대할 수 있는가?결과물자 이제 뭐 해야 하지?사전 사항1. AWS 설치 완료수행하기1. (서버, 표시 이하 생략) Git 설치하기 (하단 참고 확인, 이하 생략) sudo yum install git2.Git 설치 확인git --version3. 저장소 생성mkdir -p /opt/git/techroad2019.gitgit init --b.......]]></description>
-					<pubDate>Sat, 26 Jan 2019 20:01:53 +0900</pubDate>
-					<tag><![CDATA[AWS,서버관리,호스팅,Git]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[자금조달]]></category>
-					<title><![CDATA[자금조달 - 정부사업 2019년 R&D 통합 사업설명회]]></title>
-					<link>https://blog.naver.com/chowin21/221437985991</link>
-					<guid>https://blog.naver.com/chowin21/221437985991</guid>
-					<description><![CDATA[1조 R&amp;D 사업, 2019년부터 좀비기업 퇴출 !개요1조 R&amp;D사업설명회를 에서 얻은 간단한 정보를 공유하고자합니다.후기를 한 마디로 요약 하자면 : &quot;좀비기업 퇴출&quot;을 위한 가점방식 변화를 볼수 있을것같습니다.후기-2018 R&amp;D사업을 지원할때, 매출보단, 과제 성공에 맞춰서 계획을 세워여 한다는점에서 창업을 왜했지 ? 라는 괴리감이 많이 들었다. 다행이 딱 올해부터 이런 고질적 문제 해결방안에 대해서 나왔다고 하니 묵은 정신적 스트레스가 풀리는것 같다.-물론, 이 방식이 정말 맞을지는 모른다, 하지만, 좋은 일자리를 만들기 위해, 좋은 방향으로 변화 하는 모습은 기대한다-약 5천명이상의 사람들이 온것으로.......]]></description>
-					<pubDate>Wed, 09 Jan 2019 16:12:39 +0900</pubDate>
-					<tag><![CDATA[테크로드,체이니어스,자금조달,정부사업]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[vlog시대]]></category>
-					<title><![CDATA[vlog시대 - 동영상 광고시장을 공략할 시기]]></title>
-					<link>https://blog.naver.com/chowin21/221434982812</link>
-					<guid>https://blog.naver.com/chowin21/221434982812</guid>
-					<description><![CDATA[유튜브가 매일 같이 새로운 기록들을 갈아치우고 있다이글의 목적: 2019년 R&amp;D자금을 기반으로 성장을 기대하는 기업을 위해이글의 목표: 글로벌에서 상업적으로 성공하는 서비스가 나오길바라며1.유튜브 국내시장만 영상1600억 광고2.페이스북 국내영상 1300억 3.네이버 400억-사업을 준비하는 사람이라면, 영상광고 시장을 뺏어올수있는 제품을 만든다면 의미 있지않을까싶다. -블록체인이 미들맨을 없애고 유튜브를 능가하지않을까 ? -블록체인사용에 전 부정적인 의견을 가지고있습니다. 조합정도는 가능하다. 예를들어 100%시장중 10%미만으로 가진다는건 동의한다. 유튜브처럼 매년 상을 주고, 행사를 주최하는 등을 하며 브랜드 파.......]]></description>
-					<pubDate>Sat, 05 Jan 2019 17:56:07 +0900</pubDate>
-					<tag><![CDATA[테크로드,체이니어스,하이베트남,Vlog시대]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[kickofflabs]]></category>
-					<title><![CDATA[kickofflabs DNS not working]]></title>
-					<link>https://blog.naver.com/chowin21/221429699777</link>
-					<guid>https://blog.naver.com/chowin21/221429699777</guid>
-					<description><![CDATA[소개: 알면 금방한다 모르면 몇일 몇주가 걸릴수도있다. kickofflabs를 사용하던중 &quot; DNS not working &quot; 이란것이 나오고 안된다면, kickofflabs에서는 자사에는 문제가없다는데 뭐가 문제일까 ?답: 원인은 cloudfalre에서 최근에 업데이트된 기능과 kickofflabs의 서버 세팅과 관계가있다. cloudflare른 쓴다면 오랜지색 버튼을 흑백으로 (DNS Only)로 바꿔주면된다.*go daddy설정은 또 다르다.트러플 슈팅끝!#잡설하필 트러플이 난게 크리스마스가 끼어서, &quot;연말장애&quot;인가 싶어서 혼동이 좀있었네요 삽질끝에 답을 찾았네요 흐유 ]]></description>
-					<pubDate>Sat, 29 Dec 2018 10:59:17 +0900</pubDate>
-					<tag><![CDATA[잡설]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[테크로드]]></category>
-					<title><![CDATA[카카오톡 캐쉬 삭제]]></title>
-					<link>https://blog.naver.com/chowin21/221429365950</link>
-					<guid>https://blog.naver.com/chowin21/221429365950</guid>
-					<description><![CDATA[개요: 개발하다보면 카카오톡에 글을 공유할때 썸네일 부분을 리프래쉬 하고싶을때가 많다. 하지만 한번 등록이되면 캐쉬때문에 리프레쉬가 되지않는다 이때 캐쉬를 삭제해줘야하는데 해당 링크를 공유하고자한다. 특히나 카카오톡은 바로 검색이 되지않는다. 미래의 나를 위해서 기록카카오톡 캐쉬삭제: https://developers.kakao.com/docs/cache페이스북 캐쉬삭제: https://developers.facebook.com/tools/debug/]]></description>
-					<pubDate>Fri, 28 Dec 2018 19:33:02 +0900</pubDate>
-					<tag><![CDATA[]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인투자]]></category>
-					<title><![CDATA[2019년 블록체인사업설명회 후기]]></title>
-					<link>https://blog.naver.com/chowin21/221428066815</link>
-					<guid>https://blog.naver.com/chowin21/221428066815</guid>
-					<description><![CDATA[약72억예산 시범사업 2019년 블록체인사업설명회 후기Q 블록체인사업 들어보니 다 기존에 할수있는것이고 안해도 관계없는것들이지않나요 ?답: 담당자들도, 동의하는부분이고, 안쓰는방안에대해서 &quot;역제안&quot;도 받는다고합니다.Q 사업설명회 분의기는 어땠나요 ?답: 세분류였다. a. 돈은 필요없고 정말 좋은 아이디어면 직접 하겠다는 생각으로 아이디어 들으로 온회사 b.. 블록체인 해당사업에 지원 할려는 회사 c. 이미 하던 솔류션이있어서 이걸 장점으로 지원할려는 회사Q 이런건 다 수요조사한 기업이 가져가는것아닌가요 ?답: 50%는이미 내정되어있는것같다. 사업내용에 특정 블록체인을 쓰는 것도 있었다. 이점에 대해서는.......]]></description>
-					<pubDate>Thu, 27 Dec 2018 08:55:49 +0900</pubDate>
-					<tag><![CDATA[chaineers,테크로드,theforverit]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[인터발]]></category>
-					<title><![CDATA[점심운동 과 운동시간관리]]></title>
-					<link>https://blog.naver.com/chowin21/221403046364</link>
-					<guid>https://blog.naver.com/chowin21/221403046364</guid>
-					<description><![CDATA[사진은: EDM복싱 센터이고. 술을 파는 bar가아닙니다. 프롤로그: 운동할 시간없어요 라는 말을 듣기 싫었고 하기도 싫어서 시간을 어떻게든 마련해보았다. 주로 저녁에 퇴근후 스트레스를 땀으로 풀었고 저녁에 약속이있다면 점심에 하고 점심에도 약속이있으면 아침반을 했었다. 이 글의 목적: 아침운동 점심운동 저녁운동 각자 장단점 이 글의 목표: 건강관리 업무체력관리 -업무체력을위한 운동 최근 크로스핏의 유산소 장점과 크로스핏의 큰근육의 단점을 보완한 EDM복싱을 경험해보았다 링크 그중 스크린 PT가 있다고해서, 최신 IT트렌드에 관심이 많은저는 한번 체험해보려고 했다. 하지만 시간을 내지못했다. 한참 운동할때는 어떻게 해서.......]]></description>
-					<pubDate>Wed, 21 Nov 2018 13:36:52 +0900</pubDate>
-					<tag><![CDATA[점심운동,아침운동]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[인터발]]></category>
-					<title><![CDATA[크로스핏 에서 역도가싫다면 EDM복싱]]></title>
-					<link>https://blog.naver.com/chowin21/221395911792</link>
-					<guid>https://blog.naver.com/chowin21/221395911792</guid>
-					<description><![CDATA[여성에게 크로스핏이 다좋은데 역도때문에 현대 이상적인 여성상에서 거리가 좀 있다는것이 단점이었다. 남자도 비슷하다 우락부락 헐크바디를 추구하는사람이 있고 저 처럼 캡틴아메리카처럼 넓은어깨와 슬림한 몸매를 추구하는 사람이 있을것이다. 오늘 이야기할것은 크로스핏의 장점을 가져와 복싱에 합친운동을 소개할까한다. 결론부터 이야기하자면 EDM복싱에서 아쉬운것도 존재한다. 넓은 어깨보단 부리부리한 눈매와 칼같은 정신력 슬림한 바디에 복근이 EDM복싱 이지 않나 싶다. 우선 후기에 대해서 이야기 하겠다. 강북에도(강남뿐아니라) 호텔급 샤워실과 포토존을 브랜딩한 곳이 생각보다있다. 포토존이 존재하는 크로스핏 센터는, 운.......]]></description>
-					<pubDate>Sat, 10 Nov 2018 23:24:58 +0900</pubDate>
-					<tag><![CDATA[edm복싱,크로스핏,포토존크로스핏]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[블록체인]]></category>
-					<title><![CDATA[운동 앱 리스트 2018년 4분기]]></title>
-					<link>https://blog.naver.com/chowin21/221388031940</link>
-					<guid>https://blog.naver.com/chowin21/221388031940</guid>
-					<description><![CDATA[이 글의 목적: 운동을 하고자 운동앱을 찾는분들께 어떤 앱혹은 서비스 있는지 알려주기 이 글의 목표: 운동을 하는 방법이 다양하니 자신에게 맞는 운동을 찾아 운동 인구가 많아지고 전국민이 건강해지길 바램 -TLS pass [링크] 전국 헬스장 1일권 구매가능 -쿠팡등, 에서도 1일권 구매가 가능, 하지만 3만원 ~5만원정도 -구아바파스, 전세계 헬스장 1일권 구매가능, 비싸다 1회에 5만원~10만원, 심지어 베트남 태국에서도 1일권에 5만원~10만원한다. 잘모르는곳도 많고 안해주는곳도 많다. 하지만 워낙 유명하기에, 외국인들이 많은 헬스장이라면 이야기하면 1일권은 역량으로 무료로 해주거나 3일권으로 약 5만원~10만원정도에 해주기도한다.......]]></description>
-					<pubDate>Tue, 30 Oct 2018 15:15:58 +0900</pubDate>
-					<tag><![CDATA[프립,숨고,조이핏,재능기부,재능사이트]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[그로스해킹]]></category>
-					<title><![CDATA[린스타트업 과진시황]]></title>
-					<link>https://blog.naver.com/chowin21/221387679430</link>
-					<guid>https://blog.naver.com/chowin21/221387679430</guid>
-					<description><![CDATA[-린스타트업 나 알어 , 알만큼알지 라는분께 이런것도 아시나요 -IMVU 회사에 린스타트업 적용하여 400억매출 하는 기업으로 성장 2011년 -여기까지도 안다면 다른것도 제시를 해볼께요 -진시황이 법가 사상을 도입을 해서 기존의 봉건제도 폐지후 더 효울적인 중앙관리 시스템 성공적인 도입 -린스타트업 도입이후 멋진 기업이 나왔다 -이후로도 많은 회사들이 도입중이기도하다 -린스타트업이 흥행에 성공이후 달라진점이 있다면 채용관계가 수평적으로 되는것이 가속화되어가는것 -평생직장이 사라지고 프리랜서들의 가속화가 되는것들이 지않나싶다. 결론 p2p채용 (수평적채용)이 점차 많아질것이라본다. 린스타트업 https://estimastory.com.......]]></description>
-					<pubDate>Tue, 30 Oct 2018 01:13:03 +0900</pubDate>
-					<tag><![CDATA[린스타트업,에릭리치]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-				<item>
-					<author>chowin21</author>
-					<category><![CDATA[건강관리]]></category>
-					<title><![CDATA[묽은콧물 관리방법 과 의료블록체인 약올림]]></title>
-					<link>https://blog.naver.com/chowin21/221381025508</link>
-					<guid>https://blog.naver.com/chowin21/221381025508</guid>
-					<description><![CDATA[INTRO | '묽은콧물 관리방법' 묽은 콧물이 뭉치는것이 3일간 지속이되어서 관련 약을 복약한지 3일, 모두 나았습니다. [이전글] 관리를 하지않고 나두면, 충농증으로 커질수있기에 조기에 복약을 통해서 관리를 했습니다. *식단관리를 딱히 하지않고 먹고싶은것 먹고, 술도 마셨습니다. *운동은 지하철 계단오르기, 식사후 30분정도 산책 중간중간에 땀이살짝 날대까지 뛰기. BODY | '복약획수기록 필요할까? ' 6 의료블록체인의시도 #4 복약획수기록 필요성 에 대해서 이야기하겠습니다. 약을 무조건 먹는것은 내성을 키우기 때문에 약을 먹는것을 싫어하기에, 최소한으로 먹고 심할때만 복약하는 형태를 취하고있습니다. 이런 상황은 대부분 고.......]]></description>
-					<pubDate>Fri, 19 Oct 2018 19:26:24 +0900</pubDate>
-					<tag><![CDATA[]]></tag>
-					<activity:verb>http://activitystrea.ms/schema/1.0/post</activity:verb>
-					<activity:object-type>http://activitystrea.ms/schema/1.0/blog-entry</activity:object-type>
-				</item>
-			
-		
-		
-	
-</channel>
-</rss>
+jupyter notebook # Test 해보기
+</code></pre>
+<p>평소에 Source code로만 설치하는 것을 선호했지만 Windows에서 설치가 조금 난감하기 때문에 Anaconda를 통해 비교적 쉽게 설치를 할 수 있습니다. 그리고 Linux/macOS에서도 다 작동하는 것을 확인했습니다.</p>
+<p>편의상 문어체를 사용합니다.<br>
+<a href="https://www.continuum.io/downloads">Anaconda 다운로드</a>를 통해서 <code>Anaconda Python 3.X</code> 버전을 자신의 플랫폼에 맞게 설치한다.</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-02-28-164351.jpg" alt="TensorFlow-v1.0.0 + Keras 설치 (Windows/Linux/macOS)"></p>
+<p>나는 Python 3.6 버전이다.</p>
+<p>Windows 경우 설치중에 Anaconda를 PATH 경로에 포함하는 체크란이 있음으로 반드시 체크 됨을 확인하자.</p>
+<p>설치를 완료한 후에 linux/macOS 라면 terminal 그리고 Windows 라면 CMD 창에<br>
+<code>conda --v</code> 명령어가 작동해야한다.</p>
+<p>만약 linux/macOS에서 <code>conda</code> 명령어가 먹히지 않으면<br>
+<code>export PATH=~/anaconda/bin:$PATH</code> 로 anaconda를 경로에 추가한다.  각자의 anaconda의 경로가 다를 수 있으므로 anaconda 혹은 anaconda3로 추가해준다. 편의상 자신의 <code>.bashrc</code> 등에 넣어주자.<br>
+<code>echo 'export PATH=~/anaconda/bin:$PATH' &gt;&gt; ~/.bashrc</code></p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-02-28-164019.jpg" alt="TensorFlow-v1.0.0 + Keras 설치 (Windows/Linux/macOS)"></p>
+<p>커맨드 작동을 확인한다.Anaconda의 현 버전은 상관없는 듯하다.</p>
+<p>그리고 conda environment를 만든다.<br>
+환경 설정후 환경을 활성화 시킨다.</p>
+<pre><code class="language-bash">conda create -n tf python=3.5 # y 등으로 계속 진행
+</code></pre>
+<p>이 과정은 python의 virtualenv와 비슷하다. 안전하게 시스템의 python library가 꼬이지 않게 격리해서 만드는 과정이다. 예를들어 TensorFlow의 버전을 다르게 쓰고싶을때.</p>
+<p>우선 현재(17/3/1)기준 윈도우에선 python 3.5.X 버전을 사용해야 현재 TensorFlow-v1.0.0와 Keras를 지원한다. 그래서 <code>python=3.5</code>를 해줘야하며 리눅스와 맥에서는 python 3.6도 지원한다고 한다. 나는 윈도우 기준으로 테스트해봤기때문에 3.5로만 해보았다. 따라서 Anaconda 기본 python3.6 버전을 사용하면 TensorFlow와 Keras 설치가 불가능했으므로 잘 선택하자.</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-03-01-025948.jpg" alt="TensorFlow-v1.0.0 + Keras 설치 (Windows/Linux/macOS)"></p>
+<blockquote>
+<p>참고: <a href="https://pypi.python.org/pypi/tensorflow/1.0.0">https://pypi.python.org/pypi/tensorflow/1.0.0</a></p>
+</blockquote>
+<pre><code class="language-bash">activate tf # Windows
+# source activate tf   # Linux/macOS
+</code></pre>
+<p>그리고 환경을 활성화시킬때 Windows와 Linux/macOS 명령어의 차이가 난다.</p>
+<p><img src="https://tmmsexy.s3.amazonaws.com/2017-02-28-165746.jpg" alt="TensorFlow-v1.0.0 + Keras 설치 (Windows/Linux/macOS)"><br>
+다음 처럼 (tf) 환경이라고 쉘/터미널의 모습이 바뀐다.</p>
+<p>그리고 쭉쭉 이 순서대로 설치해준다.</p>
+<pre><code class="language-bash">pip install tensorflow  # pip install tensorflow-gpu
+conda install pandas matplotlib scikit-learn 
+pip install keras
+conda install jupyter notebook
+</code></pre>
+<p>TensorFlow를 GPU 버전으로 사용할 수 있다면<code>pip install tensorflow-gpu</code>로 설치한다.<br>
+Keras 설치 중에 Theano를 설치하는 듯 하지만 기본 백엔드는 TensorFlow로 작동한다.</p>
+<p>참고로 Keras 설치 전에 jupyter notebook 설치시 keras module을 import 하지 못하는 오류가 있다. 그래서 keras 설치후 jupyter notebook을 설치한다.</p>
+<p>간단하게 Keras import가 되는지 확인한다.<br>
+<img src="https://tmmsexy.s3.amazonaws.com/2017-02-28-171932.jpg" alt="TensorFlow-v1.0.0 + Keras 설치 (Windows/Linux/macOS)"></p>
+<p>끝으로 ..</p>
+<p>자세히 읽지는 않았지만 다음 블로그 글에서 Windows7 64bit에서 CUDA와 CuDNN을 포함한 Windows에서 Keras+TensorFlow를 설치하는 글도 참고하면 도움이 되겠습니다.<br>
+<a href="http://skyer9.tistory.com/m/11">Python Keras+Tensorflow on Windows7 64bit 설치하기</a></p>
+</div>]]></content:encoded></item></channel></rss>

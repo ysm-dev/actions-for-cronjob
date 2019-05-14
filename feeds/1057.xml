@@ -1,0 +1,906 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>LESPINSIDE</title>
+    <description>LESPINSIDE tech blog</description>
+    <link>http://blog.lespinside.com/</link>
+    <atom:link href="http://blog.lespinside.com/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Mon, 14 May 2018 05:04:37 +0000</pubDate>
+    <lastBuildDate>Mon, 14 May 2018 05:04:37 +0000</lastBuildDate>
+    <generator>Jekyll v3.7.3</generator>
+    
+      
+      <item>
+        <title>리액티브 프로그래밍 대 리액티브 시스템</title>
+        <description>&lt;p&gt;본 글은 &lt;a href=&quot;https://www.lightbend.com/&quot;&gt;Lightbend&lt;/a&gt;사의 Jonas Bonér와 Viktor Klang가 작성한 &lt;a href=&quot;https://www.lightbend.com/reactive-programming-versus-reactive-systems&quot;&gt;Reactive Programming versus Reactive Systems- Landing on a set of simple Reactive design principles in a sea of constant confusion and overloaded expectations&lt;/a&gt;을 번역한 것입니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;요약&quot;&gt;요약&lt;/h3&gt;
+&lt;p&gt;2013년 &lt;a href=&quot;http://www.reactivemanifesto.org/ko&quot;&gt;리액티브 선언문&lt;/a&gt;을 공동 저작할 때부터 지금까지 우리는 리액티브라는 주제가 소수의 회사에서 프린지(fringe) 프로젝트 수행에만 사용하는 사실상 애플리케이션을 제작하는 기술로 인정받지 못하던 것에서부터 미들웨어 분야의 수많은 영향력 있는 회사들이 사용하는 전반적인 플랫폼 전략의 일부가 되는 것을 목격했다.&lt;/p&gt;
+
+&lt;p&gt;이 글에서는 리액티브 프로그래밍 스타일로 코드를 작성하는 것과 전체적으로 응집력(cohesive) 있는 리액티브 시스템을 설계하는 것의 차이를 살펴본다. 이를 통해 “리액티브”의 다양한 측면을 정의하고 명확히 하는 것이 목표이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;바쁜-사람들을-위한-핵심-내용&quot;&gt;(바쁜 사람들을 위한) 핵심 내용&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;2015년부터 특히 2016년에 상용 미들웨어 벤더사와 사용자 모두 리액티브에 대한 관심이 급격히 증가했다.&lt;/li&gt;
+  &lt;li&gt;구현 관점에서 리액티브 프로그래밍은 리액티브 시스템의 일부이다.&lt;/li&gt;
+  &lt;li&gt;리액티브 프로그래밍은 컴포넌트 수준에서 내부 로직과 데이터 플로우(flow) 관리를 위한 성능과 자원 효율성을 통해 개발자의 생산성을 높여준다.&lt;/li&gt;
+  &lt;li&gt;리액티브 시스템은 시스템 수준에서 “클라우드 네이티브”&lt;a href=&quot;#1&quot;&gt;[1]&lt;/a&gt; 혹은 다른 대규모 분산 시스템을 구축하기 위한 복원성과 탄력성을 통해 아키텍트와 데브옵스의 생산성을 높여준다.&lt;/li&gt;
+  &lt;li&gt;리액티브 시스템의 컴포넌트 안에서 리액티브 프로그래밍을 사용하는 것은 매우 유용하다.&lt;/li&gt;
+  &lt;li&gt;리액티브 프로그래밍을 사용하여 작성한 컴포넌트들로 시스템을 만들 때 리액티브 시스템을 사용하는 것은 매우 유용하다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;리액티브---설계-원칙들의-집합&quot;&gt;리액티브 - 설계 원칙들의 집합&lt;/h3&gt;
+&lt;p&gt;최근의 성공 지표 중 하나는 리액티브라는 용어가 과도하게 사용되어 “스트리밍”, “가벼운”, “실시간” 등과 관련되어 다양한 상황에서 여러 가지 의미로 사용된다는 것이다.&lt;/p&gt;
+
+&lt;p&gt;이 문서에서 말하는 “리액티브”는 응집력 있는 시스템을 만들어내는 설계 원칙들의 집합이다. 이것은 구현 기술, 툴링(tooling) 및 디자인 패턴들이 컴포넌트가 되는 분산 환경에서 시스템 구조와 설계에 대해서 생각하는 관점이다.&lt;/p&gt;
+
+&lt;p&gt;다음과 같은 비유를 생각해보자. 스포츠 팀(축구, 야구 등)은 뛰어난 개인들로 구성되는 경우가 많다. 그런데도 팀 내에서 의사소통이 제대로 되지 않을 때 “열등한” 팀에게 지는 경우가 비일비재하다. 이처럼 시너지 효과가 부족할 경우 효과적으로 팀을 운용할 수 없다.&lt;/p&gt;
+
+&lt;p&gt;이것은 개별적으로는 훌륭한 리액티브 서비스들을 생각 없이 어설프게 합친 것과 리액티브 시스템의 차이와 같다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 시스템에서 모든 차이를 만드는 것은 개별적인 컴포넌트 간의 상호 작용이다. 이들은 개별적으로 동작하지만, 함께 목적하는 바를 성취한다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 시스템은 이러한 개별적인 서비스들이 서로를 인지하면서 하나로 합쳐져 외부에 반응하는 구조적 스타일에 기반을 둔다. 이것은 스케일을 키우거나(up) 줄일(down) 수 있고 부하를 분산할 수 있게하며 이러한 단계 중 일부를 미리 수행할 수도 있다.&lt;/p&gt;
+
+&lt;p&gt;사람들이 소프트웨어 개발과 설계의 관점에서 이야기하는 리액티브는 일반적으로 아래 세 가지 중 하나이다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;리액티브 시스템 (구조와 설계)&lt;/li&gt;
+  &lt;li&gt;리액티브 프로그래밍 (선언적 이벤트 기반)&lt;/li&gt;
+  &lt;li&gt;함수형(Functional) 리액티브 프로그래밍 (FRP)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;우리는 처음 두 개에 대하여 중점을 두고 이 구현과 기술이 뜻하는 의미를 살펴볼 것이다. 특히 언제 그것들을 사용할 것인지, 어떻게 서로 연관되는지, 각각에서 어떠한 이점을 기대할 수 있는지 논의할 것이다. 특히나 멀티코어, 클라우드, 모바일 구조에서 시스템을 구현하는 관점에서 이야기할 것이다.&lt;/p&gt;
+
+&lt;p&gt;2013년, Akka 기반의 시스템을 만들고 유지보수, 운영하면서 동시성과 분산 문제를 해결하기 위한 전통적인 방식에 비해 큰 이점을 목격했다. 그리고 그 긴 경험 끝에 그간 경험들과 교훈들이 &lt;a href=&quot;http://reactivemanifesto.org/ko&quot;&gt;리액티브 선언문&lt;/a&gt;에서 빛을 발했다.&lt;/p&gt;
+
+&lt;p&gt;현대 시스템을 이끄는 것은 응답성(Responsiveness)이다. 클라이언트/고객은 제때에 가치를 얻지 못하면 다른 곳으로 가버린다는 것을 알아야 한다. 근본적으로 가치를 얻지 못하는 것과 필요할 때 가치를 얻지 못하는 것은 다를 게 없다.&lt;/p&gt;
+
+&lt;p&gt;응답성을 촉진하는 것에는 두 가지 과제가 있다. 장애의 상황에서도 응답해야 한다는 복원성(Resilience)과 부하의 상황에서도 응답해야 한다는 탄력성(Elasticity)이다. 리액티브 선언문은 이것을 성취하기 위해서 시스템이 메시지 기반(Message Driven)이어야 한다고 규정하고 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://d3gnpvjw8j16uq.cloudfront.net/assets/images/whitepaper/rprs/b27d0cbfa50d08f1ccb8f34ba38c93be-reactive-traits.svg&quot; alt=&quot;리액티브 선언문의 네가지 신조&quot; /&gt;
+&lt;em&gt;리액티브 선언문의 네가지 신조&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;2016년 JVM 분야의 몇몇 주요 벤더사들은 리액티브 프로그래밍을 수용하기 위한 핵심 계획을 발표했다. 이것은 오늘날 회사들이 겪는 문제들이 무엇인지 말해주는 것이다.&lt;/p&gt;
+
+&lt;p&gt;전통적인 프로그래밍 기법에서 이러한 변화를 시도하는 것은 도전적인 일이다. 기존에 사용하던 기술들에 대한 호환성을 유지하고 사용자의 기반을 다른 사고방식으로 유도해야 한다. 동시에 내부 개발자 양성과 운영 경험을 구축해야 한다. 이러한 회사들의 투자는 결코 쉬운 일이 아니며 큰 공학적 도전이라는 것은 말할 필요도 없다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 프로그래밍 분야에서 다양한 활동들이 일어나고 있는 반면에 시스템 구조 측면에서는 구조와 운영 경험이 쌓이기까지 시간이 걸릴 것이다. 이것은 새로운 프로그래밍 패러다임을 적용하는 것만으로 자동으로 해결되는 문제가 아니다. 리액티브 선언문 아래에서 커지는 공감대를 보는 것은 흥미로운 일일 것이다.&lt;/p&gt;
+
+&lt;p&gt;이제 함수형 리액티브 프로그래밍에 대해서 이야기해보고 왜 더는 이 글에서 논의하지 않는지 알아보자.&lt;/p&gt;
+
+&lt;h3 id=&quot;함수형-리액티브-프로그래밍-frp&quot;&gt;함수형 리액티브 프로그래밍 (FRP)&lt;/h3&gt;
+&lt;p&gt;“FRP”라고 불리는 함수형 리액티브 프로그래밍은 흔히 잘못 이해되고 있다. FRP는 20년 전 Conal Elliott에 의해 매우 &lt;a href=&quot;http://conal.net/papers/icfp97/&quot;&gt;정교하게 정의&lt;/a&gt; 되었다. 이 용어는 최근 다른것들 사이에서 Elm, Bacon.js, Reactive Extension(RxJava, Rx.NET, RxJS)과 같은 기술을 설명하는데 잘못 사용되고 있다&lt;a href=&quot;#2&quot;&gt;[2]&lt;/a&gt;. FRP를 지원한다고 말하는 대부분의 라이브러리들은 리액티브 프로그래밍를 이야기하는 것이다. 그러므로 더는 여기서 이야기하지 않겠다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리액티브-프로그래밍&quot;&gt;리액티브 프로그래밍&lt;/h3&gt;
+&lt;p&gt;리액티브 프로그래밍과 함수형 리액티브 프로그래밍을 혼동해서는 안 된다. 리액티브 프로그래밍은 비동기 프로그래밍의 일부이며 실행 스레드가 제어 흐름을 주도하는 것이 아닌 새로운 정보가 로직을 주도하는 패러다임이다.&lt;/p&gt;
+
+&lt;p&gt;이것은 하나의 문제를 각각 비동기와 논 블로킹 방식으로 실행될 수 있는 여러 단계로 분리할 수 있다. 그리고 무한한 입력이나 출력을 생성할 수 있는 작업 흐름(workflow)을 만들기 위해 결합한다.&lt;/p&gt;
+
+&lt;p&gt;옥스퍼드 사전은 &lt;a href=&quot;http://www.reactivemanifesto.org/ko/glossary#Asynchronous&quot;&gt;비동기&lt;/a&gt;를 “동시에 존재하거나 발생하지 않는” 이라고 정의한다. 우리의 문맥에서는 클라이언트에서 서비스로 전송된 요청이 이후 임의의 시점에 처리된다는 의미이다.&lt;/p&gt;
+
+&lt;p&gt;이것은 &lt;a href=&quot;http://www.reactivemanifesto.org/ko/glossary#Non-Blocking&quot;&gt;논 블로킹&lt;/a&gt;을 가능하게 하는 리액티브 프로그래밍에서 굉장히 중요한 기술이다. 실행 스레드들이 공유 자원을 점유하기 위해 경쟁할 때 (현재 수행하는 일이 끝날 때까지 실행 스레드의 실행을 막는) 블로킹으로 기다릴 필요가 없는 것이다. 대신 자원을 점유하기 전까지 다른 유용한 작업을 수행할 수 있다. Amdahl의 법칙&lt;a href=&quot;#3&quot;&gt;[3]&lt;/a&gt;에 따르면 확장성의 가장 큰 적은 경쟁이며 그러므로 리액티브 프로그램은 거의 블로킹되지 않아야 한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://d3gnpvjw8j16uq.cloudfront.net/assets/images/whitepaper/rprs/3d275fb09d6708ed5459854c8c6d3c25-blocking-apis-messaging.svg&quot; alt=&quot;동기, 블로킹 통신(좌)는 자원을 비효율적으로 사용하며 병목현상이 발생하기 쉽다. 리액티브 방식(우)는 위험을 줄이고 값 비싼 자원을 보전하며 하드웨어/인프라에 대한 요구가 덜하다.
+&quot; /&gt;
+&lt;em&gt;동기, 블로킹 통신(좌)는 자원을 비효율적으로 사용하며 병목현상이 발생하기 쉽다. 리액티브 방식(우)는 위험을 줄이고 값 비싼 자원을 보전하며 하드웨어/인프라에 대한 요구가 덜하다.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;리액티브 프로그래밍은 일반적으로 이벤트 기반이다. 이것은 리액티브 시스템이 메시지 기반인 것과 대조적이다. 이벤트 기반과 메시지 기반 사이의 구분에 대해서는 다음 부문에 다루고 있다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 프로그래밍 라이브러리의 API는 일반적으로 둘 중 하나이다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;콜백 기반 : 사이드 이펙트(side-effect)를 발생시키는 익명 콜백을 이벤트 발생지에 붙여 이벤트가 데이터 흐름 체인을 지나갈 때 호출함&lt;/li&gt;
+  &lt;li&gt;선언적(declarative) 방식 : map, filter, fold와 같이 잘 정립된 결합자(combinator)를 사용하는 함수형 결합을 통해 이루어지는 짐&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;대부분 라이브러리들은 이 두 가지 스타일을 섞어서 제공한다. 또한 windowing, counts, trigger와 같은 스트림 기반 연산자들을 추가로 제공하기도 한다.&lt;/p&gt;
+
+&lt;p&gt;제어의 흐름이 아닌 데이터의 흐름에 중점을 둔다는 것에서 리액티브 프로그래밍이 &lt;a href=&quot;https://en.wikipedia.org/wiki/Dataflow_programming&quot;&gt;데이터 흐름 프로그래밍&lt;/a&gt;과 관련되어 있다는 주장도 일리가 있다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 프로그래밍 기법을 지원하는 프로그래밍 개념의 예제들은 아래와 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Futures_and_promises&quot;&gt;Future/Promises&lt;/a&gt; : 하나의 값에 대한 컨테이너로 어떠한 값을 비동기적으로 변형할 때 그 값이 아직 사용할 수 없는 상황에서도 추가될 수 있다. 컨테이너는 한 번만 쓸(write) 수 있고 여러 번 읽을(read) 수 있다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.reactive-streams.org/&quot;&gt;리액티브 스트림&lt;/a&gt;과 같은 스트림: 무수한 발생지와 목적지 사이에서 데이터를 처리하는 무한한 흐름으로 비동기, 논 블로킹, 역압(back-pressured)의 변형을 수행하는 파이프라인이다.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Oz_(programming_language)#Dataflow_variables_and_declarative_concurrency&quot;&gt;데이터 흐름 변수&lt;/a&gt;(Dataflow Variables) : 입력, 프로시저, 다른 셀에 의존하여 변경사항이 자동으로 업데이트되는 하나의 할당 변수(메모리 셀)이다. 실질적인 예로 스프레드시트가 있다. 스프레드시트는 한 셀의 값이 변하면 모든 종속 함수를 통과하여 새로운 “다운 스트림(downstream)” 값을 생성한다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;JVM에서 리액티브 프로그래밍을 지원하는 유명 라이브러리들로는 Akka Streams, Ratpack, Reactor, RxJava, Vert.x가 있지만 이 라이브러리들이 전부는 아니다. 이 라이브러리들은 리액티브 프로그래밍 표준인 리액티브 스트림 명세를 구현한다. 리액티브 스트림은 JVM에서 사용되는 리액티브 프로그래밍 라이브러리 간의 상호 운용이 가능하도록 하는 표준으로 스스로에 대한 설명에 따르면 이는 “논 블로킹 역압으로 비동기 스트림을 처리하는 표준을 제공하기 위한 계획” 이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리액티브-프로그래밍의-이점-그리고-한계&quot;&gt;리액티브 프로그래밍의 이점 (그리고 한계)&lt;/h3&gt;
+
+&lt;p&gt;리액티브 프로그래밍의 가장 큰 장점은 멀티코어와 멀티CPU 하드웨어에서 연산 자원 활용을 증가할 수 있다는 것과 Amdahl의 법칙과 Günther의 Universal Scalability Law&lt;a href=&quot;#4&quot;&gt;[4]&lt;/a&gt;에 따라 직렬화 지점을 감소시켜 성능을 향상할 수 있다는 것이다.&lt;/p&gt;
+
+&lt;p&gt;두 번째 이점은 개발자의 생산성이다. 전통적인 개발 패러다임은 비동기와 논 블로킹 연산 및 입출력을 직선적이고 유지보수 가능하게 다루는 데 어려움이 있다. 리액티브 프로그래밍은 대개 동작 중인 컴포넌트들 사이의 명확한 조정(coordination)에 대한 필요성을 제거하여 이러한 문제를 해결한다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 프로그래밍이 빛을 발하는 것은 컴포넌트를 생성하고 작업 흐름을 결합하는 시점이다. 비동기 실행의 모든 이점을 가지기 위해서는 &lt;a href=&quot;http://www.reactivemanifesto.org/ko/glossary#Back-Pressure&quot;&gt;역압&lt;/a&gt;이 굉장히 중요하다. 역압은 과도한 사용과 무한한 자원 소비를 피할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://d3gnpvjw8j16uq.cloudfront.net/assets/images/whitepaper/rprs/fa39e52455652709d42b2c8afae3587d-three-more-events.jpg&quot; alt=&quot;사진1&quot; /&gt;
+&lt;img src=&quot;https://d3gnpvjw8j16uq.cloudfront.net/assets/images/whitepaper/rprs/a2cd2bafc4ca99ebb2f0835374c8dc06-three-more-events-even-more.jpg&quot; alt=&quot;사진2&quot; /&gt;
+&lt;em&gt;데이터 흐름 측면에서 안정적인 상태를 유지하기 위해서 풀(pull) 방식의 역압은 새로운 요청을 업스트림으로 보내고 메시지 수신을 다운스트림으로 진행한다. 그러므로 생산자가 소비자를 압도하지 않는다. 그림 Kevin Webber(@kvmwbbr)&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;리액티브 프로그래밍이 현대 소프트웨어를 구축하기 위해 매우 유용하지만 더 높은 수준의 시스템을 생각하기 위해서는 다른 도구를 사용해야 한다. 바로 리액티브 아키텍쳐이다. 리액티브 아키텍쳐는 리액티브 시스템을 설계하는 과정이다. 나아가서 세상에는 많은 프로그래밍 패러디임이 있고 리액티브 프로그래밍은 그중 하나라는 사실을 기억하는 것이 중요하다. 이것은 그저 도구일 뿐이며 모든 경우에 만능은 아니다.&lt;/p&gt;
+
+&lt;h3 id=&quot;이벤트-기반-대-메시지-기반&quot;&gt;이벤트 기반 대 메시지 기반&lt;/h3&gt;
+&lt;p&gt;이전에 언급한 것처럼 리액티브 프로그래밍은 수명이 짧은 데이터 흐름 체인을 통해 연산하는 데 중점을 둔다. 이것은 주로 이벤트 기반이다. 반면 리액티브 시스템은 (메시징이라고도 하는) &lt;a href=&quot;http://www.reactivemanifesto.org/ko/glossary#Message-Driven&quot;&gt;메시지 기반&lt;/a&gt;&lt;a href=&quot;#5&quot;&gt;[5]&lt;/a&gt;으로 분산 시스템에서 통신과 조정을 통한 복원성과 탄력성에 중점을 둔다.&lt;/p&gt;
+
+&lt;p&gt;수명이 긴 주소가 지정가능한 컴포넌트들을 이용하는 메시지 기반과 데이터 흐름이 주도하는 이벤트 기반의 가장 큰 차이점은 메시지는 통제할 수 있지만 이벤트는 그렇지 않다는 것이다. &lt;strong&gt;메시지는 명백한 하나의 목적지를 가지는 반면 이벤트는 다른 관찰자들이 사실(facts)를 관찰(observe)하는 것이다.&lt;/strong&gt; 나아가서 메시징은 발신자와 수신자가 발신, 수신이라는 행위와 분리되는 비동기 형태가 적합하다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://d3gnpvjw8j16uq.cloudfront.net/assets/images/whitepaper/rprs/3440452be4afc65fdc38b79f6133f4bc-soapbox.jpg&quot; alt=&quot;이벤트 기반이 &amp;quot;발언대&amp;quot;에서 사실(이벤트)을 전파(broadcasting)하고 다른 관찰자들이 (듣고 있다면) 관찰하는 반면, 메시지 기반은 주소로 지정 가능한 수신자와 하나의 목적을 가진다.&quot; /&gt;
+&lt;em&gt;이벤트 기반이 “발언대”에서 사실(이벤트)을 전파(broadcasting)하고 다른 관찰자들이 (듣고 있다면) 관찰하는 반면, 메시지 기반은 주소로 지정 가능한 수신자와 하나의 목적을 가진다.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;리액티브 선언문의 용어집에는 개념적인 차이를 다음과 같이 정의한다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;메시지는 특정 대상으로 보내지는 데이터 항목이다. 이벤트는 컴포넌트가 주어진 상태에 도달했을 때 발생시키는 신호이다. 메시지 기반 시스템에서는 주소 지정이 가능한 수신자가 메시지 도착을 기다리고 메시지에 응답하며 그렇지 않을 경우 휴면한다. 이벤트 기반 시스템 알림에서 리스너는 이벤트 발생지에 소속되어 이벤트가 발생할 때 호출된다. 즉, 이벤트 기반 시스템은 주소 지정이 가능한 이벤트 발생지에 초점을 맞추고 메시지 기반 시스템은 주소 지정이 가능한 수신자에 집중한다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;메시지는 분산 시스템에서의 통신이나 네트워크 통신을 필요로 할 때 사용하지만 이벤트는 지역적으로 사용한다. 일반적으로 이벤트 기반의 시스템 간에 연결은 메시징을 통해 이루어지는데 메시지 안에 이벤트를 담아 네트워크 통신한다. 이것은 이벤트 기반 프로그래밍 모델의 상대적 간결함을 분산 환경에서도 유지하도록 해준다. 그리고 전문화되고 범위가 잘 지정된 경우에 원활하게 동작한다. (즉 AWS Lambda와 분산 스트림 처리를 하는 Spark Streaming, Flink, Kafka, Akka Streams를 사용하는 Gearpump, 분산 Publish/Subscribe 제품인 Kafka, Kinesis)&lt;/p&gt;
+
+&lt;p&gt;하지만 얻는게 있으면 잃는 것도 있다. 이 프로그래밍 모델은 추상화와 간결함을 얻는 반면 제어의 관점에서 잃는 것이 있다.&lt;/p&gt;
+
+&lt;p&gt;메시징은 부분적인 장애, 장애 감지, 삭제/중복/재정렬 된 메시지, 이벤트의 견고함, 동시성 관리와 같은 분산형 시스템의 현실과 제약을 포용하도록 강제한다. 그리고 과거에 수없이 많이 행해져 왔던 (EJB,&lt;a href=&quot;https://christophermeiklejohn.com/pl/2016/04/12/rpc.html&quot;&gt;RPC&lt;/a&gt;,&lt;a href=&quot;https://queue.acm.org/detail.cfm?id=1142044&quot;&gt;CORBA&lt;/a&gt;,&lt;a href=&quot;https://cs.brown.edu/courses/cs227/archives/2012/papers/weaker/cidr07p15.pdf&quot;&gt;XA&lt;/a&gt; 등) 마치 네트워크가 없는 것처럼 어설픈 추상화 뒤에 숨기는 대신 이러한 문제들을 전면에서 다룬다.&lt;/p&gt;
+
+&lt;p&gt;의미(semantics)와 응용 가능성(applicability)에서 이러한 차이는 복원성, 탄력성, 이동성, 위치 투명성 및 분산 시스템의 복잡성 관리와 같은 애플리케이션 설계에 중대한 영향을 미친다. 이에 대해서는 뒤에서 더 설명할 것이다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 프로그래밍을 사용하는 리액티브 시스템에서는 이벤트와 메시지가 모두 존재한다. &lt;strong&gt;하나는 통신을 위한 훌륭한 도구(메시지)이며 다른 하나는 사실(facts)을 표현하는 훌륭한 방법(이벤트)이다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;리액티브-시스템과-아키텍쳐&quot;&gt;리액티브 시스템과 아키텍쳐&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;리액티브 시스템&lt;/em&gt; 은 리액티브 선언문에 정의된 것처럼 오늘날의 애플리케이션에 대한 높은 요구사항을 충족시키는 현대적인 시스템을 만들기 위한 구조적인 설계 원칙의 집합이다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 시스템의 원칙은 전혀 새로운 것이 아니다. 70년대와 80년대로 거슬러 올라가면 Jim Gray와 Pat Helland의 &lt;a href=&quot;http://www.hpl.hp.com/techreports/tandem/TR-86.2.pdf&quot;&gt;Tandem System&lt;/a&gt;과 Joe Armstrong과 Robert Virding의 &lt;a href=&quot;http://erlang.org/download/armstrong_thesis_2003.pdf&quot;&gt;Erlang&lt;/a&gt;와 같은 사람들에게 영감을 주는 업적이 있다. 그러나 이 사람들은 시대를 앞서갔다. 상용 시스템 개발에 대한 현재 “모범 사례”에 대해서 다시 생각하기 시작한 것은 최근 5~10년밖에 되지 않았다. 이것은 오늘날의 멀티코어, 클라우드 환경, 사물 인터넷 환경에 리액티브 원칙을 적용하는 법을 익히는 것을 의미한다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 시스템의 근간은 메시지 전달이다. 메시지 전달은 컴포넌트 사이에 일시적인 경계를 만드는 것이다. 이것은 컴포넌트 간의 (동시성을 제공하는) 시간 결합도와 (분산과 이동성을 제공하는) 공간 결합도를 낮춘다. 이러한 결합도를 낮추는 일은 컴포넌트 간의 완벽한 &lt;a href=&quot;http://www.reactivemanifesto.org/ko/glossary#Isolation&quot;&gt;분리&lt;/a&gt;를 위해 필수적이다. 그리고 이러한 분리는 &lt;em&gt;복원성&lt;/em&gt; 과 &lt;em&gt;탄력성&lt;/em&gt; 모두의 기초가 된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;프로그램에서-시스템으로&quot;&gt;프로그램에서 시스템으로&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;우리는 시스템을 만드는 것인 만큼 더는 한 개의 연산을 위해 종단 사이(end-to-end) 로직을 수행하는 프로그램을 만들지 않는다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;세상은 점점 더 연결되고 있다. 시스템은 집합체이다. 시스템은 수많은 컴포넌트로 이루어지고 그러한 컴포넌트들 또한 시스템이 될 수 있다. 그것은 소프트웨어가 원활히 동작하기 위해서 다른 소프트웨어에 점점 더 의존하고 있다는 것을 의미한다.&lt;/p&gt;
+
+&lt;p&gt;오늘날 우리가 만드는 시스템은 작거나 큰, 적거나 많은, 서로 가깝거나 지구 반대편에 있는 컴퓨터에서 동작한다. 그리고 사람들의 삶이 원활하게 동작하는 시스템에 대한 의존성이 커져 그러한 사용자의 기대를 만족하게 하기 점점 더 힘들어지고 있다.&lt;/p&gt;
+
+&lt;p&gt;사용자 혹은 사업이 의존할 수 있는 시스템을 제공하기 위해서 시스템은 응답이 빨라야 한다. 만약 아무리 정확한 응답을 제공하더라도 그 응답이 필요한 시기에 제공되지 않는다면 그것은 아무 의미가 없기 때문이다. 빠른 응답성을 얻기 위해서 응답이 장애의 상황(복원성)에서도 유지되어야 하며 계속해서 변하는 부하(탄력성)에서도 유지되어야 한다. 이것이 가능하기 위해서 시스템은 &lt;em&gt;메시지 기반&lt;/em&gt; 이어야 하며 우리는 이것을 &lt;em&gt;리액티브 시스템&lt;/em&gt; 이라고 부른다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리액티브-시스템의-복원성&quot;&gt;리액티브 시스템의 복원성&lt;/h3&gt;
+&lt;p&gt;복원성은 장애가 발생한 상황에서의 &lt;em&gt;응답성&lt;/em&gt; 이며 시스템 고유의 기능적 속성이다. 이것은 어느 날 갑자기 적용할 것이 아니라 설계되어야 할 것이다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;복원성은 장애 허용(fault-tolerance)과는 다른 것이다. 이것은 장애 상황에서 우아하게 기능을 낮추는 것(degradation)에 대한 것이 아니며 장애의 상황에서 스스로 완벽히 복구되는 것을 의미한다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;복원성은 컴포넌트의 분리와 장애에 대한 억제가 필요하다. 이를 통해 장애가 주변 컴포넌트로 퍼져나가는 것을 피할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;스스로 복구하는 복원성을 가진 시스템의 핵심은 장애가 억제되며, 메시지로 구체화하고, 다른 (감독관(supervisor) 역할을 하는) 컴포넌트들에 전달되고 장애가 발생한 컴포넌트 밖의 안전한 곳에서 관리된다는 것이다. 메시지 기반이 그것을 가능하게 해준다. 모두가 겪거나 혹은 무시했던 강하게 연결된, 부서지기 쉬운, 깊게 중첩된 동기화 호출 체인에서 벗어날 수 있다. 호출 체인에서 장애 관리를 분리하여 서버의 장애 처리를 클라이언트에게 책임지게 하지 않는 것이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리액티브-시스템의-탄력성&quot;&gt;리액티브 시스템의 탄력성&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://www.reactivemanifesto.org/ko/glossary#Elasticity&quot;&gt;탄력성&lt;/a&gt; 은 부하의 상황에서의 &lt;em&gt;응답성&lt;/em&gt; 이다. 시스템의 처리량이 필요에 따라 자동으로 커지거나(scale up) 작아질 수(scale down) 있을 뿐만 아니라 (하나의 머신 안에서 코어를 추가하거나 빼는 것) 양적으로 늘어나거나(scale out) 줄어들 수(scale in) 있다(데이터 센터의 노드나 머신을 추가하거나 빼는 것). 이것은 시스템을 자원, 비용 효율적으로 만들며 환경친화적이고 사용한 만큼 지불하는 클라우드 컴퓨팅의 이점을 취하기 위한 필수 요소이다.&lt;/p&gt;
+
+&lt;p&gt;시스템은 적응력이 좋아야 한다. 중재 없는 자동 스케일링, 상태와 행동 복제, 통신의 로드 밸런싱, 장애복구와 업그레이드가 시스템을 다시 프로그래밍하거나 설정하지 않고 가능해야 한다. 이것을 가능하게 하는 것이 &lt;em&gt;위치 투명성&lt;/em&gt; 이다. 위치 투명성은 CPU 코어에서부터 데이터 센터에 이르기까지 모든 차원의 스케일링을 같은 방식으로 하는 능력이다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 선언문에 &lt;a href=&quot;http://www.reactivemanifesto.org/ko/glossary#Location-Transparency&quot;&gt;적힌 내용&lt;/a&gt; 을 보자.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;이 문제를 대단히 단순화하는 핵심 통찰력은 우리가 모두 분산 컴퓨팅을 수행하고 있다는 것을 깨닫는 것이다. 단일 노드 (QPI 링크를 통해 통신하는 여러 독립 CPU 포함) 또는 노드 클러스터 (네트워크를 통해 통신하는 독립적인 시스템)에서 시스템을 실행하든 상관없다. 이 사실을 받아들인다는 것은 멀티 코어에서 수직으로 확장하거나 클러스터에서 수평으로 확장하는 것이 개념적으로 차이가 없다는 것을 의미한다.
+비동기 메시지 기반(이벤트 기반과 대조)로 활성화된 공간 분리 (분리 (그리고 억제) 정의 참조)와 실행시간 인스턴스의 참조 분리는 우리가 위치 투명성이라고 부르는 것이다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;em&gt;수신자가 어디에 있던지 우리는 같은 방식으로 통신한다.&lt;/em&gt; 이것을 동일하게 수행할 수 있는 것은 메시지를 이용하는 방법밖에 없다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리액티브-시스템의-생산성&quot;&gt;리액티브 시스템의 생산성&lt;/h3&gt;
+&lt;p&gt;대부분 시스템은 본질적으로 집합체이기 때문에 가장 중요한 점 중 하나가 시스템 구조가 생산성을 저하에 최소한으로 영향을 미쳐야 한다는 것이다. 이것은 컴포넌트를 개발하는 것과 유지 보수하는 시점에 모두 적용되어야 하며 동시에 &lt;em&gt;우발적 복잡성(accidental complexity)&lt;/em&gt; 을 최소화해야 한다.&lt;/p&gt;
+
+&lt;p&gt;제대로 설계되지 않은 시스템은 라이프 사이클 안에서 유지 보수하기가 더욱 힘들어지고 문제점을 제한하고 수정하기 위해 이해하는 시간과 노력의 양이 증가하기 때문에 중요하다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 시스템은 우리가 아는 한 (멀티코어, 클라우드, 모바일 구조에서) 가장 생산적인 시스템 구조이다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;장애를 고립하는 것은 컴포넌트 사이에 &lt;a href=&quot;http://skife.org/architecture/fault-tolerance/2009/12/31/bulkheads.html&quot;&gt;격벽&lt;/a&gt;을 제공하며, 장애의 범위를 제한하여 장애가 전파되는 것을 막을 수 있다.&lt;/li&gt;
+  &lt;li&gt;감독관(supervisor) 계층 구조는 자가 복구 능력과 함께 여러 수준의 방어 체계를 제공하므로 관찰에 대한 비용을 들이지 않고 수많은 일시적 장애의 상당 부분을 없앨 수 있다.&lt;/li&gt;
+  &lt;li&gt;메시지 전달과 위치 투명성은 최종 사용자에게 영향을 미치지 않고 컴포넌트가 오프라인이되거나 교체 혹은 경로를 변경할 수 있도록 해준다. 이를 통해 중단 비용, 상대적 긴급성, 진단 및 수정에 필요한 자원을 줄일 수 있다.&lt;/li&gt;
+  &lt;li&gt;복제는 데이터 손실 위험을 줄일 수 있고 장애가 정보 검색 및 저장에 미치는 영향을 줄여준다.&lt;/li&gt;
+  &lt;li&gt;탄력성은 사용량의 변화에 따라 자원을 절약할 수 있다. 그러므로 부하가 적을 때 운영 비용을 최소화할 수 있고 부하가 증가할 때 중단되는 상황이나 긴급한 확장에 대한 위험을 최소화할 수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://d3gnpvjw8j16uq.cloudfront.net/assets/images/whitepaper/rprs/de51ae68bdc765b37cfbeb55bef96e3c-bulkhead.jpg&quot; alt=&quot;타이타닉에서 제대로 사용되진 못했지만, 격벽은 조선 사업에서 장애가 전파되어 다른 기능에 영향을 끼치는 것을 막기 위해 오래전부터 사용됐다.&quot; /&gt;
+&lt;em&gt;타이타닉에서 제대로 사용되진 못했지만, 격벽은 조선 사업에서 장애가 전파되어 다른 기능에 영향을 끼치는 것을 막기 위해 오래전부터 사용됐다.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;그래서 리액티브 시스템은 유지 비용이 적게 들며 언제나 장애, 다양한 부하, 변경사항에 대해서 효과적으로 대처할 수 있는 시스템을 제공한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리액티브-프로그래밍과-리액티브-시스템은-어떤-관계가-있는가&quot;&gt;리액티브 프로그래밍과 리액티브 시스템은 어떤 관계가 있는가?&lt;/h3&gt;
+&lt;p&gt;리액티브 프로그래밍은 컴포넌트 안에서 내부 로직과 데이터 흐름의 변경을 관리하기 위한 훌륭한 기법이다. 또한 코드를 명확하게 하고 성능과 자원 효율성을 최적화할 방법이다. 리액티브 시스템은 설계 원칙의 집합으로 분산 통신에 특화되어 있으며 분산 시스템에서 복원력과 탄력성을 유지할 수 있는 도구를 제공한다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 프로그래밍에서 흔히 발생하는 문제 중 하나는 이벤트 기반 콜백 혹은 선언적 프로그램에서 연산 단계들이 긴밀하게 연결되어 &lt;em&gt;복원성&lt;/em&gt; 을 얻기 힘들게 만든다는 것이다. 이것은 데이터를 변형하는 체인의 수명이 짧고 콜백이나 결합자(combinator)가 익명 즉 주소로 지정할 수 없기 때문이다.&lt;/p&gt;
+
+&lt;p&gt;이것은 &lt;em&gt;외부&lt;/em&gt; 에 &lt;em&gt;신호&lt;/em&gt; 를 보내지 않고 성공이나 실패를 관리한다는 것을 의미한다. 주소가 없으면 예외를 어디로 전파해야 하는지가 불분명해져 개별적인 복구가 어려워진다. 그 결과로 장애는 컴포넌트의 전반적인 상태가 아닌 수명이 짧은 고객의 요청에 묶이게 된다. 만약 데이터 흐름 체인의 한 단계에서 실패하면 전체 체인이 다시 실행돼야 하며 클라이언트에게 영향을 미친다. 이것은 클라이언트에게 알리지 않고 자가 회복이 가능한 리액티브 시스템의 메시지 기반과 반대되는 것이다.&lt;/p&gt;
+
+&lt;p&gt;순수한 리액티브 프로그래밍이 리액티브 시스템의 접근 방식과 반대되는 또 다른 하나는 공간 분리가 아닌 시간 분리라는 것이다.(앞 서 이야기한 것처럼 네트워크 통신으로 데이터 흐름을 분산하여 메시지를 전달하지 않는 한에서이다)&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;시간으로부터 분리되는 것은 동시성을 제공하지만 공간에서 분리되는 것은 정적인 상황뿐만 아니라 동적인 토폴러지에서 분산성과 이동성을 제공한다. 이것은 탄력성을 이루기 위해 필수적이다.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;위치 투명성의 부재는 순수하게 리액티브 프로그래밍 기법에 기반을 둔 프로그램을 탄력적으로 스케일 아웃하기 어렵게 만든다. 그러므로 그 위에 Message Bus, Data Grid, bespoke network protocols와 같은 추가적인 계층이 필요하다. 여기서 리액티브 시스템의 메시지 기반 방식이 빛을 발한다. 이것은 프로그래밍 모델과 의미를 모든 차원의 스케일에서 유지할 수 있게 해주는 통신 추상화이기 때문에 시스템 복잡도와 시스템 파악을 위한 오버헤드를 줄일 수 있다.&lt;/p&gt;
+
+&lt;p&gt;콜백 기반의 프로그래밍에서 일반적으로 언급되는 문제로 콜백 기반의 프로그램을 작성하기는 비교적 쉽지만 오랫동안 실행해보아야 실질적인 결과를 알 수 있다는 것이다.&lt;/p&gt;
+
+&lt;p&gt;예를 들어 익명 콜백을 기반으로 하는 시스템은 그것들에 대해 고민하고 유지하고 무엇보다 어디서 왜 제품이 멈추고 오동작이 발생하는지 알기 힘들다.&lt;/p&gt;
+
+&lt;p&gt;(&lt;a href=&quot;http://akka.io/?_ga=1.260209229.1795006149.1484680016&quot;&gt;Akka&lt;/a&gt; 프로젝트나 &lt;a href=&quot;https://www.erlang.org/&quot;&gt;Erlang&lt;/a&gt; 플랫폼 같은) 리액티브 시스템을 위해 설계된 라이브러리와 플랫폼은 오래전에 이러한 교훈을 얻었고 오랜 시간이 지나도 알기 쉬운 수명이 길고 주소가 지정 가능한 컴포넌트들을 사용하고 있다. 장애가 발생했을 때 장애를 발생시킨 메시지와 함께 컴포넌트를 고유하게 식별할 수 있다. 모니터링 솔루션은 컴포넌트 모델의 핵심인 주소 지정 가능성이라는 개념을 통해 전파되는 ID를 활용하여 수집된 데이터를 제공하는 의미 있는 방법을 제공한다.&lt;/p&gt;
+
+&lt;p&gt;주소지정 가능성과 장애 관리와 같은 기능을 수행하는 좋은 프로그래밍 패러다임을 선택하는 것은 운영에 도움이 된다는 것이 증명되었다. 이것은 현실의 가혹함을 염두에 두고 설계되었고 장애를 막으려고 시도하는 과정에서 원인을 찾지 못하는 것보다는 장애를 예상하고 받아들일 수 있도록 한다.&lt;/p&gt;
+
+&lt;p&gt;전체적으로 리액티브 프로그래밍은 리액티브 아키택쳐에서 사용될 수 있는 굉장히 유용한 기법이다. 이것은 전체 모든 것 중 오직 비동기와 논 블로킹 실행을 통해 데이터 흐름을 관리하는 한 부분에만 도움이 된다는 것을 기억해야 한다. 이것은 대개 한 노드나 서비스 안에서 이야기이다. 노드가 다수가 될 때부터 데이터 일관성, 노드 간 통신, 조정, 버전 관리, 오케스트레이션, 장애 관리, 관심과 책임의 분리와 같은 시스템 아키텍쳐에 대해 진지하게 생각해봐야 한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://d3gnpvjw8j16uq.cloudfront.net/assets/images/whitepaper/rprs/d7fe10c1371b513b88c9588fb3b74fa4-complex-reactive-systems.jpg&quot; alt=&quot;리액티브 프로그래밍은 한 노드나 서비스 안에서 비동기와 논블로킹 데이터 흐름 관리에 중점을 두는 반면 복잡한 리액티브 시스템 아키텍쳐는 노드와 클러스터에서 다수의 서비스를 성공적으로 배포하는 데 훨씬 더 많은 것을 필요로 한다.&quot; /&gt;
+&lt;em&gt;리액티브 프로그래밍은 한 노드나 서비스 안에서 비동기와 논블로킹 데이터 흐름 관리에 중점을 두는 반면 복잡한 리액티브 시스템 아키텍쳐는 노드와 클러스터에서 다수의 서비스를 성공적으로 배포하는 데 훨씬 더 많은 것을 필요로 한다.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;그래서 리액티브 프로그래밍의 가치를 최대화하기 위해서는 리액티브 시스템을 만드는 도구의 하나로 사용해야 한다. 리액티브 시스템을 구축하기 위해서는 OS 고유의 자원을 추상화하고 기존에 존재하는 래거시 소프트웨어 스택 위에 약간의 비동기 API와 &lt;a href=&quot;https://martinfowler.com/bliki/CircuitBreaker.html&quot;&gt;Circuit Breakers&lt;/a&gt;를 구축하는 것 이상이 필요하다. 우리가 구축하는 것은 다수의 서비스를 결합하는 분산형 시스템이라는 사실을 알아야 한다. 예상한 대로 동작하는 것뿐만 아니라 장애와 예상치 못한 부하를 직면했을 때도 일관적이고 빠르게 응답하는 경험을 제공해야 한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리액티브-프로그래밍과-시스템이-어떻게-빠른-데이터-스트리밍과-관련되어-있는가&quot;&gt;리액티브 프로그래밍과 시스템이 어떻게 빠른 데이터 스트리밍과 관련되어 있는가?&lt;/h3&gt;
+&lt;p&gt;사용자의 관점에서 빠른 데이터 스트리밍(분산된 스트림 처리)&lt;a href=&quot;#6&quot;&gt;[6]&lt;/a&gt;는 일반적으로 지역적인 스트림 기반의 이벤트 기반으로 함수형 결합자나 콜백과 같은 리액티브 프로그래밍을 사용하는 최종 사용자 API 추상화를 제공한다.&lt;/p&gt;
+
+&lt;p&gt;최종 사용자 API 아래에서 이것은 대체로 메시지 전달을 사용하며 노드 간의 스트림 처리 단계의 분산 시스템, 내구성 있는 이벤트 로그, 복제 프로토콜(replication protocols)을 지원하는 리액티브 시스템의 원칙을 사용한다. 이러한 부분은 보통 개발자에게 드러나 있지 않다. &lt;em&gt;리액티브 프로그래밍&lt;/em&gt; 을 사용자 수준에서 사용하고 &lt;em&gt;리액티브 시스템&lt;/em&gt; 을 시스템 수준에서 사용하는 좋은 예이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리액티브-프로그래밍과-리액티브-시스템이-마이크로서비스와-어떤-관계가-있는가&quot;&gt;리액티브 프로그래밍과 리액티브 시스템이 마이크로서비스와 어떤 관계가 있는가?&lt;/h3&gt;
+&lt;p&gt;자율&lt;a href=&quot;#7&quot;&gt;[7]&lt;/a&gt; 분산 서비스에 대한 시스템을 설계하는 마이크로서비스 기반의 아키텍처는 주로 클라우드를 배포 플랫폼으로 한다. 이러한 시스템에서 리액티브를 이용할 경우 많은 이점을 가질 수 있다.&lt;/p&gt;
+
+&lt;p&gt;우리가 봐온 것처럼 &lt;em&gt;리액티브 프로그래밍&lt;/em&gt; 과 &lt;em&gt;리액티브 시스템&lt;/em&gt; 은 다른 상황에서 다른 이유로 중요하다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;리액티브 프로그래밍은 &lt;em&gt;하나의&lt;/em&gt; 마이크로 서비스 안에서 서비스 내부 로직과 데이터 흐름 관리를 구현하는 데 사용된다.&lt;/li&gt;
+  &lt;li&gt;리액티브 시스템 설계는 마이크로 서비스 &lt;em&gt;사이&lt;/em&gt; 에서 사용되며 마이크로 서비스들이 분산 시스템의 규칙에 따라 동작하도록 한다. 메시지 기반으로 만들어진 복원성과 탄력성을 통해 반응성을 제공한다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;리액티브-프로그래밍과-시스템이-모바일-애플리케이션과-사물인터넷iot와-어떠한-관계가-있는가&quot;&gt;리액티브 프로그래밍과 시스템이 모바일 애플리케이션과 사물인터넷(IoT)와 어떠한 관계가 있는가?&lt;/h3&gt;
+&lt;p&gt;사물인터넷(IoT)은 디바이스에서 생성한 수많은 데이터들이 탐색, 결합, 분석되어 다시 디바이스로 돌려보내야 하는 상황에서 서로 연결된 디바이스들을 어떻게 다룰 것인가에 대한 과제들을 만들어 냈다. 이것들은 항상 반응성을 유지하는 시스템에서 이루어져야 한다. 이러한 과제들은 센서 데이터를 받는 도중에 쏟아지는 데이터를 관리하는 것을 포함해서 수많은 양의 데이터를 일괄처리하거나 실시간으로 처리하는 것, 그리고 실제 사용 패턴을 시뮬레이션하는 값비싼 연산을 수행하는 것이 포함된다. 일부 IoT 배포는 디바이스에서 보낸 데이터를 처리하는 것뿐만 아니라 디바이스 관리를 위한 백엔드 서비스가 필요하다.&lt;/p&gt;
+
+&lt;p&gt;잠재적으로 수만 대의 장비가 연결되는 서비스를 만들 때 스케일링할 수 있는 데이터 흐름이 가능한 모델이 필요하다. 데이터 손실이나 서비스 장애와 같은 일들이 발생하기 때문에 디바이스의 장애를 처리하는 전략도 필요하다. 백엔드 시스템은 필요에 따라 스케일링할 수 있어야 하며 복원성을 제공해야 한다. 한마디로 &lt;em&gt;리액티브 시스템&lt;/em&gt; 이 필요하다.&lt;/p&gt;
+
+&lt;p&gt;IoT 백엔드에서 일반적으로 발생하는 일로 수많은 센서에서 발생하는 데이터의 속도를 맞출 수 없다면 장비와 센서를 위한 역압을 구현할 필요가 있다. 엄청난 수의 장비를 사용하는 IoT 시스템의 종단 간 데이터 흐름을 본다면 데이터 저장, 정제, 처리, 분석을 막힘없이 수행해야 한다. 이를 위해서는 비동기, 논 블로킹, 역압을 지원하는 스트림이 필요하며 이 때가 &lt;em&gt;리액티브 프로그래밍&lt;/em&gt; 이 빛나는 순간이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;리액티브-프로그래밍과-시스템이-전통적인-웹-애플리케이션과-어떤-관계가-있는가&quot;&gt;리액티브 프로그래밍과 시스템이 전통적인 웹 애플리케이션과 어떤 관계가 있는가?&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;리액티브 프로그래밍&lt;/em&gt; 방식의 웹 애플리케이션은 큰 이점을 가질 수 있다. 서비스 요청을 받고 자원을 비동기적으로 할당한 뒤 응답을 결합하고 바로 클라이언트에게 보내는 것처럼 요청-응답 작업 흐름을 결합할 수 있게 한다. 최근 서버 푸시 방식의 Server-Sent Events와 Websocket의 사용이 증가하고 있다. 그리고 이것을 스케일링 되는 서비스에서 사용하 기 위해서는 많은 커넥션을 효과적으로 관리할 필요가 있으며 IO가 블로킹 되지 않아야 한다. &lt;em&gt;리액티브 프로그래밍&lt;/em&gt; 에서 특히 스트림과 퓨처(Future)는 이때 좋은 도구가 될 수 있다. 이들은 논 블로킹과 비동기 변형을 가능하게 해주며 그 결과를 클라이언트에 푸시해준다. &lt;em&gt;리액티브 프로그래밍&lt;/em&gt; 은 데이터 접근 계층에서도 유용하다. 비동기 드라이버를 이용하여 SQL 혹은 NoSQL 업데이트와 쿼리를 효율적으로 할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;웹 애플리케이션은 &lt;em&gt;리액티브 시스템&lt;/em&gt; 설계에서도 이점이 있다. 분산 캐시, 데이터 일관성, 노드간 알림 등이 그 장점들이다. 전통적인 웹 애플리케이션은 보통 상태가 없는 노드를 사용한다. 하지만 Server-Sent-Events(SSE)와 WebSocket을 사용하기 시작하면 노드는 상태를 가지게 된다. 적어도 노드들은 클라이언트의 연결에 대한 상태를 가지며 알림을 직접 푸시한다. 이것을 효율적으로 수행하기 위해서는 주소를 가진 수신자에게 바로 메시지를 보내는 것이 중요하기 때문에  &lt;em&gt;리액티브 시스템&lt;/em&gt; 설계가 필요하다.&lt;/p&gt;
+
+&lt;h3 id=&quot;요약-1&quot;&gt;요약&lt;/h3&gt;
+&lt;p&gt;기업 및 미들웨어 벤더사들은 리액티브를 사용하기 시작했다. 2016년에는 리액티브 채택에 대한 기업의 관심이 많이 증가했다. 이 글에서 우리는 리액티브 프로그래밍은 중요한 도구이며 기업들에게 리액티브 시스템이 멀티코어, 클라우드, 모바일 구조에서 종착지라고 묘사했다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 프로그래밍은 컴포넌트 수준에서 내부 로직과 데이터 흐름 변형에 대한 성능과 자원 효율성을 통해 개발자에게 생산성을 제공한다. 반면 리액티브 시스템은 “클라우드 네이티브” 와 다른 대규모의 분산 시스템을 구성하는 시스템 수준에서 복원성과 탄력성을 통해 아키텍트와 데브옵스에게 생산성을 제공한다. 우리는 리액티브 시스템의 설계 원칙안에서 리액티브 프로그래밍 기법을 사용하기를 권장한다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a name=&quot;1&quot;&gt;&lt;/a&gt;1: 일반적으로 파일 시스템과 같은 OS 기능에 의존하지 않고 설정 가능한 엔드포인트를 사용하여 클라우드와 같은 가상화된 환경에서 실행할 수 있는 애플리케이션을 나타낸다.&lt;/li&gt;
+  &lt;li&gt;&lt;a name=&quot;2&quot;&gt;&lt;/a&gt;2: FRP의 창시자인 Conal Elliott의 &lt;a href=&quot;https://begriffs.com/posts/2015-07-22-essence-of-frp.html&quot;&gt;발표&lt;/a&gt; 에 따르면&lt;/li&gt;
+  &lt;li&gt;&lt;a name=&quot;3&quot;&gt;&lt;/a&gt;3: &lt;a href=&quot;https://en.wikipedia.org/wiki/Amdahl%27s_law&quot;&gt;Amdahl의 법칙&lt;/a&gt;은 시스템의 이론적인 속도 향상은 직렬화된 부분에 제한된다는 것을 보여준다. 이것은 새로운 자원이 추가될 때 시스템이 취할 수 있는 이점이 줄어든다는 것을 의미한다.&lt;/li&gt;
+  &lt;li&gt;&lt;a name=&quot;4&quot;&gt;&lt;/a&gt;4: Neil Günter의 &lt;a href=&quot;http://www.perfdynamics.com/Manifesto/USLscalability.html&quot;&gt;Universal Scalability Law&lt;/a&gt;은 동시성과 분산 시스템에서 경쟁과 조정의 효과를 이해하기 위한 필수적인 도구이다. 이것은 시스템의 일관성(coherency) 비용이 새로운 자원이 시스템에 추가될 때 부정적인 결과를 초래할 수 있다는 것을 보여준다.&lt;/li&gt;
+  &lt;li&gt;&lt;a name=&quot;5&quot;&gt;&lt;/a&gt;5: 메시징은 동기일 수도 있고(송신자와 수신자가 동시에 사용 가능해야 함) 비동기일 수도 있다(송신자와 수신자가 시간상으로 분리됨). 그것의 의미적인 차이를 논하는 것은 이 글의 범위에서 벗어난다.&lt;/li&gt;
+  &lt;li&gt;&lt;a name=&quot;6&quot;&gt;&lt;/a&gt;6: 예를 들어 Spark Streaming, Flink, Kafka Streams, Beam, Gearpump를 사용하는 것.&lt;/li&gt;
+  &lt;li&gt;&lt;a name=&quot;7&quot;&gt;&lt;/a&gt;7: 자율(autonomous)의 기원은 자신(self)을 뜻하는 그리스어 auto와 법(law)을 뜻하는 nomos이다. 즉 에이전트는 자신의 규칙에 따라 살아간다. 스스로 관리하며 독립적이다.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        
+          <description>&lt;p&gt;본 글은 &lt;a href=&quot;https://www.lightbend.com/&quot;&gt;Lightbend&lt;/a&gt;사의 Jonas Bonér와 Viktor Klang가 작성한 &lt;a href=&quot;https://www.lightbend.com/reactive-programming-versus-reactive-systems&quot;&gt;Reactive Programming versus Reactive Systems- Landing on a set of simple Reactive design principles in a sea of constant confusion and overloaded expectations&lt;/a&gt;을 번역한 것입니다.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 05 Feb 2017 00:00:00 +0000</pubDate>
+        <link>http://blog.lespinside.com/reactive-programming-versus-reactive-systems/</link>
+        <guid isPermaLink="true">http://blog.lespinside.com/reactive-programming-versus-reactive-systems/</guid>
+        
+        
+      </item>
+      
+    
+      
+      <item>
+        <title>리액티브하게 리팩토링하기 - JDBC 마이그레이션 해부</title>
+        <description>&lt;p&gt;본 글은 &lt;a href=&quot;https://www.infoq.com/author/Nicolae-Marasoiu&quot;&gt;Nicolae Marasolu&lt;/a&gt;의 &lt;a href=&quot;https://www.infoq.com/articles/Refactoring-Reactive-JDBC&quot;&gt;Refactoring to Reactive - Anatomy of a JDBC migration&lt;/a&gt;를 번역한 것입니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;핵심-요약&quot;&gt;핵심 요약&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;리액티브 프로그래밍은 러닝 커브가 있으며 완전한 이해를 위해서 경험, 연습 그리고 열린 마음이 필요하다.&lt;/li&gt;
+  &lt;li&gt;어떠한 애플리케이션이든 점진적으로 리액티브 프로그래밍을 도입할 수 있다.&lt;/li&gt;
+  &lt;li&gt;리액티브 프로그래밍과 Netty와 같은 논 블로킹 라이브러리들은 확장성과 탄력성을 증가시키고 개발, 운영 비용을 낮춘다.(자세한 내용은 &lt;a href=&quot;http://www.reactivemanifesto.org/&quot;&gt;리액티브 선언문&lt;/a&gt; 참고 - &lt;a href=&quot;/the-reactive-manifesto/&quot;&gt;번역&lt;/a&gt;)&lt;/li&gt;
+  &lt;li&gt;퓨처 값의 스트림을 다른 퓨처 스트림으로 변형하는 것은 강력한 프로그래밍 패러다임이며 연습에 따른 큰 보상이 따른다.&lt;/li&gt;
+  &lt;li&gt;결합성은 함수형 프로그래밍의 특징이다. 이 글에서 우리는 Observable의 flatMap 연산자를 이용한 모나드 결합을 살펴본다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;리액티브 프로그래밍은 최근에 등장하여 동시성 관리와 흐름 제어와 같은 프로그래밍에서 가장 어려운 개념들에 대한 해결책을 제공하고 있다. 당신이 만약 리액티브를 사용하지 않는 애플리케이션 개발팀에서 일하고 있다면 이것은 좋은 기회이다. 리액티브 프로그래밍을 어떻게 시작할 수 있을지, 어떻게 테스트할지, 단계별로 도입할 수 있을지와 같은 궁금증이 생길 것이다.&lt;/p&gt;
+
+&lt;p&gt;이 글에서 우리는 (웹서버와 데이터베이스 백엔드를 가지는 고전적인) 실제 레거시 애플리케이션을 리액티브 모델로 변경할 것이다. 이러한 변경은 3가지 이점을 가진다.&lt;/p&gt;
+
+&lt;p&gt;a. 함수형 방식으로 일하는 것은 코드를 결합할 수 있도록 하여 코드를 재사용하게 하고 높은 추상화, 불변성, 플루언트(fluent, 유창한) 형태로 가독성을 높일 수 있다. 예를 들어 &lt;code class=&quot;highlighter-rouge&quot;&gt;Function&amp;lt;T,Observable&amp;lt;U&amp;gt;&amp;gt;&lt;/code&gt;는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&lt;/code&gt;의 &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;과 같은 연산자를 이용하여 비슷한 여러 함수를 연결할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;b. 탄력성이 높은 서버를 구축할 수 있다. 실행해야 할 코드들을 스레드 풀의 대기열에 대기시키지 않고 동시에 실행할 수 있도록 하여 서버가 실제 사용 가능한 스레드보다 더 많은 동시 사용자를 유지할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;우리는 데이터베이스에서 데이터를 조회하는 동안 스레드를 대기시키는 방식이 아닌 데이터 덩어리를 받아올 때마다 애플리케이션이 반응하도록 하여 위 내용을 구현할 것이다. 이것은 풀 방식(블로킹 I/O)에서 푸시 방식으로 변형하는 것이다. 푸시 방식은 데이터가 사용 가능할 때나 시간 초과, 예외와 같은 어떠한 이벤트가 발생할 때마다 실행하도록 하는 것이다.&lt;/p&gt;
+
+&lt;p&gt;c. 데이터베이스에서 첫 바이트가 반환되는 순간 브라우저에 업데이트될 수 있도록 하여 더 반응성이 높은 애플리케이션을 개발할 수 있다. 이것은 서블릿 3.1의 스트리밍 API로 구현 가능하며 스프링 Reactor와 연관된 스프링 스택의 웹 확장 라이브러리들로 가능해질 것이다.&lt;/p&gt;
+
+&lt;p&gt;이 글의 예제는 &lt;a href=&quot;https://github.com/nmarasoiu/Spring-JDBC/tree/pgasync&quot;&gt;링크&lt;/a&gt;에서 받을 수 있다.&lt;/p&gt;
+
+&lt;p&gt;우리는 점진적 리팩토링을 사용하여 작은 단계로 우리 프로그램에 리액티브를 적용하려고 한다.&lt;/p&gt;
+
+&lt;p&gt;시작하기에 앞서 레거시 애플리케이션에 대한 테스트를 작성하자. 우리는 이 테스트에 의존하여 우리가 함수형으로 리액티브하게 변경한 프로그램이 올바르게 동작하는지 확인할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;테스트가 완성되었다면 첫 번째 리팩토링을 진행해보자. 메서드의 반환형을 RxJava에 있는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;Single&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;Completable&lt;/code&gt;으로 변경한다. 특히 &lt;code class=&quot;highlighter-rouge&quot;&gt;T&lt;/code&gt; 타입의 값을 하나만 반환할 경우 &lt;code class=&quot;highlighter-rouge&quot;&gt;Single&amp;lt;T&amp;gt;&lt;/code&gt;를 반환할 수 있다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Single&amp;lt;T&amp;gt;&lt;/code&gt;는 정확하게 하나의 값이나 에러를 반환하는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;T&amp;gt;&lt;/code&gt; 이다. &lt;code class=&quot;highlighter-rouge&quot;&gt;List&amp;lt;T&amp;gt;&lt;/code&gt;의 경우 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;T&amp;gt;&lt;/code&gt;로 변경할 수 있고 &lt;code class=&quot;highlighter-rouge&quot;&gt;void&lt;/code&gt; 메서드는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Completable&lt;/code&gt;으로 변경한다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Completable&lt;/code&gt;은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Single&amp;lt;Void&amp;gt;&lt;/code&gt;로 전환할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;모든 계층의 메서드를 전부 변경하는 것 보다는 한 계층만 선택하여 진행해보도록 하자. &lt;code class=&quot;highlighter-rouge&quot;&gt;T&lt;/code&gt;를 &lt;code class=&quot;highlighter-rouge&quot;&gt;Sinlge&amp;lt;T&amp;gt;&lt;/code&gt;로 &lt;code class=&quot;highlighter-rouge&quot;&gt;List&amp;lt;T&amp;gt;&lt;/code&gt;를 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;T&amp;gt;&lt;/code&gt;로 &lt;code class=&quot;highlighter-rouge&quot;&gt;void&lt;/code&gt;를 &lt;code class=&quot;highlighter-rouge&quot;&gt;Completable&lt;/code&gt;으로 변경하는 것을 외부에 알려진 메서드에 적용할 필요는 없다. 메서드의 기존 시그니처를 변경하는 대신 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;T&amp;gt;&lt;/code&gt;를 반환하는 새로운 위임 메서드를 구현하자. (기존 메서드 시그니처를 유지하는) 위임 메서드는 observable의 &lt;code class=&quot;highlighter-rouge&quot;&gt;toBlocking&lt;/code&gt;을 호출하여 값을 반환하기 전까지 기존의 동기 방식을 강제하도록 한다. 가능한 작은 부분에서 시작하는 것은 러닝 커브를 극복하고 꾸준하게 점진적으로 진행할 수 있도록 도와주는 훌륭한 마이그레이션 전략이다. RxJava를 사용하여 점진적인 리팩토링을 적용해보자.&lt;/p&gt;
+
+&lt;p&gt;구체적인 예제를 보자. &lt;a href=&quot;https://github.com/nmarasoiu/Spring-JDBC&quot;&gt;이곳&lt;/a&gt;에서 모든 코드와 히스토리를 볼 수 있다. 나는 &lt;a href=&quot;https://github.com/tkssharma/Spring-JDBC&quot;&gt;tkssharma/Spring-JDBC&lt;/a&gt;의 고전적인 스프링 애플리케이션을 RxJava로 변경하는데 두가지 방식을 사용하였다. (rx-jdbc 브랜치에 있는) RxJDBC 라이브러리를 이용하는 것과 (pgasync 브랜치에 있는) pgasync 라이브러리를 이용하는 것이다. Spring-JDBC 프로젝트에 있는 다음 메서드를 보자 :&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getStudents&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getStudent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;studentId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위에서 이야기 한 마이그레이션 전략에 따라 메서드 시그니처를 유지하고 구현에 약간의 변화를 줄 것이다 :&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getStudents&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getStudentStream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;toList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;toBlocking&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;single&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;추가적인 계층를 도입하였다:&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getStudentStream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Single&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getStudent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;studentId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;계층 구현:&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getStudentStream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;students&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getStudentsViaJDBC&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;from&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;students&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;getStudentsViaJDBC&lt;/code&gt;이 최초의 구현이다.&lt;/p&gt;
+
+&lt;p&gt;우리는 기존의 리액티브가 아닌 시그니처를 유지한 상태로 리액티브 계층을 도입하였다. 그리고 원래의 구현을 새로운 리액티브 호출로 교체한 것이다. 우리는 데이터 접근 계층에 대해 몇 차례 수정을 더 할 것이다. 그리고 컨트롤러 계층으로 리액티브를 옮겨 가서 최종적인 목표는 전체적으로 리액티브한 시스템을 만드는 것이다.
+&lt;code class=&quot;highlighter-rouge&quot;&gt;Observable.toBlocking&lt;/code&gt;은 기존 세상과 리액티브 세상을 연결하는 다리 역할을 한다. 이것은 서블릿과 JDBC를 양쪽 끝단으로 사용하는 대형 시스템의 고전적인 코드에 (API만이라도) 리액티브 코드를 적용하는 데 필요하다. 서블릿과 JDBC 양쪽 끝을 리액티브로 변경하기 전까지 우리는 이 메서드가 필요하다.&lt;/p&gt;
+
+&lt;p&gt;물론 리팩토링이 끝나면 동기 방식의 &lt;code class=&quot;highlighter-rouge&quot;&gt;toBlocking&lt;/code&gt; 요청은 비동기 방식의 리액티브 패러다임에 부합하지 않으므로 최종 운영 코드에서는 해당 호출을 제거할 것이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;List&amp;lt;Student&amp;gt; getStudents()&lt;/code&gt;라는 메서드가 있다고 해보자. &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;Student&amp;gt; getStudentStream()&lt;/code&gt;이라는 새로운 메서드를 생성하여 앞서 말한 메서드의 구현을 옮길 수 있다. 이때 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable.from(Iterable)&lt;/code&gt;을 이용하면 결과 리스트를 Observable로 감쌀 수 있다. 기존의 메서드는 새로운 메서드를 호출할 것이고 &lt;code class=&quot;highlighter-rouge&quot;&gt;studentStream.toList().toBlocking().single()&lt;/code&gt;를 통해 다시 &lt;code class=&quot;highlighter-rouge&quot;&gt;List&lt;/code&gt;로 변경된다. 이것은 블로킹 호출이지만 이미 &lt;code class=&quot;highlighter-rouge&quot;&gt;getStudentStream&lt;/code&gt;이 블로킹이기 때문에 현시점에서는 괜찮다.&lt;/p&gt;
+
+&lt;p&gt;리액티브를 배우는 데 가장 큰 어려움은 Observable의 관점으로 생각하는 것이다. 리스트가 (Observable과 같은) 스트림이 된다는 것은 직관적으로 알 수 있을 것이다. 하지만 개별적인 값에 이 개념을 적용하는 것은 직관적이지 않다. 이를 개념화하기 위해 전통적인 자바의 Future를 생각해보자. Future는 이후에 발생하는 값들을 받아올 수 있는 스트림 중에서 하나의 값을 가지고 있거나 어떠한 값도 가져올 수 없어 에러가 발생하는 특정한 경우로 볼 수 있다.&lt;/p&gt;
+
+&lt;p&gt;첫 번째 단계에서는 실행 특성을 변경하지 않고 반환형을 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&lt;/code&gt;로 감쌌다. 이는 여전히 동기화 방식이고 JDBC처럼 블로킹 I/O를 수행한다.&lt;/p&gt;
+
+&lt;p&gt;우리의 리팩토링 중 &lt;code class=&quot;highlighter-rouge&quot;&gt;List&amp;lt;Student&amp;gt; getStudents()&lt;/code&gt;의 시그니처를 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;Student&amp;gt; getStudents()&lt;/code&gt;로 변경하는 한 단계가 끝나간다. 흥미로운 점은 한 명의 학생을 반환하는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Student getStudent()&lt;/code&gt; 메서드도 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;Student&amp;gt; getStudent()&lt;/code&gt; 혹은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Single&amp;lt;Student&amp;gt; getStudent()&lt;/code&gt;로 리팩토링된다는 것이다. 나아가 &lt;code class=&quot;highlighter-rouge&quot;&gt;void&lt;/code&gt; 메서드는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Completable&lt;/code&gt;을 반환하는 메서드로 변경된다. 리액티브 패러다임은 위에서 시작하여 아래로 적용해 나갈 수 있다. 프로그램의 크고 작은 일부분을 리액티브 API로 감싼 다음 비동기 방식이나 논 블로킹 I/O가 필요한 곳에서 세분화하여 적용하는 방식이다.&lt;/p&gt;
+
+&lt;p&gt;새로운 시그니처를 구현하기 위해 &lt;code class=&quot;highlighter-rouge&quot;&gt;studentList&lt;/code&gt;를 반환하는 대신 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable.just(studentList)&lt;/code&gt;를 반환하도록 한다.&lt;/p&gt;
+
+&lt;p&gt;이 시점에 우리는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&lt;/code&gt;을 몇 군데 도입했다. 하지만 단순히 리스트를 감싸거나 푸는 것 외에는 기본적으로 변경된 것이 없다. 하지만 이것은 우리의 코드를 결합 가능하게 만는다는 점에서 중요하다. 그리고 우리는 이제 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&lt;/code&gt;의 강력한 기능인 느긋한 계산법(lazy evaluation)을 사용할 준비가 되었다. 느긋한 계산법은 자바 스트림에서도 사용할 수 있다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable.just(studentList)&lt;/code&gt;를 반환하는 대신 아래와 같이 반환하자.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;defer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+   &lt;span class=&quot;o&quot;&gt;()-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;just&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;actuallyProduceStudentsViaTripToDatabase&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;actuallyProduceStudentsViaTripToDatabase&lt;/code&gt;은 우리가 처음에 봤던 &lt;code class=&quot;highlighter-rouge&quot;&gt;List&amp;lt;Student&amp;gt;&lt;/code&gt;를 반환하는 래거시 메서드이다. 이것을 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable.defer&lt;/code&gt; 혹은 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable.fromCallable&lt;/code&gt;로 감싸는 것으로 우리는 느긋한(lazy) Observable를 생성할 수 있다. 느긋한 Observable은 구독자(subscriber)가 해당 데이터를 구독하는 그 순간 데이터베이스로 질의를 보낸다.&lt;/p&gt;
+
+&lt;p&gt;지금까지는 데이터 접근계층 API만 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&lt;/code&gt;을 반환하도록 수정하였다. 컨트롤러 메서드는 아직 변경하지 않았다. 그렇기 때문에 컨트롤러 메서드는 observable을 소비(구독)하기 위해 같은 스레드에서 동기 I/O로 결과를 기다려야만 한다. 하지만 이 글에서 우리의 목표는 전체적으로 비동기 처리를 적용하는 것이므로 컨트롤러 메서드 또한 (탬플릿이 랜더링되는 시점에 데이터가 이미 사용 가능한) &lt;code class=&quot;highlighter-rouge&quot;&gt;Result&lt;/code&gt;를 반환하는 것이 아닌 &lt;code class=&quot;highlighter-rouge&quot;&gt;DefferedResult&lt;/code&gt; 클래스를 이용하여 비동기 스프링 MVC로 끝나길 원한다. &lt;code class=&quot;highlighter-rouge&quot;&gt;DefferedResult&lt;/code&gt;는 스프링 MVC에서 제공하는 비동기 객체이다. (스프링은 스프링 Reactor 에코 시스템을 이용한 리액티브 웹에서 스트리밍을 지원할 예정이다) 이러한 접근 방식을 이용하여 컨트롤러 메서드는 완료된 &lt;code class=&quot;highlighter-rouge&quot;&gt;Result&lt;/code&gt;를 반환하는 것이 아닌 결과가 사용가능할 때 이전에 반환한 &lt;code class=&quot;highlighter-rouge&quot;&gt;DefferedResult&lt;/code&gt;에 데이터가 넘겨질 것이라는 약속(promise)을 반환한다. 컨트롤러의 메서드 반환을 &lt;code class=&quot;highlighter-rouge&quot;&gt;Result&lt;/code&gt;에서 &lt;code class=&quot;highlighter-rouge&quot;&gt;DefferedResult&lt;/code&gt;로 변경하는 것만으로 어느 정도 비동기를 제공할 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@RequestMapping&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/student.html&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;method&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RequestMethod&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;GET&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DeferredResult&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ModelAndView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;showStudents&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Model&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ModelAndView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;observable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;studentDAO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAllStudents&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+           &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;toList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+           &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;students&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+               &lt;span class=&quot;n&quot;&gt;ModelAndView&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modelAndView&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ModelAndView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;home&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+               &lt;span class=&quot;n&quot;&gt;modelAndView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addObject&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;students&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;students&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+               &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modelAndView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+           &lt;span class=&quot;o&quot;&gt;});&lt;/span&gt;
+   &lt;span class=&quot;n&quot;&gt;DeferredResult&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ModelAndView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;deferredResult&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DeferredResult&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
+   &lt;span class=&quot;n&quot;&gt;observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;subscribe&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;deferredResult&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setResult&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;),&lt;/span&gt;
+                             &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;deferredResult&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setErrorResult&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;deferredResult&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;우리는 비동기에 대한 중요한 작업을 마쳤다. 하지만 놀랍게도 메서드는 여전히 데이터베이스가 결과를 반환할 때까지 기다린다. 즉 여전히 블로킹 상태이다. 왜 그럴까? 기억하고 있을지도 모르겠지만 데이터 접근계층에서 반환되는 Observable이 호출하는 스레드에서 구독되기 때문에 &lt;code class=&quot;highlighter-rouge&quot;&gt;DeferredResult&lt;/code&gt;를 사용하더라도 메서드는 Observable이 데이터를 전달할 때까지 스레드 자원을 소비하며 블로킹 상태에 머물게 된다.&lt;/p&gt;
+
+&lt;p&gt;다음 순서는 Observable를 변경하여 구독 시점에 현재 스레드를 블로킹하지 않도록 하는 것이다. 이것은 두 가지 방식으로 해결할 수 있다. 하나는 native-reactive 라이브러리를 사용하는 것이고 다른 하나는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable.subscribeOn(scheduler)&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;observeOn(scheduler)&lt;/code&gt;를 이용하는 것이다. 두 번째 방식은 subscribe과 observe를 다른 스케줄러(스레드 풀이라고 생각하라)에서 실행하도록 해준다.&lt;/p&gt;
+
+&lt;p&gt;observe 메서드는 &lt;code class=&quot;highlighter-rouge&quot;&gt;map&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;filter&lt;/code&gt; 와 같은 observable를 다른 observable로 변형하는 메서드들과 &lt;code class=&quot;highlighter-rouge&quot;&gt;doOnNext&lt;/code&gt;와 같이 스트림에서 새로운 요소가 발생할 때 실행되는 행동을 포함한다. (&lt;code class=&quot;highlighter-rouge&quot;&gt;subscribeOn&lt;/code&gt;을 사용하는) 두 번째 접근 방법은 완전히 논 블로킹을 지원하는 라이브러리로 가기 전 작은 중간 단계이다. 이것은 단순히 &lt;code class=&quot;highlighter-rouge&quot;&gt;subscribe&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;observe&lt;/code&gt;를 다른 스레드에서 실행하도록 해주는데 이것은 여전히 결과가 가능해지기 전 까지 스레드를 블로킹한다.(다른 스레드를 블로킹할 뿐이다) subscriber에게 데이터를 푸시하면 다시 그것을 &lt;code class=&quot;highlighter-rouge&quot;&gt;DeferredResult&lt;/code&gt;로 푸시하는 방식이다. JDBC위에 RxJava를 구현한 라이브러리들은 이러한 블로킹 스레드(설정에 따라 호출 스레드 혹은 다른 스레드)의 방식을 사용한다. JDBC가 블로킹 API이기 때문에 현시점에서는 이러한 방식이 필요하다. 일반적으로 이러한 접근 방식은 완전히 비동기를 지원하는 라이브러리로 가기 위한 중간 단계로 사용된다. 궁극적으로는 native-reactive 방식이 목표이다. 이것은 확장성이 향상되어 사용 가능한 스레드 수보다 더 많은 수의 사용자 동시 작업(flows)을 제공할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;RxJDBC를 이용한 &lt;code class=&quot;highlighter-rouge&quot;&gt;getStudent&lt;/code&gt; 구현:&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getStudents&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;n&quot;&gt;Class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stringClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;database&lt;/span&gt;
+           &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;select&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;select id,name from student&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+           &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Integer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stringClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+           &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;{&lt;/span&gt;
+                   &lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;student&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+                   &lt;span class=&quot;n&quot;&gt;student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;_1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+                   &lt;span class=&quot;n&quot;&gt;student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;valueOf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;_2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()));&lt;/span&gt;
+                   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+               &lt;span class=&quot;o&quot;&gt;});&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;RxJDBC라이브러리를 사용하기 위해서 메이븐 프로젝트에 의존성을 추가하자:&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+   &lt;span class=&quot;nt&quot;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.github.davidmoten&lt;span class=&quot;nt&quot;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+   &lt;span class=&quot;nt&quot;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;rxjava-jdbc&lt;span class=&quot;nt&quot;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+   &lt;span class=&quot;nt&quot;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;0.7.2&lt;span class=&quot;nt&quot;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;세 번째 단계는 진짜 리액티브 라이브러리를 도입하는 것이다. 관계형 데이터베이스에서조차도 리액티브 라이브러리가 잘 없지만 postgres와 같은 특정 데이터베이스에 초점을 맞추면 좀 더 많은 라이브러리를 찾을 수 있다. 그 이유는 데이터베이스 접근 라이브러리가 각각의 데이터베이스의 저수준 프로토콜마다 다르기 때문이다. 우리가 사용한 것은 RxJava를 사용하는 &lt;a href=&quot;https://github.com/alaisi/postgres-async-driver&quot;&gt;postgres-async-driver project&lt;/a&gt;이다.&lt;/p&gt;
+
+&lt;p&gt;이번에는 pgasync 라이브러리를 사용한 &lt;code class=&quot;highlighter-rouge&quot;&gt;getStudent&lt;/code&gt; 구현이다:&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getStudents&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;database&lt;/span&gt;
+     &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;queryRows&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;select id,name from student&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+     &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+         &lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;student&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+         &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+         &lt;span class=&quot;n&quot;&gt;student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getLong&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++));&lt;/span&gt;
+         &lt;span class=&quot;n&quot;&gt;student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++));&lt;/span&gt;
+         &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;student&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+     &lt;span class=&quot;o&quot;&gt;});&lt;/span&gt;
+ &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;pgasync라이브러리를 사용하기 위해 의존성을 추가하자:&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.github.alaisi.pgasync&lt;span class=&quot;nt&quot;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;postgres-async-driver&lt;span class=&quot;nt&quot;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;0.9&lt;span class=&quot;nt&quot;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;우리는 진정한 리액티브(비동기, 이벤트 기반, 논 블로킹) 백엔드를 구현했다. 또한 JVM의 스레드 수보다 많은 사용자 행위를 (I/O flow 수준에서) 동시에 처리할 수 있는 전체 비동기 솔루션을 만들었다.&lt;/p&gt;
+
+&lt;p&gt;다음으로 트랜잭션 작업을 진행해보자. INSERT나 UPDATE 같은 DML(data modification language) 연산을 이용하여 데이터를 수정하는 시나리오를 생각해보자. 하나의 DML로 이루어진 가장 간단한 트랜잭션에서조차 비동기 방식을 도입하는 것은 복잡하다. 이것은 우리가 스레드를 블로킹하는 트랜잭션에 익숙하기 때문이다. 여러 문장(statement)을 가지는 더 현실적인 트랜잭션의 경우에는 더 복잡해진다.&lt;/p&gt;
+
+&lt;p&gt;트랜잭션은 아래와 같이 생겼다:&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+ &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;dml&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;database&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;begin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+           &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;flatMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+                   &lt;span class=&quot;n&quot;&gt;executeDmlWithin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+                           &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;doOnError&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;rollback&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()));&lt;/span&gt;
+ &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+ &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;executeDmlWithin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+       &lt;span class=&quot;n&quot;&gt;Transaction&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;querySet&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;flatMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;resultSet&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updatedRowsCount&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;resultSet&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;iterator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;next&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getLong&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;commitAndReturnUpdateCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updatedRowsCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;});&lt;/span&gt;
+ &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+ &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;commitAndReturnUpdateCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+       &lt;span class=&quot;n&quot;&gt;Transaction&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updatedRowsCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;commit&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updatedRowsCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+ &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이것은 하나의 DML 구문으로 이루어진 트랜잭션이지만 비동기 리액티브 API에서 어떻게 트랜잭션이 이루어지는지 잘 나타내고 있다. 트랜잭션 시작, 커밋, 롤백은 모두 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&lt;/code&gt;을 반환하고 &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;을 통해 연결될 수 있는 모나드(monad) 함수들이다.&lt;/p&gt;
+
+&lt;p&gt;예제의 시그니처부터 살펴보도록 하자. &lt;code class=&quot;highlighter-rouge&quot;&gt;dml&lt;/code&gt;은 &lt;code class=&quot;highlighter-rouge&quot;&gt;UPDATE&lt;/code&gt;나 &lt;code class=&quot;highlighter-rouge&quot;&gt;INSERT&lt;/code&gt;와 같은 DML 구문과 파라미터를 받는 실행 함수이며 넘겨받은 DML 구문의 실행을 “예정(schedule)”한다. &lt;code class=&quot;highlighter-rouge&quot;&gt;db.begin&lt;/code&gt;이 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;Transaction&amp;gt;&lt;/code&gt;을 반환한다는 것에 주목하라. 트랜잭션은 데이터베이스에 대한 I/O를 포함하므로 즉시 생성되지 않는다. 그래서 이것은 데이터베이스에 실행이 완료되면 요청한 SQL 쿼리에 대한 &lt;code class=&quot;highlighter-rouge&quot;&gt;Transaction&lt;/code&gt; 객체를 반환하는 비동기 연산이다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Transaction&lt;/code&gt; 객체는 필요에 따라 &lt;code class=&quot;highlighter-rouge&quot;&gt;commit&lt;/code&gt;하거나 &lt;code class=&quot;highlighter-rouge&quot;&gt;rollback&lt;/code&gt; 할 수 있다. 이 &lt;code class=&quot;highlighter-rouge&quot;&gt;Transaction&lt;/code&gt;은 자바의 클로저(closure)에서 다른 클로저로 전달된다. 위의 예제에서 볼 수 있듯이 &lt;code class=&quot;highlighter-rouge&quot;&gt;transaction&lt;/code&gt;은 먼저 &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;의 인자로 전달할 수 있다. 이것은 세 지점에서 사용된다:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;먼저 이것은 &lt;code class=&quot;highlighter-rouge&quot;&gt;transaction&lt;/code&gt;안에서 DML을 실행한다. DML을 수행하는 &lt;code class=&quot;highlighter-rouge&quot;&gt;querySet&lt;/code&gt; 명령의 결과는 Observable이다. 이 Observable은 DML의 실행 결과(일반적으로 업데이트 된 행 수를 포함하는 &lt;code class=&quot;highlighter-rouge&quot;&gt;Row&lt;/code&gt;)를 가진다. 그리고 이는 &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;을 통해 다른 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&lt;/code&gt;로 변경된다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;두 번째 &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;은 트랜잭션 객체를 트랜잭션 커밋에 사용한다. 트랜잭션 변수를 포함하는 람다 함수가 두 번째 &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt; 의 인자로 제공된다. 이 방식으로 비동기 흐름의 한 부분에서 다른 부분으로 데이터를 전달할 수 있다. 어휘(lexical) 범위의 변수를 람다 함수를 생성할 때 포함하여 이후에 다른 스레드에서 실행되도록 하는 것이다. 이것이 자바 클로저로써 람다 표현식의 중요성이다. 클로저는 표현식 안에 사용된 변수들을 포함한다. 람다뿐만 아니라 다른 자바 클로저에서도 이러한 방식으로 데이터를 보낼 수 있다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;transaction&lt;/code&gt; 변수의 세 번째 사용은 트랜잭션이 롤백되는 &lt;code class=&quot;highlighter-rouge&quot;&gt;doOnError&lt;/code&gt;이다. 다시 한번  &lt;code class=&quot;highlighter-rouge&quot;&gt;transaction&lt;/code&gt; 변수가 어떻게 자바의 어휘 범위 지정을 통해 세 지점에 들어가는지 보라. 비록 코드 일부(호출하는 스레드 내 메소드 실행의 일부)는 동기적으로 실행되지만, 나머지는 데이터베이스의 응답과 같은 어떠한 이벤트가 발생할 때 비동기적으로 다른 스레드에서 실행된다. 하지만 &lt;code class=&quot;highlighter-rouge&quot;&gt;transaction&lt;/code&gt; 변수는 이 모든 컨텍스트에서 사용할 수 있다. 이상적으로 공유되는 값들은 불변(immutable)이거나 무 상태(stateless) 혹은 스레드 안전(thread safe)해야 한다. 자바는 효과적인 방법으로 공유되는 값이 &lt;code class=&quot;highlighter-rouge&quot;&gt;final&lt;/code&gt;이길 요구하지만 원시(primitive)형이 아닌 경우 이것으로 충분하지 않다.
+성공적이라면 트랜잭션의 커밋 결과는 호출자가 사용할 수 있는 업데이트 행수로 변환(mapped)될 것이다. 업데이트/삽입 된 행 수를 트랜잭션 메서드 외부의 호출자에게 전달하기 위해서 우리는 자바의 클로저를 이용할 수 없다. 피 호출자는 호출자와 같은 어휘 범위에 존재하지 않기 때문이다. 이 경우에 우리는 결과를 Observable의 데이터형으로 캡슐화할 필요가 있다. 만약 다수의 결과를 가져와야 한다면 우리는 불변 클래스나 배열, 수정할 수 없는 컬렉션을 사용할 수 있다. 에러가 발생할 경우에는 트랜잭션에서 롤백이 호출된다. “이 Observable은 에러가 있으니 다른 Observable을 사용하거나 나중에 동일한 Observable로 재시도해.” 라는 구체적인 Observable 명령을 통해 중단하지 않는 한 이 에러는 (호출 스택이 아니라) 연결된 Observable를 타고 전파된다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이 트랜잭션 업데이트가 flatMap 연쇄 연결(chaining)의 첫 예제이다. 여기서 우리가 한 일은 여러 단계를 이벤트 방식으로 연결한 것이다. 트랜잭션이 시작되면 쿼리를 시작할 수 있다. 쿼리의 결과가 사용 가능하면 결과를 파싱하고 트랜잭션 커밋을 수행한다. 트랜잭션이 끝나면 결과는 (아무 정보도 포함하지 않는) 커밋성공과 결과(업데이트 행수)로 변경된다. 만약에 마지막 observable이 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;Void&amp;gt;&lt;/code&gt;가 아니라 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;T&amp;gt;&lt;/code&gt;였다면 데이터 전달 객체를 통해 &lt;code class=&quot;highlighter-rouge&quot;&gt;Long&lt;/code&gt;과 함께 &lt;code class=&quot;highlighter-rouge&quot;&gt;T&lt;/code&gt;를 받을 것이다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 세상에서 우리는 블로킹 애플리케이션을 논 블로킹 상태로 변경시키는 것에 중점을 둔다. (블로킹 애플리케이션은 TCP 커넥션을 여는 것과 같은 I/O를 수행할 때 블로킹이 발생하는 것이다) 소켓을 열거나, 데이터베이스와 통신하거나(JDBC) 파일, 입력 스트림, 출력 스트림을 수행하는 대부분의 레거시 자바 API들은 블로킹 API이다. 예전의 서블릿 API들을 포함한 다른 많은 자바 구현체들 또한 마찬가지이다.&lt;/p&gt;
+
+&lt;p&gt;시간이 지나면서 논 블로킹에 대응하기 위한 것들을 도입하기 시작했다. 예를 들어 서블릿 3.x는 비동기와 스트리밍과 같은 몇 가지 개념을 통합하였다. 하지만 일반적인 J2EE 애플리케이션에서 쉽게 찾아볼 수 있는 블로킹 호출이 항상 나쁜것은 아니다. 블로킹 구조는 명시적으로 작성하는 비동기 API보다 이해하기 쉽다. C#, Scala, Hasekll과 같은 언어들은 블로킹 코드로부터 투명하게 논 블로킹을 구현할 수 있는 구조로 되어 있다. C#과 Scala의 비동기 고차 함수를 예로 들 수 있다. 내가 아는 한 자바에서 논 블로킹을 수행할 수 있는 가장 견고한 방법은 Reactive Streams이나 RxJava을 사용하거나 혹은 Netty와 같은 논 블로킹 라이브러리를 사용하는 것이다. 하지만 명시적으로 작성하는 것은 진입 장벽이 높을 수 있다. 하지만 스레드의 수보다 많은 동시 사용자를 처리해야 하거나 애플리케이션이 I/O 영역에 있어 비용을 최소화하고 싶을 때 논 블로킹을 도입하면 확장성, 탄력성, 비용 감소 측면에서 추가적인 향상을 얻을 수 있다.&lt;/p&gt;
+
+&lt;p&gt;탄력성이나 견고함을 이야기할 때 모든 스레드가 I/O를 기다리고 있는 상황을 고려해보는 것이 도움된다. 예를 들어 최신 JVM이 5000개의 스레드를 제공할 수 있다고 가정해 보자. 이것은 여러 웹 서비스에 5000개의 요청이 들어와 블로킹 애플리케이션의 각 스레드에서 대기 중이라면 그 시점에서 더는 사용자 요청을 처리할 수 없다는 의미이다. (단지 대기열에 넣는 일을 수행하는 특수한 스레드에 의해 대기될 수 있다) 기업 인트라넷과 같은 제어된 환경에서는 괜찮겠지만 스타트업에서 제품을 구매하려는 사용자가 갑자기 10배로 증가했을 때 발생하길 바라는 일은 아닐 것이다.&lt;/p&gt;
+
+&lt;p&gt;물론 갑작스러운 트래픽 증가를 해결하는 한 방식으로 수평적 확장이 있다. 더 많은 서버를 도입하는 것은 비용을 고려하지 않더라도 충분히 탄력적이라고 할 수 없다. 다시 말해 이것은 애플리케이션이 수행하는 I/O의 종류에 따라 다르다. 인터넷 서비스에서 HTTP만이 매우 느린 I/O이고 그 외의 내부 데이터베이스나 서비스의 모든 I/O가 HA(고 가용성)와 낮은 지연율을 가진다고 하더라도, 지구 반대편 클라이언트에게 전달되는 데이터는 HTTP를 통해 느리게 전송될 것이다.&lt;/p&gt;
+
+&lt;p&gt;이 문제는 전문적인 로드 밸런서의 일이지만 가장 “가용성이 높은” 내/외부 서비스가 언제 중단될지 알 수 없으며 가장 “지연시간이 낮은 실시간에 가까운” 서비스가 가비지 컬렉션때문에 느리게 응답할 수 있다는 것이다. 스택 일부만 블로킹되더라도 이 블로킹은 전체로 전파될 것이다. 이것은 가장 느린 I/O에서 스레드가 블로킹되기 시작한다는 것이고 트래픽의 5%를 차지하는 비즈니스에 중요하지 않은 단 하나의 느린 블로킹 접근때문에 자원을 가져오는 것이 중단될 수도 있다는 것을 의미한다.&lt;/p&gt;
+
+&lt;p&gt;애플리케이션을 논 블로킹으로 만드는 것이 많은 경우에 가치를 더할 수 있다는 것을 이해했을 것이다. 이제 우리의 레거시 애플리케이션으로 돌아가 보자. HTTP와 데이터베이스 접근에 대한 모든 계층이 블로킹 방식이다. 여기서부터 시작하도록 하자. 모든 수직적인 계층(HTTP와 데이터베이스 접근 계층)을 비동기로 만들기 전까지 전체 흐름은 비동기가 될 수 없다.&lt;/p&gt;
+
+&lt;p&gt;비동기와 논 블로킹 사이에는 차이점이 있다. 논 블로킹은 비동기를 포함하는 반면 비동기는 블로킹 호출을 단순히 다른 스레드로 이동시키는 것만으로 달성할 수 있다. 이것은 처음의 블로킹 방식과 같은 문제를 가지고 있지만, 점진적 접근방식에서 최종 목표로 가기 위한 한 단계로 사용할 수 있다. HTTP 측면에서 스트리밍은 아니지만, 비동기를 제공하는 서블릿 명세와 스프링 MVC의 현 상태에 대해서도 일부 이야기하였다.&lt;/p&gt;
+
+&lt;p&gt;비동기는 데이터베이스가 응답을 완료할 때 처리가 시작되는 것을 의미한다. 처리가 끝나면 웹 계층은 렌더링을 시작한다. 웹페이지 (혹은 JSON 페이로드)가 그려지면 HTTP 계층은 전체 응답 페이로드를 표시한다.&lt;/p&gt;
+
+&lt;p&gt;다음 단계는 스트리밍이다. 데이터베이스가 처리 계층에 “처리할 데이터가 있어”라고 이야기하면 처리 계층은 이것을 받는다. 이 전달에는 전용 스레드가 필요하지 않다. 예를 들어 NIO나 리눅스의 epoll은 논 블로킹이다. 이 개념은 백만개의 연결이 하나의 스레드를 통해 백만개의 연결중에 새로운 게 있는지 OS에게 물어보는 것이다. 그러면 처리 계층은 결과물을 “학생들”과 같은 의미 있는 단위로 변경한다. 때로는 데이터베이스 데이터가 한 학생 정보 중 일부분만을 가지고 있을때 처리 계층의 버퍼에 부분 정보를 유지하는 것이 유용하다. 대량의 데이터를 데이터베이스에서 가져온 뒤 그 학생의 모든 정보를 모아 상위 계층에 렌더링을 위해 보낼 수 있다. 이러한 파이프라인에서는 모든 컴포넌트가 세분화되어 스트림이 될 수 있다. 어떤 컴포넌트는 바이트를 왼쪽에서 오른쪽으로 복사만 하고 다른 컴포넌트는 전체 학생 객체를 전송한다. Spring MVC의 &lt;code class=&quot;highlighter-rouge&quot;&gt;DeferredResult&lt;/code&gt;와 같이 HTTP 응답을 쓰기 전에 모든 결과물이 필요한 경우와 다르게 전체 중 일부만 전송하는 경우도 있다.&lt;/p&gt;
+
+&lt;p&gt;다시 리팩토링의 단계로 돌아가 보자:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;시그니처에 Observable 을 추가한다.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;observable.subscribeOn&lt;/code&gt;과 &lt;code class=&quot;highlighter-rouge&quot;&gt;observable.observeOn(scheduler)&lt;/code&gt; 를 이용하여 블로킹 연산(예: JDBC 요청)을 다른 스레드 풀로 이동시킨다.&lt;/li&gt;
+  &lt;li&gt;비동기 Spring MVC를 사용하여 비동기로 만든다.&lt;/li&gt;
+  &lt;li&gt;사용하는 데이터베이스에 특화된 논 블로킹 라이브러리를 사용하여 백엔드를 논 블로킹으로 만든다.&lt;/li&gt;
+  &lt;li&gt;RxJava나 선호하는 리액티브 라이브러리를 사용하여 논 블로킹 구현을 감싼다.(우리와 같이 이미 싸여있지 않은 경우)&lt;/li&gt;
+  &lt;li&gt;Vert.x를 사용하여 스트리밍으로 만든다.&lt;/li&gt;
+  &lt;li&gt;writes를 한다.&lt;/li&gt;
+  &lt;li&gt;트랜잭션을 만든다.&lt;/li&gt;
+  &lt;li&gt;에러 처리를 검증한다.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;앱을 실행하기 위해서:
+우리는 PostgreSQL 데이터베이스를 사용하였다. PostgreSQL를 설치하고 postgres 사용자의 비밀번호를 “mysecretpassword”로 변경하거나 간단하게 docker를 설치하고 아래를 실행하라.&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;docker run &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 5432:5432 &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;POSTGRES_PASSWORD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;mysecretpassword &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; postgres
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이제 student.sql을 실행하여 테이블을 생성하고 샘플 데이터를 추가하라.
+그리고 mvn install을 실행한 뒤 war 파일을 tomcat이나 jetty에 배포하라.
+URL은 &lt;a href=&quot;http://localhost:8080/jdbctraining-1.0.0-BUILD-SNAPSHOT/&quot;&gt;이곳&lt;/a&gt;이며 “students”를 누르면 된다.&lt;/p&gt;
+
+&lt;h3 id=&quot;결합성에-대한-더-자세한-이야기&quot;&gt;결합성에 대한 더 자세한 이야기&lt;/h3&gt;
+&lt;p&gt;우리는 이미 결합성에 대하여 많은 것을 이야기했고 이것의 의미를 이해해야 한다. 리액티브 프로그래밍 특유의 맥락에서
+이러한 결합이 어떻게 동작하는지 살펴보자. 이 결합을 “시퀀싱”이라고 부르도록 하자. 이것은 어떠한 입력을 출력으로 만들어내는 일이 단계적으로 일어나는 처리(processing) 파이프라인을 의미한다. 각 단계는 동기(예: 연산이나 값 변형)일 수 있고 비동기(예: 웹 서비스나 데이터베이스에서 데이터를 가져오는 것)일 수 있다. 파이프라인은 소비자로부터 당겨오거나(pull) 생성자로부터 푸시될 수 있다.&lt;/p&gt;
+
+&lt;p&gt;다른 예제를 생각해보자. 데이터 처리를 위해 데이터를 백엔드 서버에 보내고 결과를 응답으로 받는 논 블로킹 웹 서버를 만든다고 가정하자. 요청을 보내는 사용자에 대한 인증과 권한 적용도 필요하다. 백앤드(와 기타 시스템)에서 상태를 변경하고 최종 사용자에게 응답하는 요청 처리에 대한 파이프라인을 호출하는 것에 이미 처리 단계 중 일부가 나타나고 있다.&lt;/p&gt;
+
+&lt;p&gt;이러한 파이프라인을 결합할 때에는 이것이 동작이 동기 혹은 비동기인지 또는 얼마나 많은 재시도 횟수를 사용하는지와 같은 세부사항을 알 필요가 없는 것이 이상적이다. 비동기의 경우 어떠한 스레드 풀에서 처리할지 혹은 어떠한 논 블로킹 프레임워크가 사용할지와 같은 세부사항을 이야기한다.&lt;/p&gt;
+
+&lt;p&gt;반대로 처리 과정을 동기에서 비동기로 변경할 경우에는 외부의 변경 없이 모나드 함수의 내부 구현만 수정하면 된다.&lt;/p&gt;
+
+&lt;p&gt;설명을 위해 리소스 서버(앱 서버) 내부에서 JWT 토큰을 검증하는 단계가 필요하다고 해보자. 이 것은 토큰 페이로드에서 데이터를 확인하는 라이브러리로 해결할 수 있다. 또는 네트워크 호출을 통해 인증 프로바이더(IdP)에게 해당 사용자가 여전히 유효한지 알아보는 것과 같은 더 많은 것을 검증하여 해결할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;모나드 함수를 정의해보자(flatMap를 가지고 있는 반환형이 모나드이다):&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Boolean&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;isValid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;token&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;우리는 이것을 메모리상에서 CPU 집약적인 연산을 사용하는 토큰 복호화 라이브러리를 사용하여 토큰 서명과 토큰 만료 기간, id와 같은 정보를 검증하도록 구현할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;혹은 구글을 IdP 서버로 사용한다면 구글에 요청을 보낼 수 있다.&lt;/p&gt;
+
+&lt;p&gt;두가지 경우에서 파이프라인를 포함하여 모든 함수 외부에서는  &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;Boolean&amp;gt;&lt;/code&gt;이 어떻게 구현되었는지 알지 못한다. 그저 동일한 스레드에서 구독자를 호출할 뿐이다. 메모리 상에서 라이브러리를 사용하여 해결하는 구현에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;boolean isValid(token)&lt;/code&gt; 함수와 동일하다. 혹은 구글과 I/O 통신한 결과를 파싱하여 응답을 boolean으로 반환하는 것일 수 있다. 설계는 구현을 알 수 없다.&lt;/p&gt;
+
+&lt;p&gt;우리는 또한 함수를 같은 시그니처(&lt;code class=&quot;highlighter-rouge&quot;&gt;String&lt;/code&gt;-&amp;gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;Boolean&amp;gt;&lt;/code&gt;)의 다른 함수로 감쌀 수 있다. 이를 통해 검증 상단에 재시도 구조를 더 할 수 있다.(구글에 요청을 하는 경우 HTTP 요청이 유실되거나 지연시간이 길 때 사용할 수 있다) 혹은 구글과 같은 외부 데이터 센터에 네트워크 접근이 불가능한 경우 라이브러리를 이용한 검증을 시도하는 우아한 성능 저하(degradation) 기능을 추가할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;이러한 모든 대안 해결책이나 데코레이터들을 추가할 수 있으며 그렇다 하더라도 여전히 함수는 &lt;code class=&quot;highlighter-rouge&quot;&gt;String&lt;/code&gt; 을 받아 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;Boolean&amp;gt;&lt;/code&gt; 을 반환할 것이다.&lt;/p&gt;
+
+&lt;p&gt;동기에서 비동기로 변경하거나 되돌리는 것이 API에 영향을 주지 않기 때문에 커플링이 낮다.&lt;/p&gt;
+
+&lt;p&gt;자바의 &lt;code class=&quot;highlighter-rouge&quot;&gt;Future&lt;/code&gt;와 다르게 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&lt;/code&gt;은 결합이 가능하다. 토큰 검증의 경우에서 일반적인 &lt;code class=&quot;highlighter-rouge&quot;&gt;Response&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;ErrorResponse&lt;/code&gt; 둘 중 하나를 반환하는 함수가 있다고 해보자.&lt;/p&gt;
+
+&lt;p&gt;(여러 개의 토큰을 기다리지 않고 &lt;code class=&quot;highlighter-rouge&quot;&gt;Future&amp;lt;String&amp;gt;&lt;/code&gt;과 같이 하나의 토큰만 기다리는) &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;String&amp;gt;&lt;/code&gt;이 있다고 해보자. 우리는 이 “토큰 observable”에 &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;을 적용하는데 &lt;code class=&quot;highlighter-rouge&quot;&gt;isValid&lt;/code&gt; 함수를 사용하여 “boolean observable”을 얻을 것이다. 이 “boolean observable”에 “if” 구문을 사용하는 람다 함수를 &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;로 적용했다. 만약 토큰이 유효하면 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;Response&amp;gt;&lt;/code&gt;를 반환하고 아니면 다른 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;ErrorResponse&amp;gt;&lt;/code&gt;를 반환한다.&lt;/p&gt;
+
+&lt;p&gt;코드는 아래와 같이 작성할 수 있다:&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;responseObservable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tokenObservable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;flatMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;isValid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;token&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;flatMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;valid&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;valid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+                           &lt;span class=&quot;n&quot;&gt;Observable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;just&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ErrorResponse&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;invalid&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))));&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;T&amp;gt;&lt;/code&gt; 형의 값에 flatMap을 적용하면 다른 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;U&amp;gt;&lt;/code&gt;를 얻을 수 있다는 것을 볼 수 있다. 여기서 T와 U는 같은 형일 수도 있고 다른 형일수도 있다.&lt;/p&gt;
+
+&lt;p&gt;결합은 중요한 속성이다. 특정한 모양의 작은 컴포넌트들을 결합하여 같은 모양의 큰 컴포넌트들을 이룰 수 있다. 여기서 모양이라는 것은 무엇일까?&lt;/p&gt;
+
+&lt;p&gt;모나드는 형 파라미터 T를 가지는 형이라는 것과 &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;lift&lt;/code&gt; 라는 두 함수로 나타낼 수 있다. 후자는 쉽다. T 형의 객체를 모나드의 형으로 변경하는 것이다.  &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable.just(value)&lt;/code&gt; 와 &lt;code class=&quot;highlighter-rouge&quot;&gt;Option.ofNullable(value)&lt;/code&gt; 이 이러한 모나드의 두 예제이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;은 어떤가? 이것은 고차 함수로 소스(source)라고 하는 &lt;code class=&quot;highlighter-rouge&quot;&gt;observable&amp;lt;T&amp;gt;&lt;/code&gt; 객체와 모나드 함수 &lt;code class=&quot;highlighter-rouge&quot;&gt;f(T-&amp;gt;Observable&amp;lt;T&amp;gt;)&lt;/code&gt;가 주어졌을 때 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observable&amp;lt;U&amp;gt;&lt;/code&gt;의 형을 가지는 새로운 Observable을 &lt;code class=&quot;highlighter-rouge&quot;&gt;newObservable = sourceObservable.flatMap(t-&amp;gt;f(t))&lt;/code&gt;로 생성할 수 있다. Observable의 경우 소스의 T형 요소가 사용 가능 해질 때 함수 &lt;code class=&quot;highlighter-rouge&quot;&gt;f&lt;/code&gt;가 호출된다. 이것은 새로운 observable을 생성하는데 요소마다 새로운 Observable이 생성된다. 이들은 &lt;code class=&quot;highlighter-rouge&quot;&gt;newObservable&lt;/code&gt;의 요소가 되어 생성된 순서에 따라 결과 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observables&amp;lt;U&amp;gt;&lt;/code&gt;에서 나타나게 된다. 왜 &lt;code class=&quot;highlighter-rouge&quot;&gt;Observables&amp;lt;U&amp;gt;&lt;/code&gt;일까? sourceObservable이 3개의 요소를 내보낼 때 각각의 요소에 함수 f가 적용되어 3개의 Observable을 만들어내기 때문이다. 이들은 병합되거나 연결될 수 있다. 병합은 3개의 observable의 모든 요소가 발생하는 순서로 그 시점에 newObservable “출력”에 더해진다는 것을 의미한다. 3 observable의 결과를 병합하는 것이 &lt;code class=&quot;highlighter-rouge&quot;&gt;flatMap&lt;/code&gt;이 하는 일이다. 다른 방식으로는 첫 번째 observable에서 모든 결과가 나오길 기다린 후에 두 번째 observable의 요소를 연결할 수 있다. 이처럼 모든 observable의 결과를 연결하는 것이 &lt;code class=&quot;highlighter-rouge&quot;&gt;concatMap&lt;/code&gt;이 하는 일이다.&lt;/p&gt;
+
+&lt;p&gt;이러한 Observable의 특징을 이용하여 하나의 Observable 값에 처리 단계를 추가하거나 재시도, 대체 시스템 메커니즘과 같은 데코레이터 기능을 추가한 새로운 Observable을 만들 수 있다. 이것이 내가 결합성이라고 말하는 것의 주요 부분이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;논-블로킹의-표면-아래&quot;&gt;논 블로킹의 표면 아래&lt;/h3&gt;
+&lt;p&gt;앞서서 논 블로킹 비동기 I/O 라이브러리를 사용하면 사용 가능한 스레드보다 많은 흐름을 유지할 수 있다고 언급했었다. 어떻게 이러한 일이 가능한지 궁금할 것이다. Netty(Vert.x와 PgAsync에서 사용하는 논 블로킹 I/O 라이브러리)와 같은 라이브러리가 어떻게 동작하는지 살펴보도록 하자.&lt;/p&gt;
+
+&lt;p&gt;자바는 NIO라는 API가 있다. 이 API는 적은 개수의 스레드에서 더 많은 연결을 처리하는 것에 중점을 두고 있다. NIO는 특정한 OS 시스템 호출(리눅스의 경우 epoll과 poll)을 이용하여 동작한다. 예를 들어 1000개의 연결이 열려있다고 가정해보자. 한 스레드는 selector.select라는 NIO 메서드를 호출할 것이다. 이것은 블로킹 요청으로 마지막 요청 이후 쌓여있던 “더 많은 데이터 사용 가능”, “연결이 닫힘”과 같은 이벤트들이 발생한 연결을 10개 가져온다. 이제 그 스레드는 10개의 이벤트를 다른 스레드들로 전달하고 계속 새로운 요청을 폴링할 것이다. 그렇게 이 첫 스레드는 무한 루프를 돌면서 열려있는 연결들에 대한 새로운 이벤트 질의를 하는 것이다. 받아온 10개의 이벤트는 처리를 위해 스레드 풀이나 이벤트 루프에 전달될 것이다. Netty는 이벤트 처리를 위한 대기열 제한이 없는 스레드풀이 있다. 이벤트 처리는 (계산 집중적인) CPU 기반이다. 모든 I/O는 다시 NIO로 위임될 것이다.&lt;/p&gt;
+
+&lt;p&gt;이 세가지 기술에 대해 깊게 다루고 있는 자료로 Tomasz Nurkiewicz와 Ben Christensen이 쓴 &lt;a href=&quot;http://shop.oreilly.com/product/0636920042228.do#tab_04_2&quot;&gt;Reactive Programming with RxJava Creating Asynchronous, Event-Based Applications&lt;/a&gt;이 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;글쓴이에-대하여&quot;&gt;글쓴이에 대하여&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;Nicolae Marasoiu&lt;/em&gt; 는 열정적인 소프트웨어 개발자로 스타트업부터 잘 정립된 회사에 이르기까지 다양한 아웃소싱 회사들과 제품의 고성능 서버사이드 애플리케이션 구축에 대한 수년간의 경험을 가지고 있다. 그는 제품 개발의 다양한 분야에 기여하는 것과 팀의 기술적인 모험에 영감을 주는 것을 좋아한다.&lt;/p&gt;
+</description>
+        
+          <description>&lt;p&gt;본 글은 &lt;a href=&quot;https://www.infoq.com/author/Nicolae-Marasoiu&quot;&gt;Nicolae Marasolu&lt;/a&gt;의 &lt;a href=&quot;https://www.infoq.com/articles/Refactoring-Reactive-JDBC&quot;&gt;Refactoring to Reactive - Anatomy of a JDBC migration&lt;/a&gt;를 번역한 것입니다.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 09 Jan 2017 00:00:00 +0000</pubDate>
+        <link>http://blog.lespinside.com/refactoring-to-react/</link>
+        <guid isPermaLink="true">http://blog.lespinside.com/refactoring-to-react/</guid>
+        
+        
+      </item>
+      
+    
+      
+      <item>
+        <title>리액티브 선언문 용어 정리</title>
+        <description>&lt;p&gt;본 글은 &lt;a href=&quot;http://www.reactivemanifesto.org/glossary&quot;&gt;The Reactive Manifesto Glossary&lt;/a&gt;를 번역한 것입니다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;#Asynchronous&quot;&gt;비동기&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Back-Pressure&quot;&gt;역압(Back-Pressure)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Batching&quot;&gt;Batching&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Component&quot;&gt;컴포넌트&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Delegation&quot;&gt;위임&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Elasticity&quot;&gt;탄력성 (확장성과 대조)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Failure&quot;&gt;장애 (오류와 대조)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Isolation&quot;&gt;분리 (그리고 억제)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Location-Transparency&quot;&gt;위치 투명성(Location Transparency)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Message-Driven&quot;&gt;메시지 기반(이벤트 기반과 대조)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Non-Blocking&quot;&gt;논 블로킹(Non-Blocking)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Protocol&quot;&gt;프로토콜&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Replication&quot;&gt;복제&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Resource&quot;&gt;자원&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#Scalability&quot;&gt;확장성&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#System&quot;&gt;시스템&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#User&quot;&gt;사용자&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;비동기&quot;&gt;&lt;a name=&quot;Asynchronous&quot;&gt;&lt;/a&gt;비동기&lt;/h3&gt;
+&lt;p&gt;옥스퍼드 사전은 비동기를 &lt;em&gt;“동시에 존재하거나 발생하지 않는”&lt;/em&gt; 이라고 정의한다. 이 선언문의 문맥에서는 클라이언트에서 서비스로 전송된 요청이 이후 임의의 시점에 처리된다는 의미이다. 클라이언트는 서비스 내에서 실행되는 것을 직접 보거나 동기화할 수 없다. 이것은 서비스가 요청에 대한 처리를 마쳐야만 클라이언트가 재개되는 동기화 처리의 반대말이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;역압back-pressure&quot;&gt;&lt;a name=&quot;Back-Pressure&quot;&gt;&lt;/a&gt;역압(Back-Pressure)&lt;/h3&gt;
+&lt;p&gt;한 컴포넌트가 부하를 이겨내기 힘들 때, &lt;a href=&quot;#System&quot;&gt;시스템&lt;/a&gt; 전체가 합리적인 방법으로 대응해야 한다. 과부하 상태의 컴포넌트에서 치명적인 장애가 발생하거나 제어 없이 메시지를 유실해서는 안 된다. 컴포넌트가 대처할 수 없고 장애가 발생해선 안 되기 때문에 컴포넌트는 상류 컴포넌트들에 자신이 과부하 상태라는 것을 알려 부하를 줄이도록 해야 한다. 이러한 역압은 시스템이 부하로 인해 무너지지 않고 정상적으로 응답할 수 있게 하는 중요한 피드백 방법이다. 역압은 사용자에게까지 전달되어 응답성이 떨어질 수 있지만, 이 메커니즘은 부하에 대한 시스템의 복원력을 보장하고 시스템 자체가 부하를 분산할 다른 자원을 제공할 수 있는지 정보를 제공할 것이다. &lt;a href=&quot;#Elasticity&quot;&gt;탄력성&lt;/a&gt; 참조.&lt;/p&gt;
+
+&lt;h3 id=&quot;일괄-처리batching&quot;&gt;&lt;a name=&quot;Batching&quot;&gt;&lt;/a&gt;일괄 처리(Batching)&lt;/h3&gt;
+&lt;p&gt;현대 컴퓨터는 같은 작업의 반복 실행하는 것에 최적화되어 있다. 명령어 캐시 및 분기 예측은 같은 클록 주파수에서 초당 처리 할 수 있는 명령 수를 증가시켰다. 즉, 한 CPU 코어에 여러 다른 작업을 동시에 실행하는 것은 한 작업을 실행하는 경우에 달성할 수 있는 최대 성능의 이점을 취할 수 없다는 것이다. 가능하면 여러 작업 간에 실행 전환이 적도록 프로그램을 구성해야 한다. 이는 일괄적으로 데이터 묶음을 처리하거나 전용 하드웨어 스레드들이 각각 서로 다른 작업을 수행하는 것을 의미한다.&lt;/p&gt;
+
+&lt;p&gt;동기화와 조정이 필요한 외부 &lt;a href=&quot;#Resource&quot;&gt;자원&lt;/a&gt;의 사용에도 같은 논리가 적용된다. 영구 저장장치가 제공하는 입출력 대역폭은 모든 코어에서 경쟁하는 대신 단일 스레드(CPU 코어)에서 명령을 실행할 때 크게 향상될 수 있다. 단일 진입점을 사용하는 것은 장치의 접근 패턴에 맞게 최적화되어 명령들이 재정렬 될 수 있다는 장점도 있다(현대 저장 장치들은 임의 접근보다 선형적인 접근에서 성능이 향상된다).&lt;/p&gt;
+
+&lt;p&gt;추가로 일괄 처리는 입출력이나 고비용의 연산과 같은 비용이 큰 명령들의 비용을 나눌 기회를 제공한다. 예를 들어 효율성을 증가시키고 사용률을 감소시키기 위해 같은 네트워크 패킷이나 디스크 블록에 여러 데이터 항목을 묶어서 넣을 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;컴포넌트&quot;&gt;&lt;a name=&quot;Component&quot;&gt;&lt;/a&gt;컴포넌트&lt;/h3&gt;
+&lt;p&gt;우리가 설명하는 것은 고전적인 모듈 형 소프트웨어 아키텍처이다 (&lt;a href=&quot;https://www.cs.umd.edu/class/spring2003/cmsc838p/Design/criteria.pdf&quot;&gt;Parnas (1972)&lt;/a&gt; 참조). 우리는 “컴포넌트”라는 용어가 “구획”에 가까우므로 사용하고 있다. 이는 각 컴포넌트가 독립적이고 캡슐화되어 다른 구성 요소와 &lt;a href=&quot;#Isolation&quot;&gt;분리&lt;/a&gt;됨을 의미한다. 이 개념은 시스템의 실행시간 특성에 가장 많이 적용되지만, 일반적으로 소스 코드의 모듈 구조에도 반영된다. 서로 다른 컴포넌트가 공통된 작업을 수행하기 위해 같은 소프트웨어 모듈을 사용할 수는 있지만 각 컴포넌트의 최상위 동작을 정의하는 프로그램 코드는 자체 모듈로 되어있다. 컴포넌트 경계는 종종 문제 영역의 &lt;a href=&quot;http://martinfowler.com/bliki/BoundedContext.html&quot;&gt;제한된 컨텍스트&lt;/a&gt;에 밀접하게 부합한다. 이것은 시스템 설계가 문제 영역을 반영하는 경향이 있으므로 분리를 유지하면서 발전하기 쉽다는 것을 의미한다. 메시지 &lt;a href=&quot;#Protocol&quot;&gt;프로토콜&lt;/a&gt;은 제한된 컨텍스트 (컴포넌트) 간의 자연스러운 연결과 통신 계층을 제공한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;위임&quot;&gt;&lt;a name=&quot;Delegation&quot;&gt;&lt;/a&gt;위임&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;#Asynchronous&quot;&gt;비동기적&lt;/a&gt;으로 다른 컴포넌트에 작업을 위임하는 것은 작업이 다른 &lt;a href=&quot;#Component&quot;&gt;컴포넌트&lt;/a&gt;의 컨텍스트에서 수행되는 것을 의미한다. 이 위임된 컨텍스트는 다른 오류 처리 컨텍스트, 다른 스레드, 다른 프로세스 또는 다른 네트워크 노드에서 실행될 수 있다. 위임의 목적은 작업의 수행 책임을 다른 컴포넌트에 넘기는 것으로 위임한 컴포넌트는 다른 처리를 수행할 수 있고 장애 처리 및 진행 보고와 같은 추가적인 일이 필요할 때 위임된 작업의 진행 상항을 관찰할 수도 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;탄력성-확장성과-대조&quot;&gt;&lt;a name=&quot;Elasticity&quot;&gt;&lt;/a&gt;탄력성 (확장성과 대조)&lt;/h3&gt;
+&lt;p&gt;탄력성은 다양한 요구를 충족하기 위해 자원을 비례적으로 추가하거나 제거하여 시스템의 처리량이 자동으로 증가하거나 감소하는 것을 의미한다. 시스템은 실행시간에 자원을 동적으로 추가하거나 제거하여 이득을 볼 수 있도록 확장 가능해야 한다 (&lt;a href=&quot;#Scalability&quot;&gt;확장성&lt;/a&gt;] 참조). 따라서 탄력성은 확장성에 자동 &lt;a href=&quot;#Resource&quot;&gt;자원&lt;/a&gt; 관리 개념이 추가된 것이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;장애-오류와-대조&quot;&gt;&lt;a name=&quot;Failure&quot;&gt;&lt;/a&gt;장애 (오류와 대조)&lt;/h3&gt;
+&lt;p&gt;장애는 서비스 내에서 발생하는 예기치 못한 상황으로 서비스의 정상적인 동작을 막는다. 장애 발생은 일반적으로 현재 이후의 모든 클라이언트 요청에 대한 응답을 막는다. 장애는 예상 가능하며 조건으로 처리되는 오류와 대조된다. 예를 들어 오류는 입력값 검증에서 발생할 수 있는데, 이는 클라이언트에 정상적인 처리 과정의 일부로 전달 된다. 장애는 예상할 수 없고 &lt;a href=&quot;#System&quot;&gt;시스템&lt;/a&gt;이 같은 작동 수준으로 재개하려면 개입이 필요하다. 이것은 장애가 항상 치명적이라기보다는 장애 발생 이후 시스템의 가용 능력이 감소할 것이라는 뜻한다. 오류는 정상 작동의 예상되는 부분으로 즉시 처리되며 시스템은 오류가 발생한 후에도 가용 능력을 유지하여 작동한다.&lt;/p&gt;
+
+&lt;p&gt;장애의 예로는 하드웨어 오작동, 치명적인 자원 고갈로 인한 프로세스 종료, 내부 상태 오류를 발생시키는 프로그램 결함 등이 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;분리-그리고-억제&quot;&gt;&lt;a name=&quot;Isolation&quot;&gt;&lt;/a&gt;분리 (그리고 억제)&lt;/h3&gt;
+&lt;p&gt;분리는 시간과 공간 모두에서 분리로 정의할 수 있다. 시간상의 분리는 송신자와 수신자가 독립적인 생명 주기를 가질 수 있음을 의미한다. 송신자와 수신자가 통신할 수 있기 위해서 동시에 존재할 필요는 없다. 이것은 &lt;a href=&quot;#Message-Driven&quot;&gt;메시지 전달&lt;/a&gt;을 통해 &lt;a href=&quot;#Component&quot;&gt;컴포넌트&lt;/a&gt; 간에 &lt;a href=&quot;#Asynchronous&quot;&gt;비동기&lt;/a&gt; 경계를 추가하는 것으로 가능하다. 공간 분리 (&lt;a href=&quot;#Location-Transparency&quot;&gt;위치 투명성&lt;/a&gt;으로 정의 됨)는 송신자와 수신자가 같은 프로세스에서 실행될 필요가 없다는 의미이다. 애플리케이션의 가동 중에 달라질 수는 있지만, 운영 부서나 실행시간에 자체적으로 정한 곳이 가장 효과적이다.&lt;/p&gt;
+
+&lt;p&gt;진정한 분리는 대부분의 객체 지향 언어에서 말하는 캡슐화의 개념을 뛰어넘으며 다음과 같은 분류와 방지를 제공한다 :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;상태와 동작 : 아무것도 공유하지 않는 설계를 가능하게 하고 경합과 일관성 비용을 최소로 한다 (&lt;a href=&quot;http://www.perfdynamics.com/Manifesto/USLscalability.html&quot;&gt;Universal Scalability Law&lt;/a&gt;에 정의).&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;장애 : &lt;a href=&quot;#Failure&quot;&gt;장애&lt;/a&gt;가 다른 컴포넌트들에 전파되는 것을 막고 미세한 수준으로 장애를 포착하고 알리며 관리할 수 있다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;컴포넌트 사이의 강한 분리는 잘 정의된 &lt;a href=&quot;#Protocol&quot;&gt;프로토콜&lt;/a&gt;을 사용한 통신을 기반으로 한다. 이것은 느슨한 결합을 가능하게 하고 시스템을 이해, 확장, 테스트, 발전하기 쉽게 한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;위치-투명성&quot;&gt;&lt;a name=&quot;Location-Transparency&quot;&gt;&lt;/a&gt;위치 투명성&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;#Elasticity&quot;&gt;탄력적인&lt;/a&gt; 시스템은 적응력이 있어야 하고 수요 변화에 지속해서 반응해야 하며 원활하고 효율적으로 규모를 확장하고 축소해야 한다. 이 문제를 대단히 단순화하는 핵심 통찰력은 우리가 모두 분산 컴퓨팅을 수행하고 있다는 것을 깨닫는 것이다. 단일 노드 (QPI 링크를 통해 통신하는 여러 독립 CPU 포함) 또는 노드 클러스터 (네트워크를 통해 통신하는 독립적인 시스템)에서 시스템을 실행하든 상관없다. 이 사실을 받아들인다는 것은 멀티 코어에서 수직으로 확장하거나 클러스터에서 수평으로 확장하는 것이 개념적으로 차이가 없다는 것을 의미한다.&lt;/p&gt;
+
+&lt;p&gt;모든 &lt;a href=&quot;#Component&quot;&gt;컴포넌트&lt;/a&gt;가 이동성을 지원하고 로컬 통신이 최적화되어 있다면 시스템 토폴러지 및 배포 모델을 사전에 정의 할 필요가 없다. 우리는 이 결정을 운영자와 실행시간에 넘길 수 있다. 운영자는 시스템이 어떻게 이용되는지에 따라 시스템을 조정하고 최적화할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;#Asynchronous&quot;&gt;비동기&lt;/a&gt; &lt;a href=&quot;#Message-Driven&quot;&gt;메시지 전달&lt;/a&gt;로 활성화된 공간 분리 (&lt;a href=&quot;#Isolation&quot;&gt;분리&lt;/a&gt; 정의 참조)와 실행시간 인스턴스의 참조 분리는 우리가 위치 투명성이라고 부르는 것이다. 공간 투명성은 때때로 ‘투명 분산 컴퓨팅’으로 잘못 이해되지만, 사실은 반대의 경우이다. 프로세스 내 메서드 호출을 네트워크 (ala RPC, XA 등) 상에서 모방하는 것이 아니라 네트워크와 그 제약사항 (부분 실패, 네트워크 분할, 메시지 유실, 비동기, 메시지 기반의 특성)을 전부 아우르는 프로그래밍 모델의 일급 객체로 만든다. 위치 투명성에 대한 우리의 견해는 Waldo et al의 &lt;a href=&quot;http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.41.7628&quot;&gt;A Note On Distributed Computing&lt;/a&gt;과 정확히 일치한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;메시지-기반-이벤트-기반과-대조&quot;&gt;&lt;a name=&quot;Message-Driven&quot;&gt;&lt;/a&gt;메시지 기반 (이벤트 기반과 대조)&lt;/h3&gt;
+&lt;p&gt;메시지는 특정 대상으로 보내지는 데이터 항목이다. 이벤트는 &lt;a href=&quot;#Component&quot;&gt;컴포넌트&lt;/a&gt;가 주어진 상태에 도달했을 때 발생시키는 신호이다. 메시지 기반 시스템에서는 주소 지정이 가능한 수신자가 메시지 도착을 기다리고 메시지에 응답하며 그렇지 않을 경우 휴면한다. 이벤트 기반 시스템 알림에서 리스너는 이벤트 발생지에 소속되어 이벤트가 발생할 때 호출된다. 즉, 이벤트 기반 시스템은 주소 지정이 가능한 이벤트 발생지에 초점을 맞추고 메시지 기반 시스템은 주소 지정이 가능한 수신자에 집중한다. 메시지는 인코딩된 이벤트를 페이로드로 포함할 수 있다.&lt;/p&gt;
+
+&lt;p&gt;이벤트 소비 사슬의 수명이 짧으므로 이벤트 기반 시스템에서는 복원력을 얻는 것이 더 어렵다. 작업이 실행될 때 결과에 응답하기 위한 리스너들이 존재하는데 이러한 리스너들은 일반적으로 결과의 성공 또는 &lt;a href=&quot;#Failure&quot;&gt;장애&lt;/a&gt;를 직접 처리하고 본 클라이언트에게 알린다. 하지만 컴포넌트를 복원하기 위해 장애에 대응할 때는 이것을 일시적인 클라이언트의 요청에 대한 것이 아니라 컴포넌트의 전반적인 상태에 대응하는 것으로 처리해야 한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;논-블로킹non-blocking&quot;&gt;&lt;a name=&quot;Non-Blocking&quot;&gt;&lt;/a&gt;논 블로킹(Non-Blocking)&lt;/h3&gt;
+&lt;p&gt;동시성 프로그래밍에서는 자원을 경쟁하는 스레드가 자원을 보호하는 상호 배제로 무기한 연기되지 않도록 논 블로킹 알고리즘이 고려된다. 일반적으로 이것은 API로 선언되는데, 만약 &lt;a href=&quot;#Resource&quot;&gt;자원&lt;/a&gt;이 사용 가능하다면 접근을 허용하고 그렇지 않다면 현재 자원을 사용할 수 없다는 응답이나 작업이 시작되었지만, 아직 완료되지 않았음을 호출자에게 즉시 반환한다. 자원에 대한 논 블로킹 API를 사용하면 호출자가 자원을 사용할 수 있을 때까지 기다리지 않고 다른 작업을 수행할 수 있다. 자원을 사용하려는 클라이언트를 등록하여 자원이 사용 가능해지거나 작업이 완료될 때가 알림을 받을 수 있도록 보완할 수 있다.&lt;/p&gt;
+
+&lt;h3 id=&quot;프로토콜&quot;&gt;&lt;a name=&quot;Protocol&quot;&gt;&lt;/a&gt;프로토콜&lt;/h3&gt;
+&lt;p&gt;프로토콜은 &lt;a href=&quot;#Component&quot;&gt;컴포넌트&lt;/a&gt; 간의 메시지 교환이나 전송을 위한 처리 방식을 정의한다. 프로토콜은 교환하는 참가자들 사이의 관계, 누적된 프로토콜의 상태 그리고 전송하도록 허용된 메시지 집합으로 나타낼 수 있다. 즉, 프로토콜은 참가자가 특정 시점에 다른 참가자에게 보내는 메시지를 나타낸다. 프로토콜은 교환 형태에 따라 분류할 수 있는데, 일반적인 분류로는 요청-응답, (HTTP와 같은) 반복적인 요청-응답, 발행-구독, 그리고 (push와 pull을 모두 포함하는) 스트림이 있다.&lt;/p&gt;
+
+&lt;p&gt;프로토콜은 둘 이상의 참가자를 포함할 수 있고 메시지 전달 상태를 예측할 수 있다는 점에서 로컬 프로그래밍 인터페이스보다 더 포괄적이다. 인터페이스는 오직 호출자와 수신자 사이의 한 번에 하나의 상호 작용만 명시한다.&lt;/p&gt;
+
+&lt;p&gt;여기서 정의하는 프로토콜은 전송할 메시지를 지정하지만 어떻게 전송할지는 지정하지 않는다는 점에 유의해야 한다. 인코딩, 디코딩 (예: 코덱) 및 전송 방식은 컴포넌트들의 프로토콜 사용에서는 구애받지 않는 세부 구현 정보이다.&lt;/p&gt;
+
+&lt;h3 id=&quot;복제&quot;&gt;&lt;a name=&quot;Replication&quot;&gt;&lt;/a&gt;복제&lt;/h3&gt;
+&lt;p&gt;서로 다른 곳에서 동시에 한 &lt;a href=&quot;#Component&quot;&gt;컴포넌트&lt;/a&gt;를 실행하는 것을 복제라고 한다. 이것은 서로 다른 스레드 혹은 스레드 풀, 프로세스, 네트워크 노드 또는 컴퓨팅 센터에서 실행되는 것을 의미한다. 복제는 유입되는 작업 부하를 컴포넌트의 여러 인스턴스에 분산하는 &lt;a href=&quot;#Scalability&quot;&gt;확장성&lt;/a&gt;과 작업 부하가 복제되어 여러 인스턴스에서 같은 요청을 병렬 처리하는 복원력을 제공한다. 이러한 접근법은 혼합될 수 있다. 예를 들어, 컴포넌트의 특정한 사용자에 관련된 모든 트랜잭션은 두 개의 인스턴스에서 처리하게 하고 전체 인스턴스의 개수는 들어오는 부하에 따라 결정되도록 보장할 수 있다(&lt;a href=&quot;#Elasticity&quot;&gt;탄력성&lt;/a&gt; 참조).&lt;/p&gt;
+
+&lt;h3 id=&quot;자원&quot;&gt;&lt;a name=&quot;Resource&quot;&gt;&lt;/a&gt;자원&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;#Component&quot;&gt;컴포넌트&lt;/a&gt;가 기능을 수행하기 위해 의존하는 모든 것을 자원이라고 하는데, 컴포넌트의 필요에 따라 제공되어야 한다. 여기에는 CPU 할당, 주 메모리 및 영구 저장소는 물론 네트워크 대역폭, 주 메모리 대역폭, CPU 캐시, 소켓 간 CPU 링크, 안정적인 타이머 및 작업 스케줄링 서비스, 기타 입출력 장치, 데이터베이스 또는 네트워크 파일 시스템과 같은 외부 서비스가 포함된다. 필요한 자원이 부족할 경우 컴포넌트가 필요한 시점에 작동하지 못하게 되므로 이러한 모든 자원에 대한 &lt;a href=&quot;#Elasticity&quot;&gt;탄력성&lt;/a&gt;과 복원성을 고려해야 한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;확장성&quot;&gt;&lt;a name=&quot;Scalability&quot;&gt;&lt;/a&gt;확장성&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;#System&quot;&gt;시스템&lt;/a&gt;의 기능 중 성능을 높이기 위해 더 많은 컴퓨팅 &lt;a href=&quot;#Resources&quot;&gt;자원&lt;/a&gt;을 사용하는 것은 자원 증가에 대한 입력 처리량의 증가 비율로 측정한다. 완벽하게 확장 가능한 시스템은 이 두 숫자가 비례한다는 특성이 있다: 자원을 두 배 할당하면 처리량이 두 배가 된다. 시스템 내의 병목 지점 또는 동기화 지점의 도입은 일반적으로 확장성을 제한하는 원인이다. &lt;a href=&quot;http://blogs.msdn.com/b/ddperf/archive/2009/04/29/parallel-scalability-isn-t-child-s-play-part-2-amdahl-s-law-vs-gunther-s-law.aspx&quot;&gt;Amdahl’s Law and Gunther’s Universal Scalability Model&lt;/a&gt; 참조.&lt;/p&gt;
+
+&lt;h3 id=&quot;시스템&quot;&gt;&lt;a name=&quot;System&quot;&gt;&lt;/a&gt;시스템&lt;/h3&gt;
+&lt;p&gt;시스템은 &lt;a href=&quot;#User&quot;&gt;사용자&lt;/a&gt;나 클라이언트에게 서비스들을 제공하며 조합되는 &lt;a href=&quot;#Component&quot;&gt;컴포넌트&lt;/a&gt;의 수에 따라 커지거나 작아질 수 있다. 시스템 내의 모든 컴포넌트는 이러한 서비스들을 제공하기 위해 협력한다. 많은 경우에 컴포넌트들은 같은 시스템 내에서 클라이언트-서버 관계에 있다 (프론트엔드 컴포넌트들이 백엔드 컴포넌트들에 의존하는 경우 등). 한 시스템은 공통된 복원 모델을 공유하여 시스템 내의 컴포넌트 &lt;a href=&quot;#Failure&quot;&gt;장애&lt;/a&gt;는 다른 컴포넌트로 &lt;a href=&quot;#Delegation&quot;&gt;위임&lt;/a&gt;되어 시스템 내에서 처리된다. 시스템 내 컴포넌트 묶음이 가지는 기능, &lt;a href=&quot;#Resource&quot;&gt;자원&lt;/a&gt; 혹은 장애 모델이 시스템의 나머지 부분과 &lt;a href=&quot;#Isolation&quot;&gt;분리&lt;/a&gt;된다면 이것을 하위 시스템으로 보는 게 유용하다.&lt;/p&gt;
+
+&lt;h3 id=&quot;사용자&quot;&gt;&lt;a name=&quot;User&quot;&gt;&lt;/a&gt;사용자&lt;/h3&gt;
+&lt;p&gt;우리는 이 용어를 비공식적으로 어떠한 서비스를 소비하는 사람이나 다른 서비스를 의미하는 데 사용한다.&lt;/p&gt;
+</description>
+        
+          <description>&lt;p&gt;본 글은 &lt;a href=&quot;http://www.reactivemanifesto.org/glossary&quot;&gt;The Reactive Manifesto Glossary&lt;/a&gt;를 번역한 것입니다.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Tue, 29 Nov 2016 00:00:00 +0000</pubDate>
+        <link>http://blog.lespinside.com/the-reactive-manifesto-glossary/</link>
+        <guid isPermaLink="true">http://blog.lespinside.com/the-reactive-manifesto-glossary/</guid>
+        
+        
+      </item>
+      
+    
+      
+      <item>
+        <title>리액티브 선언문 (The Reactive Manifesto)</title>
+        <description>&lt;p&gt;본 글은 &lt;a href=&quot;http://www.reactivemanifesto.org/&quot;&gt;The Reactive Manifesto&lt;/a&gt;를 번역한 것입니다.&lt;/p&gt;
+
+&lt;p&gt;서로 다른 분야에 종사하는 조직들이 유사한 소프트웨어 구축 패턴을 독립적으로 발견한다. 이 시스템들은 더 견고하고 더 복원력이 뛰어나고 더 유연하며 현대의 요구조건을 충족하기 위한 우위에 서 있다.&lt;/p&gt;
+
+&lt;p&gt;이러한 변화는 최근 몇 년 사이 급격하게 변한 애플리케이션 요구사항에 기인한다. 불가 몇 년 전만 해도 큰 애플리케이션은 수십대의 서버와 초 단위의 반응 시간, 수 시간의 오프라인 유지보수 그리고 기가바이트의 데이터를 처리를 의미했다. 오늘날 애플리케이션은 모바일 기기부터 수천개의 멀티 코어 프로세서를 사용하는 클라우드 기반 클러스터에 이르기까지 모든 곳에 배포된다. 사용자는 밀리 초의 반응시간과 100% 가동 시간을 기대한다. 데이터는 페타바이트 단위로 측정된다. 이러한 오늘날의 요구사항들은 단순히 기존의 소프트웨어 구조로 충족될 수 없다.&lt;/p&gt;
+
+&lt;p&gt;우리는 시스템 아키텍처에 대한 일관된 접근이 필요하다고 믿으며, 필요한 모든 측면이 이미 개별적으로 인식되고 있다고 믿는다: 우리는 반응이 빠르고 복원력이 좋으며 탄력적인 메시지 기반의 시스템을 원한다. 우리는 이러한 것들을 리액티브 시스템이라고 부른다.&lt;/p&gt;
+
+&lt;p&gt;리액티브 시스템으로 구축된 시스템들은 더욱 유연하고 느슨하게 연결되며 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Scalability&quot;&gt;확장 가능&lt;/a&gt;하다. 이러한 점들은 소프트웨어를 더 쉽게 개발하고 변경할 수 있게 한다. 리액티브 시스템들은 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Failure&quot;&gt;장애&lt;/a&gt;에 훨씬 더 견고하며 장애가 발생했을 때 재앙을 일으키기 보다는 우아하게 대응한다. 리액티브 시스템은 반응이 매우 빨라 &lt;a href=&quot;/the-reactive-manifesto-glossary/#User&quot;&gt;사용자들&lt;/a&gt;에게 효과적인 상호작용을 제공한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;리액티브 시스템들은:&lt;/em&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a name=&quot;Responsive&quot;&gt;&lt;/a&gt;&lt;strong&gt;즉각 반응한다(Responsive)&lt;/strong&gt;: &lt;a href=&quot;/the-reactive-manifesto-glossary/#System&quot;&gt;시스템&lt;/a&gt;은 가능한 적시에 응답한다. 응답성은 사용성과 유용성의 기초일 뿐만 아니라 그 이상으로 문제가 신속하게 감지되고 효과적으로 처리 될 수 있음을 의미한다. 반응이 빠른 시스템은 신속하고 일관된 응답 시간을 제공하고 신뢰할 수있는 상한을 설정하는데 집중하여 일관된 서비스 품질을 제공한다. 이러한 일관된 동작은 오류 처리를 단순화하고 최종 사용자의 신뢰를 높이며 상호 작용을 촉진한다.&lt;/li&gt;
+  &lt;li&gt;&lt;a name=&quot;Resilient&quot;&gt;&lt;/a&gt;&lt;strong&gt;복원력이 좋다(Resilient)&lt;/strong&gt;: 시스템은 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Failure&quot;&gt;장애&lt;/a&gt; 발생 시에도 응답을 유지한다. 이는 고 가용성의 절대 멈춰서는 안되는 시스템(mission critical systems)에만 적용되는 것은 아니다 — 복원력이 좋지 않은 시스템은 장애 발생 후 응답하지 않는다. 복원성은 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Replication&quot;&gt;복제&lt;/a&gt;, 억제, &lt;a href=&quot;/the-reactive-manifesto-glossary/#Isolation&quot;&gt;분리&lt;/a&gt; 및 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Delegation&quot;&gt;위임&lt;/a&gt;에 의해 달성된다. 장애는 각 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Component&quot;&gt;컴포넌트&lt;/a&gt; 내부에 억제되며, 컴포넌트 서로를 분리하여 시스템의 일부에 장애가 발생하더라도 시스템 전체를 손상시키지 않고 복구 할 수 있도록 한다. 각 컴포넌트의 복구는 다른 (외부) 컴포넌트로 위임되며 필요한 경우 복제를 통해 고 가용성을 보장한다. 컴포넌트의 클라이언트는 장애 처리를 부담하지 않는다.&lt;/li&gt;
+  &lt;li&gt;&lt;a name=&quot;Elastic&quot;&gt;&lt;/a&gt;&lt;strong&gt;탄력적이다(Elastic)&lt;/strong&gt;: 시스템은 다양한 작업 부하에서도 빠르게 응답한다. 리액티브 시스템은 입력을 처리하도록 할당 된 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Resource&quot;&gt;자원&lt;/a&gt;을 늘리거나 줄임으로써 입력량의 변화에 ​​대응할 수 있다. 이는 데이터 경합점이 없거나 중앙 병목 현상이 없는 설계을 의미하고 결과적으로 컴포넌트를 분할하거나 복제할 수 있게 만들고 입력을 컴포넌트들로 분산할 수 있게 한다. 리액티브 시스템들은 의미있는 실시간 성능 측정을 제공하여 예측가능한 반응형 확장 알고리즘을 지원한다. 이들은 범용 하드웨어 및 소프트웨어 플랫폼에서 비용적으로 효과적인 방식으로 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Elasticity&quot;&gt;탄력성&lt;/a&gt;을 달성한다.&lt;/li&gt;
+  &lt;li&gt;&lt;a name=&quot;Message-Driven&quot;&gt;&lt;/a&gt;&lt;strong&gt;메시지 기반이다(Message Driven)&lt;/strong&gt;: 반응형 시스템은 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Asynchronous&quot;&gt;비동기&lt;/a&gt; &lt;a href=&quot;/the-reactive-manifesto-glossary/#Message-Driven&quot;&gt;메시지 전달&lt;/a&gt;에 기반하여 느슨한 결합, 분리, &lt;a href=&quot;/the-reactive-manifesto-glossary/#Location-Transparency&quot;&gt;위치 투명성&lt;/a&gt;을 보장하는 컴포넌트 간의 경계를 형성한다. 이 경계는 또한 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Failure&quot;&gt;장애&lt;/a&gt;를 메시지로 할당하는 수단을 제공한다. 명시적인 메시지 전달을 사용하는 것은 시스템의 메시지 큐를 구축하고 모니터링하며 필요 시 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Back-Pressure&quot;&gt;역압&lt;/a&gt;을 적용하여 부하 관리, 탄력성 그리고 흐름 제어를 가능하게 한다. 통신 수단으로서 위치 투명성 메시징은 장애 관리가 클러스터 전체 또는 단일 호스트 내에서 동일한 구문과 의미로 작동 할 수 있게 한다. &lt;a href=&quot;/the-reactive-manifesto-glossary/#Non-Blocking&quot;&gt;논 블로킹&lt;/a&gt; 통신은 수신자가 활성화 시에만 &lt;a href=&quot;/the-reactive-manifesto-glossary/#Resource&quot;&gt;자원&lt;/a&gt;을 소비할 수 있게 하여 시스템 오버헤드를 줄인다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;대형 시스템들은 작은 시스템들로 구성되므로 구성 요소의 리액티브 특성에 의존한다. 즉, 리액티브 시스템은 설계 원칙을 적용하여 이러한 특성이 모든 크기의 수준에서 적용될 수 있도록 하여 시스템들을 조합할 수 있게 만든다. 세상에서 가장 큰 시스템은 이러한 속성을 기반으로하는 아키텍처에 의존하여 매일 수십억 명의 사람들의 요구에 부합한다. 이러한 설계 원칙을 매번 재발견하는 대신 처음부터 의식적으로 적용해야 할 때이다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.reactivemanifesto.org/#sign-button&quot;&gt;선언문에 서명하기&lt;/a&gt;&lt;/p&gt;
+</description>
+        
+          <description>&lt;p&gt;본 글은 &lt;a href=&quot;http://www.reactivemanifesto.org/&quot;&gt;The Reactive Manifesto&lt;/a&gt;를 번역한 것입니다.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 28 Nov 2016 00:00:00 +0000</pubDate>
+        <link>http://blog.lespinside.com/the-reactive-manifesto/</link>
+        <guid isPermaLink="true">http://blog.lespinside.com/the-reactive-manifesto/</guid>
+        
+        
+      </item>
+      
+    
+      
+      <item>
+        <title>Java Reference - SoftReference</title>
+        <description>&lt;p&gt;자바에는 객체에 대하여 strong, soft, weak, phantom 4가지 레퍼런스가 존재하며 각 레퍼런스의 유무에 따라 객체의 reachability가 결정된다. 객체의 reachability는 가비지 컬렉터의 수집 기준이 되는데 여기에 대해서는 네이버 D2의 &lt;a href=&quot;http://d2.naver.com/helloworld/329631&quot;&gt;Java Reference와 GC&lt;/a&gt;에 잘 설명되어 있다. 그렇다면 각 레퍼런스 타입은 언제 사용될까? SoftReference부터 찾아보았다.&lt;/p&gt;
+
+&lt;h2 id=&quot;softreference&quot;&gt;SoftReference&lt;/h2&gt;
+
+&lt;h3 id=&quot;joda-time&quot;&gt;joda-time&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/JodaOrg/joda-time&quot;&gt;joda-time&lt;/a&gt;은 Java의 날짜와 시간에 대한 클래스들을 대체하기 위해 만들어진 오픈소스 라이브러리이다. joda-time에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;DateTimeZone&lt;/code&gt; 캐싱에 &lt;code class=&quot;highlighter-rouge&quot;&gt;SoftReference&lt;/code&gt;를 사용한다.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DateTimeZone&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getZone&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;iZoneInfoMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;instanceof&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SoftReference&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;?&amp;gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+        &lt;span class=&quot;nd&quot;&gt;@SuppressWarnings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unchecked&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;”&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;SoftReference&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ref&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SoftReference&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;DateTimeZone&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ref&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tz&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// Reference cleared; load data again.&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;loadZoneData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;equals&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// Load zone data for the first time.&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;loadZoneData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// If this point is reached, mapping must link to another.&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getZone&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위의 코드는 joda-time의 &lt;a href=&quot;https://github.com/JodaOrg/joda-time/blob/master/src/main/java/org/joda/time/tz/ZoneInfoProvider.java&quot;&gt;ZoneInfoProvider.java&lt;/a&gt;의 일부분이다. &lt;code class=&quot;highlighter-rouge&quot;&gt;getZone&lt;/code&gt;은 파라미터로 받은 id에 대한 &lt;code class=&quot;highlighter-rouge&quot;&gt;DateTimeZone&lt;/code&gt;을 반환하는 메서드이다. &lt;code class=&quot;highlighter-rouge&quot;&gt;ZoneInfoProvider&lt;/code&gt;의 프라이빗 필드인 &lt;code class=&quot;highlighter-rouge&quot;&gt;iZoneInfoMap&lt;/code&gt;에는 id를 키 값으로 이미 로드한 &lt;code class=&quot;highlighter-rouge&quot;&gt;DateTimeZone&lt;/code&gt;에 대한 &lt;code class=&quot;highlighter-rouge&quot;&gt;SoftReference&lt;/code&gt;나 아직 로드하지 않은 id 문자열이 값으로 가지고 있다. 그리고 아직 로드하지 않은 &lt;code class=&quot;highlighter-rouge&quot;&gt;DateTimeZone&lt;/code&gt;이나 이미 로드했지만 GC된 &lt;code class=&quot;highlighter-rouge&quot;&gt;DateTimeZone&lt;/code&gt;에 대해서 &lt;code class=&quot;highlighter-rouge&quot;&gt;loadZoneData&lt;/code&gt;를 호출하여 반환한다.&lt;/p&gt;
+
+&lt;h3 id=&quot;spring-framework&quot;&gt;spring framework&lt;/h3&gt;
+&lt;p&gt;spring framework에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;ConcurrentReferenceHashMap&lt;/code&gt; 이라는 자체 &lt;code class=&quot;highlighter-rouge&quot;&gt;ConcurrentHashMap&lt;/code&gt;을 제공한다. &lt;code class=&quot;highlighter-rouge&quot;&gt;Collections.synchronizedMap(new WeakHashMap&amp;lt;K, Reference&amp;lt;V&amp;gt;&amp;gt;())&lt;/code&gt;을 대체하기 위해 만들어진 클래스로 내부적으로 기본 &lt;code class=&quot;highlighter-rouge&quot;&gt;SoftReference&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;WeakReference&lt;/code&gt;를 상속받은 &lt;code class=&quot;highlighter-rouge&quot;&gt;SoftEntryReference&lt;/code&gt;와 &lt;code class=&quot;highlighter-rouge&quot;&gt;WeakEntryReference&lt;/code&gt;를 사용하고 있다.&lt;/p&gt;
+
+&lt;p&gt;Spring framework 전반에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;CocurrentReferenceHashMap&lt;/code&gt;을 캐시로 사용하고 있는데 주로 비용이 큰 reflection에 사용하고 있다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;org.springframework.core.GenericTypeResolver&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cm&quot;&gt;/** Cache from Class to TypeVariable Map */&lt;/span&gt;
+	&lt;span class=&quot;nd&quot;&gt;@SuppressWarnings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;rawtypes&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;?&amp;gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TypeVariable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;typeVariableCache&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+			&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ConcurrentReferenceHashMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;org.springframework.core.ResolvableType&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ConcurrentReferenceHashMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ResolvableType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ResolvableType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+			&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ConcurrentReferenceHashMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;org.springframework.util.ReflectionUtils&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;	&lt;span class=&quot;cm&quot;&gt;/**
+	 * Cache for {@link Class#getDeclaredMethods()} plus equivalent default methods
+	 * from Java 8 based interfaces, allowing for fast iteration.
+	 */&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;?&amp;gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Method&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;declaredMethodsCache&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+			&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ConcurrentReferenceHashMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;cm&quot;&gt;/**
+	 * Cache for {@link Class#getDeclaredFields()}, allowing for fast iteration.
+	 */&lt;/span&gt;
+	&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;?&amp;gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Field&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;declaredFieldsCache&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+			&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ConcurrentReferenceHashMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;캐시로-사용해도-될까&quot;&gt;캐시로 사용해도 될까?&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://docs.oracle.com/javase/8/docs/api/java/lang/ref/SoftReference.html&quot;&gt;oracle javadoc&lt;/a&gt;에는 &lt;code class=&quot;highlighter-rouge&quot;&gt;SoftReference&lt;/code&gt;가 주로 memory sensitive cache에 사용된다고 적혀있다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Soft reference objects, which are cleared at the discretion of the garbage collector in response to memory demand. Soft references are most often used to implement memory-sensitive caches.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://developer.android.com/reference/java/lang/ref/SoftReference.html&quot;&gt;안드로이드 개발 참조문서&lt;/a&gt;에서는 &lt;code class=&quot;highlighter-rouge&quot;&gt;SoftReference&lt;/code&gt;를 캐싱에 사용하는 것은 비효율적이라고 말한다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Avoid Soft References for Caching
+In practice, soft references are inefficient for caching. The runtime doesn’t have enough information on which references to clear and which to keep. Most fatally, it doesn’t know what to do when given the choice between clearing a soft reference and growing the heap.
+The lack of information on the value to your application of each reference limits the usefulness of soft references. References that are cleared too early cause unnecessary work; those that are cleared too late waste memory.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;대신 &lt;a href=&quot;https://developer.android.com/reference/android/util/LruCache.html&quot;&gt;android.util.LruCache&lt;/a&gt;를 사용할 것을 권장하는데 &lt;code class=&quot;highlighter-rouge&quot;&gt;LruCache&lt;/code&gt;는 생성 시 지정한 갯수만큼 strong reference를 유지하는 방식으로 캐시를 구현하였다.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://developer.android.com/training/displaying-bitmaps/cache-bitmap.html#memory-cache&quot;&gt;안드로이드 개발자&lt;/a&gt; 페이지에는 Bitmap caching과 관련하여 다음과 같은 내용도 있다.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Note: In the past, a popular memory cache implementation was a SoftReference or WeakReference bitmap cache, however this is not recommended. Starting from Android 2.3 (API Level 9) the garbage collector is more aggressive with collecting soft/weak references which makes them fairly ineffective. In addition, prior to Android 3.0 (API Level 11), the backing data of a bitmap was stored in native memory which is not released in a predictable manner, potentially causing an application to briefly exceed its memory limits and crash.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;모든 경우에 &lt;code class=&quot;highlighter-rouge&quot;&gt;SoftReference&lt;/code&gt;를 캐시로 사용하는 것이 부적절하다기 보다는 안드로이드의 적극적인 GC 특성 상 &lt;code class=&quot;highlighter-rouge&quot;&gt;SoftReference&lt;/code&gt;가 효과적이지 못하다는 이야기인 것 같다.&lt;/p&gt;
+</description>
+        
+          <description>&lt;p&gt;자바에는 객체에 대하여 strong, soft, weak, phantom 4가지 레퍼런스가 존재하며 각 레퍼런스의 유무에 따라 객체의 reachability가 결정된다. 객체의 reachability는 가비지 컬렉터의 수집 기준이 되는데 여기에 대해서는 네이버 D2의 &lt;a href=&quot;http://d2.naver.com/helloworld/329631&quot;&gt;Java Reference와 GC&lt;/a&gt;에 잘 설명되어 있다. 그렇다면 각 레퍼런스 타입은 언제 사용될까? SoftReference부터 찾아보았다.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 06 Nov 2016 00:00:00 +0000</pubDate>
+        <link>http://blog.lespinside.com/java-soft-reference/</link>
+        <guid isPermaLink="true">http://blog.lespinside.com/java-soft-reference/</guid>
+        
+        
+      </item>
+      
+    
+  </channel>
+</rss>
