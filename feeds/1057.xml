@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>황교빈의 아카이브</title>
+	<atom:link href="https://archive.htrucci.com/feed/" rel="self" type="application/rss+xml" />
+	<link>https://archive.htrucci.com</link>
+	<description>황트루치</description>
+	<lastBuildDate>Wed, 13 Mar 2019 02:51:38 +0000</lastBuildDate>
+	<language>ko-KR</language>
+	<sy:updatePeriod>hourly</sy:updatePeriod>
+	<sy:updateFrequency>1</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=4.9.8</generator>
+
+<image>
+	<url>http://res.cloudinary.com/htrucci-archive/image/upload/h_32,w_32/v1511501686/cropped-developer-512-1_op5aty.png</url>
+	<title>황교빈의 아카이브</title>
+	<link>https://archive.htrucci.com</link>
+	<width>32</width>
+	<height>32</height>
+</image> 
+	<item>
+		<title>[Docker, SpringBoot, Maven] 스프링부트 도커 이미지로 메이븐 빌드하여 로컬 실행해보기</title>
+		<link>https://archive.htrucci.com/22867/docker-springboot-maven-%ec%8a%a4%ed%94%84%eb%a7%81%eb%b6%80%ed%8a%b8-%eb%8f%84%ec%bb%a4-%ec%9d%b4%eb%af%b8%ec%a7%80%eb%a1%9c-%eb%a9%94%ec%9d%b4%eb%b8%90-%eb%b9%8c%eb%93%9c%ed%95%98%ec%97%ac/</link>
+		<comments>https://archive.htrucci.com/22867/docker-springboot-maven-%ec%8a%a4%ed%94%84%eb%a7%81%eb%b6%80%ed%8a%b8-%eb%8f%84%ec%bb%a4-%ec%9d%b4%eb%af%b8%ec%a7%80%eb%a1%9c-%eb%a9%94%ec%9d%b4%eb%b8%90-%eb%b9%8c%eb%93%9c%ed%95%98%ec%97%ac/#respond</comments>
+		<pubDate>Tue, 05 Mar 2019 02:42:26 +0000</pubDate>
+		<dc:creator><![CDATA[htrucci]]></dc:creator>
+				<category><![CDATA[IT/개발]]></category>
+		<category><![CDATA[‣ 개발자 뇌 개발]]></category>
+		<category><![CDATA[‣ 언어, 프레임워크]]></category>
+		<category><![CDATA[springboot]]></category>
+		<category><![CDATA[maven]]></category>
+		<category><![CDATA[빌드]]></category>
+		<category><![CDATA[도커]]></category>
+		<category><![CDATA[docker]]></category>
+		<category><![CDATA[메이븐]]></category>
+		<category><![CDATA[스프링부트]]></category>
+		<category><![CDATA[로컬]]></category>
+		<category><![CDATA[localhost]]></category>
+
+		<guid isPermaLink="false">https://archive.htrucci.com/?p=22867</guid>
+		<description><![CDATA[메이븐에서 검색해보면 스포티파이에서 만든 인기있는 도커 클라이언트가 있다. https://mvnrepository.com/artifact/com.spotify/docker-client 스프링부트에 이걸 붙여서 로컬에서 메이븐 빌드하여 간단히 도커 이미지로 실행해보자. 1. 메이븐에 아래와 같이 붙여본다. [crayon-5cda06dd8b3ee799590865/] &#160; 리소스 설정 부분을 보면&#46;&#46;&#46;]]></description>
+				<content:encoded><![CDATA[<p>메이븐에서 검색해보면 스포티파이에서 만든 인기있는 도커 클라이언트가 있다.<br />
+https://mvnrepository.com/artifact/com.spotify/docker-client</p>
+<p>스프링부트에 이걸 붙여서 로컬에서 메이븐 빌드하여 간단히 도커 이미지로 실행해보자.</p>
+<p>
+1. 메이븐에 아래와 같이 붙여본다.</p>
+<p></p><pre class="crayon-plain-tag">&lt;properties&gt;
+        &lt;java.version&gt;1.8&lt;/java.version&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+        &lt;docker.image.prefix&gt;springboot&lt;/docker.image.prefix&gt;
+    &lt;/properties&gt;
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+            &lt;!-- Docker maven plugin --&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;com.spotify&lt;/groupId&gt;
+                &lt;artifactId&gt;docker-maven-plugin&lt;/artifactId&gt;
+                &lt;version&gt;1.0.0&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;imageName&gt;${docker.image.prefix}/${project.artifactId}&lt;/imageName&gt;
+                    &lt;dockerDirectory&gt;src/main/docker&lt;/dockerDirectory&gt;
+                    &lt;resources&gt;
+                        &lt;resource&gt;
+                            &lt;targetPath&gt;/&lt;/targetPath&gt;
+                            &lt;directory&gt;${project.build.directory}&lt;/directory&gt;
+                            &lt;include&gt;${project.build.finalName}.jar&lt;/include&gt;
+                        &lt;/resource&gt;
+                    &lt;/resources&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+            &lt;!-- Docker maven plugin --&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;</pre><p></p>
+<p>&nbsp;</p>
+<ol>
+<li>리소스 설정 부분을 보면 도커디렉토리를 src/main/docker로 명시한 것을 볼 수 있다. <br />
+실제로 폴더를 만들고 Dockerfile을 생성해주었다.<br />
+메이븐 구성에 따라 생성되는 jar의 이름을 아래 잘 바꿔 넣어줘야 한다.</li>
+</ol>
+<p></p><pre class="crayon-plain-tag">FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ADD htrucci-springboot-0.0.1-SNAPSHOT.jar app.jar
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]</pre><p></p>
+<p>
+3. 메이븐 빌드</p>
+<p></p><pre class="crayon-plain-tag">clean package docker:build</pre><p></p>
+<ul>
+<li>당연히 도커가 설치되어있고 실행중이어야 오류가 안난다. *</li>
+</ul>
+<p>4. 빌드된 컨테이너 확인</p>
+<p></p><pre class="crayon-plain-tag">$ docker container ls -a</pre><p></p>
+<p>있다, 내가 빌드한 이미지가 추가되어있다. 위에서 설정은 이미지 네임으로. <br />
+&lt;imageName&gt;${docker.image.prefix}/${project.artifactId}&lt;/imageName&gt;</p>
+<p>5.<br />
+테스트를 위해 도커내에서 간단히 스프링 부트를 구동시켜보자<br />
+8080포트로 맵핑해줄거고 두 명령어의 차이는 백그라운드 모드로 실행할 것인지의 차이임.</p>
+<p></p><pre class="crayon-plain-tag">$ docker run -p 8080:8080 이미지이름
+$ docker run -d -p 8080:8080 이미지이름</pre><p></p>
+<p>
+간단히 로컬에서 올려보았지만, 몇몇 과정을 자동화하는 기대치를 만족시키기 위해 문서를 잘 살펴볼 필요가 있겠다.<br />
+도커도 좀 더 봐야할 것 같구&#8230;</p>
+]]></content:encoded>
+			<wfw:commentRss>https://archive.htrucci.com/22867/docker-springboot-maven-%ec%8a%a4%ed%94%84%eb%a7%81%eb%b6%80%ed%8a%b8-%eb%8f%84%ec%bb%a4-%ec%9d%b4%eb%af%b8%ec%a7%80%eb%a1%9c-%eb%a9%94%ec%9d%b4%eb%b8%90-%eb%b9%8c%eb%93%9c%ed%95%98%ec%97%ac/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>[Maven] spotify docker client 빌드시 GET unix://localhost:80/version: 502, body: Bad response from Docker engine: HTTP 502 Bad Gateway</title>
+		<link>https://archive.htrucci.com/22865/maven-spotify-docker-client-%eb%b9%8c%eb%93%9c%ec%8b%9c-get-unix-localhost80-version-502-body-bad-response-from-docker-engine-http-502-bad-gateway/</link>
+		<comments>https://archive.htrucci.com/22865/maven-spotify-docker-client-%eb%b9%8c%eb%93%9c%ec%8b%9c-get-unix-localhost80-version-502-body-bad-response-from-docker-engine-http-502-bad-gateway/#respond</comments>
+		<pubDate>Tue, 05 Mar 2019 02:06:18 +0000</pubDate>
+		<dc:creator><![CDATA[htrucci]]></dc:creator>
+				<category><![CDATA[IT/개발]]></category>
+		<category><![CDATA[‣ 오늘의 삽질]]></category>
+		<category><![CDATA[build]]></category>
+		<category><![CDATA[maven]]></category>
+		<category><![CDATA[빌드]]></category>
+		<category><![CDATA[도커]]></category>
+		<category><![CDATA[docker]]></category>
+		<category><![CDATA[메이븐]]></category>
+
+		<guid isPermaLink="false">https://archive.htrucci.com/?p=22865</guid>
+		<description><![CDATA[[Maven] spotify docker client 빌드시 GET unix://localhost:80/version: 502, body: Bad response from Docker engine: HTTP 502 Bad Gateway [ERROR] Failed to execute goal com.spotify:docker-maven-plugin:1.0.0:build (default-cli) on project htrucci-springboot: Exception caught:&#46;&#46;&#46;]]></description>
+				<content:encoded><![CDATA[<p class="p1">[Maven] spotify docker client 빌드시 GET unix://localhost:80/version: 502, body: Bad response from Docker engine: HTTP 502 Bad Gateway <br />
+[ERROR] Failed to execute goal com.spotify:docker-maven-plugin:1.0.0:build (default-cli) on project htrucci-springboot: Exception caught: Request error: GET unix://localhost:80/version: 502, body: Bad response from Docker engine: HTTP 502 Bad Gateway -&gt; [Help 1]</p>
+<p>
+터미널에 아래 명령 실행</p>
+<div class="wpe-box wpe-box-note">
+<p class="p1"><span class="s1">export DOCKER_HOST=unix:///var/run/docker.sock</span></p>
+</div>
+]]></content:encoded>
+			<wfw:commentRss>https://archive.htrucci.com/22865/maven-spotify-docker-client-%eb%b9%8c%eb%93%9c%ec%8b%9c-get-unix-localhost80-version-502-body-bad-response-from-docker-engine-http-502-bad-gateway/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		</item>
+		<item>
+		<title>하늘 _ 신해철&#038;N.EX.T, 싸이(Psy) _ 박노해 노동의 새벽 20주년 헌정공연</title>
+		<link>https://archive.htrucci.com/22862/%ed%95%98%eb%8a%98-_-%ec%8b%a0%ed%95%b4%ec%b2%a0n-ex-t-%ec%8b%b8%ec%9d%b4psy-_-%eb%b0%95%eb%85%b8%ed%95%b4-%eb%85%b8%eb%8f%99%ec%9d%98-%ec%83%88%eb%b2%bd-20%ec%a3%bc%eb%85%84-%ed%97%8c%ec%a0%95/</link>
+		<comments>https://archive.htrucci.com/22862/%ed%95%98%eb%8a%98-_-%ec%8b%a0%ed%95%b4%ec%b2%a0n-ex-t-%ec%8b%b8%ec%9d%b4psy-_-%eb%b0%95%eb%85%b8%ed%95%b4-%eb%85%b8%eb%8f%99%ec%9d%98-%ec%83%88%eb%b2%bd-20%ec%a3%bc%eb%85%84-%ed%97%8c%ec%a0%95/#respond</comments>
+		<pubDate>Sat, 02 Feb 2019 16:15:49 +0000</pubDate>
+		<dc:creator><![CDATA[htrucci]]></dc:creator>
+				<category><![CDATA[음악]]></category>
+		<category><![CDATA[신해철]]></category>
+		<category><![CDATA[싸이]]></category>
+		<category><![CDATA[노동의 새벽]]></category>
+		<category><![CDATA[박노해]]></category>
+
+		<guid isPermaLink="false">https://archive.htrucci.com/?p=22862</guid>
+		<description><![CDATA[[곡 소개] 《노동의 새벽》을 여는 첫머리 시는 &#8216;하늘&#8217;이다. 이것은 의미 심장하다. &#8216;아 우리도 하늘이 되고 싶다&#8217;고 노동자들은 나직이 부르짖지만, 그러나 그 누구를 짓누르는 먹구름 하늘을 꿈꾸지 않는다. 서로를 받쳐주는, 우리&#46;&#46;&#46;]]></description>
+				<content:encoded><![CDATA[<p></p>
+<p><iframe width="560" height="315" src="https://www.youtube.com/embed/zXRjKuWQGnk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="allowfullscreen"></iframe></p>
+<p>[곡 소개] 《노동의 새벽》을 여는 첫머리 시는 &#8216;하늘&#8217;이다. 이것은 의미 심장하다. &#8216;아 우리도 하늘이 되고 싶다&#8217;고 노동자들은 나직이 부르짖지만, 그러나 그 누구를 짓누르는 먹구름 하늘을 꿈꾸지 않는다. 서로를 받쳐주는, 우리 모두 서로가 서로에게 푸른 하늘이 되는 그런 세상을 꿈꾼다. 《노동의 새벽》의 이런 따뜻하나 혁명적인 반전, &#8216;하늘&#8217;을 노래로 만드는 일은 한국 대중음악계의 탈출구 싸이와 넥스트가 맡았다. 거침없이 때론 능청스러운 랩으로 불러 젖히는 싸이의 목소리와 신들린듯한 넥스트의 연주는 20000년대식 &#8216;하늘&#8217;이다. 마치 《노동의 새벽》을 다시 읽어보라는 주문처럼 들린다. 지금 우리의 삶이 딛고 선 존재의 발밑을 돌아보라고, 우리의 노동이 어떤 노동을 딛고 있으며 어떤 하늘을 꿈꾸고 있는지 돌아보며 전진하라는 주문 말이다.</p>
+<p>[아티스트 소감] &#8220;박노해님의 시와 노래&#8230; 아니 그의 절규와 휴머니즘은 이렇게 먼 시절로부터 지금까지 각박한 삶과 노동살이로 식어진 우리네 심장을 어루만지며, 또한 지금도 역시 어딘가에 구석자리를 마�
