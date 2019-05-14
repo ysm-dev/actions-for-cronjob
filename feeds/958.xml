@@ -2940,4 +2940,68 @@ wasm-bindgen, wasm-pack 이 어떤 원리로 무슨 일을 해주고 있는지 �
 
 
 <blockquote class="wp-block-quote">
-	<p><em>Mozilla will not ship an implementation of HTML Imports. We expect that once JavaScript modules — a feature derived from JavaScript libraries written by the developer community — is 
+	<p><em>Mozilla will not ship an implementation of HTML Imports. We expect that once JavaScript modules — a feature derived from JavaScript libraries written by the developer community — is shipped, the way we look at this problem will have changed. We have also learned from Gaia and others, that lack of HTML Imports is not a problem as the functionality can easily be provided for with a polyfill if desired. ﻿</em><a href="https://hacks.mozilla.org/2014/12/mozilla-and-web-components/"><em></em></a></p><cite><a href="https://hacks.mozilla.org/2014/12/mozilla-and-web-components/"><em>Mozilla and Web Components</em></a></cite></blockquote>
+
+
+
+<p>웹 컴포넌트 옹호론자들은 꾸준히 HTML Imports를 구현할 것을 요구했지만, 실현되지 않을 것으로 보인다. HTML Imports에 여러가지 문제가 제기되었는데 그 중 몇 가지는 아래와 같다. 브라우저 제작사들은 이들 이유가 타당하다고 판단한 것 같다. — <a href="https://www.tjvantoll.com/2014/08/12/the-problem-with-using-html-imports-for-dependency-management/">The Problem With Using HTML Imports For Dependency Management</a></p>
+
+
+
+<ul>
+	<li>이미 ES Module 표준이 만들어지고 있다. (현재는 이미 모든 브라우저에서 지원되고 있거나 개발 중이다)</li>
+	<li>브라우저만을 위한 표준화 작업을 또 하고 싶지 않다.</li>
+	<li>표준이 아니어도 폴리필로 매우 쉽게 구현 가능하다. (현재 폴리필도 1000라인이 안되며, 기능 구현만 고려하면 500여 라인 정도면 충분하다)</li>
+	<li>HTTP/2를 사용하면 여러 개 파일을 빠르게 받을 수 있다 해도, 여전히 번들링한 단일 파일을 받는 것이 빠르다. (정확히 표준에 관한 이야기는 아니지만, 구조상 같이 언급되는 경우가 많다)</li>
+	<li>De-Duping 할 수 없음(CDN 경로를 사용할 경우를 예상할 수 있는데, 동일한 파일들을 파악하여 처리하기 힘들다. ex) code.jquery.com/jquery-2.1.1.min.js vs maxcdn.bootstrapcdn.com/bootstrap/2.3.0/js/bootstrap.min.js)</li>
+</ul>
+
+
+
+<p>위에서 제기한 이유들 외에도 실제 프로젝트를 구성해보려면 바로 만나게 되는 큰 장벽이 있다. 웹팩(Webpack)을 사용할 수 없다. 이미 표준 같은 힘을 지닌 웹팩, 롤업과 같이 사용할 수 없는 점은 치명적이다. 현재는 <a href="https://github.com/webpack-contrib/polymer-webpack-loader">polymer-webpack-loader</a>가 나와있지만 겨우 2달 되었고 직접 사용해본 결과 기본적인 문제들의 해결이 필요해 보인다. 결국, 웹 컴포넌트를 작성하기 위해서는 폴리머(Polymer)등의 지원 프레임워크와 독립적인 도구들을 사용해야 한다는 결론으로 흐르게 된다.</p>
+
+
+
+<div style="height:100px" aria-hidden="true" class="wp-block-spacer"></div>
+
+
+
+<h2>HTML Imports NO! Template Literals YES?</h2>
+
+
+
+<p>HTML Imports는 브라우저 지원이 안 될 것이라는 것, 웹팩 생태계와 따로 놀고 있다는 점등을 인식하고 결국 방향이 바뀌고 있다. 본인 의견으로도 Polymer가 웹팩 로더만 빠르게 지원했어도 더 나은 결과가 나오지 않았을까 생각한다. 지난주 있었던 <a href="https://summit.polymer-project.org/">Polymer Summit 2017</a>에서는 <a href="https://www.polymer-project.org/blog/2017-08-23-hands-on-30-preview">Polymer 3.0 preview</a>를 발표하며 새로운 방향을 보여주었다. 바로 HTML Imports를 포기하는 것이다. HTML Imports는 ES Modules로 대체되었고, 템플릿 엘리먼트는 템플릿 리터럴(Template literals)로 바뀌었다. 이로써 웹팩 생태계의 시민이 된 것이다. 의존성 문제는 해결되었지만, 템플릿은? 결국, 문자열 기반의 템플릿으로 돌아가면 템플릿 엘리먼트의 장점을 잃어버리게 되는 것 아닌가? 다행히도 ES6 템플릿 리터럴은 단순한 문자열이 아니고 템플릿 역할을 수행할 멋진 가능성을 가지고 있다.</p>
+
+
+
+<figure class="wp-block-embed is-type-rich is-provider-embed-handler">
+	View the code on <a href="https://gist.github.com/kyuwoo-choi/cd5cf260f9d09316d1e5a1aaf4ee5eca">Gist</a>.
+</figure>
+
+
+
+<p>이것 으로는 부족하다 여길 것이다. 다행히도 최근 <a href="https://github.com/WebReflection/hyperHTML">hyper(HTML)</a>, <a href="https://github.com/PolymerLabs/lit-html">lit-html</a>, <a href="https://github.com/choojs/hyperx">hyperx</a>등의 템플릿 리터럴을 사용한 프로젝트가 인기를 얻고 있다. lit-html의 설명에 따르면 이는 템플릿 리터럴를 받아 템플릿 엘리먼트를 생성한다. 만약 같은 템플릿으로 엘리먼트를 재생성하면, 이미 생성한 템플릿 엘리먼트를 사용해서 효율을 높이는 방향으로 만들어졌다고 한다. 문자열을 사용하되 템플릿 엘리먼트의 장점을 흡수하고자 하는 것이다. 크기도 minified기준으로 2kb가 채 안 된다고 하니, 바닐라 자바스크립트를 지향하는 경우에도 템플릿으로는 템플릿 리터럴를 이용한 이들 프로젝트를 사용하는 것이 좋아 보인다.</p>
+
+
+
+<p>종합하면, 모양새는 커스텀 엘리먼트와 쉐도우 돔이 자리를 지키고, HTML Imports의 하차로 인해 템플릿 엘리먼트까지 쓰지 못하게 되었다. 그리고 빈 자리를 표준인 ES Modules와 템플릿 리터럴이 차지할 것으로 보인다. 그리고 템플릿 리터럴을 활용한 프로젝트들을 주시할 필요가 있겠다. Polymer Summit의 발표가 보여준 방향이 웹 컴포넌트의 방향을 정한다 볼 수 없으나, 많은 사람이 고민하고 있던 문제들이 해결되는 모습이다. 무엇보다 웹팩의 시민이 되었으니 앞으로 웹 컴포넌트의 행보가 탄력을 받을 것으로 예상해본다.</p>
+
+
+
+<div style="height:100px" aria-hidden="true" class="wp-block-spacer"></div>
+
+
+
+<h2>마치며</h2>
+
+
+
+<p>오늘 템플릿 엘리먼트와 HTML Imports에 대해 생각하며, 이미 힘을 잃은 이 두 기술을 어떻게 쓸지 고민이 많아 시작이 쉽지 않았다. 두 기술을 자세히 설명하는 것은 의미 없을 것으로 생각해 프론트엔드에서의 템플릿의 흐름, 의존성과의 연관성, 최근의 흐름에 대해 하나의 이야기로 풀어 마무리한다. 다행인 것은 최근의 흐름이 웹 컴포넌트에 관심이 있던 한 명으로서 웹 컴포넌트가 좋은 방향으로 진행 되는것 같아 기쁘다.</p>
+
+
+
+<p>또한 이 글을 재미있게 읽었다면 지난주 Polymer Summit 2017의 <a href="https://www.youtube.com/watch?v=ruql541T7gc&amp;index=16&amp;list=PLNYkxOF6rcIDP0PqVaJxqNWwIgvoEPzJi">lit-html 세션</a>영상을 추천한다. 이 글 역시 해당 세션의 흐름을 따라가며 작성하였고, 이 영상은 템플릿 리터럴에 대한 이해와 리엑트에 대한 이야기, 그리고 이들을 이용해서 lit-html이 어떻게 영리하게 문제를 해결하는지를 담고 있다. 이들 템플릿 리터럴 라이브러리들이 웹 컴포넌트를 리엑트보다 멋진 모습을 만들어 줄 것이라는 기대도 생긴다.</p>
+
+
+
+<p>이번을 웹 컴포넌트 마�

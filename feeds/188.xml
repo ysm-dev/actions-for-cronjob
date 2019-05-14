@@ -1217,4 +1217,25 @@ document&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span c
 &lt;/ol&gt;
 &lt;h3&gt;기타 CORS우회 방법&lt;/h3&gt;
 &lt;p&gt;개발 시 크롬을 사용한다면 CORS Allow 제한을 풀어주는 &lt;a href=&quot;https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi&quot;&gt;익스텐션&lt;/a&gt;이 존재한다. 그러나 실 배포 시에는 반드시 서버에서 허용을 해주어야 한다.&lt;br&gt;
-크롬 실행 시 —disable-web-security을 걸어주는 방법도 있으나 웬만해선 권장하지 않는다.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[Javascript 2. - 클로저 (Closure)]]></tit
+크롬 실행 시 —disable-web-security을 걸어주는 방법도 있으나 웬만해선 권장하지 않는다.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[Javascript 2. - 클로저 (Closure)]]></title><description><![CDATA[실행 컨텍스트와 연관지어 클로저가 무엇이고 어디에 활용되는지 다룹니다.]]></description><link>https://undefine.me/posts/4</link><guid isPermaLink="false">https://undefine.me/posts/4</guid><pubDate>Sun, 07 Oct 2018 00:00:00 GMT</pubDate><content:encoded>&lt;h3&gt;개요&lt;/h3&gt;
+&lt;p&gt;클로저는 비단 자바스크립트만의 개념은 아니다. 함수를 일급 시민(First Citizen)으로 취급하는 대부분의 언어에서 파생되는 개념이다.
+일반적으로 함수형 프로그래밍에서 함수는 특정 요소에 종속적이면 안 되며, 구현하고자 하는 하나의 기능만을 반환해야 한다. 클로저는 이러한 함수를 어떤 특정 데이터와 결부시키고자 할 때 유용하다. 즉 클로저를 사용함으로써 함수의 순수성을 보장하는 것인데, 자바스크립트에서 특히 클로저가 강조되어왔던 이유는 함수 기반의 스코프를 가지고 있는 자바스크립트에서 private 한 값을 선언할 수 없기 때문이었다. 이 부분은 ES6 의 블록 기반 선언자인 let, const 나 Typescript 를 도입하면서 어느 정도 해결되고 있으나, 그렇다고 해도 클로저는 여전히 유용하며, 적절하게 사용하는 것이 중요하다. 클로저에 대해 모른다면, 여러분도 모르게 마구 선언해버린 클로저가 지금도 앱 어딘가에서 메모리를 잡아먹고 있을 지도 모른다.&lt;/p&gt;
+&lt;h3&gt;기본 개념&lt;/h3&gt;
+&lt;p&gt;지난 시간에 실행 컨텍스트와 스코프를 배웠다. 이에 관련해 클로저를 정의 내리자면, &lt;strong&gt;외부함수의 스코프에 포함되어 있는 내부함수가, 해당 외부함수의 실행이 종료 된 이후에도 그 안의 Variable Object(VO)에 접근할 수 있는 것&lt;/strong&gt;을 말한다. &lt;/p&gt;
+&lt;p&gt;언뜻 보면 굉장히 난해한 정의다. 하지만 우리는 실행 컨텍스트를 배웠으므로, 어렵지 않게 이해할 수 있다. 다음 코드를 보자.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;javascript&quot;&gt;&lt;pre class=&quot;language-javascript&quot;&gt;&lt;code class=&quot;language-javascript&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;outer&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;token keyword&quot;&gt;var&lt;/span&gt; freeVal &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&apos;this is &apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+  
+  &lt;span class=&quot;token keyword&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;inner&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;text&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; text &lt;span class=&quot;token operator&quot;&gt;?&lt;/span&gt; freeVal &lt;span class=&quot;token operator&quot;&gt;+&lt;/span&gt; text &lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; freeVal &lt;span class=&quot;token operator&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&apos;inner Function&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; inner&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;var&lt;/span&gt; func &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;outer&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token function&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&apos;closure&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;이 코드의 실행 순서를 살펴보자. &lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;먼
