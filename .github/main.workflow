@@ -1,6 +1,5 @@
 workflow "New workflow" {
   resolves = ["deploy"]
-  on = "schedule(*/5 * * * *)"
 }
 
 action "Install" {
